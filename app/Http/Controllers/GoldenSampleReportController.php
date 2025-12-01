@@ -1,0 +1,238 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\GoldenSampleReport;
+use App\Models\Plant;
+use App\Models\InputDeskripsi;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+
+class GoldenSampleReportController extends Controller
+{
+    /**
+     * Display a listing of the resource.
+     */
+    public function index()
+    {
+        $user = Auth::user();
+        
+        // SuperAdmin dapat melihat semua data
+        if ($user->role && strtolower($user->role->role) === 'superadmin') {
+            $reports = GoldenSampleReport::with(['user.role', 'user.plant', 'plant'])->latest()->get();
+        } else {
+            // Admin dan role lain hanya melihat data sesuai plant mereka
+            $reports = GoldenSampleReport::with(['user.role', 'user.plant', 'plant'])
+                ->whereHas('user', function($query) use ($user) {
+                    $query->where('id_plant', $user->id_plant);
+                })
+                ->latest()
+                ->get();
+        }
+        
+        return view('qc-sistem.golden-sample-retort.index', compact('reports'));
+    }
+
+    /**
+     * Show the form for creating a new resource.
+     */
+    public function create()
+    {
+        $user = Auth::user();
+        
+        // Get plants untuk dropdown
+        $query = Plant::query();
+        if ($user->role && strtolower($user->role->role) !== 'superadmin') {
+            $query->where('id', $user->id_plant);
+        }
+        $plants = $query->get();
+        
+        // Get deskripsis untuk multiple select
+        $deskripsiQuery = InputDeskripsi::query();
+        if ($user->role && strtolower($user->role->role) !== 'superadmin') {
+            $deskripsiQuery->whereHas('user', function($q) use ($user) {
+                $q->where('id_plant', $user->id_plant);
+            });
+        }
+        $deskripsis = $deskripsiQuery->latest()->get();
+        
+        return view('qc-sistem.golden-sample-retort.create', compact('plants', 'deskripsis'));
+    }
+
+    /**
+     * Store a newly created resource in storage.
+     */
+    public function store(Request $request)
+    {
+        $request->validate([
+            'id_plant' => 'required|string',
+            'plant_manual' => 'nullable|string|max:255|required_if:id_plant,other',
+            'sample_type' => 'required|string|max:255',
+            'collection_date_from' => 'required|string|regex:/^\d{4}-\d{2}$/',
+            'collection_date_to' => 'required|string|regex:/^\d{4}-\d{2}$/',
+            'sample_storage' => 'required|array|min:1',
+            'sample_storage.*' => 'string|in:Frozen,Chilled,Ambient',
+            'samples' => 'required|array|min:1',
+            'samples.*.id_deskripsi' => 'required|array|min:1',
+            'samples.*.id_deskripsi.*' => 'exists:input_deskripsis,uuid',
+            'samples.*.id_supplier' => 'required|string|max:255',
+            'samples.*.kode_produksi' => 'required|string|max:255',
+            'samples.*.best_before' => 'required|date',
+            'samples.*.qty' => 'required|string|max:100',
+            'samples.*.diserahkan' => 'required|string|max:255',
+            'samples.*.diterima' => 'required|string|max:255',
+        ]);
+
+        $idPlant = $request->id_plant === 'other' ? null : $request->id_plant;
+        
+        GoldenSampleReport::create([
+            'id_user' => Auth::id(),
+            'id_plant' => $idPlant,
+            'plant_manual' => $request->id_plant === 'other' ? $request->plant_manual : null,
+            'sample_type' => $request->sample_type,
+            'collection_date_from' => $request->collection_date_from,
+            'collection_date_to' => $request->collection_date_to,
+            'tanggal' => $request->tanggal,
+            'sample_storage' => $request->sample_storage,
+            'samples' => $request->samples,
+        ]);
+
+        return redirect()->route('golden-sample-reports.index')
+                       ->with('success', 'Golden Sample Report berhasil ditambahkan!');
+    }
+
+    /**
+     * Display the specified resource.
+     */
+    public function show(GoldenSampleReport $goldenSampleReport)
+    {
+        $this->checkPlantAccess($goldenSampleReport);
+        $goldenSampleReport->load(['user.role', 'user.plant', 'plant']);
+        
+        return view('qc-sistem.golden-sample-retort.show', compact('goldenSampleReport'));
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     */
+    public function edit(GoldenSampleReport $goldenSampleReport)
+    {
+        $this->checkPlantAccess($goldenSampleReport);
+        
+        $user = Auth::user();
+        
+        // Get plants untuk dropdown
+        $query = Plant::query();
+        if ($user->role && strtolower($user->role->role) !== 'superadmin') {
+            $query->where('id', $user->id_plant);
+        }
+        $plants = $query->get();
+        
+        // Get deskripsis untuk multiple select
+        $deskripsiQuery = InputDeskripsi::query();
+        if ($user->role && strtolower($user->role->role) !== 'superadmin') {
+            $deskripsiQuery->whereHas('user', function($q) use ($user) {
+                $q->where('id_plant', $user->id_plant);
+            });
+        }
+        $deskripsis = $deskripsiQuery->latest()->get();
+        
+        return view('qc-sistem.golden-sample-retort.edit', compact('goldenSampleReport', 'plants', 'deskripsis'));
+    }
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(Request $request, GoldenSampleReport $goldenSampleReport)
+    {
+        $this->checkPlantAccess($goldenSampleReport);
+        
+        $request->validate([
+            'id_plant' => 'required|string',
+            'plant_manual' => 'nullable|string|max:255|required_if:id_plant,other',
+            'sample_type' => 'required|string|max:255',
+            'collection_date_from' => 'required|string|regex:/^\d{4}-\d{2}$/',
+            'collection_date_to' => 'required|string|regex:/^\d{4}-\d{2}$/',
+            'sample_storage' => 'required|array|min:1',
+            'sample_storage.*' => 'string|in:Frozen,Chilled,Ambient',
+            'samples' => 'required|array|min:1',
+            'samples.*.id_deskripsi' => 'required|array|min:1',
+            'samples.*.id_deskripsi.*' => 'exists:input_deskripsis,uuid',
+            'samples.*.id_supplier' => 'required|string|max:255',
+            'samples.*.kode_produksi' => 'required|string|max:255',
+            'samples.*.best_before' => 'required|date',
+            'samples.*.qty' => 'required|string|max:100',
+            'samples.*.diserahkan' => 'required|string|max:255',
+            'samples.*.diterima' => 'required|string|max:255',
+        ]);
+
+        $idPlant = $request->id_plant === 'other' ? null : $request->id_plant;
+        
+        $goldenSampleReport->update([
+            'id_plant' => $idPlant,
+            'plant_manual' => $request->id_plant === 'other' ? $request->plant_manual : null,
+            'sample_type' => $request->sample_type,
+            'collection_date_from' => $request->collection_date_from,
+            'tanggal' => $request->tanggal,
+            'collection_date_to' => $request->collection_date_to,
+            'sample_storage' => $request->sample_storage,
+            'samples' => $request->samples,
+        ]);
+
+        return redirect()->route('golden-sample-reports.index')
+                       ->with('success', 'Golden Sample Report berhasil diupdate!');
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy(GoldenSampleReport $goldenSampleReport)
+    {
+        $this->checkPlantAccess($goldenSampleReport);
+        
+        $goldenSampleReport->delete();
+        
+        return redirect()->route('golden-sample-reports.index')
+                       ->with('success', 'Golden Sample Report berhasil dihapus!');
+    }
+
+    /**
+     * Check if user has access based on plant
+     */
+    private function checkPlantAccess(GoldenSampleReport $goldenSampleReport)
+    {
+        $user = Auth::user();
+        
+        // SuperAdmin dapat akses semua data
+        if ($user->role && strtolower($user->role->role) === 'superadmin') {
+            return;
+        }
+        
+        // Admin dan role lain hanya dapat akses data dari plant mereka
+        if ($goldenSampleReport->user->id_plant !== $user->id_plant) {
+            abort(403, 'Anda tidak memiliki akses ke data ini.');
+        }
+    }
+    public function getDeskripsiByPlant($plantId)
+    {
+        $user = Auth::user();
+        
+        $query = InputDeskripsi::query();
+        
+        // Filter berdasarkan plant
+        if ($plantId !== 'other') {
+            $query->whereHas('user', function($q) use ($plantId) {
+                $q->where('id_plant', $plantId);
+            });
+        } else {
+            // Jika "other", tampilkan semua deskripsi sesuai user
+            if ($user->role && strtolower($user->role->role) !== 'superadmin') {
+                $query->whereHas('user', function($q) use ($user) {
+                    $q->where('id_plant', $user->id_plant);
+                });
+            }
+        }
+        
+        return response()->json($query->latest()->get(['uuid', 'nama_deskripsi']));
+    }
+}
