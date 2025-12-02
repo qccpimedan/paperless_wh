@@ -36,13 +36,13 @@
                         </div>
                         <div class="card-body">
                             <div class="row">
-                                <div class="col-md-6">
+                                <div class="col-md-4">
                                     <div class="mb-3">
                                         <label class="form-label"><strong>Tanggal Pemeriksaan</strong></label>
                                         <p class="text-muted">{{ \Carbon\Carbon::parse($pemeriksaanLoadingKendaraan->tanggal)->format('d/m/Y') }}</p>
                                     </div>
                                 </div>
-                                <div class="col-md-6">
+                                <div class="col-md-4">
                                     <div class="mb-3">
                                         <label class="form-label"><strong>Plant</strong></label>
                                         <p class="text-muted">
@@ -52,6 +52,12 @@
                                                 <span class="badge bg-secondary">No Plant</span>
                                             @endif
                                         </p>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label class="form-label"><strong>Dibuat Pada</strong></label>
+                                           <p class="text-muted">{{ $pemeriksaanLoadingKendaraan->created_at ? $pemeriksaanLoadingKendaraan->created_at->format('d-M-Y H:i:s') : '-' }}</p>
                                     </div>
                                 </div>
                             </div>

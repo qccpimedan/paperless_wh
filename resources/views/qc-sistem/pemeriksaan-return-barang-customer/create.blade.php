@@ -318,7 +318,7 @@
                                                                 <div class="invalid-feedback">{{ $message }}</div>
                                                             @enderror
                                                         </div>
-
+                                                        <button type="button" class="btn btn-sm btn-primary mt-2" id="add-produk">+ Tambah Produk</button>
                                                         <!-- Remove Button -->
                                                         <div class="col-md-12 mt-3">
                                                             <button type="button" class="btn btn-sm btn-danger remove-produk" style="display: none;">Hapus Produk</button>
@@ -328,14 +328,13 @@
                                             </div>
                                         </div>
                                     </div>
-                                </form>
-                                <button type="button" class="btn btn-sm btn-primary mt-2" id="add-produk">+ Tambah Produk</button>
-                                <div class="col-md-12 d-flex justify-content-end align-items-center mt-3">
-                                    <div>
-                                        <button type="submit" class="btn btn-primary me-1 mb-1">Simpan Return Barang</button>
-                                        <a href="{{ route('return-barang.index') }}" class="btn btn-secondary mb-1">Kembali</a>
+                                    <div class="col-md-12 d-flex justify-content-end align-items-center mt-3">
+                                        <div>
+                                            <button type="submit" class="btn btn-primary me-1 mb-1">Simpan Return Barang</button>
+                                            <a href="{{ route('return-barang.index') }}" class="btn btn-secondary mb-1">Kembali</a>
+                                        </div>
                                     </div>
-                                </div>
+                                </form>
                             </div>
                         </div>
                     </div>
