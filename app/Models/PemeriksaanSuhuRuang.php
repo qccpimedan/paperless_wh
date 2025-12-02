@@ -83,7 +83,7 @@ class PemeriksaanSuhuRuang extends Model
     public function getCreatedAtAttribute($value)
     {
         if ($value) {
-            return Carbon::createFromFormat('Y-m-d H:i:s', $value, 'UTC')
+            return Carbon::createFromFormat('Y-m-d H:i:s', $value, )
                 ->setTimezone('Asia/Jakarta');
         }
         return $value;
@@ -95,7 +95,7 @@ class PemeriksaanSuhuRuang extends Model
     public function getUpdatedAtAttribute($value)
     {
         if ($value) {
-            return Carbon::createFromFormat('Y-m-d H:i:s', $value, 'UTC')
+            return Carbon::createFromFormat('Y-m-d H:i:s', $value,)
                 ->setTimezone('Asia/Jakarta');
         }
         return $value;

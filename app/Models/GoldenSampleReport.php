@@ -25,6 +25,7 @@ class GoldenSampleReport extends Model
     ];
 
     protected $casts = [
+       
         'sample_storage' => 'array',
         'samples' => 'array',
     ];

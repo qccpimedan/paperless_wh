@@ -36,19 +36,25 @@
                         <div class="card-content">
                             <div class="card-body">
                                 <div class="row">
-                                    <div class="col-md-6">
+                                    <div class="col-md-4">
                                         <div class="mb-3">
                                             <label class="form-label"><strong>Tanggal</strong></label>
                                             <p class="form-control-plaintext">{{ $pemeriksaanKebersihanArea->tanggal->format('d-m-Y') }}</p>
                                         </div>
                                     </div>
 
-                                    <div class="col-md-6">
+                                    <div class="col-md-4">
                                         <div class="mb-3">
                                             <label class="form-label"><strong>Shift</strong></label>
                                             <p class="form-control-plaintext">
                                                 <span class="badge bg-info">{{ $pemeriksaanKebersihanArea->shift->shift }}</span>
                                             </p>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="mb-3">
+                                            <label class="form-label"><strong>Dibuat Pada</strong></label>
+                                            <p class="text-muted">{{ $pemeriksaanKebersihanArea->created_at->format('d M Y H:i:s')  }}</p>
                                         </div>
                                     </div>
 

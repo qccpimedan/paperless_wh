@@ -77,6 +77,10 @@
                                     <label class="form-label fw-bold">Expired Date</label>
                                     <p class="text-muted">{{ $detailKomplain->expired_date->format('d-m-Y') }}</p>
                                 </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">Dibuat Pada</label>
+                                    <p class="text-muted">{{ $detailKomplain->created_at->format('d M Y H:i:s')  }}</p>
+                                </div>
                             </div>
                         </div>
                     </div>

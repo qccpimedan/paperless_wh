@@ -92,7 +92,7 @@
                                         <label class="form-label"><strong>Dibuat Pada</strong></label>
                                     </div>
                                     <div class="col-md-9">
-                                        <p>{{ $goldenSampleReport->tanggal ? $goldenSampleReport->tanggal->format('Y-m-d') : '-' }}</p>
+                                        <p>{{ $goldenSampleReport->created_at ? $goldenSampleReport->created_at->format('d-M-Y H:i:s') : '-' }}</p>
                                     </div>
                                 </div>
                             </div>
