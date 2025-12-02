@@ -41,9 +41,10 @@
 
                 <li class="sidebar-item has-sub {{ request()->routeIs('roles.*') || request()->routeIs('plants.*') || request()->routeIs('users.*') || request()->routeIs('barangs.*') || request()->routeIs('bahans.*') 
                 || request()->routeIs('customers.*') || request()->routeIs('shifts.*') || request()->routeIs('distributors.*') 
-                    || request()->routeIs('produsens.*') || request()->routeIs('chemicals.*') || request()->routeIs('jenis-kendaraans.*') || request()->routeIs('tujuan-pengirimans.*') || request()->routeIs('supirs.*') 
+                    || request()->routeIs('produsens.*') || request()->routeIs('chemicals.*') || request()->routeIs('jenis-kendaraans.*') 
+                    || request()->routeIs('tujuan-pengirimans.*') || request()->routeIs('supirs.*') 
                     || request()->routeIs('produks.*') || request()->routeIs('ekspedisis.*') || request()->routeIs('std-precoolings.*') || request()->routeIs('input-areas.*') 
-                    || request()->routeIs('input-master-forms.*') || request()->routeIs('input-deskripsi.*') ? 'active' : '' }}">
+                    || request()->routeIs('input-master-forms.*') || request()->routeIs('input-deskripsis.*') ? 'active' : '' }}">
                     <a href="#" class='sidebar-link'>
                         <i class="bi bi-collection-fill"></i>
                         <span>Data Master</span>
@@ -52,7 +53,7 @@
                     || request()->routeIs('customers.*') || request()->routeIs('shifts.*') || request()->routeIs('distributors.*') 
                     || request()->routeIs('produsens.*') || request()->routeIs('chemicals.*') || request()->routeIs('jenis-kendaraans.*') || request()->routeIs('tujuan-pengirimans.*') 
                     || request()->routeIs('supirs.*') || request()->routeIs('produks.*') || request()->routeIs('ekspedisis.*') || request()->routeIs('std-precoolings.*') || request()->routeIs('input-areas.*') 
-                    || request()->routeIs('input-master-forms.*') || request()->routeIs('input-deskripsi.*') ? 'active' : '' }}">
+                    || request()->routeIs('input-master-forms.*') || request()->routeIs('input-deskripsis.*') ? 'active' : '' }}">
                         <li class="submenu-item {{ request()->routeIs('roles.*') ? 'active' : '' }}">
                             <a href="{{ route('roles.index') }}">Input Role</a>
                         </li>

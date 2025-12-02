@@ -133,7 +133,7 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
 
         $data = $request->all();
         $data['id_user'] = Auth::id();
-        $data['segel_gembok'] = $request->has('segel_gembok');
+        $data['segel_gembok'] = $request->input('segel_gembok');
         $data['logo_halal'] = $request->input('logo_halal') === '1';
         $data['dokumen_halal'] = $request->input('dokumen_halal') === '1';
         $data['coa'] = $request->input('coa') === '1';
@@ -242,7 +242,7 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
         ];
 
         $data = $request->all();
-        $data['segel_gembok'] = $request->has('segel_gembok');
+        $data['segel_gembok'] = $request->input('segel_gembok');
         $data['logo_halal'] = $request->input('logo_halal') === '1';
         $data['dokumen_halal'] = $request->input('dokumen_halal') === '1';
         $data['coa'] = $request->input('coa') === '1';

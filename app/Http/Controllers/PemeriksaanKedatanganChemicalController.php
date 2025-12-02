@@ -121,7 +121,7 @@ class PemeriksaanKedatanganChemicalController extends Controller
 
         $data = $request->all();
         $data['id_user'] = Auth::id();
-        $data['segel_gembok'] = $request->has('segel_gembok');
+        $data['segel_gembok'] = $request->input('segel_gembok');
         $data['persyaratan_dokumen_halal'] = $request->input('persyaratan_dokumen_halal') === '1';
         $data['coa'] = $request->input('coa') === '1';
         $data['kondisi_mobil'] = $kondisiMobil;
@@ -221,7 +221,7 @@ class PemeriksaanKedatanganChemicalController extends Controller
         ];
 
         $data = $request->all();
-        $data['segel_gembok'] = $request->has('segel_gembok');
+        $data['segel_gembok'] = $request->input('segel_gembok');
         $data['persyaratan_dokumen_halal'] = $request->input('persyaratan_dokumen_halal') === '1';
         $data['coa'] = $request->input('coa') === '1';
         $data['kondisi_mobil'] = $kondisiMobil;

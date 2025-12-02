@@ -41,7 +41,6 @@ class PemeriksaanKedatanganChemical extends Model
     protected $casts = [
         'kondisi_mobil' => 'array',
         'kondisi_fisik' => 'array',
-        'segel_gembok' => 'boolean',
         'persyaratan_dokumen_halal' => 'boolean',
         'coa' => 'boolean',
         'tanggal' => 'date',

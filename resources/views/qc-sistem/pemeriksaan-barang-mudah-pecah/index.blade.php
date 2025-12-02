@@ -106,11 +106,6 @@
                             </tbody>
                         </table>
                     </div>
-                    
-                    <!-- Pagination -->
-                    <div class="d-flex justify-content-center mt-3">
-                        {{ $pemeriksaans->links() }}
-                    </div>
                 </div>
             </div>
         </section>

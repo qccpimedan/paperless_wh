@@ -15,8 +15,10 @@
     <link rel="stylesheet" href="{{asset('dist/css/app.css')}}">
     <link rel="stylesheet" href="{{asset('dist/vendors/simple-datatables/style.css')}}">
     <!-- Choices.js CSS -->
-    <link rel="stylesheet" href="{{asset('dist/vendors/choices.js/choices.min.css')}}">
+    <link rel="stylesheet" href="{{ asset('assets/extensions/choices.js/public/assets/styles/choices.css') }}">
     <link rel="icon" href="{{asset('dist/images/logo/logo5.png')}}" type="image/x-icon">
+    <!-- select negara -->
+    <link rel="stylesheet" href="{{asset('dist/vendors/choices.js/choices.min.css')}}">
     
     <style>
         /* ===== Navbar & Sidebar Z-Index ===== */
@@ -289,7 +291,9 @@
     <script src="{{asset('dist/vendors/simple-datatables/simple-datatables.js')}}"></script>
     <!-- Choices.js Script -->
     <script src="{{asset('dist/vendors/choices.js/choices.min.js')}}"></script>
-    
+    <!-- script negara -->
+    <script src="{{ asset('assets/extensions/choices.js/public/assets/scripts/choices.js') }}"></script>
+
     
 <script>
 // Initialize DataTable for any table with id="table1"

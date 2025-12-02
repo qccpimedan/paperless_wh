@@ -47,9 +47,9 @@
                                 <tr>
                                     <th>No</th>
                                     <th>Tanggal</th>
-                                    <th>No. PO</th>
+                                    <!-- <th>No. PO</th> -->
                                     <th>Nama Bahan Kemasan</th>
-                                    <th>Produsen</th>
+                                    <!-- <th>Produsen</th> -->
                                     <th>Kode Produksi</th>
                                     <th>Status</th>
                                     <th>Plant</th>
@@ -64,17 +64,17 @@
                                         <td>
                                             <strong>{{ $pemeriksaan->tanggal->format('d/m/Y') }}</strong>
                                         </td>
-                                        <td>
+                                        <!-- <td>
                                             {{ $pemeriksaan->no_po ?? '-' }}
-                                        </td>
+                                        </td> -->
                                         <td>
                                             @if($pemeriksaan->bahan)
                                                 {{ $pemeriksaan->bahan->nama_bahan }}
                                             @endif
                                         </td>
-                                        <td>
+                                        <!-- <td>
                                             {{ $pemeriksaan->produsen ?? '-' }}
-                                        </td>
+                                        </td> -->
                                         <td>
                                             {{ $pemeriksaan->kode_produksi ?? '-' }}
                                         </td>

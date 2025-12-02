@@ -52,21 +52,27 @@ class PemeriksaanBarangMudahPecahController extends Controller
         // Get shifts berdasarkan plant user
         $shiftQuery = Shift::query();
         if ($user->role && strtolower($user->role->role) !== 'superadmin') {
-            $shiftQuery->where('id_plant', $user->id_plant);
+            $shiftQuery->whereHas('user', function($q) use ($user) {
+                $q->where('id_plant', $user->id_plant);
+            });
         }
         $shifts = $shiftQuery->get();
         
         // Get areas berdasarkan plant user
         $areaQuery = InputArea::query();
         if ($user->role && strtolower($user->role->role) !== 'superadmin') {
-            $areaQuery->where('id_plant', $user->id_plant);
+            $areaQuery->whereHas('user', function($q) use ($user) {
+                $q->where('id_plant', $user->id_plant);
+            });
         }
         $areas = $areaQuery->get();
         
-        // Get barangs berdasarkan user
+        // Get barangs berdasarkan plant user
         $barangQuery = Barang::query();
         if ($user->role && strtolower($user->role->role) !== 'superadmin') {
-            $barangQuery->where('id_user', $user->id);
+            $barangQuery->whereHas('user', function($q) use ($user) {
+                $q->where('id_plant', $user->id_plant);
+            });
         }
         $barangs = $barangQuery->get();
         
@@ -205,19 +211,26 @@ class PemeriksaanBarangMudahPecahController extends Controller
         
         $shiftQuery = Shift::query();
         if ($user->role && strtolower($user->role->role) !== 'superadmin') {
-            $shiftQuery->where('id_plant', $user->id_plant);
+            $shiftQuery->whereHas('user', function($q) use ($user) {
+                $q->where('id_plant', $user->id_plant);
+            });
         }
         $shifts = $shiftQuery->get();
         
         $areaQuery = InputArea::query();
         if ($user->role && strtolower($user->role->role) !== 'superadmin') {
-            $areaQuery->where('id_plant', $user->id_plant);
+            $areaQuery->whereHas('user', function($q) use ($user) {
+                $q->where('id_plant', $user->id_plant);
+            });
         }
         $areas = $areaQuery->get();
         
+        // Get barangs berdasarkan plant user
         $barangQuery = Barang::query();
         if ($user->role && strtolower($user->role->role) !== 'superadmin') {
-            $barangQuery->where('id_user', $user->id);
+            $barangQuery->whereHas('user', function($q) use ($user) {
+                $q->where('id_plant', $user->id_plant);
+            });
         }
         $barangs = $barangQuery->get();
         

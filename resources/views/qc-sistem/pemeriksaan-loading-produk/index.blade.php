@@ -83,8 +83,13 @@
                                             @endif
                                         </td>
                                         <td>
-                                            @if($pemeriksaan->produk)
-                                                <strong>{{ $pemeriksaan->produk->nama_produk }}</strong>
+                                            @if($pemeriksaan->produk_data && count($pemeriksaan->produk_data) > 0)
+                                                @php
+                                                    $firstProduk = $pemeriksaan->produk_data[0];
+                                                    $produkName = \App\Models\Produk::find($firstProduk['id_produk'])?->nama_produk ?? 'Produk tidak ditemukan';
+                                                    $totalProduk = count($pemeriksaan->produk_data);
+                                                @endphp
+                                                {{ $produkName }} <span class="badge bg-info">{{ $totalProduk }}</span>
                                             @else
                                                 -
                                             @endif

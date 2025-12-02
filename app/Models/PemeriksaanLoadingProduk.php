@@ -26,22 +26,15 @@ class PemeriksaanLoadingProduk extends Model
         'kondisi_produk',
         'segel_gembok',
         'no_segel',
-        'no_po',
-        'id_produk',
-        'kode_produksi',
-        'best_before',
-        'jumlah_kemasan',
-        'jumlah_sampling',
-        'kondisi_kemasan',
+        'produk_data',
         'keterangan',
     ];
 
     protected $casts = [
         'temperature_produk' => 'array',
+        'produk_data' => 'array',
         'segel_gembok' => 'boolean',
-        'kondisi_kemasan' => 'boolean',
         'tanggal' => 'date',
-        'best_before' => 'date',
     ];
 
     protected static function boot()

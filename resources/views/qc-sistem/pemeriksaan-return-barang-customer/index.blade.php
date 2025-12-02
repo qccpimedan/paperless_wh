@@ -47,6 +47,7 @@
                                 <tr>
                                     <th>No</th>
                                     <th>Tanggal</th>
+                                    <th>Shift</th>
                                     <th>Customer</th>
                                     <th>Produk</th>
                                     <th>Kondisi</th>
@@ -61,16 +62,36 @@
                                         <td>{{ $index + 1 }}</td>
                                         <td>{{ \Carbon\Carbon::parse($pemeriksaan->tanggal)->format('d/m/Y') }}</td>
                                         <td>
+                                            <span class="badge bg-primary">{{ $pemeriksaan->shift->shift ?? '-' }}</span>
+                                        </td>
+                                        <td>
                                             <strong>{{ $pemeriksaan->customer->nama_cust ?? '-' }}</strong>
                                         </td>
                                         <td>
-                                            <strong>{{ $pemeriksaan->produk->nama_produk ?? '-' }}</strong>
+                                            @if($pemeriksaan->produk_data && count($pemeriksaan->produk_data) > 0)
+                                                @php
+                                                    $firstProduk = $pemeriksaan->produk_data[0];
+                                                    $produkName = \App\Models\Produk::find($firstProduk['id_produk'])?->nama_produk ?? 'Produk tidak ditemukan';
+                                                    $totalProduk = count($pemeriksaan->produk_data);
+                                                @endphp
+                                                {{ $produkName }} <span class="badge bg-info">{{ $totalProduk }}</span>
+                                            @else
+                                                -
+                                            @endif
                                         </td>
                                         <td>
-                                            <span class="badge bg-info">{{ $pemeriksaan->kondisi_produk }}</span>
+                                            @if($pemeriksaan->produk_data && count($pemeriksaan->produk_data) > 0)
+                                                <span class="badge bg-info">{{ $pemeriksaan->produk_data[0]['kondisi_produk'] ?? '-' }}</span>
+                                            @else
+                                                <span class="badge bg-secondary">-</span>
+                                            @endif
                                         </td>
                                         <td>
-                                            <span class="badge bg-warning">{{ $pemeriksaan->rekomendasi }}</span>
+                                            @if($pemeriksaan->produk_data && count($pemeriksaan->produk_data) > 0)
+                                                <span class="badge bg-warning">{{ $pemeriksaan->produk_data[0]['rekomendasi'] ?? '-' }}</span>
+                                            @else
+                                                <span class="badge bg-secondary">-</span>
+                                            @endif
                                         </td>
                                         <td>
                                             <span class="badge bg-secondary">{{ $pemeriksaan->user->plant->plant ?? '-' }}</span>

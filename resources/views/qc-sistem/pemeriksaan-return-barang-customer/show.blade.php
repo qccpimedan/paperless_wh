@@ -50,36 +50,66 @@
                             <p><strong>Suhu Mobil:</strong> {{ $pemeriksaanReturnBarangCustomer->suhu_mobil }}</p>
                         </div>
 
-                        <div class="col-md-6">
+                        <div class="col-md-12">
                             <p><strong>Customer:</strong> {{ $pemeriksaanReturnBarangCustomer->customer->nama_cust ?? '-' }}</p>
                             <p><strong>Alasan Return:</strong> {{ $pemeriksaanReturnBarangCustomer->alasan_return }}</p>
-                            <p><strong>Kondisi Produk:</strong> <span class="badge bg-info">{{ $pemeriksaanReturnBarangCustomer->kondisi_produk }}</span></p>
-                            <p><strong>Nama Produk:</strong> {{ $pemeriksaanReturnBarangCustomer->produk->nama_produk ?? '-' }}</p>
-                            <p><strong>Suhu Produk:</strong> {{ $pemeriksaanReturnBarangCustomer->suhu_produk ?? '-' }}</p>
-                            <p><strong>Kode Produksi:</strong> {{ $pemeriksaanReturnBarangCustomer->kode_produksi }}</p>
-                            <p><strong>Expired Date:</strong> {{ \Carbon\Carbon::parse($pemeriksaanReturnBarangCustomer->expired_date)->format('d/m/Y') }}</p>
                         </div>
 
-                        <div class="col-md-6 mt-3">
-                            <p><strong>Jumlah Barang:</strong> {{ $pemeriksaanReturnBarangCustomer->jumlah_barang }}</p>
-                            <p><strong>Kondisi Kemasan:</strong> <span class="badge {{ $pemeriksaanReturnBarangCustomer->kondisi_kemasan ? 'bg-success' : 'bg-danger' }}">{{ $pemeriksaanReturnBarangCustomer->kondisi_kemasan ? '✓ Baik' : '✗ Rusak' }}</span></p>
-                            <p><strong>Kondisi Produk:</strong> <span class="badge {{ $pemeriksaanReturnBarangCustomer->kondisi_produk_check ? 'bg-success' : 'bg-danger' }}">{{ $pemeriksaanReturnBarangCustomer->kondisi_produk_check ? '✓ Baik' : '✗ Rusak' }}</span></p>
-                            <p><strong>Rekomendasi:</strong> <span class="badge bg-warning">{{ $pemeriksaanReturnBarangCustomer->rekomendasi }}</span></p>
+                        <!-- DATA PRODUK MULTIPLE -->
+                        <div class="col-md-12 mt-4">
+                            <h5 class="text-primary mb-3">Data Produk</h5>
+                            @if($pemeriksaanReturnBarangCustomer->produk_data && count($pemeriksaanReturnBarangCustomer->produk_data) > 0)
+                                @foreach($pemeriksaanReturnBarangCustomer->produk_data as $index => $produk)
+                                    <div class="card mb-3" style="background-color: #f8f9fa;">
+                                        <div class="card-body">
+                                            <h6 class="text-secondary mb-3">Produk #{{ $index + 1 }}</h6>
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    @php
+                                                        $produkModel = \App\Models\Produk::find($produk['id_produk'] ?? null);
+                                                    @endphp
+                                                    <p><strong>Nama Produk:</strong> {{ $produkModel ? $produkModel->nama_produk : 'Unknown' }}</p>
+                                                    <p><strong>Kondisi Produk:</strong> <span class="badge bg-info">{{ $produk['kondisi_produk'] ?? '-' }}</span></p>
+                                                    <p><strong>Suhu Produk:</strong> {{ $produk['suhu_produk'] ?? '-' }}</p>
+                                                    <p><strong>Kode Produksi:</strong> {{ $produk['kode_produksi'] ?? '-' }}</p>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <p><strong>Expired Date:</strong> {{ isset($produk['expired_date']) ? \Carbon\Carbon::parse($produk['expired_date'])->format('d/m/Y') : '-' }}</p>
+                                                    <p><strong>Jumlah Barang:</strong> {{ $produk['jumlah_barang'] ?? '-' }}</p>
+                                                    <p><strong>Kondisi Kemasan:</strong> <span class="badge {{ ($produk['kondisi_kemasan'] ?? false) ? 'bg-success' : 'bg-danger' }}">{{ ($produk['kondisi_kemasan'] ?? false) ? '✓ Baik' : '✗ Rusak' }}</span></p>
+                                                    <p><strong>Kondisi Produk Check:</strong> <span class="badge {{ ($produk['kondisi_produk_check'] ?? false) ? 'bg-success' : 'bg-danger' }}">{{ ($produk['kondisi_produk_check'] ?? false) ? '✓ Baik' : '✗ Rusak' }}</span></p>
+                                                </div>
+                                                <div class="col-md-12 mt-2">
+                                                    <p><strong>Rekomendasi:</strong> <span class="badge bg-warning">{{ $produk['rekomendasi'] ?? '-' }}</span></p>
+                                                </div>
+                                                @if(isset($produk['keterangan']) && $produk['keterangan'])
+                                                    <div class="col-md-12 mt-2">
+                                                        <p><strong>Keterangan:</strong></p>
+                                                        <p class="text-muted">{{ $produk['keterangan'] }}</p>
+                                                    </div>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            @else
+                                <p class="text-muted">Tidak ada data produk</p>
+                            @endif
                         </div>
 
-                        <div class="col-md-6 mt-3">
-                            <p><strong>Plant:</strong> {{ $pemeriksaanReturnBarangCustomer->user->plant->plant ?? '-' }}</p>
-                            <p><strong>User:</strong> {{ $pemeriksaanReturnBarangCustomer->user->name ?? '-' }}</p>
-                            <p><strong>Dibuat:</strong> {{ \Carbon\Carbon::parse($pemeriksaanReturnBarangCustomer->created_at)->format('d/m/Y H:i') }}</p>
-                            <p><strong>Diupdate:</strong> {{ \Carbon\Carbon::parse($pemeriksaanReturnBarangCustomer->updated_at)->format('d/m/Y H:i') }}</p>
-                        </div>
-
-                        @if($pemeriksaanReturnBarangCustomer->keterangan)
-                            <div class="col-md-12 mt-3">
-                                <p><strong>Keterangan:</strong></p>
-                                <p class="text-muted">{{ $pemeriksaanReturnBarangCustomer->keterangan }}</p>
+                        <div class="col-md-12 mt-4">
+                            <h5 class="text-primary mb-3">Informasi Lainnya</h5>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p><strong>Plant:</strong> {{ $pemeriksaanReturnBarangCustomer->user->plant->plant ?? '-' }}</p>
+                                    <p><strong>User:</strong> {{ $pemeriksaanReturnBarangCustomer->user->name ?? '-' }}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p><strong>Dibuat:</strong> {{ \Carbon\Carbon::parse($pemeriksaanReturnBarangCustomer->created_at)->format('d/m/Y H:i') }}</p>
+                                    <p><strong>Diupdate:</strong> {{ \Carbon\Carbon::parse($pemeriksaanReturnBarangCustomer->updated_at)->format('d/m/Y H:i') }}</p>
+                                </div>
                             </div>
-                        @endif
+                        </div>
                     </div>
                 </div>
             </div>

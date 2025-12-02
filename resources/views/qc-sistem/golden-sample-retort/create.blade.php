@@ -213,7 +213,7 @@
 
                                         <div class="row mb-3">
                                             <div class="col-md-12">
-                                                <button type="button" class="btn btn-success" id="add-sample">
+                                                <button type="button" class="btn btn-primary btn-sm" id="add-sample">
                                                     <i class="bi bi-plus-circle"></i> Tambah Sampel
                                                 </button>
                                             </div>

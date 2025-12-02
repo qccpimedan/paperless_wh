@@ -217,8 +217,8 @@
                                                 </div>
                                             </div>
 
-                                            <button type="button" class="btn btn-success" id="addBarang">
-                                                <i class="bi bi-plus-circle"></i> Tambah Barang
+                                            <button type="button" class="btn btn-primary btn-sm" id="addBarang">
+                                                + Tambah Barang
                                             </button>
                                         </div>
                                     </div>

@@ -4,7 +4,7 @@
 
 @section('container')
 <div id="main">
-    <header class="mb-3">
+    <div class="mb-3">
         <a href="#" class="burger-btn d-block d-xl-none">
             <i class="bi bi-justify fs-3"></i>
         </a>
@@ -110,11 +110,17 @@
                                         </div>
                                         <div class="col-md-6">
                                             <div class="form-group">
-                                                <label>Segel/Gembok</label>
+                                                <label><strong>Segel/Gembok</strong></label>
                                                 <div class="form-check">
-                                                    <input class="form-check-input" type="checkbox" id="segel_gembok" name="segel_gembok" value="1" {{ old('segel_gembok') ? 'checked' : '' }}>
-                                                    <label class="form-check-label" for="segel_gembok">
-                                                        Ada Segel/Gembok
+                                                    <input class="form-check-input" type="radio" id="segel_option" name="segel_gembok" value="segel" {{ old('segel_gembok') == 'segel' ? 'checked' : '' }}>
+                                                    <label class="form-check-label" for="segel_option">
+                                                        Segel
+                                                    </label>
+                                                </div>
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="radio" id="gembok_option" name="segel_gembok" value="gembok" {{ old('segel_gembok') == 'gembok' ? 'checked' : '' }}>
+                                                    <label class="form-check-label" for="gembok_option">
+                                                        Gembok
                                                     </label>
                                                 </div>
                                             </div>
@@ -122,9 +128,9 @@
                                     </div>
         
                                     <div class="row">
-                                        <div class="col-md-6">
+                                        <div class="col-md-6" id="no_segel_container" style="display: {{ old('segel_gembok') == 'segel' ? 'block' : 'none' }};">
                                             <div class="form-group">
-                                                <label for="no_segel">No. Segel (Jika Ada)</label>
+                                                <label for="no_segel">No. Segel</label>
                                                 <input type="text" id="no_segel" class="form-control @error('no_segel') is-invalid @enderror"
                                                     name="no_segel" value="{{ old('no_segel') }}" placeholder="No. Segel">
                                                 @error('no_segel')
@@ -133,6 +139,20 @@
                                             </div>
                                         </div>
                                     </div>
+                                    
+                                    <script>
+                                        document.querySelectorAll('input[name="segel_gembok"]').forEach(function(radio) {
+                                            radio.addEventListener('change', function() {
+                                                const container = document.getElementById('no_segel_container');
+                                                if (this.value === 'segel') {
+                                                    container.style.display = 'block';
+                                                } else {
+                                                    container.style.display = 'none';
+                                                    document.getElementById('no_segel').value = '';
+                                                }
+                                            });
+                                        });
+                                    </script>
                                 </div>
 
                                 <!-- SECTION 2: Kondisi Mobil Pengangkut (11 items) -->
@@ -545,28 +565,6 @@
                 </div>
             </section>
         </div>
-    </header>
+    </div>
 </div>
 @endsection
-
-@push('styles')
-<link rel="stylesheet" href="{{ asset('assets/extensions/choices.js/public/assets/styles/choices.css') }}">
-@endpush
-
-@push('scripts')
-<script src="{{ asset('assets/extensions/choices.js/public/assets/scripts/choices.js') }}"></script>
-<script>
-    // Initialize Choices.js for select elements
-    document.addEventListener('DOMContentLoaded', function() {
-        const selects = document.querySelectorAll('.choices');
-        selects.forEach(select => {
-            new Choices(select, {
-                searchEnabled: true,
-                itemSelectText: 'Pilih',
-                noResultsText: 'Tidak ada hasil',
-                noChoicesText: 'Tidak ada pilihan',
-            });
-        });
-    });
-</script>
-@endpush

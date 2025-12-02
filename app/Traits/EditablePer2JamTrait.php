@@ -16,9 +16,16 @@ trait EditablePer2JamTrait
         $now = now();
         $twoHoursAgo = now()->subHours(2);
         
-        return $modelClass::where('id_user', $user->id)
-            ->where('updated_at', '<=', $twoHoursAgo)
-            ->get();
+        $query = $modelClass::where('updated_at', '<=', $twoHoursAgo);
+        
+        // Filter berdasarkan plant jika bukan superadmin
+        if ($user->role && strtolower($user->role->role) !== 'superadmin') {
+            $query->whereHas('user', function($q) use ($user) {
+                $q->where('id_plant', $user->id_plant);
+            });
+        }
+        
+        return $query->get();
     }
 
     /**
@@ -30,9 +37,16 @@ trait EditablePer2JamTrait
         $user = Auth::user();
         $twoHoursAgo = now()->subHours(2);
         
-        return $modelClass::where('id_user', $user->id)
-            ->where('updated_at', '<=', $twoHoursAgo)
-            ->count();
+        $query = $modelClass::where('updated_at', '<=', $twoHoursAgo);
+        
+        // Filter berdasarkan plant jika bukan superadmin
+        if ($user->role && strtolower($user->role->role) !== 'superadmin') {
+            $query->whereHas('user', function($q) use ($user) {
+                $q->where('id_plant', $user->id_plant);
+            });
+        }
+        
+        return $query->count();
     }
 
     /**

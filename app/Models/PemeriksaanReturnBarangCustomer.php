@@ -25,23 +25,12 @@ class PemeriksaanReturnBarangCustomer extends Model
         'suhu_mobil',
         'id_customer',
         'alasan_return',
-        'kondisi_produk',
-        'id_produk',
-        'suhu_produk',
-        'kode_produksi',
-        'expired_date',
-        'jumlah_barang',
-        'kondisi_kemasan',
-        'kondisi_produk_check',
-        'rekomendasi',
-        'keterangan',
+        'produk_data',
     ];
 
     protected $casts = [
         'tanggal' => 'date',
-        'expired_date' => 'date',
-        'kondisi_kemasan' => 'boolean',
-        'kondisi_produk_check' => 'boolean',
+        'produk_data' => 'array',
     ];
 
     protected static function boot()

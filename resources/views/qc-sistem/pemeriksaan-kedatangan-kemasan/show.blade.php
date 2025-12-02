@@ -46,13 +46,19 @@
                                 </td></tr>
                                 <tr><td><strong>Segel/Gembok:</strong></td><td>
                                     @if($pemeriksaanKedatanganKemasan->segel_gembok)
-                                        <span class="badge bg-success">Ya</span>
+                                        @if($pemeriksaanKedatanganKemasan->segel_gembok === 'segel')
+                                            <span class="badge bg-info">Segel</span>
+                                        @elseif($pemeriksaanKedatanganKemasan->segel_gembok === 'gembok')
+                                            <span class="badge bg-warning">Gembok</span>
+                                        @else
+                                            <span class="badge bg-secondary">{{ $pemeriksaanKedatanganKemasan->segel_gembok }}</span>
+                                        @endif
                                     @else
-                                        <span class="badge bg-secondary">Tidak</span>
+                                        <span class="badge bg-secondary">-</span>
                                     @endif
                                 </td></tr>
                                 <tr><td><strong>No. Segel:</strong></td><td>
-                                    @if($pemeriksaanKedatanganKemasan->no_segel)
+                                    @if($pemeriksaanKedatanganKemasan->segel_gembok === 'segel' && $pemeriksaanKedatanganKemasan->no_segel)
                                         {{ $pemeriksaanKedatanganKemasan->no_segel }}
                                     @else
                                         -

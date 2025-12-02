@@ -63,6 +63,36 @@
                                                     @enderror
                                                 </div>
                                             </div>
+                                                                                    <h5 class="text-primary mb-3">Status & Shift</h5>
+                                            <div class="col-md-6">
+                                                <div class="form-group">
+                                                    <label for="status">Status <span class="text-danger">*</span></label>
+                                                    <select id="status" class="form-control @error('status') is-invalid @enderror" name="status" required>
+                                                        <option value="">Pilih Status</option>
+                                                        <option value="Hold" {{ old('status', $pemeriksaanKedatanganKemasan->status) == 'Hold' ? 'selected' : '' }}>Hold</option>
+                                                        <option value="Release" {{ old('status', $pemeriksaanKedatanganKemasan->status) == 'Release' ? 'selected' : '' }}>Release</option>
+                                                    </select>
+                                                    @error('status')
+                                                        <div class="invalid-feedback">{{ $message }}</div>
+                                                    @enderror
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="form-group">
+                                                    <label for="id_shift">Shift</label>
+                                                    <select id="id_shift" class="form-control @error('id_shift') is-invalid @enderror" name="id_shift">
+                                                        <option value="">Pilih Shift (Opsional)</option>
+                                                        @foreach($shifts as $shift)
+                                                            <option value="{{ $shift->id }}" {{ old('id_shift', $pemeriksaanKedatanganKemasan->id_shift) == $shift->id ? 'selected' : '' }}>
+                                                                {{ $shift->shift }}
+                                                            </option>
+                                                        @endforeach
+                                                    </select>
+                                                    @error('id_shift')
+                                                        <div class="invalid-feedback">{{ $message }}</div>
+                                                    @enderror
+                                                </div>
+                                            </div>
                                             <!-- <div class="col-md-6">
                                                 <div class="form-group">
                                                     <label for="jenis_pemeriksaan">Jenis Pemeriksaan</label>
@@ -111,16 +141,22 @@
                                         <div class="row">
                                             <div class="col-md-6">
                                                 <div class="form-group">
+                                                    <label><strong>Segel/Gembok</strong></label>
                                                     <div class="form-check">
-                                                        <input class="form-check-input" type="checkbox" id="segel_gembok" name="segel_gembok" value="1" 
-                                                            {{ old('segel_gembok', $pemeriksaanKedatanganKemasan->segel_gembok) ? 'checked' : '' }}>
-                                                        <label class="form-check-label" for="segel_gembok">
-                                                            Segel/Gembok
+                                                        <input class="form-check-input" type="radio" id="segel_option" name="segel_gembok" value="segel" {{ old('segel_gembok', $pemeriksaanKedatanganKemasan->segel_gembok) == 'segel' ? 'checked' : '' }}>
+                                                        <label class="form-check-label" for="segel_option">
+                                                            Segel
+                                                        </label>
+                                                    </div>
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" type="radio" id="gembok_option" name="segel_gembok" value="gembok" {{ old('segel_gembok', $pemeriksaanKedatanganKemasan->segel_gembok) == 'gembok' ? 'checked' : '' }}>
+                                                        <label class="form-check-label" for="gembok_option">
+                                                            Gembok
                                                         </label>
                                                     </div>
                                                 </div>
                                             </div>
-                                            <div class="col-md-6">
+                                            <div class="col-md-6" id="no_segel_container" style="display: {{ old('segel_gembok', $pemeriksaanKedatanganKemasan->segel_gembok) == 'segel' ? 'block' : 'none' }};">
                                                 <div class="form-group">
                                                     <label for="no_segel">No. Segel</label>
                                                     <input type="text" id="no_segel" class="form-control @error('no_segel') is-invalid @enderror"
@@ -130,6 +166,20 @@
                                                     @enderror
                                                 </div>
                                             </div>
+                                            
+                                            <script>
+                                                document.querySelectorAll('input[name="segel_gembok"]').forEach(function(radio) {
+                                                    radio.addEventListener('change', function() {
+                                                        const container = document.getElementById('no_segel_container');
+                                                        if (this.value === 'segel') {
+                                                            container.style.display = 'block';
+                                                        } else {
+                                                            container.style.display = 'none';
+                                                            document.getElementById('no_segel').value = '';
+                                                        }
+                                                    });
+                                                });
+                                            </script>
                                         </div>
                                     </div>
 
@@ -420,40 +470,8 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <!-- Status & Shift -->
+                                    <!-- Keterangan -->
                                     <div class="form-section mb-4">
-                                        <h5 class="text-primary mb-3">Status & Shift</h5>
-                                        <div class="row">
-                                            <div class="col-md-6">
-                                                <div class="form-group">
-                                                    <label for="status">Status <span class="text-danger">*</span></label>
-                                                    <select id="status" class="form-control @error('status') is-invalid @enderror" name="status" required>
-                                                        <option value="">Pilih Status</option>
-                                                        <option value="Hold" {{ old('status', $pemeriksaanKedatanganKemasan->status) == 'Hold' ? 'selected' : '' }}>Hold</option>
-                                                        <option value="Release" {{ old('status', $pemeriksaanKedatanganKemasan->status) == 'Release' ? 'selected' : '' }}>Release</option>
-                                                    </select>
-                                                    @error('status')
-                                                        <div class="invalid-feedback">{{ $message }}</div>
-                                                    @enderror
-                                                </div>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <div class="form-group">
-                                                    <label for="id_shift">Shift</label>
-                                                    <select id="id_shift" class="form-control @error('id_shift') is-invalid @enderror" name="id_shift">
-                                                        <option value="">Pilih Shift (Opsional)</option>
-                                                        @foreach($shifts as $shift)
-                                                            <option value="{{ $shift->id }}" {{ old('id_shift', $pemeriksaanKedatanganKemasan->id_shift) == $shift->id ? 'selected' : '' }}>
-                                                                {{ $shift->shift }}
-                                                            </option>
-                                                        @endforeach
-                                                    </select>
-                                                    @error('id_shift')
-                                                        <div class="invalid-feedback">{{ $message }}</div>
-                                                    @enderror
-                                                </div>
-                                            </div>
-                                        </div>
                                         <!-- Field Tambahan yang Hilang di Edit -->
                                         <div class="form-section mb-4">
                                             <h5 class="text-primary mb-3">Detail Tambahan</h5>

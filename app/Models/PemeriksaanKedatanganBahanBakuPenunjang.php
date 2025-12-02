@@ -51,7 +51,6 @@ class PemeriksaanKedatanganBahanBakuPenunjang extends Model
     protected $casts = [
         'kondisi_mobil' => 'array',
         'kondisi_fisik' => 'array',
-        'segel_gembok' => 'boolean',
         'logo_halal' => 'boolean',
         'dokumen_halal' => 'boolean',
         'coa' => 'boolean',

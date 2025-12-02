@@ -138,9 +138,6 @@
                                 </tbody>
                             </table>
                         </div>
-                        <div class="mt-3">
-                            {{ $pemeriksaans->links() }}
-                        </div>
                     </div>
                 </div>
             </div>

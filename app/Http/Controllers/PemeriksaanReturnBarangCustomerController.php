@@ -95,16 +95,17 @@ class PemeriksaanReturnBarangCustomerController extends Controller
             'suhu_mobil' => 'required|string|max:50',
             'id_customer' => 'required|exists:customers,id',
             'alasan_return' => 'required|string|max:255',
-            'kondisi_produk' => 'required|in:Frozen,Fresh,Dry',
-            'id_produk' => 'required|exists:produks,id',
-            'suhu_produk' => 'nullable|string|max:50',
-            'kode_produksi' => 'required|string|max:100',
-            'expired_date' => 'required|date',
-            'jumlah_barang' => 'required|string|max:100',
-            'kondisi_kemasan' => 'required|boolean',
-            'kondisi_produk_check' => 'required|boolean',
-            'rekomendasi' => 'required|string|max:255',
-            'keterangan' => 'nullable|string',
+            'produk_data' => 'required|array|min:1',
+            'produk_data.*.kondisi_produk' => 'required|in:Frozen,Fresh,Dry',
+            'produk_data.*.id_produk' => 'required|exists:produks,id',
+            'produk_data.*.suhu_produk' => 'nullable|string|max:50',
+            'produk_data.*.kode_produksi' => 'required|string|max:100',
+            'produk_data.*.expired_date' => 'required|date',
+            'produk_data.*.jumlah_barang' => 'required|string|max:100',
+            'produk_data.*.kondisi_kemasan' => 'required|boolean',
+            'produk_data.*.kondisi_produk_check' => 'required|boolean',
+            'produk_data.*.rekomendasi' => 'required|string|max:255',
+            'produk_data.*.keterangan' => 'nullable|string|max:500',
         ];
 
         // Jika pilih input manual ekspedisi, validasi nama_ekspedisi_manual
@@ -135,8 +136,33 @@ class PemeriksaanReturnBarangCustomerController extends Controller
         }
 
         $validated['id_user'] = Auth::id();
-        $validated['kondisi_kemasan'] = $request->has('kondisi_kemasan') ? 1 : 0;
-        $validated['kondisi_produk_check'] = $request->has('kondisi_produk_check') ? 1 : 0;
+        
+        // Process produk_data array
+        $produkData = [];
+        if ($request->has('produk_data')) {
+            foreach ($request->produk_data as $produk) {
+                if (!empty($produk['id_produk'])) {
+                    $produkData[] = [
+                        'kondisi_produk' => $produk['kondisi_produk'],
+                        'id_produk' => $produk['id_produk'],
+                        'suhu_produk' => $produk['suhu_produk'] ?? null,
+                        'kode_produksi' => $produk['kode_produksi'],
+                        'expired_date' => $produk['expired_date'],
+                        'jumlah_barang' => $produk['jumlah_barang'],
+                        'kondisi_kemasan' => isset($produk['kondisi_kemasan']) ? (bool)$produk['kondisi_kemasan'] : false,
+                        'kondisi_produk_check' => isset($produk['kondisi_produk_check']) ? (bool)$produk['kondisi_produk_check'] : false,
+                        'rekomendasi' => $produk['rekomendasi'],
+                        'keterangan' => $produk['keterangan'] ?? null,
+                    ];
+                }
+            }
+        }
+        
+        $validated['produk_data'] = !empty($produkData) ? $produkData : null;
+        // Remove old fields if they exist
+        unset($validated['kondisi_produk'], $validated['id_produk'], $validated['suhu_produk'], 
+              $validated['kode_produksi'], $validated['expired_date'], $validated['jumlah_barang'],
+              $validated['kondisi_kemasan'], $validated['kondisi_produk_check'], $validated['rekomendasi'], $validated['keterangan']);
 
         PemeriksaanReturnBarangCustomer::create($validated);
 
@@ -203,16 +229,17 @@ class PemeriksaanReturnBarangCustomerController extends Controller
             'suhu_mobil' => 'required|string|max:50',
             'id_customer' => 'required|exists:customers,id',
             'alasan_return' => 'required|string|max:255',
-            'kondisi_produk' => 'required|in:Frozen,Fresh,Dry',
-            'id_produk' => 'required|exists:produks,id',
-            'suhu_produk' => 'nullable|string|max:50',
-            'kode_produksi' => 'required|string|max:100',
-            'expired_date' => 'required|date',
-            'jumlah_barang' => 'required|string|max:100',
-            'kondisi_kemasan' => 'required|boolean',
-            'kondisi_produk_check' => 'required|boolean',
-            'rekomendasi' => 'required|string|max:255',
-            'keterangan' => 'nullable|string',
+            'produk_data' => 'required|array|min:1',
+            'produk_data.*.kondisi_produk' => 'required|in:Frozen,Fresh,Dry',
+            'produk_data.*.id_produk' => 'required|exists:produks,id',
+            'produk_data.*.suhu_produk' => 'nullable|string|max:50',
+            'produk_data.*.kode_produksi' => 'required|string|max:100',
+            'produk_data.*.expired_date' => 'required|date',
+            'produk_data.*.jumlah_barang' => 'required|string|max:100',
+            'produk_data.*.kondisi_kemasan' => 'required|boolean',
+            'produk_data.*.kondisi_produk_check' => 'required|boolean',
+            'produk_data.*.rekomendasi' => 'required|string|max:255',
+            'produk_data.*.keterangan' => 'nullable|string|max:500',
         ];
 
         // Jika pilih input manual ekspedisi, validasi nama_ekspedisi_manual
@@ -242,8 +269,32 @@ class PemeriksaanReturnBarangCustomerController extends Controller
             }
         }
 
-        $validated['kondisi_kemasan'] = $request->has('kondisi_kemasan') ? 1 : 0;
-        $validated['kondisi_produk_check'] = $request->has('kondisi_produk_check') ? 1 : 0;
+        // Process produk_data array
+        $produkData = [];
+        if ($request->has('produk_data')) {
+            foreach ($request->produk_data as $produk) {
+                if (!empty($produk['id_produk'])) {
+                    $produkData[] = [
+                        'kondisi_produk' => $produk['kondisi_produk'],
+                        'id_produk' => $produk['id_produk'],
+                        'suhu_produk' => $produk['suhu_produk'] ?? null,
+                        'kode_produksi' => $produk['kode_produksi'],
+                        'expired_date' => $produk['expired_date'],
+                        'jumlah_barang' => $produk['jumlah_barang'],
+                        'kondisi_kemasan' => isset($produk['kondisi_kemasan']) ? (bool)$produk['kondisi_kemasan'] : false,
+                        'kondisi_produk_check' => isset($produk['kondisi_produk_check']) ? (bool)$produk['kondisi_produk_check'] : false,
+                        'rekomendasi' => $produk['rekomendasi'],
+                        'keterangan' => $produk['keterangan'] ?? null,
+                    ];
+                }
+            }
+        }
+        
+        $validated['produk_data'] = !empty($produkData) ? $produkData : null;
+        // Remove old fields if they exist
+        unset($validated['kondisi_produk'], $validated['id_produk'], $validated['suhu_produk'], 
+              $validated['kode_produksi'], $validated['expired_date'], $validated['jumlah_barang'],
+              $validated['kondisi_kemasan'], $validated['kondisi_produk_check'], $validated['rekomendasi'], $validated['keterangan']);
 
         $pemeriksaanReturnBarangCustomer->update($validated);
 

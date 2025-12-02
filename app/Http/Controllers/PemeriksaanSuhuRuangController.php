@@ -299,9 +299,16 @@ class PemeriksaanSuhuRuangController extends Controller
         $user = Auth::user();
         $twoHoursAgo = now()->subHours(2);
         
-        $recordsV2Data = PemeriksaanSuhuRuangV2::where('id_user', $user->id)
-            ->where('updated_at', '<=', $twoHoursAgo)
-            ->get();
+        $recordsV2Query = PemeriksaanSuhuRuangV2::where('updated_at', '<=', $twoHoursAgo);
+        
+        // Filter berdasarkan plant jika bukan superadmin
+        if ($user->role && strtolower($user->role->role) !== 'superadmin') {
+            $recordsV2Query->whereHas('user', function($q) use ($user) {
+                $q->where('id_plant', $user->id_plant);
+            });
+        }
+        
+        $recordsV2Data = $recordsV2Query->get();
         
         $recordsV2 = $recordsV2Data->map(function($record) {
             return [

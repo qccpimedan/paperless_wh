@@ -207,10 +207,10 @@
 
                     <hr>
 
-                    <!-- SEGEL & INFORMASI PRODUK -->
-                    <h5 class="text-primary mb-3">Segel & Informasi Produk</h5>
+                    <!-- SEGEL & DATA PRODUK MULTIPLE -->
+                    <h5 class="text-primary mb-3">Segel & Data Produk</h5>
                     <div class="row mb-4">
-                        <div class="col-md-6">
+                        <div class="col-md-12">
                             <table class="table table-borderless">
                                 <tr>
                                     <td width="200"><strong>Segel/Gembok:</strong></td>
@@ -226,82 +226,89 @@
                                     <td><strong>No. Segel:</strong></td>
                                     <td>{{ $pemeriksaanLoading->no_segel ?? '-' }}</td>
                                 </tr>
-                                <tr>
-                                    <td><strong>Nama Produk:</strong></td>
-                                    <td>
-                                        @if($pemeriksaanLoading->produk)
-                                            <strong>{{ $pemeriksaanLoading->produk->nama_produk }}</strong>
-                                        @else
-                                            -
-                                        @endif
-                                    </td>
-                                </tr>
-                            </table>
-                        </div>
-                        <div class="col-md-6">
-                            <table class="table table-borderless">
-                                <tr>
-                                    <td width="200"><strong>Kode Produksi:</strong></td>
-                                    <td>{{ $pemeriksaanLoading->kode_produksi ?? '-' }}</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Best Before:</strong></td>
-                                    <td>
-                                        @if($pemeriksaanLoading->best_before)
-                                            {{ $pemeriksaanLoading->best_before->format('d/m/Y') }}
-                                        @else
-                                            -
-                                        @endif
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Kondisi Kemasan:</strong></td>
-                                    <td>
-                                        @if($pemeriksaanLoading->kondisi_kemasan)
-                                            <span class="badge bg-success">✓ Baik</span>
-                                        @else
-                                            <span class="badge bg-danger">✗ Tidak Baik</span>
-                                        @endif
-                                    </td>
-                                </tr>
                             </table>
                         </div>
                     </div>
 
-                    <hr>
-
-                    <!-- JUMLAH -->
-                    <h5 class="text-primary mb-3">Jumlah</h5>
-                    <div class="row mb-4">
-                        <div class="col-md-6">
-                            <table class="table table-borderless">
-                                <tr>
-                                    <td width="200"><strong>Jumlah Kemasan:</strong></td>
-                                    <td>{{ $pemeriksaanLoading->jumlah_kemasan ?? '-' }}</td>
-                                </tr>
-                            </table>
-                        </div>
-                        <div class="col-md-6">
-                            <table class="table table-borderless">
-                                <tr>
-                                    <td width="200"><strong>Jumlah Sampling:</strong></td>
-                                    <td>{{ $pemeriksaanLoading->jumlah_sampling ?? '-' }}</td>
-                                </tr>
-                            </table>
-                        </div>
-                    </div>
-
-                    <hr>
-
-                    <!-- KETERANGAN -->
-                    <h5 class="text-primary mb-3">Keterangan</h5>
-                    <div class="row mb-4">
-                        <div class="col-md-12">
-                            <div class="alert alert-light">
-                                {{ $pemeriksaanLoading->keterangan ?? 'Tidak ada keterangan' }}
+                    <!-- DATA PRODUK MULTIPLE -->
+                    @if($pemeriksaanLoading->produk_data && count($pemeriksaanLoading->produk_data) > 0)
+                        <div class="row mb-4">
+                            <div class="col-md-12">
+                                <h6 class="text-secondary mb-3">Daftar Produk</h6>
+                                @foreach($pemeriksaanLoading->produk_data as $index => $produk)
+                                    <div class="card mb-3 border-light">
+                                        <div class="card-body">
+                                            <h6 class="card-title mb-3">Produk #{{ $index + 1 }}</h6>
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <table class="table table-sm table-borderless">
+                                                        <tr>
+                                                            <td width="150"><strong>Nama Produk:</strong></td>
+                                                            <td>
+                                                                @php
+                                                                    $produkName = \App\Models\Produk::find($produk['id_produk'])?->nama_produk ?? 'Produk tidak ditemukan';
+                                                                @endphp
+                                                                <strong>{{ $produkName }}</strong>
+                                                            </td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td><strong>Kode Produksi:</strong></td>
+                                                            <td>{{ $produk['kode_produksi'] ?? '-' }}</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td><strong>Best Before:</strong></td>
+                                                            <td>
+                                                                @if($produk['best_before'])
+                                                                    {{ \Carbon\Carbon::parse($produk['best_before'])->format('d/m/Y') }}
+                                                                @else
+                                                                    -
+                                                                @endif
+                                                            </td>
+                                                        </tr>
+                                                    </table>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <table class="table table-sm table-borderless">
+                                                        <tr>
+                                                            <td width="150"><strong>Jumlah Kemasan:</strong></td>
+                                                            <td>{{ $produk['jumlah_kemasan'] ?? '-' }}</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td><strong>Jumlah Sampling:</strong></td>
+                                                            <td>{{ $produk['jumlah_sampling'] ?? '-' }}</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td><strong>Kondisi Kemasan:</strong></td>
+                                                            <td>
+                                                                @if($produk['kondisi_kemasan'])
+                                                                    <span class="badge bg-success">✓ Baik</span>
+                                                                @else
+                                                                    <span class="badge bg-danger">✗ Tidak Baik</span>
+                                                                @endif
+                                                            </td>
+                                                        </tr>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                            @if($produk['keterangan'])
+                                                <div class="row mt-2">
+                                                    <div class="col-md-12">
+                                                        <small class="text-muted"><strong>Keterangan:</strong> {{ $produk['keterangan'] }}</small>
+                                                    </div>
+                                                </div>
+                                            @endif
+                                        </div>
+                                    </div>
+                                @endforeach
                             </div>
                         </div>
-                    </div>
+                    @else
+                        <div class="row mb-4">
+                            <div class="col-md-12">
+                                <div class="alert alert-info">Tidak ada data produk</div>
+                            </div>
+                        </div>
+                    @endif
 
                     <hr>
 

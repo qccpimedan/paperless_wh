@@ -104,6 +104,7 @@ class PemeriksaanLoadingProdukController extends Controller
             'jenis_kendaraan_manual' => 'nullable|required_if:id_kendaraan,other|string|max:255',
             'no_kendaraan_manual' => 'nullable|required_if:id_kendaraan,other|string|max:255',
             'id_supir' => 'nullable|exists:supirs,id',
+            'no_po' => 'nullable|string|max:255',
             'star_loading' => 'nullable',
             'selesai_loading' => 'nullable',
             'temperature_mobil' => 'nullable|string|max:255',
@@ -112,14 +113,14 @@ class PemeriksaanLoadingProdukController extends Controller
             'kondisi_produk' => 'nullable|in:Frozen,Fresh,Dry',
             'segel_gembok' => 'nullable|boolean',
             'no_segel' => 'nullable|string|max:255',
-            'no_po' => 'nullable|string|max:255',
-            'id_produk' => 'nullable|exists:produks,id',
-            'kode_produksi' => 'nullable|string|max:255',
-            'best_before' => 'nullable|date',
-            'jumlah_kemasan' => 'nullable|string|max:255',
-            'jumlah_sampling' => 'nullable|string|max:255',
-            'kondisi_kemasan' => 'nullable|boolean',
-            'keterangan' => 'nullable|string',
+            'produk_data' => 'nullable|array|min:1',
+            'produk_data.*.id_produk' => 'nullable|exists:produks,id',
+            'produk_data.*.kode_produksi' => 'nullable|string|max:255',
+            'produk_data.*.best_before' => 'nullable|date',
+            'produk_data.*.jumlah_kemasan' => 'nullable|string|max:255',
+            'produk_data.*.jumlah_sampling' => 'nullable|string|max:255',
+            'produk_data.*.kondisi_kemasan' => 'nullable|boolean',
+            'produk_data.*.keterangan' => 'nullable|string|max:500',
         ]);
 
         // Cek apakah kendaraan diinput manual
@@ -153,8 +154,27 @@ class PemeriksaanLoadingProdukController extends Controller
 
         $validated['id_user'] = Auth::id();
         $validated['segel_gembok'] = $request->has('segel_gembok');
-        $validated['kondisi_kemasan'] = $request->has('kondisi_kemasan');
         $validated['temperature_produk'] = !empty($temperatureProduk) ? $temperatureProduk : null;
+        
+        // Process produk_data array untuk multiple produk
+        $produkData = [];
+        if ($request->has('produk_data')) {
+            foreach ($request->produk_data as $produk) {
+                if (!empty($produk['id_produk'])) {
+                    $produkData[] = [
+                        'id_produk' => $produk['id_produk'],
+                        'kode_produksi' => $produk['kode_produksi'] ?? null,
+                        'best_before' => $produk['best_before'] ?? null,
+                        'jumlah_kemasan' => $produk['jumlah_kemasan'] ?? null,
+                        'jumlah_sampling' => $produk['jumlah_sampling'] ?? null,
+                        'kondisi_kemasan' => isset($produk['kondisi_kemasan']) ? (bool)$produk['kondisi_kemasan'] : true,
+                        'keterangan' => $produk['keterangan'] ?? null,
+                    ];
+                }
+            }
+        }
+        
+        $validated['produk_data'] = !empty($produkData) ? $produkData : null;
 
         PemeriksaanLoadingProduk::create($validated);
 
@@ -231,6 +251,7 @@ class PemeriksaanLoadingProdukController extends Controller
             'jenis_kendaraan_manual' => 'nullable|required_if:id_kendaraan,other|string|max:255',
             'no_kendaraan_manual' => 'nullable|required_if:id_kendaraan,other|string|max:255',
             'id_supir' => 'nullable|exists:supirs,id',
+            'no_po' => 'nullable|string|max:255',
             'star_loading' => 'nullable',
             'selesai_loading' => 'nullable',
             'temperature_mobil' => 'nullable|string|max:255',
@@ -239,14 +260,14 @@ class PemeriksaanLoadingProdukController extends Controller
             'kondisi_produk' => 'nullable|in:Frozen,Fresh,Dry',
             'segel_gembok' => 'nullable|boolean',
             'no_segel' => 'nullable|string|max:255',
-            'no_po' => 'nullable|string|max:255',
-            'id_produk' => 'nullable|exists:produks,id',
-            'kode_produksi' => 'nullable|string|max:255',
-            'best_before' => 'nullable|date',
-            'jumlah_kemasan' => 'nullable|string|max:255',
-            'jumlah_sampling' => 'nullable|string|max:255',
-            'kondisi_kemasan' => 'nullable|boolean',
-            'keterangan' => 'nullable|string',
+            'produk_data' => 'nullable|array|min:1',
+            'produk_data.*.id_produk' => 'nullable|exists:produks,id',
+            'produk_data.*.kode_produksi' => 'nullable|string|max:255',
+            'produk_data.*.best_before' => 'nullable|date',
+            'produk_data.*.jumlah_kemasan' => 'nullable|string|max:255',
+            'produk_data.*.jumlah_sampling' => 'nullable|string|max:255',
+            'produk_data.*.kondisi_kemasan' => 'nullable|boolean',
+            'produk_data.*.keterangan' => 'nullable|string|max:500',
         ]);
 
         // Cek apakah kendaraan diinput manual
@@ -278,9 +299,30 @@ class PemeriksaanLoadingProdukController extends Controller
             }
         }
 
-        $validated['segel_gembok'] = $request->has('segel_gembok');
-        $validated['kondisi_kemasan'] = $request->has('kondisi_kemasan');
         $validated['temperature_produk'] = !empty($temperatureProduk) ? $temperatureProduk : null;
+        
+        // Process produk_data array untuk multiple produk
+        $produkData = [];
+        if ($request->has('produk_data')) {
+            foreach ($request->produk_data as $produk) {
+                if (!empty($produk['id_produk'])) {
+                    $produkData[] = [
+                        'id_produk' => $produk['id_produk'],
+                        'kode_produksi' => $produk['kode_produksi'] ?? null,
+                        'best_before' => $produk['best_before'] ?? null,
+                        'jumlah_kemasan' => $produk['jumlah_kemasan'] ?? null,
+                        'jumlah_sampling' => $produk['jumlah_sampling'] ?? null,
+                        'kondisi_kemasan' => isset($produk['kondisi_kemasan']) ? (bool)$produk['kondisi_kemasan'] : true,
+                        'keterangan' => $produk['keterangan'] ?? null,
+                    ];
+                }
+            }
+        }
+        
+        $validated['produk_data'] = !empty($produkData) ? $produkData : null;
+        
+        // Hapus keterangan dari validated karena sudah di produk_data
+        unset($validated['keterangan']);
 
         $pemeriksaan_loading_produk->update($validated);
 

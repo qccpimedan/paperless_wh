@@ -53,7 +53,6 @@ class PemeriksaanKedatanganKemasan extends Model
      */
     protected $casts = [
         'tanggal' => 'date',
-        'segel_gembok' => 'boolean',
         'kondisi_mobil' => 'array',
         'kondisi_fisik' => 'array',
         'ketebalan_micron' => 'decimal:2',
