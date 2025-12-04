@@ -16,6 +16,10 @@ class PemeriksaanBarangMudahPecah extends Model
         'id_shift',
         'tanggal',
         'id_area',
+        'status_verifikasi',
+        'verified_by',
+        'verified_at',
+        'verification_notes',
     ];
 
     protected static function boot()
@@ -53,5 +57,10 @@ class PemeriksaanBarangMudahPecah extends Model
     public function details()
     {
         return $this->hasMany(PemeriksaanBarangMudahPecahDetail::class, 'id_pemeriksaan');
+    }
+
+    public function verifiedBy()
+    {
+        return $this->belongsTo(User::class, 'verified_by');
     }
 }

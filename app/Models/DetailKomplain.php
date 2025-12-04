@@ -25,6 +25,10 @@ class DetailKomplain extends Model
         'di_buat_oleh',
         'setujui_oleh',
         'id_user',
+        'status_verifikasi',
+        'verified_by',
+        'verified_at',
+        'verification_notes',
     ];
 
     protected $casts = [
@@ -44,5 +48,10 @@ class DetailKomplain extends Model
     public function user()
     {
         return $this->belongsTo(User::class, 'id_user');
+    }
+
+    public function verifiedBy()
+    {
+        return $this->belongsTo(User::class, 'verified_by');
     }
 }

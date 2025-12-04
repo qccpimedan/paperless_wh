@@ -219,4 +219,121 @@ class DetailKomplainController extends Controller
         $pdf = Pdf::loadView('qc-sistem.detail-komplain.eksport_pdf', compact('detailKomplain'));
         return $pdf->download('komplain-' . $detailKomplain->uuid . '.pdf');
     }
+
+    /**
+     * Send komplain to QC for verification
+     */
+    public function sendToQC(DetailKomplain $detailKomplain)
+    {
+        $user = Auth::user();
+        
+        // Only pending status can be sent
+        if ($detailKomplain->status_verifikasi !== 'pending') {
+            return redirect()->back()->with('error', 'Hanya komplain dengan status pending yang dapat dikirim.');
+        }
+        
+        $detailKomplain->update([
+            'status_verifikasi' => 'sent_to_qc',
+            'verified_by' => $user->id,
+            'verified_at' => now(),
+        ]);
+        
+        return redirect()->back()->with('success', 'Komplain berhasil dikirim ke QC.');
+    }
+
+    /**
+     * Approve komplain from QC
+     */
+    public function approveQC(Request $request, DetailKomplain $detailKomplain)
+    {
+        $user = Auth::user();
+        
+        // Only sent_to_qc status can be approved
+        if ($detailKomplain->status_verifikasi !== 'sent_to_qc') {
+            return redirect()->back()->with('error', 'Status komplain tidak valid untuk di-approve.');
+        }
+        
+        $detailKomplain->update([
+            'status_verifikasi' => 'approved_qc',
+            'verified_by' => $user->id,
+            'verified_at' => now(),
+            'verification_notes' => $request->input('notes'),
+        ]);
+        
+        return redirect()->back()->with('success', 'Komplain berhasil di-approve oleh QC.');
+    }
+
+    /**
+     * Reject komplain from QC
+     */
+    public function rejectQC(Request $request, DetailKomplain $detailKomplain)
+    {
+        $request->validate([
+            'notes' => 'required|string|min:5',
+        ]);
+        
+        $user = Auth::user();
+        
+        // Only sent_to_qc status can be rejected
+        if ($detailKomplain->status_verifikasi !== 'sent_to_qc') {
+            return redirect()->back()->with('error', 'Status komplain tidak valid untuk di-reject.');
+        }
+        
+        $detailKomplain->update([
+            'status_verifikasi' => 'rejected_qc',
+            'verified_by' => $user->id,
+            'verified_at' => now(),
+            'verification_notes' => $request->input('notes'),
+        ]);
+        
+        return redirect()->back()->with('error', 'Komplain ditolak oleh QC. Silakan perbaiki dan kirim ulang.');
+    }
+
+    /**
+     * Approve komplain from SPV QC (final verification)
+     */
+    public function approveSPV(Request $request, DetailKomplain $detailKomplain)
+    {
+        $user = Auth::user();
+        
+        // Only approved_qc status can be approved by SPV
+        if ($detailKomplain->status_verifikasi !== 'approved_qc') {
+            return redirect()->back()->with('error', 'Komplain harus disetujui QC terlebih dahulu.');
+        }
+        
+        $detailKomplain->update([
+            'status_verifikasi' => 'approved_spv',
+            'verified_by' => $user->id,
+            'verified_at' => now(),
+            'verification_notes' => $request->input('notes'),
+        ]);
+        
+        return redirect()->back()->with('success', 'Komplain berhasil diverifikasi oleh SPV QC.');
+    }
+
+    /**
+     * Reject komplain from SPV QC (final verification)
+     */
+    public function rejectSPV(Request $request, DetailKomplain $detailKomplain)
+    {
+        $request->validate([
+            'notes' => 'required|string|min:5',
+        ]);
+        
+        $user = Auth::user();
+        
+        // Only approved_qc status can be rejected by SPV
+        if ($detailKomplain->status_verifikasi !== 'approved_qc') {
+            return redirect()->back()->with('error', 'Status komplain tidak valid untuk di-reject.');
+        }
+        
+        $detailKomplain->update([
+            'status_verifikasi' => 'rejected_spv',
+            'verified_by' => $user->id,
+            'verified_at' => now(),
+            'verification_notes' => $request->input('notes'),
+        ]);
+        
+        return redirect()->back()->with('error', 'Komplain ditolak oleh SPV QC. Silakan perbaiki dan kirim ulang.');
+    }
 }

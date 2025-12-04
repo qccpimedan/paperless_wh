@@ -22,6 +22,10 @@ class GoldenSampleReport extends Model
         'tanggal',
         'sample_storage',
         'samples',
+        'status_verifikasi',
+        'verified_by',
+        'verified_at',
+        'verification_notes',
     ];
 
     protected $casts = [
@@ -54,6 +58,11 @@ class GoldenSampleReport extends Model
     public function plant()
     {
         return $this->belongsTo(Plant::class, 'id_plant');
+    }
+
+    public function verifiedBy()
+    {
+        return $this->belongsTo(User::class, 'verified_by');
     }
 
     public function getCreatedAtAttribute($value)

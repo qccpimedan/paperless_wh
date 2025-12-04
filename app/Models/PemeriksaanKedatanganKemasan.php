@@ -44,6 +44,10 @@ class PemeriksaanKedatanganKemasan extends Model
         'id_user',
         'id_shift',
         'id_bahan',
+        'status_verifikasi',
+        'verified_by',
+        'verified_at',
+        'verification_notes',
     ];
 
     /**
@@ -105,6 +109,14 @@ class PemeriksaanKedatanganKemasan extends Model
     public function bahan()
     {
         return $this->belongsTo(Bahan::class, 'id_bahan');
+    }
+
+    /**
+     * Relationship to verified user
+     */
+    public function verifiedBy()
+    {
+        return $this->belongsTo(User::class, 'verified_by');
     }
 
     /**

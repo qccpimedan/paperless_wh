@@ -36,6 +36,10 @@ class PemeriksaanKedatanganChemical extends Model
         'coa',
         'status',
         'keterangan',
+        'status_verifikasi',
+        'verified_by',
+        'verified_at',
+        'verification_notes',
     ];
 
     protected $casts = [
@@ -87,6 +91,11 @@ class PemeriksaanKedatanganChemical extends Model
     public function distributor()
     {
         return $this->belongsTo(Distributor::class, 'id_distributor');
+    }
+
+    public function verifiedBy()
+    {
+        return $this->belongsTo(User::class, 'verified_by');
     }
     
     /**

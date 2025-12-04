@@ -50,7 +50,9 @@
                                     <th>Shift</th>
                                     <th>Area</th>
                                     <th>Jumlah Barang</th>
-                                    <th>Dibuat Oleh</th>
+                                    <!-- <th>Dibuat Oleh</th> -->
+                                    <th>Verfikasi</th>
+                                    <th>Catatan Verfikasi</th>
                                     <th>Aksi</th>
                                 </tr>
                             </thead>
@@ -66,7 +68,59 @@
                                         <td>
                                             <span class="badge bg-primary">{{ count($pemeriksaan->details) }}</span>
                                         </td>
-                                        <td>{{ $pemeriksaan->user->name }}</td>
+                                        <!-- <td>{{ $pemeriksaan->user->name }}</td> -->
+                                        <td>
+                                            @php
+                                                $userRole = auth()->user()->role ? strtolower(auth()->user()->role->role) : null;
+                                                $status = $pemeriksaan->status_verifikasi ?? 'pending';
+                                            @endphp
+                                            
+                                            @if($status === 'pending' || $status === null)
+                                                @if($userRole === 'qc inspector')
+                                                    <form action="{{ route('pemeriksaan-barang-mudah-pecah.send-to-produksi', $pemeriksaan->uuid) }}" method="POST" style="display: inline-block;">
+                                                        @csrf
+                                                        <button type="submit" class="btn btn-sm btn-primary" title="Kirim ke Produksi">
+                                                            <i class="bi bi-send"></i> Kirim
+                                                        </button>
+                                                    </form>
+                                                @else
+                                                    <span class="badge bg-secondary">Pending</span>
+                                                @endif
+                                            @elseif($status === 'sent_to_produksi')
+                                                <span class="badge bg-warning">Menunggu Produksi</span>
+                                                @if($userRole === 'produksi')
+                                                    <button class="btn btn-sm btn-success mt-1" data-bs-toggle="modal" data-bs-target="#approveProduksiModal{{ $pemeriksaan->id }}" title="Approve">
+                                                        <i class="bi bi-check-circle"></i> Approve
+                                                    </button>
+                                                    <button class="btn btn-sm btn-danger mt-1" data-bs-toggle="modal" data-bs-target="#rejectProduksiModal{{ $pemeriksaan->id }}" title="Reject">
+                                                        <i class="bi bi-x-circle"></i> Reject
+                                                    </button>
+                                                @endif
+                                            @elseif($status === 'approved_produksi')
+                                                <span class="badge bg-info">Disetujui Produksi</span>
+                                                @if($userRole === 'spv qc')
+                                                    <button class="btn btn-sm btn-success mt-1" data-bs-toggle="modal" data-bs-target="#approveSPVModal{{ $pemeriksaan->id }}" title="Verifikasi">
+                                                        <i class="bi bi-check-circle"></i> Verifikasi
+                                                    </button>
+                                                    <button class="btn btn-sm btn-danger mt-1" data-bs-toggle="modal" data-bs-target="#rejectSPVModal{{ $pemeriksaan->id }}" title="Reject">
+                                                        <i class="bi bi-x-circle"></i> Reject
+                                                    </button>
+                                                @endif
+                                            @elseif($status === 'approved_spv')
+                                                <span class="badge bg-success">Disetujui SPV QC</span>
+                                            @elseif($status === 'rejected_produksi')
+                                                <span class="badge bg-danger">Ditolak Produksi</span>
+                                            @elseif($status === 'rejected_spv')
+                                                <span class="badge bg-danger">Ditolak SPV QC</span>
+                                            @endif
+                                        </td>
+                                        <td>
+                                            @if($pemeriksaan->verification_notes)
+                                                <small class="text-muted">{{ Str::limit($pemeriksaan->verification_notes, 50) }}</small>
+                                            @else
+                                                <span class="text-muted">-</span>
+                                            @endif
+                                        </td>
                                         <td>
                                             <div class="btn-vertical">
                                                 <a href="{{ route('pemeriksaan-barang-mudah-pecah.show', $pemeriksaan->uuid) }}" 
@@ -111,4 +165,132 @@
         </section>
     </div>
 </div>
+
+<!-- Modal untuk Approve/Reject Produksi dan SPV QC -->
+@foreach($pemeriksaans as $pemeriksaan)
+    <!-- Modal Approve Produksi -->
+    <div class="modal fade" id="approveProduksiModal{{ $pemeriksaan->id }}" tabindex="-1" aria-labelledby="approveProduksiLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="approveProduksiLabel">Approve Pemeriksaan</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form action="{{ route('pemeriksaan-barang-mudah-pecah.approve-produksi', $pemeriksaan->uuid) }}" method="POST">
+                    @csrf
+                    <div class="modal-body">
+                        @if($pemeriksaan->verification_notes)
+                            <div class="alert alert-info mb-3">
+                                <strong>Catatan Sebelumnya:</strong><br>
+                                {{ $pemeriksaan->verification_notes }}
+                            </div>
+                        @endif
+                        <div class="mb-3">
+                            <label for="notesProduksi" class="form-label">Catatan (Opsional)</label>
+                            <textarea class="form-control" id="notesProduksi" name="notes" rows="3" placeholder="Masukkan catatan jika ada"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-success">Approve</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Reject Produksi -->
+    <div class="modal fade" id="rejectProduksiModal{{ $pemeriksaan->id }}" tabindex="-1" aria-labelledby="rejectProduksiLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="rejectProduksiLabel">Reject Pemeriksaan</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form action="{{ route('pemeriksaan-barang-mudah-pecah.reject-produksi', $pemeriksaan->uuid) }}" method="POST">
+                    @csrf
+                    <div class="modal-body">
+                        @if($pemeriksaan->verification_notes)
+                            <div class="alert alert-info mb-3">
+                                <strong>Catatan Sebelumnya:</strong><br>
+                                {{ $pemeriksaan->verification_notes }}
+                            </div>
+                        @endif
+                        <div class="mb-3">
+                            <label for="notesProduksiReject" class="form-label">Alasan Penolakan <span class="text-danger">*</span></label>
+                            <textarea class="form-control" id="notesProduksiReject" name="notes" rows="3" placeholder="Masukkan alasan penolakan" required></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-danger">Reject</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Approve SPV QC -->
+    <div class="modal fade" id="approveSPVModal{{ $pemeriksaan->id }}" tabindex="-1" aria-labelledby="approveSPVLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="approveSPVLabel">Verifikasi Pemeriksaan</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form action="{{ route('pemeriksaan-barang-mudah-pecah.approve-spv', $pemeriksaan->uuid) }}" method="POST">
+                    @csrf
+                    <div class="modal-body">
+                        @if($pemeriksaan->verification_notes)
+                            <div class="alert alert-info mb-3">
+                                <strong>Catatan Sebelumnya:</strong><br>
+                                {{ $pemeriksaan->verification_notes }}
+                            </div>
+                        @endif
+                        <div class="mb-3">
+                            <label for="notesSPV" class="form-label">Catatan (Opsional)</label>
+                            <textarea class="form-control" id="notesSPV" name="notes" rows="3" placeholder="Masukkan catatan jika ada"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-success">Verifikasi</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Reject SPV QC -->
+    <div class="modal fade" id="rejectSPVModal{{ $pemeriksaan->id }}" tabindex="-1" aria-labelledby="rejectSPVLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="rejectSPVLabel">Reject Pemeriksaan</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form action="{{ route('pemeriksaan-barang-mudah-pecah.reject-spv', $pemeriksaan->uuid) }}" method="POST">
+                    @csrf
+                    <div class="modal-body">
+                        @if($pemeriksaan->verification_notes)
+                            <div class="alert alert-info mb-3">
+                                <strong>Catatan Sebelumnya:</strong><br>
+                                {{ $pemeriksaan->verification_notes }}
+                            </div>
+                        @endif
+                        <div class="mb-3">
+                            <label for="notesSPVReject" class="form-label">Alasan Penolakan <span class="text-danger">*</span></label>
+                            <textarea class="form-control" id="notesSPVReject" name="notes" rows="3" placeholder="Masukkan alasan penolakan" required></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-danger">Reject</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+@endforeach
+
 @endsection

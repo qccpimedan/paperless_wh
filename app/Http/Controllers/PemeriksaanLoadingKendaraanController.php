@@ -269,4 +269,100 @@ class PemeriksaanLoadingKendaraanController extends Controller
             abort(403, 'Anda tidak memiliki akses ke data ini.');
         }
     }
+
+    public function sendToProduksi(PemeriksaanLoadingKendaraan $pemeriksaanLoadingKendaraan)
+    {
+        $user = Auth::user();
+        $this->checkPlantAccess($pemeriksaanLoadingKendaraan);
+        
+        if ($pemeriksaanLoadingKendaraan->status_verifikasi !== 'pending') {
+            return redirect()->back()->with('error', 'Hanya pemeriksaan dengan status pending yang dapat dikirim.');
+        }
+        
+        $pemeriksaanLoadingKendaraan->update([
+            'status_verifikasi' => 'sent_to_produksi',
+            'verified_by' => $user->id,
+            'verified_at' => now(),
+        ]);
+        
+        return redirect()->back()->with('success', 'Pemeriksaan berhasil dikirim ke Produksi.');
+    }
+
+    public function approveProduksi(Request $request, PemeriksaanLoadingKendaraan $pemeriksaanLoadingKendaraan)
+    {
+        $user = Auth::user();
+        $this->checkPlantAccess($pemeriksaanLoadingKendaraan);
+        
+        if ($pemeriksaanLoadingKendaraan->status_verifikasi !== 'sent_to_produksi') {
+            return redirect()->back()->with('error', 'Status pemeriksaan tidak valid untuk di-approve.');
+        }
+        
+        $pemeriksaanLoadingKendaraan->update([
+            'status_verifikasi' => 'approved_produksi',
+            'verified_by' => $user->id,
+            'verified_at' => now(),
+            'verification_notes' => $request->input('notes'),
+        ]);
+        
+        return redirect()->back()->with('success', 'Pemeriksaan berhasil di-approve oleh Produksi.');
+    }
+
+    public function rejectProduksi(Request $request, PemeriksaanLoadingKendaraan $pemeriksaanLoadingKendaraan)
+    {
+        $request->validate(['notes' => 'required|string|min:5']);
+        $user = Auth::user();
+        $this->checkPlantAccess($pemeriksaanLoadingKendaraan);
+        
+        if ($pemeriksaanLoadingKendaraan->status_verifikasi !== 'sent_to_produksi') {
+            return redirect()->back()->with('error', 'Status pemeriksaan tidak valid untuk di-reject.');
+        }
+        
+        $pemeriksaanLoadingKendaraan->update([
+            'status_verifikasi' => 'rejected_produksi',
+            'verified_by' => $user->id,
+            'verified_at' => now(),
+            'verification_notes' => $request->input('notes'),
+        ]);
+        
+        return redirect()->back()->with('error', 'Pemeriksaan ditolak oleh Produksi. Silakan perbaiki dan kirim ulang.');
+    }
+
+    public function approveSPV(Request $request, PemeriksaanLoadingKendaraan $pemeriksaanLoadingKendaraan)
+    {
+        $user = Auth::user();
+        $this->checkPlantAccess($pemeriksaanLoadingKendaraan);
+        
+        if ($pemeriksaanLoadingKendaraan->status_verifikasi !== 'approved_produksi') {
+            return redirect()->back()->with('error', 'Pemeriksaan harus disetujui Produksi terlebih dahulu.');
+        }
+        
+        $pemeriksaanLoadingKendaraan->update([
+            'status_verifikasi' => 'approved_spv',
+            'verified_by' => $user->id,
+            'verified_at' => now(),
+            'verification_notes' => $request->input('notes'),
+        ]);
+        
+        return redirect()->back()->with('success', 'Pemeriksaan berhasil diverifikasi oleh SPV QC.');
+    }
+
+    public function rejectSPV(Request $request, PemeriksaanLoadingKendaraan $pemeriksaanLoadingKendaraan)
+    {
+        $request->validate(['notes' => 'required|string|min:5']);
+        $user = Auth::user();
+        $this->checkPlantAccess($pemeriksaanLoadingKendaraan);
+        
+        if ($pemeriksaanLoadingKendaraan->status_verifikasi !== 'approved_produksi') {
+            return redirect()->back()->with('error', 'Status pemeriksaan tidak valid untuk di-reject.');
+        }
+        
+        $pemeriksaanLoadingKendaraan->update([
+            'status_verifikasi' => 'rejected_spv',
+            'verified_by' => $user->id,
+            'verified_at' => now(),
+            'verification_notes' => $request->input('notes'),
+        ]);
+        
+        return redirect()->back()->with('error', 'Pemeriksaan ditolak oleh SPV QC. Silakan perbaiki dan kirim ulang.');
+    }
 }

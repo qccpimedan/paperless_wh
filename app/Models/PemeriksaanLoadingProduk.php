@@ -28,6 +28,10 @@ class PemeriksaanLoadingProduk extends Model
         'no_segel',
         'produk_data',
         'keterangan',
+        'status_verifikasi',
+        'verified_by',
+        'verified_at',
+        'verification_notes',
     ];
 
     protected $casts = [
@@ -82,6 +86,11 @@ class PemeriksaanLoadingProduk extends Model
     public function produk()
     {
         return $this->belongsTo(Produk::class, 'id_produk');
+    }
+
+    public function verifiedBy()
+    {
+        return $this->belongsTo(User::class, 'verified_by');
     }
     
     /**

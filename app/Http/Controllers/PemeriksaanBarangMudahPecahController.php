@@ -387,4 +387,151 @@ class PemeriksaanBarangMudahPecahController extends Controller
             'jumlah_barang' => $barang->jumlah_barang ?? 0,
         ]);
     }
+
+    /**
+     * Send pemeriksaan to Produksi for verification (QC Inspector action)
+     */
+    public function sendToProduksi(PemeriksaanBarangMudahPecah $pemeriksaanBarangMudahPecah)
+    {
+        $this->checkPlantAccess($pemeriksaanBarangMudahPecah);
+        $user = Auth::user();
+        
+        // Only QC Inspector can send to Produksi
+        if (!$user->role || strtolower($user->role->role) !== 'qc inspector') {
+            return redirect()->back()->with('error', 'Hanya QC Inspector yang dapat mengirim ke Produksi.');
+        }
+        
+        // Only pending status can be sent
+        if ($pemeriksaanBarangMudahPecah->status_verifikasi !== 'pending') {
+            return redirect()->back()->with('error', 'Hanya pemeriksaan dengan status pending yang dapat dikirim.');
+        }
+        
+        $pemeriksaanBarangMudahPecah->update([
+            'status_verifikasi' => 'sent_to_produksi',
+            'verified_by' => $user->id,
+            'verified_at' => now(),
+        ]);
+        
+        return redirect()->back()->with('success', 'Pemeriksaan berhasil dikirim ke Produksi.');
+    }
+
+    /**
+     * Approve pemeriksaan from Produksi (Produksi action)
+     */
+    public function approveProduksi(Request $request, PemeriksaanBarangMudahPecah $pemeriksaanBarangMudahPecah)
+    {
+        $this->checkPlantAccess($pemeriksaanBarangMudahPecah);
+        $user = Auth::user();
+        
+        // Only Produksi role can approve
+        if (!$user->role || strtolower($user->role->role) !== 'produksi') {
+            return redirect()->back()->with('error', 'Hanya Produksi yang dapat approve.');
+        }
+        
+        // Only sent_to_produksi status can be approved
+        if ($pemeriksaanBarangMudahPecah->status_verifikasi !== 'sent_to_produksi') {
+            return redirect()->back()->with('error', 'Status pemeriksaan tidak valid untuk di-approve.');
+        }
+        
+        $pemeriksaanBarangMudahPecah->update([
+            'status_verifikasi' => 'approved_produksi',
+            'verified_by' => $user->id,
+            'verified_at' => now(),
+            'verification_notes' => $request->input('notes'),
+        ]);
+        
+        return redirect()->back()->with('success', 'Pemeriksaan berhasil di-approve oleh Produksi.');
+    }
+
+    /**
+     * Reject pemeriksaan from Produksi (Produksi action)
+     */
+    public function rejectProduksi(Request $request, PemeriksaanBarangMudahPecah $pemeriksaanBarangMudahPecah)
+    {
+        $request->validate([
+            'notes' => 'required|string|min:5',
+        ]);
+        
+        $this->checkPlantAccess($pemeriksaanBarangMudahPecah);
+        $user = Auth::user();
+        
+        // Only Produksi role can reject
+        if (!$user->role || strtolower($user->role->role) !== 'produksi') {
+            return redirect()->back()->with('error', 'Hanya Produksi yang dapat reject.');
+        }
+        
+        // Only sent_to_produksi status can be rejected
+        if ($pemeriksaanBarangMudahPecah->status_verifikasi !== 'sent_to_produksi') {
+            return redirect()->back()->with('error', 'Status pemeriksaan tidak valid untuk di-reject.');
+        }
+        
+        $pemeriksaanBarangMudahPecah->update([
+            'status_verifikasi' => 'rejected_produksi',
+            'verified_by' => $user->id,
+            'verified_at' => now(),
+            'verification_notes' => $request->input('notes'),
+        ]);
+        
+        return redirect()->back()->with('error', 'Pemeriksaan ditolak oleh Produksi. Silakan perbaiki dan kirim ulang.');
+    }
+
+    /**
+     * Approve pemeriksaan from SPV QC (SPV QC final verification)
+     */
+    public function approveSPV(Request $request, PemeriksaanBarangMudahPecah $pemeriksaanBarangMudahPecah)
+    {
+        $this->checkPlantAccess($pemeriksaanBarangMudahPecah);
+        $user = Auth::user();
+        
+        // Only SPV QC role can approve
+        if (!$user->role || strtolower($user->role->role) !== 'spv qc') {
+            return redirect()->back()->with('error', 'Hanya SPV QC yang dapat melakukan verifikasi final.');
+        }
+        
+        // Only approved_produksi status can be approved by SPV
+        if ($pemeriksaanBarangMudahPecah->status_verifikasi !== 'approved_produksi') {
+            return redirect()->back()->with('error', 'Pemeriksaan harus disetujui Produksi terlebih dahulu.');
+        }
+        
+        $pemeriksaanBarangMudahPecah->update([
+            'status_verifikasi' => 'approved_spv',
+            'verified_by' => $user->id,
+            'verified_at' => now(),
+            'verification_notes' => $request->input('notes'),
+        ]);
+        
+        return redirect()->back()->with('success', 'Pemeriksaan berhasil diverifikasi oleh SPV QC.');
+    }
+
+    /**
+     * Reject pemeriksaan from SPV QC (SPV QC final verification)
+     */
+    public function rejectSPV(Request $request, PemeriksaanBarangMudahPecah $pemeriksaanBarangMudahPecah)
+    {
+        $request->validate([
+            'notes' => 'required|string|min:5',
+        ]);
+        
+        $this->checkPlantAccess($pemeriksaanBarangMudahPecah);
+        $user = Auth::user();
+        
+        // Only SPV QC role can reject
+        if (!$user->role || strtolower($user->role->role) !== 'spv qc') {
+            return redirect()->back()->with('error', 'Hanya SPV QC yang dapat melakukan verifikasi final.');
+        }
+        
+        // Only approved_produksi status can be rejected by SPV
+        if ($pemeriksaanBarangMudahPecah->status_verifikasi !== 'approved_produksi') {
+            return redirect()->back()->with('error', 'Status pemeriksaan tidak valid untuk di-reject.');
+        }
+        
+        $pemeriksaanBarangMudahPecah->update([
+            'status_verifikasi' => 'rejected_spv',
+            'verified_by' => $user->id,
+            'verified_at' => now(),
+            'verification_notes' => $request->input('notes'),
+        ]);
+        
+        return redirect()->back()->with('error', 'Pemeriksaan ditolak oleh SPV QC. Silakan perbaiki dan kirim ulang.');
+    }
 }

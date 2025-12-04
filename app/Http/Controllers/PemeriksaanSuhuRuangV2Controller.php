@@ -306,4 +306,126 @@ class PemeriksaanSuhuRuangV2Controller extends Controller
         $records = $this->getEditableRecordsForApi(PemeriksaanSuhuRuangV2::class);
         return response()->json(['records' => $records]);
     }
+
+    /**
+     * Send pemeriksaan to Produksi for verification
+     */
+    public function sendToProduksi(PemeriksaanSuhuRuangV2 $pemeriksaanSuhuRuangV2)
+    {
+        $user = Auth::user();
+        $this->checkPlantAccess($pemeriksaanSuhuRuangV2);
+        
+        // Only pending status can be sent
+        if ($pemeriksaanSuhuRuangV2->status_verifikasi !== 'pending') {
+            return redirect()->back()->with('error', 'Hanya pemeriksaan dengan status pending yang dapat dikirim.');
+        }
+        
+        $pemeriksaanSuhuRuangV2->update([
+            'status_verifikasi' => 'sent_to_produksi',
+            'verified_by' => $user->id,
+            'verified_at' => now(),
+        ]);
+        
+        return redirect()->back()->with('success', 'Pemeriksaan berhasil dikirim ke Produksi.');
+    }
+
+    /**
+     * Approve pemeriksaan from Produksi
+     */
+    public function approveProduksi(Request $request, PemeriksaanSuhuRuangV2 $pemeriksaanSuhuRuangV2)
+    {
+        $user = Auth::user();
+        $this->checkPlantAccess($pemeriksaanSuhuRuangV2);
+        
+        // Only sent_to_produksi status can be approved
+        if ($pemeriksaanSuhuRuangV2->status_verifikasi !== 'sent_to_produksi') {
+            return redirect()->back()->with('error', 'Status pemeriksaan tidak valid untuk di-approve.');
+        }
+        
+        $pemeriksaanSuhuRuangV2->update([
+            'status_verifikasi' => 'approved_produksi',
+            'verified_by' => $user->id,
+            'verified_at' => now(),
+            'verification_notes' => $request->input('notes'),
+        ]);
+        
+        return redirect()->back()->with('success', 'Pemeriksaan berhasil di-approve oleh Produksi.');
+    }
+
+    /**
+     * Reject pemeriksaan from Produksi
+     */
+    public function rejectProduksi(Request $request, PemeriksaanSuhuRuangV2 $pemeriksaanSuhuRuangV2)
+    {
+        $request->validate([
+            'notes' => 'required|string|min:5',
+        ]);
+        
+        $user = Auth::user();
+        $this->checkPlantAccess($pemeriksaanSuhuRuangV2);
+        
+        // Only sent_to_produksi status can be rejected
+        if ($pemeriksaanSuhuRuangV2->status_verifikasi !== 'sent_to_produksi') {
+            return redirect()->back()->with('error', 'Status pemeriksaan tidak valid untuk di-reject.');
+        }
+        
+        $pemeriksaanSuhuRuangV2->update([
+            'status_verifikasi' => 'rejected_produksi',
+            'verified_by' => $user->id,
+            'verified_at' => now(),
+            'verification_notes' => $request->input('notes'),
+        ]);
+        
+        return redirect()->back()->with('error', 'Pemeriksaan ditolak oleh Produksi. Silakan perbaiki dan kirim ulang.');
+    }
+
+    /**
+     * Approve pemeriksaan from SPV QC (final verification)
+     */
+    public function approveSPV(Request $request, PemeriksaanSuhuRuangV2 $pemeriksaanSuhuRuangV2)
+    {
+        $user = Auth::user();
+        $this->checkPlantAccess($pemeriksaanSuhuRuangV2);
+        
+        // Only approved_produksi status can be approved by SPV
+        if ($pemeriksaanSuhuRuangV2->status_verifikasi !== 'approved_produksi') {
+            return redirect()->back()->with('error', 'Pemeriksaan harus disetujui Produksi terlebih dahulu.');
+        }
+        
+        $pemeriksaanSuhuRuangV2->update([
+            'status_verifikasi' => 'approved_spv',
+            'verified_by' => $user->id,
+            'verified_at' => now(),
+            'verification_notes' => $request->input('notes'),
+        ]);
+        
+        return redirect()->back()->with('success', 'Pemeriksaan berhasil diverifikasi oleh SPV QC.');
+    }
+
+    /**
+     * Reject pemeriksaan from SPV QC (final verification)
+     */
+    public function rejectSPV(Request $request, PemeriksaanSuhuRuangV2 $pemeriksaanSuhuRuangV2)
+    {
+        $request->validate([
+            'notes' => 'required|string|min:5',
+        ]);
+        
+        $user = Auth::user();
+        $this->checkPlantAccess($pemeriksaanSuhuRuangV2);
+        
+        // Only approved_produksi status can be rejected by SPV
+        if ($pemeriksaanSuhuRuangV2->status_verifikasi !== 'approved_produksi') {
+            return redirect()->back()->with('error', 'Status pemeriksaan tidak valid untuk di-reject.');
+        }
+        
+        $pemeriksaanSuhuRuangV2->update([
+            'status_verifikasi' => 'rejected_spv',
+            'verified_by' => $user->id,
+            'verified_at' => now(),
+            'verification_notes' => $request->input('notes'),
+        ]);
+        
+        return redirect()->back()->with('error', 'Pemeriksaan ditolak oleh SPV QC. Silakan perbaiki dan kirim ulang.');
+    }
 }

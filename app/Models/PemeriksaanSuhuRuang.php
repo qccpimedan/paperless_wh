@@ -21,6 +21,10 @@ class PemeriksaanSuhuRuang extends Model
         'suhu_data',
         'keterangan',
         'tindakan_koreksi',
+        'status_verifikasi',
+        'verified_by',
+        'verified_at',
+        'verification_notes',
     ];
 
     protected $casts = [
@@ -67,6 +71,11 @@ class PemeriksaanSuhuRuang extends Model
     public function histories()
     {
         return $this->hasMany(PemeriksaanSuhuRuangHistory::class, 'id_pemeriksaan_suhu_ruang');
+    }
+
+    public function verifiedBy()
+    {
+        return $this->belongsTo(User::class, 'verified_by');
     }
 
     /**

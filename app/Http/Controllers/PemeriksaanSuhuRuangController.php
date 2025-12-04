@@ -329,4 +329,146 @@ class PemeriksaanSuhuRuangController extends Controller
         
         return response()->json(['records' => $allRecords->values()]);
     }
+
+    /**
+     * Send pemeriksaan to Produksi for verification
+     */
+    public function sendToProduksi(PemeriksaanSuhuRuang $pemeriksaanSuhuRuang)
+    {
+        $user = Auth::user();
+        
+        // Check plant access
+        if ($pemeriksaanSuhuRuang->user->id_plant !== $user->id_plant && !($user->role && strtolower($user->role->role) === 'superadmin')) {
+            abort(403, 'Anda tidak memiliki akses ke data ini.');
+        }
+        
+        // Only pending status can be sent
+        if ($pemeriksaanSuhuRuang->status_verifikasi !== 'pending') {
+            return redirect()->back()->with('error', 'Hanya pemeriksaan dengan status pending yang dapat dikirim.');
+        }
+        
+        $pemeriksaanSuhuRuang->update([
+            'status_verifikasi' => 'sent_to_produksi',
+            'verified_by' => $user->id,
+            'verified_at' => now(),
+        ]);
+        
+        return redirect()->back()->with('success', 'Pemeriksaan berhasil dikirim ke Produksi.');
+    }
+
+    /**
+     * Approve pemeriksaan from Produksi
+     */
+    public function approveProduksi(Request $request, PemeriksaanSuhuRuang $pemeriksaanSuhuRuang)
+    {
+        $user = Auth::user();
+        
+        // Check plant access
+        if ($pemeriksaanSuhuRuang->user->id_plant !== $user->id_plant && !($user->role && strtolower($user->role->role) === 'superadmin')) {
+            abort(403, 'Anda tidak memiliki akses ke data ini.');
+        }
+        
+        // Only sent_to_produksi status can be approved
+        if ($pemeriksaanSuhuRuang->status_verifikasi !== 'sent_to_produksi') {
+            return redirect()->back()->with('error', 'Status pemeriksaan tidak valid untuk di-approve.');
+        }
+        
+        $pemeriksaanSuhuRuang->update([
+            'status_verifikasi' => 'approved_produksi',
+            'verified_by' => $user->id,
+            'verified_at' => now(),
+            'verification_notes' => $request->input('notes'),
+        ]);
+        
+        return redirect()->back()->with('success', 'Pemeriksaan berhasil di-approve oleh Produksi.');
+    }
+
+    /**
+     * Reject pemeriksaan from Produksi
+     */
+    public function rejectProduksi(Request $request, PemeriksaanSuhuRuang $pemeriksaanSuhuRuang)
+    {
+        $request->validate([
+            'notes' => 'required|string|min:5',
+        ]);
+        
+        $user = Auth::user();
+        
+        // Check plant access
+        if ($pemeriksaanSuhuRuang->user->id_plant !== $user->id_plant && !($user->role && strtolower($user->role->role) === 'superadmin')) {
+            abort(403, 'Anda tidak memiliki akses ke data ini.');
+        }
+        
+        // Only sent_to_produksi status can be rejected
+        if ($pemeriksaanSuhuRuang->status_verifikasi !== 'sent_to_produksi') {
+            return redirect()->back()->with('error', 'Status pemeriksaan tidak valid untuk di-reject.');
+        }
+        
+        $pemeriksaanSuhuRuang->update([
+            'status_verifikasi' => 'rejected_produksi',
+            'verified_by' => $user->id,
+            'verified_at' => now(),
+            'verification_notes' => $request->input('notes'),
+        ]);
+        
+        return redirect()->back()->with('error', 'Pemeriksaan ditolak oleh Produksi. Silakan perbaiki dan kirim ulang.');
+    }
+
+    /**
+     * Approve pemeriksaan from SPV QC (final verification)
+     */
+    public function approveSPV(Request $request, PemeriksaanSuhuRuang $pemeriksaanSuhuRuang)
+    {
+        $user = Auth::user();
+        
+        // Check plant access
+        if ($pemeriksaanSuhuRuang->user->id_plant !== $user->id_plant && !($user->role && strtolower($user->role->role) === 'superadmin')) {
+            abort(403, 'Anda tidak memiliki akses ke data ini.');
+        }
+        
+        // Only approved_produksi status can be approved by SPV
+        if ($pemeriksaanSuhuRuang->status_verifikasi !== 'approved_produksi') {
+            return redirect()->back()->with('error', 'Pemeriksaan harus disetujui Produksi terlebih dahulu.');
+        }
+        
+        $pemeriksaanSuhuRuang->update([
+            'status_verifikasi' => 'approved_spv',
+            'verified_by' => $user->id,
+            'verified_at' => now(),
+            'verification_notes' => $request->input('notes'),
+        ]);
+        
+        return redirect()->back()->with('success', 'Pemeriksaan berhasil diverifikasi oleh SPV QC.');
+    }
+
+    /**
+     * Reject pemeriksaan from SPV QC (final verification)
+     */
+    public function rejectSPV(Request $request, PemeriksaanSuhuRuang $pemeriksaanSuhuRuang)
+    {
+        $request->validate([
+            'notes' => 'required|string|min:5',
+        ]);
+        
+        $user = Auth::user();
+        
+        // Check plant access
+        if ($pemeriksaanSuhuRuang->user->id_plant !== $user->id_plant && !($user->role && strtolower($user->role->role) === 'superadmin')) {
+            abort(403, 'Anda tidak memiliki akses ke data ini.');
+        }
+        
+        // Only approved_produksi status can be rejected by SPV
+        if ($pemeriksaanSuhuRuang->status_verifikasi !== 'approved_produksi') {
+            return redirect()->back()->with('error', 'Status pemeriksaan tidak valid untuk di-reject.');
+        }
+        
+        $pemeriksaanSuhuRuang->update([
+            'status_verifikasi' => 'rejected_spv',
+            'verified_by' => $user->id,
+            'verified_at' => now(),
+            'verification_notes' => $request->input('notes'),
+        ]);
+        
+        return redirect()->back()->with('error', 'Pemeriksaan ditolak oleh SPV QC. Silakan perbaiki dan kirim ulang.');
+    }
 }

@@ -28,6 +28,10 @@ class PemeriksaanSuhuRuangV2 extends Model
         'suhu_chillroom_domestik',
         'keterangan',
         'tindakan_koreksi',
+        'status_verifikasi',
+        'verified_by',
+        'verified_at',
+        'verification_notes',
     ];
 
     protected $casts = [
@@ -80,6 +84,11 @@ class PemeriksaanSuhuRuangV2 extends Model
     public function histories()
     {
         return $this->hasMany(PemeriksaanSuhuRuangV2History::class, 'id_pemeriksaan_suhu_ruang_v2');
+    }
+
+    public function verifiedBy()
+    {
+        return $this->belongsTo(User::class, 'verified_by');
     }
 
     /**

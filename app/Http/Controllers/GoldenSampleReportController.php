@@ -235,4 +235,126 @@ class GoldenSampleReportController extends Controller
         
         return response()->json($query->latest()->get(['uuid', 'nama_deskripsi']));
     }
+
+    /**
+     * Send report to Produksi for verification
+     */
+    public function sendToProduksi(GoldenSampleReport $goldenSampleReport)
+    {
+        $user = Auth::user();
+        $this->checkPlantAccess($goldenSampleReport);
+        
+        // Only pending status can be sent
+        if ($goldenSampleReport->status_verifikasi !== 'pending') {
+            return redirect()->back()->with('error', 'Hanya report dengan status pending yang dapat dikirim.');
+        }
+        
+        $goldenSampleReport->update([
+            'status_verifikasi' => 'sent_to_produksi',
+            'verified_by' => $user->id,
+            'verified_at' => now(),
+        ]);
+        
+        return redirect()->back()->with('success', 'Report berhasil dikirim ke Produksi.');
+    }
+
+    /**
+     * Approve report from Produksi
+     */
+    public function approveProduksi(Request $request, GoldenSampleReport $goldenSampleReport)
+    {
+        $user = Auth::user();
+        $this->checkPlantAccess($goldenSampleReport);
+        
+        // Only sent_to_produksi status can be approved
+        if ($goldenSampleReport->status_verifikasi !== 'sent_to_produksi') {
+            return redirect()->back()->with('error', 'Status report tidak valid untuk di-approve.');
+        }
+        
+        $goldenSampleReport->update([
+            'status_verifikasi' => 'approved_produksi',
+            'verified_by' => $user->id,
+            'verified_at' => now(),
+            'verification_notes' => $request->input('notes'),
+        ]);
+        
+        return redirect()->back()->with('success', 'Report berhasil di-approve oleh Produksi.');
+    }
+
+    /**
+     * Reject report from Produksi
+     */
+    public function rejectProduksi(Request $request, GoldenSampleReport $goldenSampleReport)
+    {
+        $request->validate([
+            'notes' => 'required|string|min:5',
+        ]);
+        
+        $user = Auth::user();
+        $this->checkPlantAccess($goldenSampleReport);
+        
+        // Only sent_to_produksi status can be rejected
+        if ($goldenSampleReport->status_verifikasi !== 'sent_to_produksi') {
+            return redirect()->back()->with('error', 'Status report tidak valid untuk di-reject.');
+        }
+        
+        $goldenSampleReport->update([
+            'status_verifikasi' => 'rejected_produksi',
+            'verified_by' => $user->id,
+            'verified_at' => now(),
+            'verification_notes' => $request->input('notes'),
+        ]);
+        
+        return redirect()->back()->with('error', 'Report ditolak oleh Produksi. Silakan perbaiki dan kirim ulang.');
+    }
+
+    /**
+     * Approve report from SPV QC (final verification)
+     */
+    public function approveSPV(Request $request, GoldenSampleReport $goldenSampleReport)
+    {
+        $user = Auth::user();
+        $this->checkPlantAccess($goldenSampleReport);
+        
+        // Only approved_produksi status can be approved by SPV
+        if ($goldenSampleReport->status_verifikasi !== 'approved_produksi') {
+            return redirect()->back()->with('error', 'Report harus disetujui Produksi terlebih dahulu.');
+        }
+        
+        $goldenSampleReport->update([
+            'status_verifikasi' => 'approved_spv',
+            'verified_by' => $user->id,
+            'verified_at' => now(),
+            'verification_notes' => $request->input('notes'),
+        ]);
+        
+        return redirect()->back()->with('success', 'Report berhasil diverifikasi oleh SPV QC.');
+    }
+
+    /**
+     * Reject report from SPV QC (final verification)
+     */
+    public function rejectSPV(Request $request, GoldenSampleReport $goldenSampleReport)
+    {
+        $request->validate([
+            'notes' => 'required|string|min:5',
+        ]);
+        
+        $user = Auth::user();
+        $this->checkPlantAccess($goldenSampleReport);
+        
+        // Only approved_produksi status can be rejected by SPV
+        if ($goldenSampleReport->status_verifikasi !== 'approved_produksi') {
+            return redirect()->back()->with('error', 'Status report tidak valid untuk di-reject.');
+        }
+        
+        $goldenSampleReport->update([
+            'status_verifikasi' => 'rejected_spv',
+            'verified_by' => $user->id,
+            'verified_at' => now(),
+            'verification_notes' => $request->input('notes'),
+        ]);
+        
+        return redirect()->back()->with('error', 'Report ditolak oleh SPV QC. Silakan perbaiki dan kirim ulang.');
+    }
 }

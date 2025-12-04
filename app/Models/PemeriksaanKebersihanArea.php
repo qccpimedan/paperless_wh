@@ -20,6 +20,10 @@ class PemeriksaanKebersihanArea extends Model
         'tanggal',
         'jam_sebelum_proses',
         'jam_saat_proses',
+        'status_verifikasi',
+        'verified_by',
+        'verified_at',
+        'verification_notes',
     ];
 
     protected $casts = [
@@ -65,6 +69,11 @@ class PemeriksaanKebersihanArea extends Model
     public function details()
     {
         return $this->hasMany(PemeriksaanKebersihanAreaDetail::class, 'id_pemeriksaan');
+    }
+
+    public function verifiedBy()
+    {
+        return $this->belongsTo(User::class, 'verified_by');
     }
     
     /**

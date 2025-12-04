@@ -336,4 +336,101 @@ class PemeriksaanLoadingProdukController extends Controller
         return redirect()->route('pemeriksaan-loading-produk.index')
             ->with('success', 'Data pemeriksaan loading produk berhasil dihapus.');
     }
+
+    public function sendToProduksi(PemeriksaanLoadingProduk $pemeriksaanLoadingProduk)
+    {
+        $user = Auth::user();
+        
+        if ($pemeriksaanLoadingProduk->status_verifikasi !== 'pending') {
+            return redirect()->back()->with('error', 'Hanya pemeriksaan dengan status pending yang dapat dikirim.');
+        }
+        
+        $pemeriksaanLoadingProduk->update([
+            'status_verifikasi' => 'sent_to_produksi',
+            'verified_by' => $user->id,
+            'verified_at' => now(),
+        ]);
+        
+        return redirect()->back()->with('success', 'Pemeriksaan berhasil dikirim ke Produksi.');
+    }
+
+    public function approveProduksi(Request $request, PemeriksaanLoadingProduk $pemeriksaanLoadingProduk)
+    {
+        $user = Auth::user();
+        
+        if ($pemeriksaanLoadingProduk->status_verifikasi !== 'sent_to_produksi') {
+            return redirect()->back()->with('error', 'Status pemeriksaan tidak valid untuk di-approve.');
+        }
+        
+        $pemeriksaanLoadingProduk->update([
+            'status_verifikasi' => 'approved_produksi',
+            'verified_by' => $user->id,
+            'verified_at' => now(),
+            'verification_notes' => $request->input('notes'),
+        ]);
+        
+        return redirect()->back()->with('success', 'Pemeriksaan berhasil di-approve oleh Produksi.');
+    }
+
+    public function rejectProduksi(Request $request, PemeriksaanLoadingProduk $pemeriksaanLoadingProduk)
+    {
+        $request->validate([
+            'notes' => 'required|string|min:5',
+        ]);
+        
+        $user = Auth::user();
+        
+        if ($pemeriksaanLoadingProduk->status_verifikasi !== 'sent_to_produksi') {
+            return redirect()->back()->with('error', 'Status pemeriksaan tidak valid untuk di-reject.');
+        }
+        
+        $pemeriksaanLoadingProduk->update([
+            'status_verifikasi' => 'rejected_produksi',
+            'verified_by' => $user->id,
+            'verified_at' => now(),
+            'verification_notes' => $request->input('notes'),
+        ]);
+        
+        return redirect()->back()->with('error', 'Pemeriksaan ditolak oleh Produksi. Silakan perbaiki dan kirim ulang.');
+    }
+
+    public function approveSPV(Request $request, PemeriksaanLoadingProduk $pemeriksaanLoadingProduk)
+    {
+        $user = Auth::user();
+        
+        if ($pemeriksaanLoadingProduk->status_verifikasi !== 'approved_produksi') {
+            return redirect()->back()->with('error', 'Pemeriksaan harus disetujui Produksi terlebih dahulu.');
+        }
+        
+        $pemeriksaanLoadingProduk->update([
+            'status_verifikasi' => 'approved_spv',
+            'verified_by' => $user->id,
+            'verified_at' => now(),
+            'verification_notes' => $request->input('notes'),
+        ]);
+        
+        return redirect()->back()->with('success', 'Pemeriksaan berhasil diverifikasi oleh SPV QC.');
+    }
+
+    public function rejectSPV(Request $request, PemeriksaanLoadingProduk $pemeriksaanLoadingProduk)
+    {
+        $request->validate([
+            'notes' => 'required|string|min:5',
+        ]);
+        
+        $user = Auth::user();
+        
+        if ($pemeriksaanLoadingProduk->status_verifikasi !== 'approved_produksi') {
+            return redirect()->back()->with('error', 'Status pemeriksaan tidak valid untuk di-reject.');
+        }
+        
+        $pemeriksaanLoadingProduk->update([
+            'status_verifikasi' => 'rejected_spv',
+            'verified_by' => $user->id,
+            'verified_at' => now(),
+            'verification_notes' => $request->input('notes'),
+        ]);
+        
+        return redirect()->back()->with('error', 'Pemeriksaan ditolak oleh SPV QC. Silakan perbaiki dan kirim ulang.');
+    }
 }

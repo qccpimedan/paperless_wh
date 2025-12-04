@@ -28,6 +28,10 @@ class PemeriksaanLoadingKendaraan extends Model
         'jam_selesai',
         'suhu_precooling',
         'keterangan',
+        'status_verifikasi',
+        'verified_by',
+        'verified_at',
+        'verification_notes',
     ];
 
     protected $casts = [
@@ -80,6 +84,11 @@ class PemeriksaanLoadingKendaraan extends Model
     public function shift()
     {
         return $this->belongsTo(Shift::class, 'id_shift');
+    }
+
+    public function verifiedBy()
+    {
+        return $this->belongsTo(User::class, 'verified_by');
     }
     
     /**

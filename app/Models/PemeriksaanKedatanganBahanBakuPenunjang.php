@@ -46,6 +46,10 @@ class PemeriksaanKedatanganBahanBakuPenunjang extends Model
         'kondisi_produk_suhu',
         'status',
         'keterangan',
+        'status_verifikasi',
+        'verified_by',
+        'verified_at',
+        'verification_notes',
     ];
 
     protected $casts = [
@@ -87,6 +91,11 @@ class PemeriksaanKedatanganBahanBakuPenunjang extends Model
     public function bahan()
     {
         return $this->belongsTo(Bahan::class, 'id_bahan');
+    }
+
+    public function verifiedBy()
+    {
+        return $this->belongsTo(User::class, 'verified_by');
     }
     
     /**

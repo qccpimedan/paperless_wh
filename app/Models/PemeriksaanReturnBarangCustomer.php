@@ -26,6 +26,10 @@ class PemeriksaanReturnBarangCustomer extends Model
         'id_customer',
         'alasan_return',
         'produk_data',
+        'status_verifikasi',
+        'verified_by',
+        'verified_at',
+        'verification_notes',
     ];
 
     protected $casts = [
@@ -72,6 +76,11 @@ class PemeriksaanReturnBarangCustomer extends Model
     public function produk()
     {
         return $this->belongsTo(Produk::class, 'id_produk');
+    }
+
+    public function verifiedBy()
+    {
+        return $this->belongsTo(User::class, 'verified_by');
     }
 
     public function getWaktuKedatanganDisplayAttribute()
