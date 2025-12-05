@@ -86,7 +86,7 @@
                                             </div>
 
                                             <div class="col-md-6">
-                                                <label for="pukul">Pukul <span class="text-danger">*</span></label>
+                                                <label for="pukul">Waktu <span class="text-danger">*</span></label>
                                                 <input type="time" id="pukul" class="form-control @error('pukul') is-invalid @enderror" name="pukul" value="{{ old('pukul', $pemeriksaanSuhuRuangV3->pukul) }}" required>
                                                 @error('pukul')
                                                     <div class="invalid-feedback">{{ $message }}</div>

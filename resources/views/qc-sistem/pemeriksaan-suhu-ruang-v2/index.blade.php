@@ -36,9 +36,11 @@
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="card-title mb-0">Daftar Pemeriksaan Suhu Ruang V2</h5>
-                    <a href="{{ route('pemeriksaan-suhu-ruang-v2.create') }}" class="btn btn-primary">
-                        <i class="bi bi-plus-circle"></i> Buat Pemeriksaan
-                    </a>
+                    @can('create_pemeriksaan_suhu_ruang_v2')
+                        <a href="{{ route('pemeriksaan-suhu-ruang-v2.create') }}" class="btn btn-primary">
+                            <i class="bi bi-plus-circle"></i> Buat Pemeriksaan
+                        </a>
+                    @endcan
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
@@ -47,10 +49,10 @@
                                 <tr>
                                     <th>No</th>
                                     <th>Tanggal</th>
-                                    <th>Produk</th>
-                                    <th>Area</th>
                                     <th>Shift</th>
                                     <th>Plant</th>
+                                    <th>Produk</th>
+                                    <th>Area</th>
                                     <th>Verifikasi</th>
                                     <th>Catatan Verifikasi</th>
                                     <th>Aksi</th>
@@ -62,12 +64,6 @@
                                         <td>{{ $index + 1 }}</td>
                                         <td>{{ $pemeriksaan->tanggal->format('d/m/Y') }}</td>
                                         <td>
-                                            <strong>{{ $pemeriksaan->produk->nama_bahan }}</strong>
-                                        </td>
-                                        <td>
-                                            <strong>{{ $pemeriksaan->area->nama_area }}</strong>
-                                        </td>
-                                        <td>
                                             <span class="badge bg-info">{{ $pemeriksaan->shift->shift }}</span>
                                         </td>
                                         <td>
@@ -76,6 +72,12 @@
                                             @else
                                                 <span class="badge bg-secondary">No Plant</span>
                                             @endif
+                                        </td>
+                                        <td>
+                                            <strong>{{ $pemeriksaan->produk->nama_bahan }}</strong>
+                                        </td>
+                                        <td>
+                                            <strong>{{ $pemeriksaan->area->nama_area }}</strong>
                                         </td>
                                         <td>
                                             @php
@@ -131,32 +133,40 @@
                                         </td>
                                         <td>
                                             <div class="btn-vertical">
-                                                <a href="{{ route('pemeriksaan-suhu-ruang-v2.show', $pemeriksaan->uuid) }}" 
-                                                   class="btn btn-sm btn-info" title="Lihat Detail">
-                                                    <i class="bi bi-eye"></i>
-                                                </a>
-                                                <a href="{{ route('pemeriksaan-suhu-ruang-v2.edit', $pemeriksaan->uuid) }}" 
-                                                   class="btn btn-sm btn-warning" title="Edit Data">
-                                                    <i class="bi bi-pencil"></i>
-                                                </a>
-                                                <a href="{{ route('pemeriksaan-suhu-ruang-v2.edit', $pemeriksaan->uuid) }}?edit_per_2jam=1" 
-                                                   class="btn btn-sm btn-success" title="Edit Per 2 Jam">
-                                                    <i class="bi bi-hourglass-bottom"></i>
-                                                </a>
-                                                <a href="{{ route('pemeriksaan-suhu-ruang-v2.history', $pemeriksaan->uuid) }}" 
-                                                   class="btn btn-sm btn-secondary" title="Lihat History">
-                                                    <i class="bi bi-clock-history"></i>
-                                                </a>
-                                                <form action="{{ route('pemeriksaan-suhu-ruang-v2.destroy', $pemeriksaan->uuid) }}" 
-                                                      method="POST" 
-                                                      style="display: inline-block;"
-                                                      onsubmit="return confirm('Yakin ingin menghapus pemeriksaan ini?')">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="submit" class="btn btn-sm btn-danger" title="Hapus Data">
-                                                        <i class="bi bi-trash"></i>
-                                                    </button>
-                                                </form>
+                                                @can('view_pemeriksaan_suhu_ruang_v2')
+                                                    <a href="{{ route('pemeriksaan-suhu-ruang-v2.show', $pemeriksaan->uuid) }}" 
+                                                       class="btn btn-sm btn-info" title="Lihat Detail">
+                                                        <i class="bi bi-eye"></i>
+                                                    </a>
+                                                @endcan
+                                                @can('edit_pemeriksaan_suhu_ruang_v2')
+                                                    <a href="{{ route('pemeriksaan-suhu-ruang-v2.edit', $pemeriksaan->uuid) }}" 
+                                                       class="btn btn-sm btn-warning" title="Edit Data">
+                                                        <i class="bi bi-pencil"></i>
+                                                    </a>
+                                                    <a href="{{ route('pemeriksaan-suhu-ruang-v2.edit', $pemeriksaan->uuid) }}?edit_per_2jam=1" 
+                                                       class="btn btn-sm btn-success" title="Edit Per 2 Jam">
+                                                        <i class="bi bi-hourglass-bottom"></i>
+                                                    </a>
+                                                @endcan
+                                                @can('view_pemeriksaan_suhu_ruang_v2')
+                                                    <a href="{{ route('pemeriksaan-suhu-ruang-v2.history', $pemeriksaan->uuid) }}" 
+                                                       class="btn btn-sm btn-secondary" title="Lihat History">
+                                                        <i class="bi bi-clock-history"></i>
+                                                    </a>
+                                                @endcan
+                                                @can('delete_pemeriksaan_suhu_ruang_v2')
+                                                    <form action="{{ route('pemeriksaan-suhu-ruang-v2.destroy', $pemeriksaan->uuid) }}" 
+                                                          method="POST" 
+                                                          style="display: inline-block;"
+                                                          onsubmit="return confirm('Yakin ingin menghapus pemeriksaan ini?')">
+                                                        @csrf
+                                                        @method('DELETE')
+                                                        <button type="submit" class="btn btn-sm btn-danger" title="Hapus Data">
+                                                            <i class="bi bi-trash"></i>
+                                                        </button>
+                                                    </form>
+                                                @endcan
                                             </div>
                                         </td>
                                     </tr>

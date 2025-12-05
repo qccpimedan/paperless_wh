@@ -49,6 +49,22 @@
                             </div>
                             <div class="row">
                                 <div class="col-md-6">
+                                    <label class="form-label fw-bold">Shift</label>
+                                    <p class="text-muted">{{ $detailKomplain->shift->shift ?? 'Shift tidak ditemukan' }}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">Plant</label>
+                                    <p class="text-muted">
+                                        @if($detailKomplain->user->plant)
+                                            {{ $detailKomplain->user->plant->plant }}
+                                        @else
+                                            No Plant
+                                        @endif
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
                                     <label class="form-label fw-bold">No. PO</label>
                                     <p class="text-muted">{{ $detailKomplain->no_po }}</p>
                                 </div>
@@ -77,10 +93,10 @@
                                     <label class="form-label fw-bold">Expired Date</label>
                                     <p class="text-muted">{{ $detailKomplain->expired_date->format('d-m-Y') }}</p>
                                 </div>
-                                <div class="col-md-6">
+                                <!-- <div class="col-md-6">
                                     <label class="form-label fw-bold">Dibuat Pada</label>
                                     <p class="text-muted">{{ $detailKomplain->created_at->format('d M Y H:i:s')  }}</p>
-                                </div>
+                                </div> -->
                             </div>
                         </div>
                     </div>
@@ -151,27 +167,27 @@
                         </div>
                         <div class="card-body">
                             <div class="d-grid gap-2">
-                                <a href="{{ route('detail-komplain.edit', $detailKomplain->uuid) }}" 
+                                <!-- <a href="{{ route('detail-komplain.edit', $detailKomplain->uuid) }}" 
                                    class="btn btn-warning">
                                     <i class="bi bi-pencil"></i> Edit Komplain
-                                </a>
-                                @if(!$detailKomplain->upload_suplier)
+                                </a> -->
+                                <!-- @if(!$detailKomplain->upload_suplier)
                                     <button type="button" class="btn btn-primary" data-bs-toggle="modal" 
                                             data-bs-target="#uploadModal">
                                         <i class="bi bi-upload"></i> Upload Supplier
                                     </button>
-                                @endif
+                                @endif -->
                                 <a href="{{ route('detail-komplain.index') }}" class="btn btn-secondary">
                                     <i class="bi bi-arrow-left"></i> Kembali
                                 </a>
-                                <form action="{{ route('detail-komplain.destroy', $detailKomplain->uuid) }}" 
+                                <!-- <form action="{{ route('detail-komplain.destroy', $detailKomplain->uuid) }}" 
                                       method="POST">
                                     @csrf @method('DELETE')
                                     <button type="submit" class="btn btn-danger w-100" 
                                             onclick="return confirm('Yakin ingin menghapus komplain ini?')">
                                         <i class="bi bi-trash"></i> Hapus Komplain
                                     </button>
-                                </form>
+                                </form> -->
                             </div>
                         </div>
                     </div>
@@ -187,7 +203,7 @@
                                 @if($detailKomplain->dokumentasi)
                                     <span class="badge bg-success">✓ Ada</span>
                                 @else
-                                    <span class="badge bg-warning">✗ Belum</span>
+                                    <span class="badge bg-warning">✗ Belum Diupload</span>
                                 @endif
                             </div>
                             <div class="mb-3">
@@ -195,7 +211,7 @@
                                 @if($detailKomplain->upload_suplier)
                                     <span class="badge bg-success">✓ Ada</span>
                                 @else
-                                    <span class="badge bg-warning">✗ Belum</span>
+                                    <span class="badge bg-warning">✗ Belum Diupload</span>
                                 @endif
                             </div>
                             <div>

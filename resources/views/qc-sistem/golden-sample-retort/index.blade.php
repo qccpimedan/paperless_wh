@@ -36,9 +36,11 @@
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="card-title mb-0">Daftar Golden Sample Report</h5>
-                    <a href="{{ route('golden-sample-reports.create') }}" class="btn btn-primary">
-                        <i class="bi bi-plus-circle"></i> Tambah Report
-                    </a>
+                    @can('create_golden_sample_retort')
+                        <a href="{{ route('golden-sample-reports.create') }}" class="btn btn-primary">
+                            <i class="bi bi-plus-circle"></i> Tambah Report
+                        </a>
+                    @endcan
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
@@ -47,10 +49,11 @@
                                 <tr>
                                     <th>No</th>
                                     <th>Tanggal</th>
+                                    <th>Shift</th>
+                                    <th>Plant</th>
                                     <th>Sample Type</th>
                                     <th>Collection Date</th>
                                     <th>Jumlah Sampel</th>
-                                    <th>Plant</th>
                                     <th>Verifikasi</th>
                                     <th>Catatan Verifikasi</th>
                                     <th>Aksi</th>
@@ -64,13 +67,10 @@
                                             {{ $report->tanggal }}
                                         </td>
                                         <td>
-                                            <strong>{{ $report->sample_type }}</strong>
+                                            <span class="badge bg-info">
+                                                {{ $report->shift ? $report->shift->shift : 'Shift tidak ditemukan' }}
+                                            </span>
                                         </td>
-                                        <td>
-                                            {{ $report->collection_date_from }} - {{ $report->collection_date_to }}
-                                        </td>
-                                        <td>
-                                            <span class="badge bg-info">{{ count($report->samples) }}</span>
                                         </td>
                                         <td>
                                             @if($report->id_plant && $report->plant)
@@ -80,6 +80,15 @@
                                             @else
                                                 <span class="badge bg-secondary">-</span>
                                             @endif
+                                        </td>
+                                        <td>
+                                            <strong>{{ $report->sample_type }}</strong>
+                                        </td>
+                                        <td>
+                                            {{ $report->collection_date_from }} - {{ $report->collection_date_to }}
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-info">{{ count($report->samples) }}</span>
                                         </td>
                                         <td>
                                             @php
@@ -135,24 +144,30 @@
                                         </td>
                                         <td>
                                             <div class="btn-vertical">
-                                                <a href="{{ route('golden-sample-reports.show', $report->uuid) }}" 
-                                                   class="btn btn-sm btn-info" title="Lihat Detail">
-                                                    <i class="bi bi-eye"></i>
-                                                </a>
-                                                <a href="{{ route('golden-sample-reports.edit', $report->uuid) }}" 
-                                                   class="btn btn-sm btn-warning" title="Edit Data">
-                                                    <i class="bi bi-pencil"></i>
-                                                </a>
-                                                <form action="{{ route('golden-sample-reports.destroy', $report->uuid) }}" 
-                                                      method="POST" 
-                                                      style="display: inline-block;"
-                                                      onsubmit="return confirm('Yakin ingin menghapus report ini?')">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="submit" class="btn btn-sm btn-danger" title="Hapus Data">
-                                                        <i class="bi bi-trash"></i>
-                                                    </button>
-                                                </form>
+                                                @can('view_golden_sample_retort')
+                                                    <a href="{{ route('golden-sample-reports.show', $report->uuid) }}" 
+                                                       class="btn btn-sm btn-info" title="Lihat Detail">
+                                                        <i class="bi bi-eye"></i>
+                                                    </a>
+                                                @endcan
+                                                @can('edit_golden_sample_retort')
+                                                    <a href="{{ route('golden-sample-reports.edit', $report->uuid) }}" 
+                                                       class="btn btn-sm btn-warning" title="Edit Data">
+                                                        <i class="bi bi-pencil"></i>
+                                                    </a>
+                                                @endcan
+                                                @can('delete_golden_sample_retort')
+                                                    <form action="{{ route('golden-sample-reports.destroy', $report->uuid) }}" 
+                                                          method="POST" 
+                                                          style="display: inline-block;"
+                                                          onsubmit="return confirm('Yakin ingin menghapus report ini?')">
+                                                        @csrf
+                                                        @method('DELETE')
+                                                        <button type="submit" class="btn btn-sm btn-danger" title="Hapus Data">
+                                                            <i class="bi bi-trash"></i>
+                                                        </button>
+                                                    </form>
+                                                @endcan
                                             </div>
                                         </td>
                                     </tr>

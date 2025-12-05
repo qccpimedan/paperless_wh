@@ -25,6 +25,7 @@ class DetailKomplain extends Model
         'di_buat_oleh',
         'setujui_oleh',
         'id_user',
+        'id_shift',
         'status_verifikasi',
         'verified_by',
         'verified_at',
@@ -48,6 +49,11 @@ class DetailKomplain extends Model
     public function user()
     {
         return $this->belongsTo(User::class, 'id_user');
+    }
+
+    public function shift()
+    {
+        return $this->belongsTo(Shift::class, 'id_shift');
     }
 
     public function verifiedBy()

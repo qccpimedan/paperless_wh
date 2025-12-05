@@ -61,6 +61,24 @@
                                     @enderror
                                 </div>
                             </div>
+                           <!-- Add this where you want the shift select to appear -->
+                            <div class="form-group">
+                                <label for="id_shift">Shift <span class="text-danger">*</span></label>
+                                <select class="form-select @error('id_shift') is-invalid @enderror" 
+                                        id="id_shift" 
+                                        name="id_shift" 
+                                        required>
+                                    <option value="">Pilih Shift</option>
+                                    @foreach($shifts as $shift)
+                                        <option value="{{ $shift->id }}" {{ old('id_shift') == $shift->id ? 'selected' : '' }}>
+                                            {{ $shift->shift }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                @error('id_shift')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
                         </div>
 
                         <div class="row">

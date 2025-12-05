@@ -51,14 +51,38 @@
                                         <!-- BAGIAN HEADER -->
                                         <h5 class="mb-3"><strong>Informasi Dasar</strong></h5>
                                         <div class="row mb-3">
+                                            <!-- Tambahkan di bagian form, sesudah input tanggal -->
                                             <div class="col-md-6">
-                                                <label for="tanggal">Tanggal <span class="text-danger">*</span></label>
-                                                <input type="date" class="form-control @error('tanggal') is-invalid @enderror" name="tanggal" id="tanggal" value="{{ old('tanggal', date('Y-m-d')) }}" required>
-                                                @error('tanggal')
-                                                    <div class="text-danger small">{{ $message }}</div>
-                                                @enderror
+                                                <div class="form-group">
+                                                    <label for="id_shift">Shift <span class="text-danger">*</span></label>
+                                                    <select class="form-select @error('id_shift') is-invalid @enderror" id="id_shift" name="id_shift" required>
+                                                        <option value="">Pilih Shift</option>
+                                                        @foreach($shifts as $shift)
+                                                            <option value="{{ $shift->id }}" {{ old('id_shift') == $shift->id ? 'selected' : '' }}>
+                                                                {{ $shift->shift }}
+                                                            </option>
+                                                        @endforeach
+                                                    </select>
+                                                    @error('id_shift')
+                                                        <div class="invalid-feedback">{{ $message }}</div>
+                                                    @enderror
+                                                </div>
+                                            </div>
+
+                                            <!-- Pastikan input tanggal menggunakan name yang sesuai dengan database -->
+                                            <div class="col-md-6">
+                                                <div class="form-group">
+                                                    <label for="tanggal">Tanggal <span class="text-danger">*</span></label>
+                                                    <input type="date" class="form-control @error('tanggal') is-invalid @enderror" 
+                                                        id="tanggal" name="tanggal" 
+                                                        value="{{ old('tanggal', \Carbon\Carbon::now()->format('Y-m-d')) }}" required>
+                                                    @error('tanggal')
+                                                        <div class="invalid-feedback">{{ $message }}</div>
+                                                    @enderror
+                                                </div>
                                             </div>
                                         </div>
+                                        
                                         <div class="row mb-3">
                                             <div class="col-md-12">
                                                 <div class="form-group">

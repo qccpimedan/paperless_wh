@@ -15,6 +15,7 @@ class GoldenSampleReport extends Model
         'uuid',
         'id_user',
         'id_plant',
+        'id_shift',
         'plant_manual',
         'sample_type',
         'collection_date_from',
@@ -60,6 +61,11 @@ class GoldenSampleReport extends Model
         return $this->belongsTo(Plant::class, 'id_plant');
     }
 
+    public function shift()
+    {
+        return $this->belongsTo(Shift::class, 'id_shift');
+    }
+    
     public function verifiedBy()
     {
         return $this->belongsTo(User::class, 'verified_by');

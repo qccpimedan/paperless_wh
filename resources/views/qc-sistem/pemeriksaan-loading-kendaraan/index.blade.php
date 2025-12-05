@@ -36,24 +36,26 @@
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="card-title mb-0">Daftar Pemeriksaan Loading Kendaraan</h5>
-                    <a href="{{ route('pemeriksaan-loading-kendaraan.create') }}" class="btn btn-primary">
-                        <i class="bi bi-plus-circle"></i> Tambah Pemeriksaan
-                    </a>
+                    @can('create_pemeriksaan_loading_kendaraan')
+                        <a href="{{ route('pemeriksaan-loading-kendaraan.create') }}" class="btn btn-primary">
+                            <i class="bi bi-plus-circle"></i> Tambah Pemeriksaan
+                        </a>
+                    @endcan
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
-                        <table class="table table-striped text-center" id="table1">
+                        <table class="table table-striped text-center" id="table1" style="white-space:nowrap;">
                             <thead>
                                 <tr>
                                     <th>No</th>
                                     <th>Tanggal</th>
                                     <th>Shift</th>
+                                    <th>Plant</th>
                                     <th>Ekspedisi</th>
                                     <th>Kendaraan</th>
                                     <th>Tujuan</th>
                                     <!-- <th>Jam Mulai - Selesai</th> -->
                                     <!-- <th>Suhu</th> -->
-                                    <th>Plant</th>
                                     <th>Verifikasi</th>
                                     <th>Catatan Verifikasi</th>
                                     <th>Aksi</th>
@@ -65,7 +67,14 @@
                                         <td>{{ $index + 1 }}</td>
                                         <td>{{ \Carbon\Carbon::parse($pemeriksaan->tanggal)->format('d/m/Y') }}</td>
                                         <td>
-                                            <strong>{{ $pemeriksaan->shift->shift ?? '-' }}</strong>
+                                            <span class="badge bg-info">{{ $pemeriksaan->shift->shift }}</span>
+                                        </td>
+                                        <td>
+                                            @if($pemeriksaan->user->plant)
+                                                <span class="badge bg-success">{{ $pemeriksaan->user->plant->plant }}</span>
+                                            @else
+                                                <span class="badge bg-secondary">No Plant</span>
+                                            @endif
                                         </td>
                                         <td>
                                             <strong>{{ $pemeriksaan->ekspedisi->nama_ekspedisi ?? '-' }}</strong>
@@ -82,13 +91,6 @@
                                         <td>
                                             <span class="badge bg-info">{{ $pemeriksaan->suhu_precooling }}</span>
                                         </td> -->
-                                        <td>
-                                            @if($pemeriksaan->user->plant)
-                                                <span class="badge bg-success">{{ $pemeriksaan->user->plant->plant }}</span>
-                                            @else
-                                                <span class="badge bg-secondary">No Plant</span>
-                                            @endif
-                                        </td>
                                         <td>
                                             @php
                                                 $userRole = auth()->user()->role ? strtolower(auth()->user()->role->role) : null;
@@ -143,24 +145,30 @@
                                         </td>
                                         <td>
                                             <div class="btn-vertical">
-                                                <a href="{{ route('pemeriksaan-loading-kendaraan.show', $pemeriksaan->uuid) }}" 
-                                                   class="btn btn-sm btn-info" title="Lihat Detail">
-                                                    <i class="bi bi-eye"></i>
-                                                </a>
-                                                <a href="{{ route('pemeriksaan-loading-kendaraan.edit', $pemeriksaan->uuid) }}" 
-                                                   class="btn btn-sm btn-warning" title="Edit Data">
-                                                    <i class="bi bi-pencil"></i>
-                                                </a>
-                                                <form action="{{ route('pemeriksaan-loading-kendaraan.destroy', $pemeriksaan->uuid) }}" 
-                                                      method="POST" 
-                                                      style="display: inline-block;"
-                                                      onsubmit="return confirm('Yakin ingin menghapus pemeriksaan tanggal {{ $pemeriksaan->tanggal }}?')">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="submit" class="btn btn-sm btn-danger" title="Hapus Data">
-                                                        <i class="bi bi-trash"></i>
-                                                    </button>
-                                                </form>
+                                                @can('view_pemeriksaan_loading_kendaraan')
+                                                    <a href="{{ route('pemeriksaan-loading-kendaraan.show', $pemeriksaan->uuid) }}" 
+                                                       class="btn btn-sm btn-info" title="Lihat Detail">
+                                                        <i class="bi bi-eye"></i>
+                                                    </a>
+                                                @endcan
+                                                @can('edit_pemeriksaan_loading_kendaraan')
+                                                    <a href="{{ route('pemeriksaan-loading-kendaraan.edit', $pemeriksaan->uuid) }}" 
+                                                       class="btn btn-sm btn-warning" title="Edit Data">
+                                                        <i class="bi bi-pencil"></i>
+                                                    </a>
+                                                @endcan
+                                                @can('delete_pemeriksaan_loading_kendaraan')
+                                                    <form action="{{ route('pemeriksaan-loading-kendaraan.destroy', $pemeriksaan->uuid) }}" 
+                                                          method="POST" 
+                                                          style="display: inline-block;"
+                                                          onsubmit="return confirm('Yakin ingin menghapus pemeriksaan tanggal {{ $pemeriksaan->tanggal }}?')">
+                                                        @csrf
+                                                        @method('DELETE')
+                                                        <button type="submit" class="btn btn-sm btn-danger" title="Hapus Data">
+                                                            <i class="bi bi-trash"></i>
+                                                        </button>
+                                                    </form>
+                                                @endcan
                                             </div>
                                         </td>
                                     </tr>

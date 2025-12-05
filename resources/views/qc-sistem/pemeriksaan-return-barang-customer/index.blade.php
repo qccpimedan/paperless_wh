@@ -29,9 +29,11 @@
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="card-title">Daftar Pemeriksaan Return Barang</h5>
-                    <a href="{{ route('return-barang.create') }}" class="btn btn-primary">
-                        <i class="bi bi-plus-circle"></i> Tambah Pemeriksaan
-                    </a>
+                    @can('create_return_barang')
+                        <a href="{{ route('return-barang.create') }}" class="btn btn-primary">
+                            <i class="bi bi-plus-circle"></i> Tambah Pemeriksaan
+                        </a>
+                    @endcan
                 </div>
                 <div class="card-body">
                     @if ($message = Session::get('success'))
@@ -48,11 +50,11 @@
                                     <th>No</th>
                                     <th>Tanggal</th>
                                     <th>Shift</th>
+                                    <th>Plant</th>
                                     <th>Customer</th>
                                     <th>Produk</th>
-                                    <th>Kondisi</th>
-                                    <th>Rekomendasi</th>
-                                    <th>Plant</th>
+                                    <!-- <th>Kondisi</th> -->
+                                    <!-- <th>Rekomendasi</th> -->
                                     <th>Verifikasi</th>
                                     <th>Catatan Verifikasi</th>
                                     <th>Aksi</th>
@@ -65,6 +67,9 @@
                                         <td>{{ \Carbon\Carbon::parse($pemeriksaan->tanggal)->format('d/m/Y') }}</td>
                                         <td>
                                             <span class="badge bg-primary">{{ $pemeriksaan->shift->shift ?? '-' }}</span>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-secondary">{{ $pemeriksaan->user->plant->plant ?? '-' }}</span>
                                         </td>
                                         <td>
                                             <strong>{{ $pemeriksaan->customer->nama_cust ?? '-' }}</strong>
@@ -81,7 +86,7 @@
                                                 -
                                             @endif
                                         </td>
-                                        <td>
+                                        <!-- <td>
                                             @if($pemeriksaan->produk_data && count($pemeriksaan->produk_data) > 0)
                                                 <span class="badge bg-info">{{ $pemeriksaan->produk_data[0]['kondisi_produk'] ?? '-' }}</span>
                                             @else
@@ -94,10 +99,7 @@
                                             @else
                                                 <span class="badge bg-secondary">-</span>
                                             @endif
-                                        </td>
-                                        <td>
-                                            <span class="badge bg-secondary">{{ $pemeriksaan->user->plant->plant ?? '-' }}</span>
-                                        </td>
+                                        </td> -->
                                         <td>
                                             @php
                                                 $userRole = auth()->user()->role ? strtolower(auth()->user()->role->role) : null;
@@ -151,19 +153,25 @@
                                             @endif
                                         </td>
                                         <td>
-                                            <a href="{{ route('return-barang.show', $pemeriksaan->uuid) }}" class="btn btn-sm btn-info">
-                                                <i class="bi bi-eye"></i>
-                                            </a>
-                                            <a href="{{ route('return-barang.edit', $pemeriksaan->uuid) }}" class="btn btn-sm btn-warning">
-                                                <i class="bi bi-pencil"></i>
-                                            </a>
-                                            <form action="{{ route('return-barang.destroy', $pemeriksaan->uuid) }}" method="POST" style="display:inline;">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Yakin ingin menghapus?')">
-                                                    <i class="bi bi-trash"></i>
-                                                </button>
-                                            </form>
+                                            @can('view_return_barang')
+                                                <a href="{{ route('return-barang.show', $pemeriksaan->uuid) }}" class="btn btn-sm btn-info">
+                                                    <i class="bi bi-eye"></i>
+                                                </a>
+                                            @endcan
+                                            @can('edit_return_barang')
+                                                <a href="{{ route('return-barang.edit', $pemeriksaan->uuid) }}" class="btn btn-sm btn-warning">
+                                                    <i class="bi bi-pencil"></i>
+                                                </a>
+                                            @endcan
+                                            @can('delete_return_barang')
+                                                <form action="{{ route('return-barang.destroy', $pemeriksaan->uuid) }}" method="POST" style="display:inline;">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Yakin ingin menghapus?')">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </form>
+                                            @endcan
                                         </td>
                                     </tr>
 

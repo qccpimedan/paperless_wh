@@ -36,9 +36,11 @@
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="card-title mb-0">Daftar Pemeriksaan Loading Produk</h5>
-                    <a href="{{ route('pemeriksaan-loading-produk.create') }}" class="btn btn-primary">
-                        <i class="bi bi-plus-circle"></i> Tambah Data
-                    </a>
+                    @can('create_pemeriksaan_loading_produk')
+                        <a href="{{ route('pemeriksaan-loading-produk.create') }}" class="btn btn-primary">
+                            <i class="bi bi-plus-circle"></i> Tambah Data
+                        </a>
+                    @endcan
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
@@ -47,12 +49,13 @@
                                 <tr>
                                     <th>No</th>
                                     <th>Tanggal</th>
+                                    <th>Shift</th>
+                                    <th>Plant</th>
                                     <th>Tujuan Pengiriman</th>
                                     <th>Kendaraan</th>
-                                    <th>Supir</th>
+                                    <!-- <th>Supir</th> -->
                                     <th>Produk</th>
-                                    <th>Kondisi</th>
-                                    <th>Plant</th>
+                                    <!-- <th>Kondisi</th> -->
                                     <th>Verifikasi</th>
                                     <th>Catatan Verifikasi</th>
                                     <th>Aksi</th>
@@ -63,6 +66,16 @@
                                     <tr>
                                         <td>{{ $pemeriksaans->firstItem() + $index }}</td>
                                         <td>{{ $pemeriksaan->tanggal->format('d/m/Y') }}</td>
+                                        <td>
+                                            <span class="badge bg-info">{{ $pemeriksaan->shift->shift }}</span>
+                                        </td>
+                                        <td>
+                                            @if($pemeriksaan->user->plant)
+                                                <span class="badge bg-primary">{{ $pemeriksaan->user->plant->plant }}</span>
+                                            @else
+                                                <span class="badge bg-secondary">No Plant</span>
+                                            @endif
+                                        </td>
                                         <td>
                                             @if($pemeriksaan->tujuanPengiriman)
                                                 <span class="badge bg-info">{{ $pemeriksaan->tujuanPengiriman->nama_tujuan }}</span>
@@ -77,13 +90,13 @@
                                                 -
                                             @endif
                                         </td>
-                                        <td>
+                                        <!-- <td>
                                             @if($pemeriksaan->supir)
                                                 {{ $pemeriksaan->supir->nama_supir }}
                                             @else
                                                 -
                                             @endif
-                                        </td>
+                                        </td> -->
                                         <td>
                                             @if($pemeriksaan->produk_data && count($pemeriksaan->produk_data) > 0)
                                                 @php
@@ -96,20 +109,13 @@
                                                 -
                                             @endif
                                         </td>
-                                        <td>
+                                        <!-- <td>
                                             @if($pemeriksaan->kondisi_produk)
                                                 <span class="badge bg-secondary">{{ $pemeriksaan->kondisi_produk }}</span>
                                             @else
                                                 -
                                             @endif
-                                        </td>
-                                        <td>
-                                            @if($pemeriksaan->user->plant)
-                                                <span class="badge bg-primary">{{ $pemeriksaan->user->plant->plant }}</span>
-                                            @else
-                                                <span class="badge bg-secondary">No Plant</span>
-                                            @endif
-                                        </td>
+                                        </td> -->
                                         <td>
                                             @php
                                                 $userRole = auth()->user()->role ? strtolower(auth()->user()->role->role) : null;
@@ -164,23 +170,29 @@
                                         </td>
                                         <td>
                                             <div class="btn-vertical">
-                                                <a href="{{ route('pemeriksaan-loading-produk.show', $pemeriksaan->uuid) }}" 
-                                                   class="btn btn-sm btn-info" title="Lihat Detail">
-                                                    <i class="bi bi-eye"></i>
-                                                </a>
-                                                <a href="{{ route('pemeriksaan-loading-produk.edit', $pemeriksaan->uuid) }}" 
-                                                   class="btn btn-sm btn-warning" title="Edit">
-                                                    <i class="bi bi-pencil"></i>
-                                                </a>
-                                                <form action="{{ route('pemeriksaan-loading-produk.destroy', $pemeriksaan->uuid) }}" 
-                                                      method="POST" style="display: inline-block;"
-                                                      onsubmit="return confirm('Yakin ingin menghapus data ini?')">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="submit" class="btn btn-sm btn-danger" title="Hapus">
-                                                        <i class="bi bi-trash"></i>
-                                                    </button>
-                                                </form>
+                                                @can('view_pemeriksaan_loading_produk')
+                                                    <a href="{{ route('pemeriksaan-loading-produk.show', $pemeriksaan->uuid) }}" 
+                                                       class="btn btn-sm btn-info" title="Lihat Detail">
+                                                        <i class="bi bi-eye"></i>
+                                                    </a>
+                                                @endcan
+                                                @can('edit_pemeriksaan_loading_produk')
+                                                    <a href="{{ route('pemeriksaan-loading-produk.edit', $pemeriksaan->uuid) }}" 
+                                                       class="btn btn-sm btn-warning" title="Edit">
+                                                        <i class="bi bi-pencil"></i>
+                                                    </a>
+                                                @endcan
+                                                @can('delete_pemeriksaan_loading_produk')
+                                                    <form action="{{ route('pemeriksaan-loading-produk.destroy', $pemeriksaan->uuid) }}" 
+                                                          method="POST" style="display: inline-block;"
+                                                          onsubmit="return confirm('Yakin ingin menghapus data ini?')">
+                                                        @csrf
+                                                        @method('DELETE')
+                                                        <button type="submit" class="btn btn-sm btn-danger" title="Hapus">
+                                                            <i class="bi bi-trash"></i>
+                                                        </button>
+                                                    </form>
+                                                @endcan
                                             </div>
                                         </td>
                                     </tr>

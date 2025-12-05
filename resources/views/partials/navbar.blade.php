@@ -39,8 +39,17 @@
                     </a>
                 </li>
 
-                <li class="sidebar-item has-sub {{ request()->routeIs('roles.*') || request()->routeIs('plants.*') || request()->routeIs('users.*') || request()->routeIs('barangs.*') || request()->routeIs('bahans.*') 
-                || request()->routeIs('customers.*') || request()->routeIs('shifts.*') || request()->routeIs('distributors.*') 
+                @php
+                $userRole = auth()->user()->role ? strtolower(auth()->user()->role->role) : null;
+                @endphp
+                <li class="sidebar-item {{ request()->routeIs('access-control.*') ? 'active' : '' }}">
+                    <a href="{{ route('access-control.index') }}" class='sidebar-link'>
+                        <i class="bi bi-shield-lock"></i>
+                        <span>Access Control</span>
+                    </a>
+                </li>
+                <li class="sidebar-item has-sub {{ request()->routeIs('roles.*') || request()->routeIs('plants.*') || request()->routeIs('users.*') || request()->routeIs('barangs.*') 
+                    || request()->routeIs('bahans.*') || request()->routeIs('customers.*') || request()->routeIs('shifts.*') || request()->routeIs('distributors.*') 
                     || request()->routeIs('produsens.*') || request()->routeIs('chemicals.*') || request()->routeIs('jenis-kendaraans.*') 
                     || request()->routeIs('tujuan-pengirimans.*') || request()->routeIs('supirs.*') 
                     || request()->routeIs('produks.*') || request()->routeIs('ekspedisis.*') || request()->routeIs('std-precoolings.*') || request()->routeIs('input-areas.*') 
@@ -52,8 +61,9 @@
                     <ul class="submenu {{ request()->routeIs('roles.*') || request()->routeIs('plants.*') || request()->routeIs('users.*') || request()->routeIs('barangs.*') || request()->routeIs('bahans.*') 
                     || request()->routeIs('customers.*') || request()->routeIs('shifts.*') || request()->routeIs('distributors.*') 
                     || request()->routeIs('produsens.*') || request()->routeIs('chemicals.*') || request()->routeIs('jenis-kendaraans.*') || request()->routeIs('tujuan-pengirimans.*') 
-                    || request()->routeIs('supirs.*') || request()->routeIs('produks.*') || request()->routeIs('ekspedisis.*') || request()->routeIs('std-precoolings.*') || request()->routeIs('input-areas.*') 
-                    || request()->routeIs('input-master-forms.*') || request()->routeIs('input-deskripsis.*') ? 'active' : '' }}">
+                    || request()->routeIs('supirs.*') || request()->routeIs('produks.*') || request()->routeIs('ekspedisis.*') || request()->routeIs('std-precoolings.*') 
+                    || request()->routeIs('input-areas.*') || request()->routeIs('input-master-forms.*') || request()->routeIs('input-deskripsis.*') ? 'active' : '' }}">
+                        @if($userRole === 'superadmin')
                         <li class="submenu-item {{ request()->routeIs('roles.*') ? 'active' : '' }}">
                             <a href="{{ route('roles.index') }}">Input Role</a>
                         </li>
@@ -63,6 +73,7 @@
                         <li class="submenu-item {{ request()->routeIs('users.*') ? 'active' : '' }}">
                             <a href="{{ route('users.index') }}">Input User</a>
                         </li>
+                        @endif
                         <li class="submenu-item {{ request()->routeIs('shifts.*') ? 'active' : '' }}">
                             <a href="{{ route('shifts.index') }}">Input Shift</a>
                         </li>
@@ -111,11 +122,13 @@
                         <li class="submenu-item {{ request()->routeIs('input-master-forms.*') ? 'active' : '' }}">
                             <a href="{{ route('input-master-forms.index')}}">Input Master Form</a>
                         </li>
+
                     </ul>
                 </li>
 
                 <li class="sidebar-title">Forms QC SISTEM</li>
 
+                @if($userRole === 'superadmin' || $userRole === 'qc inspector' || $userRole === 'produksi' || $userRole === 'admin' || $userRole === 'spv qc')
                 <li class="sidebar-item has-sub {{ request()->routeIs('pemeriksaan-kedatangan-kemasan.*') || 
                 request()->routeIs('pemeriksaan-bahan-baku.*') || request()->routeIs('pemeriksaan-chemical.*') ? 'active' : '' }}">
                     <a href="#" class='sidebar-link'>
@@ -220,6 +233,7 @@
                         </li>
                     </ul>
                 </li>
+                @endif
             </ul>
         </div>
         <button class="sidebar-toggler btn x"><i data-feather="x"></i></button>

@@ -40,9 +40,11 @@
                     <div class="card-header">
                         <div class="d-flex justify-content-between align-items-center">
                             <h4 class="card-title">Data Pemeriksaan Kedatangan Bahan Baku Penunjang</h4>
-                            <a href="{{ route('pemeriksaan-bahan-baku.create') }}" class="btn btn-primary">
-                                <i class="bi bi-plus-circle"></i> Tambah Data
-                            </a>
+                            @can('create_pemeriksaan_kedatangan_bahan_baku_penunjang')
+                                <a href="{{ route('pemeriksaan-bahan-baku.create') }}" class="btn btn-primary">
+                                    <i class="bi bi-plus-circle"></i> Tambah Data
+                                </a>
+                            @endcan
                         </div>
                     </div>
                     <div class="card-body">
@@ -152,24 +154,30 @@
                                             </td>
                                             <td>
                                                 <div class="btn-vertical" role="group">
-                                                    <a href="{{ route('pemeriksaan-bahan-baku.show', $pemeriksaan->uuid) }}" 
-                                                    class="btn btn-sm btn-info" title="Lihat Detail">
-                                                        <i class="bi bi-eye"></i>
-                                                    </a>
-                                                    <a href="{{ route('pemeriksaan-bahan-baku.edit', $pemeriksaan->uuid) }}" 
-                                                    class="btn btn-sm btn-warning" title="Edit">
-                                                        <i class="bi bi-pencil"></i>
-                                                    </a>
-                                                    <form action="{{ route('pemeriksaan-bahan-baku.destroy', $pemeriksaan->uuid) }}" 
-                                                        method="POST" style="display: inline-block;">
-                                                        @csrf
-                                                        @method('DELETE')
-                                                        <button type="submit" class="btn btn-sm btn-danger" 
-                                                                onclick="return confirm('Apakah Anda yakin ingin menghapus data ini?')" 
-                                                                title="Hapus">
-                                                            <i class="bi bi-trash"></i>
-                                                        </button>
-                                                    </form>
+                                                    @can('view_pemeriksaan_kedatangan_bahan_baku_penunjang')
+                                                        <a href="{{ route('pemeriksaan-bahan-baku.show', $pemeriksaan->uuid) }}" 
+                                                        class="btn btn-sm btn-info" title="Lihat Detail">
+                                                            <i class="bi bi-eye"></i>
+                                                        </a>
+                                                    @endcan
+                                                    @can('edit_pemeriksaan_kedatangan_bahan_baku_penunjang')
+                                                        <a href="{{ route('pemeriksaan-bahan-baku.edit', $pemeriksaan->uuid) }}" 
+                                                        class="btn btn-sm btn-warning" title="Edit">
+                                                            <i class="bi bi-pencil"></i>
+                                                        </a>
+                                                    @endcan
+                                                    @can('delete_pemeriksaan_kedatangan_bahan_baku_penunjang')
+                                                        <form action="{{ route('pemeriksaan-bahan-baku.destroy', $pemeriksaan->uuid) }}" 
+                                                            method="POST" style="display: inline-block;">
+                                                            @csrf
+                                                            @method('DELETE')
+                                                            <button type="submit" class="btn btn-sm btn-danger" 
+                                                                    onclick="return confirm('Apakah Anda yakin ingin menghapus data ini?')" 
+                                                                    title="Hapus">
+                                                                <i class="bi bi-trash"></i>
+                                                            </button>
+                                                        </form>
+                                                    @endcan
                                                 </div>
                                             </td>
                                         </tr>

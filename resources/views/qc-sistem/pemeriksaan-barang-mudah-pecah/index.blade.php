@@ -36,18 +36,21 @@
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="card-title mb-0">Daftar Pemeriksaan</h5>
-                    <a href="{{ route('pemeriksaan-barang-mudah-pecah.create') }}" class="btn btn-primary">
-                        <i class="bi bi-plus-circle"></i> Tambah Pemeriksaan
-                    </a>
+                    @can('create_pemeriksaan_barang_mudah_pecah')
+                        <a href="{{ route('pemeriksaan-barang-mudah-pecah.create') }}" class="btn btn-primary">
+                            <i class="bi bi-plus-circle"></i> Tambah Pemeriksaan
+                        </a>
+                    @endcan
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
-                        <table class="table table-striped text-center" id="table1">
+                        <table class="table table-striped text-center" id="table1" style="white-space:nowrap">
                             <thead>
                                 <tr>
                                     <th>No</th>
                                     <th>Tanggal</th>
                                     <th>Shift</th>
+                                    <th>Plan</th>
                                     <th>Area</th>
                                     <th>Jumlah Barang</th>
                                     <!-- <th>Dibuat Oleh</th> -->
@@ -63,6 +66,13 @@
                                         <td>{{ \Carbon\Carbon::parse($pemeriksaan->tanggal)->format('d-m-Y') }}</td>
                                         <td>
                                             <span class="badge bg-info">{{ $pemeriksaan->shift->shift }}</span>
+                                        </td>
+                                        <td>
+                                            @if($pemeriksaan->user->plant)
+                                            <span class="badge bg-primary">{{ $pemeriksaan->user->plant->plant }}</span>
+                                            @else
+                                            <span class="badge bg-secondary">No Plant</span>
+                                            @endif
                                         </td>
                                         <td>{{ $pemeriksaan->area->nama_area }}</td>
                                         <td>
@@ -123,24 +133,30 @@
                                         </td>
                                         <td>
                                             <div class="btn-vertical">
-                                                <a href="{{ route('pemeriksaan-barang-mudah-pecah.show', $pemeriksaan->uuid) }}" 
-                                                   class="btn btn-sm btn-info" title="Lihat Detail">
-                                                    <i class="bi bi-eye"></i>
-                                                </a>
-                                                <a href="{{ route('pemeriksaan-barang-mudah-pecah.edit', $pemeriksaan->uuid) }}" 
-                                                   class="btn btn-sm btn-warning" title="Edit Data">
-                                                    <i class="bi bi-pencil"></i>
-                                                </a>
-                                                <form action="{{ route('pemeriksaan-barang-mudah-pecah.destroy', $pemeriksaan->uuid) }}" 
-                                                      method="POST" 
-                                                      style="display: inline-block;"
-                                                      onsubmit="return confirm('Yakin ingin menghapus pemeriksaan ini?')">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="submit" class="btn btn-sm btn-danger" title="Hapus Data">
-                                                        <i class="bi bi-trash"></i>
-                                                    </button>
-                                                </form>
+                                                @can('view_pemeriksaan_barang_mudah_pecah')
+                                                    <a href="{{ route('pemeriksaan-barang-mudah-pecah.show', $pemeriksaan->uuid) }}" 
+                                                       class="btn btn-sm btn-info" title="Lihat Detail">
+                                                        <i class="bi bi-eye"></i>
+                                                    </a>
+                                                @endcan
+                                                @can('edit_pemeriksaan_barang_mudah_pecah')
+                                                    <a href="{{ route('pemeriksaan-barang-mudah-pecah.edit', $pemeriksaan->uuid) }}" 
+                                                       class="btn btn-sm btn-warning" title="Edit Data">
+                                                        <i class="bi bi-pencil"></i>
+                                                    </a>
+                                                @endcan
+                                                @can('delete_pemeriksaan_barang_mudah_pecah')
+                                                    <form action="{{ route('pemeriksaan-barang-mudah-pecah.destroy', $pemeriksaan->uuid) }}" 
+                                                          method="POST" 
+                                                          style="display: inline-block;"
+                                                          onsubmit="return confirm('Yakin ingin menghapus pemeriksaan ini?')">
+                                                        @csrf
+                                                        @method('DELETE')
+                                                        <button type="submit" class="btn btn-sm btn-danger" title="Hapus Data">
+                                                            <i class="bi bi-trash"></i>
+                                                        </button>
+                                                    </form>
+                                                @endcan
                                             </div>
                                         </td>
                                     </tr>

@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PlantController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\AccessControlController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\BarangController;
 use App\Http\Controllers\BahanController;
@@ -50,7 +51,55 @@ Route::get('/dashboard', [AuthController::class, 'dashboard'])->name('dashboard'
 
 
 // Protected Routes (require authentication)
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/debug/check-roles', function () {
+    try {
+        // 1. Cek table roles
+        $allRoles = \Spatie\Permission\Models\Role::all();
+        
+        $rolesData = $allRoles->map(function($role) {
+            return [
+                'id' => $role->id,
+                'role' => $role->role,
+                'guard_name' => $role->guard_name,
+                'permissions_count' => $role->permissions()->count(),
+            ];
+        });
+        
+        // 2. Cek roles yang bukan superadmin
+        $nonSuperAdminRoles = \Spatie\Permission\Models\Role::where('role', '!=', 'superadmin')->get();
+        
+        // 3. Cek apakah table roles kosong
+        $rolesCount = \Spatie\Permission\Models\Role::count();
+        
+        // 4. Cek semua permissions
+        $permissions = \Spatie\Permission\Models\Permission::all();
+        
+        $info = [
+            'Total Roles' => $rolesCount,
+            'All Roles' => $rolesData,
+            'Non SuperAdmin Roles Count' => $nonSuperAdminRoles->count(),
+            'Non SuperAdmin Roles' => $nonSuperAdminRoles->pluck('role')->toArray(),
+            'Total Permissions' => $permissions->count(),
+            'Sample Permissions' => $permissions->take(5)->pluck('name')->toArray(),
+        ];
+        
+        return '<pre style="background: #f4f4f4; padding: 20px; font-family: monospace; white-space: pre-wrap;">' . 
+               json_encode($info, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . 
+               '</pre>';
+    } catch (\Exception $e) {
+        return '<pre style="color: red; padding: 20px;">' . 
+               'Error: ' . $e->getMessage() . 
+               '\nFile: ' . $e->getFile() . 
+               '\nLine: ' . $e->getLine() . 
+               '</pre>';
+    }
+})->middleware('auth');
+    // Access Control Routes (Only SuperAdmin)
+    Route::get('access-control', [AccessControlController::class, 'index'])->name('access-control.index');
+    Route::put('access-control/{roleId}', [AccessControlController::class, 'update'])->name('access-control.update');
+    Route::get('access-control/{roleId}/permissions', [AccessControlController::class, 'getPermissions'])->name('access-control.permissions');
+    
     // Data Master Routes (Super Admin)
     Route::prefix('super-admin')->group(function () {
         // Role Management Routes
@@ -221,5 +270,7 @@ Route::middleware('auth')->group(function () {
         // AJAX routes untuk dependent dropdown
         Route::get('api/area-locations/{idArea}', [PemeriksaanBarangMudahPecahController::class, 'getAreaLocations'])->name('api.area-locations');
         Route::get('api/barang-details/{idBarang}', [PemeriksaanBarangMudahPecahController::class, 'getBarangDetails'])->name('api.barang-details');
+        
+        
     });
 });

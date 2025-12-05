@@ -36,9 +36,11 @@
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="card-title mb-0">Daftar Pemeriksaan Kedatangan Kemasan</h5>
-                    <a href="{{ route('pemeriksaan-kedatangan-kemasan.create') }}" class="btn btn-primary">
-                        <i class="bi bi-plus-circle"></i> Tambah Pemeriksaan
-                    </a>
+                    @can('create_pemeriksaan_kedatangan_kemasan')
+                        <a href="{{ route('pemeriksaan-kedatangan-kemasan.create') }}" class="btn btn-primary">
+                            <i class="bi bi-plus-circle"></i> Tambah Pemeriksaan
+                        </a>
+                    @endcan
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
@@ -47,13 +49,13 @@
                                 <tr>
                                     <th>No</th>
                                     <th>Tanggal</th>
+                                    <th>Shift</th>
+                                    <th>Plant</th>
                                     <!-- <th>No. PO</th> -->
-                                    <th>Nama Bahan Kemasan</th>
+                                    <th>Bahan Kemasan</th>
                                     <!-- <th>Produsen</th> -->
                                     <th>Kode Produksi</th>
                                     <th>Status</th>
-                                    <th>Plant</th>
-                                    <th>Shift</th>
                                     <th>Verifikasi</th>
                                     <th>Catatan Verifikasi</th>
                                     <th>Aksi</th>
@@ -65,6 +67,20 @@
                                         <td>{{ $index + 1 }}</td>
                                         <td>
                                             <strong>{{ $pemeriksaan->tanggal->format('d/m/Y') }}</strong>
+                                        </td>
+                                        <td>
+                                            @if($pemeriksaan->shift)
+                                                <span class="badge bg-primary">{{ $pemeriksaan->shift->shift }}</span>
+                                            @else
+                                                <span class="badge bg-secondary">No Shift</span>
+                                            @endif
+                                        </td>
+                                        <td>
+                                            @if($pemeriksaan->user->plant)
+                                                <span class="badge bg-info">{{ $pemeriksaan->user->plant->plant }}</span>
+                                            @else
+                                                <span class="badge bg-secondary">No Plant</span>
+                                            @endif
                                         </td>
                                         <!-- <td>
                                             {{ $pemeriksaan->no_po ?? '-' }}
@@ -85,20 +101,6 @@
                                                 <span class="badge bg-success">{{ $pemeriksaan->status }}</span>
                                             @else
                                                 <span class="badge bg-warning">{{ $pemeriksaan->status }}</span>
-                                            @endif
-                                        </td>
-                                        <td>
-                                            @if($pemeriksaan->user->plant)
-                                                <span class="badge bg-info">{{ $pemeriksaan->user->plant->plant }}</span>
-                                            @else
-                                                <span class="badge bg-secondary">No Plant</span>
-                                            @endif
-                                        </td>
-                                        <td>
-                                            @if($pemeriksaan->shift)
-                                                <span class="badge bg-primary">{{ $pemeriksaan->shift->shift }}</span>
-                                            @else
-                                                <span class="badge bg-secondary">No Shift</span>
                                             @endif
                                         </td>
                                         <td>
@@ -144,24 +146,30 @@
                                         </td>
                                         <td>
                                             <div class="btn-vertical" role="group">
-                                                <a href="{{ route('pemeriksaan-kedatangan-kemasan.show', $pemeriksaan->uuid) }}" 
-                                                   class="btn btn-sm btn-info" title="Lihat Detail">
-                                                    <i class="bi bi-eye"></i>
-                                                </a>
-                                                <a href="{{ route('pemeriksaan-kedatangan-kemasan.edit', $pemeriksaan->uuid) }}" 
-                                                   class="btn btn-sm btn-warning" title="Edit Data">
-                                                    <i class="bi bi-pencil"></i>
-                                                </a>
-                                                <form action="{{ route('pemeriksaan-kedatangan-kemasan.destroy', $pemeriksaan->uuid) }}" 
-                                                      method="POST" 
-                                                      style="display: inline-block;"
-                                                      onsubmit="return confirm('Yakin ingin menghapus data pemeriksaan ini?')">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="submit" class="btn btn-sm btn-danger" title="Hapus Data">
-                                                        <i class="bi bi-trash"></i>
-                                                    </button>
-                                                </form>
+                                                @can('view_pemeriksaan_kedatangan_kemasan')
+                                                    <a href="{{ route('pemeriksaan-kedatangan-kemasan.show', $pemeriksaan->uuid) }}" 
+                                                       class="btn btn-sm btn-info" title="Lihat Detail">
+                                                        <i class="bi bi-eye"></i>
+                                                    </a>
+                                                @endcan
+                                                @can('edit_pemeriksaan_kedatangan_kemasan')
+                                                    <a href="{{ route('pemeriksaan-kedatangan-kemasan.edit', $pemeriksaan->uuid) }}" 
+                                                       class="btn btn-sm btn-warning" title="Edit Data">
+                                                        <i class="bi bi-pencil"></i>
+                                                    </a>
+                                                @endcan
+                                                @can('delete_pemeriksaan_kedatangan_kemasan')
+                                                    <form action="{{ route('pemeriksaan-kedatangan-kemasan.destroy', $pemeriksaan->uuid) }}" 
+                                                          method="POST" 
+                                                          style="display: inline-block;"
+                                                          onsubmit="return confirm('Yakin ingin menghapus data pemeriksaan ini?')">
+                                                        @csrf
+                                                        @method('DELETE')
+                                                        <button type="submit" class="btn btn-sm btn-danger" title="Hapus Data">
+                                                            <i class="bi bi-trash"></i>
+                                                        </button>
+                                                    </form>
+                                                @endcan
                                             </div>
                                         </td>
                                     </tr>

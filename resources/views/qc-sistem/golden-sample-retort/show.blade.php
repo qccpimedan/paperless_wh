@@ -45,6 +45,22 @@
                                 </div>
                                 <div class="row mb-3">
                                     <div class="col-md-3">
+                                        <label class="form-label"><strong>Shift</strong></label>
+                                    </div>
+                                    <div class="col-md-9">
+                                        <span class="badge bg-info">{{ $goldenSampleReport->shift->shift ?? 'Shift tidak ditemukan' }}</span>
+                                    </div>
+                                </div>
+                                <div class="row mb-3">
+                                    <div class="col-md-3">
+                                        <label class="form-label"><strong>Tanggal</strong></label>
+                                    </div>
+                                    <div class="col-md-9">
+                                        <span class="badge bg-info">{{ $goldenSampleReport->tanggal }}</span>
+                                    </div>
+                                </div>
+                                <div class="row mb-3">
+                                    <div class="col-md-3">
                                         <label class="form-label"><strong>Collection Date (Bulan)</strong></label>
                                     </div>
                                     <div class="col-md-9">
@@ -79,7 +95,7 @@
                                         @endforeach
                                     </div>
                                 </div>
-                                <div class="row mb-3">
+                                <!-- <div class="row mb-3">
                                     <div class="col-md-3">
                                         <label class="form-label"><strong>Dibuat Oleh</strong></label>
                                     </div>
@@ -94,7 +110,7 @@
                                     <div class="col-md-9">
                                         <p>{{ $goldenSampleReport->created_at ? $goldenSampleReport->created_at->format('d-M-Y H:i:s') : '-' }}</p>
                                     </div>
-                                </div>
+                                </div> -->
                             </div>
                         </div>
                     </div>

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\DetailKomplain;
 use App\Models\Produk;
+use App\Models\Shift;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -31,18 +32,26 @@ class DetailKomplainController extends Controller
     public function create()
     {
         $user = Auth::user();
-        // Semua user yang login bisa create
         
-        // Filter produk berdasarkan plant
+        // Get shifts based on user's plant
+        $shifts = Shift::query();
+        if ($user->role->role !== 'SuperAdmin') {
+            $shifts->whereHas('user', function($q) use ($user) {
+                $q->where('id_plant', $user->id_plant);
+            });
+        }
+        $shifts = $shifts->get();
+        
+        // Get products based on user's plant
         $query = Produk::query();
         if ($user->role->role !== 'SuperAdmin') {
-            // Admin dan role lain hanya lihat produk sesuai plant
             $query->whereHas('user', function ($q) use ($user) {
                 $q->where('id_plant', $user->id_plant);
             });
         }
         $produks = $query->latest()->get();
-        return view('qc-sistem.detail-komplain.create', compact('produks'));
+        
+        return view('qc-sistem.detail-komplain.create', compact('produks', 'shifts'));
     }
 
     public function store(Request $request)
@@ -50,6 +59,7 @@ class DetailKomplainController extends Controller
         $request->validate([
             'nama_supplier' => 'required|string|max:255',
             'tanggal_kedatangan' => 'required|date',
+            'id_shift' => 'required|exists:shifts,id',  // Added shift validation
             'no_po' => 'required|string|max:100',
             'nama_produk' => 'required|string|max:255',
             'kode_produksi' => 'required|string|max:100',
@@ -73,6 +83,7 @@ class DetailKomplainController extends Controller
         DetailKomplain::create([
             'nama_supplier' => $request->nama_supplier,
             'tanggal_kedatangan' => $request->tanggal_kedatangan,
+            'id_shift' => $request->id_shift,
             'no_po' => $request->no_po,
             'nama_produk' => $request->nama_produk,
             'kode_produksi' => $request->kode_produksi,

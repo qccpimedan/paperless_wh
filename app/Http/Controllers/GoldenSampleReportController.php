@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\GoldenSampleReport;
 use App\Models\Plant;
+use App\Models\Shift;
 use App\Models\InputDeskripsi;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -19,10 +20,12 @@ class GoldenSampleReportController extends Controller
         
         // SuperAdmin dapat melihat semua data
         if ($user->role && strtolower($user->role->role) === 'superadmin') {
-            $reports = GoldenSampleReport::with(['user.role', 'user.plant', 'plant'])->latest()->get();
+            $reports = GoldenSampleReport::with(['user.role', 'user.plant', 'plant', 'shift'])
+            ->latest()
+            ->get();
         } else {
             // Admin dan role lain hanya melihat data sesuai plant mereka
-            $reports = GoldenSampleReport::with(['user.role', 'user.plant', 'plant'])
+            $reports = GoldenSampleReport::with(['user.role', 'user.plant', 'plant', 'shift'])
                 ->whereHas('user', function($query) use ($user) {
                     $query->where('id_plant', $user->id_plant);
                 })
@@ -56,7 +59,16 @@ class GoldenSampleReportController extends Controller
         }
         $deskripsis = $deskripsiQuery->latest()->get();
         
-        return view('qc-sistem.golden-sample-retort.create', compact('plants', 'deskripsis'));
+        // Get shifts - Mengikuti pola dari PemeriksaanKedatanganChemicalController
+        if ($user->role && strtolower($user->role->role) === 'superadmin') {
+            $shifts = Shift::with(['user.plant'])->get();
+        } else {
+            $shifts = Shift::whereHas('user', function ($query) use ($user) {
+                $query->where('id_plant', $user->id_plant);
+            })->with(['user.plant'])->get();
+        }
+        
+        return view('qc-sistem.golden-sample-retort.create', compact('plants', 'deskripsis', 'shifts'));
     }
 
     /**
@@ -66,6 +78,8 @@ class GoldenSampleReportController extends Controller
     {
         $request->validate([
             'id_plant' => 'required|string',
+            'id_shift' => 'required|exists:shifts,id',  // Added shift validation
+            'tanggal' => 'required|date',  // Added tanggal validation
             'plant_manual' => 'nullable|string|max:255|required_if:id_plant,other',
             'sample_type' => 'required|string|max:255',
             'collection_date_from' => 'required|string|regex:/^\d{4}-\d{2}$/',
@@ -88,17 +102,18 @@ class GoldenSampleReportController extends Controller
         GoldenSampleReport::create([
             'id_user' => Auth::id(),
             'id_plant' => $idPlant,
+            'id_shift' => $request->id_shift,  // Added shift_id
             'plant_manual' => $request->id_plant === 'other' ? $request->plant_manual : null,
             'sample_type' => $request->sample_type,
             'collection_date_from' => $request->collection_date_from,
             'collection_date_to' => $request->collection_date_to,
-            'tanggal' => $request->tanggal,
+            'tanggal' => \Carbon\Carbon::parse($request->tanggal)->format('Y-m-d'),  // Ensure proper date format
             'sample_storage' => $request->sample_storage,
             'samples' => $request->samples,
         ]);
 
         return redirect()->route('golden-sample-reports.index')
-                       ->with('success', 'Golden Sample Report berhasil ditambahkan!');
+                    ->with('success', 'Golden Sample Report berhasil ditambahkan!');
     }
 
     /**

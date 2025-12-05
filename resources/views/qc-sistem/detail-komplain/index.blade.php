@@ -37,9 +37,11 @@
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="card-title mb-0">Daftar Detail Komplain</h5>
-                    <a href="{{ route('detail-komplain.create') }}" class="btn btn-primary">
-                        <i class="bi bi-plus-circle"></i> Tambah Komplain
-                    </a>
+                    @can('create_detail_komplain')
+                        <a href="{{ route('detail-komplain.create') }}" class="btn btn-primary">
+                            <i class="bi bi-plus-circle"></i> Tambah Komplain
+                        </a>
+                    @endcan
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
@@ -47,13 +49,14 @@
                             <thead>
                                 <tr>
                                     <th>No</th>
-                                    <th>Supplier</th>
                                     <th>Tanggal</th>
+                                    <th>Shift</th>
+                                    <th>Plan</th>
                                     <!-- <th>No. PO</th> -->
+                                    <th>Supplier</th>
                                     <th>Produk</th>
                                     <th>Dokumentasi</th>
                                     <th>Upload Supplier</th>
-                                    <th>Plan</th>
                                     <th>Verifikasi</th>
                                     <th>Catatan Verifikasi</th>
                                     <th>Aksi</th>
@@ -63,8 +66,20 @@
                                 @forelse($komplains as $index => $komplain)
                                     <tr>
                                         <td>{{ $index + 1 }}</td>
-                                        <td><strong>{{ $komplain->nama_supplier }}</strong></td>
                                         <td>{{ $komplain->tanggal_kedatangan->format('d-m-Y') }}</td>
+                                        <td>
+                                            <span class="badge bg-info">
+                                                {{ $komplain->shift->shift ?? 'Shift tidak ditemukan' }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            @if($komplain->user->plant)
+                                            <span class="badge bg-primary">{{ $komplain->user->plant->plant }}</span>
+                                            @else
+                                            <span class="badge bg-secondary">No Plant</span>
+                                            @endif
+                                        </td>
+                                        <td><strong>{{ $komplain->nama_supplier }}</strong></td>
                                         <!-- <td>{{ $komplain->no_po }}</td> -->
                                         <td>{{ $komplain->nama_produk }}</td>
                                         <td>
@@ -88,13 +103,6 @@
                                                         data-bs-target="#uploadModal{{ $komplain->uuid }}">
                                                     <i class="bi bi-upload"></i> Upload
                                                 </button>
-                                            @endif
-                                        </td>
-                                        <td>
-                                            @if($komplain->user->plant)
-                                                <span class="badge bg-primary">{{ $komplain->user->plant->plant }}</span>
-                                            @else
-                                                <span class="badge bg-secondary">No Plant</span>
                                             @endif
                                         </td>
                                         <td>
@@ -151,26 +159,32 @@
                                         </td>
                                         <td>
                                             <div class="btn-vertical">
-                                                <a href="{{ route('detail-komplain.show', $komplain->uuid) }}" 
-                                                   class="btn btn-sm btn-info" title="Lihat Detail">
-                                                    <i class="bi bi-eye"></i>
-                                                </a>
-                                                <a href="{{ route('detail-komplain.edit', $komplain->uuid) }}" 
-                                                   class="btn btn-sm btn-warning" title="Edit">
-                                                    <i class="bi bi-pencil"></i>
-                                                </a>
+                                                @can('view_detail_komplain')
+                                                    <a href="{{ route('detail-komplain.show', $komplain->uuid) }}" 
+                                                       class="btn btn-sm btn-info" title="Lihat Detail">
+                                                        <i class="bi bi-eye"></i>
+                                                    </a>
+                                                @endcan
+                                                @can('edit_detail_komplain')
+                                                    <a href="{{ route('detail-komplain.edit', $komplain->uuid) }}" 
+                                                       class="btn btn-sm btn-warning" title="Edit">
+                                                        <i class="bi bi-pencil"></i>
+                                                    </a>
+                                                @endcan
                                                 <a href="{{ route('detail-komplain.export-pdf', $komplain->uuid) }}" 
                                                    class="btn btn-sm btn-secondary" title="Export PDF" target="_blank">
                                                     <i class="bi bi-file-earmark-arrow-down"></i>
                                                 </a>
-                                                <form action="{{ route('detail-komplain.destroy', $komplain->uuid) }}" 
-                                                      method="POST" style="display:inline;">
-                                                    @csrf @method('DELETE')
-                                                    <button type="submit" class="btn btn-sm btn-danger" title="Hapus"
-                                                            onclick="return confirm('Yakin ingin menghapus?')">
-                                                        <i class="bi bi-trash"></i>
-                                                    </button>
-                                                </form>
+                                                @can('delete_detail_komplain')
+                                                    <form action="{{ route('detail-komplain.destroy', $komplain->uuid) }}" 
+                                                          method="POST" style="display:inline;">
+                                                        @csrf @method('DELETE')
+                                                        <button type="submit" class="btn btn-sm btn-danger" title="Hapus"
+                                                                onclick="return confirm('Yakin ingin menghapus?')">
+                                                            <i class="bi bi-trash"></i>
+                                                        </button>
+                                                    </form>
+                                                @endcan
                                             </div>
                                         </td>
                                     </tr>

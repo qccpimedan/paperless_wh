@@ -52,7 +52,7 @@
 
                                     <div class="col-md-6">
                                         <div class="mb-3">
-                                            <label class="form-label"><strong>Pukul</strong></label>
+                                            <label class="form-label"><strong>Waktu</strong></label>
                                             <p class="form-control-plaintext">{{ $pemeriksaanSuhuRuangV3->pukul }}</p>
                                         </div>
                                     </div>

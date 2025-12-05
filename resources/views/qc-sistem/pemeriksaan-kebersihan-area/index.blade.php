@@ -36,9 +36,11 @@
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="card-title mb-0">Daftar Pemeriksaan Kebersihan Area</h5>
-                    <a href="{{ route('pemeriksaan-kebersihan-area.create') }}" class="btn btn-primary">
-                        <i class="bi bi-plus-circle"></i> Buat Pemeriksaan
-                    </a>
+                    @can('create_pemeriksaan_kebersihan_area')
+                        <a href="{{ route('pemeriksaan-kebersihan-area.create') }}" class="btn btn-primary">
+                            <i class="bi bi-plus-circle"></i> Buat Pemeriksaan
+                        </a>
+                    @endcan
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
@@ -47,10 +49,10 @@
                                 <tr>
                                     <th>No</th>
                                     <th>Tanggal</th>
-                                    <th>Area</th>
                                     <th>Shift</th>
-                                    <th>Master Form</th>
                                     <th>Plant</th>
+                                    <th>Area</th>
+                                    <th>Master Form</th>
                                     <th>Verifikasi</th>
                                     <th>Catatan Verifikasi</th>
                                     <th>Aksi</th>
@@ -62,13 +64,7 @@
                                         <td>{{ $index + 1 }}</td>
                                         <td>{{ $pemeriksaan->tanggal->format('d/m/Y') }}</td>
                                         <td>
-                                            <strong>{{ $pemeriksaan->area->nama_area }}</strong>
-                                        </td>
-                                        <td>
                                             <span class="badge bg-info">{{ $pemeriksaan->shift->shift }}</span>
-                                        </td>
-                                        <td>
-                                            <strong>{{ $pemeriksaan->masterForm->nama_form }}</strong>
                                         </td>
                                         <td>
                                             @if($pemeriksaan->user->plant)
@@ -76,6 +72,12 @@
                                             @else
                                                 <span class="badge bg-secondary">No Plant</span>
                                             @endif
+                                        </td>
+                                        <td>
+                                            <strong>{{ $pemeriksaan->area->nama_area }}</strong>
+                                        </td>
+                                        <td>
+                                            <strong>{{ $pemeriksaan->masterForm->nama_form }}</strong>
                                         </td>
                                         <td>
                                             @php
@@ -131,24 +133,30 @@
                                         </td>
                                         <td>
                                             <div class="btn-vertical">
-                                                <a href="{{ route('pemeriksaan-kebersihan-area.show', $pemeriksaan->uuid) }}" 
-                                                   class="btn btn-sm btn-info" title="Lihat Detail">
-                                                    <i class="bi bi-eye"></i>
-                                                </a>
-                                                <a href="{{ route('pemeriksaan-kebersihan-area.edit', $pemeriksaan->uuid) }}" 
-                                                   class="btn btn-sm btn-warning" title="Edit Data">
-                                                    <i class="bi bi-pencil"></i>
-                                                </a>
-                                                <form action="{{ route('pemeriksaan-kebersihan-area.destroy', $pemeriksaan->uuid) }}" 
-                                                      method="POST" 
-                                                      style="display: inline-block;"
-                                                      onsubmit="return confirm('Yakin ingin menghapus pemeriksaan ini?')">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="submit" class="btn btn-sm btn-danger" title="Hapus Data">
-                                                        <i class="bi bi-trash"></i>
-                                                    </button>
-                                                </form>
+                                                @can('view_pemeriksaan_kebersihan_area')
+                                                    <a href="{{ route('pemeriksaan-kebersihan-area.show', $pemeriksaan->uuid) }}" 
+                                                       class="btn btn-sm btn-info" title="Lihat Detail">
+                                                        <i class="bi bi-eye"></i>
+                                                    </a>
+                                                @endcan
+                                                @can('edit_pemeriksaan_kebersihan_area')
+                                                    <a href="{{ route('pemeriksaan-kebersihan-area.edit', $pemeriksaan->uuid) }}" 
+                                                       class="btn btn-sm btn-warning" title="Edit Data">
+                                                        <i class="bi bi-pencil"></i>
+                                                    </a>
+                                                @endcan
+                                                @can('delete_pemeriksaan_kebersihan_area')
+                                                    <form action="{{ route('pemeriksaan-kebersihan-area.destroy', $pemeriksaan->uuid) }}" 
+                                                          method="POST" 
+                                                          style="display: inline-block;"
+                                                          onsubmit="return confirm('Yakin ingin menghapus pemeriksaan ini?')">
+                                                        @csrf
+                                                        @method('DELETE')
+                                                        <button type="submit" class="btn btn-sm btn-danger" title="Hapus Data">
+                                                            <i class="bi bi-trash"></i>
+                                                        </button>
+                                                    </form>
+                                                @endcan
                                             </div>
                                         </td>
                                     </tr>
