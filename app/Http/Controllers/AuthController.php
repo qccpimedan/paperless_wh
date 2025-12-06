@@ -43,6 +43,11 @@ class AuthController extends Controller
                 'username' => 'Password salah.',
             ])->onlyInput('username');
         }
+         if (is_null($user->email_verified_at)) {
+            return back()->withErrors([
+                'username' => 'Akun belum diaktivasi. Silakan hubungi administrator untuk mengaktivasi akun Anda.',
+            ])->onlyInput('username');
+        }
 
         // Login user manually
         Auth::login($user, $request->filled('remember'));
