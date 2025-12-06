@@ -45,7 +45,7 @@ class AuthController extends Controller
         }
          if (is_null($user->email_verified_at)) {
             return back()->withErrors([
-                'username' => 'Akun belum diaktivasi. Silakan hubungi administrator untuk mengaktivasi akun Anda.',
+                'username' => 'Akun belum diaktivasi. Silakan hubungi admin kepegawaian untuk mengaktivasi akun Anda.',
             ])->onlyInput('username');
         }
 
