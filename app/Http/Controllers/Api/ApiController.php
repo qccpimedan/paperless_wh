@@ -54,19 +54,19 @@ class ApiController extends Controller
             // Set email_verified_at based on activation status
             $activation = $user['activation'] ?? false;
             
-            // Handle various activation value types
-            // if ($activation === 1 || $activation === '1' || $activation === true || $activation === 'true' || $activation === 'True') {
-            //     $userData['email_verified_at'] = Carbon::now()->format('Y-m-d H:i:s');
-            // } else {
-            //     $userData['email_verified_at'] = null;   
-            // }
-            if ($activation == 1 || $activation == '1' || $activation === true || strtolower($activation) === 'true') {
-                $userData['email_verified_at'] = Carbon::now();
-                //\Log::info('Email verified at set to: ' . $userData['email_verified_at']);
+           // Handle various activation value types
+            if ($activation === 1 || $activation === '1' || $activation === true || $activation === 'true' || $activation === 'True') {
+                $userData['email_verified_at'] = Carbon::now()->format('Y-m-d H:i:s');
             } else {
-                $userData['email_verified_at'] = null;
-               // \Log::info('Email verified at set to null');
+                $userData['email_verified_at'] = null;   
             }
+            // if ($activation == 1 || $activation == '1' || $activation === true || strtolower($activation) === 'true') {
+            //     $userData['email_verified_at'] = Carbon::now();
+            //     //\Log::info('Email verified at set to: ' . $userData['email_verified_at']);
+            // } else {
+            //     $userData['email_verified_at'] = null;
+            //    // \Log::info('Email verified at set to null');
+            // }
            
 
             $existingUser = User::withTrashed()->where('uuid', $user['uuid'])->first();
