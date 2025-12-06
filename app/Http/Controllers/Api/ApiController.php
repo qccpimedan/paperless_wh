@@ -275,4 +275,16 @@ public function syncPlant(Request $request)
             ], 200);
         }
     }
+
+      private function mapRole($roleName)
+    {
+        $roleMapping = [
+            'SPV QC' => 2,
+            'QC Inspector' => 3,
+            'admin' => 4,
+            'produksi' => 5,
+        ];
+
+        return $roleMapping[$roleName] ?? null; // default to petugas_isi if no match
+    }
 }
