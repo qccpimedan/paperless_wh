@@ -84,7 +84,8 @@ class ApiController extends Controller
 
             return response()->json([
                 'status'  => 'success',
-                'message' => 'User synced successfully: ' . $user['uuid']
+                 'message' => 'User synced successfully: ' . $user['uuid'],
+                 'data'    => $userData,
             ]);
         } catch (\Throwable $e) {
             return response()->json([
