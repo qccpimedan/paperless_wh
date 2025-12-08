@@ -138,7 +138,7 @@
                                                     class="btn btn-sm btn-info" title="Lihat Detail">
                                                         <i class="bi bi-eye"></i>
                                                     </a>
-                                                endcan
+                                                @endcan
                                                 @can('edit_pemeriksaan_suhu_ruang_v3')
                                                     <a href="{{ route('pemeriksaan-suhu-ruang-v3.edit', $pemeriksaan->uuid) }}" 
                                                     class="btn btn-sm btn-warning" title="Edit Data">
@@ -148,13 +148,13 @@
                                                     class="btn btn-sm btn-success" title="Edit Per 2 Jam">
                                                         <i class="bi bi-hourglass-bottom"></i>
                                                     </a>
-                                                endcan
+                                                @endcan
                                                 @can('view_pemeriksaan_suhu_ruang_3')
                                                     <a href="{{ route('pemeriksaan-suhu-ruang-v3.history', $pemeriksaan->uuid) }}" 
                                                     class="btn btn-sm btn-secondary" title="Lihat History">
                                                         <i class="bi bi-clock-history"></i>
                                                     </a>
-                                                endcan
+                                                @endcan
                                                 @can('delete_pemeriksaan_suhu_ruang_3')
                                                     <form action="{{ route('pemeriksaan-suhu-ruang-v3.destroy', $pemeriksaan->uuid) }}" 
                                                         method="POST" 
@@ -166,7 +166,7 @@
                                                             <i class="bi bi-trash"></i>
                                                         </button>
                                                     </form>
-                                                endcan
+                                                @endcan
                                             </div>
                                         </td>
                                     </tr>

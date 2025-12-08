@@ -50,6 +50,9 @@ class PemeriksaanKedatanganBahanBakuPenunjang extends Model
         'verified_by',
         'verified_at',
         'verification_notes',
+        'verified_by_qc',
+        'verified_by_produksi',
+        'verified_by_spv',
     ];
 
     protected $casts = [
@@ -96,6 +99,30 @@ class PemeriksaanKedatanganBahanBakuPenunjang extends Model
     public function verifiedBy()
     {
         return $this->belongsTo(User::class, 'verified_by');
+    }
+
+    /**
+     * Relationship to QC verifier
+     */
+    public function qcVerifier()
+    {
+        return $this->belongsTo(User::class, 'verified_by_qc');
+    }
+
+    /**
+     * Relationship to Produksi verifier
+     */
+    public function produksiVerifier()
+    {
+        return $this->belongsTo(User::class, 'verified_by_produksi');
+    }
+
+    /**
+     * Relationship to SPV verifier
+     */
+    public function spvVerifier()
+    {
+        return $this->belongsTo(User::class, 'verified_by_spv');
     }
     
     /**

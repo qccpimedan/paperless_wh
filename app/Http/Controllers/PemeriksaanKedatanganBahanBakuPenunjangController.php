@@ -7,6 +7,7 @@ use App\Models\Shift;
 use App\Models\Bahan;
 use App\Models\Produsen;
 use App\Models\Distributor;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Monarobase\CountryList\CountryListFacade as Countries; // Menggunakan Facade
@@ -272,7 +273,12 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
         if ($pemeriksaanBahanBaku->status_verifikasi !== 'pending') {
             return redirect()->back()->with('error', 'Hanya pemeriksaan dengan status pending yang dapat dikirim.');
         }
-        $pemeriksaanBahanBaku->update(['status_verifikasi' => 'sent_to_produksi', 'verified_by' => $user->id, 'verified_at' => now()]);
+        $pemeriksaanBahanBaku->update([
+            'status_verifikasi' => 'sent_to_produksi',
+            'verified_by' => $user->id,
+            'verified_by_qc' => $user->id,
+            'verified_at' => now()
+        ]);
         return redirect()->back()->with('success', 'Pemeriksaan berhasil dikirim ke Produksi.');
     }
 
@@ -283,7 +289,13 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
         if ($pemeriksaanBahanBaku->status_verifikasi !== 'sent_to_produksi') {
             return redirect()->back()->with('error', 'Status pemeriksaan tidak valid untuk di-approve.');
         }
-        $pemeriksaanBahanBaku->update(['status_verifikasi' => 'approved_produksi', 'verified_by' => $user->id, 'verified_at' => now(), 'verification_notes' => $request->input('notes')]);
+        $pemeriksaanBahanBaku->update([
+            'status_verifikasi' => 'approved_produksi',
+            'verified_by' => $user->id,
+            'verified_by_produksi' => $user->id,
+            'verified_at' => now(),
+            'verification_notes' => $request->input('notes')
+        ]);
         return redirect()->back()->with('success', 'Pemeriksaan berhasil di-approve oleh Produksi.');
     }
 
@@ -295,7 +307,13 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
         if ($pemeriksaanBahanBaku->status_verifikasi !== 'sent_to_produksi') {
             return redirect()->back()->with('error', 'Status pemeriksaan tidak valid untuk di-reject.');
         }
-        $pemeriksaanBahanBaku->update(['status_verifikasi' => 'rejected_produksi', 'verified_by' => $user->id, 'verified_at' => now(), 'verification_notes' => $request->input('notes')]);
+        $pemeriksaanBahanBaku->update([
+            'status_verifikasi' => 'rejected_produksi',
+            'verified_by' => $user->id,
+            'verified_by_produksi' => $user->id,
+            'verified_at' => now(),
+            'verification_notes' => $request->input('notes')
+        ]);
         return redirect()->back()->with('error', 'Pemeriksaan ditolak oleh Produksi. Silakan perbaiki dan kirim ulang.');
     }
 
@@ -306,7 +324,13 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
         if ($pemeriksaanBahanBaku->status_verifikasi !== 'approved_produksi') {
             return redirect()->back()->with('error', 'Pemeriksaan harus disetujui Produksi terlebih dahulu.');
         }
-        $pemeriksaanBahanBaku->update(['status_verifikasi' => 'approved_spv', 'verified_by' => $user->id, 'verified_at' => now(), 'verification_notes' => $request->input('notes')]);
+        $pemeriksaanBahanBaku->update([
+            'status_verifikasi' => 'approved_spv',
+            'verified_by' => $user->id,
+            'verified_by_spv' => $user->id,
+            'verified_at' => now(),
+            'verification_notes' => $request->input('notes')
+        ]);
         return redirect()->back()->with('success', 'Pemeriksaan berhasil diverifikasi oleh SPV QC.');
     }
 
@@ -318,7 +342,126 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
         if ($pemeriksaanBahanBaku->status_verifikasi !== 'approved_produksi') {
             return redirect()->back()->with('error', 'Status pemeriksaan tidak valid untuk di-reject.');
         }
-        $pemeriksaanBahanBaku->update(['status_verifikasi' => 'rejected_spv', 'verified_by' => $user->id, 'verified_at' => now(), 'verification_notes' => $request->input('notes')]);
+        $pemeriksaanBahanBaku->update([
+            'status_verifikasi' => 'rejected_spv',
+            'verified_by' => $user->id,
+            'verified_by_spv' => $user->id,
+            'verified_at' => now(),
+            'verification_notes' => $request->input('notes')
+        ]);
         return redirect()->back()->with('error', 'Pemeriksaan ditolak oleh SPV QC. Silakan perbaiki dan kirim ulang.');
+    }
+
+    /**
+     * Export data to PDF based on filters
+     */
+    public function exportPDF(Request $request)
+    {
+        $user = Auth::user();
+        $tanggal = $request->input('tanggal');
+        $id_shift = $request->input('id_shift');
+        $jam_awal = $request->input('jam_awal');
+        $jam_akhir = $request->input('jam_akhir');
+
+        // Build query
+        $query = PemeriksaanKedatanganBahanBakuPenunjang::with([
+            'user.role', 
+            'user.plant', 
+            'bahan', 
+            'shift'
+        ])->with([
+            'qcVerifier' => function($q) {
+                $q->select('id', 'name');
+            },
+            'produksiVerifier' => function($q) {
+                $q->select('id', 'name');
+            },
+            'spvVerifier' => function($q) {
+                $q->select('id', 'name');
+            }
+        ]);
+
+        // Filter by plant access
+        if ($user->role && strtolower($user->role->role) !== 'superadmin') {
+            $query->whereHas('user', function($q) use ($user) {
+                $q->where('id_plant', $user->id_plant);
+            });
+        }
+
+        // Filter by tanggal
+        if ($tanggal) {
+            $query->whereDate('tanggal', $tanggal);
+        }
+
+        // Filter by shift
+        if ($id_shift) {
+            $query->where('id_shift', $id_shift);
+        }
+
+        // Filter by jam (created_at time range)
+        if ($jam_awal && $jam_akhir) {
+            $query->whereBetween('created_at', [
+                $tanggal . ' ' . $jam_awal . ':00',
+                $tanggal . ' ' . $jam_akhir . ':59'
+            ]);
+        } elseif ($jam_awal) {
+            $query->whereTime('created_at', '>=', $jam_awal);
+        } elseif ($jam_akhir) {
+            $query->whereTime('created_at', '<=', $jam_akhir);
+        }
+
+        $pemeriksaans = $query->latest()->get();
+
+        // Get shift name for display
+        $shift = $id_shift ? Shift::find($id_shift) : null;
+        
+        // Get signature users from verified_by fields
+        $qcUser = null;
+        $produksiUser = null;
+        $spvQcUser = null;
+        
+        // Collect all unique verified_by IDs
+        $allQcIds = $pemeriksaans->pluck('verified_by_qc')->filter()->unique();
+        $allProduksiIds = $pemeriksaans->pluck('verified_by_produksi')->filter()->unique();
+        $allSpvIds = $pemeriksaans->pluck('verified_by_spv')->filter()->unique();
+        
+        // Get QC user with role
+        if($allQcIds->count() > 0) {
+            $qcUserData = User::with('role')->whereIn('id', $allQcIds->toArray())->first();
+            if($qcUserData) {
+                $qcUser = $qcUserData->name;
+            }
+        }
+        
+        // Get Produksi user with role
+        if($allProduksiIds->count() > 0) {
+            $produksiUserData = User::with('role')->whereIn('id', $allProduksiIds->toArray())->first();
+            if($produksiUserData) {
+                $produksiUser = $produksiUserData->name;
+            }
+        }
+        
+        // Get SPV user with role
+        if($allSpvIds->count() > 0) {
+            $spvUserData = User::with('role')->whereIn('id', $allSpvIds->toArray())->first();
+            if($spvUserData) {
+                $spvQcUser = $spvUserData->name;
+            }
+        }
+
+        // Generate PDF
+        $pdf = \PDF::loadView('qc-sistem.pemeriksaan-kedatangan-bahan-baku-penunjang.pdf-report', [
+            'pemeriksaans' => $pemeriksaans,
+            'tanggal' => $tanggal,
+            'shift' => $shift,
+            'jam_awal' => $jam_awal,
+            'jam_akhir' => $jam_akhir,
+            'qcUser' => $qcUser,
+            'produksiUser' => $produksiUser,
+            'spvQcUser' => $spvQcUser
+        ]);
+
+        $filename = 'laporan-pemeriksaan-bahan-baku-' . ($tanggal ?? date('Y-m-d')) . '.pdf';
+        return $pdf->download($filename);
     }
 }

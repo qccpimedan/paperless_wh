@@ -6,6 +6,7 @@ use App\Models\PemeriksaanKedatanganChemical;
 use App\Models\Shift;
 use App\Models\Chemical;
 use App\Models\Produsen;
+use App\Models\User;
 use App\Models\Distributor;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -250,7 +251,12 @@ class PemeriksaanKedatanganChemicalController extends Controller
         if ($pemeriksaanChemical->status_verifikasi !== 'pending') {
             return redirect()->back()->with('error', 'Hanya pemeriksaan dengan status pending yang dapat dikirim.');
         }
-        $pemeriksaanChemical->update(['status_verifikasi' => 'sent_to_produksi', 'verified_by' => $user->id, 'verified_at' => now()]);
+        $pemeriksaanChemical->update([
+            'status_verifikasi' => 'sent_to_produksi',
+            'verified_by' => $user->id,
+            'verified_by_qc' => $user->id,
+            'verified_at' => now()
+        ]);
         return redirect()->back()->with('success', 'Pemeriksaan berhasil dikirim ke Produksi.');
     }
 
@@ -261,7 +267,13 @@ class PemeriksaanKedatanganChemicalController extends Controller
         if ($pemeriksaanChemical->status_verifikasi !== 'sent_to_produksi') {
             return redirect()->back()->with('error', 'Status pemeriksaan tidak valid untuk di-approve.');
         }
-        $pemeriksaanChemical->update(['status_verifikasi' => 'approved_produksi', 'verified_by' => $user->id, 'verified_at' => now(), 'verification_notes' => $request->input('notes')]);
+        $pemeriksaanChemical->update([
+            'status_verifikasi' => 'approved_produksi',
+            'verified_by' => $user->id,
+            'verified_by_produksi' => $user->id,
+            'verified_at' => now(),
+            'verification_notes' => $request->input('notes')
+        ]);
         return redirect()->back()->with('success', 'Pemeriksaan berhasil di-approve oleh Produksi.');
     }
 
@@ -273,7 +285,13 @@ class PemeriksaanKedatanganChemicalController extends Controller
         if ($pemeriksaanChemical->status_verifikasi !== 'sent_to_produksi') {
             return redirect()->back()->with('error', 'Status pemeriksaan tidak valid untuk di-reject.');
         }
-        $pemeriksaanChemical->update(['status_verifikasi' => 'rejected_produksi', 'verified_by' => $user->id, 'verified_at' => now(), 'verification_notes' => $request->input('notes')]);
+        $pemeriksaanChemical->update([
+            'status_verifikasi' => 'rejected_produksi',
+            'verified_by' => $user->id,
+            'verified_by_produksi' => $user->id,
+            'verified_at' => now(),
+            'verification_notes' => $request->input('notes')
+        ]);
         return redirect()->back()->with('error', 'Pemeriksaan ditolak oleh Produksi. Silakan perbaiki dan kirim ulang.');
     }
 
@@ -284,7 +302,13 @@ class PemeriksaanKedatanganChemicalController extends Controller
         if ($pemeriksaanChemical->status_verifikasi !== 'approved_produksi') {
             return redirect()->back()->with('error', 'Pemeriksaan harus disetujui Produksi terlebih dahulu.');
         }
-        $pemeriksaanChemical->update(['status_verifikasi' => 'approved_spv', 'verified_by' => $user->id, 'verified_at' => now(), 'verification_notes' => $request->input('notes')]);
+        $pemeriksaanChemical->update([
+            'status_verifikasi' => 'approved_spv',
+            'verified_by' => $user->id,
+            'verified_by_spv' => $user->id,
+            'verified_at' => now(),
+            'verification_notes' => $request->input('notes')
+        ]);
         return redirect()->back()->with('success', 'Pemeriksaan berhasil diverifikasi oleh SPV QC.');
     }
 
@@ -296,7 +320,112 @@ class PemeriksaanKedatanganChemicalController extends Controller
         if ($pemeriksaanChemical->status_verifikasi !== 'approved_produksi') {
             return redirect()->back()->with('error', 'Status pemeriksaan tidak valid untuk di-reject.');
         }
-        $pemeriksaanChemical->update(['status_verifikasi' => 'rejected_spv', 'verified_by' => $user->id, 'verified_at' => now(), 'verification_notes' => $request->input('notes')]);
+        $pemeriksaanChemical->update([
+            'status_verifikasi' => 'rejected_spv',
+            'verified_by' => $user->id,
+            'verified_by_spv' => $user->id,
+            'verified_at' => now(),
+            'verification_notes' => $request->input('notes')
+        ]);
         return redirect()->back()->with('error', 'Pemeriksaan ditolak oleh SPV QC. Silakan perbaiki dan kirim ulang.');
+    }
+
+    public function exportPDF(Request $request)
+    {
+        $user = Auth::user();
+        $tanggal = $request->input('tanggal');
+        $id_shift = $request->input('id_shift');
+        $jam_awal = $request->input('jam_awal');
+        $jam_akhir = $request->input('jam_akhir');
+
+        $query = PemeriksaanKedatanganChemical::with([
+            'user.role', 
+            'user.plant', 
+            'chemical', 
+            'shift', 
+            'verifiedBy.role'
+        ])->with([
+            'qcVerifier' => function($q) {
+                $q->select('id', 'name');
+            },
+            'produksiVerifier' => function($q) {
+                $q->select('id', 'name');
+            },
+            'spvVerifier' => function($q) {
+                $q->select('id', 'name');
+            }
+        ]);
+
+        if ($user->role && strtolower($user->role->role) !== 'superadmin') {
+            $query->whereHas('user', function($q) use ($user) {
+                $q->where('id_plant', $user->id_plant);
+            });
+        }
+
+        if ($tanggal) {
+            $query->whereDate('tanggal', $tanggal);
+        }
+
+        if ($id_shift) {
+            $query->where('id_shift', $id_shift);
+        }
+
+        if ($jam_awal && $jam_akhir) {
+            $query->whereBetween('created_at', [
+                $tanggal . ' ' . $jam_awal . ':00',
+                $tanggal . ' ' . $jam_akhir . ':59'
+            ]);
+        } elseif ($jam_awal) {
+            $query->whereTime('created_at', '>=', $jam_awal);
+        } elseif ($jam_akhir) {
+            $query->whereTime('created_at', '<=', $jam_akhir);
+        }
+
+        $pemeriksaans = $query->latest()->get();
+
+        $shift = $id_shift ? Shift::find($id_shift) : null;
+        
+        $qcUser = null;
+        $produksiUser = null;
+        $spvQcUser = null;
+        
+        $allQcIds = $pemeriksaans->pluck('verified_by_qc')->filter()->unique();
+        $allProduksiIds = $pemeriksaans->pluck('verified_by_produksi')->filter()->unique();
+        $allSpvIds = $pemeriksaans->pluck('verified_by_spv')->filter()->unique();
+        
+        if($allQcIds->count() > 0) {
+            $qcUserData = User::with('role')->whereIn('id', $allQcIds->toArray())->first();
+            if($qcUserData) {
+                $qcUser = $qcUserData->name;
+            }
+        }
+        
+        if($allProduksiIds->count() > 0) {
+            $produksiUserData = User::with('role')->whereIn('id', $allProduksiIds->toArray())->first();
+            if($produksiUserData) {
+                $produksiUser = $produksiUserData->name;
+            }
+        }
+        
+        if($allSpvIds->count() > 0) {
+            $spvUserData = User::with('role')->whereIn('id', $allSpvIds->toArray())->first();
+            if($spvUserData) {
+                $spvQcUser = $spvUserData->name;
+            }
+        }
+
+        $pdf = \PDF::loadView('qc-sistem.pemeriksaan-kedatangan-chemical.pdf-report', [
+            'pemeriksaans' => $pemeriksaans,
+            'tanggal' => $tanggal,
+            'shift' => $shift,
+            'jam_awal' => $jam_awal,
+            'jam_akhir' => $jam_akhir,
+            'qcUser' => $qcUser,
+            'produksiUser' => $produksiUser,
+            'spvQcUser' => $spvQcUser
+        ]);
+
+        $filename = 'laporan-pemeriksaan-chemical-' . ($tanggal ?? date('Y-m-d')) . '.pdf';
+        return $pdf->download($filename);
     }
 }

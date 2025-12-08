@@ -42,12 +42,19 @@
                 @php
                 $userRole = auth()->user()->role ? strtolower(auth()->user()->role->role) : null;
                 @endphp
+                
+                {{-- Access Control - Only for Superadmin --}}
+                @if($userRole === 'superadmin')
                 <li class="sidebar-item {{ request()->routeIs('access-control.*') ? 'active' : '' }}">
                     <a href="{{ route('access-control.index') }}" class='sidebar-link'>
                         <i class="bi bi-shield-lock"></i>
                         <span>Access Control</span>
                     </a>
                 </li>
+                @endif
+                
+                {{-- Data Master - For Superadmin, Admin, SPV QC --}}
+                @if($userRole === 'superadmin' || $userRole === 'admin' || $userRole === 'spv qc')
                 <li class="sidebar-item has-sub {{ request()->routeIs('roles.*') || request()->routeIs('plants.*') || request()->routeIs('users.*') || request()->routeIs('barangs.*') 
                     || request()->routeIs('bahans.*') || request()->routeIs('customers.*') || request()->routeIs('shifts.*') || request()->routeIs('distributors.*') 
                     || request()->routeIs('produsens.*') || request()->routeIs('chemicals.*') || request()->routeIs('jenis-kendaraans.*') 
@@ -62,7 +69,9 @@
                     || request()->routeIs('customers.*') || request()->routeIs('shifts.*') || request()->routeIs('distributors.*') 
                     || request()->routeIs('produsens.*') || request()->routeIs('chemicals.*') || request()->routeIs('jenis-kendaraans.*') || request()->routeIs('tujuan-pengirimans.*') 
                     || request()->routeIs('supirs.*') || request()->routeIs('produks.*') || request()->routeIs('ekspedisis.*') || request()->routeIs('std-precoolings.*') 
-                    || request()->routeIs('input-areas.*') || request()->routeIs('input-master-forms.*') || request()->routeIs('input-deskripsis.*') ? 'active' : '' }}">
+                    || request()->routeIs('input-areas.*') 
+                    || request()->routeIs('input-master-forms.*') || request()->routeIs('input-deskripsis.*') ? 'active' : '' }}">
+                        {{-- Input Role, Plant, User - Only for Superadmin --}}
                         @if($userRole === 'superadmin')
                         <li class="submenu-item {{ request()->routeIs('roles.*') ? 'active' : '' }}">
                             <a href="{{ route('roles.index') }}">Input Role</a>
@@ -125,10 +134,13 @@
 
                     </ul>
                 </li>
+                @endif
 
                 <li class="sidebar-title">Forms QC SISTEM</li>
 
-                @if($userRole === 'superadmin' || $userRole === 'qc inspector' || $userRole === 'produksi' || $userRole === 'admin' || $userRole === 'spv qc')
+                {{-- Forms QC - For Superadmin, Admin, SPV QC, QC Inspector, Produksi --}}
+                @if($userRole === 'superadmin' || $userRole === 'admin' || $userRole === 'spv qc' || $userRole === 'qc inspector' || $userRole === 'produksi')
+                {{-- Pemeriksaan Kedatangan --}}
                 <li class="sidebar-item has-sub {{ request()->routeIs('pemeriksaan-kedatangan-kemasan.*') || 
                 request()->routeIs('pemeriksaan-bahan-baku.*') || request()->routeIs('pemeriksaan-chemical.*') ? 'active' : '' }}">
                     <a href="#" class='sidebar-link'>
