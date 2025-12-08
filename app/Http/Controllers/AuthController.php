@@ -6,7 +6,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use App\Models\User;
-
+use Illuminate\Support\Facades\DB;
+use Illuminate\Http\JsonResponse;
 class AuthController extends Controller
 {
     /**
@@ -42,6 +43,11 @@ class AuthController extends Controller
                 'username' => 'Password salah.',
             ])->onlyInput('username');
         }
+         if (is_null($user->email_verified_at)) {
+            return back()->withErrors([
+                'username' => 'Akun belum diaktivasi. Silakan hubungi admin kepegawaian untuk mengaktivasi akun Anda.',
+            ])->onlyInput('username');
+        }
 
         // Login user manually
         Auth::login($user, $request->filled('remember'));
@@ -70,4 +76,25 @@ class AuthController extends Controller
     {
         return view('dashboard');
     }
+    public function check(): JsonResponse
+    {
+        try {
+            DB::connection()->getPdo();
+
+
+            return response()->json([
+                'status' => 'ok',
+                'message' => 'MySQL connection is alive',
+                'timestamp' => now()->toDateTimeString()
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'MySQL connection failed',
+                'error' => $e->getMessage(),
+                'timestamp' => now()->toDateTimeString()
+            ], 500);
+        }
+    }
+
 }
