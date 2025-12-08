@@ -175,10 +175,10 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('role-title').textContent = `Permissions untuk Role: ${roleName.toUpperCase()} - Module: ${moduleName}`;
         
         // Update form action
-        document.getElementById('permissions-form').action = `/access-control/${roleId}`;
+        document.getElementById('permissions-form').action = `{{ url('/access-control') }}/${roleId}`;
         
         // Fetch current permissions for this role
-        fetch(`/access-control/${roleId}/permissions`)
+        fetch(`{{ url('/access-control') }}/${roleId}/permissions`)
             .then(response => response.json())
             .then(data => {
                 // Build single module HTML with all permissions
