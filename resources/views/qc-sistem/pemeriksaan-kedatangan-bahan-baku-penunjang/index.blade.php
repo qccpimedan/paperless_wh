@@ -3,6 +3,10 @@
 @section('title', 'Pemeriksaan Kedatangan Bahan Baku Penunjang')
 
 @section('container')
+@php
+    // Get shifts for filter dropdown
+    $shifts = \App\Models\Shift::all();
+@endphp
 <div id="main">
     <header class="mb-3">
         <a href="#" class="burger-btn d-block d-xl-none">
@@ -48,6 +52,42 @@
                         </div>
                     </div>
                     <div class="card-body">
+                        {{-- Filter Form untuk PDF Export --}}
+                        <div class="row mb-4 p-3 bg-light rounded">
+                            <div class="col-md-12 mb-3">
+                                <h6 class="mb-3"><i class="bi bi-funnel"></i> Filter & Cetak PDF</h6>
+                            </div>
+                            <form action="{{ route('pemeriksaan-bahan-baku.export-pdf') }}" method="GET" class="row g-3">
+                                <div class="col-md-3">
+                                    <label class="form-label">Tanggal</label>
+                                    <input type="date" name="tanggal" class="form-control" value="{{ request('tanggal') }}">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Shift</label>
+                                    <select name="id_shift" class="form-select">
+                                        <option value="">-- Pilih Shift --</option>
+                                        @foreach($shifts ?? [] as $shift)
+                                            <option value="{{ $shift->id }}" {{ request('id_shift') == $shift->id ? 'selected' : '' }}>
+                                                {{ $shift->shift }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-md-2">
+                                    <label class="form-label">Jam Mulai</label>
+                                    <input type="time" name="jam_awal" class="form-control" value="{{ request('jam_awal') }}">
+                                </div>
+                                <div class="col-md-2">
+                                    <label class="form-label">Jam Akhir</label>
+                                    <input type="time" name="jam_akhir" class="form-control" value="{{ request('jam_akhir') }}">
+                                </div>
+                                <div class="col-md-2 d-flex align-items-end">
+                                    <button type="submit" class="btn btn-success w-100">
+                                        <i class="bi bi-file-pdf"></i> Cetak PDF
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
                         <div class="table-responsive">
                             <table class="table table-striped text-center" id="table1" style="white-space: nowrap;">
                                 <thead>
@@ -63,6 +103,9 @@
                                         <!-- <th>Kode Produksi</th> -->
                                         <th>Status</th>
                                         <th>Verifikasi</th>
+                                        <!-- <th>Verifikasi QC</th>
+                                        <th>Verifikasi Produksi</th>
+                                        <th>Verifikasi SPV</th> -->
                                         <th>Catatan Verifikasi</th>
                                         <th>Aksi</th>
                                     </tr>
@@ -88,8 +131,11 @@
                                                 @endif
                                             </td>
                                             <td>
-                                                {{ $pemeriksaan->bahan->nama_bahan }}
-                                               
+                                                @if($pemeriksaan->bahan)
+                                                    {{ $pemeriksaan->bahan->nama_bahan }}
+                                                @else
+                                                    <span class="text-muted">-</span>
+                                                @endif
                                             </td>
                                             <!-- <td>
                                                 @if($pemeriksaan->kondisi_produk)
@@ -308,7 +354,7 @@
 
                                     @empty
                                         <tr>
-                                            <td colspan="13" class="text-center">Tidak ada data</td>
+                                            <td colspan="16" class="text-center">Tidak ada data</td>
                                         </tr>
                                     @endforelse
                                 </tbody>

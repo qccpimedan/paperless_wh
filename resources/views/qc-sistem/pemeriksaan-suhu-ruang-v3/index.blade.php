@@ -139,6 +139,7 @@
                                                         <i class="bi bi-eye"></i>
                                                     </a>
                                                 @endcan
+                                                @endcan
                                                 @can('edit_pemeriksaan_suhu_ruang_v3')
                                                     <a href="{{ route('pemeriksaan-suhu-ruang-v3.edit', $pemeriksaan->uuid) }}" 
                                                     class="btn btn-sm btn-warning" title="Edit Data">

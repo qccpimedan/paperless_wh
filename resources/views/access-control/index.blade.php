@@ -83,6 +83,28 @@
     </div>
 
     {{-- Permissions Form Container --}}
+    {{-- Module Selection Container --}}
+    <div id="module-selection-container" style="display: none;">
+        <section class="section">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Pilih Module untuk Dikonfigurasi</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Pilih Module:</label>
+                            <select id="module-select" class="form-select form-select-lg">
+                                <option value="">-- Pilih Module --</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    {{-- Permissions Form Container --}}
     <div id="permissions-container" style="display: none;">
         <section class="section">
             <form id="permissions-form" method="POST">
@@ -175,7 +197,7 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('role-title').textContent = `Permissions untuk Role: ${roleName.toUpperCase()} - Module: ${moduleName}`;
         
         // Update form action
-        document.getElementById('permissions-form').action = `/access-control/${roleId}`;
+        document.getElementById('permissions-form').action = `{{ url('/access-control') }}/${roleId}`;
         
         // Fetch current permissions for this role
         fetch(`/access-control/${roleId}/permissions`)

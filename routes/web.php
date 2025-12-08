@@ -144,6 +144,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
     
     // QC System Routes
     Route::prefix('qc-sistem')->group(function () {
+        // Export PDF Routes (harus sebelum resource routes)
+        Route::get('pemeriksaan-kedatangan-kemasan/export-pdf', [PemeriksaanKedatanganKemasanController::class, 'exportPDF'])->name('pemeriksaan-kedatangan-kemasan.export-pdf');
+        Route::get('pemeriksaan-bahan-baku/export-pdf', [PemeriksaanKedatanganBahanBakuPenunjangController::class, 'exportPDF'])->name('pemeriksaan-bahan-baku.export-pdf');
+        Route::get('pemeriksaan-chemical/export-pdf', [PemeriksaanKedatanganChemicalController::class, 'exportPDF'])->name('pemeriksaan-chemical.export-pdf');
+        Route::get('detail-komplain/{detailKomplain:uuid}/export-pdf', [DetailKomplainController::class, 'exportPdf'])->name('detail-komplain.export-pdf');
+        
+        // Upload File Detail Komplain
+        Route::post('detail-komplain/{detailKomplain:uuid}/upload-suplier', [DetailKomplainController::class, 'uploadSuplier'])->name('detail-komplain.upload-suplier');
+        
+        
         // Routes Menu
         Route::resource('pemeriksaan-kedatangan-kemasan', PemeriksaanKedatanganKemasanController::class);
         Route::resource('pemeriksaan-bahan-baku', PemeriksaanKedatanganBahanBakuPenunjangController::class);
@@ -158,6 +168,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::resource('detail-komplain', DetailKomplainController::class)->parameters(['detail-komplain' => 'detailKomplain:uuid']);
         Route::resource('golden-sample-reports', GoldenSampleReportController::class);
         Route::resource('pemeriksaan-barang-mudah-pecah', PemeriksaanBarangMudahPecahController::class);
+        
         
         // Routes untuk verifikasi pemeriksaan barang mudah pecah
         Route::post('pemeriksaan-barang-mudah-pecah/{pemeriksaanBarangMudahPecah:uuid}/send-to-produksi', [PemeriksaanBarangMudahPecahController::class, 'sendToProduksi'])->name('pemeriksaan-barang-mudah-pecah.send-to-produksi');
@@ -260,12 +271,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('api/check-editable-records-v2', [PemeriksaanSuhuRuangV2Controller::class, 'checkEditableRecords'])->name('api.check-editable-records-v2');
         Route::get('api/editable-records', [PemeriksaanSuhuRuangController::class, 'getEditableRecordsApi'])->name('api.editable-records');
         Route::get('api/editable-records-v2', [PemeriksaanSuhuRuangV2Controller::class, 'getEditableRecordsApi'])->name('api.editable-records-v2');
-        
-        // Upload File
-        Route::post('detail-komplain/{detailKomplain:uuid}/upload-suplier', [DetailKomplainController::class, 'uploadSuplier'])->name('detail-komplain.upload-suplier');
-        
-        // Export PDF
-        Route::get('detail-komplain/{detailKomplain:uuid}/export-pdf', [DetailKomplainController::class, 'exportPdf'])->name('detail-komplain.export-pdf');
         
         // AJAX routes untuk dependent dropdown
         Route::get('api/area-locations/{idArea}', [PemeriksaanBarangMudahPecahController::class, 'getAreaLocations'])->name('api.area-locations');
