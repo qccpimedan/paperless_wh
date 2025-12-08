@@ -144,11 +144,11 @@
                                                        class="btn btn-sm btn-warning" title="Edit Data">
                                                         <i class="bi bi-pencil"></i>
                                                     </a>
+                                                @endcan
                                                     <a href="{{ route('pemeriksaan-suhu-ruang.edit', $pemeriksaan->uuid) }}?edit_per_2jam=1" 
                                                        class="btn btn-sm btn-success" title="Edit Per 2 Jam">
                                                         <i class="bi bi-hourglass-bottom"></i>
                                                     </a>
-                                                @endcan
                                                 @can('view_pemeriksaan_suhu_ruang')
                                                     <a href="{{ route('pemeriksaan-suhu-ruang.history', $pemeriksaan->uuid) }}" 
                                                        class="btn btn-sm btn-secondary" title="Lihat History">

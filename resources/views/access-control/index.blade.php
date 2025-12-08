@@ -61,6 +61,28 @@
         </section>
     </div>
 
+    {{-- Module Selection Container --}}
+    <div id="module-selection-container" style="display: none;">
+        <section class="section">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Pilih Module untuk Dikonfigurasi</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Pilih Module:</label>
+                            <select id="module-select" class="form-select form-select-lg">
+                                <option value="">-- Pilih Module --</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    {{-- Permissions Form Container --}}
     <div id="permissions-container" style="display: none;">
         <section class="section">
             <form id="permissions-form" method="POST">
@@ -72,8 +94,8 @@
                         <h5 class="card-title mb-0" id="role-title">Permissions untuk Role</h5>
                     </div>
                     <div class="card-body">
-                        <div class="row" id="modules-list">
-                            <!-- Modules will be loaded here -->
+                        <div id="module-permissions">
+                            <!-- Module permissions will be loaded here -->
                         </div>
                     </div>
                     <div class="card-footer">
@@ -104,80 +126,104 @@ document.addEventListener('DOMContentLoaded', function() {
         permissionMap['{{ $permission->name }}'] = {{ $permission->id }};
     @endforeach
 
+    let currentRoleId = null;
+    let currentRoleName = null;
+
     // Handle role button click
     document.querySelectorAll('.role-btn').forEach(btn => {
         btn.addEventListener('click', function() {
-            const roleId = this.dataset.roleId;
-            const roleName = this.dataset.roleName;
+            currentRoleId = this.dataset.roleId;
+            currentRoleName = this.dataset.roleName;
             
             // Update active button
             document.querySelectorAll('.role-btn').forEach(b => b.classList.remove('active'));
             this.classList.add('active');
             
-            // Load permissions for this role
-            loadPermissionsForRole(roleId, roleName);
+            // Show module selection
+            showModuleSelection(currentRoleId, currentRoleName);
         });
     });
 
-    function loadPermissionsForRole(roleId, roleName) {
+    function showModuleSelection(roleId, roleName) {
+        // Show module selection container
+        document.getElementById('module-selection-container').style.display = 'block';
+        document.getElementById('permissions-container').style.display = 'none';
+        
+        // Populate module dropdown
+        let moduleOptions = '<option value="">-- Pilih Module --</option>';
+        for (const [moduleKey, moduleName] of Object.entries(modules)) {
+            moduleOptions += `<option value="${moduleKey}">${moduleName}</option>`;
+        }
+        document.getElementById('module-select').innerHTML = moduleOptions;
+    }
+
+    // Handle module selection
+    document.getElementById('module-select').addEventListener('change', function() {
+        const moduleKey = this.value;
+        if (moduleKey) {
+            loadModulePermissions(currentRoleId, currentRoleName, moduleKey);
+        } else {
+            document.getElementById('permissions-container').style.display = 'none';
+        }
+    });
+
+    function loadModulePermissions(roleId, roleName, moduleKey) {
+        const moduleName = modules[moduleKey];
+        
         // Show permissions container
         document.getElementById('permissions-container').style.display = 'block';
-        document.getElementById('role-title').textContent = `Permissions untuk Role: ${roleName.toUpperCase()}`;
+        document.getElementById('role-title').textContent = `Permissions untuk Role: ${roleName.toUpperCase()} - Module: ${moduleName}`;
         
         // Update form action
         document.getElementById('permissions-form').action = `/access-control/${roleId}`;
-        
-        // Build modules HTML
-        let modulesHtml = '';
-        
-        for (const [moduleKey, moduleName] of Object.entries(modules)) {
-            modulesHtml += `
-                <div class="col-md-6 mb-4">
-                    <div class="card border-light">
-                        <div class="card-header bg-light">
-                            <h5 class="card-title mb-0">${moduleName}</h5>
-                        </div>
-                        <div class="card-body">
-                            <div class="form-check">
-                                <input class="form-check-input permission-checkbox" type="checkbox" 
-                                    id="view_${moduleKey}" name="permissions[]" value="${getPermissionId('view_' + moduleKey)}">
-                                <label class="form-check-label" for="view_${moduleKey}">
-                                    👁️ View (Lihat Data)
-                                </label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input permission-checkbox" type="checkbox" 
-                                    id="create_${moduleKey}" name="permissions[]" value="${getPermissionId('create_' + moduleKey)}">
-                                <label class="form-check-label" for="create_${moduleKey}">
-                                    ➕ Create (Buat Data Baru)
-                                </label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input permission-checkbox" type="checkbox" 
-                                    id="edit_${moduleKey}" name="permissions[]" value="${getPermissionId('edit_' + moduleKey)}">
-                                <label class="form-check-label" for="edit_${moduleKey}">
-                                    ✏️ Edit (Ubah Data)
-                                </label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input permission-checkbox" type="checkbox" 
-                                    id="delete_${moduleKey}" name="permissions[]" value="${getPermissionId('delete_' + moduleKey)}">
-                                <label class="form-check-label" for="delete_${moduleKey}">
-                                    🗑️ Delete (Hapus Data)
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-        }
-        
-        document.getElementById('modules-list').innerHTML = modulesHtml;
         
         // Fetch current permissions for this role
         fetch(`/access-control/${roleId}/permissions`)
             .then(response => response.json())
             .then(data => {
+                // Build single module HTML with all permissions
+                let moduleHtml = `
+                    <div class="col-md-8">
+                        <div class="card border-light">
+                            <div class="card-header bg-light">
+                                <h5 class="card-title mb-0">${moduleName}</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="form-check">
+                                    <input class="form-check-input permission-checkbox module-permission" type="checkbox" 
+                                        id="view_${moduleKey}" name="permissions[]" value="${getPermissionId('view_' + moduleKey)}" data-module="${moduleKey}">
+                                    <label class="form-check-label" for="view_${moduleKey}">
+                                        👁️ View (Lihat Data)
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input permission-checkbox module-permission" type="checkbox" 
+                                        id="create_${moduleKey}" name="permissions[]" value="${getPermissionId('create_' + moduleKey)}" data-module="${moduleKey}">
+                                    <label class="form-check-label" for="create_${moduleKey}">
+                                        ➕ Create (Buat Data Baru)
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input permission-checkbox module-permission" type="checkbox" 
+                                        id="edit_${moduleKey}" name="permissions[]" value="${getPermissionId('edit_' + moduleKey)}" data-module="${moduleKey}">
+                                    <label class="form-check-label" for="edit_${moduleKey}">
+                                        ✏️ Edit (Ubah Data)
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input permission-checkbox module-permission" type="checkbox" 
+                                        id="delete_${moduleKey}" name="permissions[]" value="${getPermissionId('delete_' + moduleKey)}" data-module="${moduleKey}">
+                                    <label class="form-check-label" for="delete_${moduleKey}">
+                                        🗑️ Delete (Hapus Data)
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                document.getElementById('module-permissions').innerHTML = moduleHtml;
+                
                 // Check the checkboxes for current permissions
                 data.permissions.forEach(permId => {
                     const checkbox = document.querySelector(`input[value="${permId}"]`);
@@ -197,6 +243,30 @@ document.addEventListener('DOMContentLoaded', function() {
 function resetForm() {
     document.getElementById('permissions-form').reset();
 }
+
+// Handle form submission to ensure all permissions are sent
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('permissions-form');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            // Collect all checked permissions
+            const checkedPermissions = [];
+            document.querySelectorAll('input[name="permissions[]"]:checked').forEach(checkbox => {
+                checkedPermissions.push(checkbox.value);
+            });
+            
+            // If no permissions are checked, show warning
+            if (checkedPermissions.length === 0) {
+                e.preventDefault();
+                alert('Silakan pilih minimal satu permission untuk module ini');
+                return false;
+            }
+            
+            // Form will submit with all checked permissions
+            return true;
+        });
+    }
+});
 </script>
 
 <style>
@@ -222,6 +292,39 @@ function resetForm() {
 
 .form-check:hover {
     background-color: #f8f9fa;
+}
+
+.form-select-lg {
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+}
+
+#module-selection-container {
+    animation: slideDown 0.3s ease-in-out;
+}
+
+#permissions-container {
+    animation: slideDown 0.3s ease-in-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.module-permission {
+    cursor: pointer;
+}
+
+.module-permission:hover {
+    transform: scale(1.1);
+    transition: transform 0.2s ease;
 }
 </style>
 @endsection
