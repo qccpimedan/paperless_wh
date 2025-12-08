@@ -175,7 +175,7 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('role-title').textContent = `Permissions untuk Role: ${roleName.toUpperCase()} - Module: ${moduleName}`;
         
         // Update form action
-        document.getElementById('permissions-form').action = `/access-control/${roleId}`;
+        document.getElementById('permissions-form').action = `{{ url('/access-control') }}/${roleId}`;
         
         // Build single module HTML
         let moduleHtml = `
@@ -219,9 +219,10 @@ document.addEventListener('DOMContentLoaded', function() {
         `;
         
         document.getElementById('module-permissions').innerHTML = moduleHtml;
-        
+      const permissionsUrl = `{{ url('/access-control') }}/${roleId}/permissions`;
         // Fetch current permissions for this role
-        fetch(`/access-control/${roleId}/permissions`)
+        console.log('Url yang dimuat : ',permissionsUrl);
+       fetch(`{{ url('/access-control') }}/${roleId}/permissions`)
             .then(response => response.json())
             .then(data => {
                 // Check the checkboxes for current permissions
