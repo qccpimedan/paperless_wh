@@ -38,7 +38,7 @@ use App\Http\Controllers\PemeriksaanBarangMudahPecahController;
 use Illuminate\Support\Facades\Auth;
 
 // Redirect root to login
-Route::get('/', function () {
+Route::match(['get', 'post'], '/', function () {
     if (Auth::check()) {
         return redirect('/dashboard');
     }
