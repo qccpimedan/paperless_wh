@@ -83,7 +83,10 @@ class ApiController extends Controller
             } 
             else {
                  $newUser = User::create(array_merge(['uuid' => $user['uuid']], $userData));
-                // if (!empty($user['project_role']['role'])) {
+                    // Assign role to user using Spatie Permission
+                $role = Role::findOrFail($userData['id_role']);
+                $user->assignRole($role->role);
+                 // if (!empty($user['project_role']['role'])) {
                 //     $newUser->assignRole($user['project_role']['role']);
                 // }
             }
