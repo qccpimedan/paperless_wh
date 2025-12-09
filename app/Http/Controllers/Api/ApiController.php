@@ -91,7 +91,7 @@ class ApiController extends Controller
                 if (!empty($user['project_role']['role'])) {
                     $roleObj = Role::where('role', 'like', '%' . $user['project_role']['role'] . '%')->first();
                     if ($roleObj) {
-                        $newUser->assignRole($roleObj->role);
+                        $newUser->syncRoles($roleObj->role);
                     }
                 }
             }
