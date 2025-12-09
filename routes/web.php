@@ -35,13 +35,15 @@ use App\Http\Controllers\PemeriksaanSuhuRuangV2Controller;
 use App\Http\Controllers\DetailKomplainController;
 use App\Http\Controllers\GoldenSampleReportController;
 use App\Http\Controllers\PemeriksaanBarangMudahPecahController;
-
+use Illuminate\Support\Facades\Auth;
 
 // Redirect root to login
 Route::get('/', function () {
+    if (Auth::check()) {
+        return redirect('/dashboard');
+    }
     return redirect('/login');
 });
-
 // Authentication Routes
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [AuthController::class, 'login']);
