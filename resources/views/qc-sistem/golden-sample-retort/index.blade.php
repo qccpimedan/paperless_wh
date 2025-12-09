@@ -297,7 +297,7 @@
                                     </div>
                                 @empty
                                     <tr>
-                                        <td colspan="6" class="text-center">
+                                        <td colspan="10" class="text-center">
                                             <div class="py-4">
                                                 <i class="bi bi-inbox fs-1 text-muted"></i>
                                                 <p class="text-muted mt-2 mb-3">Belum ada Golden Sample Report</p>

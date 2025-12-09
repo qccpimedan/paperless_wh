@@ -46,7 +46,7 @@
                             <h4 class="card-title">Data Pemeriksaan Kedatangan Bahan Baku Penunjang</h4>
                             @can('create_pemeriksaan_kedatangan_bahan_baku_penunjang')
                                 <a href="{{ route('pemeriksaan-bahan-baku.create') }}" class="btn btn-primary">
-                                    <i class="bi bi-plus-circle"></i> Tambah Data
+                                    <i class="bi bi-plus-circle"></i> Tambah Bahan Baku
                                 </a>
                             @endcan
                         </div>

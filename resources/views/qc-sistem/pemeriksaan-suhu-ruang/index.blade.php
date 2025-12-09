@@ -296,7 +296,7 @@
                                     </div>
                                 @empty
                                     <tr>
-                                        <td colspan="7" class="text-center">
+                                        <td colspan="9" class="text-center">
                                             <div class="py-4">
                                                 <i class="bi bi-inbox fs-1 text-muted"></i>
                                                 <p class="text-muted mt-2 mb-3">Belum ada data pemeriksaan</p>

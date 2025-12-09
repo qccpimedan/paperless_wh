@@ -43,7 +43,7 @@ class UserController extends Controller
             'id_plant' => 'required|exists:plants,id',
         ]);
 
-        User::create([
+        $user = User::create([
             'name' => $request->name,
             'username' => $request->username,
             'email' => $request->email,
@@ -51,6 +51,10 @@ class UserController extends Controller
             'id_role' => $request->id_role,
             'id_plant' => $request->id_plant,
         ]);
+
+        // Assign role to user using Spatie Permission
+        $role = Role::findOrFail($request->id_role);
+        $user->assignRole($role->role);
 
         return redirect()->route('users.index')->with('success', 'User berhasil ditambahkan!');
     }
@@ -102,6 +106,10 @@ class UserController extends Controller
         }
 
         $user->update($updateData);
+
+        // Sync role to user using Spatie Permission
+        $role = Role::findOrFail($request->id_role);
+        $user->syncRoles($role->role);
 
         return redirect()->route('users.index')->with('success', 'User berhasil diupdate!');
     }
