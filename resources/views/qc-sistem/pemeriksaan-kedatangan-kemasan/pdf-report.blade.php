@@ -465,8 +465,17 @@
                                         @endforeach
                                     @endif
 
-                                    {{-- BAHAN KEMASAN --}}
-                                    @if($pemeriksaan->no_po || $pemeriksaan->bahan || $pemeriksaan->kode_produksi || $pemeriksaan->jumlah_datang || $pemeriksaan->jumlah_sampling || $pemeriksaan->spesifikasi || $pemeriksaan->produsen || $pemeriksaan->distributor)
+                                    {{-- BAHAN KEMASAN (Dynamic Rows) --}}
+                                    @php
+                                        $id_bahans = json_decode($pemeriksaan->id_bahan_array ?? '[]', true) ?? [];
+                                        $produsens_arr = json_decode($pemeriksaan->produsen_array ?? '[]', true) ?? [];
+                                        $distributors_arr = json_decode($pemeriksaan->distributor_array ?? '[]', true) ?? [];
+                                        $kode_produksis = json_decode($pemeriksaan->kode_produksi_array ?? '[]', true) ?? [];
+                                        $jumlah_datangs = json_decode($pemeriksaan->jumlah_datang_array ?? '[]', true) ?? [];
+                                        $jumlah_samplings = json_decode($pemeriksaan->jumlah_sampling_array ?? '[]', true) ?? [];
+                                        $spesifikasis = json_decode($pemeriksaan->spesifikasi_array ?? '[]', true) ?? [];
+                                    @endphp
+                                    @if(count($id_bahans) > 0 || $pemeriksaan->no_po)
                                         <div class="section-title">Bahan Kemasan</div>
                                         @if($pemeriksaan->no_po)
                                             <div class="field-row">
@@ -474,122 +483,87 @@
                                                 <span class="field-value">{{ $pemeriksaan->no_po }}</span>
                                             </div>
                                         @endif
-                                        @if($pemeriksaan->bahan)
-                                            <div class="field-row">
-                                                <span class="field-label">Nama Bahan:</span>
-                                                <span class="field-value">{{ $pemeriksaan->bahan->nama_bahan }}</span>
+                                        @forelse($id_bahans as $index => $id_bahan)
+                                            <div style="margin-top: 6px; padding-top: 6px; border-top: 1px solid #ddd; font-size: 8px;">
+                                                <strong>Baris {{ $index + 1 }}:</strong>
+                                                @if($id_bahan)
+                                                    Bahan: {{ \App\Models\Bahan::find($id_bahan)->nama_bahan ?? 'N/A' }}
+                                                @endif
+                                                @if($produsens_arr[$index] ?? null)
+                                                    | Produsen: {{ $produsens_arr[$index] }}
+                                                @endif
+                                                @if($distributors_arr[$index] ?? null)
+                                                    | Distributor: {{ $distributors_arr[$index] }}
+                                                @endif
+                                                @if($kode_produksis[$index] ?? null)
+                                                    | Kode: {{ $kode_produksis[$index] }}
+                                                @endif
+                                                @if($jumlah_datangs[$index] ?? null)
+                                                    | Jml: {{ $jumlah_datangs[$index] }}
+                                                @endif
+                                                @if($jumlah_samplings[$index] ?? null)
+                                                    | Sampling: {{ $jumlah_samplings[$index] }}
+                                                @endif
+                                                @if($spesifikasis[$index] ?? null)
+                                                    | Spec: {{ substr($spesifikasis[$index], 0, 30) }}{{ strlen($spesifikasis[$index]) > 30 ? '...' : '' }}
+                                                @endif
                                             </div>
-                                        @endif
-                                        @if($pemeriksaan->kode_produksi && $pemeriksaan->kode_produksi !== '')
-                                            <div class="field-row">
-                                                <span class="field-label">Kode Produksi:</span>
-                                                <span class="field-value">{{ $pemeriksaan->kode_produksi }}</span>
-                                            </div>
-                                        @endif
-                                        @if($pemeriksaan->spesifikasi)
-                                            <div class="field-row">
-                                                <span class="field-label">Spesifikasi:</span>
-                                                <span class="field-value">{{ $pemeriksaan->spesifikasi }}</span>
-                                            </div>
-                                        @endif
-                                        @if($pemeriksaan->produsen)
-                                            <div class="field-row">
-                                                <span class="field-label">Produsen:</span>
-                                                <span class="field-value">{{ $pemeriksaan->produsen }}</span>
-                                            </div>
-                                        @endif
-                                        @if($pemeriksaan->distributor)
-                                            <div class="field-row">
-                                                <span class="field-label">Distributor:</span>
-                                                <span class="field-value">{{ $pemeriksaan->distributor }}</span>
-                                            </div>
-                                        @endif
-                                        @if($pemeriksaan->jumlah_datang)
-                                            <div class="field-row">
-                                                <span class="field-label">Jumlah Kemasan:</span>
-                                                <span class="field-value">{{ $pemeriksaan->jumlah_datang }}</span>
-                                            </div>
-                                        @endif
-                                        @if($pemeriksaan->jumlah_sampling)
-                                            <div class="field-row">
-                                                <span class="field-label">Jumlah Sampling:</span>
-                                                <span class="field-value">{{ $pemeriksaan->jumlah_sampling }}</span>
-                                            </div>
-                                        @endif
+                                        @empty
+                                        @endforelse
                                     @endif
 
-                                    {{-- KONDISI FISIK --}}
+                                    {{-- KONDISI FISIK (Dynamic Rows) --}}
                                     @php
-                                        $hasFisikFields = isset($pemeriksaan->kondisi_fisik) && is_array($pemeriksaan->kondisi_fisik) && (count($pemeriksaan->kondisi_fisik) > 0 || $pemeriksaan->ketebalan_micron);
+                                        $penampakans = json_decode($pemeriksaan->penampakan_array ?? '[]', true) ?? [];
+                                        $sealings = json_decode($pemeriksaan->sealing_array ?? '[]', true) ?? [];
+                                        $cetakans = json_decode($pemeriksaan->cetakan_array ?? '[]', true) ?? [];
+                                        $ketebalan_microns = json_decode($pemeriksaan->ketebalan_micron_array ?? '[]', true) ?? [];
+                                        $dimensis = json_decode($pemeriksaan->dimensi_array ?? '[]', true) ?? [];
                                     @endphp
-                                    @if($hasFisikFields)
+                                    @if(count($penampakans) > 0 || count($sealings) > 0 || count($cetakans) > 0)
                                         <div class="section-title">Kondisi Fisik</div>
-                                        @if(isset($pemeriksaan->kondisi_fisik['penampakan']))
-                                            <div class="field-row">
-                                                <span class="field-label">Penampakan:</span>
-                                                <span class="field-value">{{ $pemeriksaan->kondisi_fisik['penampakan'] ? 'V' : 'X' }}</span>
+                                        @forelse($penampakans as $index => $penampakan)
+                                            <div style="margin-top: 6px; padding-top: 6px; border-top: 1px solid #ddd; font-size: 8px;">
+                                                <strong>Baris {{ $index + 1 }}:</strong>
+                                                Penampakan: {{ $penampakan ? 'V' : 'X' }}
+                                                | Sealing: {{ ($sealings[$index] ?? null) ? 'V' : 'X' }}
+                                                | Cetakan: {{ ($cetakans[$index] ?? null) ? 'V' : 'X' }}
+                                                @if($ketebalan_microns[$index] ?? null)
+                                                    | Ketebalan: {{ $ketebalan_microns[$index] }} μm
+                                                @endif
+                                                @if($dimensis[$index] ?? null)
+                                                    | Dimensi: {{ $dimensis[$index] }}
+                                                @endif
                                             </div>
-                                        @endif
-                                        @if(isset($pemeriksaan->kondisi_fisik['sealing']))
-                                            <div class="field-row">
-                                                <span class="field-label">Sealing:</span>
-                                                <span class="field-value">{{ $pemeriksaan->kondisi_fisik['sealing'] ? 'V' : 'X' }}</span>
-                                            </div>
-                                        @endif
-                                        @if(isset($pemeriksaan->kondisi_fisik['cetakan']))
-                                            <div class="field-row">
-                                                <span class="field-label">Cetakan:</span>
-                                                <span class="field-value">{{ $pemeriksaan->kondisi_fisik['cetakan'] ? 'V' : 'X' }}</span>
-                                            </div>
-                                        @endif
-                                        @if($pemeriksaan->ketebalan_micron)
-                                            <div class="field-row">
-                                                <span class="field-label">Ketebalan:</span>
-                                                <span class="field-value">{{ $pemeriksaan->ketebalan_micron }} micron</span>
-                                            </div>
-                                        @endif
+                                        @empty
+                                        @endforelse
                                     @endif
 
-                                    {{-- DOKUMEN --}}
-                                    <div class="section-title">Dokumen</div>
-                                    <div class="field-row">
-                                        <span class="field-label">Logo Halal:</span>
-                                        <span class="field-value">{{ $pemeriksaan->logo_halal ? 'V' : 'X' }}</span>
-                                    </div>
-                                    <div class="field-row">
-                                        <span class="field-label">Halal Berlaku:</span>
-                                        <span class="field-value">{{ $pemeriksaan->dokumen_halal ? 'V' : 'X' }}</span>
-                                    </div>
-                                    <div class="field-row">
-                                        <span class="field-label">COA:</span>
-                                        <span class="field-value">{{ $pemeriksaan->coa ? 'V' : 'X' }}</span>
-                                    </div>
-
-                                    {{-- STATUS --}}
-                                    @if($pemeriksaan->status || $pemeriksaan->keterangan)
-                                        <div class="section-title">Status</div>
-                                        @if($pemeriksaan->status)
-                                            <div class="field-row">
-                                                <span class="field-label">Status:</span>
-                                                <span class="field-value">
-                                                    @if(strtolower($pemeriksaan->status) == 'release')
-                                                        <span class="status-badge status-release">{{ $pemeriksaan->status }}</span>
-                                                    @elseif(strtolower($pemeriksaan->status) == 'hold')
-                                                        <span class="status-badge status-hold">{{ $pemeriksaan->status }}</span>
-                                                    @elseif(strtolower($pemeriksaan->status) == 'reject')
-                                                        <span class="status-badge status-reject">{{ $pemeriksaan->status }}</span>
-                                                    @else
-                                                        {{ $pemeriksaan->status }}
-                                                    @endif
-                                                </span>
+                                    {{-- DOKUMEN (Dynamic Rows) --}}
+                                    @php
+                                        $logo_halals = json_decode($pemeriksaan->logo_halal_array ?? '[]', true) ?? [];
+                                        $dokumen_halals = json_decode($pemeriksaan->dokumen_halal_array ?? '[]', true) ?? [];
+                                        $coas = json_decode($pemeriksaan->coa_array ?? '[]', true) ?? [];
+                                        $keterangans = json_decode($pemeriksaan->keterangan_array ?? '[]', true) ?? [];
+                                        $statuses = json_decode($pemeriksaan->status_array ?? '[]', true) ?? [];
+                                    @endphp
+                                    @if(count($logo_halals) > 0 || count($dokumen_halals) > 0 || count($coas) > 0)
+                                        <div class="section-title">Dokumen</div>
+                                        @forelse($logo_halals as $index => $logo_halal)
+                                            <div style="margin-top: 6px; padding-top: 6px; border-top: 1px solid #ddd; font-size: 8px;">
+                                                <strong>Baris {{ $index + 1 }}:</strong>
+                                                Logo Halal: {{ $logo_halal ? 'V' : 'X' }}
+                                                | Halal Berlaku: {{ ($dokumen_halals[$index] ?? null) ? 'V' : 'X' }}
+                                                | COA: {{ ($coas[$index] ?? null) ? 'V' : 'X' }}
+                                                @if($statuses[$index] ?? null)
+                                                    | Status: {{ $statuses[$index] }}
+                                                @endif
+                                                @if($keterangans[$index] ?? null)
+                                                    | Ket: {{ substr($keterangans[$index], 0, 25) }}{{ strlen($keterangans[$index]) > 25 ? '...' : '' }}
+                                                @endif
                                             </div>
-                                        @endif
-                                        @if($pemeriksaan->keterangan)
-                                            <div class="field-row">
-                                                <span class="field-label">Ket:</span>
-                                                <span class="field-value">{{ $pemeriksaan->keterangan }}</span>
-                                            </div>
-                                        @endif
+                                        @empty
+                                        @endforelse
                                     @endif
                                 </td>
                             @endforeach

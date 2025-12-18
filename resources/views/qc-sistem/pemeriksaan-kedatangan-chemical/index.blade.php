@@ -123,22 +123,40 @@
                                                 @endif
                                             </td>
                                             <td>
-                                                @if($pemeriksaan->chemical)
-                                                    <span class="badge bg-info">{{ $pemeriksaan->chemical->nama_chemical }}</span>
+                                                @php
+                                                    $detailChemicals = $pemeriksaan->detail_chemicals ?? [];
+                                                    $chemicalNames = [];
+                                                    foreach($detailChemicals as $detail) {
+                                                        if(isset($detail['id_chemical'])) {
+                                                            $chemical = \App\Models\Chemical::find($detail['id_chemical']);
+                                                            if($chemical) {
+                                                                $chemicalNames[] = $chemical->nama_chemical;
+                                                            }
+                                                        }
+                                                    }
+                                                @endphp
+                                                @if(count($chemicalNames) > 0)
+                                                    @foreach($chemicalNames as $name)
+                                                        <span class="badge bg-info">{{ $name }}</span><br>
+                                                    @endforeach
                                                 @else
                                                     <span class="text-muted">-</span>
                                                 @endif
                                             </td>
-                                            <!-- <td>
-                                                @if($pemeriksaan->kondisi_chemical)
-                                                    <span class="badge bg-secondary">{{ $pemeriksaan->kondisi_chemical }}</span>
-                                                @else
-                                                    <span class="text-muted">-</span>
-                                                @endif
-                                            </td> -->
                                             <td>
-                                                @if($pemeriksaan->produsen)
-                                                    {{ $pemeriksaan->produsen->nama_produsen }}
+                                                @php
+                                                    $produsenNames = [];
+                                                    foreach($detailChemicals as $detail) {
+                                                        if(isset($detail['id_produsen'])) {
+                                                            $produsen = \App\Models\Produsen::find($detail['id_produsen']);
+                                                            if($produsen) {
+                                                                $produsenNames[] = $produsen->nama_produsen;
+                                                            }
+                                                        }
+                                                    }
+                                                @endphp
+                                                @if(count($produsenNames) > 0)
+                                                    {{ implode(', ', array_unique($produsenNames)) }}
                                                 @else
                                                     <span class="text-muted">-</span>
                                                 @endif
@@ -147,10 +165,25 @@
                                                 {{ $pemeriksaan->kode_produksi ?? '-' }}
                                             </td> -->
                                             <td>
-                                                @if($pemeriksaan->status === 'Release')
-                                                    <span class="badge bg-success">{{ $pemeriksaan->status }}</span>
+                                                @php
+                                                    $statuses = [];
+                                                    foreach($detailChemicals as $detail) {
+                                                        if(isset($detail['status'])) {
+                                                            $statuses[] = $detail['status'];
+                                                        }
+                                                    }
+                                                    $uniqueStatuses = array_unique($statuses);
+                                                @endphp
+                                                @if(count($uniqueStatuses) > 0)
+                                                    @foreach($uniqueStatuses as $status)
+                                                        @if($status === 'Release')
+                                                            <span class="badge bg-success">{{ $status }}</span>
+                                                        @else
+                                                            <span class="badge bg-danger">{{ $status }}</span>
+                                                        @endif
+                                                    @endforeach
                                                 @else
-                                                    <span class="badge bg-danger">{{ $pemeriksaan->status }}</span>
+                                                    <span class="text-muted">-</span>
                                                 @endif
                                             </td>
                                             <td>

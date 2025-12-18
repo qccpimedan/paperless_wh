@@ -82,6 +82,9 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
 
     public function store(Request $request)
     {
+        // Log semua input untuk debugging
+        \Log::info('Form Submit Data:', $request->all());
+        
         $request->validate([
             'tanggal' => 'required|date',
             'jenis_mobil' => 'nullable|string|max:255',
@@ -91,23 +94,40 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
             'no_po' => 'nullable|string|max:255',
             'suhu_mobil' => 'nullable|string|max:255',
             'suhu_mobil_type' => 'nullable|in:Fresh,Frozen',
-            'kondisi_produk' => 'nullable|string|max:255',
-            'suhu_produk' => 'nullable|string|max:255',
-            'suhu_produk_type' => 'nullable|in:Fresh,Frozen',
-            'kondisi_produk_suhu' => 'nullable|string|max:255',
-            'spesifikasi' => 'nullable|string',
-            'produsen' => 'nullable|string|max:255',
-            'negara_produsen' => 'nullable|string|max:255',
-            'distributor' => 'nullable|string|max:255',
-            'kode_produksi' => 'nullable|string|max:255',
-            'expire_date' => 'nullable|date',
-            'jumlah_datang' => 'nullable|string|max:255',
-            'jumlah_sampling' => 'nullable|string|max:255',
-            'hasil_uji_ffa' => 'nullable|string|max:255',
-            'status' => 'required|in:Release,Hold',
-            'keterangan' => 'nullable|string',
             'id_shift' => 'nullable|exists:shifts,id',
-            'id_bahan' => 'nullable|exists:bahans,id',
+            'status_baris' => 'required|array|min:1',
+            'status_baris.*' => 'required|in:Release,Hold',
+            // Validasi array fields dari dynamic rows
+            'id_bahan' => 'nullable|array',
+            'id_bahan.*' => 'nullable|exists:bahans,id',
+            'produsen' => 'nullable|array',
+            'produsen.*' => 'nullable|string|max:255',
+            'negara_produsen' => 'nullable|array',
+            'negara_produsen.*' => 'nullable|string|max:255',
+            'distributor' => 'nullable|array',
+            'distributor.*' => 'nullable|string|max:255',
+            'kode_produksi' => 'nullable|array',
+            'kode_produksi.*' => 'nullable|string|max:255',
+            'expire_date' => 'nullable|array',
+            'expire_date.*' => 'nullable|date',
+            'jumlah_datang' => 'nullable|array',
+            'jumlah_datang.*' => 'nullable|string|max:255',
+            'jumlah_sampling' => 'nullable|array',
+            'jumlah_sampling.*' => 'nullable|string|max:255',
+            'spesifikasi' => 'nullable|array',
+            'spesifikasi.*' => 'nullable|string',
+            'kondisi_produk' => 'nullable|array',
+            'kondisi_produk.*' => 'nullable|string|max:255',
+            'suhu_produk' => 'nullable|array',
+            'suhu_produk.*' => 'nullable|string|max:255',
+            'suhu_produk_type' => 'nullable|array',
+            'suhu_produk_type.*' => 'nullable|string|max:255',
+            'kondisi_produk_suhu' => 'nullable|array',
+            'kondisi_produk_suhu.*' => 'nullable|string|max:255',
+            'hasil_uji_ffa' => 'nullable|array',
+            'hasil_uji_ffa.*' => 'nullable|string|max:255',
+            'keterangan' => 'nullable|array',
+            'keterangan.*' => 'nullable|string',
         ]);
 
         // Process kondisi mobil dan fisik dengan logic yang benar
@@ -125,23 +145,144 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
             'bebas_kontaminan' => $request->input('kondisi_mobil.bebas_kontaminan') === '1',
         ];
 
-        $kondisiFisik = [
-            'kemasan' => $request->input('kondisi_fisik.kemasan') === '1',
-            'warna' => $request->input('kondisi_fisik.warna') === '1',
-            'benda_asing' => $request->input('kondisi_fisik.benda_asing') === '1',
-            'aroma' => $request->input('kondisi_fisik.aroma') === '1',
-        ];
-
         $data = $request->all();
         $data['id_user'] = Auth::id();
         $data['segel_gembok'] = $request->input('segel_gembok');
-        $data['logo_halal'] = $request->input('logo_halal') === '1';
-        $data['dokumen_halal'] = $request->input('dokumen_halal') === '1';
-        $data['coa'] = $request->input('coa') === '1';
         $data['kondisi_mobil'] = $kondisiMobil;
-        $data['kondisi_fisik'] = $kondisiFisik;
+        // Hapus kondisi_fisik, logo_halal, dokumen_halal, coa dari data karena akan diproses sebagai array
+        unset($data['kondisi_fisik']);
+        unset($data['logo_halal']);
+        unset($data['dokumen_halal']);
+        unset($data['coa']);
 
-        PemeriksaanKedatanganBahanBakuPenunjang::create($data);
+        // Map array fields dari form (id_bahan[]) ke database columns (id_bahan_array)
+        $arrayFieldMapping = [
+            'id_bahan' => 'id_bahan_array',
+            'produsen' => 'produsen_array',
+            'negara_produsen' => 'negara_produsen_array',
+            'distributor' => 'distributor_array',
+            'kode_produksi' => 'kode_produksi_array',
+            'expire_date' => 'expire_date_array',
+            'jumlah_datang' => 'jumlah_datang_array',
+            'jumlah_sampling' => 'jumlah_sampling_array',
+            'spesifikasi' => 'spesifikasi_array',
+            'kondisi_fisik' => 'kondisi_fisik_array',
+            'logo_halal' => 'logo_halal_array',
+            'hasil_uji_ffa' => 'hasil_uji_ffa_array',
+            'dokumen_halal' => 'dokumen_halal_array',
+            'coa' => 'coa_array',
+            'keterangan_hasil' => 'keterangan_array',
+        ];
+
+        // Process kondisi_fisik_array dari radio buttons
+        $kondisiFisikArray = [];
+        if ($request->has('kondisi_fisik_kemasan')) {
+            $kemasanArray = $request->input('kondisi_fisik_kemasan', []);
+            $warnaArray = $request->input('kondisi_fisik_warna', []);
+            $bendaAsingArray = $request->input('kondisi_fisik_benda_asing', []);
+            $aromaArray = $request->input('kondisi_fisik_aroma', []);
+            
+            $rowCount = max(count($kemasanArray), count($warnaArray), count($bendaAsingArray), count($aromaArray));
+            
+            for ($i = 0; $i < $rowCount; $i++) {
+                $kondisiFisikArray[] = [
+                    'kemasan' => (isset($kemasanArray[$i]) && $kemasanArray[$i] === '1') ? true : false,
+                    'warna' => (isset($warnaArray[$i]) && $warnaArray[$i] === '1') ? true : false,
+                    'benda_asing' => (isset($bendaAsingArray[$i]) && $bendaAsingArray[$i] === '1') ? true : false,
+                    'aroma' => (isset($aromaArray[$i]) && $aromaArray[$i] === '1') ? true : false,
+                ];
+            }
+            $data['kondisi_fisik_array'] = json_encode($kondisiFisikArray);
+        }
+        
+        // Process logo_halal_array, dokumen_halal_array, coa_array dari radio buttons
+        if ($request->has('logo_halal')) {
+            $logoHalalArray = $request->input('logo_halal', []);
+            $data['logo_halal_array'] = json_encode(array_map(function($val) {
+                return ($val === '1') ? true : false;
+            }, $logoHalalArray));
+        }
+        
+        if ($request->has('dokumen_halal')) {
+            $dokumenHalalArray = $request->input('dokumen_halal', []);
+            $data['dokumen_halal_array'] = json_encode(array_map(function($val) {
+                return ($val === '1') ? true : false;
+            }, $dokumenHalalArray));
+        }
+        
+        if ($request->has('coa')) {
+            $coaArray = $request->input('coa', []);
+            $data['coa_array'] = json_encode(array_map(function($val) {
+                return ($val === '1') ? true : false;
+            }, $coaArray));
+        }
+        
+        // Hapus field-field kondisi_fisik yang dikirim dari form agar tidak conflict
+        unset($data['kondisi_fisik_kemasan']);
+        unset($data['kondisi_fisik_warna']);
+        unset($data['kondisi_fisik_benda_asing']);
+        unset($data['kondisi_fisik_aroma']);
+
+        // Process array fields dari form dan simpan ke kolom database yang benar
+        foreach ($arrayFieldMapping as $formField => $dbColumn) {
+            // Skip fields yang sudah diproses di atas
+            if (in_array($formField, ['kondisi_fisik', 'logo_halal', 'dokumen_halal', 'coa'])) {
+                continue;
+            }
+            
+            if ($request->has($formField) && is_array($request->input($formField))) {
+                $data[$dbColumn] = json_encode($request->input($formField));
+                // Hapus field form agar tidak conflict dengan kolom database
+                if (isset($data[$formField])) {
+                    unset($data[$formField]);
+                }
+            }
+        }
+        
+        // Set id_bahan ke null atau ambil dari array pertama jika ada
+        if (isset($data['id_bahan_array'])) {
+            $idBahanArray = json_decode($data['id_bahan_array'], true);
+            $data['id_bahan'] = !empty($idBahanArray) && !empty($idBahanArray[0]) ? $idBahanArray[0] : null;
+        }
+        
+        // Set status dari status_baris - jika ada Hold maka Hold, jika semua Release maka Release
+        if ($request->has('status_baris') && is_array($request->input('status_baris'))) {
+            $statusArray = $request->input('status_baris');
+            // Jika ada satu saja yang Hold, maka status keseluruhan adalah Hold
+            $data['status'] = in_array('Hold', $statusArray) ? 'Hold' : 'Release';
+            // Simpan status_baris ke kolom status_baris_array sebagai JSON
+            $data['status_baris_array'] = json_encode($statusArray);
+            // Hapus status_baris dari data karena tidak ada kolom di database
+            unset($data['status_baris']);
+        }
+
+        // Handle kondisi_produk dan suhu_produk yang juga array
+        if ($request->has('kondisi_produk') && is_array($request->input('kondisi_produk'))) {
+            $data['kondisi_produk'] = json_encode($request->input('kondisi_produk'));
+        }
+        if ($request->has('suhu_produk') && is_array($request->input('suhu_produk'))) {
+            $data['suhu_produk'] = json_encode($request->input('suhu_produk'));
+        }
+        if ($request->has('suhu_produk_type') && is_array($request->input('suhu_produk_type'))) {
+            $data['suhu_produk_type'] = json_encode($request->input('suhu_produk_type'));
+        }
+        if ($request->has('kondisi_produk_suhu') && is_array($request->input('kondisi_produk_suhu'))) {
+            $data['kondisi_produk_suhu'] = json_encode($request->input('kondisi_produk_suhu'));
+        }
+
+        // Log data yang akan disimpan untuk debugging
+        \Log::info('Data yang akan disimpan ke database:', $data);
+        
+        try {
+            $pemeriksaan = PemeriksaanKedatanganBahanBakuPenunjang::create($data);
+            \Log::info('Data berhasil disimpan dengan ID: ' . $pemeriksaan->id);
+        } catch (\Exception $e) {
+            \Log::error('Error saat menyimpan data: ' . $e->getMessage());
+            \Log::error('Stack trace: ' . $e->getTraceAsString());
+            return redirect()->back()
+                ->withInput()
+                ->withErrors(['error' => 'Gagal menyimpan data: ' . $e->getMessage()]);
+        }
 
         return redirect()->route('pemeriksaan-bahan-baku.index')
             ->with('success', 'Data pemeriksaan kedatangan bahan baku penunjang berhasil ditambahkan!');
@@ -201,23 +342,40 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
             'no_po' => 'nullable|string|max:255',
             'suhu_mobil' => 'nullable|string|max:255',
             'suhu_mobil_type' => 'nullable|in:Fresh,Frozen',
-            'kondisi_produk' => 'nullable|string|max:255',
-            'suhu_produk' => 'nullable|string|max:255',
-            'suhu_produk_type' => 'nullable|in:Fresh,Frozen',
-            'kondisi_produk_suhu' => 'nullable|string|max:255',
-            'spesifikasi' => 'nullable|string',
-            'produsen' => 'nullable|string|max:255',
-            'negara_produsen' => 'nullable|string|max:255',
-            'distributor' => 'nullable|string|max:255',
-            'kode_produksi' => 'nullable|string|max:255',
-            'expire_date' => 'nullable|date',
-            'jumlah_datang' => 'nullable|string|max:255',
-            'jumlah_sampling' => 'nullable|string|max:255',
-            'hasil_uji_ffa' => 'nullable|string|max:255',
-            'status' => 'required|in:Release,Hold',
-            'keterangan' => 'nullable|string',
             'id_shift' => 'nullable|exists:shifts,id',
-            'id_bahan' => 'nullable|exists:bahans,id',
+            'status_baris' => 'required|array|min:1',
+            'status_baris.*' => 'required|in:Release,Hold',
+            // Validasi array fields dari dynamic rows
+            'id_bahan' => 'nullable|array',
+            'id_bahan.*' => 'nullable|exists:bahans,id',
+            'produsen' => 'nullable|array',
+            'produsen.*' => 'nullable|string|max:255',
+            'negara_produsen' => 'nullable|array',
+            'negara_produsen.*' => 'nullable|string|max:255',
+            'distributor' => 'nullable|array',
+            'distributor.*' => 'nullable|string|max:255',
+            'kode_produksi' => 'nullable|array',
+            'kode_produksi.*' => 'nullable|string|max:255',
+            'expire_date' => 'nullable|array',
+            'expire_date.*' => 'nullable|date',
+            'jumlah_datang' => 'nullable|array',
+            'jumlah_datang.*' => 'nullable|string|max:255',
+            'jumlah_sampling' => 'nullable|array',
+            'jumlah_sampling.*' => 'nullable|string|max:255',
+            'spesifikasi' => 'nullable|array',
+            'spesifikasi.*' => 'nullable|string',
+            'kondisi_produk' => 'nullable|array',
+            'kondisi_produk.*' => 'nullable|string|max:255',
+            'suhu_produk' => 'nullable|array',
+            'suhu_produk.*' => 'nullable|string|max:255',
+            'suhu_produk_type' => 'nullable|array',
+            'suhu_produk_type.*' => 'nullable|string|max:255',
+            'kondisi_produk_suhu' => 'nullable|array',
+            'kondisi_produk_suhu.*' => 'nullable|string|max:255',
+            'hasil_uji_ffa' => 'nullable|array',
+            'hasil_uji_ffa.*' => 'nullable|string|max:255',
+            'keterangan' => 'nullable|array',
+            'keterangan.*' => 'nullable|string',
         ]);
 
         // Process kondisi mobil dan fisik dengan logic yang benar
@@ -235,20 +393,127 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
             'bebas_kontaminan' => $request->input('kondisi_mobil.bebas_kontaminan') === '1',
         ];
 
-        $kondisiFisik = [
-            'kemasan' => $request->input('kondisi_fisik.kemasan') === '1',
-            'warna' => $request->input('kondisi_fisik.warna') === '1',
-            'benda_asing' => $request->input('kondisi_fisik.benda_asing') === '1',
-            'aroma' => $request->input('kondisi_fisik.aroma') === '1',
-        ];
-
         $data = $request->all();
         $data['segel_gembok'] = $request->input('segel_gembok');
-        $data['logo_halal'] = $request->input('logo_halal') === '1';
-        $data['dokumen_halal'] = $request->input('dokumen_halal') === '1';
-        $data['coa'] = $request->input('coa') === '1';
         $data['kondisi_mobil'] = $kondisiMobil;
-        $data['kondisi_fisik'] = $kondisiFisik;
+        // Hapus kondisi_fisik, logo_halal, dokumen_halal, coa dari data karena akan diproses sebagai array
+        unset($data['kondisi_fisik']);
+        unset($data['logo_halal']);
+        unset($data['dokumen_halal']);
+        unset($data['coa']);
+
+        // Map array fields dari form (id_bahan[]) ke database columns (id_bahan_array)
+        $arrayFieldMapping = [
+            'id_bahan' => 'id_bahan_array',
+            'produsen' => 'produsen_array',
+            'negara_produsen' => 'negara_produsen_array',
+            'distributor' => 'distributor_array',
+            'kode_produksi' => 'kode_produksi_array',
+            'expire_date' => 'expire_date_array',
+            'jumlah_datang' => 'jumlah_datang_array',
+            'jumlah_sampling' => 'jumlah_sampling_array',
+            'spesifikasi' => 'spesifikasi_array',
+            'kondisi_fisik' => 'kondisi_fisik_array',
+            'logo_halal' => 'logo_halal_array',
+            'hasil_uji_ffa' => 'hasil_uji_ffa_array',
+            'dokumen_halal' => 'dokumen_halal_array',
+            'coa' => 'coa_array',
+            'keterangan_hasil' => 'keterangan_array',
+        ];
+
+        // Process kondisi_fisik_array dari radio buttons
+        $kondisiFisikArray = [];
+        if ($request->has('kondisi_fisik_kemasan')) {
+            $kemasanArray = $request->input('kondisi_fisik_kemasan', []);
+            $warnaArray = $request->input('kondisi_fisik_warna', []);
+            $bendaAsingArray = $request->input('kondisi_fisik_benda_asing', []);
+            $aromaArray = $request->input('kondisi_fisik_aroma', []);
+            
+            $rowCount = max(count($kemasanArray), count($warnaArray), count($bendaAsingArray), count($aromaArray));
+            
+            for ($i = 0; $i < $rowCount; $i++) {
+                $kondisiFisikArray[] = [
+                    'kemasan' => (isset($kemasanArray[$i]) && $kemasanArray[$i] === '1') ? true : false,
+                    'warna' => (isset($warnaArray[$i]) && $warnaArray[$i] === '1') ? true : false,
+                    'benda_asing' => (isset($bendaAsingArray[$i]) && $bendaAsingArray[$i] === '1') ? true : false,
+                    'aroma' => (isset($aromaArray[$i]) && $aromaArray[$i] === '1') ? true : false,
+                ];
+            }
+            $data['kondisi_fisik_array'] = json_encode($kondisiFisikArray);
+        }
+        
+        // Process logo_halal_array, dokumen_halal_array, coa_array dari radio buttons
+        if ($request->has('logo_halal')) {
+            $logoHalalArray = $request->input('logo_halal', []);
+            $data['logo_halal_array'] = json_encode(array_map(function($val) {
+                return ($val === '1') ? true : false;
+            }, $logoHalalArray));
+        }
+        
+        if ($request->has('dokumen_halal')) {
+            $dokumenHalalArray = $request->input('dokumen_halal', []);
+            $data['dokumen_halal_array'] = json_encode(array_map(function($val) {
+                return ($val === '1') ? true : false;
+            }, $dokumenHalalArray));
+        }
+        
+        if ($request->has('coa')) {
+            $coaArray = $request->input('coa', []);
+            $data['coa_array'] = json_encode(array_map(function($val) {
+                return ($val === '1') ? true : false;
+            }, $coaArray));
+        }
+        
+        // Hapus field-field kondisi_fisik yang dikirim dari form agar tidak conflict
+        unset($data['kondisi_fisik_kemasan']);
+        unset($data['kondisi_fisik_warna']);
+        unset($data['kondisi_fisik_benda_asing']);
+        unset($data['kondisi_fisik_aroma']);
+
+        // Process array fields dari form dan simpan ke kolom database yang benar
+        foreach ($arrayFieldMapping as $formField => $dbColumn) {
+            // Skip fields yang sudah diproses di atas
+            if (in_array($formField, ['kondisi_fisik', 'logo_halal', 'dokumen_halal', 'coa'])) {
+                continue;
+            }
+            
+            if ($request->has($formField) && is_array($request->input($formField))) {
+                $data[$dbColumn] = json_encode($request->input($formField));
+                // Hapus field form agar tidak conflict dengan kolom database
+                if (isset($data[$formField])) {
+                    unset($data[$formField]);
+                }
+            }
+        }
+        
+        // Handle kondisi_produk, suhu_produk, dll yang dikirim sebagai array
+        if ($request->has('kondisi_produk') && is_array($request->input('kondisi_produk'))) {
+            $data['kondisi_produk'] = json_encode($request->input('kondisi_produk'));
+        }
+        if ($request->has('suhu_produk') && is_array($request->input('suhu_produk'))) {
+            $data['suhu_produk'] = json_encode($request->input('suhu_produk'));
+        }
+        if ($request->has('suhu_produk_type') && is_array($request->input('suhu_produk_type'))) {
+            $data['suhu_produk_type'] = json_encode($request->input('suhu_produk_type'));
+        }
+        if ($request->has('kondisi_produk_suhu') && is_array($request->input('kondisi_produk_suhu'))) {
+            $data['kondisi_produk_suhu'] = json_encode($request->input('kondisi_produk_suhu'));
+        }
+        
+        // Set id_bahan ke null atau ambil dari array pertama jika ada
+        if (isset($data['id_bahan_array'])) {
+            $idBahanArray = json_decode($data['id_bahan_array'], true);
+            $data['id_bahan'] = !empty($idBahanArray) && !empty($idBahanArray[0]) ? $idBahanArray[0] : null;
+        }
+        
+        // Set status dari status_baris - jika ada Hold maka Hold, jika semua Release maka Release
+        if ($request->has('status_baris') && is_array($request->input('status_baris'))) {
+            $statusArray = $request->input('status_baris');
+            // Jika ada satu saja yang Hold, maka status keseluruhan adalah Hold
+            $data['status'] = in_array('Hold', $statusArray) ? 'Hold' : 'Release';
+            // Simpan status_baris sebagai JSON
+            $data['status_baris_array'] = json_encode($statusArray);
+        }
 
         $pemeriksaanBahanBaku->update($data);
 

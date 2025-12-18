@@ -63,7 +63,19 @@
                                                     @enderror
                                                 </div>
                                             </div>
-                                                                                    <h5 class="text-primary mb-3">Status & Shift</h5>
+                                            <div class="col-md-6">
+                                                <div class="form-group">
+                                                    <label for="no_po">No. PO</label>
+                                                    <input type="text" id="no_po" class="form-control @error('no_po') is-invalid @enderror"
+                                                        name="no_po" value="{{ old('no_po', $pemeriksaanKedatanganKemasan->no_po) }}" placeholder="No. PO">
+                                                    @error('no_po')
+                                                        <div class="invalid-feedback">{{ $message }}</div>
+                                                    @enderror
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="row">
                                             <div class="col-md-6">
                                                 <div class="form-group">
                                                     <label for="status">Status <span class="text-danger">*</span></label>
@@ -81,7 +93,7 @@
                                                 <div class="form-group">
                                                     <label for="id_shift">Shift</label>
                                                     <select id="id_shift" class="form-control @error('id_shift') is-invalid @enderror" name="id_shift">
-                                                        <option value="">Pilih Shift (Opsional)</option>
+                                                        <option value="">Pilih Shift </option>
                                                         @foreach($shifts as $shift)
                                                             <option value="{{ $shift->id }}" {{ old('id_shift', $pemeriksaanKedatanganKemasan->id_shift) == $shift->id ? 'selected' : '' }}>
                                                                 {{ $shift->shift }}
@@ -93,18 +105,8 @@
                                                     @enderror
                                                 </div>
                                             </div>
-                                            <!-- <div class="col-md-6">
-                                                <div class="form-group">
-                                                    <label for="jenis_pemeriksaan">Jenis Pemeriksaan</label>
-                                                    <input type="text" id="jenis_pemeriksaan" class="form-control @error('jenis_pemeriksaan') is-invalid @enderror"
-                                                        name="jenis_pemeriksaan" value="{{ old('jenis_pemeriksaan', $pemeriksaanKedatanganKemasan->jenis_pemeriksaan) }}" placeholder="Jenis Pemeriksaan">
-                                                    @error('jenis_pemeriksaan')
-                                                        <div class="invalid-feedback">{{ $message }}</div>
-                                                    @enderror
-                                                </div>
-                                            </div> -->
                                         </div>
-                                        
+
                                         <div class="row">
                                             <div class="col-md-4">
                                                 <div class="form-group">
@@ -183,83 +185,6 @@
                                         </div>
                                     </div>
 
-                                    <!-- Informasi Kemasan -->
-                                    <div class="form-section mb-4">
-                                        <h5 class="text-primary mb-3">Informasi Kemasan</h5>
-                                        <div class="row">
-                                            <div class="col-md-6">
-                                                <div class="form-group">
-                                                    <label for="no_po">No. PO</label>
-                                                    <input type="text" id="no_po" class="form-control @error('no_po') is-invalid @enderror"
-                                                        name="no_po" value="{{ old('no_po', $pemeriksaanKedatanganKemasan->no_po) }}" placeholder="No. PO">
-                                                    @error('no_po')
-                                                        <div class="invalid-feedback">{{ $message }}</div>
-                                                    @enderror
-                                                </div>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <div class="form-group">
-                                                    <label for="id_bahan">Bahan Terkait</label>
-                                                    <select id="id_bahan" class="choices form-control @error('id_bahan') is-invalid @enderror" name="id_bahan">
-                                                        <option value="">Pilih Bahan (Opsional)</option>
-                                                        @foreach($bahans as $bahan)
-                                                            <option value="{{ $bahan->id }}" {{ old('id_bahan', $pemeriksaanKedatanganKemasan->id_bahan) == $bahan->id ? 'selected' : '' }}>
-                                                                {{ $bahan->nama_bahan }}
-                                                            </option>
-                                                        @endforeach
-                                                    </select>
-                                                    @error('id_bahan')
-                                                        <div class="invalid-feedback">{{ $message }}</div>
-                                                    @enderror
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div class="row">
-                                            <!-- <div class="col-md-6">
-                                                <div class="form-group">
-                                                    <label for="nama_bahan_kemasan">Nama Bahan Kemasan</label>
-                                                    <input type="text" id="nama_bahan_kemasan" class="form-control @error('nama_bahan_kemasan') is-invalid @enderror"
-                                                        name="nama_bahan_kemasan" value="{{ old('nama_bahan_kemasan', $pemeriksaanKedatanganKemasan->nama_bahan_kemasan) }}" placeholder="Nama Bahan Kemasan">
-                                                    @error('nama_bahan_kemasan')
-                                                        <div class="invalid-feedback">{{ $message }}</div>
-                                                    @enderror
-                                                </div>
-                                            </div> -->
-                                            <div class="col-md-6">
-                                                <div class="form-group">
-                                                    <label for="produsen">Produsen</label>
-                                                    <select id="produsen" class="choices form-control @error('produsen') is-invalid @enderror" name="produsen">
-                                                        <option value="">Pilih Produsen</option>
-                                                        @foreach ($produsens as $produsen)
-                                                            <option value="{{ $produsen->nama_produsen }}" {{ old('produsen', $pemeriksaanKedatanganKemasan->produsen) == $produsen->nama_produsen ? 'selected' : '' }}>
-                                                                {{ $produsen->nama_produsen }}
-                                                            </option>
-                                                        @endforeach
-                                                    </select>
-                                                    @error('produsen')
-                                                        <div class="invalid-feedback">{{ $message }}</div>
-                                                    @enderror
-                                                </div>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <div class="form-group">
-                                                    <label for="distributor">Distributor</label>
-                                                    <select id="distributor" class="choices form-control @error('distributor') is-invalid @enderror" name="distributor">
-                                                        <option value="">Pilih Distributor</option>
-                                                        @foreach ($distributors as $distributor)
-                                                            <option value="{{ $distributor->nama_distributor }}" {{ old('distributor', $pemeriksaanKedatanganKemasan->distributor) == $distributor->nama_distributor ? 'selected' : '' }}>
-                                                                {{ $distributor->nama_distributor }}
-                                                            </option>
-                                                        @endforeach
-                                                    </select>
-                                                    @error('distributor')
-                                                        <div class="invalid-feedback">{{ $message }}</div>
-                                                    @enderror
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
                                     <!-- Kondisi Mobil Pengangkut -->
                                     <div class="form-section mb-4">
                                         <h5 class="text-primary mb-3">Kondisi Mobil Pengangkut</h5>
@@ -418,139 +343,402 @@
                                             </div>
                                         </div>
                                     </div>
-
-                                    <!-- Kondisi Fisik -->
+                                    <!-- Informasi Kemasan -->
                                     <div class="form-section mb-4">
-                                        <h5 class="text-primary mb-3">Kondisi Fisik</h5>
+                                        <h5 class="text-primary mb-3">Informasi Kemasan</h5>
                                         <div class="row">
-                                            <div class="col-md-4">
-                                                <div class="mb-3">
-                                                    <label class="form-label"><strong>Penampakan</strong></label>
-                                                    <div class="form-check">
-                                                        <input class="form-check-input" type="radio" name="kondisi_fisik[penampakan]" id="penampakan_ya" value="1" 
-                                                            {{ old('kondisi_fisik.penampakan', ($pemeriksaanKedatanganKemasan->kondisi_fisik['penampakan'] ?? null) ? '1' : null) == '1' ? 'checked' : '' }}>
-                                                        <label class="form-check-label" for="penampakan_ya">Ya ✓</label>
-                                                    </div>
-                                                    <div class="form-check">
-                                                        <input class="form-check-input" type="radio" name="kondisi_fisik[penampakan]" id="penampakan_tidak" value="0" 
-                                                            {{ old('kondisi_fisik.penampakan', ($pemeriksaanKedatanganKemasan->kondisi_fisik['penampakan'] ?? null) ? '1' : '0') == '0' ? 'checked' : '' }}>
-                                                        <label class="form-check-label" for="penampakan_tidak">Tidak ✗</label>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-4">
-                                                <div class="mb-3">
-                                                    <label class="form-label"><strong>Sealing</strong></label>
-                                                    <div class="form-check">
-                                                        <input class="form-check-input" type="radio" name="kondisi_fisik[sealing]" id="sealing_ya" value="1" 
-                                                            {{ old('kondisi_fisik.sealing', ($pemeriksaanKedatanganKemasan->kondisi_fisik['sealing'] ?? null) ? '1' : null) == '1' ? 'checked' : '' }}>
-                                                        <label class="form-check-label" for="sealing_ya">Ya ✓</label>
-                                                    </div>
-                                                    <div class="form-check">
-                                                        <input class="form-check-input" type="radio" name="kondisi_fisik[sealing]" id="sealing_tidak" value="0" 
-                                                            {{ old('kondisi_fisik.sealing', ($pemeriksaanKedatanganKemasan->kondisi_fisik['sealing'] ?? null) ? '1' : '0') == '0' ? 'checked' : '' }}>
-                                                        <label class="form-check-label" for="sealing_tidak">Tidak ✗</label>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-4">
-                                                <div class="mb-3">
-                                                    <label class="form-label"><strong>Cetakan</strong></label>
-                                                    <div class="form-check">
-                                                        <input class="form-check-input" type="radio" name="kondisi_fisik[cetakan]" id="cetakan_ya" value="1" 
-                                                            {{ old('kondisi_fisik.cetakan', ($pemeriksaanKedatanganKemasan->kondisi_fisik['cetakan'] ?? null) ? '1' : null) == '1' ? 'checked' : '' }}>
-                                                        <label class="form-check-label" for="cetakan_ya">Ya ✓</label>
-                                                    </div>
-                                                    <div class="form-check">
-                                                        <input class="form-check-input" type="radio" name="kondisi_fisik[cetakan]" id="cetakan_tidak" value="0" 
-                                                            {{ old('kondisi_fisik.cetakan', ($pemeriksaanKedatanganKemasan->kondisi_fisik['cetakan'] ?? null) ? '1' : '0') == '0' ? 'checked' : '' }}>
-                                                        <label class="form-check-label" for="cetakan_tidak">Tidak ✗</label>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <!-- Keterangan -->
-                                    <div class="form-section mb-4">
-                                        <!-- Field Tambahan yang Hilang di Edit -->
-                                        <div class="form-section mb-4">
-                                            <h5 class="text-primary mb-3">Detail Tambahan</h5>
                                             
-                                            <div class="row">
-                                                <div class="col-md-6">
-                                                    <div class="form-group">
-                                                        <label for="ketebalan_micron">Ketebalan (Micron)</label>
-                                                        <input type="number" step="0.01" id="ketebalan_micron" class="form-control @error('ketebalan_micron') is-invalid @enderror"
-                                                            name="ketebalan_micron" value="{{ old('ketebalan_micron', $pemeriksaanKedatanganKemasan->ketebalan_micron) }}" placeholder="Ketebalan dalam micron">
-                                                        @error('ketebalan_micron')
-                                                            <div class="invalid-feedback">{{ $message }}</div>
-                                                        @enderror
-                                                    </div>
+                                            <!-- <div class="col-md-6">
+                                                <div class="form-group">
+                                                    <label for="id_bahan">Bahan Terkait</label>
+                                                    <select id="id_bahan" class="choices form-control @error('id_bahan') is-invalid @enderror" name="id_bahan">
+                                                        <option value="">Pilih Bahan (Opsional)</option>
+                                                        @foreach($bahans as $bahan)
+                                                            <option value="{{ $bahan->id }}" {{ old('id_bahan', $pemeriksaanKedatanganKemasan->id_bahan) == $bahan->id ? 'selected' : '' }}>
+                                                                {{ $bahan->nama_bahan }}
+                                                            </option>
+                                                        @endforeach
+                                                    </select>
+                                                    @error('id_bahan')
+                                                        <div class="invalid-feedback">{{ $message }}</div>
+                                                    @enderror
                                                 </div>
-                                            </div>
+                                            </div> -->
+                                        </div>
 
-                                            <!-- Radio Button untuk Dokumen -->
-                                            <div class="row">
-                                                <div class="col-md-4">
-                                                    <div class="mb-3">
-                                                        <label class="form-label"><strong>Logo Halal</strong></label>
-                                                        <div class="form-check">
-                                                            <input class="form-check-input" type="radio" name="logo_halal" id="logo_halal_ya" value="1" 
-                                                                {{ old('logo_halal', $pemeriksaanKedatanganKemasan->logo_halal ? '1' : null) == '1' ? 'checked' : '' }}>
-                                                            <label class="form-check-label" for="logo_halal_ya">Ya ✓</label>
+                                        <!-- <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="form-group">
+                                                    <label for="produsen">Produsen</label>
+                                                    <select id="produsen" class="choices form-control @error('produsen') is-invalid @enderror" name="produsen">
+                                                        <option value="">Pilih Produsen</option>
+                                                        @foreach ($produsens as $produsen)
+                                                            <option value="{{ $produsen->nama_produsen }}" {{ old('produsen', $pemeriksaanKedatanganKemasan->produsen) == $produsen->nama_produsen ? 'selected' : '' }}>
+                                                                {{ $produsen->nama_produsen }}
+                                                            </option>
+                                                        @endforeach
+                                                    </select>
+                                                    @error('produsen')
+                                                        <div class="invalid-feedback">{{ $message }}</div>
+                                                    @enderror
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="form-group">
+                                                    <label for="distributor">Distributor</label>
+                                                    <select id="distributor" class="choices form-control @error('distributor') is-invalid @enderror" name="distributor">
+                                                        <option value="">Pilih Distributor</option>
+                                                        @foreach ($distributors as $distributor)
+                                                            <option value="{{ $distributor->nama_distributor }}" {{ old('distributor', $pemeriksaanKedatanganKemasan->distributor) == $distributor->nama_distributor ? 'selected' : '' }}>
+                                                                {{ $distributor->nama_distributor }}
+                                                            </option>
+                                                        @endforeach
+                                                    </select>
+                                                    @error('distributor')
+                                                        <div class="invalid-feedback">{{ $message }}</div>
+                                                    @enderror
+                                        </div> -->
+                                    </div>
+
+                                    <!-- Dynamic Rows Data -->
+                                    @php
+                                        $id_bahans = json_decode($pemeriksaanKedatanganKemasan->id_bahan_array ?? '[]', true) ?? [];
+                                        $produsens_arr = json_decode($pemeriksaanKedatanganKemasan->produsen_array ?? '[]', true) ?? [];
+                                        $distributors_arr = json_decode($pemeriksaanKedatanganKemasan->distributor_array ?? '[]', true) ?? [];
+                                        $kode_produksis = json_decode($pemeriksaanKedatanganKemasan->kode_produksi_array ?? '[]', true) ?? [];
+                                        $jumlah_datangs = json_decode($pemeriksaanKedatanganKemasan->jumlah_datang_array ?? '[]', true) ?? [];
+                                        $jumlah_samplings = json_decode($pemeriksaanKedatanganKemasan->jumlah_sampling_array ?? '[]', true) ?? [];
+                                        $spesifikasis = json_decode($pemeriksaanKedatanganKemasan->spesifikasi_array ?? '[]', true) ?? [];
+                                        $penampakans = json_decode($pemeriksaanKedatanganKemasan->penampakan_array ?? '[]', true) ?? [];
+                                        $sealings = json_decode($pemeriksaanKedatanganKemasan->sealing_array ?? '[]', true) ?? [];
+                                        $cetakans = json_decode($pemeriksaanKedatanganKemasan->cetakan_array ?? '[]', true) ?? [];
+                                        $ketebalan_microns = json_decode($pemeriksaanKedatanganKemasan->ketebalan_micron_array ?? '[]', true) ?? [];
+                                        $dimensis = json_decode($pemeriksaanKedatanganKemasan->dimensi_array ?? '[]', true) ?? [];
+                                        $statuses = json_decode($pemeriksaanKedatanganKemasan->status_array ?? '[]', true) ?? [];
+                                        $logo_halals = json_decode($pemeriksaanKedatanganKemasan->logo_halal_array ?? '[]', true) ?? [];
+                                        $dokumen_halals = json_decode($pemeriksaanKedatanganKemasan->dokumen_halal_array ?? '[]', true) ?? [];
+                                        $coas = json_decode($pemeriksaanKedatanganKemasan->coa_array ?? '[]', true) ?? [];
+                                        $keterangans = json_decode($pemeriksaanKedatanganKemasan->keterangan_array ?? '[]', true) ?? [];
+                                        $rowCount = max(count($id_bahans), count($produsens_arr), count($distributors_arr));
+                                    @endphp
+                                    <div id="unified-container">
+                                        @forelse($id_bahans as $index => $id_bahan)
+                                            <div class="unified-row mb-4 p-3 border rounded" style="background-color: #f8f9fa;">
+                                                <h6 class="text-primary mb-3">Baris {{ $index + 1 }}</h6>
+                                                <div class="row">
+                                                    <div class="col-md-6">
+                                                        <div class="form-group">
+                                                            <label class="form-label">Bahan Kemasan</label>
+                                                            <select class="choices form-control" name="id_bahan[]">
+                                                                <option value="">Pilih Bahan</option>
+                                                                @foreach($bahans as $bahan)
+                                                                    <option value="{{ $bahan->id }}" {{ $id_bahan == $bahan->id ? 'selected' : '' }}>{{ $bahan->nama_bahan }}</option>
+                                                                @endforeach
+                                                            </select>
                                                         </div>
-                                                        <div class="form-check">
-                                                            <input class="form-check-input" type="radio" name="logo_halal" id="logo_halal_tidak" value="0" 
-                                                                {{ old('logo_halal', $pemeriksaanKedatanganKemasan->logo_halal ? '1' : '0') == '0' ? 'checked' : '' }}>
-                                                            <label class="form-check-label" for="logo_halal_tidak">Tidak ✗</label>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <div class="form-group">
+                                                            <label class="form-label">Produsen</label>
+                                                            <select class="choices form-control" name="produsen[]">
+                                                                <option value="">Pilih Produsen</option>
+                                                                @foreach ($produsens as $produsen)
+                                                                    <option value="{{ $produsen->nama_produsen }}" {{ ($produsens_arr[$index] ?? '') == $produsen->nama_produsen ? 'selected' : '' }}>{{ $produsen->nama_produsen }}</option>
+                                                                @endforeach
+                                                            </select>
                                                         </div>
                                                     </div>
                                                 </div>
-                                                <div class="col-md-4">
-                                                    <div class="mb-3">
-                                                        <label class="form-label"><strong>Dokumen Halal</strong></label>
-                                                        <div class="form-check">
-                                                            <input class="form-check-input" type="radio" name="dokumen_halal" id="dokumen_halal_ya" value="1" 
-                                                                {{ old('dokumen_halal', $pemeriksaanKedatanganKemasan->dokumen_halal ? '1' : null) == '1' ? 'checked' : '' }}>
-                                                            <label class="form-check-label" for="dokumen_halal_ya">Ya ✓</label>
+                                                <div class="row">
+                                                    <div class="col-md-6">
+                                                        <div class="form-group">
+                                                            <label class="form-label">Distributor</label>
+                                                            <select class="choices form-control" name="distributor[]">
+                                                                <option value="">Pilih Distributor</option>
+                                                                @foreach ($distributors as $distributor)
+                                                                    <option value="{{ $distributor->nama_distributor }}" {{ ($distributors_arr[$index] ?? '') == $distributor->nama_distributor ? 'selected' : '' }}>{{ $distributor->nama_distributor }}</option>
+                                                                @endforeach
+                                                            </select>
                                                         </div>
-                                                        <div class="form-check">
-                                                            <input class="form-check-input" type="radio" name="dokumen_halal" id="dokumen_halal_tidak" value="0" 
-                                                                {{ old('dokumen_halal', $pemeriksaanKedatanganKemasan->dokumen_halal ? '1' : '0') == '0' ? 'checked' : '' }}>
-                                                            <label class="form-check-label" for="dokumen_halal_tidak">Tidak ✗</label>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <div class="form-group">
+                                                            <label class="form-label">Kode Produksi</label>
+                                                            <input type="text" class="form-control" name="kode_produksi[]" value="{{ $kode_produksis[$index] ?? '' }}" placeholder="Kode Produksi">
                                                         </div>
                                                     </div>
                                                 </div>
-                                                <div class="col-md-4">
-                                                    <div class="mb-3">
-                                                        <label class="form-label"><strong>COA</strong></label>
-                                                        <div class="form-check">
-                                                            <input class="form-check-input" type="radio" name="coa" id="coa_ya" value="1" 
-                                                                {{ old('coa', $pemeriksaanKedatanganKemasan->coa ? '1' : null) == '1' ? 'checked' : '' }}>
-                                                            <label class="form-check-label" for="coa_ya">Ya ✓</label>
+                                                <div class="row">
+                                                    <div class="col-md-4">
+                                                        <div class="form-group">
+                                                            <label class="form-label">Jumlah Datang</label>
+                                                            <input type="text" class="form-control" name="jumlah_datang[]" value="{{ $jumlah_datangs[$index] ?? '' }}" placeholder="Jumlah Datang">
                                                         </div>
-                                                        <div class="form-check">
-                                                            <input class="form-check-input" type="radio" name="coa" id="coa_tidak" value="0" 
-                                                                {{ old('coa', $pemeriksaanKedatanganKemasan->coa ? '1' : '0') == '0' ? 'checked' : '' }}>
-                                                            <label class="form-check-label" for="coa_tidak">Tidak ✗</label>
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <div class="form-group">
+                                                            <label class="form-label">Jumlah Sampling</label>
+                                                            <input type="text" class="form-control" name="jumlah_sampling[]" value="{{ $jumlah_samplings[$index] ?? '' }}" placeholder="Jumlah Sampling">
                                                         </div>
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <div class="form-group">
+                                                            <label class="form-label">Spesifikasi</label>
+                                                            <textarea class="form-control" name="spesifikasi[]" rows="2" placeholder="Spesifikasi">{{ $spesifikasis[$index] ?? '' }}</textarea>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <!-- Kondisi Fisik -->
+                                                <div class="form-section mb-3">
+                                                    <h6 class="text-primary mb-2">Kondisi Fisik</h6>
+                                                    <div class="row">
+                                                        <div class="col-md-4">
+                                                            <div class="mb-3">
+                                                                <label class="form-label"><strong>Penampakan</strong></label>
+                                                                <div class="form-check">
+                                                                    <input class="form-check-input" type="radio" name="penampakan[]" value="1" {{ ($penampakans[$index] ?? null) ? 'checked' : '' }}>
+                                                                    <label class="form-check-label">Ya ✓</label>
+                                                                </div>
+                                                                <div class="form-check">
+                                                                    <input class="form-check-input" type="radio" name="penampakan[]" value="0" {{ !($penampakans[$index] ?? null) && isset($penampakans[$index]) ? 'checked' : '' }}>
+                                                                    <label class="form-check-label">Tidak ✗</label>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-4">
+                                                            <div class="mb-3">
+                                                                <label class="form-label"><strong>Sealing</strong></label>
+                                                                <div class="form-check">
+                                                                    <input class="form-check-input" type="radio" name="sealing[]" value="1" {{ ($sealings[$index] ?? null) ? 'checked' : '' }}>
+                                                                    <label class="form-check-label">Ya ✓</label>
+                                                                </div>
+                                                                <div class="form-check">
+                                                                    <input class="form-check-input" type="radio" name="sealing[]" value="0" {{ !($sealings[$index] ?? null) && isset($sealings[$index]) ? 'checked' : '' }}>
+                                                                    <label class="form-check-label">Tidak ✗</label>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-4">
+                                                            <div class="mb-3">
+                                                                <label class="form-label"><strong>Cetakan</strong></label>
+                                                                <div class="form-check">
+                                                                    <input class="form-check-input" type="radio" name="cetakan[]" value="1" {{ ($cetakans[$index] ?? null) ? 'checked' : '' }}>
+                                                                    <label class="form-check-label">Ya ✓</label>
+                                                                </div>
+                                                                <div class="form-check">
+                                                                    <input class="form-check-input" type="radio" name="cetakan[]" value="0" {{ !($cetakans[$index] ?? null) && isset($cetakans[$index]) ? 'checked' : '' }}>
+                                                                    <label class="form-check-label">Tidak ✗</label>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Detail Tambahan -->
+                                                <div class="form-section mb-3">
+                                                    <h6 class="text-primary mb-2">Detail Tambahan</h6>
+                                                    <div class="row">
+                                                        <div class="col-md-4">
+                                                            <div class="form-group">
+                                                                <label class="form-label">Ketebalan (Micron)</label>
+                                                                <input type="number" step="0.01" class="form-control" name="ketebalan_micron[]" value="{{ $ketebalan_microns[$index] ?? '' }}" placeholder="Ketebalan">
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-4">
+                                                            <div class="form-group">
+                                                                <label class="form-label">Dimensi</label>
+                                                                <input type="text" class="form-control" name="dimensi[]" value="{{ $dimensis[$index] ?? '' }}" placeholder="Dimensi">
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-4">
+                                                            <div class="form-group">
+                                                                <label class="form-label">Status</label>
+                                                                <select class="form-control" name="status[]">
+                                                                    <option value="">Pilih Status</option>
+                                                                    <option value="Hold" {{ ($statuses[$index] ?? '') == 'Hold' ? 'selected' : '' }}>Hold</option>
+                                                                    <option value="Release" {{ ($statuses[$index] ?? '') == 'Release' ? 'selected' : '' }}>Release</option>
+                                                                </select>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Dokumen -->
+                                                <div class="form-section mb-3">
+                                                    <h6 class="text-primary mb-2">Dokumen</h6>
+                                                    <div class="row">
+                                                        <div class="col-md-4">
+                                                            <div class="mb-3">
+                                                                <label class="form-label"><strong>Logo Halal</strong></label>
+                                                                <div class="form-check">
+                                                                    <input class="form-check-input" type="radio" name="logo_halal[]" value="1" {{ ($logo_halals[$index] ?? null) ? 'checked' : '' }}>
+                                                                    <label class="form-check-label">Ya ✓</label>
+                                                                </div>
+                                                                <div class="form-check">
+                                                                    <input class="form-check-input" type="radio" name="logo_halal[]" value="0" {{ !($logo_halals[$index] ?? null) && isset($logo_halals[$index]) ? 'checked' : '' }}>
+                                                                    <label class="form-check-label">Tidak ✗</label>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-4">
+                                                            <div class="mb-3">
+                                                                <label class="form-label"><strong>Dokumen Halal</strong></label>
+                                                                <div class="form-check">
+                                                                    <input class="form-check-input" type="radio" name="dokumen_halal[]" value="1" {{ ($dokumen_halals[$index] ?? null) ? 'checked' : '' }}>
+                                                                    <label class="form-check-label">Ya ✓</label>
+                                                                </div>
+                                                                <div class="form-check">
+                                                                    <input class="form-check-input" type="radio" name="dokumen_halal[]" value="0" {{ !($dokumen_halals[$index] ?? null) && isset($dokumen_halals[$index]) ? 'checked' : '' }}>
+                                                                    <label class="form-check-label">Tidak ✗</label>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-4">
+                                                            <div class="mb-3">
+                                                                <label class="form-label"><strong>COA</strong></label>
+                                                                <div class="form-check">
+                                                                    <input class="form-check-input" type="radio" name="coa[]" value="1" {{ ($coas[$index] ?? null) ? 'checked' : '' }}>
+                                                                    <label class="form-check-label">Ya ✓</label>
+                                                                </div>
+                                                                <div class="form-check">
+                                                                    <input class="form-check-input" type="radio" name="coa[]" value="0" {{ !($coas[$index] ?? null) && isset($coas[$index]) ? 'checked' : '' }}>
+                                                                    <label class="form-check-label">Tidak ✗</label>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="row">
+                                                        <div class="col-md-12">
+                                                            <div class="form-group">
+                                                                <label class="form-label">Keterangan</label>
+                                                                <textarea class="form-control" name="keterangan[]" rows="2" placeholder="Keterangan tambahan">{{ $keterangans[$index] ?? '' }}</textarea>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div class="row mt-3 pt-3 border-top">
+                                                    <div class="col-md-12">
+                                                        <button type="button" class="btn btn-danger btn-sm remove-unified-btn"><i class="bi bi-trash"></i> Hapus Baris</button>
                                                     </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                        <div class="form-group">
-                                            <label for="keterangan">Keterangan</label>
-                                            <textarea id="keterangan" class="form-control @error('keterangan') is-invalid @enderror"
-                                                name="keterangan" rows="3" placeholder="Keterangan">{{ old('keterangan', $pemeriksaanKedatanganKemasan->keterangan) }}</textarea>
-                                            @error('keterangan')
-                                                <div class="invalid-feedback">{{ $message }}</div>
-                                            @enderror
-                                        </div>
+                                        @empty
+                                            <div class="unified-row mb-4 p-3 border rounded" style="background-color: #f8f9fa;">
+                                                <h6 class="text-primary mb-3">Baris 1</h6>
+                                                <div class="row">
+                                                    <div class="col-md-6">
+                                                        <div class="form-group">
+                                                            <label class="form-label">Bahan Kemasan</label>
+                                                            <select class="choices form-control" name="id_bahan[]">
+                                                                <option value="">Pilih Bahan</option>
+                                                                @foreach($bahans as $bahan)
+                                                                    <option value="{{ $bahan->id }}">{{ $bahan->nama_bahan }}</option>
+                                                                @endforeach
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <div class="form-group">
+                                                            <label class="form-label">Produsen</label>
+                                                            <select class="choices form-control" name="produsen[]">
+                                                                <option value="">Pilih Produsen</option>
+                                                                @foreach ($produsens as $produsen)
+                                                                    <option value="{{ $produsen->nama_produsen }}">{{ $produsen->nama_produsen }}</option>
+                                                                @endforeach
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="row">
+                                                    <div class="col-md-6">
+                                                        <div class="form-group">
+                                                            <label class="form-label">Distributor</label>
+                                                            <select class="choices form-control" name="distributor[]">
+                                                                <option value="">Pilih Distributor</option>
+                                                                @foreach ($distributors as $distributor)
+                                                                    <option value="{{ $distributor->nama_distributor }}">{{ $distributor->nama_distributor }}</option>
+                                                                @endforeach
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <div class="form-group">
+                                                            <label class="form-label">Kode Produksi</label>
+                                                            <input type="text" class="form-control" name="kode_produksi[]" placeholder="Kode Produksi">
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="row">
+                                                    <div class="col-md-4">
+                                                        <div class="form-group">
+                                                            <label class="form-label">Jumlah Datang</label>
+                                                            <input type="text" class="form-control" name="jumlah_datang[]" placeholder="Jumlah Datang">
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <div class="form-group">
+                                                            <label class="form-label">Jumlah Sampling</label>
+                                                            <input type="text" class="form-control" name="jumlah_sampling[]" placeholder="Jumlah Sampling">
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <div class="form-group">
+                                                            <label class="form-label">Spesifikasi</label>
+                                                            <textarea class="form-control" name="spesifikasi[]" rows="2" placeholder="Spesifikasi"></textarea>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="row mt-3 pt-3 border-top">
+                                                    <div class="col-md-12">
+                                                        <button type="button" class="btn btn-danger btn-sm remove-unified-btn"><i class="bi bi-trash"></i> Hapus Baris</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        @endforelse
                                     </div>
+
+                                    <script>
+                                        document.addEventListener('DOMContentLoaded', function() {
+                                            function updateDeleteButtons() {
+                                                const rows = document.querySelectorAll('.unified-row');
+                                                const deleteButtons = document.querySelectorAll('.remove-unified-btn');
+                                                
+                                                // Jika hanya 1 baris, disable tombol hapus
+                                                if (rows.length === 1) {
+                                                    deleteButtons.forEach(btn => {
+                                                        btn.disabled = true;
+                                                        btn.style.opacity = '0.5';
+                                                        btn.style.cursor = 'not-allowed';
+                                                    });
+                                                } else {
+                                                    deleteButtons.forEach(btn => {
+                                                        btn.disabled = false;
+                                                        btn.style.opacity = '1';
+                                                        btn.style.cursor = 'pointer';
+                                                    });
+                                                }
+                                            }
+
+                                            // Event listener untuk tombol hapus
+                                            document.addEventListener('click', function(e) {
+                                                if (e.target.closest('.remove-unified-btn')) {
+                                                    const row = e.target.closest('.unified-row');
+                                                    if (row && !e.target.closest('.remove-unified-btn').disabled) {
+                                                        row.remove();
+                                                        updateDeleteButtons();
+                                                    }
+                                                }
+                                            });
+
+                                            // Initial check
+                                            updateDeleteButtons();
+                                        });
+                                    </script>
                                     
                                     <div class="col-md-12 d-flex justify-content-end mt-3">
                                         <a href="{{ route('pemeriksaan-kedatangan-kemasan.index') }}" class="btn btn-light-secondary me-1 mb-1">Kembali</a>
-                                        <button type="submit" class="btn btn-primary me-1 mb-1">Update</button>
+                                        <button type="submit" class="btn btn-primary me-1 mb-1">Update Data</button>
                                         <button type="reset" class="btn btn-light-secondary me-1 mb-1">Reset</button>
                                     </div>
                                 </form>

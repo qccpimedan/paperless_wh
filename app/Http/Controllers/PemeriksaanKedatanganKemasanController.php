@@ -121,20 +121,27 @@ class PemeriksaanKedatanganKemasanController extends Controller
             'nama_supir' => 'nullable|string|max:255',
             'jenis_pemeriksaan' => 'nullable|string|max:255',
             'no_po' => 'nullable|string|max:255',
-            'spesifikasi' => 'nullable|string',
-            'produsen' => 'nullable|string|max:255',
-            'distributor' => 'nullable|string|max:255',
-            'kode_produksi' => 'nullable|string|max:255',
-            'jumlah_datang' => 'nullable|string|max:255',
-            'jumlah_sampling' => 'nullable|string|max:255',
-            'ketebalan_micron' => 'nullable|numeric',
-            'status' => 'required|in:Release,Hold',
-            'keterangan' => 'nullable|string',
+            'id_bahan.*' => 'nullable|exists:bahans,id',
+            'produsen.*' => 'nullable|string|max:255',
+            'distributor.*' => 'nullable|string|max:255',
+            'kode_produksi.*' => 'nullable|string|max:255',
+            'jumlah_datang.*' => 'nullable|string|max:255',
+            'jumlah_sampling.*' => 'nullable|string|max:255',
+            'spesifikasi.*' => 'nullable|string',
+            'penampakan.*' => 'nullable|in:0,1',
+            'sealing.*' => 'nullable|in:0,1',
+            'cetakan.*' => 'nullable|in:0,1',
+            'ketebalan_micron.*' => 'nullable|numeric',
+            'dimensi.*' => 'nullable|string|max:255',
+            'status.*' => 'nullable|in:Release,Hold',
+            'logo_halal.*' => 'nullable|in:0,1',
+            'dokumen_halal.*' => 'nullable|in:0,1',
+            'coa.*' => 'nullable|in:0,1',
+            'keterangan.*' => 'nullable|string',
             'id_shift' => 'nullable|exists:shifts,id',
-            'id_bahan' => 'nullable|exists:bahans,id',
         ]);
     
-        // Process kondisi mobil dan fisik dengan logic yang benar
+        // Process kondisi mobil dengan logic yang benar
         $kondisiMobil = [
             'bersih' => $request->input('kondisi_mobil.bersih') === '1',
             'bebas_hama' => $request->input('kondisi_mobil.bebas_hama') === '1',
@@ -149,20 +156,56 @@ class PemeriksaanKedatanganKemasanController extends Controller
             'bebas_kontaminan' => $request->input('kondisi_mobil.bebas_kontaminan') === '1',
         ];
     
-        $kondisiFisik = [
-            'penampakan' => $request->input('kondisi_fisik.penampakan') === '1',
-            'sealing' => $request->input('kondisi_fisik.sealing') === '1',
-            'cetakan' => $request->input('kondisi_fisik.cetakan') === '1',
-        ];
+        // Get array data from dynamic form
+        $id_bahans = $request->input('id_bahan', []);
+        $produsens = $request->input('produsen', []);
+        $distributors = $request->input('distributor', []);
+        $kode_produksis = $request->input('kode_produksi', []);
+        $jumlah_datangs = $request->input('jumlah_datang', []);
+        $jumlah_samplings = $request->input('jumlah_sampling', []);
+        $spesifikasis = $request->input('spesifikasi', []);
+        $penampakans = $request->input('penampakan', []);
+        $sealings = $request->input('sealing', []);
+        $cetakans = $request->input('cetakan', []);
+        $ketebalan_microns = $request->input('ketebalan_micron', []);
+        $dimensis = $request->input('dimensi', []);
+        $statuses = $request->input('status', []);
+        $logo_halals = $request->input('logo_halal', []);
+        $dokumen_halals = $request->input('dokumen_halal', []);
+        $coas = $request->input('coa', []);
+        $keterangans = $request->input('keterangan', []);
     
-        $data = $request->all();
-        $data['id_user'] = Auth::id();
-        $data['segel_gembok'] = $request->input('segel_gembok');
-        $data['logo_halal'] = $request->input('logo_halal') === '1';
-        $data['dokumen_halal'] = $request->input('dokumen_halal') === '1';
-        $data['coa'] = $request->input('coa') === '1';
-        $data['kondisi_mobil'] = $kondisiMobil;
-        $data['kondisi_fisik'] = $kondisiFisik;
+        // Ensure all arrays are properly formatted as JSON
+        $data = [
+            'tanggal' => $request->input('tanggal'),
+            'jenis_mobil' => $request->input('jenis_mobil'),
+            'no_mobil' => $request->input('no_mobil'),
+            'nama_supir' => $request->input('nama_supir'),
+            'jenis_pemeriksaan' => $request->input('jenis_pemeriksaan'),
+            'no_po' => $request->input('no_po'),
+            'segel_gembok' => $request->input('segel_gembok'),
+            'no_segel' => $request->input('no_segel'),
+            'kondisi_mobil' => json_encode($kondisiMobil),
+            'id_user' => Auth::id(),
+            'id_shift' => $request->input('id_shift'),
+            'id_bahan_array' => json_encode(is_array($id_bahans) ? $id_bahans : []),
+            'produsen_array' => json_encode(is_array($produsens) ? $produsens : []),
+            'distributor_array' => json_encode(is_array($distributors) ? $distributors : []),
+            'kode_produksi_array' => json_encode(is_array($kode_produksis) ? $kode_produksis : []),
+            'jumlah_datang_array' => json_encode(is_array($jumlah_datangs) ? $jumlah_datangs : []),
+            'jumlah_sampling_array' => json_encode(is_array($jumlah_samplings) ? $jumlah_samplings : []),
+            'spesifikasi_array' => json_encode(is_array($spesifikasis) ? $spesifikasis : []),
+            'penampakan_array' => json_encode(is_array($penampakans) ? $penampakans : []),
+            'sealing_array' => json_encode(is_array($sealings) ? $sealings : []),
+            'cetakan_array' => json_encode(is_array($cetakans) ? $cetakans : []),
+            'ketebalan_micron_array' => json_encode(is_array($ketebalan_microns) ? $ketebalan_microns : []),
+            'dimensi_array' => json_encode(is_array($dimensis) ? $dimensis : []),
+            'status_array' => json_encode(is_array($statuses) ? $statuses : []),
+            'logo_halal_array' => json_encode(is_array($logo_halals) ? $logo_halals : []),
+            'dokumen_halal_array' => json_encode(is_array($dokumen_halals) ? $dokumen_halals : []),
+            'coa_array' => json_encode(is_array($coas) ? $coas : []),
+            'keterangan_array' => json_encode(is_array($keterangans) ? $keterangans : []),
+        ];
     
         PemeriksaanKedatanganKemasan::create($data);
     
@@ -257,20 +300,27 @@ class PemeriksaanKedatanganKemasanController extends Controller
             'nama_supir' => 'nullable|string|max:255',
             'jenis_pemeriksaan' => 'nullable|string|max:255',
             'no_po' => 'nullable|string|max:255',
-            'spesifikasi' => 'nullable|string',
-            'produsen' => 'nullable|string|max:255',
-            'distributor' => 'nullable|string|max:255',
-            'kode_produksi' => 'nullable|string|max:255',
-            'jumlah_datang' => 'nullable|string|max:255',
-            'jumlah_sampling' => 'nullable|string|max:255',
-            'ketebalan_micron' => 'nullable|numeric',
-            'status' => 'required|in:Release,Hold',
-            'keterangan' => 'nullable|string',
+            'id_bahan.*' => 'nullable|exists:bahans,id',
+            'produsen.*' => 'nullable|string|max:255',
+            'distributor.*' => 'nullable|string|max:255',
+            'kode_produksi.*' => 'nullable|string|max:255',
+            'jumlah_datang.*' => 'nullable|string|max:255',
+            'jumlah_sampling.*' => 'nullable|string|max:255',
+            'spesifikasi.*' => 'nullable|string',
+            'penampakan.*' => 'nullable|in:0,1',
+            'sealing.*' => 'nullable|in:0,1',
+            'cetakan.*' => 'nullable|in:0,1',
+            'ketebalan_micron.*' => 'nullable|numeric',
+            'dimensi.*' => 'nullable|string|max:255',
+            'status.*' => 'nullable|in:Release,Hold',
+            'logo_halal.*' => 'nullable|in:0,1',
+            'dokumen_halal.*' => 'nullable|in:0,1',
+            'coa.*' => 'nullable|in:0,1',
+            'keterangan.*' => 'nullable|string',
             'id_shift' => 'nullable|exists:shifts,id',
-            'id_bahan' => 'nullable|exists:bahans,id',
         ]);
     
-        // Process kondisi mobil dan fisik dengan logic yang benar
+        // Process kondisi mobil dengan logic yang benar
         $kondisiMobil = [
             'bersih' => $request->input('kondisi_mobil.bersih') === '1',
             'bebas_hama' => $request->input('kondisi_mobil.bebas_hama') === '1',
@@ -285,19 +335,55 @@ class PemeriksaanKedatanganKemasanController extends Controller
             'bebas_kontaminan' => $request->input('kondisi_mobil.bebas_kontaminan') === '1',
         ];
     
-        $kondisiFisik = [
-            'penampakan' => $request->input('kondisi_fisik.penampakan') === '1',
-            'sealing' => $request->input('kondisi_fisik.sealing') === '1',
-            'cetakan' => $request->input('kondisi_fisik.cetakan') === '1',
-        ];
+        // Get array data from dynamic form
+        $id_bahans = $request->input('id_bahan', []);
+        $produsens = $request->input('produsen', []);
+        $distributors = $request->input('distributor', []);
+        $kode_produksis = $request->input('kode_produksi', []);
+        $jumlah_datangs = $request->input('jumlah_datang', []);
+        $jumlah_samplings = $request->input('jumlah_sampling', []);
+        $spesifikasis = $request->input('spesifikasi', []);
+        $penampakans = $request->input('penampakan', []);
+        $sealings = $request->input('sealing', []);
+        $cetakans = $request->input('cetakan', []);
+        $ketebalan_microns = $request->input('ketebalan_micron', []);
+        $dimensis = $request->input('dimensi', []);
+        $statuses = $request->input('status', []);
+        $logo_halals = $request->input('logo_halal', []);
+        $dokumen_halals = $request->input('dokumen_halal', []);
+        $coas = $request->input('coa', []);
+        $keterangans = $request->input('keterangan', []);
     
-        $data = $request->all();
-        $data['segel_gembok'] = $request->input('segel_gembok');
-        $data['logo_halal'] = $request->input('logo_halal') === '1';
-        $data['dokumen_halal'] = $request->input('dokumen_halal') === '1';
-        $data['coa'] = $request->input('coa') === '1';
-        $data['kondisi_mobil'] = $kondisiMobil;
-        $data['kondisi_fisik'] = $kondisiFisik;
+        // Ensure all arrays are properly formatted as JSON
+        $data = [
+            'tanggal' => $request->input('tanggal'),
+            'jenis_mobil' => $request->input('jenis_mobil'),
+            'no_mobil' => $request->input('no_mobil'),
+            'nama_supir' => $request->input('nama_supir'),
+            'jenis_pemeriksaan' => $request->input('jenis_pemeriksaan'),
+            'no_po' => $request->input('no_po'),
+            'segel_gembok' => $request->input('segel_gembok'),
+            'no_segel' => $request->input('no_segel'),
+            'kondisi_mobil' => json_encode($kondisiMobil),
+            'id_shift' => $request->input('id_shift'),
+            'id_bahan_array' => json_encode(is_array($id_bahans) ? $id_bahans : []),
+            'produsen_array' => json_encode(is_array($produsens) ? $produsens : []),
+            'distributor_array' => json_encode(is_array($distributors) ? $distributors : []),
+            'kode_produksi_array' => json_encode(is_array($kode_produksis) ? $kode_produksis : []),
+            'jumlah_datang_array' => json_encode(is_array($jumlah_datangs) ? $jumlah_datangs : []),
+            'jumlah_sampling_array' => json_encode(is_array($jumlah_samplings) ? $jumlah_samplings : []),
+            'spesifikasi_array' => json_encode(is_array($spesifikasis) ? $spesifikasis : []),
+            'penampakan_array' => json_encode(is_array($penampakans) ? $penampakans : []),
+            'sealing_array' => json_encode(is_array($sealings) ? $sealings : []),
+            'cetakan_array' => json_encode(is_array($cetakans) ? $cetakans : []),
+            'ketebalan_micron_array' => json_encode(is_array($ketebalan_microns) ? $ketebalan_microns : []),
+            'dimensi_array' => json_encode(is_array($dimensis) ? $dimensis : []),
+            'status_array' => json_encode(is_array($statuses) ? $statuses : []),
+            'logo_halal_array' => json_encode(is_array($logo_halals) ? $logo_halals : []),
+            'dokumen_halal_array' => json_encode(is_array($dokumen_halals) ? $dokumen_halals : []),
+            'coa_array' => json_encode(is_array($coas) ? $coas : []),
+            'keterangan_array' => json_encode(is_array($keterangans) ? $keterangans : []),
+        ];
     
         $pemeriksaanKedatanganKemasan->update($data);
     

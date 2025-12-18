@@ -30,47 +30,20 @@
                 </div>
                 <div class="card-body">
                     <!-- Informasi Dasar -->
-                    <h5 class="text-primary">Informasi Dasar</h5>
+                    <h5 class="text-primary mb-3">Informasi Dasar</h5>
                     <div class="row mb-4">
                         <div class="col-md-6">
                             <table class="table table-borderless">
-                                <tr><td><strong>Tanggal:</strong></td><td>{{ $pemeriksaanBahanBaku->tanggal->format('d/m/Y') }}</td></tr>
-                                <!-- <tr><td><strong>Jenis Pemeriksaan:</strong></td><td>{{ $pemeriksaanBahanBaku->jenis_pemeriksaan ?? '-' }}</td></tr> -->
+                                <tr><td width="40%"><strong>Tanggal:</strong></td><td>{{ $pemeriksaanBahanBaku->tanggal->format('d/m/Y') }}</td></tr>
                                 <tr><td><strong>No. PO:</strong></td><td>{{ $pemeriksaanBahanBaku->no_po ?? '-' }}</td></tr>
-                                <tr><td><strong>Status:</strong></td><td>
+                                <tr><td><strong>Jenis Pemeriksaan:</strong></td><td>{{ $pemeriksaanBahanBaku->jenis_pemeriksaan ?? '-' }}</td></tr>
+                                <!-- <tr><td><strong>Status Keseluruhan:</strong></td><td>
                                     @if($pemeriksaanBahanBaku->status === 'Release')
                                         <span class="badge bg-success">Release</span>
                                     @else
                                         <span class="badge bg-warning">Hold</span>
                                     @endif
-                                </td></tr>
-                                <tr><td><strong>Segel/Gembok:</strong></td><td>
-                                    @if($pemeriksaanBahanBaku->segel_gembok)
-                                        @if($pemeriksaanBahanBaku->segel_gembok === 'segel')
-                                            <span class="badge bg-info">Segel</span>
-                                        @elseif($pemeriksaanBahanBaku->segel_gembok === 'gembok')
-                                            <span class="badge bg-warning">Gembok</span>
-                                        @else
-                                            <span class="badge bg-secondary">{{ $pemeriksaanBahanBaku->segel_gembok }}</span>
-                                        @endif
-                                    @else
-                                        <span class="badge bg-secondary">-</span>
-                                    @endif
-                                </td></tr>
-                                <tr><td><strong>No. Segel:</strong></td><td>
-                                    @if($pemeriksaanBahanBaku->segel_gembok === 'segel' && $pemeriksaanBahanBaku->no_segel)
-                                        {{ $pemeriksaanBahanBaku->no_segel }}
-                                    @else
-                                        -
-                                    @endif
-                                </td></tr>
-                            </table>
-                        </div>
-                        <div class="col-md-6">
-                            <table class="table table-borderless">
-                                <tr><td><strong>Nama Supir:</strong></td><td>{{ $pemeriksaanBahanBaku->nama_supir ?? '-' }}</td></tr>
-                                <tr><td><strong>Jenis Mobil:</strong></td><td>{{ $pemeriksaanBahanBaku->jenis_mobil ?? '-' }}</td></tr>
-                                <tr><td><strong>No. Mobil:</strong></td><td>{{ $pemeriksaanBahanBaku->no_mobil ?? '-' }}</td></tr>
+                                </td></tr> -->
                                 <tr><td><strong>Shift:</strong></td><td>
                                     @if($pemeriksaanBahanBaku->shift)
                                         <span class="badge bg-primary">{{ $pemeriksaanBahanBaku->shift->shift }}</span>
@@ -80,19 +53,60 @@
                                 </td></tr>
                             </table>
                         </div>
+                        <div class="col-md-6">
+                            <table class="table table-borderless">
+                                <tr><td width="40%"><strong>Nama Supir:</strong></td><td>{{ $pemeriksaanBahanBaku->nama_supir ?? '-' }}</td></tr>
+                                <tr><td><strong>Jenis Mobil:</strong></td><td>{{ $pemeriksaanBahanBaku->jenis_mobil ?? '-' }}</td></tr>
+                                <tr><td><strong>No. Mobil:</strong></td><td>{{ $pemeriksaanBahanBaku->no_mobil ?? '-' }}</td></tr>
+                                <tr><td><strong>Segel/Gembok:</strong></td><td>
+                                    @if($pemeriksaanBahanBaku->segel_gembok)
+                                        <span class="badge bg-info">{{ ucfirst($pemeriksaanBahanBaku->segel_gembok) }}</span>
+                                        @if($pemeriksaanBahanBaku->segel_gembok === 'segel' && $pemeriksaanBahanBaku->no_segel)
+                                            - {{ $pemeriksaanBahanBaku->no_segel }}
+                                        @endif
+                                    @else
+                                        -
+                                    @endif
+                                </td></tr>
+                            </table>
+                        </div>
                     </div>
 
+                    <!-- Suhu Mobil -->
+                    @if($pemeriksaanBahanBaku->suhu_mobil_type || $pemeriksaanBahanBaku->suhu_mobil)
+                        <h5 class="text-primary mb-3">Informasi Suhu Mobil</h5>
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <table class="table table-borderless">
+                                    <tr><td width="40%"><strong>Jenis Suhu Mobil:</strong></td><td>
+                                        @if($pemeriksaanBahanBaku->suhu_mobil_type)
+                                            <span class="badge bg-info">{{ $pemeriksaanBahanBaku->suhu_mobil_type }}</span>
+                                        @else
+                                            -
+                                        @endif
+                                    </td></tr>
+                                    <tr><td><strong>Nilai Suhu Mobil:</strong></td><td>{{ $pemeriksaanBahanBaku->suhu_mobil ?? '-' }}</td></tr>
+                                </table>
+                            </div>
+                        </div>
+                    @endif
+
                     <!-- Kondisi Mobil -->
-                    <h5 class="text-primary">Kondisi Mobil Pengangkut</h5>
+                    <h5 class="text-primary mb-3">Kondisi Mobil Pengangkut</h5>
                     @if($pemeriksaanBahanBaku->kondisi_mobil)
                         <div class="row mb-4">
                             @php
                                 $kondisiMobil = [
-                                    'bersih' => 'Bersih', 'bebas_hama' => 'Bebas dari hama',
-                                    'tidak_kondensasi' => 'Tidak Kondensasi', 'bebas_produk_halal' => 'Bebas dari Produk Non Halal',
-                                    'tidak_berbau' => 'Tidak Berbau', 'tidak_ada_sampah' => 'Tidak ada sampah',
-                                    'tidak_ada_mikroba' => 'Tidak ada mikroba', 'lampu_cover_utuh' => 'Lampu Cover utuh',
-                                    'pallet_utuh' => 'Pallet utuh', 'tertutup_rapat' => 'Tertutup rapat',
+                                    'bersih' => 'Bersih', 
+                                    'bebas_hama' => 'Bebas dari hama',
+                                    'tidak_kondensasi' => 'Tidak Kondensasi', 
+                                    'bebas_produk_halal' => 'Bebas dari Produk Non Halal',
+                                    'tidak_berbau' => 'Tidak Berbau', 
+                                    'tidak_ada_sampah' => 'Tidak ada sampah',
+                                    'tidak_ada_mikroba' => 'Tidak ada mikroba', 
+                                    'lampu_cover_utuh' => 'Lampu Cover utuh',
+                                    'pallet_utuh' => 'Pallet utuh', 
+                                    'tertutup_rapat' => 'Tertutup rapat',
                                     'bebas_kontaminan' => 'Bebas kontaminan'
                                 ];
                             @endphp
@@ -109,204 +123,201 @@
                         </div>
                     @endif
 
-                    <!-- Informasi Produk & Supplier -->
-                    <h5 class="text-primary">Informasi Produk & Supplier</h5>
-                    <div class="row mb-4">
-                        <div class="col-md-6">
-                            <table class="table table-borderless">
-                                <tr><td><strong>Nama Bahan:</strong></td><td>
-                                    @if($pemeriksaanBahanBaku->bahan)
-                                        <span class="badge bg-info">{{ $pemeriksaanBahanBaku->bahan->nama_bahan }}</span>
-                                    @else
-                                        -
-                                    @endif
-                                </td></tr>
-                                <tr><td><strong>Kondisi Produk:</strong></td><td>
-                                    @if($pemeriksaanBahanBaku->kondisi_produk)
-                                        <span class="badge bg-secondary">{{ $pemeriksaanBahanBaku->kondisi_produk }}</span>
-                                    @else
-                                        -
-                                    @endif
-                                </td></tr>
-                                <tr><td><strong>Produsen:</strong></td><td>{{ $pemeriksaanBahanBaku->produsen ?? '-' }}</td></tr>
-                                <tr><td><strong>Distributor:</strong></td><td>{{ $pemeriksaanBahanBaku->distributor ?? '-' }}</td></tr>
-                            </table>
-                        </div>
-                        <div class="col-md-6">
-                            <table class="table table-borderless">
-                                <tr><td><strong>Kode Produksi:</strong></td><td>{{ $pemeriksaanBahanBaku->kode_produksi ?? '-' }}</td></tr>
-                                <tr><td><strong>Expire Date:</strong></td><td>{{ $pemeriksaanBahanBaku->expire_date ? $pemeriksaanBahanBaku->expire_date->format('d/m/Y') : '-' }}</td></tr>
-                                <tr><td><strong>Jumlah Datang:</strong></td><td>{{ $pemeriksaanBahanBaku->jumlah_datang ?? '-' }}</td></tr>
-                                <tr><td><strong>Jumlah Sampling:</strong></td><td>{{ $pemeriksaanBahanBaku->jumlah_sampling ?? '-' }}</td></tr>
-                            </table>
-                        </div>
-                                                <!-- New Conditional Fields Display -->
-                                                <div class="col-12 mt-3">
-                            <h6 class="text-primary">Informasi Suhu & Kondisi</h6>
-                            <div class="row">
-                                <div class="col-md-4">
-                                    <table class="table table-borderless table-sm">
-                                        <tr><td><strong>Jenis Suhu Mobil:</strong></td><td>
-                                            @if($pemeriksaanBahanBaku->suhu_mobil_type)
-                                                <span class="badge bg-info">{{ $pemeriksaanBahanBaku->suhu_mobil_type }}</span>
-                                            @else
-                                                -
-                                            @endif
-                                        </td></tr>
-                                        <tr><td><strong>Nilai Suhu Mobil:</strong></td><td>{{ $pemeriksaanBahanBaku->suhu_mobil ?? '-' }}</td></tr>
-                                    </table>
-                                </div>
-                                <div class="col-md-4">
-                                    <table class="table table-borderless table-sm">
-                                        <tr><td><strong>Jenis Suhu Produk:</strong></td><td>
-                                            @if($pemeriksaanBahanBaku->suhu_produk_type)
-                                                <span class="badge bg-info">{{ $pemeriksaanBahanBaku->suhu_produk_type }}</span>
-                                            @else
-                                                -
-                                            @endif
-                                        </td></tr>
-                                        <tr><td><strong>Nilai Suhu Produk:</strong></td><td>{{ $pemeriksaanBahanBaku->suhu_produk ?? '-' }}</td></tr>
-                                    </table>
-                                </div>
-                                <div class="col-md-4">
-                                    <table class="table table-borderless table-sm">
-                                        <tr><td><strong>Suhu Kondisi Produk:</strong></td><td>{{ $pemeriksaanBahanBaku->kondisi_produk_suhu ?? '-' }}</td></tr>
-                                        @if($pemeriksaanBahanBaku->kondisi_produk === 'Minyak')
-                                            <tr><td><strong>Hasil Uji FFA:</strong></td><td>{{ $pemeriksaanBahanBaku->hasil_uji_ffa ?? '-' }}</td></tr>
-                                        @endif
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-                        <!-- Conditional Fields Display -->
-                        @if(in_array($pemeriksaanBahanBaku->kondisi_produk, ['Fresh', 'Frozen']))
-                            <div class="col-12 mt-3">
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <strong>Suhu Mobil:</strong> {{ $pemeriksaanBahanBaku->suhu_mobil ?? '-' }}
-                                    </div>
-                                    <div class="col-md-6">
-                                        <strong>Suhu Produk:</strong> {{ $pemeriksaanBahanBaku->suhu_produk ?? '-' }}
-                                    </div>
-                                </div>
-                            </div>
-                        @endif
+                    <!-- Detail Produk (Dynamic Rows) -->
+                    <h5 class="text-primary mb-3">Detail Produk</h5>
+                    @php
+                        $idBahanArray = json_decode($pemeriksaanBahanBaku->id_bahan_array, true) ?? [];
+                        $produsenArray = json_decode($pemeriksaanBahanBaku->produsen_array, true) ?? [];
+                        $negaraProdusenArray = json_decode($pemeriksaanBahanBaku->negara_produsen_array, true) ?? [];
+                        $distributorArray = json_decode($pemeriksaanBahanBaku->distributor_array, true) ?? [];
+                        $kodeProduksiArray = json_decode($pemeriksaanBahanBaku->kode_produksi_array, true) ?? [];
+                        $expireDateArray = json_decode($pemeriksaanBahanBaku->expire_date_array, true) ?? [];
+                        $jumlahDatangArray = json_decode($pemeriksaanBahanBaku->jumlah_datang_array, true) ?? [];
+                        $jumlahSamplingArray = json_decode($pemeriksaanBahanBaku->jumlah_sampling_array, true) ?? [];
+                        $spesifikasiArray = json_decode($pemeriksaanBahanBaku->spesifikasi_array, true) ?? [];
+                        $kondisiProdukArray = json_decode($pemeriksaanBahanBaku->kondisi_produk, true) ?? [];
+                        $suhuProdukArray = json_decode($pemeriksaanBahanBaku->suhu_produk, true) ?? [];
+                        $suhuProdukTypeArray = json_decode($pemeriksaanBahanBaku->suhu_produk_type, true) ?? [];
+                        $kondisiProdukSuhuArray = json_decode($pemeriksaanBahanBaku->kondisi_produk_suhu, true) ?? [];
+                        $kondisiFisikArray = json_decode($pemeriksaanBahanBaku->kondisi_fisik_array, true) ?? [];
+                        $logoHalalArray = json_decode($pemeriksaanBahanBaku->logo_halal_array, true) ?? [];
+                        $dokumenHalalArray = json_decode($pemeriksaanBahanBaku->dokumen_halal_array, true) ?? [];
+                        $coaArray = json_decode($pemeriksaanBahanBaku->coa_array, true) ?? [];
+                        $hasilUjiFfaArray = json_decode($pemeriksaanBahanBaku->hasil_uji_ffa_array, true) ?? [];
+                        $statusBarisArray = json_decode($pemeriksaanBahanBaku->status_baris_array, true) ?? [];
+                        $keteranganArray = json_decode($pemeriksaanBahanBaku->keterangan_array, true) ?? [];
                         
-                        @if($pemeriksaanBahanBaku->kondisi_produk === 'Minyak')
-                            <div class="col-12 mt-3">
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <strong>Hasil Uji FFA:</strong> {{ $pemeriksaanBahanBaku->hasil_uji_ffa ?? '-' }}
-                                    </div>
-                                    <div class="col-md-6">
-                                        <strong>Bukti Kebersihan Tanki:</strong> {{ $pemeriksaanBahanBaku->bukti_kebersihan_tanki ?? '-' }}
-                                    </div>
-                                </div>
-                            </div>
-                        @endif
-                    </div>
-
-                    <!-- Kondisi Fisik & Dokumentasi -->
-                    <div class="row mb-4">
-                        <div class="col-md-6">
-                            <h5 class="text-primary">Kondisi Fisik</h5>
-                            @if($pemeriksaanBahanBaku->kondisi_fisik)
-                                @php
-                                    $kondisiFisik = [
-                                        'kemasan' => 'Kemasan',
-                                        'warna' => 'Warna',
-                                        'benda_asing' => 'Benda Asing/Kotoran',
-                                        'aroma' => 'Aroma'
-                                    ];
-                                @endphp
-                                @foreach($kondisiFisik as $key => $label)
-                                    <div class="mb-2">
-                                        @if(isset($pemeriksaanBahanBaku->kondisi_fisik[$key]) && $pemeriksaanBahanBaku->kondisi_fisik[$key])
-                                            <span class="badge bg-success me-2">✓</span>
+                        $rowCount = max(count($idBahanArray), 1);
+                    @endphp
+                    
+                    @for($i = 0; $i < $rowCount; $i++)
+                        <div class="card mb-3" style="border-left: 4px solid #435ebe;">
+                            <div class="card-header bg-light">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <h6 class="mb-0">Bahan Baku Penunjang {{ $i + 1 }}</h6>
+                                    @if(isset($statusBarisArray[$i]))
+                                        @if($statusBarisArray[$i] === 'Release')
+                                            <span class="badge bg-success">Release</span>
                                         @else
-                                            <span class="badge bg-danger me-2">✗</span>
+                                            <span class="badge bg-warning">Hold</span>
                                         @endif
-                                        {{ $label }}
+                                    @endif
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <table class="table table-borderless table-sm">
+                                            <tr><td width="40%"><strong>Nama Bahan:</strong></td><td>
+                                                @if(isset($idBahanArray[$i]) && $idBahanArray[$i])
+                                                    @php $bahan = \App\Models\Bahan::find($idBahanArray[$i]); @endphp
+                                                    <span class="badge bg-info">{{ $bahan->nama_bahan ?? '-' }}</span>
+                                                @else
+                                                    -
+                                                @endif
+                                            </td></tr>
+                                            <tr><td><strong>Produsen:</strong></td><td>{{ $produsenArray[$i] ?? '-' }}</td></tr>
+                                            <tr><td><strong>Negara Produsen:</strong></td><td>{{ $negaraProdusenArray[$i] ?? '-' }}</td></tr>
+                                            <tr><td><strong>Distributor:</strong></td><td>{{ $distributorArray[$i] ?? '-' }}</td></tr>
+                                            <tr><td><strong>Kode Produksi:</strong></td><td>{{ $kodeProduksiArray[$i] ?? '-' }}</td></tr>
+                                        </table>
                                     </div>
-                                @endforeach
-                            @else
-                                <p class="text-muted">Tidak ada data kondisi fisik</p>
-                            @endif
-                        </div>
-                        
-                        <div class="col-md-6">
-                            <h5 class="text-primary">Dokumentasi</h5>
-                            <div class="mb-2">
-                                @if($pemeriksaanBahanBaku->logo_halal)
-                                    <span class="badge bg-success me-2">✓</span>
-                                @else
-                                    <span class="badge bg-danger me-2">✗</span>
-                                @endif
-                                Logo Halal
-                            </div>
-                            <div class="mb-2">
-                                @if($pemeriksaanBahanBaku->dokumen_halal)
-                                    <span class="badge bg-success me-2">✓</span>
-                                @else
-                                    <span class="badge bg-danger me-2">✗</span>
-                                @endif
-                                Persyaratan Dokumen: Halal (berlaku)
-                            </div>
-                            <div class="mb-2">
-                                @if($pemeriksaanBahanBaku->coa)
-                                    <span class="badge bg-success me-2">✓</span>
-                                @else
-                                    <span class="badge bg-danger me-2">✗</span>
-                                @endif
-                                COA (Certificate of Analysis)
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Informasi Tambahan -->
-                    @if($pemeriksaanBahanBaku->spesifikasi)
-                        <div class="col-12 mt-3">
-                            <strong>Spesifikasi:</strong>
-                            <p class="mt-2 p-3 bg-light rounded">{{ $pemeriksaanBahanBaku->spesifikasi }}</p>
-                        </div>
-                    @endif
-                    
-                    @if($pemeriksaanBahanBaku->keterangan)
-                        <div class="col-12 mt-3">
-                            <strong>Keterangan:</strong>
-                            <p class="mt-2 p-3 bg-light rounded">{{ $pemeriksaanBahanBaku->keterangan }}</p>
-                        </div>
-                    @endif
-                    <div class="row mb-4">
-                        <div class="col-12">
-                            <h5 class="text-primary">Informasi Tambahan</h5>
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <table class="table table-borderless">
-                                        <tr><td width="40%"><strong>Dibuat Oleh:</strong></td><td>
-                                            <strong>{{ $pemeriksaanBahanBaku->user->name }}</strong>
-                                            <br><small class="text-muted">{{ $pemeriksaanBahanBaku->user->username }}</small>
-                                        </td></tr>
-                                        <!-- <tr><td><strong>Plant:</strong></td><td>
-                                            @if($pemeriksaanBahanBaku->user->plant)
-                                                <span class="badge bg-info">{{ $pemeriksaanBahanBaku->user->plant->plant }}</span>
-                                            @else
-                                                <span class="badge bg-secondary">No Plant</span>
-                                            @endif
-                                        </td></tr> -->
-                                    </table>
+                                    <div class="col-md-6">
+                                        <table class="table table-borderless table-sm">
+                                            <tr><td width="40%"><strong>Expire Date:</strong></td><td>
+                                                @if(isset($expireDateArray[$i]) && $expireDateArray[$i])
+                                                    {{ \Carbon\Carbon::parse($expireDateArray[$i])->format('d/m/Y') }}
+                                                @else
+                                                    -
+                                                @endif
+                                            </td></tr>
+                                            <tr><td><strong>Jumlah Datang:</strong></td><td>{{ $jumlahDatangArray[$i] ?? '-' }}</td></tr>
+                                            <tr><td><strong>Jumlah Sampling:</strong></td><td>{{ $jumlahSamplingArray[$i] ?? '-' }}</td></tr>
+                                        </table>
+                                    </div>
                                 </div>
-                                <div class="col-md-6">
-                                    <table class="table table-borderless">
-                                        <tr><td width="40%"><strong>Dibuat Pada:</strong></td><td>{{ $pemeriksaanBahanBaku->created_at->format('d/m/Y H:i:s') }}</td></tr>
-                                        <tr><td><strong>Diupdate Pada:</strong></td><td>{{ $pemeriksaanBahanBaku->updated_at->format('d/m/Y H:i:s') }}</td></tr>
-                                    </table>
-                                </div>
+                                
+                                @if(isset($kondisiProdukArray[$i]) || isset($suhuProdukTypeArray[$i]) || isset($suhuProdukArray[$i]) || isset($kondisiProdukSuhuArray[$i]) || isset($hasilUjiFfaArray[$i]))
+                                    <div class="row mt-3">
+                                        <div class="col-12">
+                                            <h6 class="text-primary small mb-2">Informasi Suhu & Kondisi</h6>
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    @if(isset($kondisiProdukArray[$i]) && $kondisiProdukArray[$i])
+                                                        <div class="d-flex align-items-center small mb-2">
+                                                            <span style="min-width: 150px;"><strong>Kondisi Produk:</strong></span>
+                                                            <span class="badge bg-secondary">{{ $kondisiProdukArray[$i] }}</span>
+                                                        </div>
+                                                    @endif
+                                                    @if(isset($suhuProdukTypeArray[$i]) && $suhuProdukTypeArray[$i])
+                                                        <div class="d-flex align-items-center small mb-2">
+                                                            <span style="min-width: 150px;"><strong>Jenis Suhu Produk:</strong></span>
+                                                            <span class="badge bg-info">{{ $suhuProdukTypeArray[$i] }}</span>
+                                                        </div>
+                                                    @endif
+                                                    @if(isset($hasilUjiFfaArray[$i]) && $hasilUjiFfaArray[$i])
+                                                        <div class="d-flex align-items-center small mb-2">
+                                                            <span style="min-width: 150px;"><strong>Hasil Uji FFA:</strong></span>
+                                                            <span>{{ $hasilUjiFfaArray[$i] }}</span>
+                                                        </div>
+                                                    @endif
+                                                </div>
+                                                <div class="col-md-6">
+                                                    @if(isset($kondisiProdukSuhuArray[$i]) && $kondisiProdukSuhuArray[$i])
+                                                        <div class="d-flex align-items-center small mb-2">
+                                                            <span style="min-width: 160px;"><strong>Suhu Kondisi Produk:</strong></span>
+                                                            <span>{{ $kondisiProdukSuhuArray[$i] }}</span>
+                                                        </div>
+                                                    @endif
+                                                    @if(isset($suhuProdukArray[$i]) && $suhuProdukArray[$i])
+                                                        <div class="d-flex align-items-center small mb-2">
+                                                            <span style="min-width: 160px;"><strong>Nilai Suhu Produk:</strong></span>
+                                                            <span>{{ $suhuProdukArray[$i] }}</span>
+                                                        </div>
+                                                    @endif
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endif
+                                
+                                <!-- Kondisi Fisik & Dokumentasi Per Baris -->
+                                @if(isset($kondisiFisikArray[$i]) || isset($logoHalalArray[$i]) || isset($dokumenHalalArray[$i]) || isset($coaArray[$i]))
+                                    <div class="row mt-3">
+                                        <div class="col-12">
+                                            <h6 class="text-primary small mb-2">Kondisi Fisik & Dokumentasi</h6>
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <strong class="small d-block mb-2">Kondisi Fisik:</strong>
+                                                    @php
+                                                        $kondisiFisikLabels = [
+                                                            'kemasan' => 'Kemasan',
+                                                            'warna' => 'Warna',
+                                                            'benda_asing' => 'Benda Asing',
+                                                            'aroma' => 'Aroma'
+                                                        ];
+                                                    @endphp
+                                                    @foreach($kondisiFisikLabels as $key => $label)
+                                                        <div class="d-flex align-items-center small mb-1">
+                                                            @if(isset($kondisiFisikArray[$i][$key]) && $kondisiFisikArray[$i][$key])
+                                                                <span class="badge bg-success me-2" style="min-width: 24px;">✓</span>
+                                                            @else
+                                                                <span class="badge bg-danger me-2" style="min-width: 24px;">✗</span>
+                                                            @endif
+                                                            <span>{{ $label }}</span>
+                                                        </div>
+                                                    @endforeach
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <strong class="small d-block mb-2">Dokumentasi:</strong>
+                                                    <div class="d-flex align-items-center small mb-1">
+                                                        @if(isset($logoHalalArray[$i]) && $logoHalalArray[$i] == '1')
+                                                            <span class="badge bg-success me-2" style="min-width: 24px;">✓</span>
+                                                        @else
+                                                            <span class="badge bg-danger me-2" style="min-width: 24px;">✗</span>
+                                                        @endif
+                                                        <span>Logo Halal</span>
+                                                    </div>
+                                                    <div class="d-flex align-items-center small mb-1">
+                                                        @if(isset($dokumenHalalArray[$i]) && $dokumenHalalArray[$i] == '1')
+                                                            <span class="badge bg-success me-2" style="min-width: 24px;">✓</span>
+                                                        @else
+                                                            <span class="badge bg-danger me-2" style="min-width: 24px;">✗</span>
+                                                        @endif
+                                                        <span>Dokumen Halal</span>
+                                                    </div>
+                                                    <div class="d-flex align-items-center small mb-1">
+                                                        @if(isset($coaArray[$i]) && $coaArray[$i] == '1')
+                                                            <span class="badge bg-success me-2" style="min-width: 24px;">✓</span>
+                                                        @else
+                                                            <span class="badge bg-danger me-2" style="min-width: 24px;">✗</span>
+                                                        @endif
+                                                        <span>COA</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endif
+                                @if(isset($spesifikasiArray[$i]) && $spesifikasiArray[$i])
+                                    <div class="row mt-3">
+                                        <div class="col-12">
+                                            <strong>Spesifikasi:</strong>
+                                            <p class="mt-1 p-2 bg-light rounded small">{{ $spesifikasiArray[$i] }}</p>
+                                        </div>
+                                    </div>
+                                @endif
+                                @if(isset($keteranganArray[$i]) && $keteranganArray[$i])
+                                    <div class="row">
+                                        <div class="col-12">
+                                            <strong>Keterangan:</strong>
+                                            <p class="mt-1 p-2 bg-light rounded small">{{ $keteranganArray[$i] ?? '-' }}</p>
+                                        </div>
+                                    </div>
+                                @endif
                             </div>
-                            
-                            
                         </div>
-                    </div>
+                    @endfor
                 </div>
             </div>
         </section>
