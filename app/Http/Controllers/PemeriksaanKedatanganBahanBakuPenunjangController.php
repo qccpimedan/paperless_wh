@@ -92,8 +92,6 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
             'nama_supir' => 'nullable|string|max:255',
             'jenis_pemeriksaan' => 'nullable|string|max:255',
             'no_po' => 'nullable|string|max:255',
-            'suhu_mobil' => 'nullable|string|max:255',
-            'suhu_mobil_type' => 'nullable|in:Fresh,Frozen',
             'id_shift' => 'nullable|exists:shifts,id',
             'status_baris' => 'required|array|min:1',
             'status_baris.*' => 'required|in:Release,Hold',
@@ -122,6 +120,10 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
             'suhu_produk.*' => 'nullable|string|max:255',
             'suhu_produk_type' => 'nullable|array',
             'suhu_produk_type.*' => 'nullable|string|max:255',
+            'suhu_mobil' => 'nullable|array',
+            'suhu_mobil.*' => 'nullable|string|max:255',
+            'suhu_mobil_type' => 'nullable|array',
+            'suhu_mobil_type.*' => 'nullable|string|max:255',
             'kondisi_produk_suhu' => 'nullable|array',
             'kondisi_produk_suhu.*' => 'nullable|string|max:255',
             'hasil_uji_ffa' => 'nullable|array',
@@ -166,6 +168,8 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
             'jumlah_datang' => 'jumlah_datang_array',
             'jumlah_sampling' => 'jumlah_sampling_array',
             'spesifikasi' => 'spesifikasi_array',
+            'suhu_mobil' => 'suhu_mobil_array',
+            'suhu_mobil_type' => 'suhu_mobil_type_array',
             'kondisi_fisik' => 'kondisi_fisik_array',
             'logo_halal' => 'logo_halal_array',
             'hasil_uji_ffa' => 'hasil_uji_ffa_array',
@@ -340,8 +344,6 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
             'nama_supir' => 'nullable|string|max:255',
             'jenis_pemeriksaan' => 'nullable|string|max:255',
             'no_po' => 'nullable|string|max:255',
-            'suhu_mobil' => 'nullable|string|max:255',
-            'suhu_mobil_type' => 'nullable|in:Fresh,Frozen',
             'id_shift' => 'nullable|exists:shifts,id',
             'status_baris' => 'required|array|min:1',
             'status_baris.*' => 'required|in:Release,Hold',
@@ -370,6 +372,10 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
             'suhu_produk.*' => 'nullable|string|max:255',
             'suhu_produk_type' => 'nullable|array',
             'suhu_produk_type.*' => 'nullable|string|max:255',
+            'suhu_mobil' => 'nullable|array',
+            'suhu_mobil.*' => 'nullable|string|max:255',
+            'suhu_mobil_type' => 'nullable|array',
+            'suhu_mobil_type.*' => 'nullable|in:Fresh,Frozen,Tidak Ada',
             'kondisi_produk_suhu' => 'nullable|array',
             'kondisi_produk_suhu.*' => 'nullable|string|max:255',
             'hasil_uji_ffa' => 'nullable|array',
@@ -413,6 +419,8 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
             'jumlah_datang' => 'jumlah_datang_array',
             'jumlah_sampling' => 'jumlah_sampling_array',
             'spesifikasi' => 'spesifikasi_array',
+            'suhu_mobil' => 'suhu_mobil_array',
+            'suhu_mobil_type' => 'suhu_mobil_type_array',
             'kondisi_fisik' => 'kondisi_fisik_array',
             'logo_halal' => 'logo_halal_array',
             'hasil_uji_ffa' => 'hasil_uji_ffa_array',
@@ -623,10 +631,10 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
     public function exportPDF(Request $request)
     {
         $user = Auth::user();
-        $tanggal = $request->input('tanggal');
         $id_shift = $request->input('id_shift');
-        $jam_awal = $request->input('jam_awal');
-        $jam_akhir = $request->input('jam_akhir');
+        $tanggal_dari = $request->input('tanggal_dari');
+        $tanggal_sampai = $request->input('tanggal_sampai');
+        $tanggal = $request->input('tanggal');
 
         // Build query
         $query = PemeriksaanKedatanganBahanBakuPenunjang::with([
@@ -653,26 +661,20 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
             });
         }
 
-        // Filter by tanggal
-        if ($tanggal) {
-            $query->whereDate('tanggal', $tanggal);
-        }
-
         // Filter by shift
         if ($id_shift) {
             $query->where('id_shift', $id_shift);
         }
 
-        // Filter by jam (created_at time range)
-        if ($jam_awal && $jam_akhir) {
-            $query->whereBetween('created_at', [
-                $tanggal . ' ' . $jam_awal . ':00',
-                $tanggal . ' ' . $jam_akhir . ':59'
-            ]);
-        } elseif ($jam_awal) {
-            $query->whereTime('created_at', '>=', $jam_awal);
-        } elseif ($jam_akhir) {
-            $query->whereTime('created_at', '<=', $jam_akhir);
+        // Filter by tanggal berdasarkan shift
+        // Shift 1: date range (tanggal_dari - tanggal_sampai)
+        // Shift 2 & 3: single date (tanggal)
+        if ($tanggal_dari && $tanggal_sampai) {
+            // Shift 1: Filter dengan date range
+            $query->whereBetween('tanggal', [$tanggal_dari, $tanggal_sampai]);
+        } elseif ($tanggal) {
+            // Shift 2 & 3: Filter dengan single date
+            $query->whereDate('tanggal', $tanggal);
         }
 
         $pemeriksaans = $query->latest()->get();
@@ -718,15 +720,21 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
         $pdf = \PDF::loadView('qc-sistem.pemeriksaan-kedatangan-bahan-baku-penunjang.pdf-report', [
             'pemeriksaans' => $pemeriksaans,
             'tanggal' => $tanggal,
+            'tanggal_dari' => $tanggal_dari,
+            'tanggal_sampai' => $tanggal_sampai,
             'shift' => $shift,
-            'jam_awal' => $jam_awal,
-            'jam_akhir' => $jam_akhir,
             'qcUser' => $qcUser,
             'produksiUser' => $produksiUser,
             'spvQcUser' => $spvQcUser
         ]);
 
-        $filename = 'laporan-pemeriksaan-bahan-baku-' . ($tanggal ?? date('Y-m-d')) . '.pdf';
+        // Generate filename berdasarkan filter
+        if ($tanggal_dari && $tanggal_sampai) {
+            $filename = 'laporan-pemeriksaan-bahan-baku-' . $tanggal_dari . '-to-' . $tanggal_sampai . '.pdf';
+        } else {
+            $filename = 'laporan-pemeriksaan-bahan-baku-' . ($tanggal ?? date('Y-m-d')) . '.pdf';
+        }
+        
         return $pdf->download($filename);
     }
 }

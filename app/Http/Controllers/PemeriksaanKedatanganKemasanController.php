@@ -502,10 +502,10 @@ class PemeriksaanKedatanganKemasanController extends Controller
     public function exportPDF(Request $request)
     {
         $user = Auth::user();
-        $tanggal = $request->input('tanggal');
         $id_shift = $request->input('id_shift');
-        $jam_awal = $request->input('jam_awal');
-        $jam_akhir = $request->input('jam_akhir');
+        $tanggalDari = $request->input('tanggal_dari');
+        $tanggalSampai = $request->input('tanggal_sampai');
+        $tanggal = $request->input('tanggal');
 
         // Build query
         $query = PemeriksaanKedatanganKemasan::with([
@@ -533,26 +533,33 @@ class PemeriksaanKedatanganKemasanController extends Controller
             });
         }
 
-        // Filter by tanggal
-        if ($tanggal) {
-            $query->whereDate('tanggal', $tanggal);
-        }
-
         // Filter by shift
         if ($id_shift) {
             $query->where('id_shift', $id_shift);
         }
 
-        // Filter by jam (created_at time range)
-        if ($jam_awal && $jam_akhir) {
-            $query->whereBetween('created_at', [
-                $tanggal . ' ' . $jam_awal . ':00',
-                $tanggal . ' ' . $jam_akhir . ':59'
-            ]);
-        } elseif ($jam_awal) {
-            $query->whereTime('created_at', '>=', $jam_awal);
-        } elseif ($jam_akhir) {
-            $query->whereTime('created_at', '<=', $jam_akhir);
+        // Filter tanggal berdasarkan shift
+        if ($id_shift) {
+            $shift = Shift::find($id_shift);
+            $shiftName = $shift ? trim(strtolower((string) $shift->shift)) : null;
+
+            if ($shiftName === '1' || $shiftName === 'shift 1') {
+                if ($tanggalDari && $tanggalSampai) {
+                    $query->whereBetween('tanggal', [$tanggalDari, $tanggalSampai]);
+                } elseif ($tanggalDari) {
+                    $query->whereDate('tanggal', '>=', $tanggalDari);
+                } elseif ($tanggalSampai) {
+                    $query->whereDate('tanggal', '<=', $tanggalSampai);
+                }
+            } else {
+                if ($tanggal) {
+                    $query->whereDate('tanggal', $tanggal);
+                }
+            }
+        } else {
+            if ($tanggal) {
+                $query->whereDate('tanggal', $tanggal);
+            }
         }
 
         $pemeriksaans = $query->latest()->get();
@@ -607,15 +614,16 @@ class PemeriksaanKedatanganKemasanController extends Controller
         $pdf = \PDF::loadView('qc-sistem.pemeriksaan-kedatangan-kemasan.pdf-report', [
             'pemeriksaans' => $pemeriksaans,
             'tanggal' => $tanggal,
+            'tanggal_dari' => $tanggalDari,
+            'tanggal_sampai' => $tanggalSampai,
             'shift' => $shift,
-            'jam_awal' => $jam_awal,
-            'jam_akhir' => $jam_akhir,
             'qcUser' => $qcUser,
             'produksiUser' => $produksiUser,
             'spvQcUser' => $spvQcUser
         ]);
 
-        $filename = 'laporan-pemeriksaan-kemasan-' . ($tanggal ?? date('Y-m-d')) . '.pdf';
+        $filenameDate = $tanggal ?? $tanggalDari ?? date('Y-m-d');
+        $filename = 'laporan-pemeriksaan-kemasan-' . $filenameDate . '.pdf';
         return $pdf->download($filename);
     }
 }

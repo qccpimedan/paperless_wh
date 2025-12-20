@@ -122,6 +122,16 @@
                                                 @enderror
                                             </div>
                                         </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="no_po">No. PO</label>
+                                                <input type="text" id="no_po" class="form-control @error('no_po') is-invalid @enderror"
+                                                    name="no_po" value="{{ old('no_po') }}" placeholder="No. PO">
+                                                @error('no_po')
+                                                    <div class="invalid-feedback">{{ $message }}</div>
+                                                @enderror
+                                            </div>
+                                        </div>
                                         <!-- <div class="col-md-6">
                                             <div class="form-group">
                                                 <label for="jenis_pemeriksaan">Jenis Pemeriksaan</label>
@@ -134,44 +144,7 @@
                                         </div> -->
                                     </div>
         
-                                    <!-- Row untuk Suhu Mobil -->
                                     <div class="row">
-                                        <div class="col-md-6">
-                                            <div class="form-group">
-                                                <label for="suhu_mobil_type">Suhu Mobil</label>
-                                                <select id="suhu_mobil_type" class="form-control @error('suhu_mobil_type') is-invalid @enderror" name="suhu_mobil_type">
-                                                    <option value="">Pilih Jenis Suhu Mobil</option>
-                                                    <option value="Fresh" {{ old('suhu_mobil_type') == 'Fresh' ? 'selected' : '' }}>Fresh</option>
-                                                    <option value="Frozen" {{ old('suhu_mobil_type') == 'Frozen' ? 'selected' : '' }}>Frozen</option>
-                                                </select>
-                                                @error('suhu_mobil_type')
-                                                    <div class="invalid-feedback">{{ $message }}</div>
-                                                @enderror
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <!-- Input Suhu Mobil - Conditional -->
-                                            <div class="form-group" id="suhu_mobil_input_field" style="display: none;">
-                                                <label for="suhu_mobil">Nilai Suhu Mobil (°C)</label>
-                                                <input type="text" id="suhu_mobil" class="form-control @error('suhu_mobil') is-invalid @enderror"
-                                                    name="suhu_mobil" value="{{ old('suhu_mobil') }}" placeholder="Contoh: -18°C atau 4°C">
-                                                @error('suhu_mobil')
-                                                    <div class="invalid-feedback">{{ $message }}</div>
-                                                @enderror
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <div class="form-group">
-                                                <label for="no_po">No. PO</label>
-                                                <input type="text" id="no_po" class="form-control @error('no_po') is-invalid @enderror"
-                                                    name="no_po" value="{{ old('no_po') }}" placeholder="No. PO">
-                                                @error('no_po')
-                                                    <div class="invalid-feedback">{{ $message }}</div>
-                                                @enderror
-                                            </div>
-                                        </div>
                                         <div class="col-md-6">
                                             <div class="form-group">
                                                 <label><strong>Segel/Gembok</strong></label>
@@ -487,6 +460,27 @@
                                                     </div>
                                                 </div>
                                             </div>
+
+                                            <!-- SUHU MOBIL -->
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <div class="form-group">
+                                                        <label class="form-label">Suhu Mobil</label>
+                                                        <select class="form-control suhu-mobil-type" name="suhu_mobil_type[]" id="suhu_mobil_type_1">
+                                                            <option value="">Pilih Jenis Suhu Mobil</option>
+                                                            <option value="Fresh">Fresh</option>
+                                                            <option value="Frozen">Frozen</option>
+                                                            <option value="Tidak Ada">Tidak Ada</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="form-group suhu-mobil-input" id="suhu_mobil_input_1" style="display: none;">
+                                                        <label class="form-label">Nilai Suhu Mobil (°C)</label>
+                                                        <input type="text" class="form-control" name="suhu_mobil[]" id="suhu_mobil_val_1" placeholder="Contoh: -18°C atau 4°C">
+                                                    </div>
+                                                </div>
+                                            </div>
                                             
                                             <!-- KONDISI PRODUK -->
                                             <div class="row">
@@ -700,18 +694,22 @@
                                             }
                                         });
                                     }
-                                    //Suhu Mobil - Row 1
-                                    document.getElementById('suhu_mobil_type').addEventListener('change', function() {
-                                        const suhuMobilType = this.value;
-                                        const inputField = document.getElementById('suhu_mobil_input_field');
-                                        
-                                        if (suhuMobilType === 'Fresh' || suhuMobilType === 'Frozen') {
-                                            inputField.style.display = 'block';
-                                        } else {
-                                            inputField.style.display = 'none';
-                                            document.getElementById('suhu_mobil').value = ''; // Clear input
-                                        }
-                                    });
+                                    // Suhu Mobil - Row 1
+                                    const suhuMobilType1 = document.getElementById('suhu_mobil_type_1');
+                                    const suhuMobilInput1 = document.getElementById('suhu_mobil_input_1');
+                                    
+                                    if (suhuMobilType1 && suhuMobilInput1) {
+                                        suhuMobilType1.addEventListener('change', function() {
+                                            if (this.value === 'Fresh' || this.value === 'Frozen') {
+                                                suhuMobilInput1.style.display = 'block';
+                                            } else {
+                                                suhuMobilInput1.style.display = 'none';
+                                                document.getElementById('suhu_mobil_val_1').value = '';
+                                            }
+                                        });
+                                    }
+
+                                    
                                     // Radio listeners for Row 1
                                     // Kondisi Fisik - Kemasan
                                     document.querySelectorAll('input[name="kondisi_fisik_kemasan_1"]').forEach(radio => {
@@ -1090,6 +1088,27 @@ function addNewRow() {
                 </div>
             </div>
         </div>
+
+        <!-- SUHU MOBIL -->
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label class="form-label">Suhu Mobil</label>
+                    <select class="form-control suhu-mobil-type" name="suhu_mobil_type[]" data-row-id="${uniqueId}">
+                        <option value="">Pilih Jenis Suhu Mobil</option>
+                        <option value="Fresh">Fresh</option>
+                        <option value="Frozen">Frozen</option>
+                        <option value="Tidak Ada">Tidak Ada</option>
+                    </select>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-group suhu-mobil-input" id="suhu_mobil_input_${uniqueId}" style="display: none;">
+                    <label class="form-label">Nilai Suhu Mobil (°C)</label>
+                    <input type="text" class="form-control" name="suhu_mobil[]" placeholder="Contoh: -18°C atau 4°C">
+                </div>
+            </div>
+        </div>
         
         <!-- KONDISI PRODUK -->
         <div class="row">
@@ -1273,6 +1292,9 @@ function addNewRow() {
     // Setup conditional logic for Suhu Produk in new row
     setupSuhuProdukLogic(newRow, uniqueId);
     
+    // Setup conditional logic for Suhu Mobil in new row
+    setupSuhuMobilLogic(newRow, uniqueId);
+    
     // Setup conditional logic for Kondisi Produk in new row
     setupKondisiProdukLogic(newRow, uniqueId);
     
@@ -1316,6 +1338,25 @@ function setupSuhuProdukLogic(row, uniqueId) {
             } else {
                 suhuProdukInput.style.display = 'none';
                 const input = suhuProdukInput.querySelector('input');
+                if (input) input.value = '';
+            }
+        });
+    }
+}
+
+// Setup Suhu Mobil conditional logic for dynamic rows
+function setupSuhuMobilLogic(row, uniqueId) {
+    const suhuMobilSelect = row.querySelector('.suhu-mobil-type');
+    const suhuMobilInput = row.querySelector(`#suhu_mobil_input_${uniqueId}`);
+    
+    if (suhuMobilSelect && suhuMobilInput) {
+        suhuMobilSelect.addEventListener('change', function() {
+            const value = this.value;
+            if (value === 'Fresh' || value === 'Frozen') {
+                suhuMobilInput.style.display = 'block';
+            } else {
+                suhuMobilInput.style.display = 'none';
+                const input = suhuMobilInput.querySelector('input');
                 if (input) input.value = '';
             }
         });

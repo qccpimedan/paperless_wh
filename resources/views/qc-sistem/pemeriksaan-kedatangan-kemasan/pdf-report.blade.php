@@ -451,7 +451,16 @@
 
                                     {{-- JENIS PEMERIKSAAN --}}
                                     @php
-                                        $kondisiMobil = $pemeriksaan->kondisi_mobil ?? [];
+                                        $kondisiMobilRaw = $pemeriksaan->kondisi_mobil ?? [];
+                                        if (is_string($kondisiMobilRaw)) {
+                                            $decoded = json_decode($kondisiMobilRaw, true);
+                                            $kondisiMobil = is_array($decoded) ? $decoded : [];
+                                        } elseif (is_array($kondisiMobilRaw)) {
+                                            $kondisiMobil = $kondisiMobilRaw;
+                                        } else {
+                                            $kondisiMobil = [];
+                                        }
+
                                         $checkedItems = array_filter($kondisiMobil);
                                     @endphp
                                     @if(count($checkedItems) > 0)
@@ -496,16 +505,16 @@
                                                     | Distributor: {{ $distributors_arr[$index] }}
                                                 @endif
                                                 @if($kode_produksis[$index] ?? null)
-                                                    | Kode: {{ $kode_produksis[$index] }}
+                                                    | Kode Produksi: {{ $kode_produksis[$index] }}
                                                 @endif
                                                 @if($jumlah_datangs[$index] ?? null)
-                                                    | Jml: {{ $jumlah_datangs[$index] }}
+                                                    | Jml Datang: {{ $jumlah_datangs[$index] }}
                                                 @endif
                                                 @if($jumlah_samplings[$index] ?? null)
-                                                    | Sampling: {{ $jumlah_samplings[$index] }}
+                                                    | Jml Sampling: {{ $jumlah_samplings[$index] }}
                                                 @endif
                                                 @if($spesifikasis[$index] ?? null)
-                                                    | Spec: {{ substr($spesifikasis[$index], 0, 30) }}{{ strlen($spesifikasis[$index]) > 30 ? '...' : '' }}
+                                                    | Spesifikasi: {{ substr($spesifikasis[$index], 0, 30) }}{{ strlen($spesifikasis[$index]) > 30 ? '...' : '' }}
                                                 @endif
                                             </div>
                                         @empty
@@ -529,7 +538,7 @@
                                                 | Sealing: {{ ($sealings[$index] ?? null) ? 'V' : 'X' }}
                                                 | Cetakan: {{ ($cetakans[$index] ?? null) ? 'V' : 'X' }}
                                                 @if($ketebalan_microns[$index] ?? null)
-                                                    | Ketebalan: {{ $ketebalan_microns[$index] }} μm
+                                                    | Ketebalan: {{ $ketebalan_microns[$index] }}
                                                 @endif
                                                 @if($dimensis[$index] ?? null)
                                                     | Dimensi: {{ $dimensis[$index] }}
@@ -559,7 +568,7 @@
                                                     | Status: {{ $statuses[$index] }}
                                                 @endif
                                                 @if($keterangans[$index] ?? null)
-                                                    | Ket: {{ substr($keterangans[$index], 0, 25) }}{{ strlen($keterangans[$index]) > 25 ? '...' : '' }}
+                                                    | Keterangan: {{ substr($keterangans[$index], 0, 25) }}{{ strlen($keterangans[$index]) > 25 ? '...' : '' }}
                                                 @endif
                                             </div>
                                         @empty

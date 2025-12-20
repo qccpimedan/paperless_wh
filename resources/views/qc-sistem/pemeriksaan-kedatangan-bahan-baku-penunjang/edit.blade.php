@@ -135,33 +135,6 @@
                                         </div> -->
                                     </div>
         
-                                    <!-- Row untuk Suhu Mobil -->
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <div class="form-group">
-                                                <label for="suhu_mobil_type">Suhu Mobil</label>
-                                                <select id="suhu_mobil_type" class="form-control @error('suhu_mobil_type') is-invalid @enderror" name="suhu_mobil_type">
-                                                    <option value="">Pilih Jenis Suhu Mobil</option>
-                                                    <option value="Fresh" {{ old('suhu_mobil_type', $pemeriksaanBahanBaku->suhu_mobil_type) == 'Fresh' ? 'selected' : '' }}>Fresh</option>
-                                                    <option value="Frozen" {{ old('suhu_mobil_type', $pemeriksaanBahanBaku->suhu_mobil_type) == 'Frozen' ? 'selected' : '' }}>Frozen</option>
-                                                </select>
-                                                @error('suhu_mobil_type')
-                                                    <div class="invalid-feedback">{{ $message }}</div>
-                                                @enderror
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <!-- Input Suhu Mobil - Conditional -->
-                                            <div class="form-group" id="suhu_mobil_input_field" style="display: none;">
-                                                <label for="suhu_mobil">Nilai Suhu Mobil (°C)</label>
-                                                <input type="text" id="suhu_mobil" class="form-control @error('suhu_mobil') is-invalid @enderror"
-                                                    name="suhu_mobil" value="{{ old('suhu_mobil', $pemeriksaanBahanBaku->suhu_mobil) }}" placeholder="Contoh: -18°C atau 4°C">
-                                                @error('suhu_mobil')
-                                                    <div class="invalid-feedback">{{ $message }}</div>
-                                                @enderror
-                                            </div>
-                                        </div>
-                                    </div>
                                     <div class="row">
                                         <div class="col-md-6">
                                             <div class="form-group">
@@ -389,6 +362,8 @@
                                         $kondisiProdukArray = json_decode($pemeriksaanBahanBaku->kondisi_produk, true) ?? [];
                                         $suhuProdukArray = json_decode($pemeriksaanBahanBaku->suhu_produk, true) ?? [];
                                         $suhuProdukTypeArray = json_decode($pemeriksaanBahanBaku->suhu_produk_type, true) ?? [];
+                                        $suhuMobilArray = json_decode($pemeriksaanBahanBaku->suhu_mobil_array, true) ?? [];
+                                        $suhuMobilTypeArray = json_decode($pemeriksaanBahanBaku->suhu_mobil_type_array, true) ?? [];
                                         $kondisiProdukSuhuArray = json_decode($pemeriksaanBahanBaku->kondisi_produk_suhu, true) ?? [];
                                         $kondisiFisikArray = json_decode($pemeriksaanBahanBaku->kondisi_fisik_array, true) ?? [];
                                         $logoHalalArray = json_decode($pemeriksaanBahanBaku->logo_halal_array, true) ?? [];
@@ -511,6 +486,27 @@
                                                     <div class="form-group suhu-produk-input" style="display: {{ ($suhuProdukTypeArray[$i] ?? '') == 'Fresh' || ($suhuProdukTypeArray[$i] ?? '') == 'Frozen' ? 'block' : 'none' }};">
                                                         <label class="form-label">Nilai Suhu Produk (°C)</label>
                                                         <input type="text" class="form-control" name="suhu_produk[]" value="{{ $suhuProdukArray[$i] ?? '' }}" placeholder="Contoh: -18°C atau 4°C">
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- SUHU MOBIL -->
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <div class="form-group">
+                                                        <label class="form-label">Suhu Mobil</label>
+                                                        <select class="form-control suhu-mobil-type" name="suhu_mobil_type[]" data-row-index="{{ $i }}">
+                                                            <option value="">Pilih Jenis Suhu Mobil</option>
+                                                            <option value="Fresh" {{ ($suhuMobilTypeArray[$i] ?? '') == 'Fresh' ? 'selected' : '' }}>Fresh</option>
+                                                            <option value="Frozen" {{ ($suhuMobilTypeArray[$i] ?? '') == 'Frozen' ? 'selected' : '' }}>Frozen</option>
+                                                            <option value="Tidak Ada" {{ ($suhuMobilTypeArray[$i] ?? '') == 'Tidak Ada' ? 'selected' : '' }}>Tidak Ada</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="form-group suhu-mobil-input" style="display: {{ ($suhuMobilTypeArray[$i] ?? '') == 'Fresh' || ($suhuMobilTypeArray[$i] ?? '') == 'Frozen' ? 'block' : 'none' }};">
+                                                        <label class="form-label">Nilai Suhu Mobil (°C)</label>
+                                                        <input type="text" class="form-control" name="suhu_mobil[]" value="{{ $suhuMobilArray[$i] ?? '' }}" placeholder="Contoh: -18°C atau 4°C">
                                                     </div>
                                                 </div>
                                             </div>
@@ -692,117 +688,6 @@
                                         @endfor
                                     </div>
                                 </div>
-
-                                <script>
-                                // Setup conditional logic and radio listeners for first row
-                                document.addEventListener('DOMContentLoaded', function() {
-                                    
-                                    // Suhu Produk - Row 1
-                                    const suhuProdukType1 = document.getElementById('suhu_produk_type_1');
-                                    const suhuProdukInput1 = document.getElementById('suhu_produk_input_1');
-                                    
-                                    if (suhuProdukType1 && suhuProdukInput1) {
-                                        suhuProdukType1.addEventListener('change', function() {
-                                            if (this.value === 'Fresh' || this.value === 'Frozen') {
-                                                suhuProdukInput1.style.display = 'block';
-                                            } else {
-                                                suhuProdukInput1.style.display = 'none';
-                                                document.getElementById('suhu_produk_val_1').value = '';
-                                            }
-                                        });
-                                    }
-                                    
-                                    // Kondisi Produk - Row 1
-                                    const kondisiProduk1 = document.getElementById('kondisi_produk_1');
-                                    const kondisiProdukSuhu1 = document.getElementById('kondisi_produk_suhu_1');
-                                    
-                                    if (kondisiProduk1 && kondisiProdukSuhu1) {
-                                        kondisiProduk1.addEventListener('change', function() {
-                                            if (this.value === 'Fresh' || this.value === 'Frozen' || this.value === 'Dry' || this.value === 'Minyak') {
-                                                kondisiProdukSuhu1.style.display = 'block';
-                                            } else {
-                                                kondisiProdukSuhu1.style.display = 'none';
-                                                document.getElementById('kondisi_produk_suhu_val_1').value = '';
-                                            }
-                                        });
-                                    }
-                                    //Suhu Mobil - Row 1
-                                    document.getElementById('suhu_mobil_type').addEventListener('change', function() {
-                                        const suhuMobilType = this.value;
-                                        const inputField = document.getElementById('suhu_mobil_input_field');
-                                        
-                                        if (suhuMobilType === 'Fresh' || suhuMobilType === 'Frozen') {
-                                            inputField.style.display = 'block';
-                                        } else {
-                                            inputField.style.display = 'none';
-                                            document.getElementById('suhu_mobil').value = ''; // Clear input
-                                        }
-                                    });
-                                    // Radio listeners for Row 1
-                                    // Kondisi Fisik - Kemasan
-                                    document.querySelectorAll('input[name="kondisi_fisik_kemasan_1"]').forEach(radio => {
-                                        radio.addEventListener('change', function() {
-                                            if (this.checked) {
-                                                document.querySelector('.radio-value-kemasan-1').value = this.value;
-                                            }
-                                        });
-                                    });
-                                    
-                                    // Kondisi Fisik - Warna
-                                    document.querySelectorAll('input[name="kondisi_fisik_warna_1"]').forEach(radio => {
-                                        radio.addEventListener('change', function() {
-                                            if (this.checked) {
-                                                document.querySelector('.radio-value-warna-1').value = this.value;
-                                            }
-                                        });
-                                    });
-                                    
-                                    // Kondisi Fisik - Benda Asing
-                                    document.querySelectorAll('input[name="kondisi_fisik_benda_asing_1"]').forEach(radio => {
-                                        radio.addEventListener('change', function() {
-                                            if (this.checked) {
-                                                document.querySelector('.radio-value-benda-1').value = this.value;
-                                            }
-                                        });
-                                    });
-                                    
-                                    // Kondisi Fisik - Aroma
-                                    document.querySelectorAll('input[name="kondisi_fisik_aroma_1"]').forEach(radio => {
-                                        radio.addEventListener('change', function() {
-                                            if (this.checked) {
-                                                document.querySelector('.radio-value-aroma-1').value = this.value;
-                                            }
-                                        });
-                                    });
-                                    
-                                    // Dokumen - Logo Halal
-                                    document.querySelectorAll('input[name="logo_halal_1"]').forEach(radio => {
-                                        radio.addEventListener('change', function() {
-                                            if (this.checked) {
-                                                document.querySelector('.radio-value-logo-1').value = this.value;
-                                            }
-                                        });
-                                    });
-                                    
-                                    // Dokumen - Dokumen Halal
-                                    document.querySelectorAll('input[name="dokumen_halal_1"]').forEach(radio => {
-                                        radio.addEventListener('change', function() {
-                                            if (this.checked) {
-                                                document.querySelector('.radio-value-dokumen-1').value = this.value;
-                                            }
-                                        });
-                                    });
-                                    
-                                    // Dokumen - COA
-                                    document.querySelectorAll('input[name="coa_1"]').forEach(radio => {
-                                        radio.addEventListener('change', function() {
-                                            if (this.checked) {
-                                                document.querySelector('.radio-value-coa-1').value = this.value;
-                                            }
-                                        });
-                                    });
-                                });
-                                </script>
                                 
                                 <div class="col-md-12 d-flex justify-content-end mt-3">
                                     <a href="{{ route('pemeriksaan-bahan-baku.index') }}" class="btn btn-light-secondary me-1 mb-1">Kembali</a>
@@ -821,107 +706,152 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    
-    // 1. Suhu Mobil Conditional Logic
-    const suhuMobilTypeEl = document.getElementById('suhu_mobil_type');
-    if (suhuMobilTypeEl) {
-        suhuMobilTypeEl.addEventListener('change', function() {
-            const suhuMobilType = this.value;
-            const inputField = document.getElementById('suhu_mobil_input_field');
-            
-            if (suhuMobilType === 'Fresh' || suhuMobilType === 'Frozen') {
-                inputField.style.display = 'block';
-            } else {
-                inputField.style.display = 'none';
-                document.getElementById('suhu_mobil').value = '';
+
+    const isFreshOrFrozen = (val) => val === 'Fresh' || val === 'Frozen';
+
+    const initChoices = function() {
+        const selectElements = document.querySelectorAll('select.choices');
+        selectElements.forEach(function(select) {
+            if (select.dataset.choicesInitialized === 'true') return;
+            if (select.classList.contains('choices__input')) return;
+
+            try {
+                new Choices(select, {
+                    searchEnabled: true,
+                    removeItemButton: true,
+                    placeholder: true,
+                    placeholderValue: 'Pilih opsi',
+                    noResultsText: 'Tidak ada hasil',
+                    noChoicesText: 'Tidak ada pilihan',
+                    searchPlaceholderValue: 'Cari...',
+                    itemSelectText: 'Tekan untuk memilih'
+                });
+                select.dataset.choicesInitialized = 'true';
+            } catch (err) {
+                console.error('Error initializing Choices:', err);
             }
         });
-        
-        // Trigger on load if value exists
-        if (suhuMobilTypeEl.value) {
-            suhuMobilTypeEl.dispatchEvent(new Event('change'));
-        }
-    }
+    };
 
-    // 2. Suhu Produk Conditional Logic
-    const suhuProdukTypeEl = document.getElementById('suhu_produk_type');
-    if (suhuProdukTypeEl) {
-        suhuProdukTypeEl.addEventListener('change', function() {
-            const suhuProdukType = this.value;
-            const inputField = document.getElementById('suhu_produk_input_field');
-            
-            if (suhuProdukType === 'Fresh' || suhuProdukType === 'Frozen') {
-                inputField.style.display = 'block';
+    const updateConditionalForRow = function(unifiedRow) {
+        if (!unifiedRow) return;
+
+        const suhuProdukSelect = unifiedRow.querySelector('select.suhu-produk-type');
+        const suhuProdukInputField = unifiedRow.querySelector('.suhu-produk-input');
+        const suhuProdukInput = suhuProdukInputField ? suhuProdukInputField.querySelector('input') : null;
+        if (suhuProdukSelect && suhuProdukInputField) {
+            if (isFreshOrFrozen(suhuProdukSelect.value)) {
+                suhuProdukInputField.style.display = 'block';
             } else {
-                inputField.style.display = 'none';
-                document.getElementById('suhu_produk').value = '';
+                suhuProdukInputField.style.display = 'none';
+                if (suhuProdukInput) suhuProdukInput.value = '';
             }
-        });
-        
-        // Trigger on load if value exists
-        if (suhuProdukTypeEl.value) {
-            suhuProdukTypeEl.dispatchEvent(new Event('change'));
         }
-    }
 
-    // 3. Kondisi Produk Conditional Logic
-    const kondisiProdukEl = document.getElementById('kondisi_produk');
-    if (kondisiProdukEl) {
-        kondisiProdukEl.addEventListener('change', function() {
-            const kondisiProduk = this.value;
-            
-            const kondisiProdukSuhuField = document.getElementById('kondisi_produk_suhu_field');
-            if (kondisiProdukSuhuField) {
+        const suhuMobilSelect = unifiedRow.querySelector('select.suhu-mobil-type');
+        const suhuMobilInputField = unifiedRow.querySelector('.suhu-mobil-input');
+        const suhuMobilInput = suhuMobilInputField ? suhuMobilInputField.querySelector('input') : null;
+        if (suhuMobilSelect && suhuMobilInputField) {
+            if (isFreshOrFrozen(suhuMobilSelect.value)) {
+                suhuMobilInputField.style.display = 'block';
+            } else {
+                suhuMobilInputField.style.display = 'none';
+                if (suhuMobilInput) suhuMobilInput.value = '';
+            }
+        }
+
+        const kondisiProdukSelect = unifiedRow.querySelector('select.kondisi-produk');
+        const kondisiProdukSuhuField = unifiedRow.querySelector('.kondisi-produk-suhu');
+        const kondisiProdukSuhuInput = kondisiProdukSuhuField ? kondisiProdukSuhuField.querySelector('input') : null;
+        if (kondisiProdukSelect && kondisiProdukSuhuField) {
+            const val = kondisiProdukSelect.value;
+            if (val === 'Fresh' || val === 'Frozen' || val === 'Dry' || val === 'Minyak') {
+                kondisiProdukSuhuField.style.display = 'block';
+            } else {
                 kondisiProdukSuhuField.style.display = 'none';
+                if (kondisiProdukSuhuInput) kondisiProdukSuhuInput.value = '';
             }
-            
-            const kondisiProdukSuhu = document.getElementById('kondisi_produk_suhu');
-            if (kondisiProdukSuhu) {
-                kondisiProdukSuhu.value = '';
-            }
-            
-            if (kondisiProduk === 'Fresh' || kondisiProduk === 'Frozen' || kondisiProduk === 'Dry') {
-                if (kondisiProdukSuhuField) kondisiProdukSuhuField.style.display = 'block';
-            } else if (kondisiProduk === 'Minyak') {
-                if (kondisiProdukSuhuField) kondisiProdukSuhuField.style.display = 'block';
-            }
-        });
-        
-        // Trigger on load if value exists
-        if (kondisiProdukEl.value) {
-            kondisiProdukEl.dispatchEvent(new Event('change'));
         }
-    }
+    };
 
-    // Initialize Choices.js for all select elements
-    const selectElements = document.querySelectorAll('select.choices');
-    selectElements.forEach(function(select) {
-        if (select.dataset.choicesInitialized === 'true') return;
-        if (select.classList.contains('choices__input')) return;
-        
-        try {
-            new Choices(select, {
-                searchEnabled: true,
-                removeItemButton: true,
-                placeholder: true,
-                placeholderValue: 'Pilih opsi',
-                noResultsText: 'Tidak ada hasil',
-                noChoicesText: 'Tidak ada pilihan',
-                searchPlaceholderValue: 'Cari...',
-                itemSelectText: 'Tekan untuk memilih'
-            });
-            select.dataset.choicesInitialized = 'true';
-        } catch(err) {
-            console.error('Error initializing Choices:', err);
+    const initAllRows = function() {
+        document.querySelectorAll('#unified-container .unified-row').forEach(function(row) {
+            updateConditionalForRow(row);
+        });
+    };
+
+    // 1) Init plugins
+    initChoices();
+
+    // 2) Init conditional fields based on existing values (pre-filled edit)
+    initAllRows();
+
+    // 3) Event delegation: update conditional fields reliably even after refresh / Choices rendering
+    document.addEventListener('change', function(e) {
+        const target = e.target;
+        if (!target) return;
+
+        if (target.matches('select.suhu-produk-type, select.suhu-mobil-type, select.kondisi-produk')) {
+            const unifiedRow = target.closest('.unified-row');
+            updateConditionalForRow(unifiedRow);
+        }
+
+        // Kondisi Fisik - Kemasan
+        if (target.name && target.name.startsWith('kondisi_fisik_kemasan_')) {
+            const rowIndex = target.name.split('_').pop();
+            const hiddenInput = document.querySelector('.radio-value-kemasan-' + rowIndex);
+            if (hiddenInput) hiddenInput.value = target.value;
+        }
+
+        // Kondisi Fisik - Warna
+        if (target.name && target.name.startsWith('kondisi_fisik_warna_')) {
+            const rowIndex = target.name.split('_').pop();
+            const hiddenInput = document.querySelector('.radio-value-warna-' + rowIndex);
+            if (hiddenInput) hiddenInput.value = target.value;
+        }
+
+        // Kondisi Fisik - Benda Asing
+        if (target.name && target.name.startsWith('kondisi_fisik_benda_asing_')) {
+            const rowIndex = target.name.split('_').pop();
+            const hiddenInput = document.querySelector('.radio-value-benda-' + rowIndex);
+            if (hiddenInput) hiddenInput.value = target.value;
+        }
+
+        // Kondisi Fisik - Aroma
+        if (target.name && target.name.startsWith('kondisi_fisik_aroma_')) {
+            const rowIndex = target.name.split('_').pop();
+            const hiddenInput = document.querySelector('.radio-value-aroma-' + rowIndex);
+            if (hiddenInput) hiddenInput.value = target.value;
+        }
+
+        // Dokumentasi - Logo Halal
+        if (target.name && target.name.startsWith('logo_halal_')) {
+            const rowIndex = target.name.split('_').pop();
+            const hiddenInput = document.querySelector('.radio-value-logo-' + rowIndex);
+            if (hiddenInput) hiddenInput.value = target.value;
+        }
+
+        // Dokumentasi - Dokumen Halal
+        if (target.name && target.name.startsWith('dokumen_halal_')) {
+            const rowIndex = target.name.split('_').pop();
+            const hiddenInput = document.querySelector('.radio-value-dokumen-' + rowIndex);
+            if (hiddenInput) hiddenInput.value = target.value;
+        }
+
+        // Dokumentasi - COA
+        if (target.name && target.name.startsWith('coa_')) {
+            const rowIndex = target.name.split('_').pop();
+            const hiddenInput = document.querySelector('.radio-value-coa-' + rowIndex);
+            if (hiddenInput) hiddenInput.value = target.value;
         }
     });
-    
+
     // Handle hapus baris
     document.addEventListener('click', function(e) {
         if (e.target.closest('.remove-row-btn')) {
             const row = e.target.closest('.unified-row');
             const rowCount = document.querySelectorAll('#unified-container .unified-row').length;
-            
+
             if (rowCount > 1 && row) {
                 if (confirm('Apakah Anda yakin ingin menghapus baris ini?')) {
                     row.remove();
@@ -929,74 +859,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             } else {
                 alert('Minimal harus ada satu baris data!');
-            }
-        }
-    });
-    
-    // Setup event listeners untuk radio buttons kondisi fisik dan dokumentasi
-    document.addEventListener('change', function(e) {
-        const target = e.target;
-        
-        // Kondisi Fisik - Kemasan
-        if (target.name && target.name.startsWith('kondisi_fisik_kemasan_')) {
-            const rowIndex = target.name.split('_').pop();
-            const hiddenInput = document.querySelector('.radio-value-kemasan-' + rowIndex);
-            if (hiddenInput) {
-                hiddenInput.value = target.value;
-            }
-        }
-        
-        // Kondisi Fisik - Warna
-        if (target.name && target.name.startsWith('kondisi_fisik_warna_')) {
-            const rowIndex = target.name.split('_').pop();
-            const hiddenInput = document.querySelector('.radio-value-warna-' + rowIndex);
-            if (hiddenInput) {
-                hiddenInput.value = target.value;
-            }
-        }
-        
-        // Kondisi Fisik - Benda Asing
-        if (target.name && target.name.startsWith('kondisi_fisik_benda_asing_')) {
-            const rowIndex = target.name.split('_').pop();
-            const hiddenInput = document.querySelector('.radio-value-benda-' + rowIndex);
-            if (hiddenInput) {
-                hiddenInput.value = target.value;
-            }
-        }
-        
-        // Kondisi Fisik - Aroma
-        if (target.name && target.name.startsWith('kondisi_fisik_aroma_')) {
-            const rowIndex = target.name.split('_').pop();
-            const hiddenInput = document.querySelector('.radio-value-aroma-' + rowIndex);
-            if (hiddenInput) {
-                hiddenInput.value = target.value;
-            }
-        }
-        
-        // Dokumentasi - Logo Halal
-        if (target.name && target.name.startsWith('logo_halal_')) {
-            const rowIndex = target.name.split('_').pop();
-            const hiddenInput = document.querySelector('.radio-value-logo-' + rowIndex);
-            if (hiddenInput) {
-                hiddenInput.value = target.value;
-            }
-        }
-        
-        // Dokumentasi - Dokumen Halal
-        if (target.name && target.name.startsWith('dokumen_halal_')) {
-            const rowIndex = target.name.split('_').pop();
-            const hiddenInput = document.querySelector('.radio-value-dokumen-' + rowIndex);
-            if (hiddenInput) {
-                hiddenInput.value = target.value;
-            }
-        }
-        
-        // Dokumentasi - COA
-        if (target.name && target.name.startsWith('coa_')) {
-            const rowIndex = target.name.split('_').pop();
-            const hiddenInput = document.querySelector('.radio-value-coa-' + rowIndex);
-            if (hiddenInput) {
-                hiddenInput.value = target.value;
             }
         }
     });

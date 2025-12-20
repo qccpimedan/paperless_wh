@@ -64,6 +64,8 @@ class PemeriksaanKedatanganBahanBakuPenunjang extends Model
         'jumlah_datang_array',
         'jumlah_sampling_array',
         'spesifikasi_array',
+        'suhu_mobil_array',
+        'suhu_mobil_type_array',
         'kondisi_fisik_array',
         'logo_halal_array',
         'hasil_uji_ffa_array',

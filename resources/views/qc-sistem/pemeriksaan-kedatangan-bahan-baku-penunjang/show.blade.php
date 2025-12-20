@@ -138,6 +138,8 @@
                         $kondisiProdukArray = json_decode($pemeriksaanBahanBaku->kondisi_produk, true) ?? [];
                         $suhuProdukArray = json_decode($pemeriksaanBahanBaku->suhu_produk, true) ?? [];
                         $suhuProdukTypeArray = json_decode($pemeriksaanBahanBaku->suhu_produk_type, true) ?? [];
+                        $suhuMobilArray = json_decode($pemeriksaanBahanBaku->suhu_mobil_array, true) ?? [];
+                        $suhuMobilTypeArray = json_decode($pemeriksaanBahanBaku->suhu_mobil_type_array, true) ?? [];
                         $kondisiProdukSuhuArray = json_decode($pemeriksaanBahanBaku->kondisi_produk_suhu, true) ?? [];
                         $kondisiFisikArray = json_decode($pemeriksaanBahanBaku->kondisi_fisik_array, true) ?? [];
                         $logoHalalArray = json_decode($pemeriksaanBahanBaku->logo_halal_array, true) ?? [];
@@ -215,6 +217,12 @@
                                                             <span class="badge bg-info">{{ $suhuProdukTypeArray[$i] }}</span>
                                                         </div>
                                                     @endif
+                                                    @if(isset($suhuMobilTypeArray[$i]) && $suhuMobilTypeArray[$i])
+                                                        <div class="d-flex align-items-center small mb-2">
+                                                            <span style="min-width: 150px;"><strong>Jenis Suhu Mobil:</strong></span>
+                                                            <span class="badge bg-warning">{{ $suhuMobilTypeArray[$i] }}</span>
+                                                        </div>
+                                                    @endif
                                                     @if(isset($hasilUjiFfaArray[$i]) && $hasilUjiFfaArray[$i])
                                                         <div class="d-flex align-items-center small mb-2">
                                                             <span style="min-width: 150px;"><strong>Hasil Uji FFA:</strong></span>
@@ -233,6 +241,12 @@
                                                         <div class="d-flex align-items-center small mb-2">
                                                             <span style="min-width: 160px;"><strong>Nilai Suhu Produk:</strong></span>
                                                             <span>{{ $suhuProdukArray[$i] }}</span>
+                                                        </div>
+                                                    @endif
+                                                    @if(isset($suhuMobilArray[$i]) && $suhuMobilArray[$i])
+                                                        <div class="d-flex align-items-center small mb-2">
+                                                            <span style="min-width: 160px;"><strong>Nilai Suhu Mobil:</strong></span>
+                                                            <span>{{ $suhuMobilArray[$i] }}</span>
                                                         </div>
                                                     @endif
                                                 </div>

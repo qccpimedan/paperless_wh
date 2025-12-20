@@ -479,6 +479,8 @@
                                         $kondisiProdukArray = json_decode($pemeriksaan->kondisi_produk ?? '[]', true);
                                         $suhuProdukArray = json_decode($pemeriksaan->suhu_produk ?? '[]', true);
                                         $suhuProdukTypeArray = json_decode($pemeriksaan->suhu_produk_type ?? '[]', true);
+                                        $suhuMobilArray = json_decode($pemeriksaan->suhu_mobil_array ?? '[]', true);
+                                        $suhuMobilTypeArray = json_decode($pemeriksaan->suhu_mobil_type_array ?? '[]', true);
                                         $kondisiProdukSuhuArray = json_decode($pemeriksaan->kondisi_produk_suhu ?? '[]', true);
                                         $hasilUjiFfaArray = json_decode($pemeriksaan->hasil_uji_ffa_array ?? '[]', true);
                                         
@@ -559,7 +561,7 @@
                                             @endif
                                             
                                             {{-- Suhu & Kondisi --}}
-                                            @if(isset($kondisiProdukArray[$i]) || isset($suhuProdukTypeArray[$i]) || isset($suhuProdukArray[$i]) || isset($kondisiProdukSuhuArray[$i]) || isset($hasilUjiFfaArray[$i]))
+                                            @if(isset($kondisiProdukArray[$i]) || isset($suhuProdukTypeArray[$i]) || isset($suhuProdukArray[$i]) || isset($suhuMobilTypeArray[$i]) || isset($suhuMobilArray[$i]) || isset($kondisiProdukSuhuArray[$i]) || isset($hasilUjiFfaArray[$i]))
                                                 <div style="margin-top: 6px; padding-top: 6px; border-top: 1px dashed #dee2e6;"></div>
                                                 @if(isset($kondisiProdukArray[$i]) && $kondisiProdukArray[$i])
                                                     <div class="field-row">
@@ -569,14 +571,26 @@
                                                 @endif
                                                 @if(isset($suhuProdukTypeArray[$i]) && $suhuProdukTypeArray[$i])
                                                     <div class="field-row">
-                                                        <span class="field-label">Jenis Suhu:</span>
+                                                        <span class="field-label">Jenis Suhu Produk:</span>
                                                         <span class="field-value">{{ $suhuProdukTypeArray[$i] }}</span>
                                                     </div>
                                                 @endif
                                                 @if(isset($suhuProdukArray[$i]) && $suhuProdukArray[$i])
                                                     <div class="field-row">
-                                                        <span class="field-label">Suhu:</span>
+                                                        <span class="field-label">Suhu Produk:</span>
                                                         <span class="field-value">{{ $suhuProdukArray[$i] }}°C</span>
+                                                    </div>
+                                                @endif
+                                                @if(isset($suhuMobilTypeArray[$i]) && $suhuMobilTypeArray[$i])
+                                                    <div class="field-row">
+                                                        <span class="field-label">Jenis Suhu Mobil:</span>
+                                                        <span class="field-value">{{ $suhuMobilTypeArray[$i] }}</span>
+                                                    </div>
+                                                @endif
+                                                @if(isset($suhuMobilArray[$i]) && $suhuMobilArray[$i])
+                                                    <div class="field-row">
+                                                        <span class="field-label">Suhu Mobil:</span>
+                                                        <span class="field-value">{{ $suhuMobilArray[$i] }}°C</span>
                                                     </div>
                                                 @endif
                                                 @if(isset($kondisiProdukSuhuArray[$i]) && $kondisiProdukSuhuArray[$i])
