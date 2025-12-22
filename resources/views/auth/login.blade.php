@@ -97,7 +97,13 @@
                 <a href="{{ route('login') }}"><img src="{{ asset('dist/images/logo/logo.png') }}" alt="Logo"></a>
             </div> -->
             <h6 class="auth-title">Log in.</h6>
+
             <p class="auth-subtitle">Log in with your data that you entered during registration.</p>
+            <!-- Button to trigger modal - Prominent position -->
+            <button type="button" class="btn btn-info btn-sm mb-3 fw-bold" data-bs-toggle="modal" data-bs-target="#loginGuideModal">
+                <i class="bi bi-info-circle me-2"></i>Baca Petunjuk Sebelum Login
+            </button>
+
 
             @if(session('success'))
                 <div class="alert alert-success alert-dismissible fade show" role="alert">
@@ -149,6 +155,95 @@
     </div>
     <div class="col-lg-7 d-none d-lg-block">
         <div id="auth-right" style="background-image: url('{{ asset('dist/images/logo/logo1.jpg') }}'); background-size: cover; background-position: center; background-repeat: no-repeat;">
+        </div>
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="loginGuideModal" tabindex="-1" aria-labelledby="loginGuideModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="loginGuideModalLabel">
+                    <i class="bi bi-info-circle me-2"></i>Petunjuk Login
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <h6 class="mb-3">Sebelum melakukan login, perhatikan hal-hal berikut:</h6>
+                
+                <!-- Petunjuk Umum Login -->
+                <div class="mb-4">
+                    <h6 class="text-primary mb-2">
+                        <i class="bi bi-shield-lock me-2"></i>Petunjuk Umum Login
+                    </h6>
+                    <ul class="list-unstyled">
+                        <li class="mb-2">
+                            <i class="bi bi-check-circle text-success me-2"></i>
+                            Pastikan Anda telah memiliki akun yang terdaftar dalam sistem
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-check-circle text-success me-2"></i>
+                            Masukkan username dan password yang benar
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-check-circle text-success me-2"></i>
+                            Perhatikan penggunaan huruf besar/kecil pada password
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-check-circle text-success me-2"></i>
+                            Jika lupa password, hubungi administrator sistem
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Petunjuk Role dan Peran -->
+                <div class="mb-4">
+                    <h6 class="text-primary mb-2">
+                        <i class="bi bi-people me-2"></i>Role dan Peran Sistem
+                    </h6>
+                    <div class="alert alert-light border-start border-primary border-4">
+                        <div class="mb-3">
+                            <strong class="text-info">
+                                <i class="bi bi-person-badge me-2"></i>QC
+                            </strong>
+                            <p class="mb-0 ms-4">Hanya bertugas untuk mengisi form yang telah disediakan</p>
+                        </div>
+                        <div class="mb-3">
+                            <strong class="text-warning">
+                                <i class="bi bi-person-badge me-2"></i>Produksi
+                            </strong>
+                            <p class="mb-0 ms-4">Hanya bertugas untuk verifikasi awal dari form yang telah diisi QC</p>
+                        </div>
+                        <div class="mb-0">
+                            <strong class="text-success">
+                                <i class="bi bi-person-badge me-2"></i>SPV QC
+                            </strong>
+                            <p class="mb-0 ms-4">Bertugas untuk melakukan verifikasi lanjutan dari form yang telah diisi oleh QC dan disetujui oleh produksi</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Keamanan -->
+                <div class="mb-3">
+                    <h6 class="text-danger mb-2">
+                        <i class="bi bi-shield-exclamation me-2"></i>Keamanan
+                    </h6>
+                    <ul class="list-unstyled">
+                        <li class="mb-2">
+                            <i class="bi bi-shield-check text-warning me-2"></i>
+                            Jangan memberikan informasi login Anda kepada orang lain
+                        </li>
+                    </ul>
+                </div>
+
+               
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-x-circle me-2"></i>Tutup
+                </button>
+            </div>
         </div>
     </div>
 </div>
