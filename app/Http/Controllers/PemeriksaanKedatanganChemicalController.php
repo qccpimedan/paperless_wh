@@ -503,8 +503,7 @@ class PemeriksaanKedatanganChemicalController extends Controller
 
         $query = PemeriksaanKedatanganChemical::with([
             'user.role', 
-            'user.plant', 
-            'chemical', 
+            'user.plant',    
             'shift', 
             'verifiedBy.role'
         ])->with([
