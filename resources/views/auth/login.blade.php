@@ -423,21 +423,6 @@
                         </div>
                     </div>
                 </div>
-
-                <!-- Keamanan -->
-                <div class="mb-0">
-                    <h6 class="text-danger mb-3">
-                        <i class="bi bi-shield-exclamation-fill me-2"></i>Keamanan
-                    </h6>
-                    <div class="alert alert-warning border-0 bg-warning bg-opacity-10">
-                        <ul class="list-unstyled mb-0">
-                            <li class="mb-0">
-                                <i class="bi bi-shield-check text-warning me-2"></i>
-                                Jangan memberikan informasi login Anda kepada orang lain
-                            </li>
-                        </ul>
-                    </div>
-                </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
