@@ -186,8 +186,18 @@
                                         <!-- <td>
                                             {{ $pemeriksaan->produsen ?? '-' }}
                                         </td> -->
-                                        <td>
-                                            {{ $pemeriksaan->kode_produksi ?? '-' }}
+                                            <td>
+                                            @php
+                                                $kodeProduksiArray = json_decode($pemeriksaan->kode_produksi_array ?? '[]', true);
+                                                $kodeProduksiArray = is_array($kodeProduksiArray) ? array_values(array_filter($kodeProduksiArray, function ($v) {
+                                                    return $v !== null && $v !== '';
+                                                })) : [];
+                                            @endphp
+                                            @if(count($kodeProduksiArray) > 0)
+                                                {{ implode(', ', $kodeProduksiArray) }}
+                                            @else
+                                                {{ $pemeriksaan->kode_produksi ?? '-' }}
+                                            @endif
                                         </td>
                                         <td>
                                             @if($pemeriksaan->status === 'Release')
@@ -235,37 +245,42 @@
                                                 <small class="text-muted">{{ Str::limit($pemeriksaan->verification_notes, 50) }}</small>
                                             @else
                                                 <span class="text-muted">-</span>
-                                            @endif
-                                        </td>
-                                        <td>
-                                            <div class="btn-vertical" role="group">
-                                                @can('view_pemeriksaan_kedatangan_kemasan')
-                                                    <a href="{{ route('pemeriksaan-kedatangan-kemasan.show', $pemeriksaan->uuid) }}" 
-                                                       class="btn btn-sm btn-info" title="Lihat Detail">
-                                                        <i class="bi bi-eye"></i>
-                                                    </a>
-                                                @endcan
-                                                @can('edit_pemeriksaan_kedatangan_kemasan')
-                                                    <a href="{{ route('pemeriksaan-kedatangan-kemasan.edit', $pemeriksaan->uuid) }}" 
-                                                       class="btn btn-sm btn-warning" title="Edit Data">
-                                                        <i class="bi bi-pencil"></i>
-                                                    </a>
-                                                @endcan
-                                                @can('delete_pemeriksaan_kedatangan_kemasan')
-                                                    <form action="{{ route('pemeriksaan-kedatangan-kemasan.destroy', $pemeriksaan->uuid) }}" 
-                                                          method="POST" 
-                                                          style="display: inline-block;"
-                                                          onsubmit="return confirm('Yakin ingin menghapus data pemeriksaan ini?')">
-                                                        @csrf
-                                                        @method('DELETE')
-                                                        <button type="submit" class="btn btn-sm btn-danger" title="Hapus Data">
-                                                            <i class="bi bi-trash"></i>
-                                                        </button>
-                                                    </form>
-                                                @endcan
-                                            </div>
-                                        </td>
-                                    </tr>
+                                                @endif
+                                            </td>
+                                            <td>
+                                                <div class="btn-vertical" role="group">
+                                                        <a href="{{ route('pemeriksaan-kedatangan-kemasan.tambah-baris', $pemeriksaan->uuid) }}"
+                                                        class="btn btn-sm btn-success" title="Tambah Baris">
+                                                            <i class="bi bi-plus-circle"></i>
+                                                        </a>
+                                                    @can('view_pemeriksaan_kedatangan_kemasan')
+                                                        <a href="{{ route('pemeriksaan-kedatangan-kemasan.show', $pemeriksaan->uuid) }}" 
+                                                        class="btn btn-sm btn-info" title="Lihat Detail">
+                                                            <i class="bi bi-eye"></i>
+                                                        </a>
+                                                    @endcan
+                                                    @can('edit_pemeriksaan_kedatangan_kemasan')
+                                                        <a href="{{ route('pemeriksaan-kedatangan-kemasan.edit', $pemeriksaan->uuid) }}" 
+                                                        class="btn btn-sm btn-warning" title="Edit Data">
+                                                            <i class="bi bi-pencil"></i>
+                                                        </a>
+
+                                                    @endcan
+                                                    @can('delete_pemeriksaan_kedatangan_kemasan')
+                                                        <form action="{{ route('pemeriksaan-kedatangan-kemasan.destroy', $pemeriksaan->uuid) }}" 
+                                                            method="POST" 
+                                                            style="display: inline-block;"
+                                                            onsubmit="return confirm('Yakin ingin menghapus data pemeriksaan ini?')">
+                                                            @csrf
+                                                            @method('DELETE')
+                                                            <button type="submit" class="btn btn-sm btn-danger" title="Hapus Data">
+                                                                <i class="bi bi-trash"></i>
+                                                            </button>
+                                                        </form>
+                                                    @endcan
+                                                </div>
+                                            </td>
+                                        </tr>
 
                                     <!-- Modal Approve Produksi -->
                                     <div class="modal fade" id="approveProduksiModal{{ $pemeriksaan->id }}" tabindex="-1" aria-hidden="true">

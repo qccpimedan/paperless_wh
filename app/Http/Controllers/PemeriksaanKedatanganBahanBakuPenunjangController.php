@@ -529,6 +529,153 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
         ->with('success', 'Data pemeriksaan kedatangan bahan baku penunjang berhasil diupdate!');
     }
 
+    public function createRow(PemeriksaanKedatanganBahanBakuPenunjang $pemeriksaanBahanBaku)
+    {
+        $this->checkPlantAccess($pemeriksaanBahanBaku);
+
+        $user = Auth::user();
+
+        if ($user->role && strtolower($user->role->role) === 'superadmin') {
+            $bahans = Bahan::with(['user.plant'])->get();
+            $countries = Countries::getList('en', 'php');
+            $produsens = Produsen::all();
+            $distributors = Distributor::all();
+        } else {
+            $bahans = Bahan::whereHas('user', function ($query) use ($user) {
+                $query->where('id_plant', $user->id_plant);
+            })->with(['user.plant'])->get();
+            $countries = Countries::getList('en', 'php');
+            $produsens = Produsen::whereHas('user', function ($query) use ($user) {
+                $query->where('id_plant', $user->id_plant);
+            })->get();
+            $distributors = Distributor::whereHas('user', function ($query) use ($user) {
+                $query->where('id_plant', $user->id_plant);
+            })->get();
+        }
+
+        return view('qc-sistem.pemeriksaan-kedatangan-bahan-baku-penunjang.tambah-baris', compact(
+            'pemeriksaanBahanBaku',
+            'bahans',
+            'countries',
+            'produsens',
+            'distributors'
+        ));
+    }
+
+    public function storeRow(Request $request, PemeriksaanKedatanganBahanBakuPenunjang $pemeriksaanBahanBaku)
+    {
+        $this->checkPlantAccess($pemeriksaanBahanBaku);
+
+        $request->validate([
+            'status_baris' => 'required|in:Release,Hold',
+            'id_bahan' => 'nullable|exists:bahans,id',
+            'produsen' => 'nullable|string|max:255',
+            'negara_produsen' => 'nullable|string|max:255',
+            'distributor' => 'nullable|string|max:255',
+            'kode_produksi' => 'nullable|string|max:255',
+            'expire_date' => 'nullable|date',
+            'jumlah_datang' => 'nullable|string|max:255',
+            'jumlah_sampling' => 'nullable|string|max:255',
+            'spesifikasi' => 'nullable|string',
+            'suhu_produk_type' => 'nullable|string|max:255',
+            'suhu_produk' => 'nullable|string|max:255',
+            'suhu_mobil_type' => 'nullable|string|max:255',
+            'suhu_mobil' => 'nullable|string|max:255',
+            'kondisi_produk' => 'nullable|string|max:255',
+            'kondisi_produk_suhu' => 'nullable|string|max:255',
+            'hasil_uji_ffa' => 'nullable|string|max:255',
+            'keterangan' => 'nullable|string',
+            'kondisi_fisik_kemasan' => 'nullable|in:0,1',
+            'kondisi_fisik_warna' => 'nullable|in:0,1',
+            'kondisi_fisik_benda_asing' => 'nullable|in:0,1',
+            'kondisi_fisik_aroma' => 'nullable|in:0,1',
+            'logo_halal' => 'nullable|in:0,1',
+            'dokumen_halal' => 'nullable|in:0,1',
+            'coa' => 'nullable|in:0,1',
+        ]);
+
+        $appendJsonArray = function (?string $raw, $value): array {
+            $arr = json_decode($raw ?? '[]', true);
+            if (!is_array($arr)) {
+                $arr = [];
+            }
+            $arr[] = $value;
+            return $arr;
+        };
+
+        $idBahanArr = $appendJsonArray($pemeriksaanBahanBaku->id_bahan_array, $request->input('id_bahan'));
+        $produsenArr = $appendJsonArray($pemeriksaanBahanBaku->produsen_array, $request->input('produsen'));
+        $negaraProdusenArr = $appendJsonArray($pemeriksaanBahanBaku->negara_produsen_array, $request->input('negara_produsen'));
+        $distributorArr = $appendJsonArray($pemeriksaanBahanBaku->distributor_array, $request->input('distributor'));
+        $kodeProduksiArr = $appendJsonArray($pemeriksaanBahanBaku->kode_produksi_array, $request->input('kode_produksi'));
+        $expireDateArr = $appendJsonArray($pemeriksaanBahanBaku->expire_date_array, $request->input('expire_date'));
+        $jumlahDatangArr = $appendJsonArray($pemeriksaanBahanBaku->jumlah_datang_array, $request->input('jumlah_datang'));
+        $jumlahSamplingArr = $appendJsonArray($pemeriksaanBahanBaku->jumlah_sampling_array, $request->input('jumlah_sampling'));
+        $spesifikasiArr = $appendJsonArray($pemeriksaanBahanBaku->spesifikasi_array, $request->input('spesifikasi'));
+
+        $suhuProdukArr = $appendJsonArray($pemeriksaanBahanBaku->suhu_produk, $request->input('suhu_produk'));
+        $suhuProdukTypeArr = $appendJsonArray($pemeriksaanBahanBaku->suhu_produk_type, $request->input('suhu_produk_type'));
+        $suhuMobilArr = $appendJsonArray($pemeriksaanBahanBaku->suhu_mobil_array, $request->input('suhu_mobil'));
+        $suhuMobilTypeArr = $appendJsonArray($pemeriksaanBahanBaku->suhu_mobil_type_array, $request->input('suhu_mobil_type'));
+        $kondisiProdukArr = $appendJsonArray($pemeriksaanBahanBaku->kondisi_produk, $request->input('kondisi_produk'));
+        $kondisiProdukSuhuArr = $appendJsonArray($pemeriksaanBahanBaku->kondisi_produk_suhu, $request->input('kondisi_produk_suhu'));
+        $hasilUjiFfaArr = $appendJsonArray($pemeriksaanBahanBaku->hasil_uji_ffa_array, $request->input('hasil_uji_ffa'));
+        $keteranganArr = $appendJsonArray($pemeriksaanBahanBaku->keterangan_array, $request->input('keterangan'));
+
+        $kondisiFisikArr = json_decode($pemeriksaanBahanBaku->kondisi_fisik_array ?? '[]', true);
+        if (!is_array($kondisiFisikArr)) {
+            $kondisiFisikArr = [];
+        }
+        $kondisiFisikArr[] = [
+            'kemasan' => $request->input('kondisi_fisik_kemasan') === '1',
+            'warna' => $request->input('kondisi_fisik_warna') === '1',
+            'benda_asing' => $request->input('kondisi_fisik_benda_asing') === '1',
+            'aroma' => $request->input('kondisi_fisik_aroma') === '1',
+        ];
+
+        $logoHalalArr = $appendJsonArray($pemeriksaanBahanBaku->logo_halal_array, $request->input('logo_halal') === '1');
+        $dokumenHalalArr = $appendJsonArray($pemeriksaanBahanBaku->dokumen_halal_array, $request->input('dokumen_halal') === '1');
+        $coaArr = $appendJsonArray($pemeriksaanBahanBaku->coa_array, $request->input('coa') === '1');
+
+        $statusBarisArr = $appendJsonArray($pemeriksaanBahanBaku->status_baris_array, $request->input('status_baris'));
+        $statusOverall = in_array('Hold', $statusBarisArr, true) ? 'Hold' : 'Release';
+
+        $data = [
+            'id_bahan_array' => json_encode($idBahanArr),
+            'produsen_array' => json_encode($produsenArr),
+            'negara_produsen_array' => json_encode($negaraProdusenArr),
+            'distributor_array' => json_encode($distributorArr),
+            'kode_produksi_array' => json_encode($kodeProduksiArr),
+            'expire_date_array' => json_encode($expireDateArr),
+            'jumlah_datang_array' => json_encode($jumlahDatangArr),
+            'jumlah_sampling_array' => json_encode($jumlahSamplingArr),
+            'spesifikasi_array' => json_encode($spesifikasiArr),
+            'suhu_produk' => json_encode($suhuProdukArr),
+            'suhu_produk_type' => json_encode($suhuProdukTypeArr),
+            'suhu_mobil_array' => json_encode($suhuMobilArr),
+            'suhu_mobil_type_array' => json_encode($suhuMobilTypeArr),
+            'kondisi_produk' => json_encode($kondisiProdukArr),
+            'kondisi_produk_suhu' => json_encode($kondisiProdukSuhuArr),
+            'hasil_uji_ffa_array' => json_encode($hasilUjiFfaArr),
+            'keterangan_array' => json_encode($keteranganArr),
+            'kondisi_fisik_array' => json_encode($kondisiFisikArr),
+            'logo_halal_array' => json_encode($logoHalalArr),
+            'dokumen_halal_array' => json_encode($dokumenHalalArr),
+            'coa_array' => json_encode($coaArr),
+            'status_baris_array' => json_encode($statusBarisArr),
+            'status' => $statusOverall,
+        ];
+
+        if (!$pemeriksaanBahanBaku->id_bahan && $request->input('id_bahan')) {
+            $data['id_bahan'] = $request->input('id_bahan');
+        }
+
+        $pemeriksaanBahanBaku->update($data);
+
+        return redirect()->route('pemeriksaan-bahan-baku.index')
+            ->with('success', 'Baris baru berhasil ditambahkan!');
+    }
+
     public function destroy(PemeriksaanKedatanganBahanBakuPenunjang $pemeriksaanBahanBaku)
     {
         $this->checkPlantAccess($pemeriksaanBahanBaku);

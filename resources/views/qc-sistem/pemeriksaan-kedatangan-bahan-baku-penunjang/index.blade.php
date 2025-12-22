@@ -161,7 +161,7 @@
                                         <th>Nama Bahan</th>
                                         <!-- <th>Kondisi Produk</th> -->
                                         <th>Produsen</th>
-                                        <!-- <th>Kode Produksi</th> -->
+                                        <th>Kode Produksi</th>
                                         <th>Status</th>
                                         <th>Verifikasi</th>
                                         <!-- <th>Verifikasi QC</th>
@@ -208,9 +208,19 @@
                                             <td>
                                                 {{ $pemeriksaan->produsen ?? '-' }}
                                             </td>
-                                            <!-- <td>
-                                                {{ $pemeriksaan->kode_produksi ?? '-' }}
-                                            </td> -->
+                                            <td>
+                                                @php
+                                                    $kodeProduksiArray = json_decode($pemeriksaan->kode_produksi_array ?? '[]', true);
+                                                    $kodeProduksiArray = is_array($kodeProduksiArray) ? array_values(array_filter($kodeProduksiArray, function ($v) {
+                                                        return $v !== null && $v !== '';
+                                                    })) : [];
+                                                @endphp
+                                                @if(count($kodeProduksiArray) > 0)
+                                                    {{ implode(', ', $kodeProduksiArray) }}
+                                                @else
+                                                    {{ $pemeriksaan->kode_produksi ?? '-' }}
+                                                @endif
+                                            </td>
                                             <td>
                                                 @if($pemeriksaan->status === 'Release')
                                                     <span class="badge bg-success">{{ $pemeriksaan->status }}</span>
@@ -261,6 +271,10 @@
                                             </td>
                                             <td>
                                                 <div class="btn-vertical" role="group">
+                                                    <a href="{{ route('pemeriksaan-bahan-baku.tambah-baris', $pemeriksaan->uuid) }}" 
+                                                    class="btn btn-sm btn-success" title="Tambah Baris">
+                                                        <i class="bi bi-plus-circle"></i>
+                                                    </a>
                                                     @can('view_pemeriksaan_kedatangan_bahan_baku_penunjang')
                                                         <a href="{{ route('pemeriksaan-bahan-baku.show', $pemeriksaan->uuid) }}" 
                                                         class="btn btn-sm btn-info" title="Lihat Detail">

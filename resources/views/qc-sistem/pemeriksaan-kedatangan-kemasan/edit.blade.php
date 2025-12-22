@@ -488,6 +488,7 @@
                                                         </div>
                                                     </div>
                                                 </div>
+
                                                 <!-- Kondisi Fisik -->
                                                 <div class="form-section mb-3">
                                                     <h6 class="text-primary mb-2">Kondisi Fisik</h6>
@@ -496,11 +497,11 @@
                                                             <div class="mb-3">
                                                                 <label class="form-label"><strong>Penampakan</strong></label>
                                                                 <div class="form-check">
-                                                                    <input class="form-check-input" type="radio" name="penampakan[]" value="1" {{ ($penampakans[$index] ?? null) ? 'checked' : '' }}>
+                                                                    <input class="form-check-input" type="radio" name="penampakan[{{ $index }}]" value="1" {{ ($penampakans[$index] ?? null) ? 'checked' : '' }}>
                                                                     <label class="form-check-label">Ya ✓</label>
                                                                 </div>
                                                                 <div class="form-check">
-                                                                    <input class="form-check-input" type="radio" name="penampakan[]" value="0" {{ !($penampakans[$index] ?? null) && isset($penampakans[$index]) ? 'checked' : '' }}>
+                                                                    <input class="form-check-input" type="radio" name="penampakan[{{ $index }}]" value="0" {{ !($penampakans[$index] ?? null) && isset($penampakans[$index]) ? 'checked' : '' }}>
                                                                     <label class="form-check-label">Tidak ✗</label>
                                                                 </div>
                                                             </div>
@@ -509,11 +510,11 @@
                                                             <div class="mb-3">
                                                                 <label class="form-label"><strong>Sealing</strong></label>
                                                                 <div class="form-check">
-                                                                    <input class="form-check-input" type="radio" name="sealing[]" value="1" {{ ($sealings[$index] ?? null) ? 'checked' : '' }}>
+                                                                    <input class="form-check-input" type="radio" name="sealing[{{ $index }}]" value="1" {{ ($sealings[$index] ?? null) ? 'checked' : '' }}>
                                                                     <label class="form-check-label">Ya ✓</label>
                                                                 </div>
                                                                 <div class="form-check">
-                                                                    <input class="form-check-input" type="radio" name="sealing[]" value="0" {{ !($sealings[$index] ?? null) && isset($sealings[$index]) ? 'checked' : '' }}>
+                                                                    <input class="form-check-input" type="radio" name="sealing[{{ $index }}]" value="0" {{ !($sealings[$index] ?? null) && isset($sealings[$index]) ? 'checked' : '' }}>
                                                                     <label class="form-check-label">Tidak ✗</label>
                                                                 </div>
                                                             </div>
@@ -522,11 +523,11 @@
                                                             <div class="mb-3">
                                                                 <label class="form-label"><strong>Cetakan</strong></label>
                                                                 <div class="form-check">
-                                                                    <input class="form-check-input" type="radio" name="cetakan[]" value="1" {{ ($cetakans[$index] ?? null) ? 'checked' : '' }}>
+                                                                    <input class="form-check-input" type="radio" name="cetakan[{{ $index }}]" value="1" {{ ($cetakans[$index] ?? null) ? 'checked' : '' }}>
                                                                     <label class="form-check-label">Ya ✓</label>
                                                                 </div>
                                                                 <div class="form-check">
-                                                                    <input class="form-check-input" type="radio" name="cetakan[]" value="0" {{ !($cetakans[$index] ?? null) && isset($cetakans[$index]) ? 'checked' : '' }}>
+                                                                    <input class="form-check-input" type="radio" name="cetakan[{{ $index }}]" value="0" {{ !($cetakans[$index] ?? null) && isset($cetakans[$index]) ? 'checked' : '' }}>
                                                                     <label class="form-check-label">Tidak ✗</label>
                                                                 </div>
                                                             </div>
@@ -534,8 +535,8 @@
                                                     </div>
                                                 </div>
 
-                                                <!-- Detail Tambahan -->
-                                                <div class="form-section mb-3">
+                                                    <!-- Detail Tambahan -->
+                                                    <div class="form-section mb-3">
                                                     <h6 class="text-primary mb-2">Detail Tambahan</h6>
                                                     <div class="row">
                                                         <div class="col-md-4">
@@ -571,11 +572,11 @@
                                                             <div class="mb-3">
                                                                 <label class="form-label"><strong>Logo Halal</strong></label>
                                                                 <div class="form-check">
-                                                                    <input class="form-check-input" type="radio" name="logo_halal[]" value="1" {{ ($logo_halals[$index] ?? null) ? 'checked' : '' }}>
+                                                                    <input class="form-check-input" type="radio" name="logo_halal[{{ $index }}]" value="1" {{ ($logo_halals[$index] ?? null) ? 'checked' : '' }}>
                                                                     <label class="form-check-label">Ya ✓</label>
                                                                 </div>
                                                                 <div class="form-check">
-                                                                    <input class="form-check-input" type="radio" name="logo_halal[]" value="0" {{ !($logo_halals[$index] ?? null) && isset($logo_halals[$index]) ? 'checked' : '' }}>
+                                                                    <input class="form-check-input" type="radio" name="logo_halal[{{ $index }}]" value="0" {{ !($logo_halals[$index] ?? null) && isset($logo_halals[$index]) ? 'checked' : '' }}>
                                                                     <label class="form-check-label">Tidak ✗</label>
                                                                 </div>
                                                             </div>
@@ -584,11 +585,11 @@
                                                             <div class="mb-3">
                                                                 <label class="form-label"><strong>Dokumen Halal</strong></label>
                                                                 <div class="form-check">
-                                                                    <input class="form-check-input" type="radio" name="dokumen_halal[]" value="1" {{ ($dokumen_halals[$index] ?? null) ? 'checked' : '' }}>
+                                                                    <input class="form-check-input" type="radio" name="dokumen_halal[{{ $index }}]" value="1" {{ ($dokumen_halals[$index] ?? null) ? 'checked' : '' }}>
                                                                     <label class="form-check-label">Ya ✓</label>
                                                                 </div>
                                                                 <div class="form-check">
-                                                                    <input class="form-check-input" type="radio" name="dokumen_halal[]" value="0" {{ !($dokumen_halals[$index] ?? null) && isset($dokumen_halals[$index]) ? 'checked' : '' }}>
+                                                                    <input class="form-check-input" type="radio" name="dokumen_halal[{{ $index }}]" value="0" {{ !($dokumen_halals[$index] ?? null) && isset($dokumen_halals[$index]) ? 'checked' : '' }}>
                                                                     <label class="form-check-label">Tidak ✗</label>
                                                                 </div>
                                                             </div>
@@ -597,11 +598,11 @@
                                                             <div class="mb-3">
                                                                 <label class="form-label"><strong>COA</strong></label>
                                                                 <div class="form-check">
-                                                                    <input class="form-check-input" type="radio" name="coa[]" value="1" {{ ($coas[$index] ?? null) ? 'checked' : '' }}>
+                                                                    <input class="form-check-input" type="radio" name="coa[{{ $index }}]" value="1" {{ ($coas[$index] ?? null) ? 'checked' : '' }}>
                                                                     <label class="form-check-label">Ya ✓</label>
                                                                 </div>
                                                                 <div class="form-check">
-                                                                    <input class="form-check-input" type="radio" name="coa[]" value="0" {{ !($coas[$index] ?? null) && isset($coas[$index]) ? 'checked' : '' }}>
+                                                                    <input class="form-check-input" type="radio" name="coa[{{ $index }}]" value="0" {{ !($coas[$index] ?? null) && isset($coas[$index]) ? 'checked' : '' }}>
                                                                     <label class="form-check-label">Tidak ✗</label>
                                                                 </div>
                                                             </div>

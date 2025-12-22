@@ -213,6 +213,98 @@ class PemeriksaanKedatanganChemicalController extends Controller
         return view('qc-sistem.pemeriksaan-kedatangan-chemical.edit', compact('pemeriksaanChemical', 'shifts', 'chemicals', 'produsens', 'distributors', 'countries'));
     }
 
+    public function createRow(PemeriksaanKedatanganChemical $pemeriksaanChemical)
+    {
+        $this->checkPlantAccess($pemeriksaanChemical);
+
+        $user = Auth::user();
+
+        if ($user->role && strtolower($user->role->role) === 'superadmin') {
+            $chemicals = Chemical::with(['user.plant'])->get();
+            $produsens = Produsen::with(['user.plant'])->get();
+            $distributors = Distributor::with(['user.plant'])->get();
+        } else {
+            $chemicals = Chemical::whereHas('user', function ($query) use ($user) {
+                $query->where('id_plant', $user->id_plant);
+            })->with(['user.plant'])->get();
+
+            $produsens = Produsen::whereHas('user', function ($query) use ($user) {
+                $query->where('id_plant', $user->id_plant);
+            })->with(['user.plant'])->get();
+
+            $distributors = Distributor::whereHas('user', function ($query) use ($user) {
+                $query->where('id_plant', $user->id_plant);
+            })->with(['user.plant'])->get();
+        }
+
+        $countries = Countries::getList('en', 'php');
+
+        return view('qc-sistem.pemeriksaan-kedatangan-chemical.tambah-baris', compact(
+            'pemeriksaanChemical',
+            'chemicals',
+            'produsens',
+            'distributors',
+            'countries'
+        ));
+    }
+
+    public function storeRow(Request $request, PemeriksaanKedatanganChemical $pemeriksaanChemical)
+    {
+        $this->checkPlantAccess($pemeriksaanChemical);
+
+        $request->validate([
+            'status_baris' => 'required|in:Release,Hold',
+            'id_chemical' => 'required|exists:chemicals,id',
+            'kondisi_chemical' => 'nullable|string|max:255',
+            'id_produsen' => 'nullable|exists:produsens,id',
+            'negara_produsen' => 'nullable|string|max:255',
+            'id_distributor' => 'nullable|exists:distributors,id',
+            'kode_produksi' => 'nullable|string|max:255',
+            'expire_date' => 'nullable|date',
+            'jumlah_datang' => 'nullable|string|max:255',
+            'jumlah_sampling' => 'nullable|string|max:255',
+            'kondisi_fisik_kemasan' => 'nullable|in:0,1',
+            'kondisi_fisik_warna' => 'nullable|in:0,1',
+            'persyaratan_dokumen_halal' => 'nullable|in:0,1',
+            'coa' => 'nullable|in:0,1',
+            'keterangan' => 'nullable|string|max:500',
+        ]);
+
+        $detailChemicals = $pemeriksaanChemical->detail_chemicals ?? [];
+        if (!is_array($detailChemicals)) {
+            $detailChemicals = [];
+        }
+
+        $newRow = [
+            'id_chemical' => $request->input('id_chemical'),
+            'kondisi_chemical' => $request->input('kondisi_chemical'),
+            'id_produsen' => $request->input('id_produsen'),
+            'negara_produsen' => $request->input('negara_produsen'),
+            'id_distributor' => $request->input('id_distributor'),
+            'kode_produksi' => $request->input('kode_produksi'),
+            'expire_date' => $request->input('expire_date'),
+            'jumlah_datang' => $request->input('jumlah_datang'),
+            'jumlah_sampling' => $request->input('jumlah_sampling'),
+            'kondisi_fisik' => [
+                'kemasan' => $request->input('kondisi_fisik_kemasan') === '1',
+                'warna' => $request->input('kondisi_fisik_warna') === '1',
+            ],
+            'persyaratan_dokumen_halal' => $request->input('persyaratan_dokumen_halal') === '1',
+            'coa' => $request->input('coa') === '1',
+            'status' => $request->input('status_baris'),
+            'keterangan' => $request->input('keterangan'),
+        ];
+
+        $detailChemicals[] = $newRow;
+
+        $pemeriksaanChemical->update([
+            'detail_chemicals' => $detailChemicals,
+        ]);
+
+        return redirect()->route('pemeriksaan-chemical.index')
+            ->with('success', 'Baris chemical berhasil ditambahkan!');
+    }
+
     public function update(Request $request, PemeriksaanKedatanganChemical $pemeriksaanChemical)
     {
         $this->checkPlantAccess($pemeriksaanChemical);

@@ -164,15 +164,15 @@ class PemeriksaanKedatanganKemasanController extends Controller
         $jumlah_datangs = $request->input('jumlah_datang', []);
         $jumlah_samplings = $request->input('jumlah_sampling', []);
         $spesifikasis = $request->input('spesifikasi', []);
-        $penampakans = $request->input('penampakan', []);
-        $sealings = $request->input('sealing', []);
-        $cetakans = $request->input('cetakan', []);
+        $penampakans = array_values((array) $request->input('penampakan', []));
+        $sealings = array_values((array) $request->input('sealing', []));
+        $cetakans = array_values((array) $request->input('cetakan', []));
         $ketebalan_microns = $request->input('ketebalan_micron', []);
         $dimensis = $request->input('dimensi', []);
         $statuses = $request->input('status', []);
-        $logo_halals = $request->input('logo_halal', []);
-        $dokumen_halals = $request->input('dokumen_halal', []);
-        $coas = $request->input('coa', []);
+        $logo_halals = array_values((array) $request->input('logo_halal', []));
+        $dokumen_halals = array_values((array) $request->input('dokumen_halal', []));
+        $coas = array_values((array) $request->input('coa', []));
         $keterangans = $request->input('keterangan', []);
     
         // Ensure all arrays are properly formatted as JSON
@@ -185,7 +185,7 @@ class PemeriksaanKedatanganKemasanController extends Controller
             'no_po' => $request->input('no_po'),
             'segel_gembok' => $request->input('segel_gembok'),
             'no_segel' => $request->input('no_segel'),
-            'kondisi_mobil' => json_encode($kondisiMobil),
+            'kondisi_mobil' => $kondisiMobil,
             'id_user' => Auth::id(),
             'id_shift' => $request->input('id_shift'),
             'id_bahan_array' => json_encode(is_array($id_bahans) ? $id_bahans : []),
@@ -343,15 +343,15 @@ class PemeriksaanKedatanganKemasanController extends Controller
         $jumlah_datangs = $request->input('jumlah_datang', []);
         $jumlah_samplings = $request->input('jumlah_sampling', []);
         $spesifikasis = $request->input('spesifikasi', []);
-        $penampakans = $request->input('penampakan', []);
-        $sealings = $request->input('sealing', []);
-        $cetakans = $request->input('cetakan', []);
+        $penampakans = array_values((array) $request->input('penampakan', []));
+        $sealings = array_values((array) $request->input('sealing', []));
+        $cetakans = array_values((array) $request->input('cetakan', []));
         $ketebalan_microns = $request->input('ketebalan_micron', []);
         $dimensis = $request->input('dimensi', []);
         $statuses = $request->input('status', []);
-        $logo_halals = $request->input('logo_halal', []);
-        $dokumen_halals = $request->input('dokumen_halal', []);
-        $coas = $request->input('coa', []);
+        $logo_halals = array_values((array) $request->input('logo_halal', []));
+        $dokumen_halals = array_values((array) $request->input('dokumen_halal', []));
+        $coas = array_values((array) $request->input('coa', []));
         $keterangans = $request->input('keterangan', []);
     
         // Ensure all arrays are properly formatted as JSON
@@ -364,7 +364,7 @@ class PemeriksaanKedatanganKemasanController extends Controller
             'no_po' => $request->input('no_po'),
             'segel_gembok' => $request->input('segel_gembok'),
             'no_segel' => $request->input('no_segel'),
-            'kondisi_mobil' => json_encode($kondisiMobil),
+            'kondisi_mobil' => $kondisiMobil,
             'id_shift' => $request->input('id_shift'),
             'id_bahan_array' => json_encode(is_array($id_bahans) ? $id_bahans : []),
             'produsen_array' => json_encode(is_array($produsens) ? $produsens : []),
@@ -389,6 +389,148 @@ class PemeriksaanKedatanganKemasanController extends Controller
     
         return redirect()->route('pemeriksaan-kedatangan-kemasan.index')
             ->with('success', 'Data pemeriksaan kedatangan kemasan berhasil diupdate!');
+    }
+
+    public function createRow(PemeriksaanKedatanganKemasan $pemeriksaanKedatanganKemasan)
+    {
+        $this->checkPlantAccess($pemeriksaanKedatanganKemasan);
+
+        $user = Auth::user();
+
+        if ($user->role && strtolower($user->role->role) === 'superadmin') {
+            $bahans = Bahan::with('user.plant')->get();
+            $shifts = Shift::with('user.plant')->get();
+            $produsens = Produsen::with('user.plant')->get();
+            $distributors = Distributor::with('user.plant')->get();
+        } else {
+            if ($user->id_plant) {
+                $bahans = Bahan::whereHas('user', function($query) use ($user) {
+                    $query->where('id_plant', $user->id_plant);
+                })->with('user.plant')->get();
+
+                $shifts = Shift::whereHas('user', function($query) use ($user) {
+                    $query->where('id_plant', $user->id_plant);
+                })->with('user.plant')->get();
+
+                $produsens = Produsen::whereHas('user', function($query) use ($user) {
+                    $query->where('id_plant', $user->id_plant);
+                })->with('user.plant')->get();
+
+                $distributors = Distributor::whereHas('user', function($query) use ($user) {
+                    $query->where('id_plant', $user->id_plant);
+                })->with('user.plant')->get();
+            } else {
+                $bahans = Bahan::all();
+                $shifts = Shift::all();
+                $produsens = Produsen::all();
+                $distributors = Distributor::all();
+            }
+        }
+
+        if ($bahans->isEmpty()) {
+            $bahans = Bahan::all();
+        }
+        if ($shifts->isEmpty()) {
+            $shifts = Shift::all();
+        }
+        if ($produsens->isEmpty()) {
+            $produsens = Produsen::all();
+        }
+        if ($distributors->isEmpty()) {
+            $distributors = Distributor::all();
+        }
+
+        return view('qc-sistem.pemeriksaan-kedatangan-kemasan.tambah-baris', compact(
+            'pemeriksaanKedatanganKemasan',
+            'bahans',
+            'shifts',
+            'produsens',
+            'distributors'
+        ));
+    }
+
+    public function storeRow(Request $request, PemeriksaanKedatanganKemasan $pemeriksaanKedatanganKemasan)
+    {
+        $this->checkPlantAccess($pemeriksaanKedatanganKemasan);
+
+        $request->validate([
+            'id_bahan.*' => 'nullable|exists:bahans,id',
+            'produsen.*' => 'nullable|string|max:255',
+            'distributor.*' => 'nullable|string|max:255',
+            'kode_produksi.*' => 'nullable|string|max:255',
+            'jumlah_datang.*' => 'nullable|string|max:255',
+            'jumlah_sampling.*' => 'nullable|string|max:255',
+            'spesifikasi.*' => 'nullable|string',
+            'penampakan.*' => 'nullable|in:0,1',
+            'sealing.*' => 'nullable|in:0,1',
+            'cetakan.*' => 'nullable|in:0,1',
+            'ketebalan_micron.*' => 'nullable|numeric',
+            'dimensi.*' => 'nullable|string|max:255',
+            'status.*' => 'nullable|in:Release,Hold',
+            'logo_halal.*' => 'nullable|in:0,1',
+            'dokumen_halal.*' => 'nullable|in:0,1',
+            'coa.*' => 'nullable|in:0,1',
+            'keterangan.*' => 'nullable|string',
+        ]);
+
+        $existingIdBahans = json_decode($pemeriksaanKedatanganKemasan->id_bahan_array ?? '[]', true) ?? [];
+        $existingProdusens = json_decode($pemeriksaanKedatanganKemasan->produsen_array ?? '[]', true) ?? [];
+        $existingDistributors = json_decode($pemeriksaanKedatanganKemasan->distributor_array ?? '[]', true) ?? [];
+        $existingKodeProduksis = json_decode($pemeriksaanKedatanganKemasan->kode_produksi_array ?? '[]', true) ?? [];
+        $existingJumlahDatangs = json_decode($pemeriksaanKedatanganKemasan->jumlah_datang_array ?? '[]', true) ?? [];
+        $existingJumlahSamplings = json_decode($pemeriksaanKedatanganKemasan->jumlah_sampling_array ?? '[]', true) ?? [];
+        $existingSpesifikasis = json_decode($pemeriksaanKedatanganKemasan->spesifikasi_array ?? '[]', true) ?? [];
+        $existingPenampakans = json_decode($pemeriksaanKedatanganKemasan->penampakan_array ?? '[]', true) ?? [];
+        $existingSealings = json_decode($pemeriksaanKedatanganKemasan->sealing_array ?? '[]', true) ?? [];
+        $existingCetakans = json_decode($pemeriksaanKedatanganKemasan->cetakan_array ?? '[]', true) ?? [];
+        $existingKetebalanMicrons = json_decode($pemeriksaanKedatanganKemasan->ketebalan_micron_array ?? '[]', true) ?? [];
+        $existingDimensis = json_decode($pemeriksaanKedatanganKemasan->dimensi_array ?? '[]', true) ?? [];
+        $existingStatuses = json_decode($pemeriksaanKedatanganKemasan->status_array ?? '[]', true) ?? [];
+        $existingLogoHalals = json_decode($pemeriksaanKedatanganKemasan->logo_halal_array ?? '[]', true) ?? [];
+        $existingDokumenHalals = json_decode($pemeriksaanKedatanganKemasan->dokumen_halal_array ?? '[]', true) ?? [];
+        $existingCoas = json_decode($pemeriksaanKedatanganKemasan->coa_array ?? '[]', true) ?? [];
+        $existingKeterangans = json_decode($pemeriksaanKedatanganKemasan->keterangan_array ?? '[]', true) ?? [];
+
+        $existingIdBahans[] = $request->input('id_bahan.0');
+        $existingProdusens[] = $request->input('produsen.0');
+        $existingDistributors[] = $request->input('distributor.0');
+        $existingKodeProduksis[] = $request->input('kode_produksi.0');
+        $existingJumlahDatangs[] = $request->input('jumlah_datang.0');
+        $existingJumlahSamplings[] = $request->input('jumlah_sampling.0');
+        $existingSpesifikasis[] = $request->input('spesifikasi.0');
+        $existingPenampakans[] = $request->input('penampakan.0');
+        $existingSealings[] = $request->input('sealing.0');
+        $existingCetakans[] = $request->input('cetakan.0');
+        $existingKetebalanMicrons[] = $request->input('ketebalan_micron.0');
+        $existingDimensis[] = $request->input('dimensi.0');
+        $existingStatuses[] = $request->input('status.0');
+        $existingLogoHalals[] = $request->input('logo_halal.0');
+        $existingDokumenHalals[] = $request->input('dokumen_halal.0');
+        $existingCoas[] = $request->input('coa.0');
+        $existingKeterangans[] = $request->input('keterangan.0');
+
+        $pemeriksaanKedatanganKemasan->update([
+            'id_bahan_array' => json_encode($existingIdBahans),
+            'produsen_array' => json_encode($existingProdusens),
+            'distributor_array' => json_encode($existingDistributors),
+            'kode_produksi_array' => json_encode($existingKodeProduksis),
+            'jumlah_datang_array' => json_encode($existingJumlahDatangs),
+            'jumlah_sampling_array' => json_encode($existingJumlahSamplings),
+            'spesifikasi_array' => json_encode($existingSpesifikasis),
+            'penampakan_array' => json_encode($existingPenampakans),
+            'sealing_array' => json_encode($existingSealings),
+            'cetakan_array' => json_encode($existingCetakans),
+            'ketebalan_micron_array' => json_encode($existingKetebalanMicrons),
+            'dimensi_array' => json_encode($existingDimensis),
+            'status_array' => json_encode($existingStatuses),
+            'logo_halal_array' => json_encode($existingLogoHalals),
+            'dokumen_halal_array' => json_encode($existingDokumenHalals),
+            'coa_array' => json_encode($existingCoas),
+            'keterangan_array' => json_encode($existingKeterangans),
+        ]);
+
+        return redirect()->route('pemeriksaan-kedatangan-kemasan.index')
+            ->with('success', 'Baris baru berhasil ditambahkan!');
     }
 
     /**

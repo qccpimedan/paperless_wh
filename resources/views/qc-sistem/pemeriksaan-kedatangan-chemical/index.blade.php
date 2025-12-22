@@ -287,6 +287,9 @@
                                             </td>
                                             <td>
                                                 <div class="btn-vertical">
+                                                    <a href="{{ route('pemeriksaan-chemical.tambah-baris', $pemeriksaan->uuid) }}" class="btn btn-sm btn-success" title="Tambah Baris">
+                                                        <i class="bi bi-plus-circle"></i>
+                                                    </a>
                                                     @can('view_pemeriksaan_kedatangan_chemical')
                                                         <a href="{{ route('pemeriksaan-chemical.show', $pemeriksaan->uuid) }}" class="btn btn-sm btn-info" title="Detail">
                                                             <i class="bi bi-eye"></i>

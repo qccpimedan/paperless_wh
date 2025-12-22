@@ -483,7 +483,8 @@
                                         $suhuMobilTypeArray = json_decode($pemeriksaan->suhu_mobil_type_array ?? '[]', true);
                                         $kondisiProdukSuhuArray = json_decode($pemeriksaan->kondisi_produk_suhu ?? '[]', true);
                                         $hasilUjiFfaArray = json_decode($pemeriksaan->hasil_uji_ffa_array ?? '[]', true);
-                                        
+                                        $keteranganArray = json_decode($pemeriksaan->keterangan_array ?? '[]', true);
+
                                         $rowCount = max(
                                             count($idBahanArray),
                                             count($produsenArray),
@@ -493,120 +494,202 @@
                                             count($expireDateArray),
                                             count($jumlahDatangArray),
                                             count($jumlahSamplingArray),
-                                            count($spesifikasiArray)
+                                            count($spesifikasiArray),
+                                            count($kondisiProdukArray),
+                                            count($suhuProdukArray),
+                                            count($suhuProdukTypeArray),
+                                            count($suhuMobilArray),
+                                            count($suhuMobilTypeArray),
+                                            count($kondisiProdukSuhuArray),
+                                            count($hasilUjiFfaArray),
+                                            count($keteranganArray)
                                         );
+
+                                        $bahanNameById = [];
+                                        $bahanIds = array_values(array_filter($idBahanArray, function ($v) {
+                                            return !empty($v);
+                                        }));
+                                        if (count($bahanIds) > 0) {
+                                            $bahanModels = \App\Models\Bahan::whereIn('id', $bahanIds)->get(['id', 'nama_bahan']);
+                                            foreach ($bahanModels as $bahanModel) {
+                                                $bahanNameById[$bahanModel->id] = $bahanModel->nama_bahan;
+                                            }
+                                        }
                                     @endphp
-                                    
+
                                     @if($rowCount > 0)
-                                        @for($i = 0; $i < $rowCount; $i++)
-                                            <div class="section-title">Bahan Baku {{ $i + 1 }}</div>
-                                            @if(isset($idBahanArray[$i]) && $idBahanArray[$i])
-                                                @php
-                                                    $bahan = \App\Models\Bahan::find($idBahanArray[$i]);
-                                                @endphp
-                                                @if($bahan)
-                                                    <div class="field-row">
-                                                        <span class="field-label">Nama:</span>
-                                                        <span class="field-value">{{ $bahan->nama_bahan }}</span>
-                                                    </div>
-                                                @endif
-                                            @endif
-                                            @if(isset($produsenArray[$i]) && $produsenArray[$i])
-                                                <div class="field-row">
-                                                    <span class="field-label">Produsen:</span>
-                                                    <span class="field-value">{{ $produsenArray[$i] }}</span>
-                                                </div>
-                                            @endif
-                                            @if(isset($negaraProdusenArray[$i]) && $negaraProdusenArray[$i])
-                                                <div class="field-row">
-                                                    <span class="field-label">Negara:</span>
-                                                    <span class="field-value">{{ $negaraProdusenArray[$i] }}</span>
-                                                </div>
-                                            @endif
-                                            @if(isset($distributorArray[$i]) && $distributorArray[$i])
-                                                <div class="field-row">
-                                                    <span class="field-label">Distributor:</span>
-                                                    <span class="field-value">{{ $distributorArray[$i] }}</span>
-                                                </div>
-                                            @endif
-                                            @if(isset($kodeProduksiArray[$i]) && $kodeProduksiArray[$i])
-                                                <div class="field-row">
-                                                    <span class="field-label">Kode:</span>
-                                                    <span class="field-value">{{ $kodeProduksiArray[$i] }}</span>
-                                                </div>
-                                            @endif
-                                            @if(isset($expireDateArray[$i]) && $expireDateArray[$i])
-                                                <div class="field-row">
-                                                    <span class="field-label">Exp Date:</span>
-                                                    <span class="field-value">{{ \Carbon\Carbon::parse($expireDateArray[$i])->format('d/m/Y') }}</span>
-                                                </div>
-                                            @endif
-                                            @if(isset($jumlahDatangArray[$i]) && $jumlahDatangArray[$i])
-                                                <div class="field-row">
-                                                    <span class="field-label">Jml Datang:</span>
-                                                    <span class="field-value">{{ $jumlahDatangArray[$i] }}</span>
-                                                </div>
-                                            @endif
-                                            @if(isset($jumlahSamplingArray[$i]) && $jumlahSamplingArray[$i])
-                                                <div class="field-row">
-                                                    <span class="field-label">Jml Sampling:</span>
-                                                    <span class="field-value">{{ $jumlahSamplingArray[$i] }}</span>
-                                                </div>
-                                            @endif
-                                            @if(isset($spesifikasiArray[$i]) && $spesifikasiArray[$i])
-                                                <div class="field-row">
-                                                    <span class="field-label">Spesifikasi:</span>
-                                                    <span class="field-value">{{ $spesifikasiArray[$i] }}</span>
-                                                </div>
-                                            @endif
-                                            
-                                            {{-- Suhu & Kondisi --}}
-                                            @if(isset($kondisiProdukArray[$i]) || isset($suhuProdukTypeArray[$i]) || isset($suhuProdukArray[$i]) || isset($suhuMobilTypeArray[$i]) || isset($suhuMobilArray[$i]) || isset($kondisiProdukSuhuArray[$i]) || isset($hasilUjiFfaArray[$i]))
-                                                <div style="margin-top: 6px; padding-top: 6px; border-top: 1px dashed #dee2e6;"></div>
-                                                @if(isset($kondisiProdukArray[$i]) && $kondisiProdukArray[$i])
-                                                    <div class="field-row">
-                                                        <span class="field-label">Kondisi:</span>
-                                                        <span class="field-value">{{ $kondisiProdukArray[$i] }}</span>
-                                                    </div>
-                                                @endif
-                                                @if(isset($suhuProdukTypeArray[$i]) && $suhuProdukTypeArray[$i])
-                                                    <div class="field-row">
-                                                        <span class="field-label">Jenis Suhu Produk:</span>
-                                                        <span class="field-value">{{ $suhuProdukTypeArray[$i] }}</span>
-                                                    </div>
-                                                @endif
-                                                @if(isset($suhuProdukArray[$i]) && $suhuProdukArray[$i])
-                                                    <div class="field-row">
-                                                        <span class="field-label">Suhu Produk:</span>
-                                                        <span class="field-value">{{ $suhuProdukArray[$i] }}°C</span>
-                                                    </div>
-                                                @endif
-                                                @if(isset($suhuMobilTypeArray[$i]) && $suhuMobilTypeArray[$i])
-                                                    <div class="field-row">
-                                                        <span class="field-label">Jenis Suhu Mobil:</span>
-                                                        <span class="field-value">{{ $suhuMobilTypeArray[$i] }}</span>
-                                                    </div>
-                                                @endif
-                                                @if(isset($suhuMobilArray[$i]) && $suhuMobilArray[$i])
-                                                    <div class="field-row">
-                                                        <span class="field-label">Suhu Mobil:</span>
-                                                        <span class="field-value">{{ $suhuMobilArray[$i] }}°C</span>
-                                                    </div>
-                                                @endif
-                                                @if(isset($kondisiProdukSuhuArray[$i]) && $kondisiProdukSuhuArray[$i])
-                                                    <div class="field-row">
-                                                        <span class="field-label">Suhu Kondisi:</span>
-                                                        <span class="field-value">{{ $kondisiProdukSuhuArray[$i] }}</span>
-                                                    </div>
-                                                @endif
-                                                @if(isset($hasilUjiFfaArray[$i]) && $hasilUjiFfaArray[$i])
-                                                    <div class="field-row">
-                                                        <span class="field-label">Hasil FFA:</span>
-                                                        <span class="field-value">{{ $hasilUjiFfaArray[$i] }}</span>
-                                                    </div>
-                                                @endif
-                                            @endif
-                                        @endfor
+                                        <div class="section-title">Bahan Baku Penunjang</div>
+
+                                        <div class="field-row">
+                                            <span class="field-label">Nama:</span>
+                                            <span class="field-value">
+                                                @for($i = 0; $i < $rowCount; $i++)
+                                                    @php
+                                                        $bahanId = $idBahanArray[$i] ?? null;
+                                                        $bahanName = $bahanId && isset($bahanNameById[$bahanId]) ? $bahanNameById[$bahanId] : '-';
+                                                    @endphp
+                                                    <div>Row {{ $i + 1 }}: {{ $bahanName }}</div>
+                                                @endfor
+                                            </span>
+                                        </div>
+
+                                        <div class="field-row">
+                                            <span class="field-label">Prod:</span>
+                                            <span class="field-value">
+                                                @for($i = 0; $i < $rowCount; $i++)
+                                                    <div>Row {{ $i + 1 }}: {{ $produsenArray[$i] ?? '-' }}</div>
+                                                @endfor
+                                            </span>
+                                        </div>
+
+                                        <div class="field-row">
+                                            <span class="field-label">Neg:</span>
+                                            <span class="field-value">
+                                                @for($i = 0; $i < $rowCount; $i++)
+                                                    <div>Row {{ $i + 1 }}: {{ $negaraProdusenArray[$i] ?? '-' }}</div>
+                                                @endfor
+                                            </span>
+                                        </div>
+
+                                        <div class="field-row">
+                                            <span class="field-label">Dist:</span>
+                                            <span class="field-value">
+                                                @for($i = 0; $i < $rowCount; $i++)
+                                                    <div>Row {{ $i + 1 }}: {{ $distributorArray[$i] ?? '-' }}</div>
+                                                @endfor
+                                            </span>
+                                        </div>
+
+                                        <div class="field-row">
+                                            <span class="field-label">Kode:</span>
+                                            <span class="field-value">
+                                                @for($i = 0; $i < $rowCount; $i++)
+                                                    <div>Row {{ $i + 1 }}: {{ $kodeProduksiArray[$i] ?? '-' }}</div>
+                                                @endfor
+                                            </span>
+                                        </div>
+
+                                        <div class="field-row">
+                                            <span class="field-label">Exp:</span>
+                                            <span class="field-value">
+                                                @for($i = 0; $i < $rowCount; $i++)
+                                                    @php
+                                                        $exp = $expireDateArray[$i] ?? null;
+                                                        $expFormatted = $exp ? \Carbon\Carbon::parse($exp)->format('d/m/Y') : '-';
+                                                    @endphp
+                                                    <div>Row {{ $i + 1 }}: {{ $expFormatted }}</div>
+                                                @endfor
+                                            </span>
+                                        </div>
+
+                                        <div class="field-row">
+                                            <span class="field-label">Datang:</span>
+                                            <span class="field-value">
+                                                @for($i = 0; $i < $rowCount; $i++)
+                                                    <div>Row {{ $i + 1 }}: {{ $jumlahDatangArray[$i] ?? '-' }}</div>
+                                                @endfor
+                                            </span>
+                                        </div>
+
+                                        <div class="field-row">
+                                            <span class="field-label">Samp:</span>
+                                            <span class="field-value">
+                                                @for($i = 0; $i < $rowCount; $i++)
+                                                    <div>Row {{ $i + 1 }}: {{ $jumlahSamplingArray[$i] ?? '-' }}</div>
+                                                @endfor
+                                            </span>
+                                        </div>
+
+                                        <div class="field-row">
+                                            <span class="field-label">Spes:</span>
+                                            <span class="field-value">
+                                                @for($i = 0; $i < $rowCount; $i++)
+                                                    <div>Row {{ $i + 1 }}: {{ $spesifikasiArray[$i] ?? '-' }}</div>
+                                                @endfor
+                                            </span>
+                                        </div>
+
+                                        <div style="margin-top: 6px; padding-top: 6px; border-top: 1px dashed #dee2e6;"></div>
+
+                                        <div class="field-row">
+                                            <span class="field-label">Kond:</span>
+                                            <span class="field-value">
+                                                @for($i = 0; $i < $rowCount; $i++)
+                                                    <div>Row {{ $i + 1 }}: {{ $kondisiProdukArray[$i] ?? '-' }}</div>
+                                                @endfor
+                                            </span>
+                                        </div>
+
+                                        <div class="field-row">
+                                            <span class="field-label">T.Produk:</span>
+                                            <span class="field-value">
+                                                @for($i = 0; $i < $rowCount; $i++)
+                                                    <div>Row {{ $i + 1 }}: {{ $suhuProdukTypeArray[$i] ?? '-' }}</div>
+                                                @endfor
+                                            </span>
+                                        </div>
+
+                                        <div class="field-row">
+                                            <span class="field-label">S.Prod:</span>
+                                            <span class="field-value">
+                                                @for($i = 0; $i < $rowCount; $i++)
+                                                    @php
+                                                        $sp = $suhuProdukArray[$i] ?? null;
+                                                        $spDisplay = $sp !== null && $sp !== '' ? ($sp . '°C') : '-';
+                                                    @endphp
+                                                    <div>Row {{ $i + 1 }}: {{ $spDisplay }}</div>
+                                                @endfor
+                                            </span>
+                                        </div>
+
+                                        <div class="field-row">
+                                            <span class="field-label">T.Mobil:</span>
+                                            <span class="field-value">
+                                                @for($i = 0; $i < $rowCount; $i++)
+                                                    <div>Row {{ $i + 1 }}: {{ $suhuMobilTypeArray[$i] ?? '-' }}</div>
+                                                @endfor
+                                            </span>
+                                        </div>
+
+                                        <div class="field-row">
+                                            <span class="field-label">S.Mobil:</span>
+                                            <span class="field-value">
+                                                @for($i = 0; $i < $rowCount; $i++)
+                                                    @php
+                                                        $sm = $suhuMobilArray[$i] ?? null;
+                                                        $smDisplay = $sm !== null && $sm !== '' ? ($sm . '°C') : '-';
+                                                    @endphp
+                                                    <div>Row {{ $i + 1 }}: {{ $smDisplay }}</div>
+                                                @endfor
+                                            </span>
+                                        </div>
+
+                                        <div class="field-row">
+                                            <span class="field-label">S.Kond:</span>
+                                            <span class="field-value">
+                                                @for($i = 0; $i < $rowCount; $i++)
+                                                    <div>Row {{ $i + 1 }}: {{ $kondisiProdukSuhuArray[$i] ?? '-' }}</div>
+                                                @endfor
+                                            </span>
+                                        </div>
+
+                                        <div class="field-row">
+                                            <span class="field-label">FFA:</span>
+                                            <span class="field-value">
+                                                @for($i = 0; $i < $rowCount; $i++)
+                                                    <div>Row {{ $i + 1 }}: {{ $hasilUjiFfaArray[$i] ?? '-' }}</div>
+                                                @endfor
+                                            </span>
+                                        </div>
+
+                                        <div class="field-row">
+                                            <span class="field-label">Ket:</span>
+                                            <span class="field-value">
+                                                @for($i = 0; $i < $rowCount; $i++)
+                                                    <div>Row {{ $i + 1 }}: {{ $keteranganArray[$i] ?? '-' }}</div>
+                                                @endfor
+                                            </span>
+                                        </div>
                                     @endif
 
                                     {{-- KONDISI FISIK --}}
@@ -614,33 +697,39 @@
                                         $kondisiFisikArray = json_decode($pemeriksaan->kondisi_fisik_array ?? '[]', true);
                                     @endphp
                                     @if(count($kondisiFisikArray) > 0)
-                                        @foreach($kondisiFisikArray as $idx => $kondisiFisik)
-                                            <div class="section-title">Kondisi Fisik {{ $idx + 1 }}</div>
-                                            @if(isset($kondisiFisik['kemasan']))
-                                                <div class="field-row">
-                                                    <span class="field-label">Kemasan:</span>
-                                                    <span class="field-value">{{ $kondisiFisik['kemasan'] ? 'V' : 'X' }}</span>
-                                                </div>
-                                            @endif
-                                            @if(isset($kondisiFisik['warna']))
-                                                <div class="field-row">
-                                                    <span class="field-label">Warna:</span>
-                                                    <span class="field-value">{{ $kondisiFisik['warna'] ? 'V' : 'X' }}</span>
-                                                </div>
-                                            @endif
-                                            @if(isset($kondisiFisik['benda_asing']))
-                                                <div class="field-row">
-                                                    <span class="field-label">Benda Asing:</span>
-                                                    <span class="field-value">{{ $kondisiFisik['benda_asing'] ? 'V' : 'X' }}</span>
-                                                </div>
-                                            @endif
-                                            @if(isset($kondisiFisik['aroma']))
-                                                <div class="field-row">
-                                                    <span class="field-label">Aroma:</span>
-                                                    <span class="field-value">{{ $kondisiFisik['aroma'] ? 'V' : 'X' }}</span>
-                                                </div>
-                                            @endif
-                                        @endforeach
+                                        <div class="section-title">Kondisi Fisik</div>
+                                        <div class="field-row">
+                                            <span class="field-label">Kemasan:</span>
+                                            <span class="field-value">
+                                                @foreach($kondisiFisikArray as $idx => $kondisiFisik)
+                                                    <div>Row {{ $idx + 1 }}: {{ ($kondisiFisik['kemasan'] ?? false) ? 'V' : 'X' }}</div>
+                                                @endforeach
+                                            </span>
+                                        </div>
+                                        <div class="field-row">
+                                            <span class="field-label">Warna:</span>
+                                            <span class="field-value">
+                                                @foreach($kondisiFisikArray as $idx => $kondisiFisik)
+                                                    <div>Row {{ $idx + 1 }}: {{ ($kondisiFisik['warna'] ?? false) ? 'V' : 'X' }}</div>
+                                                @endforeach
+                                            </span>
+                                        </div>
+                                        <div class="field-row">
+                                            <span class="field-label">B.Asing:</span>
+                                            <span class="field-value">
+                                                @foreach($kondisiFisikArray as $idx => $kondisiFisik)
+                                                    <div>Row {{ $idx + 1 }}: {{ ($kondisiFisik['benda_asing'] ?? false) ? 'V' : 'X' }}</div>
+                                                @endforeach
+                                            </span>
+                                        </div>
+                                        <div class="field-row">
+                                            <span class="field-label">Aroma:</span>
+                                            <span class="field-value">
+                                                @foreach($kondisiFisikArray as $idx => $kondisiFisik)
+                                                    <div>Row {{ $idx + 1 }}: {{ ($kondisiFisik['aroma'] ?? false) ? 'V' : 'X' }}</div>
+                                                @endforeach
+                                            </span>
+                                        </div>
                                     @endif
 
                                     {{-- DOKUMEN --}}
@@ -651,53 +740,65 @@
                                         $maxDokumen = max(count($logoHalalArray), count($dokumenHalalArray), count($coaArray));
                                     @endphp
                                     @if($maxDokumen > 0)
-                                        @for($idx = 0; $idx < $maxDokumen; $idx++)
-                                            <div class="section-title">Dokumen {{ $idx + 1 }}</div>
-                                            <div class="field-row">
-                                                <span class="field-label">Logo Halal:</span>
-                                                <span class="field-value">{{ ($logoHalalArray[$idx] ?? false) ? 'V' : 'X' }}</span>
-                                            </div>
-                                            <div class="field-row">
-                                                <span class="field-label">Halal Berlaku:</span>
-                                                <span class="field-value">{{ ($dokumenHalalArray[$idx] ?? false) ? 'V' : 'X' }}</span>
-                                            </div>
-                                            <div class="field-row">
-                                                <span class="field-label">COA:</span>
-                                                <span class="field-value">{{ ($coaArray[$idx] ?? false) ? 'V' : 'X' }}</span>
-                                            </div>
-                                        @endfor
+                                        <div class="section-title">Dokumen</div>
+                                        <div class="field-row">
+                                            <span class="field-label">Logo:</span>
+                                            <span class="field-value">
+                                                @for($idx = 0; $idx < $maxDokumen; $idx++)
+                                                    <div>Row {{ $idx + 1 }}: {{ ($logoHalalArray[$idx] ?? false) ? 'V' : 'X' }}</div>
+                                                @endfor
+                                            </span>
+                                        </div>
+                                        <div class="field-row">
+                                            <span class="field-label">Halal:</span>
+                                            <span class="field-value">
+                                                @for($idx = 0; $idx < $maxDokumen; $idx++)
+                                                    <div>Row {{ $idx + 1 }}: {{ ($dokumenHalalArray[$idx] ?? false) ? 'V' : 'X' }}</div>
+                                                @endfor
+                                            </span>
+                                        </div>
+                                        <div class="field-row">
+                                            <span class="field-label">COA:</span>
+                                            <span class="field-value">
+                                                @for($idx = 0; $idx < $maxDokumen; $idx++)
+                                                    <div>Row {{ $idx + 1 }}: {{ ($coaArray[$idx] ?? false) ? 'V' : 'X' }}</div>
+                                                @endfor
+                                            </span>
+                                        </div>
                                     @endif
 
                                     {{-- STATUS --}}
                                     @php
                                         $statusBarisArray = json_decode($pemeriksaan->status_baris_array ?? '[]', true);
-                                        $keteranganArray = json_decode($pemeriksaan->keterangan_array ?? '[]', true);
                                         $maxStatus = max(count($statusBarisArray), count($keteranganArray));
                                     @endphp
                                     @if($maxStatus > 0)
-                                        @for($idx = 0; $idx < $maxStatus; $idx++)
-                                            <div class="section-title">Status {{ $idx + 1 }}</div>
-                                            @if(isset($statusBarisArray[$idx]))
-                                                <div class="field-row">
-                                                    <span class="field-label">Status:</span>
-                                                    <span class="field-value">
-                                                        @if(strtolower($statusBarisArray[$idx]) == 'release')
-                                                            <span class="status-badge status-release">{{ $statusBarisArray[$idx] }}</span>
-                                                        @elseif(strtolower($statusBarisArray[$idx]) == 'hold')
-                                                            <span class="status-badge status-hold">{{ $statusBarisArray[$idx] }}</span>
+                                        <div class="section-title">Status Baris</div>
+                                        <div class="field-row">
+                                            <span class="field-label">Status:</span>
+                                            <span class="field-value">
+                                                @for($idx = 0; $idx < $maxStatus; $idx++)
+                                                    <div>
+                                                        Row {{ $idx + 1 }}:
+                                                        @if(strtolower($statusBarisArray[$idx] ?? '') == 'release')
+                                                            <span class="status-badge status-release">{{ $statusBarisArray[$idx] ?? '-' }}</span>
+                                                        @elseif(strtolower($statusBarisArray[$idx] ?? '') == 'hold')
+                                                            <span class="status-badge status-hold">{{ $statusBarisArray[$idx] ?? '-' }}</span>
                                                         @else
-                                                            {{ $statusBarisArray[$idx] }}
+                                                            {{ $statusBarisArray[$idx] ?? '-' }}
                                                         @endif
-                                                    </span>
-                                                </div>
-                                            @endif
-                                            @if(isset($keteranganArray[$idx]) && $keteranganArray[$idx])
-                                                <div class="field-row">
-                                                    <span class="field-label">Ket:</span>
-                                                    <span class="field-value">{{ $keteranganArray[$idx] }}</span>
-                                                </div>
-                                            @endif
-                                        @endfor
+                                                    </div>
+                                                @endfor
+                                            </span>
+                                        </div>
+                                        <div class="field-row">
+                                            <span class="field-label">Ket:</span>
+                                            <span class="field-value">
+                                                @for($idx = 0; $idx < $maxStatus; $idx++)
+                                                    <div>Row {{ $idx + 1 }}: {{ $keteranganArray[$idx] ?? '-' }}</div>
+                                                @endfor
+                                            </span>
+                                        </div>
                                     @endif
                                 </td>
                             @endforeach

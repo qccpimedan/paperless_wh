@@ -387,19 +387,90 @@
 
         @if($pemeriksaans->count() > 0)
             @php
-                $recordsPerPage = 4;
-                $chunks = $pemeriksaans->chunk($recordsPerPage);
-                $firstRecord = $pemeriksaans->first();
+                $columnsPerPage = 4;
+
+                $allBahanIds = [];
+
+                $pdfColumns = collect();
+                foreach ($pemeriksaans as $p) {
+                    $idBahansTmp = json_decode($p->id_bahan_array ?? '[]', true) ?? [];
+
+                    if (!empty($idBahansTmp)) {
+                        foreach ($idBahansTmp as $tmpId) {
+                            if ($tmpId) {
+                                $allBahanIds[] = $tmpId;
+                            }
+                        }
+                    }
+
+                    $produsensTmp = json_decode($p->produsen_array ?? '[]', true) ?? [];
+                    $distributorsTmp = json_decode($p->distributor_array ?? '[]', true) ?? [];
+                    $kodeProduksisTmp = json_decode($p->kode_produksi_array ?? '[]', true) ?? [];
+                    $jumlahDatangsTmp = json_decode($p->jumlah_datang_array ?? '[]', true) ?? [];
+                    $jumlahSamplingsTmp = json_decode($p->jumlah_sampling_array ?? '[]', true) ?? [];
+                    $spesifikasisTmp = json_decode($p->spesifikasi_array ?? '[]', true) ?? [];
+                    $penampakansTmp = json_decode($p->penampakan_array ?? '[]', true) ?? [];
+                    $sealingsTmp = json_decode($p->sealing_array ?? '[]', true) ?? [];
+                    $cetakansTmp = json_decode($p->cetakan_array ?? '[]', true) ?? [];
+                    $ketebalanMicronsTmp = json_decode($p->ketebalan_micron_array ?? '[]', true) ?? [];
+                    $dimensisTmp = json_decode($p->dimensi_array ?? '[]', true) ?? [];
+                    $statusesTmp = json_decode($p->status_array ?? '[]', true) ?? [];
+                    $logoHalalsTmp = json_decode($p->logo_halal_array ?? '[]', true) ?? [];
+                    $dokumenHalalsTmp = json_decode($p->dokumen_halal_array ?? '[]', true) ?? [];
+                    $coasTmp = json_decode($p->coa_array ?? '[]', true) ?? [];
+                    $keterangansTmp = json_decode($p->keterangan_array ?? '[]', true) ?? [];
+
+                    $rowCount = max(
+                        1,
+                        count($idBahansTmp),
+                        count($produsensTmp),
+                        count($distributorsTmp),
+                        count($kodeProduksisTmp),
+                        count($jumlahDatangsTmp),
+                        count($jumlahSamplingsTmp),
+                        count($spesifikasisTmp),
+                        count($penampakansTmp),
+                        count($sealingsTmp),
+                        count($cetakansTmp),
+                        count($ketebalanMicronsTmp),
+                        count($dimensisTmp),
+                        count($statusesTmp),
+                        count($logoHalalsTmp),
+                        count($dokumenHalalsTmp),
+                        count($coasTmp),
+                        count($keterangansTmp)
+                    );
+
+                    for ($i = 0; $i < $rowCount; $i++) {
+                        $pdfColumns->push([
+                            'record' => $p,
+                            'rowIndex' => $i,
+                        ]);
+                    }
+                }
+
+                $chunks = $pdfColumns->chunk($columnsPerPage);
+
+                $bahanMap = [];
+                if (!empty($allBahanIds)) {
+                    $bahanMap = \App\Models\Bahan::whereIn('id', array_values(array_unique($allBahanIds)))
+                        ->pluck('nama_bahan', 'id')
+                        ->toArray();
+                }
             @endphp
             
             @foreach($chunks as $pageIndex => $pageRecords)
+                @php
+                    $firstColumn = $pageRecords->first();
+                    $firstRecord = $firstColumn ? $firstColumn['record'] : null;
+                @endphp
                 {{-- SUBHEADER (Setiap halaman) --}}
                 <div class="subheader">
                     <table class="subheader-table">
                         <tr>
                             <td>
                                 <span class="subheader-label">Hari/Tanggal:</span>
-                                <span class="subheader-value">{{ $firstRecord->tanggal ? (is_string($firstRecord->tanggal) ? $firstRecord->tanggal : $firstRecord->tanggal->format('d/m/Y')) : '-' }}</span>
+                                <span class="subheader-value">{{ $firstRecord && $firstRecord->tanggal ? (is_string($firstRecord->tanggal) ? $firstRecord->tanggal : $firstRecord->tanggal->format('d/m/Y')) : '-' }}</span>
                             </td>
                             <td class="subheader-divider"></td>
                             <td>
@@ -420,7 +491,7 @@
                         <tr>
                             <td>
                                 <span class="subheader-label">Segel/Gembok:</span>
-                                <span class="subheader-value">{{ $firstRecord->segel_gembok ? ucfirst($firstRecord->segel_gembok) : '-' }}</span>
+                                <span class="subheader-value">{{ $firstRecord && $firstRecord->segel_gembok ? ucfirst($firstRecord->segel_gembok) : '-' }}</span>
                             </td>
                             <td class="subheader-divider"></td>
                             <td>
@@ -440,9 +511,11 @@
                 <div class="page-break">
                     <table class="data-table">
                         <tr>
-                            @foreach($pageRecords as $index => $pemeriksaan)
+                            @foreach($pageRecords as $index => $column)
                                 @php
-                                    $columnNumber = ($pageIndex * $recordsPerPage) + $loop->iteration;
+                                    $pemeriksaan = $column['record'];
+                                    $rowIndex = $column['rowIndex'];
+                                    $columnNumber = ($pageIndex * $columnsPerPage) + $loop->iteration;
                                 @endphp
                                 <td class="data-column" data-numbered="true">
                                     <div class="column-header">
@@ -483,8 +556,16 @@
                                         $jumlah_datangs = json_decode($pemeriksaan->jumlah_datang_array ?? '[]', true) ?? [];
                                         $jumlah_samplings = json_decode($pemeriksaan->jumlah_sampling_array ?? '[]', true) ?? [];
                                         $spesifikasis = json_decode($pemeriksaan->spesifikasi_array ?? '[]', true) ?? [];
+
+                                        $id_bahan = $id_bahans[$rowIndex] ?? null;
+                                        $produsen_val = $produsens_arr[$rowIndex] ?? null;
+                                        $distributor_val = $distributors_arr[$rowIndex] ?? null;
+                                        $kode_produksi_val = $kode_produksis[$rowIndex] ?? null;
+                                        $jumlah_datang_val = $jumlah_datangs[$rowIndex] ?? null;
+                                        $jumlah_sampling_val = $jumlah_samplings[$rowIndex] ?? null;
+                                        $spesifikasi_val = $spesifikasis[$rowIndex] ?? null;
                                     @endphp
-                                    @if(count($id_bahans) > 0 || $pemeriksaan->no_po)
+                                    @if($id_bahan || $produsen_val || $distributor_val || $kode_produksi_val || $jumlah_datang_val || $jumlah_sampling_val || $spesifikasi_val || $pemeriksaan->no_po)
                                         <div class="section-title">Bahan Kemasan</div>
                                         @if($pemeriksaan->no_po)
                                             <div class="field-row">
@@ -492,33 +573,54 @@
                                                 <span class="field-value">{{ $pemeriksaan->no_po }}</span>
                                             </div>
                                         @endif
-                                        @forelse($id_bahans as $index => $id_bahan)
-                                            <div style="margin-top: 6px; padding-top: 6px; border-top: 1px solid #ddd; font-size: 8px;">
-                                                <strong>Baris {{ $index + 1 }}:</strong>
-                                                @if($id_bahan)
-                                                    Bahan: {{ \App\Models\Bahan::find($id_bahan)->nama_bahan ?? 'N/A' }}
-                                                @endif
-                                                @if($produsens_arr[$index] ?? null)
-                                                    | Produsen: {{ $produsens_arr[$index] }}
-                                                @endif
-                                                @if($distributors_arr[$index] ?? null)
-                                                    | Distributor: {{ $distributors_arr[$index] }}
-                                                @endif
-                                                @if($kode_produksis[$index] ?? null)
-                                                    | Kode Produksi: {{ $kode_produksis[$index] }}
-                                                @endif
-                                                @if($jumlah_datangs[$index] ?? null)
-                                                    | Jml Datang: {{ $jumlah_datangs[$index] }}
-                                                @endif
-                                                @if($jumlah_samplings[$index] ?? null)
-                                                    | Jml Sampling: {{ $jumlah_samplings[$index] }}
-                                                @endif
-                                                @if($spesifikasis[$index] ?? null)
-                                                    | Spesifikasi: {{ substr($spesifikasis[$index], 0, 30) }}{{ strlen($spesifikasis[$index]) > 30 ? '...' : '' }}
-                                                @endif
-                                            </div>
-                                        @empty
-                                        @endforelse
+                                        <div style="margin-top: 6px; padding-top: 6px; border-top: 1px solid #ddd; font-size: 8px;">
+                                            <!-- <div class="field-row">
+                                                <span class="field-label">Baris:</span>
+                                                <span class="field-value">{{ $rowIndex + 1 }}</span>
+                                            </div> -->
+                                            @if($id_bahan)
+                                                <div class="field-row">
+                                                    <span class="field-label">Bahan:</span>
+                                                    <span class="field-value">{{ $bahanMap[$id_bahan] ?? 'N/A' }}</span>
+                                                </div>
+                                            @endif
+                                            @if($produsen_val)
+                                                <div class="field-row">
+                                                    <span class="field-label">Produsen:</span>
+                                                    <span class="field-value">{{ $produsen_val }}</span>
+                                                </div>
+                                            @endif
+                                            @if($distributor_val)
+                                                <div class="field-row">
+                                                    <span class="field-label">Distributor:</span>
+                                                    <span class="field-value">{{ $distributor_val }}</span>
+                                                </div>
+                                            @endif
+                                            @if($kode_produksi_val)
+                                                <div class="field-row">
+                                                    <span class="field-label">Kode Produksi:</span>
+                                                    <span class="field-value">{{ $kode_produksi_val }}</span>
+                                                </div>
+                                            @endif
+                                            @if($jumlah_datang_val)
+                                                <div class="field-row">
+                                                    <span class="field-label">Jml Datang:</span>
+                                                    <span class="field-value">{{ $jumlah_datang_val }}</span>
+                                                </div>
+                                            @endif
+                                            @if($jumlah_sampling_val)
+                                                <div class="field-row">
+                                                    <span class="field-label">Jml Sampling:</span>
+                                                    <span class="field-value">{{ $jumlah_sampling_val }}</span>
+                                                </div>
+                                            @endif
+                                            @if($spesifikasi_val)
+                                                <div class="field-row">
+                                                    <span class="field-label">Spesifikasi:</span>
+                                                    <span class="field-value">{{ substr($spesifikasi_val, 0, 30) }}{{ strlen($spesifikasi_val) > 30 ? '...' : '' }}</span>
+                                                </div>
+                                            @endif
+                                        </div>
                                     @endif
 
                                     {{-- KONDISI FISIK (Dynamic Rows) --}}
@@ -526,26 +628,75 @@
                                         $penampakans = json_decode($pemeriksaan->penampakan_array ?? '[]', true) ?? [];
                                         $sealings = json_decode($pemeriksaan->sealing_array ?? '[]', true) ?? [];
                                         $cetakans = json_decode($pemeriksaan->cetakan_array ?? '[]', true) ?? [];
+
+                                        $penampakan_val = $penampakans[$rowIndex] ?? null;
+                                        $sealing_val = $sealings[$rowIndex] ?? null;
+                                        $cetakan_val = $cetakans[$rowIndex] ?? null;
+                                    @endphp
+                                    @if($penampakan_val !== null || $sealing_val !== null || $cetakan_val !== null)
+                                        <div class="section-title">Kondisi Fisik</div>
+                                        <div style="margin-top: 6px; padding-top: 6px; border-top: 1px solid #ddd; font-size: 8px;">
+                                            <!-- <div class="field-row">
+                                                <span class="field-label">Baris:</span>
+                                                <span class="field-value">{{ $rowIndex + 1 }}</span>
+                                            </div> -->
+                                            @if($penampakan_val !== null)
+                                                <div class="field-row">
+                                                    <span class="field-label">Penampakan:</span>
+                                                    <span class="field-value">{{ $penampakan_val ? 'V' : 'X' }}</span>
+                                                </div>
+                                            @endif
+                                            @if($sealing_val !== null)
+                                                <div class="field-row">
+                                                    <span class="field-label">Sealing:</span>
+                                                    <span class="field-value">{{ $sealing_val ? 'V' : 'X' }}</span>
+                                                </div>
+                                            @endif
+                                            @if($cetakan_val !== null)
+                                                <div class="field-row">
+                                                    <span class="field-label">Cetakan:</span>
+                                                    <span class="field-value">{{ $cetakan_val ? 'V' : 'X' }}</span>
+                                                </div>
+                                            @endif
+                                        </div>
+                                    @endif
+
+                                    {{-- DETAIL TAMBAHAN (Dynamic Rows) --}}
+                                    @php
                                         $ketebalan_microns = json_decode($pemeriksaan->ketebalan_micron_array ?? '[]', true) ?? [];
                                         $dimensis = json_decode($pemeriksaan->dimensi_array ?? '[]', true) ?? [];
+                                        $statuses = json_decode($pemeriksaan->status_array ?? '[]', true) ?? [];
+
+                                        $ketebalan_micron_val = $ketebalan_microns[$rowIndex] ?? null;
+                                        $dimensi_val = $dimensis[$rowIndex] ?? null;
+                                        $status_val = $statuses[$rowIndex] ?? null;
                                     @endphp
-                                    @if(count($penampakans) > 0 || count($sealings) > 0 || count($cetakans) > 0)
-                                        <div class="section-title">Kondisi Fisik</div>
-                                        @forelse($penampakans as $index => $penampakan)
-                                            <div style="margin-top: 6px; padding-top: 6px; border-top: 1px solid #ddd; font-size: 8px;">
-                                                <strong>Baris {{ $index + 1 }}:</strong>
-                                                Penampakan: {{ $penampakan ? 'V' : 'X' }}
-                                                | Sealing: {{ ($sealings[$index] ?? null) ? 'V' : 'X' }}
-                                                | Cetakan: {{ ($cetakans[$index] ?? null) ? 'V' : 'X' }}
-                                                @if($ketebalan_microns[$index] ?? null)
-                                                    | Ketebalan: {{ $ketebalan_microns[$index] }}
-                                                @endif
-                                                @if($dimensis[$index] ?? null)
-                                                    | Dimensi: {{ $dimensis[$index] }}
-                                                @endif
-                                            </div>
-                                        @empty
-                                        @endforelse
+                                    @if($ketebalan_micron_val !== null || $dimensi_val || $status_val)
+                                        <div class="section-title">Detail Tambahan</div>
+                                        <div style="margin-top: 6px; padding-top: 6px; border-top: 1px solid #ddd; font-size: 8px;">
+                                            <!-- <div class="field-row">
+                                                <span class="field-label">Baris:</span>
+                                                <span class="field-value">{{ $rowIndex + 1 }}</span>
+                                            </div> -->
+                                            @if($ketebalan_micron_val !== null && $ketebalan_micron_val !== '')
+                                                <div class="field-row">
+                                                    <span class="field-label">Ketebalan (Micron):</span>
+                                                    <span class="field-value">{{ $ketebalan_micron_val }}</span>
+                                                </div>
+                                            @endif
+                                            @if($dimensi_val)
+                                                <div class="field-row">
+                                                    <span class="field-label">Dimensi:</span>
+                                                    <span class="field-value">{{ $dimensi_val }}</span>
+                                                </div>
+                                            @endif
+                                            @if($status_val)
+                                                <div class="field-row">
+                                                    <span class="field-label">Status:</span>
+                                                    <span class="field-value">{{ $status_val }}</span>
+                                                </div>
+                                            @endif
+                                        </div>
                                     @endif
 
                                     {{-- DOKUMEN (Dynamic Rows) --}}
@@ -554,31 +705,44 @@
                                         $dokumen_halals = json_decode($pemeriksaan->dokumen_halal_array ?? '[]', true) ?? [];
                                         $coas = json_decode($pemeriksaan->coa_array ?? '[]', true) ?? [];
                                         $keterangans = json_decode($pemeriksaan->keterangan_array ?? '[]', true) ?? [];
-                                        $statuses = json_decode($pemeriksaan->status_array ?? '[]', true) ?? [];
+
+                                        $logo_halal_val = $logo_halals[$rowIndex] ?? null;
+                                        $dokumen_halal_val = $dokumen_halals[$rowIndex] ?? null;
+                                        $coa_val = $coas[$rowIndex] ?? null;
+                                        $keterangan_val = $keterangans[$rowIndex] ?? null;
                                     @endphp
-                                    @if(count($logo_halals) > 0 || count($dokumen_halals) > 0 || count($coas) > 0)
+                                    @if($logo_halal_val !== null || $dokumen_halal_val !== null || $coa_val !== null || $keterangan_val)
                                         <div class="section-title">Dokumen</div>
-                                        @forelse($logo_halals as $index => $logo_halal)
-                                            <div style="margin-top: 6px; padding-top: 6px; border-top: 1px solid #ddd; font-size: 8px;">
-                                                <strong>Baris {{ $index + 1 }}:</strong>
-                                                Logo Halal: {{ $logo_halal ? 'V' : 'X' }}
-                                                | Halal Berlaku: {{ ($dokumen_halals[$index] ?? null) ? 'V' : 'X' }}
-                                                | COA: {{ ($coas[$index] ?? null) ? 'V' : 'X' }}
-                                                @if($statuses[$index] ?? null)
-                                                    | Status: {{ $statuses[$index] }}
-                                                @endif
-                                                @if($keterangans[$index] ?? null)
-                                                    | Keterangan: {{ substr($keterangans[$index], 0, 25) }}{{ strlen($keterangans[$index]) > 25 ? '...' : '' }}
-                                                @endif
+                                        <div style="margin-top: 6px; padding-top: 6px; border-top: 1px solid #ddd; font-size: 8px;">
+                                            <!-- <div class="field-row">
+                                                <span class="field-label">Baris:</span>
+                                                <span class="field-value">{{ $rowIndex + 1 }}</span>
+                                            </div> -->
+                                            <div class="field-row">
+                                                <span class="field-label">Logo Halal:</span>
+                                                <span class="field-value">{{ $logo_halal_val ? 'V' : 'X' }}</span>
                                             </div>
-                                        @empty
-                                        @endforelse
+                                            <div class="field-row">
+                                                <span class="field-label">Halal Berlaku:</span>
+                                                <span class="field-value">{{ $dokumen_halal_val ? 'V' : 'X' }}</span>
+                                            </div>
+                                            <div class="field-row">
+                                                <span class="field-label">COA:</span>
+                                                <span class="field-value">{{ $coa_val ? 'V' : 'X' }}</span>
+                                            </div>
+                                            @if($keterangan_val)
+                                                <div class="field-row">
+                                                    <span class="field-label">Keterangan:</span>
+                                                    <span class="field-value">{{ substr($keterangan_val, 0, 25) }}{{ strlen($keterangan_val) > 25 ? '...' : '' }}</span>
+                                                </div>
+                                            @endif
+                                        </div>
                                     @endif
                                 </td>
                             @endforeach
                             
                             {{-- Fill empty columns if less than 4 records --}}
-                            @for($i = $pageRecords->count(); $i < $recordsPerPage; $i++)
+                            @for($i = $pageRecords->count(); $i < $columnsPerPage; $i++)
                                 <td class="data-column" style="background: #f8f9fa;"></td>
                             @endfor
                         </tr>
