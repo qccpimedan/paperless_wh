@@ -142,8 +142,8 @@
                                             <div class="col-md-6">
                                                 <div class="form-group">
                                                     <label for="id_supir">Nama Supir</label>
-                                                    <select id="id_supir" class="choices form-select @error('id_supir') is-invalid @enderror" name="id_supir">
-                                                        <option value="">-- Pilih Supir --</option>
+                                                    <select id="id_supir" class="form-control @error('id_supir') is-invalid @enderror" name="id_supir">
+                                                        <option value="">Pilih Supir</option>
                                                         @foreach($supirs as $supir)
                                                             <option value="{{ $supir->id }}" {{ old('id_supir') == $supir->id ? 'selected' : '' }}>
                                                                 {{ $supir->nama_supir }}
@@ -151,16 +151,6 @@
                                                         @endforeach
                                                     </select>
                                                     @error('id_supir')
-                                                        <div class="invalid-feedback">{{ $message }}</div>
-                                                    @enderror
-                                                </div>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <div class="form-group">
-                                                    <label for="no_po">No. PO</label>
-                                                    <input type="text" id="no_po" class="form-control @error('no_po') is-invalid @enderror"
-                                                        name="no_po" value="{{ old('no_po') }}" placeholder="Nomor PO">
-                                                    @error('no_po')
                                                         <div class="invalid-feedback">{{ $message }}</div>
                                                     @enderror
                                                 </div>

@@ -136,9 +136,15 @@
         <tr>
             <td style="font-weight: bold;">Dokumentasi (Lampiran)</td>
             <td>
-                @if($detailKomplain->dokumentasi)
+                @php
+                    $dokumentasiFullPath = null;
+                    if ($detailKomplain->dokumentasi) {
+                        $dokumentasiFullPath = public_path('storage/' . $detailKomplain->dokumentasi);
+                    }
+                @endphp
+                @if($dokumentasiFullPath && file_exists($dokumentasiFullPath))
                     <div class="image-container">
-                        <img src="{{ public_path('storage/' . $detailKomplain->dokumentasi) }}" alt="Dokumentasi">
+                        <img src="{{ $dokumentasiFullPath }}" alt="Dokumentasi">
                     </div>
                 @else
                     <span>-</span>

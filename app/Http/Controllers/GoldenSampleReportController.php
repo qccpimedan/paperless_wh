@@ -82,8 +82,7 @@ class GoldenSampleReportController extends Controller
             'tanggal' => 'required|date',  // Added tanggal validation
             'plant_manual' => 'nullable|string|max:255|required_if:id_plant,other',
             'sample_type' => 'required|string|max:255',
-            'collection_date_from' => 'required|string|regex:/^\d{4}-\d{2}$/',
-            'collection_date_to' => 'required|string|regex:/^\d{4}-\d{2}$/',
+            'masa_penyimpanan' => 'required|string|max:255',
             'sample_storage' => 'required|array|min:1',
             'sample_storage.*' => 'string|in:Frozen,Chilled,Ambient',
             'samples' => 'required|array|min:1',
@@ -105,8 +104,7 @@ class GoldenSampleReportController extends Controller
             'id_shift' => $request->id_shift,  // Added shift_id
             'plant_manual' => $request->id_plant === 'other' ? $request->plant_manual : null,
             'sample_type' => $request->sample_type,
-            'collection_date_from' => $request->collection_date_from,
-            'collection_date_to' => $request->collection_date_to,
+            'masa_penyimpanan' => $request->masa_penyimpanan,
             'tanggal' => \Carbon\Carbon::parse($request->tanggal)->format('Y-m-d'),  // Ensure proper date format
             'sample_storage' => $request->sample_storage,
             'samples' => $request->samples,
@@ -166,8 +164,7 @@ class GoldenSampleReportController extends Controller
             'id_plant' => 'required|string',
             'plant_manual' => 'nullable|string|max:255|required_if:id_plant,other',
             'sample_type' => 'required|string|max:255',
-            'collection_date_from' => 'required|string|regex:/^\d{4}-\d{2}$/',
-            'collection_date_to' => 'required|string|regex:/^\d{4}-\d{2}$/',
+            'masa_penyimpanan' => 'required|string|max:255',
             'sample_storage' => 'required|array|min:1',
             'sample_storage.*' => 'string|in:Frozen,Chilled,Ambient',
             'samples' => 'required|array|min:1',
@@ -187,9 +184,8 @@ class GoldenSampleReportController extends Controller
             'id_plant' => $idPlant,
             'plant_manual' => $request->id_plant === 'other' ? $request->plant_manual : null,
             'sample_type' => $request->sample_type,
-            'collection_date_from' => $request->collection_date_from,
             'tanggal' => $request->tanggal,
-            'collection_date_to' => $request->collection_date_to,
+            'masa_penyimpanan' => $request->masa_penyimpanan,
             'sample_storage' => $request->sample_storage,
             'samples' => $request->samples,
         ]);

@@ -130,6 +130,7 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
             'hasil_uji_ffa.*' => 'nullable|string|max:255',
             'keterangan' => 'nullable|array',
             'keterangan.*' => 'nullable|string',
+            'file_coa.*' => 'nullable|mimes:pdf|max:5120',
         ]);
 
         // Process kondisi mobil dan fisik dengan logic yang benar
@@ -220,6 +221,19 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
                 return ($val === '1') ? true : false;
             }, $coaArray));
         }
+
+        $fileCoaPaths = [];
+        $uploadedCoas = (array) $request->file('file_coa', []);
+        $rowCountFileCoa = max(count($request->input('coa', [])), count($uploadedCoas));
+        for ($i = 0; $i < $rowCountFileCoa; $i++) {
+            $uploadedFile = $uploadedCoas[$i] ?? null;
+            if ($uploadedFile) {
+                $fileCoaPaths[$i] = $uploadedFile->storePublicly('pemeriksaan-bahan-baku-penunjang/coa', 'public');
+            } else {
+                $fileCoaPaths[$i] = null;
+            }
+        }
+        $data['file_coa_array'] = json_encode(array_values($fileCoaPaths));
         
         // Hapus field-field kondisi_fisik yang dikirim dari form agar tidak conflict
         unset($data['kondisi_fisik_kemasan']);
@@ -382,6 +396,7 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
             'hasil_uji_ffa.*' => 'nullable|string|max:255',
             'keterangan' => 'nullable|array',
             'keterangan.*' => 'nullable|string',
+            'file_coa.*' => 'nullable|mimes:pdf|max:5120',
         ]);
 
         // Process kondisi mobil dan fisik dengan logic yang benar
@@ -471,6 +486,29 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
                 return ($val === '1') ? true : false;
             }, $coaArray));
         }
+
+        $existingFileCoa = json_decode($pemeriksaanBahanBaku->file_coa_array ?? '[]', true);
+        if (!is_array($existingFileCoa)) {
+            $existingFileCoa = [];
+        }
+
+        $newFileCoa = [];
+        $uploadedCoas = (array) $request->file('file_coa', []);
+        $rowCountFileCoa = max(
+            count($request->input('id_bahan', [])),
+            count($request->input('produsen', [])),
+            count($request->input('distributor', [])),
+            count($request->input('coa', []))
+        );
+        for ($i = 0; $i < $rowCountFileCoa; $i++) {
+            $uploadedFile = $uploadedCoas[$i] ?? null;
+            if ($uploadedFile) {
+                $newFileCoa[$i] = $uploadedFile->storePublicly('pemeriksaan-bahan-baku-penunjang/coa', 'public');
+            } else {
+                $newFileCoa[$i] = $existingFileCoa[$i] ?? null;
+            }
+        }
+        $data['file_coa_array'] = json_encode(array_values($newFileCoa));
         
         // Hapus field-field kondisi_fisik yang dikirim dari form agar tidak conflict
         unset($data['kondisi_fisik_kemasan']);
@@ -592,6 +630,7 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
             'logo_halal' => 'nullable|in:0,1',
             'dokumen_halal' => 'nullable|in:0,1',
             'coa' => 'nullable|in:0,1',
+            'file_coa' => 'nullable|mimes:pdf|max:5120',
         ]);
 
         $appendJsonArray = function (?string $raw, $value): array {
@@ -637,6 +676,17 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
         $dokumenHalalArr = $appendJsonArray($pemeriksaanBahanBaku->dokumen_halal_array, $request->input('dokumen_halal') === '1');
         $coaArr = $appendJsonArray($pemeriksaanBahanBaku->coa_array, $request->input('coa') === '1');
 
+        $fileCoaArr = json_decode($pemeriksaanBahanBaku->file_coa_array ?? '[]', true);
+        if (!is_array($fileCoaArr)) {
+            $fileCoaArr = [];
+        }
+        $uploadedFileCoa = $request->file('file_coa');
+        if ($uploadedFileCoa) {
+            $fileCoaArr[] = $uploadedFileCoa->storePublicly('pemeriksaan-bahan-baku-penunjang/coa', 'public');
+        } else {
+            $fileCoaArr[] = null;
+        }
+
         $statusBarisArr = $appendJsonArray($pemeriksaanBahanBaku->status_baris_array, $request->input('status_baris'));
         $statusOverall = in_array('Hold', $statusBarisArr, true) ? 'Hold' : 'Release';
 
@@ -662,6 +712,7 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
             'logo_halal_array' => json_encode($logoHalalArr),
             'dokumen_halal_array' => json_encode($dokumenHalalArr),
             'coa_array' => json_encode($coaArr),
+            'file_coa_array' => json_encode($fileCoaArr),
             'status_baris_array' => json_encode($statusBarisArr),
             'status' => $statusOverall,
         ];

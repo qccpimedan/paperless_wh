@@ -52,7 +52,7 @@
                                     <th>Shift</th>
                                     <th>Plant</th>
                                     <th>Sample Type</th>
-                                    <th>Collection Date</th>
+                                    <th>Masa Penyimpanan</th>
                                     <th>Jumlah Sampel</th>
                                     <th>Verifikasi</th>
                                     <th>Catatan Verifikasi</th>
@@ -85,7 +85,7 @@
                                             <strong>{{ $report->sample_type }}</strong>
                                         </td>
                                         <td>
-                                            {{ $report->collection_date_from }} - {{ $report->collection_date_to }}
+                                            {{ $report->masa_penyimpanan ?? '-' }}
                                         </td>
                                         <td>
                                             <span class="badge bg-info">{{ count($report->samples) }}</span>

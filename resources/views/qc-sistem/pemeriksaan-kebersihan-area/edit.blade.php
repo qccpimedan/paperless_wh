@@ -103,25 +103,48 @@
                                                             <label class="form-label"><strong>{{ $loop->iteration }}. {{ $detail->field->field_name }}</strong></label>
                                                         </div>
 
-                                                        <div class="col-md-3">
-                                                            <div class="form-check">
-                                                                <input class="form-check-input" type="radio" name="status_{{ $detail->id }}" 
-                                                                    id="status_yes_{{ $detail->id }}" value="1"
-                                                                    {{ old('status_' . $detail->id, $detail->status) == 1 ? 'checked' : '' }}>
-                                                                <label class="form-check-label" for="status_yes_{{ $detail->id }}">
-                                                                    ✓ Baik
-                                                                </label>
+                                                        <div class="col-md-6 mt-2">
+                                                            <label class="form-label">Form Verifikasi</label>
+                                                            <select class="form-control form-control-sm" name="verifikasi_{{ $detail->id }}" required>
+                                                                <option value="">-- Pilih --</option>
+                                                                <option value="1" {{ old('verifikasi_' . $detail->id, $detail->verifikasi_hasil) === true || old('verifikasi_' . $detail->id, $detail->verifikasi_hasil) === 1 || old('verifikasi_' . $detail->id, $detail->verifikasi_hasil) === '1' ? 'selected' : '' }}>OK</option>
+                                                                <option value="0" {{ old('verifikasi_' . $detail->id, $detail->verifikasi_hasil) === false || old('verifikasi_' . $detail->id, $detail->verifikasi_hasil) === 0 || old('verifikasi_' . $detail->id, $detail->verifikasi_hasil) === '0' ? 'selected' : '' }}>Tidak OK</option>
+                                                            </select>
+                                                        </div>
+
+                                                        <div class="col-md-6 mt-2">
+                                                            <label class="form-label">Sebelum Proses</label>
+                                                            <div class="d-flex gap-3">
+                                                                <div class="form-check">
+                                                                    <input class="form-check-input" type="radio" name="status_sebelum_{{ $detail->id }}" 
+                                                                        id="status_sebelum_ok_{{ $detail->id }}" value="1"
+                                                                        {{ old('status_sebelum_' . $detail->id, $detail->status_sebelum_proses) == 1 ? 'checked' : '' }}>
+                                                                    <label class="form-check-label" for="status_sebelum_ok_{{ $detail->id }}">✓ Ok</label>
+                                                                </div>
+                                                                <div class="form-check">
+                                                                    <input class="form-check-input" type="radio" name="status_sebelum_{{ $detail->id }}" 
+                                                                        id="status_sebelum_no_{{ $detail->id }}" value="0"
+                                                                        {{ old('status_sebelum_' . $detail->id, $detail->status_sebelum_proses) == 0 ? 'checked' : '' }}>
+                                                                    <label class="form-check-label" for="status_sebelum_no_{{ $detail->id }}">✗ Tidak Ok</label>
+                                                                </div>
                                                             </div>
                                                         </div>
 
-                                                        <div class="col-md-3">
-                                                            <div class="form-check">
-                                                                <input class="form-check-input" type="radio" name="status_{{ $detail->id }}" 
-                                                                    id="status_no_{{ $detail->id }}" value="0"
-                                                                    {{ old('status_' . $detail->id, $detail->status) == 0 ? 'checked' : '' }}>
-                                                                <label class="form-check-label" for="status_no_{{ $detail->id }}">
-                                                                    ✗ Tidak Baik
-                                                                </label>
+                                                        <div class="col-md-6 mt-2">
+                                                            <label class="form-label">Saat Proses</label>
+                                                            <div class="d-flex gap-3">
+                                                                <div class="form-check">
+                                                                    <input class="form-check-input" type="radio" name="status_saat_{{ $detail->id }}" 
+                                                                        id="status_saat_ok_{{ $detail->id }}" value="1"
+                                                                        {{ old('status_saat_' . $detail->id, $detail->status_saat_proses) == 1 ? 'checked' : '' }}>
+                                                                    <label class="form-check-label" for="status_saat_ok_{{ $detail->id }}">✓ Ok</label>
+                                                                </div>
+                                                                <div class="form-check">
+                                                                    <input class="form-check-input" type="radio" name="status_saat_{{ $detail->id }}" 
+                                                                        id="status_saat_no_{{ $detail->id }}" value="0"
+                                                                        {{ old('status_saat_' . $detail->id, $detail->status_saat_proses) == 0 ? 'checked' : '' }}>
+                                                                    <label class="form-check-label" for="status_saat_no_{{ $detail->id }}">✗ Tidak Ok</label>
+                                                                </div>
                                                             </div>
                                                         </div>
 

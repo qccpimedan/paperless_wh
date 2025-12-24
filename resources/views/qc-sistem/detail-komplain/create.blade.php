@@ -176,9 +176,9 @@
                         <div class="row">
                             <div class="col-md-12">
                                 <div class="mb-3">
-                                    <label for="dokumentasi" class="form-label">Dokumentasi Komplain <span class="text-muted">(PDF/JPG/PNG, Max 5MB)</span></label>
+                                    <label for="dokumentasi" class="form-label">Dokumentasi Komplain <span class="text-muted">(Gambar, Max 1MB)</span></label>
                                     <input type="file" class="form-control @error('dokumentasi') is-invalid @enderror" 
-                                           id="dokumentasi" name="dokumentasi" accept=".pdf,.jpg,.jpeg,.png">
+                                           id="dokumentasi" name="dokumentasi" accept="image/*" capture="camera">
                                     <small class="text-muted">Bukti komplain: foto, scan dokumen, dll</small>
                                     @error('dokumentasi')
                                         <div class="invalid-feedback">{{ $message }}</div>
@@ -239,5 +239,83 @@
         </section>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const MAX_SIZE = 1024 * 1024;
+
+    const input = document.getElementById('dokumentasi');
+    if (!input) return;
+
+    function fileToDataURL(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+        });
+    }
+
+    function loadImage(src) {
+        return new Promise((resolve, reject) => {
+            const img = new Image();
+            img.onload = () => resolve(img);
+            img.onerror = reject;
+            img.src = src;
+        });
+    }
+
+    async function compressImage(file) {
+        const dataUrl = await fileToDataURL(file);
+        const img = await loadImage(dataUrl);
+
+        const maxDimension = 1920;
+        let width = img.width;
+        let height = img.height;
+        if (width > height && width > maxDimension) {
+            height = Math.round((height * maxDimension) / width);
+            width = maxDimension;
+        } else if (height >= width && height > maxDimension) {
+            width = Math.round((width * maxDimension) / height);
+            height = maxDimension;
+        }
+
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+
+        let quality = 0.85;
+        let blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', quality));
+        while (blob && blob.size > MAX_SIZE && quality > 0.4) {
+            quality -= 0.1;
+            blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', quality));
+        }
+
+        const newName = (file.name || 'image')
+            .replace(/\.[^/.]+$/, '') + '.jpg';
+        return new File([blob], newName, { type: 'image/jpeg', lastModified: Date.now() });
+    }
+
+    async function handleChange() {
+        const file = input.files && input.files[0] ? input.files[0] : null;
+        if (!file) return;
+        if (file.size <= MAX_SIZE) return;
+
+        try {
+            const compressedFile = await compressImage(file);
+            const dt = new DataTransfer();
+            dt.items.add(compressedFile);
+            input.files = dt.files;
+        } catch (e) {
+            input.value = '';
+            alert('Gagal mengkompres gambar. Silakan coba lagi.');
+        }
+    }
+
+    input.addEventListener('change', handleChange);
+});
+</script>
 
 @endsection

@@ -46,7 +46,7 @@
         <section class="section">
             <div class="card">
                 <div class="card-body">
-                    <form action="{{ route('pemeriksaan-bahan-baku.store-baris', $pemeriksaanBahanBaku->uuid) }}" method="POST" id="tambahBarisForm">
+                    <form action="{{ route('pemeriksaan-bahan-baku.store-baris', $pemeriksaanBahanBaku->uuid) }}" method="POST" id="tambahBarisForm" enctype="multipart/form-data">
                         @csrf
 
                         <div class="row">
@@ -265,6 +265,21 @@
                                             <input class="form-check-input" type="radio" name="kondisi_fisik_aroma" value="0" {{ old('kondisi_fisik_aroma') === '0' ? 'checked' : '' }}>
                                             <label class="form-check-label">Tidak ✗</label>
                                         </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-section mb-3">
+                            <h6 class="text-primary mb-2">Upload COA (PDF)</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3">
+                                        <label class="form-label">File COA (PDF)</label>
+                                        <input type="file" name="file_coa" class="form-control" accept="application/pdf">
+                                        @error('file_coa')
+                                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                                        @enderror
                                     </div>
                                 </div>
                             </div>

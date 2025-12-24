@@ -145,6 +145,7 @@
                         $logoHalalArray = json_decode($pemeriksaanBahanBaku->logo_halal_array, true) ?? [];
                         $dokumenHalalArray = json_decode($pemeriksaanBahanBaku->dokumen_halal_array, true) ?? [];
                         $coaArray = json_decode($pemeriksaanBahanBaku->coa_array, true) ?? [];
+                        $fileCoaArray = json_decode($pemeriksaanBahanBaku->file_coa_array ?? '[]', true) ?? [];
                         $hasilUjiFfaArray = json_decode($pemeriksaanBahanBaku->hasil_uji_ffa_array, true) ?? [];
                         $statusBarisArray = json_decode($pemeriksaanBahanBaku->status_baris_array, true) ?? [];
                         $keteranganArray = json_decode($pemeriksaanBahanBaku->keterangan_array, true) ?? [];
@@ -308,6 +309,16 @@
                                                         @endif
                                                         <span>COA</span>
                                                     </div>
+
+                                                    @php
+                                                        $coaFilePath = $fileCoaArray[$i] ?? null;
+                                                    @endphp
+                                                    @if($coaFilePath)
+                                                        <div class="d-flex align-items-center small mb-1">
+                                                            <span class="badge bg-info me-2" style="min-width: 24px;">i</span>
+                                                            <a href="{{ asset('storage/' . $coaFilePath) }}" target="_blank">Lihat File COA</a>
+                                                        </div>
+                                                    @endif
                                                 </div>
                                             </div>
                                         </div>

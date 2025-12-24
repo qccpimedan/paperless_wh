@@ -50,7 +50,7 @@
                                 </div>
                             @endif
 
-                            <form action="{{ route('pemeriksaan-bahan-baku.store') }}" method="POST">
+                            <form action="{{ route('pemeriksaan-bahan-baku.store') }}" method="POST" enctype="multipart/form-data">
                                 @csrf
                                 
                                 <!-- Informasi Dasar -->
@@ -611,6 +611,18 @@
                                                                 <label class="form-check-label" for="coa_tidak_1">Tidak ✗</label>
                                                             </div>
                                                             <input type="hidden" name="coa[]" class="radio-value-coa-1">
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="form-section mb-3">
+                                                <h6 class="text-primary mb-2">Upload COA (PDF)</h6>
+                                                <div class="row">
+                                                    <div class="col-md-6">
+                                                        <div class="form-group">
+                                                            <label class="form-label">File COA (PDF)</label>
+                                                            <input type="file" name="file_coa[]" class="form-control" accept="application/pdf">
                                                         </div>
                                                     </div>
                                                 </div>
@@ -1239,6 +1251,18 @@ function addNewRow() {
                             <label class="form-check-label">Tidak ✗</label>
                         </div>
                         <input type="hidden" name="coa[]" class="radio-value-coa-${uniqueId}">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-section mb-3">
+            <h6 class="text-primary mb-2">Upload COA (PDF)</h6>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label">File COA (PDF)</label>
+                        <input type="file" name="file_coa[]" class="form-control" accept="application/pdf">
                     </div>
                 </div>
             </div>

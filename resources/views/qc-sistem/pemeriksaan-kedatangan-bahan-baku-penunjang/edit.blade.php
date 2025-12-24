@@ -50,7 +50,7 @@
                                 </div>
                             @endif
 
-                            <form action="{{ route('pemeriksaan-bahan-baku.update', $pemeriksaanBahanBaku->uuid) }}" method="POST">
+                            <form action="{{ route('pemeriksaan-bahan-baku.update', $pemeriksaanBahanBaku->uuid) }}" method="POST" enctype="multipart/form-data">
                                 @csrf
                                 @method('PUT')
                                 
@@ -369,6 +369,7 @@
                                         $logoHalalArray = json_decode($pemeriksaanBahanBaku->logo_halal_array, true) ?? [];
                                         $dokumenHalalArray = json_decode($pemeriksaanBahanBaku->dokumen_halal_array, true) ?? [];
                                         $coaArray = json_decode($pemeriksaanBahanBaku->coa_array, true) ?? [];
+                                        $fileCoaArray = json_decode($pemeriksaanBahanBaku->file_coa_array ?? '[]', true) ?? [];
                                         $hasilUjiFfaArray = json_decode($pemeriksaanBahanBaku->hasil_uji_ffa_array, true) ?? [];
                                         $statusBarisArray = json_decode($pemeriksaanBahanBaku->status_baris_array, true) ?? [];
                                         $keteranganArray = json_decode($pemeriksaanBahanBaku->keterangan_array, true) ?? [];
@@ -640,6 +641,28 @@
                                                                 <label class="form-check-label" for="coa_tidak_{{ $i }}">Tidak ✗</label>
                                                             </div>
                                                             <input type="hidden" name="coa[]" class="radio-value-coa-{{ $i }}" value="{{ ($coaArray[$i] ?? false) ? '1' : '0' }}">
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="form-section mb-3">
+                                                <h6 class="text-primary mb-2">Upload COA (PDF)</h6>
+                                                <div class="row">
+                                                    <div class="col-md-6">
+                                                        @php
+                                                            $coaFilePath = $fileCoaArray[$i] ?? null;
+                                                        @endphp
+                                                        @if($coaFilePath)
+                                                            <div class="mb-2">
+                                                                <a href="{{ asset('storage/' . $coaFilePath) }}" target="_blank" class="btn btn-sm btn-info">
+                                                                    Lihat COA
+                                                                </a>
+                                                            </div>
+                                                        @endif
+                                                        <div class="form-group">
+                                                            <label class="form-label">Ganti File COA (PDF)</label>
+                                                            <input type="file" name="file_coa[]" class="form-control" accept="application/pdf">
                                                         </div>
                                                     </div>
                                                 </div>

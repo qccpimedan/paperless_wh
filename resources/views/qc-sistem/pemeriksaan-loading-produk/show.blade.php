@@ -94,10 +94,6 @@
                                     </td>
                                 </tr>
                                 <tr>
-                                    <td><strong>No. PO:</strong></td>
-                                    <td>{{ $pemeriksaanLoading->no_po ?? '-' }}</td>
-                                </tr>
-                                <tr>
                                     <td><strong>Plant:</strong></td>
                                     <td>
                                         @if($pemeriksaanLoading->user->plant)

@@ -71,6 +71,7 @@ class PemeriksaanKedatanganBahanBakuPenunjang extends Model
         'hasil_uji_ffa_array',
         'dokumen_halal_array',
         'coa_array',
+        'file_coa_array',
         'keterangan_array',
     ];
 
@@ -80,6 +81,7 @@ class PemeriksaanKedatanganBahanBakuPenunjang extends Model
         'logo_halal' => 'boolean',
         'dokumen_halal' => 'boolean',
         'coa' => 'boolean',
+        'file_coa_array' => 'array',
         'tanggal' => 'date',
         'expire_date' => 'date',
     ];

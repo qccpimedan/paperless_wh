@@ -66,7 +66,7 @@ class DetailKomplainController extends Controller
             'expired_date' => 'required|date',
             'jumlah_datang' => 'required|string|max:100',
             'jumlah_di_tolak' => 'required|string|max:100',
-            'dokumentasi' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
+            'dokumentasi' => 'nullable|image|max:1024',
             'keterangan' => 'nullable|string',
             'di_buat_oleh' => 'nullable|string|max:255',
             'setujui_oleh' => 'nullable|string|max:255',
@@ -76,7 +76,7 @@ class DetailKomplainController extends Controller
         $dokumentasiPath = null;
         if ($request->hasFile('dokumentasi')) {
             $file = $request->file('dokumentasi');
-            $dokumentasiPath = $file->store('komplain/dokumentasi', 'public');
+            $dokumentasiPath = $file->storePublicly('komplain/dokumentasi', 'public');
         }
 
         // Simpan ke database
@@ -137,7 +137,7 @@ class DetailKomplainController extends Controller
             'expired_date' => 'required|date',
             'jumlah_datang' => 'required|string|max:100',
             'jumlah_di_tolak' => 'required|string|max:100',
-            'dokumentasi' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
+            'dokumentasi' => 'nullable|image|max:1024',
             'keterangan' => 'nullable|string',
             'di_buat_oleh' => 'nullable|string|max:255',
             'setujui_oleh' => 'nullable|string|max:255',
@@ -150,7 +150,7 @@ class DetailKomplainController extends Controller
                 Storage::disk('public')->delete($detailKomplain->dokumentasi);
             }
             $file = $request->file('dokumentasi');
-            $dokumentasiPath = $file->store('komplain/dokumentasi', 'public');
+            $dokumentasiPath = $file->storePublicly('komplain/dokumentasi', 'public');
         }
 
         // Update data
