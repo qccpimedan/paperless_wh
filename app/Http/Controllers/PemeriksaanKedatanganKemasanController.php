@@ -139,6 +139,7 @@ class PemeriksaanKedatanganKemasanController extends Controller
             'coa.*' => 'nullable|in:0,1',
             'keterangan.*' => 'nullable|string',
             'id_shift' => 'nullable|exists:shifts,id',
+            'image_kemasan.*' => 'nullable|image|max:1024',
         ]);
     
         // Process kondisi mobil dengan logic yang benar
@@ -174,6 +175,17 @@ class PemeriksaanKedatanganKemasanController extends Controller
         $dokumen_halals = array_values((array) $request->input('dokumen_halal', []));
         $coas = array_values((array) $request->input('coa', []));
         $keterangans = $request->input('keterangan', []);
+
+        $imageKemasanPaths = [];
+        if ($request->hasFile('image_kemasan')) {
+            foreach ((array) $request->file('image_kemasan') as $uploadedFile) {
+                if ($uploadedFile) {
+                    $imageKemasanPaths[] = $uploadedFile->storePublicly('pemeriksaan-kedatangan-kemasan', 'public');
+                } else {
+                    $imageKemasanPaths[] = null;
+                }
+            }
+        }
     
         // Ensure all arrays are properly formatted as JSON
         $data = [
@@ -205,6 +217,7 @@ class PemeriksaanKedatanganKemasanController extends Controller
             'dokumen_halal_array' => json_encode(is_array($dokumen_halals) ? $dokumen_halals : []),
             'coa_array' => json_encode(is_array($coas) ? $coas : []),
             'keterangan_array' => json_encode(is_array($keterangans) ? $keterangans : []),
+            'image_kemasan_array' => json_encode(is_array($imageKemasanPaths) ? $imageKemasanPaths : []),
         ];
     
         PemeriksaanKedatanganKemasan::create($data);
@@ -318,6 +331,7 @@ class PemeriksaanKedatanganKemasanController extends Controller
             'coa.*' => 'nullable|in:0,1',
             'keterangan.*' => 'nullable|string',
             'id_shift' => 'nullable|exists:shifts,id',
+            'image_kemasan.*' => 'nullable|image|max:1024',
         ]);
     
         // Process kondisi mobil dengan logic yang benar
@@ -353,6 +367,24 @@ class PemeriksaanKedatanganKemasanController extends Controller
         $dokumen_halals = array_values((array) $request->input('dokumen_halal', []));
         $coas = array_values((array) $request->input('coa', []));
         $keterangans = $request->input('keterangan', []);
+
+        $existingImageKemasan = json_decode($pemeriksaanKedatanganKemasan->image_kemasan_array ?? '[]', true);
+        if (!is_array($existingImageKemasan)) {
+            $existingImageKemasan = [];
+        }
+
+        $newImageKemasan = [];
+        $uploadedImages = (array) $request->file('image_kemasan', []);
+
+        $rowCount = max(count($id_bahans), count($produsens), count($distributors), count($kode_produksis));
+        for ($i = 0; $i < $rowCount; $i++) {
+            $uploadedFile = $uploadedImages[$i] ?? null;
+            if ($uploadedFile) {
+                $newImageKemasan[$i] = $uploadedFile->storePublicly('pemeriksaan-kedatangan-kemasan', 'public');
+            } else {
+                $newImageKemasan[$i] = $existingImageKemasan[$i] ?? null;
+            }
+        }
     
         // Ensure all arrays are properly formatted as JSON
         $data = [
@@ -383,6 +415,7 @@ class PemeriksaanKedatanganKemasanController extends Controller
             'dokumen_halal_array' => json_encode(is_array($dokumen_halals) ? $dokumen_halals : []),
             'coa_array' => json_encode(is_array($coas) ? $coas : []),
             'keterangan_array' => json_encode(is_array($keterangans) ? $keterangans : []),
+            'image_kemasan_array' => json_encode(array_values($newImageKemasan)),
         ];
     
         $pemeriksaanKedatanganKemasan->update($data);
@@ -471,6 +504,7 @@ class PemeriksaanKedatanganKemasanController extends Controller
             'dokumen_halal.*' => 'nullable|in:0,1',
             'coa.*' => 'nullable|in:0,1',
             'keterangan.*' => 'nullable|string',
+            'image_kemasan.*' => 'nullable|image|max:1024',
         ]);
 
         $existingIdBahans = json_decode($pemeriksaanKedatanganKemasan->id_bahan_array ?? '[]', true) ?? [];
@@ -490,6 +524,7 @@ class PemeriksaanKedatanganKemasanController extends Controller
         $existingDokumenHalals = json_decode($pemeriksaanKedatanganKemasan->dokumen_halal_array ?? '[]', true) ?? [];
         $existingCoas = json_decode($pemeriksaanKedatanganKemasan->coa_array ?? '[]', true) ?? [];
         $existingKeterangans = json_decode($pemeriksaanKedatanganKemasan->keterangan_array ?? '[]', true) ?? [];
+        $existingImageKemasans = json_decode($pemeriksaanKedatanganKemasan->image_kemasan_array ?? '[]', true) ?? [];
 
         $existingIdBahans[] = $request->input('id_bahan.0');
         $existingProdusens[] = $request->input('produsen.0');
@@ -509,6 +544,13 @@ class PemeriksaanKedatanganKemasanController extends Controller
         $existingCoas[] = $request->input('coa.0');
         $existingKeterangans[] = $request->input('keterangan.0');
 
+        $uploadedImage = $request->file('image_kemasan.0');
+        if ($uploadedImage) {
+            $existingImageKemasans[] = $uploadedImage->storePublicly('pemeriksaan-kedatangan-kemasan', 'public');
+        } else {
+            $existingImageKemasans[] = null;
+        }
+
         $pemeriksaanKedatanganKemasan->update([
             'id_bahan_array' => json_encode($existingIdBahans),
             'produsen_array' => json_encode($existingProdusens),
@@ -527,6 +569,7 @@ class PemeriksaanKedatanganKemasanController extends Controller
             'dokumen_halal_array' => json_encode($existingDokumenHalals),
             'coa_array' => json_encode($existingCoas),
             'keterangan_array' => json_encode($existingKeterangans),
+            'image_kemasan_array' => json_encode($existingImageKemasans),
         ]);
 
         return redirect()->route('pemeriksaan-kedatangan-kemasan.index')

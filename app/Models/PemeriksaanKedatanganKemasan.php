@@ -68,6 +68,7 @@ class PemeriksaanKedatanganKemasan extends Model
         'dokumen_halal_array',
         'coa_array',
         'keterangan_array',
+        'image_kemasan_array',
     ];
 
     /**
@@ -83,6 +84,7 @@ class PemeriksaanKedatanganKemasan extends Model
         'logo_halal' => 'boolean',
         'dokumen_halal' => 'boolean',
         'coa' => 'boolean',
+        'image_kemasan_array' => 'array',
     ];
 
     /**

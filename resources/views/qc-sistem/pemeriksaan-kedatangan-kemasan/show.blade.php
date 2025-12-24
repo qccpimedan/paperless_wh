@@ -129,6 +129,7 @@
                         $dokumen_halals = json_decode($pemeriksaanKedatanganKemasan->dokumen_halal_array ?? '[]', true) ?? [];
                         $coas = json_decode($pemeriksaanKedatanganKemasan->coa_array ?? '[]', true) ?? [];
                         $keterangans = json_decode($pemeriksaanKedatanganKemasan->keterangan_array ?? '[]', true) ?? [];
+                        $image_kemasans = json_decode($pemeriksaanKedatanganKemasan->image_kemasan_array ?? '[]', true) ?? [];
                         $rowCount = max(count($id_bahans), count($produsens), count($distributors));
                     @endphp
 
@@ -299,6 +300,18 @@
                                     </div>
                                 @endif
                             </div>
+
+                            @php
+                                $imgPath = $image_kemasans[$index] ?? null;
+                            @endphp
+                            @if($imgPath)
+                                <div class="form-section mb-3">
+                                    <h6 class="text-primary mb-2">Gambar Kemasan</h6>
+                                    <div class="p-2 bg-white rounded">
+                                        <img src="{{ asset('storage/' . $imgPath) }}" alt="Gambar Kemasan" style="max-width: 260px; height: auto; border: 1px solid #ddd; padding: 4px;">
+                                    </div>
+                                </div>
+                            @endif
                         </div>
                     @empty
                         <div class="alert alert-info">Tidak ada data dynamic form</div>

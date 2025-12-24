@@ -419,6 +419,7 @@
                     $dokumenHalalsTmp = json_decode($p->dokumen_halal_array ?? '[]', true) ?? [];
                     $coasTmp = json_decode($p->coa_array ?? '[]', true) ?? [];
                     $keterangansTmp = json_decode($p->keterangan_array ?? '[]', true) ?? [];
+                    $imageKemasansTmp = json_decode($p->image_kemasan_array ?? '[]', true) ?? [];
 
                     $rowCount = max(
                         1,
@@ -438,7 +439,8 @@
                         count($logoHalalsTmp),
                         count($dokumenHalalsTmp),
                         count($coasTmp),
-                        count($keterangansTmp)
+                        count($keterangansTmp),
+                        count($imageKemasansTmp)
                     );
 
                     for ($i = 0; $i < $rowCount; $i++) {
@@ -705,11 +707,13 @@
                                         $dokumen_halals = json_decode($pemeriksaan->dokumen_halal_array ?? '[]', true) ?? [];
                                         $coas = json_decode($pemeriksaan->coa_array ?? '[]', true) ?? [];
                                         $keterangans = json_decode($pemeriksaan->keterangan_array ?? '[]', true) ?? [];
+                                        $image_kemasans = json_decode($pemeriksaan->image_kemasan_array ?? '[]', true) ?? [];
 
                                         $logo_halal_val = $logo_halals[$rowIndex] ?? null;
                                         $dokumen_halal_val = $dokumen_halals[$rowIndex] ?? null;
                                         $coa_val = $coas[$rowIndex] ?? null;
                                         $keterangan_val = $keterangans[$rowIndex] ?? null;
+                                        $image_path_val = $image_kemasans[$rowIndex] ?? null;
                                     @endphp
                                     @if($logo_halal_val !== null || $dokumen_halal_val !== null || $coa_val !== null || $keterangan_val)
                                         <div class="section-title">Dokumen</div>
@@ -736,6 +740,20 @@
                                                     <span class="field-value">{{ substr($keterangan_val, 0, 25) }}{{ strlen($keterangan_val) > 25 ? '...' : '' }}</span>
                                                 </div>
                                             @endif
+                                        </div>
+                                    @endif
+
+                                    {{-- GAMBAR KEMASAN (Dynamic Rows) --}}
+                                    @php
+                                        $imgFullPath = null;
+                                        if ($image_path_val) {
+                                            $imgFullPath = public_path('storage/' . $image_path_val);
+                                        }
+                                    @endphp
+                                    @if($imgFullPath && file_exists($imgFullPath))
+                                        <div class="section-title">Gambar Kemasan</div>
+                                        <div style="margin-top: 6px; padding-top: 6px; border-top: 1px solid #ddd; font-size: 8px; text-align: center;">
+                                            <img src="{{ $imgFullPath }}" alt="Gambar Kemasan" style="max-width: 150px; max-height: 120px;">
                                         </div>
                                     @endif
                                 </td>

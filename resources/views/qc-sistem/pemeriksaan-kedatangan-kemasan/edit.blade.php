@@ -45,7 +45,7 @@
                                     </div>
                                 @endif
 
-                                <form class="form form-horizontal" action="{{ route('pemeriksaan-kedatangan-kemasan.update', $pemeriksaanKedatanganKemasan->uuid) }}" method="POST">
+                                <form class="form form-horizontal" action="{{ route('pemeriksaan-kedatangan-kemasan.update', $pemeriksaanKedatanganKemasan->uuid) }}" method="POST" enctype="multipart/form-data">
                                     @csrf
                                     @method('PUT')
                                     
@@ -419,6 +419,7 @@
                                         $dokumen_halals = json_decode($pemeriksaanKedatanganKemasan->dokumen_halal_array ?? '[]', true) ?? [];
                                         $coas = json_decode($pemeriksaanKedatanganKemasan->coa_array ?? '[]', true) ?? [];
                                         $keterangans = json_decode($pemeriksaanKedatanganKemasan->keterangan_array ?? '[]', true) ?? [];
+                                        $image_kemasans = json_decode($pemeriksaanKedatanganKemasan->image_kemasan_array ?? '[]', true) ?? [];
                                         $rowCount = max(count($id_bahans), count($produsens_arr), count($distributors_arr));
                                     @endphp
                                     <div id="unified-container">
@@ -618,6 +619,26 @@
                                                     </div>
                                                 </div>
 
+                                                <div class="form-section mb-3">
+                                                    <h6 class="text-primary mb-2">Upload Gambar</h6>
+                                                    <div class="row">
+                                                        <div class="col-md-6">
+                                                            @php
+                                                                $imgPath = $image_kemasans[$index] ?? null;
+                                                            @endphp
+                                                            @if($imgPath)
+                                                                <div class="mb-2">
+                                                                    <img src="{{ asset('storage/' . $imgPath) }}" alt="Gambar Kemasan" style="max-width: 220px; height: auto; border: 1px solid #ddd; padding: 4px; background: #fff;">
+                                                                </div>
+                                                            @endif
+                                                            <div class="form-group">
+                                                                <label class="form-label">Ganti Gambar (Max 1MB)</label>
+                                                                <input type="file" name="image_kemasan[]" class="form-control image-kemasan-input" accept="image/*" capture="camera">
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
                                                 <div class="row mt-3 pt-3 border-top">
                                                     <div class="col-md-12">
                                                         <button type="button" class="btn btn-danger btn-sm remove-unified-btn"><i class="bi bi-trash"></i> Hapus Baris</button>
@@ -690,6 +711,17 @@
                                                         </div>
                                                     </div>
                                                 </div>
+                                                <div class="form-section mb-3">
+                                                    <h6 class="text-primary mb-2">Upload Gambar</h6>
+                                                    <div class="row">
+                                                        <div class="col-md-6">
+                                                            <div class="form-group">
+                                                                <label class="form-label">Ganti Gambar (Max 1MB)</label>
+                                                                <input type="file" name="image_kemasan[]" class="form-control image-kemasan-input" accept="image/*" capture="camera">
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
                                                 <div class="row mt-3 pt-3 border-top">
                                                     <div class="col-md-12">
                                                         <button type="button" class="btn btn-danger btn-sm remove-unified-btn"><i class="bi bi-trash"></i> Hapus Baris</button>
@@ -734,6 +766,85 @@
 
                                             // Initial check
                                             updateDeleteButtons();
+                                        });
+                                    </script>
+                                    
+                                    <script>
+                                        document.addEventListener('DOMContentLoaded', function() {
+                                            const MAX_SIZE = 1024 * 1024;
+
+                                            function fileToDataURL(file) {
+                                                return new Promise((resolve, reject) => {
+                                                    const reader = new FileReader();
+                                                    reader.onload = () => resolve(reader.result);
+                                                    reader.onerror = reject;
+                                                    reader.readAsDataURL(file);
+                                                });
+                                            }
+
+                                            function loadImage(src) {
+                                                return new Promise((resolve, reject) => {
+                                                    const img = new Image();
+                                                    img.onload = () => resolve(img);
+                                                    img.onerror = reject;
+                                                    img.src = src;
+                                                });
+                                            }
+
+                                            async function compressImage(file) {
+                                                const dataUrl = await fileToDataURL(file);
+                                                const img = await loadImage(dataUrl);
+
+                                                const maxDimension = 1920;
+                                                let width = img.width;
+                                                let height = img.height;
+                                                if (width > height && width > maxDimension) {
+                                                    height = Math.round((height * maxDimension) / width);
+                                                    width = maxDimension;
+                                                } else if (height >= width && height > maxDimension) {
+                                                    width = Math.round((width * maxDimension) / height);
+                                                    height = maxDimension;
+                                                }
+
+                                                const canvas = document.createElement('canvas');
+                                                canvas.width = width;
+                                                canvas.height = height;
+                                                const ctx = canvas.getContext('2d');
+                                                ctx.drawImage(img, 0, 0, width, height);
+
+                                                let quality = 0.85;
+                                                let blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', quality));
+                                                while (blob && blob.size > MAX_SIZE && quality > 0.4) {
+                                                    quality -= 0.1;
+                                                    blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', quality));
+                                                }
+
+                                                const newName = (file.name || 'image').replace(/\.[^/.]+$/, '') + '.jpg';
+                                                return new File([blob], newName, { type: 'image/jpeg', lastModified: Date.now() });
+                                            }
+
+                                            async function handleImageInputChange(input) {
+                                                const file = input.files && input.files[0] ? input.files[0] : null;
+                                                if (!file) return;
+                                                if (file.size <= MAX_SIZE) return;
+
+                                                try {
+                                                    const compressedFile = await compressImage(file);
+                                                    const dt = new DataTransfer();
+                                                    dt.items.add(compressedFile);
+                                                    input.files = dt.files;
+                                                } catch (e) {
+                                                    input.value = '';
+                                                    alert('Gagal mengkompres gambar. Silakan coba lagi.');
+                                                }
+                                            }
+
+                                            document.addEventListener('change', function(e) {
+                                                const input = e.target;
+                                                if (input && input.classList && input.classList.contains('image-kemasan-input')) {
+                                                    handleImageInputChange(input);
+                                                }
+                                            });
                                         });
                                     </script>
                                     
