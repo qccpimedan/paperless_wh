@@ -188,14 +188,6 @@
                                     <label class="form-label"><strong>${index + 1}. ${field.nama}</strong></label>
                                 </div>
                                 <div class="col-md-6 mt-2">
-                                    <label class="form-label">Form Verifikasi</label>
-                                    <select class="form-control form-control-sm" name="field_verifikasi_${field.id}" required>
-                                        <option value="">-- Pilih --</option>
-                                        <option value="1">OK</option>
-                                        <option value="0">Tidak OK</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-6 mt-2">
                                     <label class="form-label">Sebelum Proses</label>
                                     <div class="d-flex gap-3">
                                         <div class="form-check">
@@ -234,6 +226,14 @@
                                     <label class="form-label">Tindakan Koreksi</label>
                                     <textarea class="form-control form-control-sm" 
                                         name="field_tindakan_${field.id}" placeholder="Tindakan Koreksi" rows="3"></textarea>
+                                </div>
+                                <div class="col-md-6 mt-2">
+                                    <label class="form-label">Verifikasi</label>
+                                    <select class="form-control form-control-sm" name="field_verifikasi_${field.id}" required>
+                                        <option value="">-- Pilih --</option>
+                                        <option value="1">OK</option>
+                                        <option value="0">Tidak OK</option>
+                                    </select>
                                 </div>
                             </div>
                         </div>
