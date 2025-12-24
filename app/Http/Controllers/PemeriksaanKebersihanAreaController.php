@@ -40,9 +40,25 @@ class PemeriksaanKebersihanAreaController extends Controller
      */
     public function create()
     {
-        $masterForms = InputMasterForm::all();
-        $areas = InputArea::all();
-        $shifts = Shift::all();
+        $user = Auth::user();
+
+        if ($user->role && strtolower($user->role->role) === 'superadmin') {
+            $masterForms = InputMasterForm::all();
+            $areas = InputArea::all();
+            $shifts = Shift::all();
+        } else {
+            $masterForms = InputMasterForm::whereHas('user', function ($query) use ($user) {
+                $query->where('id_plant', $user->id_plant);
+            })->get();
+
+            $areas = InputArea::whereHas('user', function ($query) use ($user) {
+                $query->where('id_plant', $user->id_plant);
+            })->get();
+
+            $shifts = Shift::whereHas('user', function ($query) use ($user) {
+                $query->where('id_plant', $user->id_plant);
+            })->get();
+        }
         
         return view('qc-sistem.pemeriksaan-kebersihan-area.create', compact('masterForms', 'areas', 'shifts'));
     }
