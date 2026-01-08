@@ -455,8 +455,8 @@
 
                 $bahanMap = [];
                 if (!empty($allBahanIds)) {
-                    $bahanMap = \App\Models\Bahan::whereIn('id', array_values(array_unique($allBahanIds)))
-                        ->pluck('nama_bahan', 'id')
+                    $bahanMap = \App\Models\BahanKemasan::whereIn('id', array_values(array_unique($allBahanIds)))
+                        ->pluck('nama_kemasan', 'id')
                         ->toArray();
                 }
             @endphp

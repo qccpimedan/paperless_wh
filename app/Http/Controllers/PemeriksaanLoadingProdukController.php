@@ -7,9 +7,11 @@ use App\Models\Shift;
 use App\Models\TujuanPengiriman;
 use App\Models\JenisKendaraan;
 use App\Models\Supir;
+use App\Models\Customer;
 use App\Models\Produk;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 
 class PemeriksaanLoadingProdukController extends Controller
 {
@@ -58,7 +60,7 @@ class PemeriksaanLoadingProdukController extends Controller
         // SuperAdmin dapat melihat semua data
         if ($user->role && strtolower($user->role->role) === 'superadmin') {
             $shifts = Shift::with(['user.plant'])->get();
-            $tujuanPengirimans = TujuanPengiriman::with(['user.plant'])->get();
+            $tujuanPengirimans = TujuanPengiriman::with(['user.plant', 'customer'])->get();
             $kendaraans = JenisKendaraan::with(['user.plant'])->get();
             $supirs = Supir::with(['user.plant'])->get();
             $produks = Produk::with(['user.plant'])->get();
@@ -70,7 +72,7 @@ class PemeriksaanLoadingProdukController extends Controller
             
             $tujuanPengirimans = TujuanPengiriman::whereHas('user', function ($query) use ($user) {
                 $query->where('id_plant', $user->id_plant);
-            })->with(['user.plant'])->get();
+            })->with(['user.plant', 'customer'])->get();
             
             $kendaraans = JenisKendaraan::whereHas('user', function ($query) use ($user) {
                 $query->where('id_plant', $user->id_plant);
@@ -99,19 +101,42 @@ class PemeriksaanLoadingProdukController extends Controller
         $validated = $request->validate([
             'tanggal' => 'required|date',
             'id_shift' => 'nullable|exists:shifts,id',
-            'id_tujuan_pengiriman' => 'nullable|exists:tujuan_pengirimen,id',
+            'id_tujuan_pengiriman' => [
+                'nullable',
+                Rule::when(
+                    $request->input('id_tujuan_pengiriman') !== 'other',
+                    Rule::exists('tujuan_pengirimen', 'id')
+                ),
+            ],
+            'nama_customer_manual' => 'nullable|required_if:id_tujuan_pengiriman,other|string|max:255',
+            'nama_tujuan_manual' => 'nullable|required_if:id_tujuan_pengiriman,other|string|max:255',
             'id_kendaraan' => 'nullable',
             'jenis_kendaraan_manual' => 'nullable|required_if:id_kendaraan,other|string|max:255',
             'no_kendaraan_manual' => 'nullable|required_if:id_kendaraan,other|string|max:255',
-            'id_supir' => 'nullable|exists:supirs,id',
+            'id_supir' => [
+                'nullable',
+                Rule::when(
+                    $request->input('id_supir') !== 'other',
+                    Rule::exists('supirs', 'id')
+                ),
+            ],
+            'nama_supir_manual' => 'nullable|required_if:id_supir,other|string|max:255',
             'star_loading' => 'nullable',
             'selesai_loading' => 'nullable',
             'temperature_mobil' => 'nullable|string|max:255',
             'temperature_produk' => 'nullable|array',
             'temperature_produk.*' => 'nullable|string|max:255',
             'kondisi_produk' => 'nullable|in:Frozen,Fresh,Dry',
-            'segel_gembok' => 'nullable|boolean',
-            'no_segel' => 'nullable|string|max:255',
+            'segel_gembok' => 'nullable|in:segel,gembok',
+            'no_segel' => 'nullable|required_if:segel_gembok,segel|string|max:255',
+            'id_produk' => 'required|exists:produks,id',
+            'produk_detail' => 'nullable|array|min:1',
+            'produk_detail.*.kode_produksi' => 'nullable|string|max:255',
+            'produk_detail.*.best_before' => 'nullable|date',
+            'produk_detail.*.jumlah_kemasan' => 'nullable|string|max:255',
+            'produk_detail.*.jumlah_sampling' => 'nullable|string|max:255',
+            'produk_detail.*.kondisi_kemasan' => 'nullable|boolean',
+            'produk_detail.*.keterangan' => 'nullable|string',
             'produk_data' => 'nullable|array|min:1',
             'produk_data.*.id_produk' => 'nullable|exists:produks,id',
             'produk_data.*.kode_produksi' => 'nullable|string|max:255',
@@ -119,7 +144,7 @@ class PemeriksaanLoadingProdukController extends Controller
             'produk_data.*.jumlah_kemasan' => 'nullable|string|max:255',
             'produk_data.*.jumlah_sampling' => 'nullable|string|max:255',
             'produk_data.*.kondisi_kemasan' => 'nullable|boolean',
-            'produk_data.*.keterangan' => 'nullable|string|max:500',
+            'produk_data.*.keterangan' => 'nullable|string',
         ]);
 
         // Cek apakah kendaraan diinput manual
@@ -141,6 +166,38 @@ class PemeriksaanLoadingProdukController extends Controller
             }
         }
 
+        if ($request->id_tujuan_pengiriman === 'other') {
+            if ($request->nama_customer_manual && $request->nama_tujuan_manual) {
+                $customer = Customer::create([
+                    'nama_cust' => $request->nama_customer_manual,
+                    'id_user' => Auth::id(),
+                ]);
+
+                $tujuan = TujuanPengiriman::create([
+                    'id_user' => Auth::id(),
+                    'id_customer' => $customer->id,
+                    'nama_tujuan' => $request->nama_tujuan_manual,
+                ]);
+
+                $validated['id_tujuan_pengiriman'] = $tujuan->id;
+            } else {
+                $validated['id_tujuan_pengiriman'] = null;
+            }
+        }
+
+        if ($request->id_supir === 'other') {
+            if ($request->nama_supir_manual) {
+                $supir = Supir::create([
+                    'nama_supir' => $request->nama_supir_manual,
+                    'id_user' => Auth::id(),
+                ]);
+
+                $validated['id_supir'] = $supir->id;
+            } else {
+                $validated['id_supir'] = null;
+            }
+        }
+
         // Process temperature_produk array
         $temperatureProduk = [];
         if ($request->has('temperature_produk')) {
@@ -152,12 +209,13 @@ class PemeriksaanLoadingProdukController extends Controller
         }
 
         $validated['id_user'] = Auth::id();
-        $validated['segel_gembok'] = $request->has('segel_gembok');
+        $validated['segel_gembok'] = $request->input('segel_gembok') === 'segel';
         $validated['temperature_produk'] = !empty($temperatureProduk) ? $temperatureProduk : null;
         
-        // Process produk_data array untuk multiple produk
+        // Process product data
+        // Priority: opsi 2 (single id_produk select + produk_data[*] rows with hidden id_produk)
         $produkData = [];
-        if ($request->has('produk_data')) {
+        if ($request->has('produk_data') && is_array($request->produk_data)) {
             foreach ($request->produk_data as $produk) {
                 if (!empty($produk['id_produk'])) {
                     $produkData[] = [
@@ -171,6 +229,25 @@ class PemeriksaanLoadingProdukController extends Controller
                     ];
                 }
             }
+        } elseif ($request->filled('id_produk') && $request->has('produk_detail') && is_array($request->produk_detail)) {
+            // Backward compatibility: opsi 1 (id_produk + produk_detail[])
+            foreach ($request->produk_detail as $detail) {
+                $produkData[] = [
+                    'id_produk' => $request->id_produk,
+                    'kode_produksi' => $detail['kode_produksi'] ?? null,
+                    'best_before' => $detail['best_before'] ?? null,
+                    'jumlah_kemasan' => $detail['jumlah_kemasan'] ?? null,
+                    'jumlah_sampling' => $detail['jumlah_sampling'] ?? null,
+                    'kondisi_kemasan' => isset($detail['kondisi_kemasan']) ? (bool)$detail['kondisi_kemasan'] : true,
+                    'keterangan' => $detail['keterangan'] ?? null,
+                ];
+            }
+        }
+
+        if (empty($produkData)) {
+            return back()
+                ->withErrors(['id_produk' => 'Data produk wajib diisi (minimal 1 detail).'])
+                ->withInput();
         }
         
         $validated['produk_data'] = !empty($produkData) ? $produkData : null;
@@ -186,7 +263,7 @@ class PemeriksaanLoadingProdukController extends Controller
         $pemeriksaan_loading_produk->load([
             'user.plant', 
             'shift', 
-            'tujuanPengiriman', 
+            'tujuanPengiriman.customer', 
             'kendaraan', 
             'supir', 
             'produk'
@@ -204,7 +281,7 @@ class PemeriksaanLoadingProdukController extends Controller
         // SuperAdmin dapat melihat semua data
         if ($user->role && strtolower($user->role->role) === 'superadmin') {
             $shifts = Shift::with(['user.plant'])->get();
-            $tujuanPengirimans = TujuanPengiriman::with(['user.plant'])->get();
+            $tujuanPengirimans = TujuanPengiriman::with(['user.plant', 'customer'])->get();
             $kendaraans = JenisKendaraan::with(['user.plant'])->get();
             $supirs = Supir::with(['user.plant'])->get();
             $produks = Produk::with(['user.plant'])->get();
@@ -216,7 +293,7 @@ class PemeriksaanLoadingProdukController extends Controller
             
             $tujuanPengirimans = TujuanPengiriman::whereHas('user', function ($query) use ($user) {
                 $query->where('id_plant', $user->id_plant);
-            })->with(['user.plant'])->get();
+            })->with(['user.plant', 'customer'])->get();
             
             $kendaraans = JenisKendaraan::whereHas('user', function ($query) use ($user) {
                 $query->where('id_plant', $user->id_plant);
@@ -245,19 +322,34 @@ class PemeriksaanLoadingProdukController extends Controller
         $validated = $request->validate([
             'tanggal' => 'required|date',
             'id_shift' => 'nullable|exists:shifts,id',
-            'id_tujuan_pengiriman' => 'nullable|exists:tujuan_pengirimen,id',
+            'id_tujuan_pengiriman' => [
+                'nullable',
+                Rule::when(
+                    $request->input('id_tujuan_pengiriman') !== 'other',
+                    Rule::exists('tujuan_pengirimen', 'id')
+                ),
+            ],
+            'nama_customer_manual' => 'nullable|required_if:id_tujuan_pengiriman,other|string|max:255',
+            'nama_tujuan_manual' => 'nullable|required_if:id_tujuan_pengiriman,other|string|max:255',
             'id_kendaraan' => 'nullable',
             'jenis_kendaraan_manual' => 'nullable|required_if:id_kendaraan,other|string|max:255',
             'no_kendaraan_manual' => 'nullable|required_if:id_kendaraan,other|string|max:255',
-            'id_supir' => 'nullable|exists:supirs,id',
+            'id_supir' => [
+                'nullable',
+                Rule::when(
+                    $request->input('id_supir') !== 'other',
+                    Rule::exists('supirs', 'id')
+                ),
+            ],
+            'nama_supir_manual' => 'nullable|required_if:id_supir,other|string|max:255',
             'star_loading' => 'nullable',
             'selesai_loading' => 'nullable',
             'temperature_mobil' => 'nullable|string|max:255',
             'temperature_produk' => 'nullable|array',
             'temperature_produk.*' => 'nullable|string|max:255',
             'kondisi_produk' => 'nullable|in:Frozen,Fresh,Dry',
-            'segel_gembok' => 'nullable|boolean',
-            'no_segel' => 'nullable|string|max:255',
+            'segel_gembok' => 'nullable|in:segel,gembok',
+            'no_segel' => 'nullable|required_if:segel_gembok,segel|string|max:255',
             'produk_data' => 'nullable|array|min:1',
             'produk_data.*.id_produk' => 'nullable|exists:produks,id',
             'produk_data.*.kode_produksi' => 'nullable|string|max:255',
@@ -287,6 +379,38 @@ class PemeriksaanLoadingProdukController extends Controller
             }
         }
 
+        if ($request->id_tujuan_pengiriman === 'other') {
+            if ($request->nama_customer_manual && $request->nama_tujuan_manual) {
+                $customer = Customer::create([
+                    'nama_cust' => $request->nama_customer_manual,
+                    'id_user' => Auth::id(),
+                ]);
+
+                $tujuan = TujuanPengiriman::create([
+                    'id_user' => Auth::id(),
+                    'id_customer' => $customer->id,
+                    'nama_tujuan' => $request->nama_tujuan_manual,
+                ]);
+
+                $validated['id_tujuan_pengiriman'] = $tujuan->id;
+            } else {
+                $validated['id_tujuan_pengiriman'] = null;
+            }
+        }
+
+        if ($request->id_supir === 'other') {
+            if ($request->nama_supir_manual) {
+                $supir = Supir::create([
+                    'nama_supir' => $request->nama_supir_manual,
+                    'id_user' => Auth::id(),
+                ]);
+
+                $validated['id_supir'] = $supir->id;
+            } else {
+                $validated['id_supir'] = null;
+            }
+        }
+
         // Process temperature_produk array
         $temperatureProduk = [];
         if ($request->has('temperature_produk')) {
@@ -298,6 +422,7 @@ class PemeriksaanLoadingProdukController extends Controller
         }
 
         $validated['temperature_produk'] = !empty($temperatureProduk) ? $temperatureProduk : null;
+        $validated['segel_gembok'] = $request->input('segel_gembok') === 'segel';
         
         // Process produk_data array untuk multiple produk
         $produkData = [];

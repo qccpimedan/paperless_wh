@@ -51,6 +51,11 @@ class Customer extends Model
     {
         return $this->belongsTo(User::class, 'id_user');
     }
+
+    public function tujuanPengirimans()
+    {
+        return $this->hasMany(TujuanPengiriman::class, 'id_customer');
+    }
     
     /**
      * Serialize timestamps to Indonesia timezone (Asia/Jakarta)

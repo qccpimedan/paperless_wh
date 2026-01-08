@@ -35,6 +35,7 @@ use App\Http\Controllers\PemeriksaanSuhuRuangV2Controller;
 use App\Http\Controllers\DetailKomplainController;
 use App\Http\Controllers\GoldenSampleReportController;
 use App\Http\Controllers\PemeriksaanBarangMudahPecahController;
+use App\Http\Controllers\BahanKemasanController;
 use Illuminate\Support\Facades\Auth;
 
 // Redirect root to login
@@ -124,6 +125,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::resource('produsens', ProdusenController::class);
         // Chemical Management Routes
         Route::resource('chemicals', ChemicalController::class);
+        // Bahan Kemasan Management Routes
+        Route::resource('bahan-kemasans', BahanKemasanController::class);
         // Jenis Kendaraan Management Routes
         Route::resource('jenis-kendaraans', JenisKendaraanController::class);
         // Tujuan Pengiriman Management Routes

@@ -56,11 +56,11 @@
                                                 <div class="col-md-6">
                                                     <div class="form-group">
                                                         <label class="form-label">Bahan Kemasan</label>
-                                                        <select class="choices form-control @error('id_bahan.0') is-invalid @enderror" name="id_bahan[]">
+                                                        <select class="choices form-control bahan-kemasan-select @error('id_bahan.0') is-invalid @enderror" name="id_bahan[]">
                                                             <option value="">Pilih Bahan</option>
-                                                            @foreach($bahans as $bahan)
-                                                                <option value="{{ $bahan->id }}" {{ old('id_bahan.0') == $bahan->id ? 'selected' : '' }}>
-                                                                    {{ $bahan->nama_bahan }}
+                                                            @foreach($bahanKemasans as $bahanKemasan)
+                                                                <option value="{{ $bahanKemasan->id }}" {{ old('id_bahan.0') == $bahanKemasan->id ? 'selected' : '' }}>
+                                                                    {{ $bahanKemasan->nama_kemasan }}
                                                                 </option>
                                                             @endforeach
                                                         </select>
@@ -79,7 +79,7 @@
                                                 <div class="col-md-4">
                                                     <div class="form-group">
                                                         <label class="form-label">Produsen</label>
-                                                        <select class="choices form-control @error('produsen.0') is-invalid @enderror" name="produsen[]">
+                                                        <select class="choices form-control produsen-select @error('produsen.0') is-invalid @enderror" name="produsen[]">
                                                             <option value="">Pilih Produsen</option>
                                                             @foreach ($produsens as $produsen)
                                                                 <option value="{{ $produsen->nama_produsen }}" {{ old('produsen.0') == $produsen->nama_produsen ? 'selected' : '' }}>
@@ -95,7 +95,7 @@
                                                 <div class="col-md-4">
                                                     <div class="form-group">
                                                         <label class="form-label">Distributor</label>
-                                                        <select class="choices form-control @error('distributor.0') is-invalid @enderror" name="distributor[]">
+                                                        <select class="choices form-control distributor-select @error('distributor.0') is-invalid @enderror" name="distributor[]">
                                                             <option value="">Pilih Distributor</option>
                                                             @foreach ($distributors as $distributor)
                                                                 <option value="{{ $distributor->nama_distributor }}" {{ old('distributor.0') == $distributor->nama_distributor ? 'selected' : '' }}>
@@ -322,10 +322,49 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    const choicesInstances = new WeakMap();
+    const bahanKemasanMeta = @json($bahanKemasanMeta ?? []);
+
+    function applyBahanKemasanMetaForRow(rowEl) {
+        const bahanSelect = rowEl.querySelector('select.bahan-kemasan-select');
+        const produsenSelect = rowEl.querySelector('select.produsen-select');
+        const distributorSelect = rowEl.querySelector('select.distributor-select');
+
+        if (!bahanSelect || !produsenSelect || !distributorSelect) return;
+
+        const bahanId = bahanSelect.value;
+        const meta = bahanKemasanMeta[bahanId];
+        if (!meta) return;
+
+        const produsenChoices = choicesInstances.get(produsenSelect);
+        if (produsenChoices) {
+            produsenChoices.setChoiceByValue(meta.produsen || '');
+        } else {
+            produsenSelect.value = meta.produsen || '';
+        }
+
+        const distributorChoices = choicesInstances.get(distributorSelect);
+        if (distributorChoices) {
+            distributorChoices.setChoiceByValue(meta.distributor || '');
+        } else {
+            distributorSelect.value = meta.distributor || '';
+        }
+    }
+
+    document.addEventListener('change', function(e) {
+        const target = e.target;
+        if (target && target.matches('select.bahan-kemasan-select')) {
+            const row = target.closest('.unified-row');
+            if (row) {
+                applyBahanKemasanMetaForRow(row);
+            }
+        }
+    });
+
     const selects = document.querySelectorAll('select.choices');
     selects.forEach(select => {
         if (!select.dataset.choicesInitialized) {
-            new Choices(select, {
+            const instance = new Choices(select, {
                 searchEnabled: true,
                 searchPlaceholderValue: 'Cari...',
                 itemSelectText: 'Tekan untuk memilih',
@@ -334,6 +373,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 placeholder: true,
                 placeholderValue: 'Pilih...'
             });
+            choicesInstances.set(select, instance);
             select.dataset.choicesInitialized = 'true';
         }
     });

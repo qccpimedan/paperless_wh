@@ -11,14 +11,14 @@
         <div class="page-title">
             <div class="row">
                 <div class="col-12 col-md-6 order-md-1 order-last">
-                    <h3>Data Bahan Baku</h3>
-                    <p class="text-subtitle text-muted">Kelola data bahan baku sistem</p>
+                    <h3>Data Bahan Kemasan</h3>
+                    <p class="text-subtitle text-muted">Kelola data bahan kemasan sistem</p>
                 </div>
                 <div class="col-12 col-md-6 order-md-2 order-first">
                     <nav aria-label="breadcrumb" class="breadcrumb-header float-start float-lg-end">
                         <ol class="breadcrumb">
                             <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
-                            <li class="breadcrumb-item active" aria-current="page">Data Bahan Baku</li>
+                            <li class="breadcrumb-item active" aria-current="page">Data Bahan Kemasan</li>
                         </ol>
                     </nav>
                 </div>
@@ -35,9 +35,9 @@
         <section class="section">
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="card-title mb-0">Daftar Bahan Baku</h5>
-                    <a href="{{ route('bahans.create') }}" class="btn btn-primary">
-                        <i class="bi bi-plus-circle"></i> Tambah Bahan Baku
+                    <h5 class="card-title mb-0">Daftar Bahan Kemasan</h5>
+                    <a href="{{ route('bahan-kemasans.create') }}" class="btn btn-primary">
+                        <i class="bi bi-plus-circle"></i> Tambah Bahan Kemasan
                     </a>
                 </div>
                 <div class="card-body">
@@ -46,45 +46,43 @@
                             <thead>
                                 <tr>
                                     <th>No</th>
-                                    <th>Nama Bahan Baku</th>
-                                    <!-- <th>Dibuat Ole</th> -->
+                                    <th>Distributor</th>
+                                    <th>Produsen</th>
+                                    <th>Nama Kemasan</th>
                                     <th>Plant</th>
-                                    <!-- <th>Tanggal Dibuat</th> -->
                                     <th>Aksi</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                @forelse($bahans as $index => $bahan)
+                                @forelse($bahanKemasans as $index => $bahanKemasan)
                                     <tr>
                                         <td>{{ $index + 1 }}</td>
                                         <td>
-                                            <strong>{{ $bahan->nama_bahan }}</strong>
+                                            {{ $bahanKemasan->distributor ? $bahanKemasan->distributor->nama_distributor : '-' }}
                                         </td>
-                                        <!-- <td>
-                                            <strong>{{ $bahan->user->name }}</strong>
-                                            <br>
-                                            <small class="text-muted">{{ $bahan->user->username }}</small>
-                                        </td> -->
                                         <td>
-                                            @if($bahan->user->plant)
-                                                <span class="badge bg-info">{{ $bahan->user->plant->plant }}</span>
+                                            {{ $bahanKemasan->produsen ? $bahanKemasan->produsen->nama_produsen : '-' }}
+                                        </td>
+                                        <td>
+                                            <strong>{{ $bahanKemasan->nama_kemasan }}</strong>
+                                        </td>
+                                        <td>
+                                            @if($bahanKemasan->user && $bahanKemasan->user->plant)
+                                                <span class="badge bg-info">{{ $bahanKemasan->user->plant->plant }}</span>
                                             @else
-                                                <span class="badge bg-secondary">No Plant</span>
+                                                <span class="badge bg-secondary">-</span>
                                             @endif
                                         </td>
-                                        <!-- <td>
-                                            {{ $bahan->created_at->format('d/m/Y H:i') }}
-                                        </td> -->
                                         <td>
                                             <div class="btn-vertical">
-                                                <a href="{{ route('bahans.edit', $bahan->uuid) }}" 
+                                                <a href="{{ route('bahan-kemasans.edit', $bahanKemasan->uuid) }}" 
                                                    class="btn btn-sm btn-warning" title="Edit Data">
                                                     <i class="bi bi-pencil"></i>
                                                 </a>
-                                                <form action="{{ route('bahans.destroy', $bahan->uuid) }}" 
+                                                <form action="{{ route('bahan-kemasans.destroy', $bahanKemasan->uuid) }}" 
                                                       method="POST" 
                                                       style="display: inline-block;"
-                                                      onsubmit="return confirm('Yakin ingin menghapus bahan {{ $bahan->nama_bahan }}?')">
+                                                      onsubmit="return confirm('Yakin ingin menghapus bahan kemasan {{ $bahanKemasan->nama_kemasan }}?')">
                                                     @csrf
                                                     @method('DELETE')
                                                     <button type="submit" class="btn btn-sm btn-danger" title="Hapus Data">
@@ -99,9 +97,9 @@
                                         <td colspan="6" class="text-center">
                                             <div class="py-4">
                                                 <i class="bi bi-inbox fs-1 text-muted"></i>
-                                                <p class="text-muted mt-2 mb-3">Belum ada data bahan</p>
-                                                <a href="{{ route('bahans.create') }}" class="btn btn-primary">
-                                                    <i class="bi bi-plus-circle"></i> Tambah Bahan Pertama
+                                                <p class="text-muted mt-2 mb-3">Belum ada data bahan kemasan</p>
+                                                <a href="{{ route('bahan-kemasans.create') }}" class="btn btn-primary">
+                                                    <i class="bi bi-plus-circle"></i> Tambah Bahan Kemasan Pertama
                                                 </a>
                                             </div>
                                         </td>
@@ -118,7 +116,6 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Initialize DataTable if available
     if (typeof $('#table1').DataTable === 'function') {
         $('#table1').DataTable({
             "pageLength": 10,

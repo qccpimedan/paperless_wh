@@ -206,7 +206,17 @@
                                                 @endif
                                             </td> -->
                                             <td>
-                                                {{ $pemeriksaan->produsen ?? '-' }}
+                                                @php
+                                                    $produsenArray = json_decode($pemeriksaan->produsen_array ?? '[]', true);
+                                                    $produsenArray = is_array($produsenArray) ? array_values(array_filter($produsenArray, function ($v) {
+                                                        return $v !== null && $v !== '';
+                                                    })) : [];
+                                                @endphp
+                                                @if(count($produsenArray) > 0)
+                                                    {{ implode(', ', $produsenArray) }}
+                                                @else
+                                                    {{ $pemeriksaan->produsen ?? '-' }}
+                                                @endif
                                             </td>
                                             <td>
                                                 @php

@@ -50,6 +50,20 @@
                                     @method('PUT')
                                     <div class="form-body">
                                         <div class="row">
+                                            <div class="col-md-12 mb-3">
+                                                <label for="id_customer">Customer (Opsional)</label>
+                                                <select id="id_customer" name="id_customer" class="form-select @error('id_customer') is-invalid @enderror">
+                                                    <option value="">-- Pilih Customer --</option>
+                                                    @foreach($customers as $customer)
+                                                        <option value="{{ $customer->id }}" {{ old('id_customer', $tujuanPengiriman->id_customer) == $customer->id ? 'selected' : '' }}>
+                                                            {{ $customer->nama_cust }}
+                                                        </option>
+                                                    @endforeach
+                                                </select>
+                                                @error('id_customer')
+                                                    <div class="invalid-feedback">{{ $message }}</div>
+                                                @enderror
+                                            </div>
                                             <div class="col-md-12">
                                                 <label for="nama_tujuan">Nama Tujuan <span class="text-danger">*</span></label>
                                                 <input type="text" id="nama_tujuan" class="form-control @error('nama_tujuan') is-invalid @enderror"

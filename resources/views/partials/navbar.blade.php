@@ -59,7 +59,8 @@
                     || request()->routeIs('bahans.*') || request()->routeIs('customers.*') || request()->routeIs('shifts.*') || request()->routeIs('distributors.*') 
                     || request()->routeIs('produsens.*') || request()->routeIs('chemicals.*') || request()->routeIs('jenis-kendaraans.*') 
                     || request()->routeIs('tujuan-pengirimans.*') || request()->routeIs('supirs.*') 
-                    || request()->routeIs('produks.*') || request()->routeIs('ekspedisis.*') || request()->routeIs('std-precoolings.*') || request()->routeIs('input-areas.*') 
+                    || request()->routeIs('produks.*') || request()->routeIs('bahan-kemasans.*') 
+                    || request()->routeIs('ekspedisis.*') || request()->routeIs('std-precoolings.*') || request()->routeIs('input-areas.*') 
                     || request()->routeIs('input-master-forms.*') || request()->routeIs('input-deskripsis.*') ? 'active' : '' }}">
                     <a href="#" class='sidebar-link'>
                         <i class="bi bi-collection-fill"></i>
@@ -69,7 +70,7 @@
                     || request()->routeIs('customers.*') || request()->routeIs('shifts.*') || request()->routeIs('distributors.*') 
                     || request()->routeIs('produsens.*') || request()->routeIs('chemicals.*') || request()->routeIs('jenis-kendaraans.*') || request()->routeIs('tujuan-pengirimans.*') 
                     || request()->routeIs('supirs.*') || request()->routeIs('produks.*') || request()->routeIs('ekspedisis.*') || request()->routeIs('std-precoolings.*') 
-                    || request()->routeIs('input-areas.*') 
+                    || request()->routeIs('input-areas.*') || request()->routeIs('bahan-kemasans.*')
                     || request()->routeIs('input-master-forms.*') || request()->routeIs('input-deskripsis.*') ? 'active' : '' }}">
                         {{-- Input Role, Plant, User - Only for Superadmin --}}
                         @if($userRole === 'superadmin')
@@ -92,9 +93,6 @@
                         <li class="submenu-item {{ request()->routeIs('barangs.*') ? 'active' : '' }}">
                             <a href="{{ route('barangs.index')}}">Input Barang</a>
                         </li>
-                        <li class="submenu-item {{ request()->routeIs('bahans.*') ? 'active' : '' }}">
-                            <a href="{{ route('bahans.index')}}">Input Bahan</a>
-                        </li>
                         <li class="submenu-item {{ request()->routeIs('customers.*') ? 'active' : '' }}">
                             <a href="{{ route('customers.index')}}">Input Customer</a>
                         </li>
@@ -103,6 +101,12 @@
                         </li>
                         <li class="submenu-item {{ request()->routeIs('produsens.*') ? 'active' : '' }}">
                             <a href="{{ route('produsens.index')}}">Input Produsen</a>
+                        </li>
+                        <li class="submenu-item {{ request()->routeIs('bahans.*') ? 'active' : '' }}">
+                            <a href="{{ route('bahans.index')}}">Input Bahan Baku</a>
+                        </li>
+                        <li class="submenu-item {{ request()->routeIs('bahan-kemasans.*') ? 'active' : '' }}">
+                            <a href="{{ route('bahan-kemasans.index')}}">Input Bahan Kemasan</a>
                         </li>
                         <li class="submenu-item {{ request()->routeIs('chemicals.*') ? 'active' : '' }}">
                             <a href="{{ route('chemicals.index')}}">Input Chemical</a>

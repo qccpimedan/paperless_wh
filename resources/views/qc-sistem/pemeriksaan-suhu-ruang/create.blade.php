@@ -97,11 +97,29 @@
                                                     <option value="">-- Pilih Produk --</option>
                                                     @foreach($produks as $produk)
                                                         <option value="{{ $produk->id }}" {{ old('id_produk') == $produk->id ? 'selected' : '' }}>
-                                                            {{ $produk->nama_bahan }}
+                                                            {{ $produk->nama_produk }}
                                                         </option>
                                                     @endforeach
                                                 </select>
                                                 @error('id_produk')
+                                                    <div class="invalid-feedback">{{ $message }}</div>
+                                                @enderror
+                                            </div>
+
+                                            <div class="col-md-6 mt-3">
+                                                <label for="suhu_produk">Suhu Produk</label>
+                                                <input type="text" id="suhu_produk" class="form-control @error('suhu_produk') is-invalid @enderror"
+                                                    name="suhu_produk" value="{{ old('suhu_produk') }}" placeholder="Contoh: 25°C">
+                                                @error('suhu_produk')
+                                                    <div class="invalid-feedback">{{ $message }}</div>
+                                                @enderror
+                                            </div>
+
+                                            <div class="col-md-6 mt-3">
+                                                <label for="pukul">Pukul</label>
+                                                <input type="time" id="pukul" class="form-control @error('pukul') is-invalid @enderror"
+                                                    name="pukul" value="{{ old('pukul') }}">
+                                                @error('pukul')
                                                     <div class="invalid-feedback">{{ $message }}</div>
                                                 @enderror
                                             </div>

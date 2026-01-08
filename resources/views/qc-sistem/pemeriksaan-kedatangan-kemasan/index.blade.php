@@ -148,7 +148,7 @@
                                     <th>Bahan Kemasan</th>
                                     <!-- <th>Produsen</th> -->
                                     <th>Kode Produksi</th>
-                                    <th>Status</th>
+                                    <!-- <th>Status</th> -->
                                     <th>Verifikasi</th>
                                     <th>Catatan Verifikasi</th>
                                     <th>Aksi</th>
@@ -181,6 +181,21 @@
                                         <td>
                                             @if($pemeriksaan->bahan)
                                                 {{ $pemeriksaan->bahan->nama_bahan }}
+                                            @else
+                                                @php
+                                                    $idBahanArray = json_decode($pemeriksaan->id_bahan_array ?? '[]', true);
+                                                    $idBahanArray = is_array($idBahanArray) ? array_values(array_filter($idBahanArray, function ($v) {
+                                                        return $v !== null && $v !== '';
+                                                    })) : [];
+                                                    $namaBahanArray = array_values(array_filter(array_map(function ($id) use ($bahanNamaById) {
+                                                        return $bahanNamaById[$id] ?? null;
+                                                    }, $idBahanArray)));
+                                                @endphp
+                                                @if(count($namaBahanArray) > 0)
+                                                    {{ implode(', ', $namaBahanArray) }}
+                                                @else
+                                                    -
+                                                @endif
                                             @endif
                                         </td>
                                         <!-- <td>
@@ -199,13 +214,13 @@
                                                 {{ $pemeriksaan->kode_produksi ?? '-' }}
                                             @endif
                                         </td>
-                                        <td>
+                                        <!-- <td>
                                             @if($pemeriksaan->status === 'Release')
                                                 <span class="badge bg-success">{{ $pemeriksaan->status }}</span>
                                             @else
                                                 <span class="badge bg-warning">{{ $pemeriksaan->status }}</span>
                                             @endif
-                                        </td>
+                                        </td> -->
                                         <td>
                                             @php
                                                 $userRole = auth()->user()->role ? strtolower(auth()->user()->role->role) : null;

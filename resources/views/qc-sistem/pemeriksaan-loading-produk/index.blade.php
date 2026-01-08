@@ -51,7 +51,7 @@
                                     <th>Tanggal</th>
                                     <th>Shift</th>
                                     <th>Plant</th>
-                                    <th>Tujuan Pengiriman</th>
+                                    <!-- <th>Tujuan Pengiriman</th> -->
                                     <th>Kendaraan</th>
                                     <!-- <th>Supir</th> -->
                                     <th>Produk</th>
@@ -67,7 +67,11 @@
                                         <td>{{ $pemeriksaans->firstItem() + $index }}</td>
                                         <td>{{ $pemeriksaan->tanggal->format('d/m/Y') }}</td>
                                         <td>
-                                            <span class="badge bg-info">{{ $pemeriksaan->shift->shift }}</span>
+                                            @if($pemeriksaan->shift)
+                                                <span class="badge bg-info">{{ $pemeriksaan->shift->shift }}</span>
+                                            @else
+                                                -
+                                            @endif
                                         </td>
                                         <td>
                                             @if($pemeriksaan->user->plant)
@@ -76,13 +80,13 @@
                                                 <span class="badge bg-secondary">No Plant</span>
                                             @endif
                                         </td>
-                                        <td>
+                                        <!-- <td>
                                             @if($pemeriksaan->tujuanPengiriman)
                                                 <span class="badge bg-info">{{ $pemeriksaan->tujuanPengiriman->nama_tujuan }}</span>
                                             @else
                                                 -
                                             @endif
-                                        </td>
+                                        </td> -->
                                         <td>
                                             @if($pemeriksaan->kendaraan)
                                                 {{ $pemeriksaan->kendaraan->jenis_kendaraan }} - {{ $pemeriksaan->kendaraan->no_kendaraan }}

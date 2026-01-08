@@ -37,13 +37,13 @@
                                 <tr><td><strong>Tanggal:</strong></td><td>{{ $pemeriksaanKedatanganKemasan->tanggal->format('d/m/Y') }}</td></tr>
                                 <!-- <tr><td><strong>Jenis Pemeriksaan:</strong></td><td>{{ $pemeriksaanKedatanganKemasan->jenis_pemeriksaan ?? '-' }}</td></tr> -->
                                 <tr><td><strong>No. PO:</strong></td><td>{{ $pemeriksaanKedatanganKemasan->no_po ?? '-' }}</td></tr>
-                                <tr><td><strong>Status:</strong></td><td>
+                                <!-- <tr><td><strong>Status:</strong></td><td>
                                     @if($pemeriksaanKedatanganKemasan->status === 'Release')
                                         <span class="badge bg-success">Release</span>
                                     @else
                                         <span class="badge bg-warning">Hold</span>
                                     @endif
-                                </td></tr>
+                                </td></tr> -->
                                 <tr><td><strong>Segel/Gembok:</strong></td><td>
                                     @if($pemeriksaanKedatanganKemasan->segel_gembok)
                                         @if($pemeriksaanKedatanganKemasan->segel_gembok === 'segel')
@@ -89,7 +89,7 @@
                             @php
                                 $kondisiMobil = [
                                     'bersih' => 'Bersih', 'bebas_hama' => 'Bebas dari hama',
-                                    'tidak_kondensasi' => 'Tidak Kondensasi', 'bebas_produk_halal' => 'Bebas dari Produk Halal',
+                                    'tidak_kondensasi' => 'Tidak Kondensasi', 'bebas_produk_halal' => 'Bebas dari Produk Non Halal',
                                     'tidak_berbau' => 'Tidak Berbau', 'tidak_ada_sampah' => 'Tidak ada sampah',
                                     'tidak_ada_mikroba' => 'Tidak ada mikroba', 'lampu_cover_utuh' => 'Lampu Cover utuh',
                                     'pallet_utuh' => 'Pallet utuh', 'tertutup_rapat' => 'Tertutup rapat',
@@ -143,7 +143,7 @@
                                 <div class="row">
                                     <div class="col-md-6">
                                         <div class="p-2 bg-white rounded">
-                                            <strong>Bahan:</strong> {{ $id_bahan ?? '-' }}
+                                            <strong>Bahan:</strong> {{ $bahanNamaById[$id_bahan] ?? '-' }}
                                         </div>
                                     </div>
                                 </div>

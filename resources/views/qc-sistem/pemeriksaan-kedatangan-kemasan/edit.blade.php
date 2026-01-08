@@ -233,7 +233,7 @@
                                         <div class="row">
                                             <div class="col-md-4">
                                                 <div class="mb-3">
-                                                    <label class="form-label"><strong>Bebas dari Produk Halal</strong></label>
+                                                    <label class="form-label"><strong>Bebas dari Produk Non Halal</strong></label>
                                                     <div class="form-check">
                                                         <input class="form-check-input" type="radio" name="kondisi_mobil[bebas_produk_halal]" id="bebas_produk_halal_ya" value="1" {{ (old('kondisi_mobil.bebas_produk_halal', $pemeriksaanKedatanganKemasan->kondisi_mobil['bebas_produk_halal'] ?? false)) ? 'checked' : '' }}>
                                                         <label class="form-check-label" for="bebas_produk_halal_ya">Ya ✓</label>
@@ -348,7 +348,7 @@
                                         <h5 class="text-primary mb-3">Informasi Kemasan</h5>
                                         <div class="row">
                                             
-                                            <!-- <div class="col-md-6">
+                                            {{-- <div class="col-md-6">
                                                 <div class="form-group">
                                                     <label for="id_bahan">Bahan Terkait</label>
                                                     <select id="id_bahan" class="choices form-control @error('id_bahan') is-invalid @enderror" name="id_bahan">
@@ -363,10 +363,10 @@
                                                         <div class="invalid-feedback">{{ $message }}</div>
                                                     @enderror
                                                 </div>
-                                            </div> -->
+                                            </div> --}}
                                         </div>
 
-                                        <!-- <div class="row">
+                                        {{-- <div class="row">
                                             <div class="col-md-6">
                                                 <div class="form-group">
                                                     <label for="produsen">Produsen</label>
@@ -397,7 +397,7 @@
                                                     @error('distributor')
                                                         <div class="invalid-feedback">{{ $message }}</div>
                                                     @enderror
-                                        </div> -->
+                                        </div> --}}
                                     </div>
 
                                     <!-- Dynamic Rows Data -->
@@ -430,10 +430,10 @@
                                                     <div class="col-md-6">
                                                         <div class="form-group">
                                                             <label class="form-label">Bahan Kemasan</label>
-                                                            <select class="choices form-control" name="id_bahan[]">
+                                                            <select class="choices form-control bahan-kemasan-select" name="id_bahan[]">
                                                                 <option value="">Pilih Bahan</option>
-                                                                @foreach($bahans as $bahan)
-                                                                    <option value="{{ $bahan->id }}" {{ $id_bahan == $bahan->id ? 'selected' : '' }}>{{ $bahan->nama_bahan }}</option>
+                                                                @foreach($bahanKemasans as $bahanKemasan)
+                                                                    <option value="{{ $bahanKemasan->id }}" {{ $id_bahan == $bahanKemasan->id ? 'selected' : '' }}>{{ $bahanKemasan->nama_kemasan }}</option>
                                                                 @endforeach
                                                             </select>
                                                         </div>
@@ -441,7 +441,7 @@
                                                     <div class="col-md-6">
                                                         <div class="form-group">
                                                             <label class="form-label">Produsen</label>
-                                                            <select class="choices form-control" name="produsen[]">
+                                                            <select class="choices form-control produsen-select" name="produsen[]">
                                                                 <option value="">Pilih Produsen</option>
                                                                 @foreach ($produsens as $produsen)
                                                                     <option value="{{ $produsen->nama_produsen }}" {{ ($produsens_arr[$index] ?? '') == $produsen->nama_produsen ? 'selected' : '' }}>{{ $produsen->nama_produsen }}</option>
@@ -454,7 +454,7 @@
                                                     <div class="col-md-6">
                                                         <div class="form-group">
                                                             <label class="form-label">Distributor</label>
-                                                            <select class="choices form-control" name="distributor[]">
+                                                            <select class="choices form-control distributor-select" name="distributor[]">
                                                                 <option value="">Pilih Distributor</option>
                                                                 @foreach ($distributors as $distributor)
                                                                     <option value="{{ $distributor->nama_distributor }}" {{ ($distributors_arr[$index] ?? '') == $distributor->nama_distributor ? 'selected' : '' }}>{{ $distributor->nama_distributor }}</option>
@@ -652,10 +652,10 @@
                                                     <div class="col-md-6">
                                                         <div class="form-group">
                                                             <label class="form-label">Bahan Kemasan</label>
-                                                            <select class="choices form-control" name="id_bahan[]">
+                                                            <select class="choices form-control bahan-kemasan-select" name="id_bahan[]">
                                                                 <option value="">Pilih Bahan</option>
-                                                                @foreach($bahans as $bahan)
-                                                                    <option value="{{ $bahan->id }}">{{ $bahan->nama_bahan }}</option>
+                                                                @foreach($bahanKemasans as $bahanKemasan)
+                                                                    <option value="{{ $bahanKemasan->id }}">{{ $bahanKemasan->nama_kemasan }}</option>
                                                                 @endforeach
                                                             </select>
                                                         </div>
@@ -663,7 +663,7 @@
                                                     <div class="col-md-6">
                                                         <div class="form-group">
                                                             <label class="form-label">Produsen</label>
-                                                            <select class="choices form-control" name="produsen[]">
+                                                            <select class="choices form-control produsen-select" name="produsen[]">
                                                                 <option value="">Pilih Produsen</option>
                                                                 @foreach ($produsens as $produsen)
                                                                     <option value="{{ $produsen->nama_produsen }}">{{ $produsen->nama_produsen }}</option>
@@ -676,7 +676,7 @@
                                                     <div class="col-md-6">
                                                         <div class="form-group">
                                                             <label class="form-label">Distributor</label>
-                                                            <select class="choices form-control" name="distributor[]">
+                                                            <select class="choices form-control distributor-select" name="distributor[]">
                                                                 <option value="">Pilih Distributor</option>
                                                                 @foreach ($distributors as $distributor)
                                                                     <option value="{{ $distributor->nama_distributor }}">{{ $distributor->nama_distributor }}</option>
@@ -733,25 +733,76 @@
 
                                     <script>
                                         document.addEventListener('DOMContentLoaded', function() {
+                                            const choicesInstances = new WeakMap();
+                                            const bahanKemasanMeta = @json($bahanKemasanMeta ?? []);
+
+                                            function applyBahanKemasanMetaForRow(rowEl) {
+                                                const bahanSelect = rowEl.querySelector('select.bahan-kemasan-select');
+                                                const produsenSelect = rowEl.querySelector('select.produsen-select');
+                                                const distributorSelect = rowEl.querySelector('select.distributor-select');
+
+                                                if (!bahanSelect || !produsenSelect || !distributorSelect) return;
+
+                                                const bahanId = bahanSelect.value;
+                                                const meta = bahanKemasanMeta[bahanId];
+
+                                                if (!meta) {
+                                                    return;
+                                                }
+
+                                                const produsenChoices = choicesInstances.get(produsenSelect);
+                                                if (produsenChoices) {
+                                                    produsenChoices.setChoiceByValue(meta.produsen || '');
+                                                } else {
+                                                    produsenSelect.value = meta.produsen || '';
+                                                }
+
+                                                const distributorChoices = choicesInstances.get(distributorSelect);
+                                                if (distributorChoices) {
+                                                    distributorChoices.setChoiceByValue(meta.distributor || '');
+                                                } else {
+                                                    distributorSelect.value = meta.distributor || '';
+                                                }
+                                            }
+
+                                            document.addEventListener('change', function(e) {
+                                                const target = e.target;
+                                                if (target && target.matches('select.bahan-kemasan-select')) {
+                                                    const row = target.closest('.unified-row');
+                                                    if (row) {
+                                                        applyBahanKemasanMetaForRow(row);
+                                                    }
+                                                }
+                                            });
+
                                             function updateDeleteButtons() {
                                                 const rows = document.querySelectorAll('.unified-row');
                                                 const deleteButtons = document.querySelectorAll('.remove-unified-btn');
-                                                
-                                                // Jika hanya 1 baris, disable tombol hapus
-                                                if (rows.length === 1) {
-                                                    deleteButtons.forEach(btn => {
-                                                        btn.disabled = true;
-                                                        btn.style.opacity = '0.5';
-                                                        btn.style.cursor = 'not-allowed';
-                                                    });
-                                                } else {
-                                                    deleteButtons.forEach(btn => {
-                                                        btn.disabled = false;
-                                                        btn.style.opacity = '1';
-                                                        btn.style.cursor = 'pointer';
-                                                    });
-                                                }
+                                                deleteButtons.forEach(button => {
+                                                    if (rows.length > 1) {
+                                                        button.style.display = 'inline-block';
+                                                    } else {
+                                                        button.style.display = 'none';
+                                                    }
+                                                });
                                             }
+
+                                            const selects = document.querySelectorAll('select.choices');
+                                            selects.forEach(select => {
+                                                if (!select.dataset.choicesInitialized) {
+                                                    const instance = new Choices(select, {
+                                                        searchEnabled: true,
+                                                        searchPlaceholderValue: 'Cari...',
+                                                        itemSelectText: 'Tekan untuk memilih',
+                                                        noResultsText: 'Tidak ada hasil ditemukan',
+                                                        noChoicesText: 'Tidak ada pilihan tersedia',
+                                                        placeholder: true,
+                                                        placeholderValue: 'Pilih...'
+                                                    });
+                                                    choicesInstances.set(select, instance);
+                                                    select.dataset.choicesInitialized = 'true';
+                                                }
+                                            });
 
                                             // Event listener untuk tombol hapus
                                             document.addEventListener('click', function(e) {

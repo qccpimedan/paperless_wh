@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Chemical;
+use App\Models\BahanKemasan;
 use App\Models\Distributor;
 use App\Models\Produsen;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
-class ChemicalController extends Controller
+class BahanKemasanController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -16,21 +16,21 @@ class ChemicalController extends Controller
     public function index()
     {
         $user = Auth::user();
-        
+
         // SuperAdmin dapat melihat semua data
         if ($user->role && strtolower($user->role->role) === 'superadmin') {
-            $chemicals = Chemical::with(['user.role', 'user.plant', 'distributor', 'produsen'])->latest()->get();
+            $bahanKemasans = BahanKemasan::with(['user.role', 'user.plant', 'distributor', 'produsen'])->latest()->get();
         } else {
             // Admin dan role lain hanya melihat data sesuai plant mereka
-            $chemicals = Chemical::with(['user.role', 'user.plant', 'distributor', 'produsen'])
-                ->whereHas('user', function($query) use ($user) {
+            $bahanKemasans = BahanKemasan::with(['user.role', 'user.plant', 'distributor', 'produsen'])
+                ->whereHas('user', function ($query) use ($user) {
                     $query->where('id_plant', $user->id_plant);
                 })
                 ->latest()
                 ->get();
         }
-        
-        return view('super-admin.input-chemical.index', compact('chemicals'));
+
+        return view('super-admin.input-bahan-kemasan.index', compact('bahanKemasans'));
     }
 
     /**
@@ -45,21 +45,21 @@ class ChemicalController extends Controller
             $produsens = Produsen::with(['user.plant'])->latest()->get();
         } else {
             $distributors = Distributor::with(['user.plant'])
-                ->whereHas('user', function($query) use ($user) {
+                ->whereHas('user', function ($query) use ($user) {
                     $query->where('id_plant', $user->id_plant);
                 })
                 ->latest()
                 ->get();
 
             $produsens = Produsen::with(['user.plant'])
-                ->whereHas('user', function($query) use ($user) {
+                ->whereHas('user', function ($query) use ($user) {
                     $query->where('id_plant', $user->id_plant);
                 })
                 ->latest()
                 ->get();
         }
 
-        return view('super-admin.input-chemical.create', compact('distributors', 'produsens'));
+        return view('super-admin.input-bahan-kemasan.create', compact('distributors', 'produsens'));
     }
 
     /**
@@ -72,60 +72,58 @@ class ChemicalController extends Controller
             'id_distributor.*' => 'nullable|exists:distributors,id',
             'id_produsen' => 'nullable|array',
             'id_produsen.*' => 'nullable|exists:produsens,id',
-            'nama_chemical' => 'required|array|min:1',
-            'nama_chemical.*' => 'required|string|max:255',
+            'nama_kemasan' => 'required|array|min:1',
+            'nama_kemasan.*' => 'required|string|max:255',
         ]);
 
-        $namaChemicalArray = $request->input('nama_chemical', []);
+        $namaKemasanArray = $request->input('nama_kemasan', []);
         $idDistributorArray = $request->input('id_distributor', []);
         $idProdusenArray = $request->input('id_produsen', []);
 
-        $hasAtLeastOneChemical = collect($namaChemicalArray)
+        $hasAtLeastOneKemasan = collect($namaKemasanArray)
             ->map(fn ($v) => trim((string) $v))
             ->filter(fn ($v) => $v !== '')
             ->isNotEmpty();
 
-        if (!$hasAtLeastOneChemical) {
-            return back()->withErrors(['nama_chemical' => 'Minimal harus ada satu nama chemical.']);
+        if (!$hasAtLeastOneKemasan) {
+            return back()->withErrors(['nama_kemasan' => 'Minimal harus ada satu nama kemasan.']);
         }
 
-        // Create separate record for each nama_chemical
-        foreach ($namaChemicalArray as $index => $nama) {
+        // Create separate record for each nama_kemasan
+        foreach ($namaKemasanArray as $index => $nama) {
             $nama = trim((string) $nama);
             if ($nama === '') {
                 continue;
             }
 
-            Chemical::create([
+            BahanKemasan::create([
                 'id_user' => Auth::id(),
                 'id_distributor' => $idDistributorArray[$index] ?? null,
                 'id_produsen' => $idProdusenArray[$index] ?? null,
-                'nama_chemical' => $nama,
+                'nama_kemasan' => $nama,
             ]);
         }
 
-        return redirect()->route('chemicals.index')->with('success', 'Chemical berhasil ditambahkan!');
+        return redirect()->route('bahan-kemasans.index')->with('success', 'Bahan Kemasan berhasil ditambahkan!');
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(Chemical $chemical)
+    public function show(BahanKemasan $bahanKemasan)
     {
-        // Check access based on plant
-        $this->checkPlantAccess($chemical);
-        
-        $chemical->load('user');
-        return view('super-admin.input-chemical.show', compact('chemical'));
+        $this->checkPlantAccess($bahanKemasan);
+
+        $bahanKemasan->load(['user', 'distributor', 'produsen']);
+        return view('super-admin.input-bahan-kemasan.show', compact('bahanKemasan'));
     }
 
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Chemical $chemical)
+    public function edit(BahanKemasan $bahanKemasan)
     {
-        // Check access based on plant
-        $this->checkPlantAccess($chemical);
+        $this->checkPlantAccess($bahanKemasan);
 
         $user = Auth::user();
 
@@ -134,73 +132,71 @@ class ChemicalController extends Controller
             $produsens = Produsen::with(['user.plant'])->latest()->get();
         } else {
             $distributors = Distributor::with(['user.plant'])
-                ->whereHas('user', function($query) use ($user) {
+                ->whereHas('user', function ($query) use ($user) {
                     $query->where('id_plant', $user->id_plant);
                 })
                 ->latest()
                 ->get();
 
             $produsens = Produsen::with(['user.plant'])
-                ->whereHas('user', function($query) use ($user) {
+                ->whereHas('user', function ($query) use ($user) {
                     $query->where('id_plant', $user->id_plant);
                 })
                 ->latest()
                 ->get();
         }
 
-        return view('super-admin.input-chemical.edit', compact('chemical', 'distributors', 'produsens'));
+        return view('super-admin.input-bahan-kemasan.edit', compact('bahanKemasan', 'distributors', 'produsens'));
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Chemical $chemical)
+    public function update(Request $request, BahanKemasan $bahanKemasan)
     {
-        // Check access based on plant
-        $this->checkPlantAccess($chemical);
-        
+        $this->checkPlantAccess($bahanKemasan);
+
         $request->validate([
             'id_distributor' => 'nullable|exists:distributors,id',
             'id_produsen' => 'nullable|exists:produsens,id',
-            'nama_chemical' => 'required|string|max:255',
+            'nama_kemasan' => 'required|string|max:255',
         ]);
 
-        $chemical->update([
-            'id_distributor' => $request->input('id_distributor'),
-            'id_produsen' => $request->input('id_produsen'),
-            'nama_chemical' => trim($request->nama_chemical),
+        $bahanKemasan->update([
+            'id_distributor' => $request->id_distributor,
+            'id_produsen' => $request->id_produsen,
+            'nama_kemasan' => trim($request->nama_kemasan),
         ]);
 
-        return redirect()->route('chemicals.index')->with('success', 'Chemical berhasil diupdate!');
+        return redirect()->route('bahan-kemasans.index')->with('success', 'Bahan Kemasan berhasil diupdate!');
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Chemical $chemical)
+    public function destroy(BahanKemasan $bahanKemasan)
     {
-        // Check access based on plant
-        $this->checkPlantAccess($chemical);
-        
-        $chemical->delete();
-        return redirect()->route('chemicals.index')->with('success', 'Chemical berhasil dihapus!');
+        $this->checkPlantAccess($bahanKemasan);
+
+        $bahanKemasan->delete();
+        return redirect()->route('bahan-kemasans.index')->with('success', 'Bahan Kemasan berhasil dihapus!');
     }
 
     /**
-     * Check if user has access to chemical based on plant
+     * Check if user has access to bahan kemasan based on plant
      */
-    private function checkPlantAccess(Chemical $chemical)
+    private function checkPlantAccess(BahanKemasan $bahanKemasan)
     {
         $user = Auth::user();
-        
+
         // SuperAdmin dapat akses semua data
         if ($user->role && strtolower($user->role->role) === 'superadmin') {
             return;
         }
-        
+
         // Admin dan role lain hanya dapat akses data dari plant mereka
-        if ($chemical->user->id_plant !== $user->id_plant) {
-            abort(403, 'Unauthorized action.');
+        if ($bahanKemasan->user->id_plant !== $user->id_plant) {
+            abort(403, 'Anda tidak memiliki akses ke data ini.');
         }
     }
 }

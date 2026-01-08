@@ -227,7 +227,7 @@
 
                                                 <!-- 4. Bebas dari Produk Halal -->
                                                 <div class="mb-3">
-                                                    <label class="form-label"><strong>4. Bebas dari Produk Halal</strong></label>
+                                                    <label class="form-label"><strong>4. Bebas dari Produk Non Halal</strong></label>
                                                     <div class="form-check">
                                                         <input class="form-check-input" type="radio" name="kondisi_mobil[bebas_produk_halal]" id="bebas_produk_halal_ya" value="1" {{ old('kondisi_mobil.bebas_produk_halal') == '1' ? 'checked' : '' }}>
                                                         <label class="form-check-label" for="bebas_produk_halal_ya">Ya ✓</label>
@@ -347,11 +347,11 @@
                                                     <div class="col-md-6">
                                                         <div class="form-group">
                                                             <label class="form-label">Bahan Kemasan</label>
-                                                            <select class="choices form-control @error('id_bahan.0') is-invalid @enderror" name="id_bahan[]">
+                                                            <select class="choices form-control bahan-kemasan-select @error('id_bahan.0') is-invalid @enderror" name="id_bahan[]">
                                                                 <option value="">Pilih Bahan</option>
-                                                                @foreach($bahans as $bahan)
-                                                                    <option value="{{ $bahan->id }}" {{ old('id_bahan.0') == $bahan->id ? 'selected' : '' }}>
-                                                                        {{ $bahan->nama_bahan }}
+                                                                @foreach($bahanKemasans as $bahanKemasan)
+                                                                    <option value="{{ $bahanKemasan->id }}" {{ old('id_bahan.0') == $bahanKemasan->id ? 'selected' : '' }}>
+                                                                        {{ $bahanKemasan->nama_kemasan }}
                                                                     </option>
                                                                 @endforeach
                                                             </select>
@@ -370,7 +370,7 @@
                                                     <div class="col-md-4">
                                                         <div class="form-group">
                                                             <label class="form-label">Produsen</label>
-                                                            <select class="choices form-control @error('produsen.0') is-invalid @enderror" name="produsen[]">
+                                                            <select class="form-control produsen-select @error('produsen.0') is-invalid @enderror" name="produsen[]">
                                                                 <option value="">Pilih Produsen</option>
                                                                 @foreach ($produsens as $produsen)
                                                                     <option value="{{ $produsen->nama_produsen }}" {{ old('produsen.0') == $produsen->nama_produsen ? 'selected' : '' }}>
@@ -386,7 +386,7 @@
                                                     <div class="col-md-4">
                                                         <div class="form-group">
                                                             <label class="form-label">Distributor</label>
-                                                            <select class="choices form-control @error('distributor.0') is-invalid @enderror" name="distributor[]">
+                                                            <select class=" form-control distributor-select @error('distributor.0') is-invalid @enderror" name="distributor[]">
                                                                 <option value="">Pilih Distributor</option>
                                                                 @foreach ($distributors as $distributor)
                                                                     <option value="{{ $distributor->nama_distributor }}" {{ old('distributor.0') == $distributor->nama_distributor ? 'selected' : '' }}>
@@ -629,13 +629,14 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    const choicesInstances = new WeakMap();
     
     // Initialize Choices.js for all existing selects
     function initializeAllChoices() {
         const selects = document.querySelectorAll('select.choices');
         selects.forEach(select => {
             if (!select.dataset.choicesInitialized) {
-                new Choices(select, {
+                const instance = new Choices(select, {
                     searchEnabled: true,
                     searchPlaceholderValue: 'Cari...',
                     itemSelectText: 'Tekan untuk memilih',
@@ -644,6 +645,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     placeholder: true,
                     placeholderValue: 'Pilih...'
                 });
+                choicesInstances.set(select, instance);
                 select.dataset.choicesInitialized = 'true';
             }
         });
@@ -651,6 +653,8 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Initialize on page load
     initializeAllChoices();
+    
+    const bahanKemasanMeta = @json($bahanKemasanMeta ?? []);
     
     // Add unified row
     document.addEventListener('click', function(e) {
@@ -669,10 +673,10 @@ document.addEventListener('DOMContentLoaded', function() {
                         <div class="col-md-6">
                             <div class="form-group">
                                 <label class="form-label">Bahan Kemasan</label>
-                                <select class="choices form-control" name="id_bahan[]">
+                                <select class="choices form-control bahan-kemasan-select" name="id_bahan[]">
                                     <option value="">Pilih Bahan</option>
-                                    @foreach($bahans as $bahan)
-                                        <option value="{{ $bahan->id }}">{{ $bahan->nama_bahan }}</option>
+                                    @foreach($bahanKemasans as $bahanKemasan)
+                                        <option value="{{ $bahanKemasan->id }}">{{ $bahanKemasan->nama_kemasan }}</option>
                                     @endforeach
                                 </select>
                             </div>
@@ -687,7 +691,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         <div class="col-md-4">
                             <div class="form-group">
                                 <label class="form-label">Produsen</label>
-                                <select class="choices form-control" name="produsen[]">
+                                <select class="form-control produsen-select" name="produsen[]">
                                     <option value="">Pilih Produsen</option>
                                     @foreach ($produsens as $produsen)
                                         <option value="{{ $produsen->nama_produsen }}">{{ $produsen->nama_produsen }}</option>
@@ -698,7 +702,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         <div class="col-md-4">
                             <div class="form-group">
                                 <label class="form-label">Distributor</label>
-                                <select class="choices form-control" name="distributor[]">
+                                <select class="form-control distributor-select" name="distributor[]">
                                     <option value="">Pilih Distributor</option>
                                     @foreach ($distributors as $distributor)
                                         <option value="{{ $distributor->nama_distributor }}">{{ $distributor->nama_distributor }}</option>
@@ -889,7 +893,7 @@ document.addEventListener('DOMContentLoaded', function() {
             // Initialize Choices.js for new selects ONLY in the new row
             const newSelects = newRow.querySelectorAll('select.choices');
             newSelects.forEach(select => {
-                new Choices(select, {
+                const instance = new Choices(select, {
                     searchEnabled: true,
                     searchPlaceholderValue: 'Cari...',
                     itemSelectText: 'Tekan untuk memilih',
@@ -898,9 +902,65 @@ document.addEventListener('DOMContentLoaded', function() {
                     placeholder: true,
                     placeholderValue: 'Pilih...'
                 });
+                choicesInstances.set(select, instance);
             });
-            
-            updateRemoveButtons();
+
+            const bahanSelect = newRow.querySelector('select.bahan-kemasan-select');
+            if (bahanSelect) {
+                bahanSelect.addEventListener('change', function() {
+                    applyBahanKemasanMetaForRow(newRow);
+                });
+            }
+        }
+    });
+
+    function applyBahanKemasanMetaForRow(rowEl) {
+        const bahanSelect = rowEl.querySelector('select.bahan-kemasan-select');
+        const produsenSelect = rowEl.querySelector('select.produsen-select');
+        const distributorSelect = rowEl.querySelector('select.distributor-select');
+
+        if (!bahanSelect || !produsenSelect || !distributorSelect) return;
+
+        const bahanId = bahanSelect.value;
+        const meta = bahanKemasanMeta[bahanId];
+        if (!meta) return;
+
+        const produsenChoices = choicesInstances.get(produsenSelect);
+        if (produsenChoices) {
+            produsenChoices.setChoiceByValue(meta.produsen || '');
+        } else {
+            produsenSelect.value = meta.produsen || '';
+        }
+
+        const distributorChoices = choicesInstances.get(distributorSelect);
+        if (distributorChoices) {
+            distributorChoices.setChoiceByValue(meta.distributor || '');
+        } else {
+            distributorSelect.value = meta.distributor || '';
+        }
+    }
+
+    document.addEventListener('change', function(e) {
+        const target = e.target;
+        if (target && target.matches('select.bahan-kemasan-select')) {
+            const row = target.closest('.unified-row');
+            if (row) {
+                applyBahanKemasanMetaForRow(row);
+            }
+        }
+    });
+
+    // Bind directly for initial rows (Choices.js can swallow delegated change in some cases)
+    document.querySelectorAll('#unified-container .unified-row').forEach((row) => {
+        const bahanSelect = row.querySelector('select.bahan-kemasan-select');
+        if (!bahanSelect) return;
+
+        bahanSelect.addEventListener('change', function() {
+            applyBahanKemasanMetaForRow(row);
+        });
+
+        if (bahanSelect.value) {
+            applyBahanKemasanMetaForRow(row);
         }
     });
     

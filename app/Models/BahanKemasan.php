@@ -7,9 +7,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 
-class Chemical extends Model
+class BahanKemasan extends Model
 {
     use HasFactory;
+
+    protected $table = 'bahan_kemasans';
 
     /**
      * The attributes that are mass assignable.
@@ -21,7 +23,7 @@ class Chemical extends Model
         'id_user',
         'id_distributor',
         'id_produsen',
-        'nama_chemical',
+        'nama_kemasan',
     ];
 
     /**
@@ -63,7 +65,7 @@ class Chemical extends Model
     {
         return $this->belongsTo(Produsen::class, 'id_produsen');
     }
-    
+
     /**
      * Serialize timestamps to Indonesia timezone (Asia/Jakarta)
      */

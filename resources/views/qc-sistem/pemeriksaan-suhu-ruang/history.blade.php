@@ -33,7 +33,7 @@
                         <h5 class="card-title mb-0">History Perubahan Data</h5>
                         <small class="text-muted">
                             Tanggal: {{ $pemeriksaanSuhuRuang->tanggal->format('d/m/Y') }} | 
-                            Produk: {{ $pemeriksaanSuhuRuang->produk->nama_bahan }} | 
+                            Produk: {{ $pemeriksaanSuhuRuang->produk->nama_produk }} | 
                             Area: {{ $pemeriksaanSuhuRuang->area->nama_area }}
                         </small>
                     </div>

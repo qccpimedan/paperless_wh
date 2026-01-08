@@ -51,6 +51,11 @@ class Produsen extends Model
     {
         return $this->belongsTo(User::class, 'id_user');
     }
+
+    public function chemicals()
+    {
+        return $this->hasMany(Chemical::class, 'id_produsen');
+    }
     
     /**
      * Serialize timestamps to Indonesia timezone (Asia/Jakarta)

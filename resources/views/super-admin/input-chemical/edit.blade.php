@@ -54,6 +54,36 @@
                                             <label for="nama_chemical">Nama Chemical <span class="text-danger">*</span></label>
                                         </div>
                                         <div class="col-md-12 form-group">
+                                            <label for="id_distributor">Distributor (Opsional)</label>
+                                            <select id="id_distributor" name="id_distributor" class="form-select @error('id_distributor') is-invalid @enderror">
+                                                <option value="">-- Pilih Distributor --</option>
+                                                @foreach($distributors as $distributor)
+                                                    <option value="{{ $distributor->id }}" {{ old('id_distributor', $chemical->id_distributor) == $distributor->id ? 'selected' : '' }}>
+                                                        {{ $distributor->nama_distributor }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                            @error('id_distributor')
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+
+                                        <div class="col-md-12 form-group">
+                                            <label for="id_produsen">Produsen (Opsional)</label>
+                                            <select id="id_produsen" name="id_produsen" class="form-select @error('id_produsen') is-invalid @enderror">
+                                                <option value="">-- Pilih Produsen --</option>
+                                                @foreach($produsens as $produsen)
+                                                    <option value="{{ $produsen->id }}" {{ old('id_produsen', $chemical->id_produsen) == $produsen->id ? 'selected' : '' }}>
+                                                        {{ $produsen->nama_produsen }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                            @error('id_produsen')
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+
+                                        <div class="col-md-12 form-group">
                                             <input type="text" id="nama_chemical" class="form-control @error('nama_chemical') is-invalid @enderror"
                                                 name="nama_chemical" placeholder="Nama Chemical" value="{{ old('nama_chemical', $chemical->nama_chemical) }}" required>
                                             @error('nama_chemical')

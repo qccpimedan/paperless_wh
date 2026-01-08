@@ -66,7 +66,7 @@
                                     <div class="col-md-6">
                                         <div class="mb-3">
                                             <label class="form-label"><strong>Produk</strong></label>
-                                            <p class="form-control-plaintext">{{ $pemeriksaanSuhuRuang->produk->nama_bahan }}</p>
+                                            <p class="form-control-plaintext">{{ $pemeriksaanSuhuRuang->produk->nama_produk }}</p>
                                         </div>
                                     </div>
                                 </div>

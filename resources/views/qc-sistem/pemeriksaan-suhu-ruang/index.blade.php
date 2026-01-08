@@ -74,7 +74,7 @@
                                             @endif
                                         </td>
                                         <td>
-                                            <strong>{{ $pemeriksaan->produk->nama_bahan }}</strong>
+                                            <strong>{{ $pemeriksaan->produk->nama_produk }}</strong>
                                         </td>
                                         <td>
                                             <strong>{{ $pemeriksaan->area->nama_area }}</strong>

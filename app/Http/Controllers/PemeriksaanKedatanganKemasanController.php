@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\PemeriksaanKedatanganKemasan;
-use App\Models\Bahan;
+use App\Models\BahanKemasan;
 use App\Models\Shift;
 use App\Models\Produsen;
 use App\Models\User;
@@ -35,8 +35,21 @@ class PemeriksaanKedatanganKemasanController extends Controller
                 ->latest() // Data terbaru muncul paling atas
                 ->get();
         }
+
+        $bahanIds = $pemeriksaans
+            ->flatMap(function ($pemeriksaan) {
+                $ids = json_decode($pemeriksaan->id_bahan_array ?? '[]', true);
+                return is_array($ids) ? $ids : [];
+            })
+            ->filter(fn ($id) => !empty($id))
+            ->unique()
+            ->values();
+
+        $bahanNamaById = $bahanIds->isNotEmpty()
+            ? BahanKemasan::whereIn('id', $bahanIds)->pluck('nama_kemasan', 'id')
+            : collect();
         
-        return view('qc-sistem.pemeriksaan-kedatangan-kemasan.index', compact('pemeriksaans'));
+        return view('qc-sistem.pemeriksaan-kedatangan-kemasan.index', compact('pemeriksaans', 'bahanNamaById'));
     }
 
     /**
@@ -53,18 +66,18 @@ class PemeriksaanKedatanganKemasanController extends Controller
             'role' => $user->role ? $user->role->role : 'no role'
         ]);
         
-        // Get bahans, shifts, produsens, and distributors based on plant access
+        // Get bahan kemasans, shifts, produsens, and distributors based on plant access
         if ($user->role && strtolower($user->role->role) === 'superadmin') {
-            $bahans = Bahan::with('user.plant')->get();
+            $bahanKemasans = BahanKemasan::with(['user.plant', 'distributor', 'produsen'])->get();
             $shifts = Shift::with('user.plant')->get();
             $produsens = Produsen::with('user.plant')->get();
             $distributors = Distributor::with('user.plant')->get();
         } else {
             if ($user->id_plant) {
                 // Filter berdasarkan plant
-                $bahans = Bahan::whereHas('user', function($query) use ($user) {
+                $bahanKemasans = BahanKemasan::whereHas('user', function($query) use ($user) {
                     $query->where('id_plant', $user->id_plant);
-                })->with('user.plant')->get();
+                })->with(['user.plant', 'distributor', 'produsen'])->get();
                 
                 $shifts = Shift::whereHas('user', function($query) use ($user) {
                     $query->where('id_plant', $user->id_plant);
@@ -79,7 +92,7 @@ class PemeriksaanKedatanganKemasanController extends Controller
                 })->with('user.plant')->get();
             } else {
                 // Fallback: User has no plant, get all
-                $bahans = Bahan::all();
+                $bahanKemasans = BahanKemasan::with(['distributor', 'produsen'])->get();
                 $shifts = Shift::all();
                 $produsens = Produsen::all();
                 $distributors = Distributor::all();
@@ -87,8 +100,8 @@ class PemeriksaanKedatanganKemasanController extends Controller
         }
         
         // Fallback if no data found
-        if ($bahans->isEmpty()) {
-            $bahans = Bahan::all();
+        if ($bahanKemasans->isEmpty()) {
+            $bahanKemasans = BahanKemasan::with(['distributor', 'produsen'])->get();
         }
         if ($shifts->isEmpty()) {
             $shifts = Shift::all();
@@ -99,15 +112,37 @@ class PemeriksaanKedatanganKemasanController extends Controller
         if ($distributors->isEmpty()) {
             $distributors = Distributor::all();
         }
+
+        $referencedProdusenIds = $bahanKemasans->pluck('id_produsen')->filter()->unique()->values();
+        if ($referencedProdusenIds->isNotEmpty()) {
+            $referencedProdusens = Produsen::with('user.plant')->whereIn('id', $referencedProdusenIds)->get();
+            $produsens = $produsens->concat($referencedProdusens)->unique('id')->values();
+        }
+
+        $referencedDistributorIds = $bahanKemasans->pluck('id_distributor')->filter()->unique()->values();
+        if ($referencedDistributorIds->isNotEmpty()) {
+            $referencedDistributors = Distributor::with('user.plant')->whereIn('id', $referencedDistributorIds)->get();
+            $distributors = $distributors->concat($referencedDistributors)->unique('id')->values();
+        }
         
         \Log::info('Data for create view:', [
-            'bahans_count' => $bahans->count(),
+            'bahanKemasans_count' => $bahanKemasans->count(),
             'shifts_count' => $shifts->count(),
             'produsens_count' => $produsens->count(),
             'distributors_count' => $distributors->count()
         ]);
-        
-        return view('qc-sistem.pemeriksaan-kedatangan-kemasan.create', compact('bahans', 'shifts', 'produsens', 'distributors'));
+
+        $bahanKemasanMeta = $bahanKemasans
+            ->mapWithKeys(function ($bk) {
+                return [
+                    $bk->id => [
+                        'produsen' => $bk->produsen ? $bk->produsen->nama_produsen : '',
+                        'distributor' => $bk->distributor ? $bk->distributor->nama_distributor : '',
+                    ],
+                ];
+            });
+
+        return view('qc-sistem.pemeriksaan-kedatangan-kemasan.create', compact('bahanKemasans', 'shifts', 'produsens', 'distributors', 'bahanKemasanMeta'));
     }
     /**
      * Store a newly created resource in storage.
@@ -121,7 +156,7 @@ class PemeriksaanKedatanganKemasanController extends Controller
             'nama_supir' => 'nullable|string|max:255',
             'jenis_pemeriksaan' => 'nullable|string|max:255',
             'no_po' => 'nullable|string|max:255',
-            'id_bahan.*' => 'nullable|exists:bahans,id',
+            'id_bahan.*' => 'nullable|exists:bahan_kemasans,id',
             'produsen.*' => 'nullable|string|max:255',
             'distributor.*' => 'nullable|string|max:255',
             'kode_produksi.*' => 'nullable|string|max:255',
@@ -235,7 +270,17 @@ class PemeriksaanKedatanganKemasanController extends Controller
         $this->checkPlantAccess($pemeriksaanKedatanganKemasan);
         
         $pemeriksaanKedatanganKemasan->load(['user', 'bahan', 'shift']);
-        return view('qc-sistem.pemeriksaan-kedatangan-kemasan.show', compact('pemeriksaanKedatanganKemasan'));
+
+        $bahanIds = collect(json_decode($pemeriksaanKedatanganKemasan->id_bahan_array ?? '[]', true))
+            ->filter(fn ($id) => !empty($id))
+            ->unique()
+            ->values();
+
+        $bahanNamaById = $bahanIds->isNotEmpty()
+            ? BahanKemasan::whereIn('id', $bahanIds)->pluck('nama_kemasan', 'id')->toArray()
+            : [];
+
+        return view('qc-sistem.pemeriksaan-kedatangan-kemasan.show', compact('pemeriksaanKedatanganKemasan', 'bahanNamaById'));
     }
 
     /**
@@ -248,18 +293,18 @@ class PemeriksaanKedatanganKemasanController extends Controller
         
         $user = Auth::user();
         
-        // Get bahans, shifts, produsens, and distributors based on plant access (SAMA SEPERTI CREATE)
+        // Get bahan kemasans, shifts, produsens, and distributors based on plant access (SAMA SEPERTI CREATE)
     if ($user->role && strtolower($user->role->role) === 'superadmin') {
-        $bahans = Bahan::with('user.plant')->get();
+        $bahanKemasans = BahanKemasan::with(['user.plant', 'distributor', 'produsen'])->get();
         $shifts = Shift::with('user.plant')->get();
         $produsens = Produsen::with('user.plant')->get();
         $distributors = Distributor::with('user.plant')->get();
     } else {
         if ($user->id_plant) {
             // Filter berdasarkan plant
-            $bahans = Bahan::whereHas('user', function($query) use ($user) {
+            $bahanKemasans = BahanKemasan::whereHas('user', function($query) use ($user) {
                 $query->where('id_plant', $user->id_plant);
-            })->with('user.plant')->get();
+            })->with(['user.plant', 'distributor', 'produsen'])->get();
             
             $shifts = Shift::whereHas('user', function($query) use ($user) {
                 $query->where('id_plant', $user->id_plant);
@@ -274,7 +319,7 @@ class PemeriksaanKedatanganKemasanController extends Controller
             })->with('user.plant')->get();
         } else {
             // Fallback: User has no plant, get all
-            $bahans = Bahan::all();
+            $bahanKemasans = BahanKemasan::with(['distributor', 'produsen'])->get();
             $shifts = Shift::all();
             $produsens = Produsen::all();
             $distributors = Distributor::all();
@@ -282,8 +327,8 @@ class PemeriksaanKedatanganKemasanController extends Controller
     }
 
     // Fallback if no data found
-    if ($bahans->isEmpty()) {
-        $bahans = Bahan::all();
+    if ($bahanKemasans->isEmpty()) {
+        $bahanKemasans = BahanKemasan::with(['distributor', 'produsen'])->get();
     }
     if ($shifts->isEmpty()) {
         $shifts = Shift::all();
@@ -295,8 +340,30 @@ class PemeriksaanKedatanganKemasanController extends Controller
         $distributors = Distributor::all();
     }
 
+    $referencedProdusenIds = $bahanKemasans->pluck('id_produsen')->filter()->unique()->values();
+    if ($referencedProdusenIds->isNotEmpty()) {
+        $referencedProdusens = Produsen::with('user.plant')->whereIn('id', $referencedProdusenIds)->get();
+        $produsens = $produsens->concat($referencedProdusens)->unique('id')->values();
+    }
+
+    $referencedDistributorIds = $bahanKemasans->pluck('id_distributor')->filter()->unique()->values();
+    if ($referencedDistributorIds->isNotEmpty()) {
+        $referencedDistributors = Distributor::with('user.plant')->whereIn('id', $referencedDistributorIds)->get();
+        $distributors = $distributors->concat($referencedDistributors)->unique('id')->values();
+    }
+
+    $bahanKemasanMeta = $bahanKemasans
+        ->mapWithKeys(function ($bk) {
+            return [
+                $bk->id => [
+                    'produsen' => $bk->produsen ? $bk->produsen->nama_produsen : '',
+                    'distributor' => $bk->distributor ? $bk->distributor->nama_distributor : '',
+                ],
+            ];
+        });
+
     return view('qc-sistem.pemeriksaan-kedatangan-kemasan.edit', 
-    compact('pemeriksaanKedatanganKemasan', 'bahans', 'shifts', 'produsens', 'distributors'));
+    compact('pemeriksaanKedatanganKemasan', 'bahanKemasans', 'shifts', 'produsens', 'distributors', 'bahanKemasanMeta'));
     }
     /**
      * Update the specified resource in storage.
@@ -313,7 +380,7 @@ class PemeriksaanKedatanganKemasanController extends Controller
             'nama_supir' => 'nullable|string|max:255',
             'jenis_pemeriksaan' => 'nullable|string|max:255',
             'no_po' => 'nullable|string|max:255',
-            'id_bahan.*' => 'nullable|exists:bahans,id',
+            'id_bahan.*' => 'nullable|exists:bahan_kemasans,id',
             'produsen.*' => 'nullable|string|max:255',
             'distributor.*' => 'nullable|string|max:255',
             'kode_produksi.*' => 'nullable|string|max:255',
@@ -431,15 +498,15 @@ class PemeriksaanKedatanganKemasanController extends Controller
         $user = Auth::user();
 
         if ($user->role && strtolower($user->role->role) === 'superadmin') {
-            $bahans = Bahan::with('user.plant')->get();
+            $bahanKemasans = BahanKemasan::with(['user.plant', 'distributor', 'produsen'])->get();
             $shifts = Shift::with('user.plant')->get();
             $produsens = Produsen::with('user.plant')->get();
             $distributors = Distributor::with('user.plant')->get();
         } else {
             if ($user->id_plant) {
-                $bahans = Bahan::whereHas('user', function($query) use ($user) {
+                $bahanKemasans = BahanKemasan::whereHas('user', function($query) use ($user) {
                     $query->where('id_plant', $user->id_plant);
-                })->with('user.plant')->get();
+                })->with(['user.plant', 'distributor', 'produsen'])->get();
 
                 $shifts = Shift::whereHas('user', function($query) use ($user) {
                     $query->where('id_plant', $user->id_plant);
@@ -453,15 +520,15 @@ class PemeriksaanKedatanganKemasanController extends Controller
                     $query->where('id_plant', $user->id_plant);
                 })->with('user.plant')->get();
             } else {
-                $bahans = Bahan::all();
+                $bahanKemasans = BahanKemasan::with(['distributor', 'produsen'])->get();
                 $shifts = Shift::all();
                 $produsens = Produsen::all();
                 $distributors = Distributor::all();
             }
         }
 
-        if ($bahans->isEmpty()) {
-            $bahans = Bahan::all();
+        if ($bahanKemasans->isEmpty()) {
+            $bahanKemasans = BahanKemasan::with(['distributor', 'produsen'])->get();
         }
         if ($shifts->isEmpty()) {
             $shifts = Shift::all();
@@ -473,12 +540,23 @@ class PemeriksaanKedatanganKemasanController extends Controller
             $distributors = Distributor::all();
         }
 
+        $bahanKemasanMeta = $bahanKemasans
+            ->mapWithKeys(function ($bk) {
+                return [
+                    $bk->id => [
+                        'produsen' => $bk->produsen ? $bk->produsen->nama_produsen : '',
+                        'distributor' => $bk->distributor ? $bk->distributor->nama_distributor : '',
+                    ],
+                ];
+            });
+
         return view('qc-sistem.pemeriksaan-kedatangan-kemasan.tambah-baris', compact(
             'pemeriksaanKedatanganKemasan',
-            'bahans',
+            'bahanKemasans',
             'shifts',
             'produsens',
-            'distributors'
+            'distributors',
+            'bahanKemasanMeta'
         ));
     }
 
@@ -487,7 +565,7 @@ class PemeriksaanKedatanganKemasanController extends Controller
         $this->checkPlantAccess($pemeriksaanKedatanganKemasan);
 
         $request->validate([
-            'id_bahan.*' => 'nullable|exists:bahans,id',
+            'id_bahan.*' => 'nullable|exists:bahan_kemasans,id',
             'produsen.*' => 'nullable|string|max:255',
             'distributor.*' => 'nullable|string|max:255',
             'kode_produksi.*' => 'nullable|string|max:255',
