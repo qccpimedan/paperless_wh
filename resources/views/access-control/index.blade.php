@@ -51,7 +51,9 @@
                 <div class="card-body">
                     <div class="btn-group" role="group">
                         @foreach ($roles as $role)
-                            <button type="button" class="btn btn-outline-primary role-btn" data-role-id="{{ $role->id }}" data-role-name="{{ $role->role }}">
+                            <button type="button" class="btn btn-outline-primary role-btn"
+                                data-role-id="{{ $role->id }}"
+                                data-role-name="{{ $role->role }}">
                                 {{ ucfirst(str_replace('_', ' ', $role->role)) }}
                             </button>
                         @endforeach

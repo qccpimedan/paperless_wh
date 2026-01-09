@@ -8,6 +8,19 @@ use Spatie\Permission\Models\Role;
 
 class AccessControlController extends Controller
 {
+    private function isSuperAdmin($user): bool
+    {
+        if (!$user) {
+            return false;
+        }
+
+        if (method_exists($user, 'hasRole') && $user->hasRole('superadmin')) {
+            return true;
+        }
+
+        return strtolower(optional($user->role)->role ?? '') === 'superadmin';
+    }
+
     /**
      * Display the access control dashboard
      */
@@ -22,12 +35,12 @@ class AccessControlController extends Controller
             $user = auth()->user();
 
             // Check if user has superadmin role
-            if (!$user->hasRole('superadmin')) {
+            if (!$this->isSuperAdmin($user)) {
                 abort(403, 'Unauthorized access - Anda harus menjadi Super Admin');
             }
 
-            // Get all roles except superadmin
-            $roles = Role::where('role', '!=', 'superadmin')->get();
+            // Get all roles (superadmin included for display; editing superadmin remains blocked)
+            $roles = Role::all();
 
             // Get all modules
             $modules = [
@@ -63,17 +76,12 @@ class AccessControlController extends Controller
     {
         try {
             // Check authorization
-            if (!auth()->user()->hasRole('superadmin')) {
+            if (!$this->isSuperAdmin(auth()->user())) {
                 return redirect()->back()->with('error', 'Unauthorized access');
             }
 
             // Find role by ID
             $role = Role::findOrFail($roleId);
-
-            // Validate that role is not superadmin
-            if ($role->role === 'superadmin') {
-                return redirect()->back()->with('error', 'Tidak bisa mengubah permissions Superadmin');
-            }
 
             // Get all permission IDs from request (only checked permissions)
             $newPermissionIds = $request->input('permissions', []);
@@ -140,7 +148,7 @@ class AccessControlController extends Controller
     {
         try {
             // Check authorization
-            if (!auth()->user()->hasRole('superadmin')) {
+            if (!$this->isSuperAdmin(auth()->user())) {
                 return response()->json(['error' => 'Unauthorized', 'success' => false], 403);
             }
 
