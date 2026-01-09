@@ -72,14 +72,11 @@
                                                 <label for="id_shift">Shift</label>
                                                 <select id="id_shift" class="form-control @error('id_shift') is-invalid @enderror" name="id_shift">
                                                     <option value="">Pilih Shift</option>
-                                                    @foreach($shifts as $shift)
-                                                        <option value="{{ $shift->id }}" {{ old('id_shift') == $shift->id ? 'selected' : '' }}>
-                                                            {{ $shift->shift }}
-                                                            @if($shift->user && $shift->user->plant)
-                                                                - {{ $shift->user->plant->plant }}
-                                                            @endif
-                                                        </option>
-                                                    @endforeach
+                                                        @foreach($shifts as $shift)
+                                                            <option value="{{ $shift->id }}" {{ old('id_shift') == $shift->id ? 'selected' : '' }}>
+                                                                {{ $shift->shift }}
+                                                            </option>
+                                                        @endforeach
                                                 </select>
                                                 @error('id_shift')
                                                     <div class="invalid-feedback">{{ $message }}</div>
@@ -190,8 +187,14 @@
                                 </div>
                                 
                                 <!-- Kondisi Mobil Pengangkut -->
-                                <div class="form-section mb-4">
+                                <div class="form-section mb-4" id="kondisi-mobil-section">
                                     <h5 class="text-primary mb-3">Kondisi Mobil Pengangkut</h5>
+                                    <div class="mb-3">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="kondisi_mobil_check_all">
+                                            <label class="form-check-label" for="kondisi_mobil_check_all">Centang semua (Ya)</label>
+                                        </div>
+                                    </div>
                                     <div class="row">
                                         <div class="col-md-4">
                                             <!-- 1. Bersih -->
@@ -343,6 +346,31 @@
                                         </div>
                                     </div>
                                 </div>
+
+                                <script>
+                                    document.addEventListener('DOMContentLoaded', function() {
+                                        const section = document.getElementById('kondisi-mobil-section');
+                                        const checkAll = document.getElementById('kondisi_mobil_check_all');
+                                        if (!section || !checkAll) return;
+
+                                        checkAll.addEventListener('change', function() {
+                                            const radios = section.querySelectorAll('input[type="radio"][name^="kondisi_mobil["]');
+                                            if (this.checked) {
+                                                radios.forEach((radio) => {
+                                                    if (radio.value === '1') radio.checked = true;
+                                                });
+                                            } else {
+                                                const names = new Set();
+                                                radios.forEach((radio) => names.add(radio.name));
+                                                names.forEach((name) => {
+                                                    section.querySelectorAll(`input[type="radio"][name="${name}"]`).forEach((r) => {
+                                                        r.checked = false;
+                                                    });
+                                                });
+                                            }
+                                        });
+                                    });
+                                </script>
                                 <!-- Dynamic Rows Section -->
                                 <div class="form-section mb-4">
                                     <h5 class="text-primary mb-3">Detail Produk (Baris Dinamis)</h5>
@@ -789,8 +817,8 @@
                                 </script>
                                 
                                 <div class="col-md-12 d-flex justify-content-end mt-3">
-                                    <a href="{{ route('pemeriksaan-bahan-baku.index') }}" class="btn btn-light-secondary me-1 mb-1">Kembali</a>
-                                    <button type="submit" class="btn btn-primary me-1 mb-1">Simpan</button>
+                                    <a href="{{ route('pemeriksaan-bahan-baku.index') }}" class="btn btn-light-secondary me-1 mb-1 btn-kembali-confirm">Kembali</a>
+                                    <button type="submit" class="btn btn-primary me-1 mb-1">Simpan Data</button>
                                     <button type="reset" class="btn btn-light-secondary me-1 mb-1">Reset</button>
                                 </div>
                             </form>
@@ -813,6 +841,12 @@ let selectOptionsCache = {
 };
 
 document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.btn-kembali-confirm').forEach((el) => {
+        el.addEventListener('click', function(e) {
+            const ok = confirm('Data belum disimpan. Yakin ingin kembali ke halaman index?');
+            if (!ok) e.preventDefault();
+        });
+    });
     
     // 1. Suhu Mobil Conditional Logic
     const suhuMobilTypeEl = document.getElementById('suhu_mobil_type');

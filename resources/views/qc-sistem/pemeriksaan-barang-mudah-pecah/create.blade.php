@@ -229,8 +229,8 @@
                                             <button type="submit" class="btn btn-primary me-1 mb-1">
                                                 Simpan Pemeriksaan
                                             </button>
-                                            <a href="{{ route('pemeriksaan-barang-mudah-pecah.index') }}" class="btn btn-light-secondary mb-1">
-                                                Batal
+                                            <a href="{{ route('pemeriksaan-barang-mudah-pecah.index') }}" class="btn btn-light-secondary mb-1 btn-kembali-confirm">
+                                                Kembali
                                             </a>
                                         </div>
                                     </div>
@@ -245,6 +245,13 @@
 </div>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.btn-kembali-confirm').forEach((el) => {
+        el.addEventListener('click', function(e) {
+            const ok = confirm('Data belum disimpan. Yakin ingin kembali ke halaman index?');
+            if (!ok) e.preventDefault();
+        });
+    });
+
     let barangIndex = 1;
     const idAreaSelect = document.getElementById('id_area');
     

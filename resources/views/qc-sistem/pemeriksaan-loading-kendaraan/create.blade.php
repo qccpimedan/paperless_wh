@@ -326,8 +326,8 @@
 
                                             <!-- Buttons -->
                                             <div class="col-md-12 d-flex justify-content-end mt-3">
-                                                <button type="submit" class="btn btn-primary me-1 mb-1">Submit</button>
-                                                <a href="{{ route('pemeriksaan-loading-kendaraan.index') }}" class="btn btn-light-secondary me-1 mb-1">Kembali</a>
+                                                <button type="submit" class="btn btn-primary me-1 mb-1">Simpan Data</button>
+                                                <a href="{{ route('pemeriksaan-loading-kendaraan.index') }}" class="btn btn-light-secondary me-1 mb-1 btn-kembali-confirm">Kembali</a>
                                             </div>
                                         </div>
                                     </div>
@@ -340,4 +340,15 @@
         </section>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.btn-kembali-confirm').forEach((el) => {
+        el.addEventListener('click', function(e) {
+            const ok = confirm('Data belum disimpan. Yakin ingin kembali ke halaman index?');
+            if (!ok) e.preventDefault();
+        });
+    });
+});
+</script>
 @endsection

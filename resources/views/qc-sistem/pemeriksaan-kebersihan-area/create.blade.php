@@ -138,7 +138,7 @@
                                             
                                             <div class="col-md-12 d-flex justify-content-end mt-3">
                                                 <button type="submit" class="btn btn-primary me-1 mb-1">Buat Pemeriksaan</button>
-                                                <a href="{{ route('pemeriksaan-kebersihan-area.index') }}" class="btn btn-light-secondary me-1 mb-1">Kembali</a>
+                                                <a href="{{ route('pemeriksaan-kebersihan-area.index') }}" class="btn btn-light-secondary me-1 mb-1 btn-kembali-confirm">Kembali</a>
                                             </div>
                                         </div>
                                     </div>
@@ -153,6 +153,15 @@
 </div>
 
 <script>
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.btn-kembali-confirm').forEach((el) => {
+        el.addEventListener('click', function(e) {
+            const ok = confirm('Data belum disimpan. Yakin ingin kembali ke halaman index?');
+            if (!ok) e.preventDefault();
+        });
+    });
+});
+
     // Data master forms dengan fields
     const masterFormsData = {
         @foreach($masterForms as $form)

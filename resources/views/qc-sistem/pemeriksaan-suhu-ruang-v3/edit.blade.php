@@ -11,18 +11,18 @@
         <div class="page-title">
             <div class="row">
                 <div class="col-12 col-md-6 order-md-1 order-last">
-                    <h3>Pemeriksaan Suhu Ruang V3</h3>
+                    <h3>Gudang Dry</h3>
                     @if(request()->query('edit_per_2jam'))
-                        <p class="text-subtitle text-muted">Edit pemeriksaan suhu ruang V3 (Per 2 Jam)</p>
+                        <p class="text-subtitle text-muted">Edit Gudang Dry (Per 2 Jam)</p>
                     @else
-                        <p class="text-subtitle text-muted">Edit pemeriksaan suhu ruang V3</p>
+                        <p class="text-subtitle text-muted">Edit Gudang Dry</p>
                     @endif
                 </div>
                 <div class="col-12 col-md-6 order-md-2 order-first">
                     <nav aria-label="breadcrumb" class="breadcrumb-header float-start float-lg-end">
                         <ol class="breadcrumb">
                             <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
-                            <li class="breadcrumb-item"><a href="{{ route('pemeriksaan-suhu-ruang-v3.index') }}">Pemeriksaan V3</a></li>
+                            <li class="breadcrumb-item"><a href="{{ route('pemeriksaan-suhu-ruang-v3.index') }}">Pemeriksaan</a></li>
                             <li class="breadcrumb-item active" aria-current="page">Edit Pemeriksaan</li>
                         </ol>
                     </nav>
@@ -36,9 +36,9 @@
                     <div class="card">
                         <div class="card-header">
                             @if(request()->query('edit_per_2jam'))
-                                <h4 class="card-title">Form Edit Pemeriksaan Suhu Ruang V3 (Per 2 Jam)</h4>
+                                <h4 class="card-title">Form Edit Gudang Dry (Per 2 Jam)</h4>
                             @else
-                                <h4 class="card-title">Form Edit Pemeriksaan Suhu Ruang V3</h4>
+                                <h4 class="card-title">Form Edit Gudang Dry</h4>
                             @endif
                         </div>
                         <div class="card-content">

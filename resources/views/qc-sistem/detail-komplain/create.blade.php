@@ -229,7 +229,7 @@
 
                         <div class="row mt-4">
                             <div class="col-12">
-                                <a href="{{ route('detail-komplain.index') }}" class="btn btn-secondary">Kembali</a>
+                                <a href="{{ route('detail-komplain.index') }}" class="btn btn-secondary btn-kembali-confirm">Kembali</a>
                                 <button type="submit" class="btn btn-primary">Simpan Komplain</button>
                             </div>
                         </div>
@@ -242,6 +242,13 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.btn-kembali-confirm').forEach((el) => {
+        el.addEventListener('click', function(e) {
+            const ok = confirm('Data belum disimpan. Yakin ingin kembali ke halaman index?');
+            if (!ok) e.preventDefault();
+        });
+    });
+
     const MAX_SIZE = 1024 * 1024;
 
     const input = document.getElementById('dokumentasi');
