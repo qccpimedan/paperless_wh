@@ -11,8 +11,8 @@
         <div class="page-title">
             <div class="row">
                 <div class="col-12 col-md-6 order-md-1 order-last">
-                    <h3>History Pemeriksaan Suhu Ruang V3</h3>
-                    <p class="text-subtitle text-muted">Riwayat perubahan data pemeriksaan suhu ruang</p>
+                    <h3>History Gudang Dry </h3>
+                    <p class="text-subtitle text-muted">Riwayat perubahan data Gudang Dry</p>
                 </div>
                 <div class="col-12 col-md-6 order-md-2 order-first">
                     <nav aria-label="breadcrumb" class="breadcrumb-header float-start float-lg-end">

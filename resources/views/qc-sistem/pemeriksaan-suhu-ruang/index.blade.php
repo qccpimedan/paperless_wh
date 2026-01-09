@@ -11,14 +11,14 @@
         <div class="page-title">
             <div class="row">
                 <div class="col-12 col-md-6 order-md-1 order-last">
-                    <h3>Data Pemeriksaan Suhu Ruang</h3>
-                    <p class="text-subtitle text-muted">Kelola data pemeriksaan suhu ruang</p>
+                    <h3>Data Food Prosesing</h3>
+                    <p class="text-subtitle text-muted">Kelola data Food Prosesing</p>
                 </div>
                 <div class="col-12 col-md-6 order-md-2 order-first">
                     <nav aria-label="breadcrumb" class="breadcrumb-header float-start float-lg-end">
                         <ol class="breadcrumb">
                             <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
-                            <li class="breadcrumb-item active" aria-current="page">Data Pemeriksaan Suhu Ruang</li>
+                            <li class="breadcrumb-item active" aria-current="page">Data Food Prosesing</li>
                         </ol>
                     </nav>
                 </div>
@@ -35,7 +35,7 @@
         <section class="section">
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="card-title mb-0">Daftar Pemeriksaan Suhu Ruang</h5>
+                    <h5 class="card-title mb-0">Daftar Food Prosesing</h5>
                     @can('create_pemeriksaan_suhu_ruang')
                         <a href="{{ route('pemeriksaan-suhu-ruang.create') }}" class="btn btn-primary">
                             <i class="bi bi-plus-circle"></i> Buat Pemeriksaan

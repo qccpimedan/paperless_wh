@@ -8,14 +8,14 @@
         <div class="page-title">
             <div class="row">
                 <div class="col-12 col-md-6 order-md-1 order-last">
-                    <h3>Pemeriksaan Suhu Ruang V3</h3>
-                    <p class="text-subtitle text-muted">Buat pemeriksaan suhu ruang V3 baru</p>
+                    <h3>Gudang Dry</h3>
+                    <p class="text-subtitle text-muted">Buat Gudang Dry</p>
                 </div>
                 <div class="col-12 col-md-6 order-md-2 order-first">
                     <nav aria-label="breadcrumb" class="breadcrumb-header float-start float-lg-end">
                         <ol class="breadcrumb">
                             <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
-                            <li class="breadcrumb-item"><a href="{{ route('pemeriksaan-suhu-ruang-v3.index') }}">Pemeriksaan V3</a></li>
+                            <li class="breadcrumb-item"><a href="{{ route('pemeriksaan-suhu-ruang-v3.index') }}">Pemeriksaan</a></li>
                             <li class="breadcrumb-item active">Buat Pemeriksaan</li>
                         </ol>
                     </nav>
@@ -27,7 +27,7 @@
                 <div class="col-md-12 col-12">
                     <div class="card">
                         <div class="card-header">
-                            <h4 class="card-title">Form Pemeriksaan Suhu Ruang V3</h4>
+                            <h4 class="card-title">Form Gudang Dry</h4>
                         </div>
                         <div class="card-content">
                             <div class="card-body">
@@ -127,11 +127,11 @@
                                                 @endfor
                                             @endforeach
 
-                                            <div class="col-md-12 mt-4">
+                                            <div class="col-md-6 mt-4">
                                                 <label for="keterangan">Keterangan</label>
                                                 <textarea id="keterangan" class="form-control" name="keterangan" rows="3">{{ old('keterangan') }}</textarea>
                                             </div>
-                                            <div class="col-md-12 mt-3">
+                                            <div class="col-md-6 mt-3">
                                                 <label for="tindakan_koreksi">Tindakan Koreksi</label>
                                                 <textarea id="tindakan_koreksi" class="form-control" name="tindakan_koreksi" rows="3">{{ old('tindakan_koreksi') }}</textarea>
                                             </div>
@@ -139,7 +139,7 @@
                                                 <button type="submit" class="btn btn-primary me-1 mb-1">
                                                     Buat Pemeriksaan
                                                 </button>
-                                                <a href="{{ route('pemeriksaan-suhu-ruang-v2.index') }}" class="btn btn-light-secondary me-1 mb-1">
+                                                <a href="{{ route('pemeriksaan-suhu-ruang-v3.index') }}" class="btn btn-light-secondary me-1 mb-1 btn-kembali-confirm">
                                                     Kembali
                                                 </a>
                                             </div>
@@ -156,6 +156,13 @@
 </div>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.btn-kembali-confirm').forEach((el) => {
+            el.addEventListener('click', function(e) {
+                const ok = confirm('Data belum disimpan. Yakin ingin kembali ke halaman index?');
+                if (!ok) e.preventDefault();
+            });
+        });
+
         const fields = ['suhu_premix', 'suhu_seasoning', 'suhu_dry', 'suhu_cassing', 'suhu_beef', 'suhu_packaging', 'suhu_ruang_chemical', 'suhu_ruang_seasoning'];
         fields.forEach(field => {
             document.querySelectorAll(`.${field}-checkbox`).forEach(checkbox => {

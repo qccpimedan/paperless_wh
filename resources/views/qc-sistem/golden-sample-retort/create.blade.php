@@ -236,7 +236,7 @@
                                         <div class="row">
                                             <div class="col-md-12 d-flex justify-content-end">
                                                 <button type="submit" class="btn btn-primary me-1 mb-1">Simpan Report</button>
-                                                <a href="{{ route('golden-sample-reports.index') }}" class="btn btn-light-secondary me-1 mb-1">Kembali</a>
+                                                <a href="{{ route('golden-sample-reports.index') }}" class="btn btn-light-secondary me-1 mb-1 btn-kembali-confirm">Kembali</a>
                                             </div>
                                         </div>
                                     </div>
@@ -261,6 +261,15 @@ document.getElementById('id_plant').addEventListener('change', function() {
         manualInput.style.display = 'none';
         document.getElementById('plant_manual').required = false;
     }
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.btn-kembali-confirm').forEach((el) => {
+        el.addEventListener('click', function(e) {
+            const ok = confirm('Data belum disimpan. Yakin ingin kembali ke halaman index?');
+            if (!ok) e.preventDefault();
+        });
+    });
 });
 
 // Check on page load

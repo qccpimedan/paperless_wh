@@ -381,7 +381,7 @@
 
                                         <div class="col-md-12 d-flex justify-content-end mt-3">
                                             <button type="submit" class="btn btn-primary me-1 mb-1">Simpan Loading Produk</button>
-                                            <a href="{{ route('pemeriksaan-loading-produk.index') }}" class="btn btn-light-secondary me-1 mb-1">Kembali</a>
+                                            <a href="{{ route('pemeriksaan-loading-produk.index') }}" class="btn btn-light-secondary me-1 mb-1 btn-kembali-confirm">Kembali</a>
                                         </div>
                                     </div>
                                 </form>
@@ -396,6 +396,13 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+
+    document.querySelectorAll('.btn-kembali-confirm').forEach((el) => {
+        el.addEventListener('click', function(e) {
+            const ok = confirm('Data belum disimpan. Yakin ingin kembali ke halaman index?');
+            if (!ok) e.preventDefault();
+        });
+    });
 
     // Kendaraan manual input handling
     const kendaraanSelect = document.getElementById('id_kendaraan');

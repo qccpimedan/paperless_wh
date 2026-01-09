@@ -11,11 +11,11 @@
         <div class="page-title">
             <div class="row">
                 <div class="col-12 col-md-6 order-md-1 order-last">
-                    <h3>Pemeriksaan Suhu Ruang</h3>
+                    <h3>Food Prosesing</h3>
                     @if(request()->query('edit_per_2jam'))
-                        <p class="text-subtitle text-muted">Edit pemeriksaan suhu ruang (Per 2 Jam)</p>
+                        <p class="text-subtitle text-muted">Edit Food Prosesing (Per 2 Jam)</p>
                     @else
-                        <p class="text-subtitle text-muted">Edit pemeriksaan suhu ruang</p>
+                        <p class="text-subtitle text-muted">Edit Food Prosesing</p>
                     @endif
                 </div>
                 <div class="col-12 col-md-6 order-md-2 order-first">
@@ -36,9 +36,9 @@
                     <div class="card">
                         <div class="card-header">
                             @if(request()->query('edit_per_2jam'))
-                                <h4 class="card-title">Form Edit Pemeriksaan Suhu Ruang (Per 2 Jam)</h4>
+                                <h4 class="card-title">Form Edit Food Prosesing (Per 2 Jam)</h4>
                             @else
-                                <h4 class="card-title">Form Edit Pemeriksaan Suhu Ruang</h4>
+                                <h4 class="card-title">Form Edit Food Prosesing</h4>
                             @endif
                         </div>
                         <div class="card-content">

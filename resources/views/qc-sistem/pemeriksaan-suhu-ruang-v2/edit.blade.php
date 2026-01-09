@@ -11,11 +11,11 @@
         <div class="page-title">
             <div class="row">
                 <div class="col-12 col-md-6 order-md-1 order-last">
-                    <h3>Pemeriksaan Suhu Ruang V2</h3>
+                    <h3>CS Meat</h3>
                     @if(request()->query('edit_per_2jam'))
-                        <p class="text-subtitle text-muted">Edit pemeriksaan suhu ruang V2 (Per 2 Jam)</p>
+                        <p class="text-subtitle text-muted">CS Meat (Per 2 Jam)</p>
                     @else
-                        <p class="text-subtitle text-muted">Edit pemeriksaan suhu ruang V2</p>
+                        <p class="text-subtitle text-muted">CS Meat</p>
                     @endif
                 </div>
                 <div class="col-12 col-md-6 order-md-2 order-first">
@@ -36,9 +36,9 @@
                     <div class="card">
                         <div class="card-header">
                             @if(request()->query('edit_per_2jam'))
-                                <h4 class="card-title">Form Edit Pemeriksaan Suhu Ruang V2 (Per 2 Jam)</h4>
+                                <h4 class="card-title">Form CS Meat (Per 2 Jam)</h4>
                             @else
-                                <h4 class="card-title">Form Edit Pemeriksaan Suhu Ruang V2</h4>
+                                <h4 class="card-title">Form CS Meat</h4>
                             @endif
                         </div>
                         <div class="card-content">
@@ -453,15 +453,17 @@
 
                                             <!-- Catatan Section -->
                                             <div class="col-md-12 mt-4">
-                                                <h5 class="mb-3"><strong>Catatan</strong></h5>
-                                            </div>
-                                            <div class="col-md-6 mt-3">
-                                                <label for="keterangan">Keterangan</label>
-                                                <textarea id="keterangan" class="form-control form-control-sm" name="keterangan" placeholder="Keterangan" rows="3">{{ old('keterangan', $pemeriksaanSuhuRuangV2->keterangan) }}</textarea>
-                                            </div>
-                                            <div class="col-md-6 mt-3">
-                                                <label for="tindakan_koreksi">Tindakan Koreksi</label>
-                                                <textarea id="tindakan_koreksi" class="form-control form-control-sm" name="tindakan_koreksi" placeholder="Tindakan Koreksi" rows="3">{{ old('tindakan_koreksi', $pemeriksaanSuhuRuangV2->tindakan_koreksi) }}</textarea>
+                                                <h5 class="mb-2"><strong>Catatan</strong></h5>
+                                                <div class="row">
+                                                    <div class="col-md-6">
+                                                        <label for="keterangan">Keterangan</label>
+                                                        <textarea id="keterangan" class="form-control form-control-sm" name="keterangan" placeholder="Keterangan" rows="3">{{ old('keterangan', $pemeriksaanSuhuRuangV2->keterangan) }}</textarea>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <label for="tindakan_koreksi">Tindakan Koreksi</label>
+                                                        <textarea id="tindakan_koreksi" class="form-control form-control-sm" name="tindakan_koreksi" placeholder="Tindakan Koreksi" rows="3">{{ old('tindakan_koreksi', $pemeriksaanSuhuRuangV2->tindakan_koreksi) }}</textarea>
+                                                    </div>
+                                                </div>
                                             </div>
 
                                             <div class="col-12 d-flex justify-content-end mt-4">
