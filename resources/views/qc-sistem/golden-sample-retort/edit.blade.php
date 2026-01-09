@@ -91,17 +91,10 @@
                                             </div>
                                             <div class="col-md-6">
                                                 <div class="row">
-                                                    <div class="col-md-6">
-                                                        <label for="collection_date_from">Dari Bulan <span class="text-danger">*</span></label>
-                                                        <input type="month" class="form-control @error('collection_date_from') is-invalid @enderror" name="collection_date_from" id="collection_date_from" value="{{ old('collection_date_from', $goldenSampleReport->collection_date_from) }}" required>
-                                                        @error('collection_date_from')
-                                                            <div class="text-danger small">{{ $message }}</div>
-                                                        @enderror
-                                                    </div>
-                                                    <div class="col-md-6">
-                                                        <label for="collection_date_to">Ke Bulan <span class="text-danger">*</span></label>
-                                                        <input type="month" class="form-control @error('collection_date_to') is-invalid @enderror" name="collection_date_to" id="collection_date_to" value="{{ old('collection_date_to', $goldenSampleReport->collection_date_to) }}" required>
-                                                        @error('collection_date_to')
+                                                    <div class="col-md-12">
+                                                        <label for="masa_penyimpanan">Masa Penyimpanan <span class="text-danger">*</span></label>
+                                                        <input type="text" class="form-control @error('masa_penyimpanan') is-invalid @enderror" name="masa_penyimpanan" id="masa_penyimpanan" value="{{ old('masa_penyimpanan', $goldenSampleReport->masa_penyimpanan) }}" required>
+                                                        @error('masa_penyimpanan')
                                                             <div class="text-danger small">{{ $message }}</div>
                                                         @enderror
                                                     </div>

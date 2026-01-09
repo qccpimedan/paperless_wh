@@ -73,7 +73,7 @@ class PemeriksaanSuhuRuangV2 extends Model
 
     public function produk()
     {
-        return $this->belongsTo(Bahan::class, 'id_produk');
+        return $this->belongsTo(Produk::class, 'id_produk');
     }
 
     public function area()

@@ -45,6 +45,7 @@ class PemeriksaanKedatanganBahanBakuPenunjang extends Model
         'suhu_produk_type', 
         'kondisi_produk_suhu',
         'status',
+        'status_baris_array',
         'keterangan',
         'status_verifikasi',
         'verified_by',
@@ -53,6 +54,25 @@ class PemeriksaanKedatanganBahanBakuPenunjang extends Model
         'verified_by_qc',
         'verified_by_produksi',
         'verified_by_spv',
+        // Array columns untuk dynamic rows
+        'id_bahan_array',
+        'produsen_array',
+        'negara_produsen_array',
+        'distributor_array',
+        'kode_produksi_array',
+        'expire_date_array',
+        'jumlah_datang_array',
+        'jumlah_sampling_array',
+        'spesifikasi_array',
+        'suhu_mobil_array',
+        'suhu_mobil_type_array',
+        'kondisi_fisik_array',
+        'logo_halal_array',
+        'hasil_uji_ffa_array',
+        'dokumen_halal_array',
+        'coa_array',
+        'file_coa_array',
+        'keterangan_array',
     ];
 
     protected $casts = [
@@ -61,6 +81,7 @@ class PemeriksaanKedatanganBahanBakuPenunjang extends Model
         'logo_halal' => 'boolean',
         'dokumen_halal' => 'boolean',
         'coa' => 'boolean',
+        'file_coa_array' => 'array',
         'tanggal' => 'date',
         'expire_date' => 'date',
     ];

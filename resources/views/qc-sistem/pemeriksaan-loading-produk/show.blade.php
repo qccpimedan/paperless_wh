@@ -60,10 +60,16 @@
                                     </td>
                                 </tr>
                                 <tr>
-                                    <td><strong>Tujuan Pengiriman:</strong></td>
+                                    <td><strong>Customer & Tujuan Pengiriman:</strong></td>
                                     <td>
                                         @if($pemeriksaanLoading->tujuanPengiriman)
-                                            <span class="badge bg-info">{{ $pemeriksaanLoading->tujuanPengiriman->nama_tujuan }}</span>
+                                            <span class="badge bg-info">
+                                                @if($pemeriksaanLoading->tujuanPengiriman->customer)
+                                                    {{ $pemeriksaanLoading->tujuanPengiriman->customer->nama_cust }} - {{ $pemeriksaanLoading->tujuanPengiriman->nama_tujuan }}
+                                                @else
+                                                    {{ $pemeriksaanLoading->tujuanPengiriman->nama_tujuan }}
+                                                @endif
+                                            </span>
                                         @else
                                             -
                                         @endif
@@ -92,10 +98,6 @@
                                             -
                                         @endif
                                     </td>
-                                </tr>
-                                <tr>
-                                    <td><strong>No. PO:</strong></td>
-                                    <td>{{ $pemeriksaanLoading->no_po ?? '-' }}</td>
                                 </tr>
                                 <tr>
                                     <td><strong>Plant:</strong></td>
@@ -216,16 +218,18 @@
                                     <td width="200"><strong>Segel/Gembok:</strong></td>
                                     <td>
                                         @if($pemeriksaanLoading->segel_gembok)
-                                            <span class="badge bg-success">✓ Ya</span>
+                                            <span class="badge bg-info">Segel</span>
                                         @else
-                                            <span class="badge bg-secondary">✗ Tidak</span>
+                                            <span class="badge bg-warning text-dark">Gembok</span>
                                         @endif
                                     </td>
                                 </tr>
-                                <tr>
-                                    <td><strong>No. Segel:</strong></td>
-                                    <td>{{ $pemeriksaanLoading->no_segel ?? '-' }}</td>
-                                </tr>
+                                @if($pemeriksaanLoading->segel_gembok)
+                                    <tr>
+                                        <td><strong>No. Segel:</strong></td>
+                                        <td>{{ $pemeriksaanLoading->no_segel ?? '-' }}</td>
+                                    </tr>
+                                @endif
                             </table>
                         </div>
                     </div>
@@ -234,11 +238,11 @@
                     @if($pemeriksaanLoading->produk_data && count($pemeriksaanLoading->produk_data) > 0)
                         <div class="row mb-4">
                             <div class="col-md-12">
-                                <h6 class="text-secondary mb-3">Daftar Produk</h6>
+                                <h6 class="text-secondary mb-3">Detail Produk</h6>
                                 @foreach($pemeriksaanLoading->produk_data as $index => $produk)
                                     <div class="card mb-3 border-light">
                                         <div class="card-body">
-                                            <h6 class="card-title mb-3">Produk #{{ $index + 1 }}</h6>
+                                            <h6 class="card-title mb-3">Detail #{{ $index + 1 }}</h6>
                                             <div class="row">
                                                 <div class="col-md-6">
                                                     <table class="table table-sm table-borderless">
@@ -310,9 +314,7 @@
                         </div>
                     @endif
 
-                    <hr>
-
-                    <!-- INFORMASI SISTEM -->
+                    <!-- INFORMASI SISTEM
                     <h5 class="text-primary mb-3">Informasi Sistem</h5>
                     <div class="row">
                         <div class="col-md-6">
@@ -331,7 +333,7 @@
                                 </tr>
                             </table>
                         </div>
-                    </div>
+                    </div> -->
                 </div>
             </div>
         </section>

@@ -45,6 +45,11 @@
                                     </div>
                                 @endif
 
+                                <div class="alert alert-info">
+                                    <strong>Catatan:</strong> Halaman ini terhubung dengan master <strong>Distributor</strong> dan <strong>Produsen</strong>.
+                                    Jika data Distributor/Produsen belum ada, silakan input terlebih dahulu pada menu <strong>Input Distributor</strong> dan <strong>Input Produsen</strong>, lalu kembali ke halaman ini.
+                                </div>
+
                                 <form class="form form-horizontal" action="{{ route('chemicals.store') }}" method="POST">
                                     @csrf
                                     <div class="form-body">
@@ -53,6 +58,22 @@
                                                 <label for="nama_chemical">Nama Chemical <span class="text-danger">*</span></label>
                                                 <div id="dynamic-fields">
                                                     <div class="input-group mb-2">
+                                                        <select name="id_distributor[]" class="form-select @error('id_distributor.0') is-invalid @enderror">
+                                                            <option value="">-- Pilih Distributor (Opsional) --</option>
+                                                            @foreach($distributors as $distributor)
+                                                                <option value="{{ $distributor->id }}" {{ old('id_distributor.0') == $distributor->id ? 'selected' : '' }}>
+                                                                    {{ $distributor->nama_distributor }}
+                                                                </option>
+                                                            @endforeach
+                                                        </select>
+                                                        <select name="id_produsen[]" class="form-select @error('id_produsen.0') is-invalid @enderror">
+                                                            <option value="">-- Pilih Produsen (Opsional) --</option>
+                                                            @foreach($produsens as $produsen)
+                                                                <option value="{{ $produsen->id }}" {{ old('id_produsen.0') == $produsen->id ? 'selected' : '' }}>
+                                                                    {{ $produsen->nama_produsen }}
+                                                                </option>
+                                                            @endforeach
+                                                        </select>
                                                         <input type="text" class="form-control @error('nama_chemical.0') is-invalid @enderror"
                                                             name="nama_chemical[]" placeholder="Nama Chemical" value="{{ old('nama_chemical.0') }}" required>
                                                         <button type="button" class="btn btn-success" id="add-field">
@@ -60,6 +81,12 @@
                                                         </button>
                                                     </div>
                                                 </div>
+                                                @error('id_distributor')
+                                                    <div class="text-danger small">{{ $message }}</div>
+                                                @enderror
+                                                @error('id_produsen')
+                                                    <div class="text-danger small">{{ $message }}</div>
+                                                @enderror
                                                 @error('nama_chemical')
                                                     <div class="text-danger small">{{ $message }}</div>
                                                 @enderror
@@ -91,6 +118,18 @@ document.addEventListener('DOMContentLoaded', function() {
         const newField = document.createElement('div');
         newField.className = 'input-group mb-2';
         newField.innerHTML = `
+            <select name="id_distributor[]" class="form-select">
+                <option value="">-- Pilih Distributor (Opsional) --</option>
+                @foreach($distributors as $distributor)
+                    <option value="{{ $distributor->id }}">{{ $distributor->nama_distributor }}</option>
+                @endforeach
+            </select>
+            <select name="id_produsen[]" class="form-select">
+                <option value="">-- Pilih Produsen (Opsional) --</option>
+                @foreach($produsens as $produsen)
+                    <option value="{{ $produsen->id }}">{{ $produsen->nama_produsen }}</option>
+                @endforeach
+            </select>
             <input type="text" class="form-control" name="nama_chemical[]" placeholder="Nama Chemical" required>
             <button type="button" class="btn btn-danger remove-field">
                 <i class="bi bi-trash"></i>

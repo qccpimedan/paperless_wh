@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\PemeriksaanKedatanganKemasan;
-use App\Models\Bahan;
+use App\Models\BahanKemasan;
 use App\Models\Shift;
 use App\Models\Produsen;
 use App\Models\User;
@@ -35,8 +35,21 @@ class PemeriksaanKedatanganKemasanController extends Controller
                 ->latest() // Data terbaru muncul paling atas
                 ->get();
         }
+
+        $bahanIds = $pemeriksaans
+            ->flatMap(function ($pemeriksaan) {
+                $ids = json_decode($pemeriksaan->id_bahan_array ?? '[]', true);
+                return is_array($ids) ? $ids : [];
+            })
+            ->filter(fn ($id) => !empty($id))
+            ->unique()
+            ->values();
+
+        $bahanNamaById = $bahanIds->isNotEmpty()
+            ? BahanKemasan::whereIn('id', $bahanIds)->pluck('nama_kemasan', 'id')
+            : collect();
         
-        return view('qc-sistem.pemeriksaan-kedatangan-kemasan.index', compact('pemeriksaans'));
+        return view('qc-sistem.pemeriksaan-kedatangan-kemasan.index', compact('pemeriksaans', 'bahanNamaById'));
     }
 
     /**
@@ -53,18 +66,18 @@ class PemeriksaanKedatanganKemasanController extends Controller
             'role' => $user->role ? $user->role->role : 'no role'
         ]);
         
-        // Get bahans, shifts, produsens, and distributors based on plant access
+        // Get bahan kemasans, shifts, produsens, and distributors based on plant access
         if ($user->role && strtolower($user->role->role) === 'superadmin') {
-            $bahans = Bahan::with('user.plant')->get();
+            $bahanKemasans = BahanKemasan::with(['user.plant', 'distributor', 'produsen'])->get();
             $shifts = Shift::with('user.plant')->get();
             $produsens = Produsen::with('user.plant')->get();
             $distributors = Distributor::with('user.plant')->get();
         } else {
             if ($user->id_plant) {
                 // Filter berdasarkan plant
-                $bahans = Bahan::whereHas('user', function($query) use ($user) {
+                $bahanKemasans = BahanKemasan::whereHas('user', function($query) use ($user) {
                     $query->where('id_plant', $user->id_plant);
-                })->with('user.plant')->get();
+                })->with(['user.plant', 'distributor', 'produsen'])->get();
                 
                 $shifts = Shift::whereHas('user', function($query) use ($user) {
                     $query->where('id_plant', $user->id_plant);
@@ -79,7 +92,7 @@ class PemeriksaanKedatanganKemasanController extends Controller
                 })->with('user.plant')->get();
             } else {
                 // Fallback: User has no plant, get all
-                $bahans = Bahan::all();
+                $bahanKemasans = BahanKemasan::with(['distributor', 'produsen'])->get();
                 $shifts = Shift::all();
                 $produsens = Produsen::all();
                 $distributors = Distributor::all();
@@ -87,8 +100,8 @@ class PemeriksaanKedatanganKemasanController extends Controller
         }
         
         // Fallback if no data found
-        if ($bahans->isEmpty()) {
-            $bahans = Bahan::all();
+        if ($bahanKemasans->isEmpty()) {
+            $bahanKemasans = BahanKemasan::with(['distributor', 'produsen'])->get();
         }
         if ($shifts->isEmpty()) {
             $shifts = Shift::all();
@@ -99,15 +112,37 @@ class PemeriksaanKedatanganKemasanController extends Controller
         if ($distributors->isEmpty()) {
             $distributors = Distributor::all();
         }
+
+        $referencedProdusenIds = $bahanKemasans->pluck('id_produsen')->filter()->unique()->values();
+        if ($referencedProdusenIds->isNotEmpty()) {
+            $referencedProdusens = Produsen::with('user.plant')->whereIn('id', $referencedProdusenIds)->get();
+            $produsens = $produsens->concat($referencedProdusens)->unique('id')->values();
+        }
+
+        $referencedDistributorIds = $bahanKemasans->pluck('id_distributor')->filter()->unique()->values();
+        if ($referencedDistributorIds->isNotEmpty()) {
+            $referencedDistributors = Distributor::with('user.plant')->whereIn('id', $referencedDistributorIds)->get();
+            $distributors = $distributors->concat($referencedDistributors)->unique('id')->values();
+        }
         
         \Log::info('Data for create view:', [
-            'bahans_count' => $bahans->count(),
+            'bahanKemasans_count' => $bahanKemasans->count(),
             'shifts_count' => $shifts->count(),
             'produsens_count' => $produsens->count(),
             'distributors_count' => $distributors->count()
         ]);
-        
-        return view('qc-sistem.pemeriksaan-kedatangan-kemasan.create', compact('bahans', 'shifts', 'produsens', 'distributors'));
+
+        $bahanKemasanMeta = $bahanKemasans
+            ->mapWithKeys(function ($bk) {
+                return [
+                    $bk->id => [
+                        'produsen' => $bk->produsen ? $bk->produsen->nama_produsen : '',
+                        'distributor' => $bk->distributor ? $bk->distributor->nama_distributor : '',
+                    ],
+                ];
+            });
+
+        return view('qc-sistem.pemeriksaan-kedatangan-kemasan.create', compact('bahanKemasans', 'shifts', 'produsens', 'distributors', 'bahanKemasanMeta'));
     }
     /**
      * Store a newly created resource in storage.
@@ -121,20 +156,28 @@ class PemeriksaanKedatanganKemasanController extends Controller
             'nama_supir' => 'nullable|string|max:255',
             'jenis_pemeriksaan' => 'nullable|string|max:255',
             'no_po' => 'nullable|string|max:255',
-            'spesifikasi' => 'nullable|string',
-            'produsen' => 'nullable|string|max:255',
-            'distributor' => 'nullable|string|max:255',
-            'kode_produksi' => 'nullable|string|max:255',
-            'jumlah_datang' => 'nullable|string|max:255',
-            'jumlah_sampling' => 'nullable|string|max:255',
-            'ketebalan_micron' => 'nullable|numeric',
-            'status' => 'required|in:Release,Hold',
-            'keterangan' => 'nullable|string',
+            'id_bahan.*' => 'nullable|exists:bahan_kemasans,id',
+            'produsen.*' => 'nullable|string|max:255',
+            'distributor.*' => 'nullable|string|max:255',
+            'kode_produksi.*' => 'nullable|string|max:255',
+            'jumlah_datang.*' => 'nullable|string|max:255',
+            'jumlah_sampling.*' => 'nullable|string|max:255',
+            'spesifikasi.*' => 'nullable|string',
+            'penampakan.*' => 'nullable|in:0,1',
+            'sealing.*' => 'nullable|in:0,1',
+            'cetakan.*' => 'nullable|in:0,1',
+            'ketebalan_micron.*' => 'nullable|numeric',
+            'dimensi.*' => 'nullable|string|max:255',
+            'status.*' => 'nullable|in:Release,Hold',
+            'logo_halal.*' => 'nullable|in:0,1',
+            'dokumen_halal.*' => 'nullable|in:0,1',
+            'coa.*' => 'nullable|in:0,1',
+            'keterangan.*' => 'nullable|string',
             'id_shift' => 'nullable|exists:shifts,id',
-            'id_bahan' => 'nullable|exists:bahans,id',
+            'image_kemasan.*' => 'nullable|image|max:1024',
         ]);
     
-        // Process kondisi mobil dan fisik dengan logic yang benar
+        // Process kondisi mobil dengan logic yang benar
         $kondisiMobil = [
             'bersih' => $request->input('kondisi_mobil.bersih') === '1',
             'bebas_hama' => $request->input('kondisi_mobil.bebas_hama') === '1',
@@ -149,20 +192,68 @@ class PemeriksaanKedatanganKemasanController extends Controller
             'bebas_kontaminan' => $request->input('kondisi_mobil.bebas_kontaminan') === '1',
         ];
     
-        $kondisiFisik = [
-            'penampakan' => $request->input('kondisi_fisik.penampakan') === '1',
-            'sealing' => $request->input('kondisi_fisik.sealing') === '1',
-            'cetakan' => $request->input('kondisi_fisik.cetakan') === '1',
-        ];
+        // Get array data from dynamic form
+        $id_bahans = $request->input('id_bahan', []);
+        $produsens = $request->input('produsen', []);
+        $distributors = $request->input('distributor', []);
+        $kode_produksis = $request->input('kode_produksi', []);
+        $jumlah_datangs = $request->input('jumlah_datang', []);
+        $jumlah_samplings = $request->input('jumlah_sampling', []);
+        $spesifikasis = $request->input('spesifikasi', []);
+        $penampakans = array_values((array) $request->input('penampakan', []));
+        $sealings = array_values((array) $request->input('sealing', []));
+        $cetakans = array_values((array) $request->input('cetakan', []));
+        $ketebalan_microns = $request->input('ketebalan_micron', []);
+        $dimensis = $request->input('dimensi', []);
+        $statuses = $request->input('status', []);
+        $logo_halals = array_values((array) $request->input('logo_halal', []));
+        $dokumen_halals = array_values((array) $request->input('dokumen_halal', []));
+        $coas = array_values((array) $request->input('coa', []));
+        $keterangans = $request->input('keterangan', []);
+
+        $imageKemasanPaths = [];
+        if ($request->hasFile('image_kemasan')) {
+            foreach ((array) $request->file('image_kemasan') as $uploadedFile) {
+                if ($uploadedFile) {
+                    $imageKemasanPaths[] = $uploadedFile->storePublicly('pemeriksaan-kedatangan-kemasan', 'public');
+                } else {
+                    $imageKemasanPaths[] = null;
+                }
+            }
+        }
     
-        $data = $request->all();
-        $data['id_user'] = Auth::id();
-        $data['segel_gembok'] = $request->input('segel_gembok');
-        $data['logo_halal'] = $request->input('logo_halal') === '1';
-        $data['dokumen_halal'] = $request->input('dokumen_halal') === '1';
-        $data['coa'] = $request->input('coa') === '1';
-        $data['kondisi_mobil'] = $kondisiMobil;
-        $data['kondisi_fisik'] = $kondisiFisik;
+        // Ensure all arrays are properly formatted as JSON
+        $data = [
+            'tanggal' => $request->input('tanggal'),
+            'jenis_mobil' => $request->input('jenis_mobil'),
+            'no_mobil' => $request->input('no_mobil'),
+            'nama_supir' => $request->input('nama_supir'),
+            'jenis_pemeriksaan' => $request->input('jenis_pemeriksaan'),
+            'no_po' => $request->input('no_po'),
+            'segel_gembok' => $request->input('segel_gembok'),
+            'no_segel' => $request->input('no_segel'),
+            'kondisi_mobil' => $kondisiMobil,
+            'id_user' => Auth::id(),
+            'id_shift' => $request->input('id_shift'),
+            'id_bahan_array' => json_encode(is_array($id_bahans) ? $id_bahans : []),
+            'produsen_array' => json_encode(is_array($produsens) ? $produsens : []),
+            'distributor_array' => json_encode(is_array($distributors) ? $distributors : []),
+            'kode_produksi_array' => json_encode(is_array($kode_produksis) ? $kode_produksis : []),
+            'jumlah_datang_array' => json_encode(is_array($jumlah_datangs) ? $jumlah_datangs : []),
+            'jumlah_sampling_array' => json_encode(is_array($jumlah_samplings) ? $jumlah_samplings : []),
+            'spesifikasi_array' => json_encode(is_array($spesifikasis) ? $spesifikasis : []),
+            'penampakan_array' => json_encode(is_array($penampakans) ? $penampakans : []),
+            'sealing_array' => json_encode(is_array($sealings) ? $sealings : []),
+            'cetakan_array' => json_encode(is_array($cetakans) ? $cetakans : []),
+            'ketebalan_micron_array' => json_encode(is_array($ketebalan_microns) ? $ketebalan_microns : []),
+            'dimensi_array' => json_encode(is_array($dimensis) ? $dimensis : []),
+            'status_array' => json_encode(is_array($statuses) ? $statuses : []),
+            'logo_halal_array' => json_encode(is_array($logo_halals) ? $logo_halals : []),
+            'dokumen_halal_array' => json_encode(is_array($dokumen_halals) ? $dokumen_halals : []),
+            'coa_array' => json_encode(is_array($coas) ? $coas : []),
+            'keterangan_array' => json_encode(is_array($keterangans) ? $keterangans : []),
+            'image_kemasan_array' => json_encode(is_array($imageKemasanPaths) ? $imageKemasanPaths : []),
+        ];
     
         PemeriksaanKedatanganKemasan::create($data);
     
@@ -179,7 +270,17 @@ class PemeriksaanKedatanganKemasanController extends Controller
         $this->checkPlantAccess($pemeriksaanKedatanganKemasan);
         
         $pemeriksaanKedatanganKemasan->load(['user', 'bahan', 'shift']);
-        return view('qc-sistem.pemeriksaan-kedatangan-kemasan.show', compact('pemeriksaanKedatanganKemasan'));
+
+        $bahanIds = collect(json_decode($pemeriksaanKedatanganKemasan->id_bahan_array ?? '[]', true))
+            ->filter(fn ($id) => !empty($id))
+            ->unique()
+            ->values();
+
+        $bahanNamaById = $bahanIds->isNotEmpty()
+            ? BahanKemasan::whereIn('id', $bahanIds)->pluck('nama_kemasan', 'id')->toArray()
+            : [];
+
+        return view('qc-sistem.pemeriksaan-kedatangan-kemasan.show', compact('pemeriksaanKedatanganKemasan', 'bahanNamaById'));
     }
 
     /**
@@ -192,18 +293,18 @@ class PemeriksaanKedatanganKemasanController extends Controller
         
         $user = Auth::user();
         
-        // Get bahans, shifts, produsens, and distributors based on plant access (SAMA SEPERTI CREATE)
+        // Get bahan kemasans, shifts, produsens, and distributors based on plant access (SAMA SEPERTI CREATE)
     if ($user->role && strtolower($user->role->role) === 'superadmin') {
-        $bahans = Bahan::with('user.plant')->get();
+        $bahanKemasans = BahanKemasan::with(['user.plant', 'distributor', 'produsen'])->get();
         $shifts = Shift::with('user.plant')->get();
         $produsens = Produsen::with('user.plant')->get();
         $distributors = Distributor::with('user.plant')->get();
     } else {
         if ($user->id_plant) {
             // Filter berdasarkan plant
-            $bahans = Bahan::whereHas('user', function($query) use ($user) {
+            $bahanKemasans = BahanKemasan::whereHas('user', function($query) use ($user) {
                 $query->where('id_plant', $user->id_plant);
-            })->with('user.plant')->get();
+            })->with(['user.plant', 'distributor', 'produsen'])->get();
             
             $shifts = Shift::whereHas('user', function($query) use ($user) {
                 $query->where('id_plant', $user->id_plant);
@@ -218,7 +319,7 @@ class PemeriksaanKedatanganKemasanController extends Controller
             })->with('user.plant')->get();
         } else {
             // Fallback: User has no plant, get all
-            $bahans = Bahan::all();
+            $bahanKemasans = BahanKemasan::with(['distributor', 'produsen'])->get();
             $shifts = Shift::all();
             $produsens = Produsen::all();
             $distributors = Distributor::all();
@@ -226,8 +327,8 @@ class PemeriksaanKedatanganKemasanController extends Controller
     }
 
     // Fallback if no data found
-    if ($bahans->isEmpty()) {
-        $bahans = Bahan::all();
+    if ($bahanKemasans->isEmpty()) {
+        $bahanKemasans = BahanKemasan::with(['distributor', 'produsen'])->get();
     }
     if ($shifts->isEmpty()) {
         $shifts = Shift::all();
@@ -239,8 +340,30 @@ class PemeriksaanKedatanganKemasanController extends Controller
         $distributors = Distributor::all();
     }
 
+    $referencedProdusenIds = $bahanKemasans->pluck('id_produsen')->filter()->unique()->values();
+    if ($referencedProdusenIds->isNotEmpty()) {
+        $referencedProdusens = Produsen::with('user.plant')->whereIn('id', $referencedProdusenIds)->get();
+        $produsens = $produsens->concat($referencedProdusens)->unique('id')->values();
+    }
+
+    $referencedDistributorIds = $bahanKemasans->pluck('id_distributor')->filter()->unique()->values();
+    if ($referencedDistributorIds->isNotEmpty()) {
+        $referencedDistributors = Distributor::with('user.plant')->whereIn('id', $referencedDistributorIds)->get();
+        $distributors = $distributors->concat($referencedDistributors)->unique('id')->values();
+    }
+
+    $bahanKemasanMeta = $bahanKemasans
+        ->mapWithKeys(function ($bk) {
+            return [
+                $bk->id => [
+                    'produsen' => $bk->produsen ? $bk->produsen->nama_produsen : '',
+                    'distributor' => $bk->distributor ? $bk->distributor->nama_distributor : '',
+                ],
+            ];
+        });
+
     return view('qc-sistem.pemeriksaan-kedatangan-kemasan.edit', 
-    compact('pemeriksaanKedatanganKemasan', 'bahans', 'shifts', 'produsens', 'distributors'));
+    compact('pemeriksaanKedatanganKemasan', 'bahanKemasans', 'shifts', 'produsens', 'distributors', 'bahanKemasanMeta'));
     }
     /**
      * Update the specified resource in storage.
@@ -257,20 +380,28 @@ class PemeriksaanKedatanganKemasanController extends Controller
             'nama_supir' => 'nullable|string|max:255',
             'jenis_pemeriksaan' => 'nullable|string|max:255',
             'no_po' => 'nullable|string|max:255',
-            'spesifikasi' => 'nullable|string',
-            'produsen' => 'nullable|string|max:255',
-            'distributor' => 'nullable|string|max:255',
-            'kode_produksi' => 'nullable|string|max:255',
-            'jumlah_datang' => 'nullable|string|max:255',
-            'jumlah_sampling' => 'nullable|string|max:255',
-            'ketebalan_micron' => 'nullable|numeric',
-            'status' => 'required|in:Release,Hold',
-            'keterangan' => 'nullable|string',
+            'id_bahan.*' => 'nullable|exists:bahan_kemasans,id',
+            'produsen.*' => 'nullable|string|max:255',
+            'distributor.*' => 'nullable|string|max:255',
+            'kode_produksi.*' => 'nullable|string|max:255',
+            'jumlah_datang.*' => 'nullable|string|max:255',
+            'jumlah_sampling.*' => 'nullable|string|max:255',
+            'spesifikasi.*' => 'nullable|string',
+            'penampakan.*' => 'nullable|in:0,1',
+            'sealing.*' => 'nullable|in:0,1',
+            'cetakan.*' => 'nullable|in:0,1',
+            'ketebalan_micron.*' => 'nullable|numeric',
+            'dimensi.*' => 'nullable|string|max:255',
+            'status.*' => 'nullable|in:Release,Hold',
+            'logo_halal.*' => 'nullable|in:0,1',
+            'dokumen_halal.*' => 'nullable|in:0,1',
+            'coa.*' => 'nullable|in:0,1',
+            'keterangan.*' => 'nullable|string',
             'id_shift' => 'nullable|exists:shifts,id',
-            'id_bahan' => 'nullable|exists:bahans,id',
+            'image_kemasan.*' => 'nullable|image|max:1024',
         ]);
     
-        // Process kondisi mobil dan fisik dengan logic yang benar
+        // Process kondisi mobil dengan logic yang benar
         $kondisiMobil = [
             'bersih' => $request->input('kondisi_mobil.bersih') === '1',
             'bebas_hama' => $request->input('kondisi_mobil.bebas_hama') === '1',
@@ -285,24 +416,242 @@ class PemeriksaanKedatanganKemasanController extends Controller
             'bebas_kontaminan' => $request->input('kondisi_mobil.bebas_kontaminan') === '1',
         ];
     
-        $kondisiFisik = [
-            'penampakan' => $request->input('kondisi_fisik.penampakan') === '1',
-            'sealing' => $request->input('kondisi_fisik.sealing') === '1',
-            'cetakan' => $request->input('kondisi_fisik.cetakan') === '1',
-        ];
+        // Get array data from dynamic form
+        $id_bahans = $request->input('id_bahan', []);
+        $produsens = $request->input('produsen', []);
+        $distributors = $request->input('distributor', []);
+        $kode_produksis = $request->input('kode_produksi', []);
+        $jumlah_datangs = $request->input('jumlah_datang', []);
+        $jumlah_samplings = $request->input('jumlah_sampling', []);
+        $spesifikasis = $request->input('spesifikasi', []);
+        $penampakans = array_values((array) $request->input('penampakan', []));
+        $sealings = array_values((array) $request->input('sealing', []));
+        $cetakans = array_values((array) $request->input('cetakan', []));
+        $ketebalan_microns = $request->input('ketebalan_micron', []);
+        $dimensis = $request->input('dimensi', []);
+        $statuses = $request->input('status', []);
+        $logo_halals = array_values((array) $request->input('logo_halal', []));
+        $dokumen_halals = array_values((array) $request->input('dokumen_halal', []));
+        $coas = array_values((array) $request->input('coa', []));
+        $keterangans = $request->input('keterangan', []);
+
+        $existingImageKemasan = json_decode($pemeriksaanKedatanganKemasan->image_kemasan_array ?? '[]', true);
+        if (!is_array($existingImageKemasan)) {
+            $existingImageKemasan = [];
+        }
+
+        $newImageKemasan = [];
+        $uploadedImages = (array) $request->file('image_kemasan', []);
+
+        $rowCount = max(count($id_bahans), count($produsens), count($distributors), count($kode_produksis));
+        for ($i = 0; $i < $rowCount; $i++) {
+            $uploadedFile = $uploadedImages[$i] ?? null;
+            if ($uploadedFile) {
+                $newImageKemasan[$i] = $uploadedFile->storePublicly('pemeriksaan-kedatangan-kemasan', 'public');
+            } else {
+                $newImageKemasan[$i] = $existingImageKemasan[$i] ?? null;
+            }
+        }
     
-        $data = $request->all();
-        $data['segel_gembok'] = $request->input('segel_gembok');
-        $data['logo_halal'] = $request->input('logo_halal') === '1';
-        $data['dokumen_halal'] = $request->input('dokumen_halal') === '1';
-        $data['coa'] = $request->input('coa') === '1';
-        $data['kondisi_mobil'] = $kondisiMobil;
-        $data['kondisi_fisik'] = $kondisiFisik;
+        // Ensure all arrays are properly formatted as JSON
+        $data = [
+            'tanggal' => $request->input('tanggal'),
+            'jenis_mobil' => $request->input('jenis_mobil'),
+            'no_mobil' => $request->input('no_mobil'),
+            'nama_supir' => $request->input('nama_supir'),
+            'jenis_pemeriksaan' => $request->input('jenis_pemeriksaan'),
+            'no_po' => $request->input('no_po'),
+            'segel_gembok' => $request->input('segel_gembok'),
+            'no_segel' => $request->input('no_segel'),
+            'kondisi_mobil' => $kondisiMobil,
+            'id_shift' => $request->input('id_shift'),
+            'id_bahan_array' => json_encode(is_array($id_bahans) ? $id_bahans : []),
+            'produsen_array' => json_encode(is_array($produsens) ? $produsens : []),
+            'distributor_array' => json_encode(is_array($distributors) ? $distributors : []),
+            'kode_produksi_array' => json_encode(is_array($kode_produksis) ? $kode_produksis : []),
+            'jumlah_datang_array' => json_encode(is_array($jumlah_datangs) ? $jumlah_datangs : []),
+            'jumlah_sampling_array' => json_encode(is_array($jumlah_samplings) ? $jumlah_samplings : []),
+            'spesifikasi_array' => json_encode(is_array($spesifikasis) ? $spesifikasis : []),
+            'penampakan_array' => json_encode(is_array($penampakans) ? $penampakans : []),
+            'sealing_array' => json_encode(is_array($sealings) ? $sealings : []),
+            'cetakan_array' => json_encode(is_array($cetakans) ? $cetakans : []),
+            'ketebalan_micron_array' => json_encode(is_array($ketebalan_microns) ? $ketebalan_microns : []),
+            'dimensi_array' => json_encode(is_array($dimensis) ? $dimensis : []),
+            'status_array' => json_encode(is_array($statuses) ? $statuses : []),
+            'logo_halal_array' => json_encode(is_array($logo_halals) ? $logo_halals : []),
+            'dokumen_halal_array' => json_encode(is_array($dokumen_halals) ? $dokumen_halals : []),
+            'coa_array' => json_encode(is_array($coas) ? $coas : []),
+            'keterangan_array' => json_encode(is_array($keterangans) ? $keterangans : []),
+            'image_kemasan_array' => json_encode(array_values($newImageKemasan)),
+        ];
     
         $pemeriksaanKedatanganKemasan->update($data);
     
         return redirect()->route('pemeriksaan-kedatangan-kemasan.index')
             ->with('success', 'Data pemeriksaan kedatangan kemasan berhasil diupdate!');
+    }
+
+    public function createRow(PemeriksaanKedatanganKemasan $pemeriksaanKedatanganKemasan)
+    {
+        $this->checkPlantAccess($pemeriksaanKedatanganKemasan);
+
+        $user = Auth::user();
+
+        if ($user->role && strtolower($user->role->role) === 'superadmin') {
+            $bahanKemasans = BahanKemasan::with(['user.plant', 'distributor', 'produsen'])->get();
+            $shifts = Shift::with('user.plant')->get();
+            $produsens = Produsen::with('user.plant')->get();
+            $distributors = Distributor::with('user.plant')->get();
+        } else {
+            if ($user->id_plant) {
+                $bahanKemasans = BahanKemasan::whereHas('user', function($query) use ($user) {
+                    $query->where('id_plant', $user->id_plant);
+                })->with(['user.plant', 'distributor', 'produsen'])->get();
+
+                $shifts = Shift::whereHas('user', function($query) use ($user) {
+                    $query->where('id_plant', $user->id_plant);
+                })->with('user.plant')->get();
+
+                $produsens = Produsen::whereHas('user', function($query) use ($user) {
+                    $query->where('id_plant', $user->id_plant);
+                })->with('user.plant')->get();
+
+                $distributors = Distributor::whereHas('user', function($query) use ($user) {
+                    $query->where('id_plant', $user->id_plant);
+                })->with('user.plant')->get();
+            } else {
+                $bahanKemasans = BahanKemasan::with(['distributor', 'produsen'])->get();
+                $shifts = Shift::all();
+                $produsens = Produsen::all();
+                $distributors = Distributor::all();
+            }
+        }
+
+        if ($bahanKemasans->isEmpty()) {
+            $bahanKemasans = BahanKemasan::with(['distributor', 'produsen'])->get();
+        }
+        if ($shifts->isEmpty()) {
+            $shifts = Shift::all();
+        }
+        if ($produsens->isEmpty()) {
+            $produsens = Produsen::all();
+        }
+        if ($distributors->isEmpty()) {
+            $distributors = Distributor::all();
+        }
+
+        $bahanKemasanMeta = $bahanKemasans
+            ->mapWithKeys(function ($bk) {
+                return [
+                    $bk->id => [
+                        'produsen' => $bk->produsen ? $bk->produsen->nama_produsen : '',
+                        'distributor' => $bk->distributor ? $bk->distributor->nama_distributor : '',
+                    ],
+                ];
+            });
+
+        return view('qc-sistem.pemeriksaan-kedatangan-kemasan.tambah-baris', compact(
+            'pemeriksaanKedatanganKemasan',
+            'bahanKemasans',
+            'shifts',
+            'produsens',
+            'distributors',
+            'bahanKemasanMeta'
+        ));
+    }
+
+    public function storeRow(Request $request, PemeriksaanKedatanganKemasan $pemeriksaanKedatanganKemasan)
+    {
+        $this->checkPlantAccess($pemeriksaanKedatanganKemasan);
+
+        $request->validate([
+            'id_bahan.*' => 'nullable|exists:bahan_kemasans,id',
+            'produsen.*' => 'nullable|string|max:255',
+            'distributor.*' => 'nullable|string|max:255',
+            'kode_produksi.*' => 'nullable|string|max:255',
+            'jumlah_datang.*' => 'nullable|string|max:255',
+            'jumlah_sampling.*' => 'nullable|string|max:255',
+            'spesifikasi.*' => 'nullable|string',
+            'penampakan.*' => 'nullable|in:0,1',
+            'sealing.*' => 'nullable|in:0,1',
+            'cetakan.*' => 'nullable|in:0,1',
+            'ketebalan_micron.*' => 'nullable|numeric',
+            'dimensi.*' => 'nullable|string|max:255',
+            'status.*' => 'nullable|in:Release,Hold',
+            'logo_halal.*' => 'nullable|in:0,1',
+            'dokumen_halal.*' => 'nullable|in:0,1',
+            'coa.*' => 'nullable|in:0,1',
+            'keterangan.*' => 'nullable|string',
+            'image_kemasan.*' => 'nullable|image|max:1024',
+        ]);
+
+        $existingIdBahans = json_decode($pemeriksaanKedatanganKemasan->id_bahan_array ?? '[]', true) ?? [];
+        $existingProdusens = json_decode($pemeriksaanKedatanganKemasan->produsen_array ?? '[]', true) ?? [];
+        $existingDistributors = json_decode($pemeriksaanKedatanganKemasan->distributor_array ?? '[]', true) ?? [];
+        $existingKodeProduksis = json_decode($pemeriksaanKedatanganKemasan->kode_produksi_array ?? '[]', true) ?? [];
+        $existingJumlahDatangs = json_decode($pemeriksaanKedatanganKemasan->jumlah_datang_array ?? '[]', true) ?? [];
+        $existingJumlahSamplings = json_decode($pemeriksaanKedatanganKemasan->jumlah_sampling_array ?? '[]', true) ?? [];
+        $existingSpesifikasis = json_decode($pemeriksaanKedatanganKemasan->spesifikasi_array ?? '[]', true) ?? [];
+        $existingPenampakans = json_decode($pemeriksaanKedatanganKemasan->penampakan_array ?? '[]', true) ?? [];
+        $existingSealings = json_decode($pemeriksaanKedatanganKemasan->sealing_array ?? '[]', true) ?? [];
+        $existingCetakans = json_decode($pemeriksaanKedatanganKemasan->cetakan_array ?? '[]', true) ?? [];
+        $existingKetebalanMicrons = json_decode($pemeriksaanKedatanganKemasan->ketebalan_micron_array ?? '[]', true) ?? [];
+        $existingDimensis = json_decode($pemeriksaanKedatanganKemasan->dimensi_array ?? '[]', true) ?? [];
+        $existingStatuses = json_decode($pemeriksaanKedatanganKemasan->status_array ?? '[]', true) ?? [];
+        $existingLogoHalals = json_decode($pemeriksaanKedatanganKemasan->logo_halal_array ?? '[]', true) ?? [];
+        $existingDokumenHalals = json_decode($pemeriksaanKedatanganKemasan->dokumen_halal_array ?? '[]', true) ?? [];
+        $existingCoas = json_decode($pemeriksaanKedatanganKemasan->coa_array ?? '[]', true) ?? [];
+        $existingKeterangans = json_decode($pemeriksaanKedatanganKemasan->keterangan_array ?? '[]', true) ?? [];
+        $existingImageKemasans = json_decode($pemeriksaanKedatanganKemasan->image_kemasan_array ?? '[]', true) ?? [];
+
+        $existingIdBahans[] = $request->input('id_bahan.0');
+        $existingProdusens[] = $request->input('produsen.0');
+        $existingDistributors[] = $request->input('distributor.0');
+        $existingKodeProduksis[] = $request->input('kode_produksi.0');
+        $existingJumlahDatangs[] = $request->input('jumlah_datang.0');
+        $existingJumlahSamplings[] = $request->input('jumlah_sampling.0');
+        $existingSpesifikasis[] = $request->input('spesifikasi.0');
+        $existingPenampakans[] = $request->input('penampakan.0');
+        $existingSealings[] = $request->input('sealing.0');
+        $existingCetakans[] = $request->input('cetakan.0');
+        $existingKetebalanMicrons[] = $request->input('ketebalan_micron.0');
+        $existingDimensis[] = $request->input('dimensi.0');
+        $existingStatuses[] = $request->input('status.0');
+        $existingLogoHalals[] = $request->input('logo_halal.0');
+        $existingDokumenHalals[] = $request->input('dokumen_halal.0');
+        $existingCoas[] = $request->input('coa.0');
+        $existingKeterangans[] = $request->input('keterangan.0');
+
+        $uploadedImage = $request->file('image_kemasan.0');
+        if ($uploadedImage) {
+            $existingImageKemasans[] = $uploadedImage->storePublicly('pemeriksaan-kedatangan-kemasan', 'public');
+        } else {
+            $existingImageKemasans[] = null;
+        }
+
+        $pemeriksaanKedatanganKemasan->update([
+            'id_bahan_array' => json_encode($existingIdBahans),
+            'produsen_array' => json_encode($existingProdusens),
+            'distributor_array' => json_encode($existingDistributors),
+            'kode_produksi_array' => json_encode($existingKodeProduksis),
+            'jumlah_datang_array' => json_encode($existingJumlahDatangs),
+            'jumlah_sampling_array' => json_encode($existingJumlahSamplings),
+            'spesifikasi_array' => json_encode($existingSpesifikasis),
+            'penampakan_array' => json_encode($existingPenampakans),
+            'sealing_array' => json_encode($existingSealings),
+            'cetakan_array' => json_encode($existingCetakans),
+            'ketebalan_micron_array' => json_encode($existingKetebalanMicrons),
+            'dimensi_array' => json_encode($existingDimensis),
+            'status_array' => json_encode($existingStatuses),
+            'logo_halal_array' => json_encode($existingLogoHalals),
+            'dokumen_halal_array' => json_encode($existingDokumenHalals),
+            'coa_array' => json_encode($existingCoas),
+            'keterangan_array' => json_encode($existingKeterangans),
+            'image_kemasan_array' => json_encode($existingImageKemasans),
+        ]);
+
+        return redirect()->route('pemeriksaan-kedatangan-kemasan.index')
+            ->with('success', 'Baris baru berhasil ditambahkan!');
     }
 
     /**
@@ -416,10 +765,10 @@ class PemeriksaanKedatanganKemasanController extends Controller
     public function exportPDF(Request $request)
     {
         $user = Auth::user();
-        $tanggal = $request->input('tanggal');
         $id_shift = $request->input('id_shift');
-        $jam_awal = $request->input('jam_awal');
-        $jam_akhir = $request->input('jam_akhir');
+        $tanggalDari = $request->input('tanggal_dari');
+        $tanggalSampai = $request->input('tanggal_sampai');
+        $tanggal = $request->input('tanggal');
 
         // Build query
         $query = PemeriksaanKedatanganKemasan::with([
@@ -447,26 +796,33 @@ class PemeriksaanKedatanganKemasanController extends Controller
             });
         }
 
-        // Filter by tanggal
-        if ($tanggal) {
-            $query->whereDate('tanggal', $tanggal);
-        }
-
         // Filter by shift
         if ($id_shift) {
             $query->where('id_shift', $id_shift);
         }
 
-        // Filter by jam (created_at time range)
-        if ($jam_awal && $jam_akhir) {
-            $query->whereBetween('created_at', [
-                $tanggal . ' ' . $jam_awal . ':00',
-                $tanggal . ' ' . $jam_akhir . ':59'
-            ]);
-        } elseif ($jam_awal) {
-            $query->whereTime('created_at', '>=', $jam_awal);
-        } elseif ($jam_akhir) {
-            $query->whereTime('created_at', '<=', $jam_akhir);
+        // Filter tanggal berdasarkan shift
+        if ($id_shift) {
+            $shift = Shift::find($id_shift);
+            $shiftName = $shift ? trim(strtolower((string) $shift->shift)) : null;
+
+            if ($shiftName === '1' || $shiftName === 'shift 1') {
+                if ($tanggalDari && $tanggalSampai) {
+                    $query->whereBetween('tanggal', [$tanggalDari, $tanggalSampai]);
+                } elseif ($tanggalDari) {
+                    $query->whereDate('tanggal', '>=', $tanggalDari);
+                } elseif ($tanggalSampai) {
+                    $query->whereDate('tanggal', '<=', $tanggalSampai);
+                }
+            } else {
+                if ($tanggal) {
+                    $query->whereDate('tanggal', $tanggal);
+                }
+            }
+        } else {
+            if ($tanggal) {
+                $query->whereDate('tanggal', $tanggal);
+            }
         }
 
         $pemeriksaans = $query->latest()->get();
@@ -521,15 +877,16 @@ class PemeriksaanKedatanganKemasanController extends Controller
         $pdf = \PDF::loadView('qc-sistem.pemeriksaan-kedatangan-kemasan.pdf-report', [
             'pemeriksaans' => $pemeriksaans,
             'tanggal' => $tanggal,
+            'tanggal_dari' => $tanggalDari,
+            'tanggal_sampai' => $tanggalSampai,
             'shift' => $shift,
-            'jam_awal' => $jam_awal,
-            'jam_akhir' => $jam_akhir,
             'qcUser' => $qcUser,
             'produksiUser' => $produksiUser,
             'spvQcUser' => $spvQcUser
         ]);
 
-        $filename = 'laporan-pemeriksaan-kemasan-' . ($tanggal ?? date('Y-m-d')) . '.pdf';
+        $filenameDate = $tanggal ?? $tanggalDari ?? date('Y-m-d');
+        $filename = 'laporan-pemeriksaan-kemasan-' . $filenameDate . '.pdf';
         return $pdf->download($filename);
     }
 }

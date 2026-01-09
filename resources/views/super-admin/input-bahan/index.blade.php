@@ -11,14 +11,14 @@
         <div class="page-title">
             <div class="row">
                 <div class="col-12 col-md-6 order-md-1 order-last">
-                    <h3>Data Bahan</h3>
-                    <p class="text-subtitle text-muted">Kelola data bahan sistem</p>
+                    <h3>Data Bahan Baku</h3>
+                    <p class="text-subtitle text-muted">Kelola data bahan baku sistem</p>
                 </div>
                 <div class="col-12 col-md-6 order-md-2 order-first">
                     <nav aria-label="breadcrumb" class="breadcrumb-header float-start float-lg-end">
                         <ol class="breadcrumb">
                             <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
-                            <li class="breadcrumb-item active" aria-current="page">Data Bahan</li>
+                            <li class="breadcrumb-item active" aria-current="page">Data Bahan Baku</li>
                         </ol>
                     </nav>
                 </div>
@@ -35,9 +35,9 @@
         <section class="section">
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="card-title mb-0">Daftar Bahan</h5>
+                    <h5 class="card-title mb-0">Daftar Bahan Baku</h5>
                     <a href="{{ route('bahans.create') }}" class="btn btn-primary">
-                        <i class="bi bi-plus-circle"></i> Tambah Bahan
+                        <i class="bi bi-plus-circle"></i> Tambah Bahan Baku
                     </a>
                 </div>
                 <div class="card-body">
@@ -46,7 +46,7 @@
                             <thead>
                                 <tr>
                                     <th>No</th>
-                                    <th>Nama Bahan</th>
+                                    <th>Nama Bahan Baku</th>
                                     <!-- <th>Dibuat Ole</th> -->
                                     <th>Plant</th>
                                     <!-- <th>Tanggal Dibuat</th> -->

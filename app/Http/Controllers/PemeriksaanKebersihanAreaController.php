@@ -40,9 +40,25 @@ class PemeriksaanKebersihanAreaController extends Controller
      */
     public function create()
     {
-        $masterForms = InputMasterForm::all();
-        $areas = InputArea::all();
-        $shifts = Shift::all();
+        $user = Auth::user();
+
+        if ($user->role && strtolower($user->role->role) === 'superadmin') {
+            $masterForms = InputMasterForm::all();
+            $areas = InputArea::all();
+            $shifts = Shift::all();
+        } else {
+            $masterForms = InputMasterForm::whereHas('user', function ($query) use ($user) {
+                $query->where('id_plant', $user->id_plant);
+            })->get();
+
+            $areas = InputArea::whereHas('user', function ($query) use ($user) {
+                $query->where('id_plant', $user->id_plant);
+            })->get();
+
+            $shifts = Shift::whereHas('user', function ($query) use ($user) {
+                $query->where('id_plant', $user->id_plant);
+            })->get();
+        }
         
         return view('qc-sistem.pemeriksaan-kebersihan-area.create', compact('masterForms', 'areas', 'shifts'));
     }
@@ -59,6 +75,7 @@ class PemeriksaanKebersihanAreaController extends Controller
             'tanggal' => 'required|date',
             'jam_sebelum_proses' => 'nullable|date_format:H:i',
             'jam_saat_proses' => 'nullable|date_format:H:i',
+            'verifikasi_hasil' => 'nullable|boolean',
         ]);
 
         // Create pemeriksaan
@@ -70,19 +87,35 @@ class PemeriksaanKebersihanAreaController extends Controller
             'tanggal' => $request->tanggal,
             'jam_sebelum_proses' => $request->jam_sebelum_proses,
             'jam_saat_proses' => $request->jam_saat_proses,
+            'verifikasi_hasil' => $request->has('verifikasi_hasil') ? (bool) $request->input('verifikasi_hasil') : null,
         ]);
 
         // Create details for each field
         $masterForm = InputMasterForm::find($request->id_master_form);
         foreach ($masterForm->fields as $field) {
-            $statusKey = 'field_status_' . $field->id;
+            $statusSebelumKey = 'field_status_sebelum_' . $field->id;
+            $statusSaatKey = 'field_status_saat_' . $field->id;
+            $verifikasiKey = 'field_verifikasi_' . $field->id;
             $keteranganKey = 'field_keterangan_' . $field->id;
             $tindakanKey = 'field_tindakan_' . $field->id;
+
+            $statusSebelum = $request->has($statusSebelumKey) ? (int) $request->input($statusSebelumKey) : null;
+            $statusSaat = $request->has($statusSaatKey) ? (int) $request->input($statusSaatKey) : null;
+
+            $legacyStatus = null;
+            if ($statusSebelum !== null && $statusSaat !== null) {
+                $legacyStatus = ($statusSebelum === 1 && $statusSaat === 1) ? 1 : 0;
+            }
+
+            $verifikasiHasil = $request->has($verifikasiKey) ? (int) $request->input($verifikasiKey) : null;
             
             PemeriksaanKebersihanAreaDetail::create([
                 'id_pemeriksaan' => $pemeriksaan->id,
                 'id_master_form_field' => $field->id,
-                'status' => $request->has($statusKey) ? (int)$request->input($statusKey) : null,
+                'status' => $legacyStatus,
+                'status_sebelum_proses' => $statusSebelum,
+                'status_saat_proses' => $statusSaat,
+                'verifikasi_hasil' => $verifikasiHasil,
                 'keterangan' => $request->input($keteranganKey),
                 'tindakan_koreksi' => $request->input($tindakanKey),
             ]);
@@ -122,8 +155,8 @@ class PemeriksaanKebersihanAreaController extends Controller
         
         $request->validate([
             'tanggal' => 'required|date',
-            'jam_sebelum_proses' => 'nullable|',
-            'jam_saat_proses' => 'nullable|',
+            'jam_sebelum_proses' => 'nullable|date_format:H:i',
+            'jam_saat_proses' => 'nullable|date_format:H:i',
         ]);
 
         // Update pemeriksaan
@@ -135,12 +168,27 @@ class PemeriksaanKebersihanAreaController extends Controller
 
         // Update details
         foreach ($pemeriksaanKebersihanArea->details as $detail) {
-            $statusKey = 'status_' . $detail->id;
+            $statusSebelumKey = 'status_sebelum_' . $detail->id;
+            $statusSaatKey = 'status_saat_' . $detail->id;
+            $verifikasiKey = 'verifikasi_' . $detail->id;
             $keteranganKey = 'keterangan_' . $detail->id;
             $tindakanKey = 'tindakan_koreksi_' . $detail->id;
 
+            $statusSebelum = $request->has($statusSebelumKey) ? (int) $request->input($statusSebelumKey) : null;
+            $statusSaat = $request->has($statusSaatKey) ? (int) $request->input($statusSaatKey) : null;
+
+            $legacyStatus = null;
+            if ($statusSebelum !== null && $statusSaat !== null) {
+                $legacyStatus = ($statusSebelum === 1 && $statusSaat === 1) ? 1 : 0;
+            }
+
+            $verifikasiHasil = $request->has($verifikasiKey) ? (int) $request->input($verifikasiKey) : null;
+
             $detail->update([
-                'status' => $request->has($statusKey) ? (bool)$request->input($statusKey) : null,
+                'status' => $legacyStatus,
+                'status_sebelum_proses' => $statusSebelum,
+                'status_saat_proses' => $statusSaat,
+                'verifikasi_hasil' => $verifikasiHasil,
                 'keterangan' => $request->input($keteranganKey),
                 'tindakan_koreksi' => $request->input($tindakanKey),
             ]);

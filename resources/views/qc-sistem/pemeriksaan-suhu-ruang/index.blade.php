@@ -74,7 +74,7 @@
                                             @endif
                                         </td>
                                         <td>
-                                            <strong>{{ $pemeriksaan->produk->nama_bahan }}</strong>
+                                            <strong>{{ $pemeriksaan->produk->nama_produk }}</strong>
                                         </td>
                                         <td>
                                             <strong>{{ $pemeriksaan->area->nama_area }}</strong>
@@ -144,11 +144,11 @@
                                                        class="btn btn-sm btn-warning" title="Edit Data">
                                                         <i class="bi bi-pencil"></i>
                                                     </a>
+                                                @endcan
                                                     <a href="{{ route('pemeriksaan-suhu-ruang.edit', $pemeriksaan->uuid) }}?edit_per_2jam=1" 
                                                        class="btn btn-sm btn-success" title="Edit Per 2 Jam">
                                                         <i class="bi bi-hourglass-bottom"></i>
                                                     </a>
-                                                @endcan
                                                 @can('view_pemeriksaan_suhu_ruang')
                                                     <a href="{{ route('pemeriksaan-suhu-ruang.history', $pemeriksaan->uuid) }}" 
                                                        class="btn btn-sm btn-secondary" title="Lihat History">
@@ -296,7 +296,7 @@
                                     </div>
                                 @empty
                                     <tr>
-                                        <td colspan="7" class="text-center">
+                                        <td colspan="9" class="text-center">
                                             <div class="py-4">
                                                 <i class="bi bi-inbox fs-1 text-muted"></i>
                                                 <p class="text-muted mt-2 mb-3">Belum ada data pemeriksaan</p>

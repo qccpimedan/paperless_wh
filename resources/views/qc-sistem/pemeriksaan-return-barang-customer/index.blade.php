@@ -29,7 +29,7 @@
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="card-title">Daftar Pemeriksaan Return Barang</h5>
-                    @can('create_return_barang')
+                    @can('create_pemeriksaan_return_barang_customer')
                         <a href="{{ route('return-barang.create') }}" class="btn btn-primary">
                             <i class="bi bi-plus-circle"></i> Tambah Pemeriksaan
                         </a>
@@ -153,17 +153,17 @@
                                             @endif
                                         </td>
                                         <td>
-                                            @can('view_return_barang')
+                                            @can('view_pemeriksaan_return_barang_customer')
                                                 <a href="{{ route('return-barang.show', $pemeriksaan->uuid) }}" class="btn btn-sm btn-info">
                                                     <i class="bi bi-eye"></i>
                                                 </a>
                                             @endcan
-                                            @can('edit_return_barang')
+                                            @can('edit_pemeriksaan_return_barang_customer')
                                                 <a href="{{ route('return-barang.edit', $pemeriksaan->uuid) }}" class="btn btn-sm btn-warning">
                                                     <i class="bi bi-pencil"></i>
                                                 </a>
                                             @endcan
-                                            @can('delete_return_barang')
+                                            @can('delete_pemeriksaan_return_barang_customer')
                                                 <form action="{{ route('return-barang.destroy', $pemeriksaan->uuid) }}" method="POST" style="display:inline;">
                                                     @csrf
                                                     @method('DELETE')

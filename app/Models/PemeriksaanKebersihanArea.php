@@ -20,6 +20,7 @@ class PemeriksaanKebersihanArea extends Model
         'tanggal',
         'jam_sebelum_proses',
         'jam_saat_proses',
+        'verifikasi_hasil',
         'status_verifikasi',
         'verified_by',
         'verified_at',
@@ -28,6 +29,7 @@ class PemeriksaanKebersihanArea extends Model
 
     protected $casts = [
         'tanggal' => 'date',
+        'verifikasi_hasil' => 'boolean',
     ];
 
     protected static function boot()

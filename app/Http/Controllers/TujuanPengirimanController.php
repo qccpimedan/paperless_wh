@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\TujuanPengiriman;
+use App\Models\Customer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -17,10 +18,10 @@ class TujuanPengirimanController extends Controller
         
         // SuperAdmin dapat melihat semua data
         if ($user->role && strtolower($user->role->role) === 'superadmin') {
-            $tujuanPengirimans = TujuanPengiriman::with(['user.role', 'user.plant'])->latest()->get();
+            $tujuanPengirimans = TujuanPengiriman::with(['user.role', 'user.plant', 'customer'])->latest()->get();
         } else {
             // Admin dan role lain hanya melihat data sesuai plant mereka
-            $tujuanPengirimans = TujuanPengiriman::with(['user.role', 'user.plant'])
+            $tujuanPengirimans = TujuanPengiriman::with(['user.role', 'user.plant', 'customer'])
                 ->whereHas('user', function($query) use ($user) {
                     $query->where('id_plant', $user->id_plant);
                 })
@@ -36,7 +37,20 @@ class TujuanPengirimanController extends Controller
      */
     public function create()
     {
-        return view('super-admin.input-tujuan-pengiriman.create');
+        $user = Auth::user();
+
+        if ($user->role && strtolower($user->role->role) === 'superadmin') {
+            $customers = Customer::with(['user.plant'])->latest()->get();
+        } else {
+            $customers = Customer::with(['user.plant'])
+                ->whereHas('user', function($query) use ($user) {
+                    $query->where('id_plant', $user->id_plant);
+                })
+                ->latest()
+                ->get();
+        }
+
+        return view('super-admin.input-tujuan-pengiriman.create', compact('customers'));
     }
 
     /**
@@ -45,24 +59,35 @@ class TujuanPengirimanController extends Controller
     public function store(Request $request)
     {
         $request->validate([
+            'id_customer' => 'nullable|array',
+            'id_customer.*' => 'nullable|exists:customers,id',
             'nama_tujuan' => 'required|array|min:1',
             'nama_tujuan.*' => 'required|string|max:255',
         ]);
 
-        // Filter empty values
-        $namaTujuan = array_filter($request->nama_tujuan, function($value) {
-            return !empty(trim($value));
-        });
+        $namaTujuanArray = $request->input('nama_tujuan', []);
+        $idCustomerArray = $request->input('id_customer', []);
 
-        if (empty($namaTujuan)) {
+        $hasAtLeastOneTujuan = collect($namaTujuanArray)
+            ->map(fn ($v) => trim((string) $v))
+            ->filter(fn ($v) => $v !== '')
+            ->isNotEmpty();
+
+        if (!$hasAtLeastOneTujuan) {
             return back()->withErrors(['nama_tujuan' => 'Minimal harus ada satu nama tujuan.']);
         }
 
         // Create separate record for each nama_tujuan
-        foreach ($namaTujuan as $nama) {
+        foreach ($namaTujuanArray as $index => $nama) {
+            $nama = trim((string) $nama);
+            if ($nama === '') {
+                continue;
+            }
+
             TujuanPengiriman::create([
                 'id_user' => Auth::id(),
-                'nama_tujuan' => trim($nama),
+                'id_customer' => $idCustomerArray[$index] ?? null,
+                'nama_tujuan' => $nama,
             ]);
         }
 
@@ -88,8 +113,21 @@ class TujuanPengirimanController extends Controller
     {
         // Check access based on plant
         $this->checkPlantAccess($tujuanPengiriman);
-        
-        return view('super-admin.input-tujuan-pengiriman.edit', compact('tujuanPengiriman'));
+
+        $user = Auth::user();
+
+        if ($user->role && strtolower($user->role->role) === 'superadmin') {
+            $customers = Customer::with(['user.plant'])->latest()->get();
+        } else {
+            $customers = Customer::with(['user.plant'])
+                ->whereHas('user', function($query) use ($user) {
+                    $query->where('id_plant', $user->id_plant);
+                })
+                ->latest()
+                ->get();
+        }
+
+        return view('super-admin.input-tujuan-pengiriman.edit', compact('tujuanPengiriman', 'customers'));
     }
 
     /**
@@ -101,10 +139,12 @@ class TujuanPengirimanController extends Controller
         $this->checkPlantAccess($tujuanPengiriman);
         
         $request->validate([
+            'id_customer' => 'nullable|exists:customers,id',
             'nama_tujuan' => 'required|string|max:255',
         ]);
 
         $tujuanPengiriman->update([
+            'id_customer' => $request->input('id_customer'),
             'nama_tujuan' => trim($request->nama_tujuan),
         ]);
 

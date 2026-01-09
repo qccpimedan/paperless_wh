@@ -19,6 +19,8 @@ class Chemical extends Model
     protected $fillable = [
         'uuid',
         'id_user',
+        'id_distributor',
+        'id_produsen',
         'nama_chemical',
     ];
 
@@ -50,6 +52,16 @@ class Chemical extends Model
     public function user()
     {
         return $this->belongsTo(User::class, 'id_user');
+    }
+
+    public function distributor()
+    {
+        return $this->belongsTo(Distributor::class, 'id_distributor');
+    }
+
+    public function produsen()
+    {
+        return $this->belongsTo(Produsen::class, 'id_produsen');
     }
     
     /**

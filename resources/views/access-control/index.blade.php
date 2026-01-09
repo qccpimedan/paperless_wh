@@ -51,7 +51,9 @@
                 <div class="card-body">
                     <div class="btn-group" role="group">
                         @foreach ($roles as $role)
-                            <button type="button" class="btn btn-outline-primary role-btn" data-role-id="{{ $role->id }}" data-role-name="{{ $role->role }}">
+                            <button type="button" class="btn btn-outline-primary role-btn"
+                                data-role-id="{{ $role->id }}"
+                                data-role-name="{{ $role->role }}">
                                 {{ ucfirst(str_replace('_', ' ', $role->role)) }}
                             </button>
                         @endforeach
@@ -74,6 +76,7 @@
                             <label class="form-label fw-bold">Pilih Module:</label>
                             <select id="module-select" class="form-select form-select-lg">
                                 <option value="">-- Pilih Module --</option>
+                                <option value="all">📋 Lihat Semua Module</option>
                             </select>
                         </div>
                     </div>
@@ -151,6 +154,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Populate module dropdown
         let moduleOptions = '<option value="">-- Pilih Module --</option>';
+        moduleOptions += '<option value="all">📋 Lihat Semua Module</option>';
         for (const [moduleKey, moduleName] of Object.entries(modules)) {
             moduleOptions += `<option value="${moduleKey}">${moduleName}</option>`;
         }
@@ -160,12 +164,85 @@ document.addEventListener('DOMContentLoaded', function() {
     // Handle module selection
     document.getElementById('module-select').addEventListener('change', function() {
         const moduleKey = this.value;
-        if (moduleKey) {
+        if (moduleKey === 'all') {
+            loadAllModulePermissions(currentRoleId, currentRoleName);
+        } else if (moduleKey) {
             loadModulePermissions(currentRoleId, currentRoleName, moduleKey);
         } else {
             document.getElementById('permissions-container').style.display = 'none';
         }
     });
+
+    function loadAllModulePermissions(roleId, roleName) {
+        // Show permissions container
+        document.getElementById('permissions-container').style.display = 'block';
+        document.getElementById('role-title').textContent = `Permissions untuk Role: ${roleName.toUpperCase()} - Semua Module`;
+        
+        // Update form action
+        document.getElementById('permissions-form').action = `{{ url('/access-control') }}/${roleId}`;
+        
+        // Fetch current permissions for this role
+        fetch(`{{ url('/access-control') }}/${roleId}/permissions`)
+            .then(response => response.json())
+            .then(data => {
+                // Build HTML for all modules
+                let allModulesHtml = '';
+                
+                for (const [moduleKey, moduleName] of Object.entries(modules)) {
+                    allModulesHtml += `
+                        <div class="col-md-6 mb-3">
+                            <div class="card border-light">
+                                <div class="card-header bg-light">
+                                    <h6 class="card-title mb-0">${moduleName}</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="form-check">
+                                        <input class="form-check-input permission-checkbox module-permission" type="checkbox" 
+                                            id="view_${moduleKey}" name="permissions[]" value="${getPermissionId('view_' + moduleKey)}" data-module="${moduleKey}">
+                                        <label class="form-check-label" for="view_${moduleKey}">
+                                            👁️ View
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input permission-checkbox module-permission" type="checkbox" 
+                                            id="create_${moduleKey}" name="permissions[]" value="${getPermissionId('create_' + moduleKey)}" data-module="${moduleKey}">
+                                        <label class="form-check-label" for="create_${moduleKey}">
+                                            ➕ Create
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input permission-checkbox module-permission" type="checkbox" 
+                                            id="edit_${moduleKey}" name="permissions[]" value="${getPermissionId('edit_' + moduleKey)}" data-module="${moduleKey}">
+                                        <label class="form-check-label" for="edit_${moduleKey}">
+                                            ✏️ Edit
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input permission-checkbox module-permission" type="checkbox" 
+                                            id="delete_${moduleKey}" name="permissions[]" value="${getPermissionId('delete_' + moduleKey)}" data-module="${moduleKey}">
+                                        <label class="form-check-label" for="delete_${moduleKey}">
+                                            🗑️ Delete
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                // Wrap in row
+                let modulePermissionsHtml = `<div class="row">${allModulesHtml}</div>`;
+                document.getElementById('module-permissions').innerHTML = modulePermissionsHtml;
+                
+                // Check the checkboxes for current permissions
+                data.permissions.forEach(permId => {
+                    const checkbox = document.querySelector(`input[value="${permId}"]`);
+                    if (checkbox) {
+                        checkbox.checked = true;
+                    }
+                });
+            });
+    }
 
     function loadModulePermissions(roleId, roleName, moduleKey) {
         const moduleName = modules[moduleKey];
@@ -175,55 +252,55 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('role-title').textContent = `Permissions untuk Role: ${roleName.toUpperCase()} - Module: ${moduleName}`;
         
         // Update form action
-        document.getElementById('permissions-form').action = `/access-control/${roleId}`;
-        
-        // Build single module HTML
-        let moduleHtml = `
-            <div class="col-md-8">
-                <div class="card border-light">
-                    <div class="card-header bg-light">
-                        <h5 class="card-title mb-0">${moduleName}</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="form-check">
-                            <input class="form-check-input permission-checkbox" type="checkbox" 
-                                id="view_${moduleKey}" name="permissions[]" value="${getPermissionId('view_' + moduleKey)}">
-                            <label class="form-check-label" for="view_${moduleKey}">
-                                👁️ View (Lihat Data)
-                            </label>
-                        </div>
-                        <div class="form-check">
-                            <input class="form-check-input permission-checkbox" type="checkbox" 
-                                id="create_${moduleKey}" name="permissions[]" value="${getPermissionId('create_' + moduleKey)}">
-                            <label class="form-check-label" for="create_${moduleKey}">
-                                ➕ Create (Buat Data Baru)
-                            </label>
-                        </div>
-                        <div class="form-check">
-                            <input class="form-check-input permission-checkbox" type="checkbox" 
-                                id="edit_${moduleKey}" name="permissions[]" value="${getPermissionId('edit_' + moduleKey)}">
-                            <label class="form-check-label" for="edit_${moduleKey}">
-                                ✏️ Edit (Ubah Data)
-                            </label>
-                        </div>
-                        <div class="form-check">
-                            <input class="form-check-input permission-checkbox" type="checkbox" 
-                                id="delete_${moduleKey}" name="permissions[]" value="${getPermissionId('delete_' + moduleKey)}">
-                            <label class="form-check-label" for="delete_${moduleKey}">
-                                🗑️ Delete (Hapus Data)
-                            </label>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
-        
-        document.getElementById('module-permissions').innerHTML = moduleHtml;
+        document.getElementById('permissions-form').action = `{{ url('/access-control') }}/${roleId}`;
         
         // Fetch current permissions for this role
-        fetch(`/access-control/${roleId}/permissions`)
+        fetch(`{{ url('/access-control') }}/${roleId}/permissions`)
             .then(response => response.json())
             .then(data => {
+                // Build single module HTML with all permissions
+                let moduleHtml = `
+                    <div class="col-md-8">
+                        <div class="card border-light">
+                            <div class="card-header bg-light">
+                                <h5 class="card-title mb-0">${moduleName}</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="form-check">
+                                    <input class="form-check-input permission-checkbox module-permission" type="checkbox" 
+                                        id="view_${moduleKey}" name="permissions[]" value="${getPermissionId('view_' + moduleKey)}" data-module="${moduleKey}">
+                                    <label class="form-check-label" for="view_${moduleKey}">
+                                        👁️ View (Lihat Data)
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input permission-checkbox module-permission" type="checkbox" 
+                                        id="create_${moduleKey}" name="permissions[]" value="${getPermissionId('create_' + moduleKey)}" data-module="${moduleKey}">
+                                    <label class="form-check-label" for="create_${moduleKey}">
+                                        ➕ Create (Buat Data Baru)
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input permission-checkbox module-permission" type="checkbox" 
+                                        id="edit_${moduleKey}" name="permissions[]" value="${getPermissionId('edit_' + moduleKey)}" data-module="${moduleKey}">
+                                    <label class="form-check-label" for="edit_${moduleKey}">
+                                        ✏️ Edit (Ubah Data)
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input permission-checkbox module-permission" type="checkbox" 
+                                        id="delete_${moduleKey}" name="permissions[]" value="${getPermissionId('delete_' + moduleKey)}" data-module="${moduleKey}">
+                                    <label class="form-check-label" for="delete_${moduleKey}">
+                                        🗑️ Delete (Hapus Data)
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                document.getElementById('module-permissions').innerHTML = moduleHtml;
+                
                 // Check the checkboxes for current permissions
                 data.permissions.forEach(permId => {
                     const checkbox = document.querySelector(`input[value="${permId}"]`);
@@ -243,6 +320,30 @@ document.addEventListener('DOMContentLoaded', function() {
 function resetForm() {
     document.getElementById('permissions-form').reset();
 }
+
+// Handle form submission to ensure all permissions are sent
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('permissions-form');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            // Collect all checked permissions
+            const checkedPermissions = [];
+            document.querySelectorAll('input[name="permissions[]"]:checked').forEach(checkbox => {
+                checkedPermissions.push(checkbox.value);
+            });
+            
+            // If no permissions are checked, show warning
+            if (checkedPermissions.length === 0) {
+                e.preventDefault();
+                alert('Silakan pilih minimal satu permission untuk module ini');
+                return false;
+            }
+            
+            // Form will submit with all checked permissions
+            return true;
+        });
+    }
+});
 </script>
 
 <style>
@@ -292,6 +393,15 @@ function resetForm() {
         opacity: 1;
         transform: translateY(0);
     }
+}
+
+.module-permission {
+    cursor: pointer;
+}
+
+.module-permission:hover {
+    transform: scale(1.1);
+    transition: transform 0.2s ease;
 }
 </style>
 @endsection

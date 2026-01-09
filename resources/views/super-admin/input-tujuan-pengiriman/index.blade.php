@@ -46,6 +46,7 @@
                             <thead>
                                 <tr>
                                     <th>No</th>
+                                    <th>Customer</th>
                                     <th>Nama Tujuan</th>
                                     <th>Plant</th>
                                     <th>Aksi</th>
@@ -56,13 +57,20 @@
                                     <tr>
                                         <td>{{ $index + 1 }}</td>
                                         <td>
+                                            @if($tujuan->customer)
+                                                {{ $tujuan->customer->nama_cust }}
+                                            @else
+                                                <span>-</span>
+                                            @endif
+                                        </td>
+                                        <td>
                                             <strong>{{ $tujuan->nama_tujuan }}</strong>
                                         </td>
                                         <td>
                                             @if($tujuan->user->plant)
                                                 <span class="badge bg-info">{{ $tujuan->user->plant->plant }}</span>
                                             @else
-                                                <span class="badge bg-secondary">No Plant</span>
+                                                <span>No Plant</span>
                                             @endif
                                         </td>
                                         <td>
@@ -86,7 +94,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="4" class="text-center">
+                                        <td colspan="5" class="text-center">
                                             <div class="py-4">
                                                 <i class="bi bi-inbox fs-1 text-muted"></i>
                                                 <p class="text-muted mt-2 mb-3">Belum ada data tujuan pengiriman</p>

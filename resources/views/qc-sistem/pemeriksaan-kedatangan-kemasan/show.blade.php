@@ -37,13 +37,13 @@
                                 <tr><td><strong>Tanggal:</strong></td><td>{{ $pemeriksaanKedatanganKemasan->tanggal->format('d/m/Y') }}</td></tr>
                                 <!-- <tr><td><strong>Jenis Pemeriksaan:</strong></td><td>{{ $pemeriksaanKedatanganKemasan->jenis_pemeriksaan ?? '-' }}</td></tr> -->
                                 <tr><td><strong>No. PO:</strong></td><td>{{ $pemeriksaanKedatanganKemasan->no_po ?? '-' }}</td></tr>
-                                <tr><td><strong>Status:</strong></td><td>
+                                <!-- <tr><td><strong>Status:</strong></td><td>
                                     @if($pemeriksaanKedatanganKemasan->status === 'Release')
                                         <span class="badge bg-success">Release</span>
                                     @else
                                         <span class="badge bg-warning">Hold</span>
                                     @endif
-                                </td></tr>
+                                </td></tr> -->
                                 <tr><td><strong>Segel/Gembok:</strong></td><td>
                                     @if($pemeriksaanKedatanganKemasan->segel_gembok)
                                         @if($pemeriksaanKedatanganKemasan->segel_gembok === 'segel')
@@ -89,7 +89,7 @@
                             @php
                                 $kondisiMobil = [
                                     'bersih' => 'Bersih', 'bebas_hama' => 'Bebas dari hama',
-                                    'tidak_kondensasi' => 'Tidak Kondensasi', 'bebas_produk_halal' => 'Bebas dari Produk Halal',
+                                    'tidak_kondensasi' => 'Tidak Kondensasi', 'bebas_produk_halal' => 'Bebas dari Produk Non Halal',
                                     'tidak_berbau' => 'Tidak Berbau', 'tidak_ada_sampah' => 'Tidak ada sampah',
                                     'tidak_ada_mikroba' => 'Tidak ada mikroba', 'lampu_cover_utuh' => 'Lampu Cover utuh',
                                     'pallet_utuh' => 'Pallet utuh', 'tertutup_rapat' => 'Tertutup rapat',
@@ -109,41 +109,216 @@
                         </div>
                     @endif
 
-                    <!-- Informasi Kemasan & Supplier -->
+                    <!-- Informasi Kemasan & Supplier (Dynamic Rows) -->
                     <h5 class="text-primary">Informasi Kemasan & Supplier</h5>
-                    <div class="row mb-4">
-                        <div class="col-md-6">
-                            <table class="table table-borderless">
-                                <!-- <tr><td width="40%"><strong>Nama Bahan Kemasan:</strong></td><td>{{ $pemeriksaanKedatanganKemasan->nama_bahan_kemasan ?? '-' }}</td></tr>
-                                <tr><td><strong>Bahan Terkait:</strong></td><td>
-                                    @if($pemeriksaanKedatanganKemasan->bahan)
-                                        <span class="badge bg-info">{{ $pemeriksaanKedatanganKemasan->bahan->nama_bahan }}</span>
-                                    @else
-                                        -
-                                    @endif
-                                </td></tr> -->
-                                <tr><td><strong>Produsen:</strong></td><td>{{ $pemeriksaanKedatanganKemasan->produsen ?? '-' }}</td></tr>
-                                <tr><td><strong>Distributor:</strong></td><td>{{ $pemeriksaanKedatanganKemasan->distributor ?? '-' }}</td></tr>
-                            </table>
-                        </div>
-                        <div class="col-md-6">
-                            <table class="table table-borderless">
-                                <tr><td width="40%"><strong>Kode Produksi:</strong></td><td>{{ $pemeriksaanKedatanganKemasan->kode_produksi ?? '-' }}</td></tr>
-                                <tr><td><strong>Jumlah Datang:</strong></td><td>{{ $pemeriksaanKedatanganKemasan->jumlah_datang ?? '-' }}</td></tr>
-                                <tr><td><strong>Jumlah Sampling:</strong></td><td>{{ $pemeriksaanKedatanganKemasan->jumlah_sampling ?? '-' }}</td></tr>
-                            </table>
-                        </div>
-                        @if($pemeriksaanKedatanganKemasan->spesifikasi)
-                            <div class="col-12 mt-3">
-                                <strong>Spesifikasi:</strong>
-                                <p class="mt-2 p-3 bg-light rounded">{{ $pemeriksaanKedatanganKemasan->spesifikasi }}</p>
+                    @php
+                        $id_bahans = json_decode($pemeriksaanKedatanganKemasan->id_bahan_array ?? '[]', true) ?? [];
+                        $produsens = json_decode($pemeriksaanKedatanganKemasan->produsen_array ?? '[]', true) ?? [];
+                        $distributors = json_decode($pemeriksaanKedatanganKemasan->distributor_array ?? '[]', true) ?? [];
+                        $kode_produksis = json_decode($pemeriksaanKedatanganKemasan->kode_produksi_array ?? '[]', true) ?? [];
+                        $jumlah_datangs = json_decode($pemeriksaanKedatanganKemasan->jumlah_datang_array ?? '[]', true) ?? [];
+                        $jumlah_samplings = json_decode($pemeriksaanKedatanganKemasan->jumlah_sampling_array ?? '[]', true) ?? [];
+                        $spesifikasis = json_decode($pemeriksaanKedatanganKemasan->spesifikasi_array ?? '[]', true) ?? [];
+                        $penampakans = json_decode($pemeriksaanKedatanganKemasan->penampakan_array ?? '[]', true) ?? [];
+                        $sealings = json_decode($pemeriksaanKedatanganKemasan->sealing_array ?? '[]', true) ?? [];
+                        $cetakans = json_decode($pemeriksaanKedatanganKemasan->cetakan_array ?? '[]', true) ?? [];
+                        $ketebalan_microns = json_decode($pemeriksaanKedatanganKemasan->ketebalan_micron_array ?? '[]', true) ?? [];
+                        $dimensis = json_decode($pemeriksaanKedatanganKemasan->dimensi_array ?? '[]', true) ?? [];
+                        $statuses = json_decode($pemeriksaanKedatanganKemasan->status_array ?? '[]', true) ?? [];
+                        $logo_halals = json_decode($pemeriksaanKedatanganKemasan->logo_halal_array ?? '[]', true) ?? [];
+                        $dokumen_halals = json_decode($pemeriksaanKedatanganKemasan->dokumen_halal_array ?? '[]', true) ?? [];
+                        $coas = json_decode($pemeriksaanKedatanganKemasan->coa_array ?? '[]', true) ?? [];
+                        $keterangans = json_decode($pemeriksaanKedatanganKemasan->keterangan_array ?? '[]', true) ?? [];
+                        $image_kemasans = json_decode($pemeriksaanKedatanganKemasan->image_kemasan_array ?? '[]', true) ?? [];
+                        $rowCount = max(count($id_bahans), count($produsens), count($distributors));
+                    @endphp
+
+                    @forelse($id_bahans as $index => $id_bahan)
+                        <div class="mb-4 p-3 border rounded" style="background-color: #f8f9fa;">
+                            <h5 class="text-primary mb-3">Baris {{ $index + 1 }}</h5>
+                            
+                            <!-- Bahan Kemasan -->
+                            <div class="form-section mb-3">
+                                <h6 class="text-primary mb-2">Bahan Kemasan</h6>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="p-2 bg-white rounded">
+                                            <strong>Bahan:</strong> {{ $bahanNamaById[$id_bahan] ?? '-' }}
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                        @endif
-                        
-                    </div>
+
+                            <!-- Informasi Kemasan & Supplier -->
+                            <div class="form-section mb-3">
+                                <h6 class="text-primary mb-2">Informasi Kemasan & Supplier</h6>
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="p-2 bg-white rounded mb-2">
+                                            <strong>Produsen:</strong> {{ $produsens[$index] ?? '-' }}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="p-2 bg-white rounded mb-2">
+                                            <strong>Distributor:</strong> {{ $distributors[$index] ?? '-' }}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="p-2 bg-white rounded mb-2">
+                                            <strong>Kode Produksi:</strong> {{ $kode_produksis[$index] ?? '-' }}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="p-2 bg-white rounded mb-2">
+                                            <strong>Jumlah Datang:</strong> {{ $jumlah_datangs[$index] ?? '-' }}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="p-2 bg-white rounded mb-2">
+                                            <strong>Jumlah Sampling:</strong> {{ $jumlah_samplings[$index] ?? '-' }}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="p-2 bg-white rounded mb-2">
+                                            <strong>Spesifikasi:</strong> {{ $spesifikasis[$index] ?? '-' }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Kondisi Fisik -->
+                            <div class="form-section mb-3">
+                                <h6 class="text-primary mb-2">Kondisi Fisik</h6>
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="p-2 bg-white rounded mb-2">
+                                            <strong>Penampakan:</strong>
+                                            @if($penampakans[$index] ?? null)
+                                                <span class="badge bg-success ms-2">✓ Ya</span>
+                                            @else
+                                                <span class="badge bg-danger ms-2">✗ Tidak</span>
+                                            @endif
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="p-2 bg-white rounded mb-2">
+                                            <strong>Sealing:</strong>
+                                            @if($sealings[$index] ?? null)
+                                                <span class="badge bg-success ms-2">✓ Ya</span>
+                                            @else
+                                                <span class="badge bg-danger ms-2">✗ Tidak</span>
+                                            @endif
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="p-2 bg-white rounded mb-2">
+                                            <strong>Cetakan:</strong>
+                                            @if($cetakans[$index] ?? null)
+                                                <span class="badge bg-success ms-2">✓ Ya</span>
+                                            @else
+                                                <span class="badge bg-danger ms-2">✗ Tidak</span>
+                                            @endif
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Detail Tambahan -->
+                            <div class="form-section mb-3">
+                                <h6 class="text-primary mb-2">Detail Tambahan</h6>
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="p-2 bg-white rounded mb-2">
+                                            <strong>Ketebalan (Micron):</strong> {{ $ketebalan_microns[$index] ?? '-' }}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="p-2 bg-white rounded mb-2">
+                                            <strong>Dimensi:</strong> {{ $dimensis[$index] ?? '-' }}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="p-2 bg-white rounded mb-2">
+                                            <strong>Status:</strong> 
+                                            @if($statuses[$index] === 'Release')
+                                                <span class="badge bg-success ms-2">Release</span>
+                                            @elseif($statuses[$index] === 'Hold')
+                                                <span class="badge bg-warning ms-2">Hold</span>
+                                            @else
+                                                <span class="badge bg-secondary ms-2">{{ $statuses[$index] ?? '-' }}</span>
+                                            @endif
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Dokumen -->
+                            <div class="form-section mb-3">
+                                <h6 class="text-primary mb-2">Dokumen</h6>
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="p-2 bg-white rounded mb-2">
+                                            <strong>Logo Halal:</strong>
+                                            @if($logo_halals[$index] ?? null)
+                                                <span class="badge bg-success ms-2">✓ Ya</span>
+                                            @else
+                                                <span class="badge bg-danger ms-2">✗ Tidak</span>
+                                            @endif
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="p-2 bg-white rounded mb-2">
+                                            <strong>Dokumen Halal:</strong>
+                                            @if($dokumen_halals[$index] ?? null)
+                                                <span class="badge bg-success ms-2">✓ Ya</span>
+                                            @else
+                                                <span class="badge bg-danger ms-2">✗ Tidak</span>
+                                            @endif
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="p-2 bg-white rounded mb-2">
+                                            <strong>COA:</strong>
+                                            @if($coas[$index] ?? null)
+                                                <span class="badge bg-success ms-2">✓ Ya</span>
+                                            @else
+                                                <span class="badge bg-danger ms-2">✗ Tidak</span>
+                                            @endif
+                                        </div>
+                                    </div>
+                                </div>
+                                @if($keterangans[$index] ?? null)
+                                    <div class="row mt-2">
+                                        <div class="col-md-12">
+                                            <div class="p-2 bg-white rounded">
+                                                <strong>Keterangan:</strong>
+                                                <p class="mt-2 mb-0">{{ $keterangans[$index] }}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endif
+                            </div>
+
+                            @php
+                                $imgPath = $image_kemasans[$index] ?? null;
+                            @endphp
+                            @if($imgPath)
+                                <div class="form-section mb-3">
+                                    <h6 class="text-primary mb-2">Gambar Kemasan</h6>
+                                    <div class="p-2 bg-white rounded">
+                                        <img src="{{ asset('storage/' . $imgPath) }}" alt="Gambar Kemasan" style="max-width: 260px; height: auto; border: 1px solid #ddd; padding: 4px;">
+                                    </div>
+                                </div>
+                            @endif
+                        </div>
+                    @empty
+                        <div class="alert alert-info">Tidak ada data dynamic form</div>
+                    @endforelse
 
                     <!-- Kondisi Fisik & Dokumentasi -->
-                    <div class="row mb-4">
+                    <!-- <div class="row mb-4">
                         <div class="col-md-6">
                             <h5 class="text-primary">Kondisi Fisik</h5>
                             @if($pemeriksaanKedatanganKemasan->kondisi_fisik)
@@ -171,6 +346,11 @@
                             @if($pemeriksaanKedatanganKemasan->ketebalan_micron)
                                 <div class="mt-3 p-2 bg-light rounded">
                                     <strong>Ketebalan:</strong> {{ $pemeriksaanKedatanganKemasan->ketebalan_micron }} Micron
+                                </div>
+                            @endif
+                            @if($pemeriksaanKedatanganKemasan->dimensi)
+                                <div class="mt-2 p-2 bg-light rounded">
+                                    <strong>Dimensi:</strong> {{ $pemeriksaanKedatanganKemasan->dimensi }}
                                 </div>
                             @endif
                         </div>
@@ -202,10 +382,10 @@
                                 COA (Certificate of Analysis)
                             </div>
                         </div>
-                    </div>
+                    </div> -->
 
                     <!-- Informasi Tambahan -->
-                    <div class="row mb-4">
+                    <!-- <div class="row mb-4">
                         <div class="col-12">
                             <h5 class="text-primary">Informasi Tambahan</h5>
                             <div class="row">
@@ -215,13 +395,6 @@
                                             <strong>{{ $pemeriksaanKedatanganKemasan->user->name }}</strong>
                                             <br><small class="text-muted">{{ $pemeriksaanKedatanganKemasan->user->username }}</small>
                                         </td></tr>
-                                        <!-- <tr><td><strong>Plant:</strong></td><td>
-                                            @if($pemeriksaanKedatanganKemasan->user->plant)
-                                                <span class="badge bg-info">{{ $pemeriksaanKedatanganKemasan->user->plant->plant }}</span>
-                                            @else
-                                                <span class="badge bg-secondary">No Plant</span>
-                                            @endif
-                                        </td></tr> -->
                                     </table>
                                 </div>
                                 <div class="col-md-6">
@@ -232,7 +405,7 @@
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    </div> -->
                 </div>
             </div>
         </section>

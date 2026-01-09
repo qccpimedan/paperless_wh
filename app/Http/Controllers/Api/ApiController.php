@@ -77,15 +77,23 @@ class ApiController extends Controller
                     $existingUser->restore();
                 }
                 $existingUser->update($userData);
-                // if (!empty($user['project_role']['role'])) {
-                //     $existingUser->assignRole($user['project_role']['role']);
-                // }
+                // Assign role to user using Spatie Permission
+                if (!empty($user['project_role']['role'])) {
+                    $roleObj = Role::where('role', 'like', '%' . $user['project_role']['role'] . '%')->first();
+                    if ($roleObj) {
+                        $existingUser->syncRoles($roleObj->role);
+                    }
+                }
             } 
             else {
                  $newUser = User::create(array_merge(['uuid' => $user['uuid']], $userData));
-                // if (!empty($user['project_role']['role'])) {
-                //     $newUser->assignRole($user['project_role']['role']);
-                // }
+                // Assign role to user using Spatie Permission
+                if (!empty($user['project_role']['role'])) {
+                    $roleObj = Role::where('role', 'like', '%' . $user['project_role']['role'] . '%')->first();
+                    if ($roleObj) {
+                        $newUser->syncRoles($roleObj->role);
+                    }
+                }
             }
 
 

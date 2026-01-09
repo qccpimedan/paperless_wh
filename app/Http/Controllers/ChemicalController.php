@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Chemical;
+use App\Models\Distributor;
+use App\Models\Produsen;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -17,10 +19,10 @@ class ChemicalController extends Controller
         
         // SuperAdmin dapat melihat semua data
         if ($user->role && strtolower($user->role->role) === 'superadmin') {
-            $chemicals = Chemical::with(['user.role', 'user.plant'])->latest()->get();
+            $chemicals = Chemical::with(['user.role', 'user.plant', 'distributor', 'produsen'])->latest()->get();
         } else {
             // Admin dan role lain hanya melihat data sesuai plant mereka
-            $chemicals = Chemical::with(['user.role', 'user.plant'])
+            $chemicals = Chemical::with(['user.role', 'user.plant', 'distributor', 'produsen'])
                 ->whereHas('user', function($query) use ($user) {
                     $query->where('id_plant', $user->id_plant);
                 })
@@ -36,7 +38,28 @@ class ChemicalController extends Controller
      */
     public function create()
     {
-        return view('super-admin.input-chemical.create');
+        $user = Auth::user();
+
+        if ($user->role && strtolower($user->role->role) === 'superadmin') {
+            $distributors = Distributor::with(['user.plant'])->latest()->get();
+            $produsens = Produsen::with(['user.plant'])->latest()->get();
+        } else {
+            $distributors = Distributor::with(['user.plant'])
+                ->whereHas('user', function($query) use ($user) {
+                    $query->where('id_plant', $user->id_plant);
+                })
+                ->latest()
+                ->get();
+
+            $produsens = Produsen::with(['user.plant'])
+                ->whereHas('user', function($query) use ($user) {
+                    $query->where('id_plant', $user->id_plant);
+                })
+                ->latest()
+                ->get();
+        }
+
+        return view('super-admin.input-chemical.create', compact('distributors', 'produsens'));
     }
 
     /**
@@ -45,24 +68,39 @@ class ChemicalController extends Controller
     public function store(Request $request)
     {
         $request->validate([
+            'id_distributor' => 'nullable|array',
+            'id_distributor.*' => 'nullable|exists:distributors,id',
+            'id_produsen' => 'nullable|array',
+            'id_produsen.*' => 'nullable|exists:produsens,id',
             'nama_chemical' => 'required|array|min:1',
             'nama_chemical.*' => 'required|string|max:255',
         ]);
 
-        // Filter empty values
-        $namaChemical = array_filter($request->nama_chemical, function($value) {
-            return !empty(trim($value));
-        });
+        $namaChemicalArray = $request->input('nama_chemical', []);
+        $idDistributorArray = $request->input('id_distributor', []);
+        $idProdusenArray = $request->input('id_produsen', []);
 
-        if (empty($namaChemical)) {
+        $hasAtLeastOneChemical = collect($namaChemicalArray)
+            ->map(fn ($v) => trim((string) $v))
+            ->filter(fn ($v) => $v !== '')
+            ->isNotEmpty();
+
+        if (!$hasAtLeastOneChemical) {
             return back()->withErrors(['nama_chemical' => 'Minimal harus ada satu nama chemical.']);
         }
 
         // Create separate record for each nama_chemical
-        foreach ($namaChemical as $nama) {
+        foreach ($namaChemicalArray as $index => $nama) {
+            $nama = trim((string) $nama);
+            if ($nama === '') {
+                continue;
+            }
+
             Chemical::create([
                 'id_user' => Auth::id(),
-                'nama_chemical' => trim($nama),
+                'id_distributor' => $idDistributorArray[$index] ?? null,
+                'id_produsen' => $idProdusenArray[$index] ?? null,
+                'nama_chemical' => $nama,
             ]);
         }
 
@@ -88,8 +126,29 @@ class ChemicalController extends Controller
     {
         // Check access based on plant
         $this->checkPlantAccess($chemical);
-        
-        return view('super-admin.input-chemical.edit', compact('chemical'));
+
+        $user = Auth::user();
+
+        if ($user->role && strtolower($user->role->role) === 'superadmin') {
+            $distributors = Distributor::with(['user.plant'])->latest()->get();
+            $produsens = Produsen::with(['user.plant'])->latest()->get();
+        } else {
+            $distributors = Distributor::with(['user.plant'])
+                ->whereHas('user', function($query) use ($user) {
+                    $query->where('id_plant', $user->id_plant);
+                })
+                ->latest()
+                ->get();
+
+            $produsens = Produsen::with(['user.plant'])
+                ->whereHas('user', function($query) use ($user) {
+                    $query->where('id_plant', $user->id_plant);
+                })
+                ->latest()
+                ->get();
+        }
+
+        return view('super-admin.input-chemical.edit', compact('chemical', 'distributors', 'produsens'));
     }
 
     /**
@@ -101,10 +160,14 @@ class ChemicalController extends Controller
         $this->checkPlantAccess($chemical);
         
         $request->validate([
+            'id_distributor' => 'nullable|exists:distributors,id',
+            'id_produsen' => 'nullable|exists:produsens,id',
             'nama_chemical' => 'required|string|max:255',
         ]);
 
         $chemical->update([
+            'id_distributor' => $request->input('id_distributor'),
+            'id_produsen' => $request->input('id_produsen'),
             'nama_chemical' => trim($request->nama_chemical),
         ]);
 

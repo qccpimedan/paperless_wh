@@ -44,7 +44,10 @@
                                         </ul>
                                     </div>
                                 @endif
-
+                                <div class="alert alert-info">
+                                    <strong>Catatan:</strong> Halaman ini terhubung dengan master <strong>Customer</strong> dan <strong>Produsen</strong>.
+                                    Jika data Customer belum ada, silakan input terlebih dahulu pada menu <strong>Input Customer</strong>, lalu kembali ke halaman ini.
+                                </div>
                                 <form class="form form-horizontal" action="{{ route('tujuan-pengirimans.store') }}" method="POST">
                                     @csrf
                                     <div class="form-body">
@@ -53,6 +56,14 @@
                                                 <label for="nama_tujuan">Nama Tujuan <span class="text-danger">*</span></label>
                                                 <div id="dynamic-fields">
                                                     <div class="input-group mb-2">
+                                                        <select name="id_customer[]" class="form-select @error('id_customer.0') is-invalid @enderror">
+                                                            <option value="">-- Pilih Customer (Opsional) --</option>
+                                                            @foreach($customers as $customer)
+                                                                <option value="{{ $customer->id }}" {{ old('id_customer.0') == $customer->id ? 'selected' : '' }}>
+                                                                    {{ $customer->nama_cust }}
+                                                                </option>
+                                                            @endforeach
+                                                        </select>
                                                         <input type="text" class="form-control @error('nama_tujuan.0') is-invalid @enderror"
                                                             name="nama_tujuan[]" placeholder="Nama Tujuan" value="{{ old('nama_tujuan.0') }}" required>
                                                         <button type="button" class="btn btn-success" id="add-field">
@@ -60,6 +71,9 @@
                                                         </button>
                                                     </div>
                                                 </div>
+                                                @error('id_customer')
+                                                    <div class="text-danger small">{{ $message }}</div>
+                                                @enderror
                                                 @error('nama_tujuan')
                                                     <div class="text-danger small">{{ $message }}</div>
                                                 @enderror
@@ -90,6 +104,12 @@ document.addEventListener('DOMContentLoaded', function() {
         const newField = document.createElement('div');
         newField.className = 'input-group mb-2';
         newField.innerHTML = `
+            <select name="id_customer[]" class="form-select">
+                <option value="">-- Pilih Customer (Opsional) --</option>
+                @foreach($customers as $customer)
+                    <option value="{{ $customer->id }}">{{ $customer->nama_cust }}</option>
+                @endforeach
+            </select>
             <input type="text" class="form-control" name="nama_tujuan[]" placeholder="Nama Tujuan" required>
             <button type="button" class="btn btn-danger remove-field">
                 <i class="bi bi-trash"></i>

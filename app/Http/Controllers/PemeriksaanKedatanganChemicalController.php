@@ -19,11 +19,11 @@ class PemeriksaanKedatanganChemicalController extends Controller
         $user = Auth::user();
         
         if ($user->role && strtolower($user->role->role) === 'superadmin') {
-            $pemeriksaans = PemeriksaanKedatanganChemical::with(['user.role', 'user.plant', 'chemical', 'produsen', 'distributor', 'shift'])
+            $pemeriksaans = PemeriksaanKedatanganChemical::with(['user.role', 'user.plant', 'shift'])
                 ->latest()
                 ->paginate(10);
         } else {
-            $pemeriksaans = PemeriksaanKedatanganChemical::with(['user.role', 'user.plant', 'chemical', 'produsen', 'distributor', 'shift'])
+            $pemeriksaans = PemeriksaanKedatanganChemical::with(['user.role', 'user.plant', 'shift'])
                 ->whereHas('user', function($query) use ($user) {
                     $query->where('id_plant', $user->id_plant);
                 })
@@ -85,18 +85,27 @@ class PemeriksaanKedatanganChemicalController extends Controller
             'jenis_mobil' => 'nullable|string|max:255',
             'no_mobil' => 'nullable|string|max:255',
             'nama_supir' => 'nullable|string|max:255',
-            'id_chemical' => 'nullable|exists:chemicals,id',
-            'id_produsen' => 'nullable|exists:produsens,id',
-            'negara_produsen' => 'nullable|string|max:255',
-            'id_distributor' => 'nullable|exists:distributors,id',
-            'kode_produksi' => 'nullable|string|max:255',
-            'expire_date' => 'nullable|date',
-            'kondisi_chemical' => 'nullable|in:Cair,Serbuk',
-            'jumlah_datang' => 'nullable|string|max:255',
-            'jumlah_sampling' => 'nullable|string|max:255',
-            'status' => 'required|in:Release,Hold',
-            'keterangan' => 'nullable|string',
             'id_shift' => 'nullable|exists:shifts,id',
+            // Validasi array untuk dynamic rows
+            'id_chemical' => 'required|array',
+            'id_chemical.*' => 'required|exists:chemicals,id',
+            'kondisi_chemical' => 'nullable|array',
+            'id_produsen' => 'nullable|array',
+            'id_produsen.*' => 'nullable|exists:produsens,id',
+            'negara_produsen' => 'nullable|array',
+            'id_distributor' => 'nullable|array',
+            'id_distributor.*' => 'nullable|exists:distributors,id',
+            'kode_produksi' => 'nullable|array',
+            'expire_date' => 'nullable|array',
+            'jumlah_datang' => 'nullable|array',
+            'jumlah_sampling' => 'nullable|array',
+            'kondisi_fisik_kemasan' => 'nullable|array',
+            'kondisi_fisik_warna' => 'nullable|array',
+            'persyaratan_dokumen_halal' => 'nullable|array',
+            'coa' => 'nullable|array',
+            'status_baris' => 'required|array',
+            'status_baris.*' => 'required|in:Release,Hold',
+            'keterangan' => 'nullable|array',
         ]);
 
         // Process kondisi mobil (11 items)
@@ -114,19 +123,45 @@ class PemeriksaanKedatanganChemicalController extends Controller
             'bebas_kontaminan' => $request->input('kondisi_mobil.bebas_kontaminan') === '1',
         ];
 
-        // Process kondisi fisik (2 items)
-        $kondisiFisik = [
-            'kemasan' => $request->input('kondisi_fisik.kemasan') === '1',
-            'warna' => $request->input('kondisi_fisik.warna') === '1',
-        ];
+        // Process detail chemicals dari dynamic rows
+        $detailChemicals = [];
+        $idChemicals = $request->input('id_chemical', []);
+        
+        foreach ($idChemicals as $index => $idChemical) {
+            $detailChemicals[] = [
+                'id_chemical' => $idChemical,
+                'kondisi_chemical' => $request->input('kondisi_chemical.' . $index),
+                'id_produsen' => $request->input('id_produsen.' . $index),
+                'negara_produsen' => $request->input('negara_produsen.' . $index),
+                'id_distributor' => $request->input('id_distributor.' . $index),
+                'kode_produksi' => $request->input('kode_produksi.' . $index),
+                'expire_date' => $request->input('expire_date.' . $index),
+                'jumlah_datang' => $request->input('jumlah_datang.' . $index),
+                'jumlah_sampling' => $request->input('jumlah_sampling.' . $index),
+                'kondisi_fisik' => [
+                    'kemasan' => $request->input('kondisi_fisik_kemasan.' . $index) === '1',
+                    'warna' => $request->input('kondisi_fisik_warna.' . $index) === '1',
+                ],
+                'persyaratan_dokumen_halal' => $request->input('persyaratan_dokumen_halal.' . $index) === '1',
+                'coa' => $request->input('coa.' . $index) === '1',
+                'status' => $request->input('status_baris.' . $index),
+                'keterangan' => $request->input('keterangan.' . $index),
+            ];
+        }
 
-        $data = $request->all();
-        $data['id_user'] = Auth::id();
-        $data['segel_gembok'] = $request->input('segel_gembok');
-        $data['persyaratan_dokumen_halal'] = $request->input('persyaratan_dokumen_halal') === '1';
-        $data['coa'] = $request->input('coa') === '1';
-        $data['kondisi_mobil'] = $kondisiMobil;
-        $data['kondisi_fisik'] = $kondisiFisik;
+        // Create data
+        $data = [
+            'id_user' => Auth::id(),
+            'id_shift' => $request->input('id_shift'),
+            'tanggal' => $request->input('tanggal'),
+            'jenis_mobil' => $request->input('jenis_mobil'),
+            'no_mobil' => $request->input('no_mobil'),
+            'nama_supir' => $request->input('nama_supir'),
+            'segel_gembok' => $request->input('segel_gembok'),
+            'no_segel' => $request->input('no_segel'),
+            'kondisi_mobil' => $kondisiMobil,
+            'detail_chemicals' => $detailChemicals,
+        ];
 
         PemeriksaanKedatanganChemical::create($data);
 
@@ -138,7 +173,8 @@ class PemeriksaanKedatanganChemicalController extends Controller
     {
         $this->checkPlantAccess($pemeriksaanChemical);
         
-        $pemeriksaanChemical->load(['user.plant', 'shift', 'chemical', 'produsen', 'distributor']);
+        // Load hanya relasi yang masih digunakan (tidak ada relasi chemical, produsen, distributor lagi)
+        $pemeriksaanChemical->load(['user.plant', 'shift']);
         
         return view('qc-sistem.pemeriksaan-kedatangan-chemical.show', compact('pemeriksaanChemical'));
     }
@@ -177,6 +213,98 @@ class PemeriksaanKedatanganChemicalController extends Controller
         return view('qc-sistem.pemeriksaan-kedatangan-chemical.edit', compact('pemeriksaanChemical', 'shifts', 'chemicals', 'produsens', 'distributors', 'countries'));
     }
 
+    public function createRow(PemeriksaanKedatanganChemical $pemeriksaanChemical)
+    {
+        $this->checkPlantAccess($pemeriksaanChemical);
+
+        $user = Auth::user();
+
+        if ($user->role && strtolower($user->role->role) === 'superadmin') {
+            $chemicals = Chemical::with(['user.plant'])->get();
+            $produsens = Produsen::with(['user.plant'])->get();
+            $distributors = Distributor::with(['user.plant'])->get();
+        } else {
+            $chemicals = Chemical::whereHas('user', function ($query) use ($user) {
+                $query->where('id_plant', $user->id_plant);
+            })->with(['user.plant'])->get();
+
+            $produsens = Produsen::whereHas('user', function ($query) use ($user) {
+                $query->where('id_plant', $user->id_plant);
+            })->with(['user.plant'])->get();
+
+            $distributors = Distributor::whereHas('user', function ($query) use ($user) {
+                $query->where('id_plant', $user->id_plant);
+            })->with(['user.plant'])->get();
+        }
+
+        $countries = Countries::getList('en', 'php');
+
+        return view('qc-sistem.pemeriksaan-kedatangan-chemical.tambah-baris', compact(
+            'pemeriksaanChemical',
+            'chemicals',
+            'produsens',
+            'distributors',
+            'countries'
+        ));
+    }
+
+    public function storeRow(Request $request, PemeriksaanKedatanganChemical $pemeriksaanChemical)
+    {
+        $this->checkPlantAccess($pemeriksaanChemical);
+
+        $request->validate([
+            'status_baris' => 'required|in:Release,Hold',
+            'id_chemical' => 'required|exists:chemicals,id',
+            'kondisi_chemical' => 'nullable|string|max:255',
+            'id_produsen' => 'nullable|exists:produsens,id',
+            'negara_produsen' => 'nullable|string|max:255',
+            'id_distributor' => 'nullable|exists:distributors,id',
+            'kode_produksi' => 'nullable|string|max:255',
+            'expire_date' => 'nullable|date',
+            'jumlah_datang' => 'nullable|string|max:255',
+            'jumlah_sampling' => 'nullable|string|max:255',
+            'kondisi_fisik_kemasan' => 'nullable|in:0,1',
+            'kondisi_fisik_warna' => 'nullable|in:0,1',
+            'persyaratan_dokumen_halal' => 'nullable|in:0,1',
+            'coa' => 'nullable|in:0,1',
+            'keterangan' => 'nullable|string|max:500',
+        ]);
+
+        $detailChemicals = $pemeriksaanChemical->detail_chemicals ?? [];
+        if (!is_array($detailChemicals)) {
+            $detailChemicals = [];
+        }
+
+        $newRow = [
+            'id_chemical' => $request->input('id_chemical'),
+            'kondisi_chemical' => $request->input('kondisi_chemical'),
+            'id_produsen' => $request->input('id_produsen'),
+            'negara_produsen' => $request->input('negara_produsen'),
+            'id_distributor' => $request->input('id_distributor'),
+            'kode_produksi' => $request->input('kode_produksi'),
+            'expire_date' => $request->input('expire_date'),
+            'jumlah_datang' => $request->input('jumlah_datang'),
+            'jumlah_sampling' => $request->input('jumlah_sampling'),
+            'kondisi_fisik' => [
+                'kemasan' => $request->input('kondisi_fisik_kemasan') === '1',
+                'warna' => $request->input('kondisi_fisik_warna') === '1',
+            ],
+            'persyaratan_dokumen_halal' => $request->input('persyaratan_dokumen_halal') === '1',
+            'coa' => $request->input('coa') === '1',
+            'status' => $request->input('status_baris'),
+            'keterangan' => $request->input('keterangan'),
+        ];
+
+        $detailChemicals[] = $newRow;
+
+        $pemeriksaanChemical->update([
+            'detail_chemicals' => $detailChemicals,
+        ]);
+
+        return redirect()->route('pemeriksaan-chemical.index')
+            ->with('success', 'Baris chemical berhasil ditambahkan!');
+    }
+
     public function update(Request $request, PemeriksaanKedatanganChemical $pemeriksaanChemical)
     {
         $this->checkPlantAccess($pemeriksaanChemical);
@@ -186,18 +314,27 @@ class PemeriksaanKedatanganChemicalController extends Controller
             'jenis_mobil' => 'nullable|string|max:255',
             'no_mobil' => 'nullable|string|max:255',
             'nama_supir' => 'nullable|string|max:255',
-            'id_chemical' => 'nullable|exists:chemicals,id',
-            'id_produsen' => 'nullable|exists:produsens,id',
-            'negara_produsen' => 'nullable|string|max:255',
-            'id_distributor' => 'nullable|exists:distributors,id',
-            'kode_produksi' => 'nullable|string|max:255',
-            'expire_date' => 'nullable|date',
-            'kondisi_chemical' => 'nullable|in:Cair,Serbuk',
-            'jumlah_datang' => 'nullable|string|max:255',
-            'jumlah_sampling' => 'nullable|string|max:255',
-            'status' => 'required|in:Release,Hold',
-            'keterangan' => 'nullable|string',
             'id_shift' => 'nullable|exists:shifts,id',
+            // Validasi array untuk dynamic rows
+            'id_chemical' => 'required|array',
+            'id_chemical.*' => 'required|exists:chemicals,id',
+            'kondisi_chemical' => 'nullable|array',
+            'id_produsen' => 'nullable|array',
+            'id_produsen.*' => 'nullable|exists:produsens,id',
+            'negara_produsen' => 'nullable|array',
+            'id_distributor' => 'nullable|array',
+            'id_distributor.*' => 'nullable|exists:distributors,id',
+            'kode_produksi' => 'nullable|array',
+            'expire_date' => 'nullable|array',
+            'jumlah_datang' => 'nullable|array',
+            'jumlah_sampling' => 'nullable|array',
+            'kondisi_fisik_kemasan' => 'nullable|array',
+            'kondisi_fisik_warna' => 'nullable|array',
+            'persyaratan_dokumen_halal' => 'nullable|array',
+            'coa' => 'nullable|array',
+            'status_baris' => 'required|array',
+            'status_baris.*' => 'required|in:Release,Hold',
+            'keterangan' => 'nullable|array',
         ]);
 
         // Process kondisi mobil (11 items)
@@ -215,18 +352,44 @@ class PemeriksaanKedatanganChemicalController extends Controller
             'bebas_kontaminan' => $request->input('kondisi_mobil.bebas_kontaminan') === '1',
         ];
 
-        // Process kondisi fisik (2 items)
-        $kondisiFisik = [
-            'kemasan' => $request->input('kondisi_fisik.kemasan') === '1',
-            'warna' => $request->input('kondisi_fisik.warna') === '1',
-        ];
+        // Process detail chemicals dari dynamic rows
+        $detailChemicals = [];
+        $idChemicals = $request->input('id_chemical', []);
+        
+        foreach ($idChemicals as $index => $idChemical) {
+            $detailChemicals[] = [
+                'id_chemical' => $idChemical,
+                'kondisi_chemical' => $request->input('kondisi_chemical.' . $index),
+                'id_produsen' => $request->input('id_produsen.' . $index),
+                'negara_produsen' => $request->input('negara_produsen.' . $index),
+                'id_distributor' => $request->input('id_distributor.' . $index),
+                'kode_produksi' => $request->input('kode_produksi.' . $index),
+                'expire_date' => $request->input('expire_date.' . $index),
+                'jumlah_datang' => $request->input('jumlah_datang.' . $index),
+                'jumlah_sampling' => $request->input('jumlah_sampling.' . $index),
+                'kondisi_fisik' => [
+                    'kemasan' => $request->input('kondisi_fisik_kemasan.' . $index) === '1',
+                    'warna' => $request->input('kondisi_fisik_warna.' . $index) === '1',
+                ],
+                'persyaratan_dokumen_halal' => $request->input('persyaratan_dokumen_halal.' . $index) === '1',
+                'coa' => $request->input('coa.' . $index) === '1',
+                'status' => $request->input('status_baris.' . $index),
+                'keterangan' => $request->input('keterangan.' . $index),
+            ];
+        }
 
-        $data = $request->all();
-        $data['segel_gembok'] = $request->input('segel_gembok');
-        $data['persyaratan_dokumen_halal'] = $request->input('persyaratan_dokumen_halal') === '1';
-        $data['coa'] = $request->input('coa') === '1';
-        $data['kondisi_mobil'] = $kondisiMobil;
-        $data['kondisi_fisik'] = $kondisiFisik;
+        // Update data
+        $data = [
+            'id_shift' => $request->input('id_shift'),
+            'tanggal' => $request->input('tanggal'),
+            'jenis_mobil' => $request->input('jenis_mobil'),
+            'no_mobil' => $request->input('no_mobil'),
+            'nama_supir' => $request->input('nama_supir'),
+            'segel_gembok' => $request->input('segel_gembok'),
+            'no_segel' => $request->input('no_segel'),
+            'kondisi_mobil' => $kondisiMobil,
+            'detail_chemicals' => $detailChemicals,
+        ];
 
         $pemeriksaanChemical->update($data);
 
@@ -333,15 +496,14 @@ class PemeriksaanKedatanganChemicalController extends Controller
     public function exportPDF(Request $request)
     {
         $user = Auth::user();
-        $tanggal = $request->input('tanggal');
         $id_shift = $request->input('id_shift');
-        $jam_awal = $request->input('jam_awal');
-        $jam_akhir = $request->input('jam_akhir');
+        $tanggalDari = $request->input('tanggal_dari');
+        $tanggalSampai = $request->input('tanggal_sampai');
+        $tanggal = $request->input('tanggal');
 
         $query = PemeriksaanKedatanganChemical::with([
             'user.role', 
-            'user.plant', 
-            'chemical', 
+            'user.plant',    
             'shift', 
             'verifiedBy.role'
         ])->with([
@@ -362,23 +524,34 @@ class PemeriksaanKedatanganChemicalController extends Controller
             });
         }
 
-        if ($tanggal) {
-            $query->whereDate('tanggal', $tanggal);
-        }
-
         if ($id_shift) {
             $query->where('id_shift', $id_shift);
         }
 
-        if ($jam_awal && $jam_akhir) {
-            $query->whereBetween('created_at', [
-                $tanggal . ' ' . $jam_awal . ':00',
-                $tanggal . ' ' . $jam_akhir . ':59'
-            ]);
-        } elseif ($jam_awal) {
-            $query->whereTime('created_at', '>=', $jam_awal);
-        } elseif ($jam_akhir) {
-            $query->whereTime('created_at', '<=', $jam_akhir);
+        // Filter tanggal berdasarkan shift
+        if ($id_shift) {
+            $shift = Shift::find($id_shift);
+            $shiftName = $shift ? trim(strtolower((string) $shift->shift)) : null;
+
+            if ($shiftName === '1' || $shiftName === 'shift 1') {
+                if ($tanggalDari && $tanggalSampai) {
+                    $query->whereBetween('tanggal', [$tanggalDari, $tanggalSampai]);
+                } elseif ($tanggalDari) {
+                    $query->whereDate('tanggal', '>=', $tanggalDari);
+                } elseif ($tanggalSampai) {
+                    $query->whereDate('tanggal', '<=', $tanggalSampai);
+                }
+            } else {
+                // Shift 2/3 dan lainnya: single date
+                if ($tanggal) {
+                    $query->whereDate('tanggal', $tanggal);
+                }
+            }
+        } else {
+            // Jika shift tidak dipilih, fallback single date jika ada
+            if ($tanggal) {
+                $query->whereDate('tanggal', $tanggal);
+            }
         }
 
         $pemeriksaans = $query->latest()->get();
@@ -417,15 +590,16 @@ class PemeriksaanKedatanganChemicalController extends Controller
         $pdf = \PDF::loadView('qc-sistem.pemeriksaan-kedatangan-chemical.pdf-report', [
             'pemeriksaans' => $pemeriksaans,
             'tanggal' => $tanggal,
+            'tanggal_dari' => $tanggalDari,
+            'tanggal_sampai' => $tanggalSampai,
             'shift' => $shift,
-            'jam_awal' => $jam_awal,
-            'jam_akhir' => $jam_akhir,
             'qcUser' => $qcUser,
             'produksiUser' => $produksiUser,
             'spvQcUser' => $spvQcUser
         ]);
 
-        $filename = 'laporan-pemeriksaan-chemical-' . ($tanggal ?? date('Y-m-d')) . '.pdf';
+        $filenameDate = $tanggal ?? $tanggalDari ?? date('Y-m-d');
+        $filename = 'laporan-pemeriksaan-chemical-' . $filenameDate . '.pdf';
         return $pdf->download($filename);
     }
 }

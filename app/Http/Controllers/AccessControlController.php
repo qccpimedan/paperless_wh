@@ -8,6 +8,19 @@ use Spatie\Permission\Models\Role;
 
 class AccessControlController extends Controller
 {
+    private function isSuperAdmin($user): bool
+    {
+        if (!$user) {
+            return false;
+        }
+
+        if (method_exists($user, 'hasRole') && $user->hasRole('superadmin')) {
+            return true;
+        }
+
+        return strtolower(optional($user->role)->role ?? '') === 'superadmin';
+    }
+
     /**
      * Display the access control dashboard
      */
@@ -22,12 +35,12 @@ class AccessControlController extends Controller
             $user = auth()->user();
 
             // Check if user has superadmin role
-            if (!$user->hasRole('superadmin')) {
+            if (!$this->isSuperAdmin($user)) {
                 abort(403, 'Unauthorized access - Anda harus menjadi Super Admin');
             }
 
-            // Get all roles except superadmin
-            $roles = Role::where('role', '!=', 'superadmin')->get();
+            // Get all roles (superadmin included for display; editing superadmin remains blocked)
+            $roles = Role::all();
 
             // Get all modules
             $modules = [
@@ -63,29 +76,64 @@ class AccessControlController extends Controller
     {
         try {
             // Check authorization
-            if (!auth()->user()->hasRole('superadmin')) {
+            if (!$this->isSuperAdmin(auth()->user())) {
                 return redirect()->back()->with('error', 'Unauthorized access');
             }
 
             // Find role by ID
             $role = Role::findOrFail($roleId);
 
-            // Validate that role is not superadmin
-            if ($role->role === 'superadmin') {
-                return redirect()->back()->with('error', 'Tidak bisa mengubah permissions Superadmin');
-            }
-
-            // Get all permission IDs from request
-            $permissionIds = $request->input('permissions', []);
+            // Get all permission IDs from request (only checked permissions)
+            $newPermissionIds = $request->input('permissions', []);
 
             // Filter out empty values
-            $permissionIds = array_filter($permissionIds);
+            $newPermissionIds = array_filter($newPermissionIds);
 
             // Convert to integers
-            $permissionIds = array_map('intval', $permissionIds);
+            $newPermissionIds = array_map('intval', $newPermissionIds);
+
+            // Get existing permissions for this role
+            $existingPermissionIds = $role->permissions()->pluck('id')->toArray();
+
+            // Get all permissions from the request (to identify which module is being updated)
+            // We need to identify which module permissions are in the request
+            $requestPermissions = Permission::whereIn('id', $newPermissionIds)->get();
+            
+            // Extract module names from requested permissions
+            $requestedModules = [];
+            foreach ($requestPermissions as $perm) {
+                // Permission name format: action_module (e.g., view_detail_komplain)
+                $parts = explode('_', $perm->name);
+                if (count($parts) >= 2) {
+                    // Remove the action part to get module
+                    array_shift($parts);
+                    $module = implode('_', $parts);
+                    $requestedModules[$module] = true;
+                }
+            }
+
+            // Get all existing permissions and remove those from the modules being updated
+            $permissionsToKeep = [];
+            foreach ($role->permissions as $perm) {
+                $parts = explode('_', $perm->name);
+                if (count($parts) >= 2) {
+                    array_shift($parts);
+                    $module = implode('_', $parts);
+                    // Keep permission only if its module is NOT being updated
+                    if (!isset($requestedModules[$module])) {
+                        $permissionsToKeep[] = $perm->id;
+                    }
+                }
+            }
+
+            // Merge: keep permissions from other modules + add new permissions from current module
+            $finalPermissionIds = array_unique(array_merge($permissionsToKeep, $newPermissionIds));
+
+            // Get all permissions to sync
+            $allPermissionsToSync = Permission::whereIn('id', $finalPermissionIds)->get();
 
             // Sync permissions for the role
-            $role->syncPermissions(Permission::whereIn('id', $permissionIds)->get());
+            $role->syncPermissions($allPermissionsToSync);
 
             return redirect('access-control')->with('success', "Permissions untuk role '{$role->role}' berhasil diupdate!");
         } catch (\Exception $e) {
@@ -100,12 +148,14 @@ class AccessControlController extends Controller
     {
         try {
             // Check authorization
-            if (!auth()->user()->hasRole('superadmin')) {
+            if (!$this->isSuperAdmin(auth()->user())) {
                 return response()->json(['error' => 'Unauthorized', 'success' => false], 403);
             }
 
             // Find role by ID
             $role = Role::findOrFail($roleId);
+            
+            // Get all permissions for this role
             $rolePermissions = $role->permissions()->pluck('id')->toArray();
             
             return response()->json([

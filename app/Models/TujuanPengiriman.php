@@ -19,6 +19,7 @@ class TujuanPengiriman extends Model
     protected $fillable = [
         'uuid',
         'id_user',
+        'id_customer',
         'nama_tujuan',
     ];
 
@@ -50,6 +51,11 @@ class TujuanPengiriman extends Model
     public function user()
     {
         return $this->belongsTo(User::class, 'id_user');
+    }
+
+    public function customer()
+    {
+        return $this->belongsTo(Customer::class, 'id_customer');
     }
     
     /**

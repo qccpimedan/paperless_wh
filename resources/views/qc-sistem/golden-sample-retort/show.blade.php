@@ -61,14 +61,10 @@
                                 </div>
                                 <div class="row mb-3">
                                     <div class="col-md-3">
-                                        <label class="form-label"><strong>Collection Date (Bulan)</strong></label>
+                                        <label class="form-label"><strong>Masa Penyimpanan</strong></label>
                                     </div>
                                     <div class="col-md-9">
-                                        @if($goldenSampleReport->collection_date_from && $goldenSampleReport->collection_date_to)
-                                            <p>{{ $goldenSampleReport->collection_date_from }} - {{ $goldenSampleReport->collection_date_to }}</p>
-                                        @else
-                                            <p class="text-muted">-</p>
-                                        @endif
+                                        <p>{{ $goldenSampleReport->masa_penyimpanan ?? '-' }}</p>
                                     </div>
                                 </div>
                                 <div class="row mb-3">

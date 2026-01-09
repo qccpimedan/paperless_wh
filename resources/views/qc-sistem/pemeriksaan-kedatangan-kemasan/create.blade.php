@@ -45,7 +45,7 @@
                                     </div>
                                 @endif
 
-                                <form class="form form-horizontal" action="{{ route('pemeriksaan-kedatangan-kemasan.store') }}" method="POST">
+                                <form class="form form-horizontal" action="{{ route('pemeriksaan-kedatangan-kemasan.store') }}" method="POST" enctype="multipart/form-data">
                                     @csrf
                                     
                                     <!-- Informasi Dasar -->
@@ -120,6 +120,16 @@
                                                     <input type="text" id="nama_supir" class="form-control @error('nama_supir') is-invalid @enderror"
                                                         name="nama_supir" value="{{ old('nama_supir') }}" placeholder="Nama Supir">
                                                     @error('nama_supir')
+                                                        <div class="invalid-feedback">{{ $message }}</div>
+                                                    @enderror
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="form-group">
+                                                    <label for="no_po">No. PO</label>
+                                                    <input type="text" id="no_po" class="form-control @error('no_po') is-invalid @enderror"
+                                                        name="no_po" value="{{ old('no_po') }}" placeholder="No. PO">
+                                                    @error('no_po')
                                                         <div class="invalid-feedback">{{ $message }}</div>
                                                     @enderror
                                                 </div>
@@ -217,7 +227,7 @@
 
                                                 <!-- 4. Bebas dari Produk Halal -->
                                                 <div class="mb-3">
-                                                    <label class="form-label"><strong>4. Bebas dari Produk Halal</strong></label>
+                                                    <label class="form-label"><strong>4. Bebas dari Produk Non Halal</strong></label>
                                                     <div class="form-check">
                                                         <input class="form-check-input" type="radio" name="kondisi_mobil[bebas_produk_halal]" id="bebas_produk_halal_ya" value="1" {{ old('kondisi_mobil.bebas_produk_halal') == '1' ? 'checked' : '' }}>
                                                         <label class="form-check-label" for="bebas_produk_halal_ya">Ya ✓</label>
@@ -326,243 +336,280 @@
                                         </div>
                                     </div>
 
-                                    <!-- Informasi Kemasan & Supplier -->
-                                    <div class="form-section mb-4">
-                                        <h5 class="text-primary mb-3">Informasi Kemasan & Supplier</h5>
-                                        <div class="row">
-                                            <div class="col-md-6">
-                                                <div class="form-group">
-                                                    <label for="no_po">No. PO</label>
-                                                    <input type="text" id="no_po" class="form-control @error('no_po') is-invalid @enderror"
-                                                        name="no_po" value="{{ old('no_po') }}" placeholder="No. PO">
-                                                    @error('no_po')
-                                                        <div class="invalid-feedback">{{ $message }}</div>
-                                                    @enderror
+                                    <!-- UNIFIED DYNAMIC FORM - Bahan Kemasan, Informasi Kemasan, Kondisi Fisik, Detail Tambahan, Dokumen -->
+                                    <!-- DYNAMIC ROWS CONTAINER -->
+                                    <div id="unified-container">
+                                        <div class="unified-row mb-4 p-3 border rounded" style="background-color: #f8f9fa;">
+                                            <!-- Bahan Kemasan -->
+                                            <div class="form-section mb-3">
+                                                <h6 class="text-primary mb-2">Bahan Kemasan</h6>
+                                                <div class="row">
+                                                    <div class="col-md-6">
+                                                        <div class="form-group">
+                                                            <label class="form-label">Bahan Kemasan</label>
+                                                            <select class="choices form-control bahan-kemasan-select @error('id_bahan.0') is-invalid @enderror" name="id_bahan[]">
+                                                                <option value="">Pilih Bahan</option>
+                                                                @foreach($bahanKemasans as $bahanKemasan)
+                                                                    <option value="{{ $bahanKemasan->id }}" {{ old('id_bahan.0') == $bahanKemasan->id ? 'selected' : '' }}>
+                                                                        {{ $bahanKemasan->nama_kemasan }}
+                                                                    </option>
+                                                                @endforeach
+                                                            </select>
+                                                            @error('id_bahan.0')
+                                                                <div class="invalid-feedback">{{ $message }}</div>
+                                                            @enderror
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </div>
-                                            <div class="col-md-6">
-                                                <div class="form-group">
-                                                    <label for="id_bahan">Bahan Kemasan</label>
-                                                    <select id="id_bahan" class="choices form-control @error('id_bahan') is-invalid @enderror" name="id_bahan">
-                                                        <option value="">Pilih Bahan</option>
-                                                        @foreach($bahans as $bahan)
-                                                            <option value="{{ $bahan->id }}" {{ old('id_bahan') == $bahan->id ? 'selected' : '' }}>
-                                                                {{ $bahan->nama_bahan }}
-                                                            </option>
-                                                        @endforeach
-                                                    </select>
-                                                    @error('id_bahan')
-                                                        <div class="invalid-feedback">{{ $message }}</div>
-                                                    @enderror
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="row">
-                                            <div class="col-md-6">
-                                                <div class="form-group">
-                                                    <label for="produsen">Produsen</label>
-                                                    <select id="produsen" class="choices form-control @error('produsen') is-invalid @enderror" name="produsen">
-                                                        <option value="">Pilih Produsen</option>
-                                                        @foreach ($produsens as $produsen)
-                                                            <option value="{{ $produsen->nama_produsen }}" {{ old('produsen') == $produsen->nama_produsen ? 'selected' : '' }}>
-                                                                {{ $produsen->nama_produsen }}
-                                                            </option>
-                                                        @endforeach
-                                                    </select>
-                                                    @error('produsen')
-                                                        <div class="invalid-feedback">{{ $message }}</div>
-                                                    @enderror
-                                                </div>
-                                            </div>
-                                        </div>
 
-                                        <div class="row">
-                                            <div class="col-md-6">
-                                                <div class="form-group">
-                                                    <label for="distributor">Distributor</label>
-                                                    <select id="distributor" class="choices form-control @error('distributor') is-invalid @enderror" name="distributor">
-                                                        <option value="">Pilih Distributor</option>
-                                                        @foreach ($distributors as $distributor)
-                                                            <option value="{{ $distributor->nama_distributor }}" {{ old('distributor') == $distributor->nama_distributor ? 'selected' : '' }}>
-                                                                {{ $distributor->nama_distributor }}
-                                                            </option>
-                                                        @endforeach
-                                                    </select>
-                                                    @error('distributor')
-                                                        <div class="invalid-feedback">{{ $message }}</div>
-                                                    @enderror
+                                            <!-- Informasi Kemasan & Supplier -->
+                                            <div class="form-section mb-3">
+                                                <h6 class="text-primary mb-2">Informasi Kemasan & Supplier</h6>
+                                                <div class="row">
+                                                    <div class="col-md-4">
+                                                        <div class="form-group">
+                                                            <label class="form-label">Produsen</label>
+                                                            <select class="form-control produsen-select @error('produsen.0') is-invalid @enderror" name="produsen[]">
+                                                                <option value="">Pilih Produsen</option>
+                                                                @foreach ($produsens as $produsen)
+                                                                    <option value="{{ $produsen->nama_produsen }}" {{ old('produsen.0') == $produsen->nama_produsen ? 'selected' : '' }}>
+                                                                        {{ $produsen->nama_produsen }}
+                                                                    </option>
+                                                                @endforeach
+                                                            </select>
+                                                            @error('produsen.0')
+                                                                <div class="invalid-feedback">{{ $message }}</div>
+                                                            @enderror
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <div class="form-group">
+                                                            <label class="form-label">Distributor</label>
+                                                            <select class=" form-control distributor-select @error('distributor.0') is-invalid @enderror" name="distributor[]">
+                                                                <option value="">Pilih Distributor</option>
+                                                                @foreach ($distributors as $distributor)
+                                                                    <option value="{{ $distributor->nama_distributor }}" {{ old('distributor.0') == $distributor->nama_distributor ? 'selected' : '' }}>
+                                                                        {{ $distributor->nama_distributor }}
+                                                                    </option>
+                                                                @endforeach
+                                                            </select>
+                                                            @error('distributor.0')
+                                                                <div class="invalid-feedback">{{ $message }}</div>
+                                                            @enderror
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <div class="form-group">
+                                                            <label class="form-label">Kode Produksi</label>
+                                                            <input type="text" class="form-control @error('kode_produksi.0') is-invalid @enderror"
+                                                                name="kode_produksi[]" value="{{ old('kode_produksi.0') }}" placeholder="Kode Produksi">
+                                                            @error('kode_produksi.0')
+                                                                <div class="invalid-feedback">{{ $message }}</div>
+                                                            @enderror
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="row">
+                                                    <div class="col-md-4">
+                                                        <div class="form-group">
+                                                            <label class="form-label">Jumlah Datang (Kg/pcs/roll)</label>
+                                                            <input type="text" class="form-control @error('jumlah_datang.0') is-invalid @enderror"
+                                                                name="jumlah_datang[]" value="{{ old('jumlah_datang.0') }}" placeholder="Jumlah Datang">
+                                                            @error('jumlah_datang.0')
+                                                                <div class="invalid-feedback">{{ $message }}</div>
+                                                            @enderror
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <div class="form-group">
+                                                            <label class="form-label">Jumlah Sampling (pcs/kg/roll)</label>
+                                                            <input type="text" class="form-control @error('jumlah_sampling.0') is-invalid @enderror"
+                                                                name="jumlah_sampling[]" value="{{ old('jumlah_sampling.0') }}" placeholder="Jumlah Sampling">
+                                                            @error('jumlah_sampling.0')
+                                                                <div class="invalid-feedback">{{ $message }}</div>
+                                                            @enderror
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <div class="form-group">
+                                                            <label class="form-label">Spesifikasi</label>
+                                                            <textarea class="form-control @error('spesifikasi.0') is-invalid @enderror"
+                                                                name="spesifikasi[]" rows="2" placeholder="Spesifikasi">{{ old('spesifikasi.0') }}</textarea>
+                                                            @error('spesifikasi.0')
+                                                                <div class="invalid-feedback">{{ $message }}</div>
+                                                            @enderror
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </div>
-                                            <div class="col-md-6">
-                                                <div class="form-group">
-                                                    <label for="kode_produksi">Kode Produksi</label>
-                                                    <input type="text" id="kode_produksi" class="form-control @error('kode_produksi') is-invalid @enderror"
-                                                        name="kode_produksi" value="{{ old('kode_produksi') }}" placeholder="Kode Produksi">
-                                                    @error('kode_produksi')
-                                                        <div class="invalid-feedback">{{ $message }}</div>
-                                                    @enderror
-                                                </div>
-                                            </div>
-                                        </div>
 
-                                        <div class="row">
-                                            <div class="col-md-6">
-                                                <div class="form-group">
-                                                    <label for="jumlah_datang">Jumlah Kemasan Yang Datang (Kg/pcs/roll)</label>
-                                                    <input type="text" id="jumlah_datang" class="form-control @error('jumlah_datang') is-invalid @enderror"
-                                                        name="jumlah_datang" value="{{ old('jumlah_datang') }}" placeholder="Jumlah Datang">
-                                                    @error('jumlah_datang')
-                                                        <div class="invalid-feedback">{{ $message }}</div>
-                                                    @enderror
+                                            <!-- Kondisi Fisik -->
+                                            <div class="form-section mb-3">
+                                                <h6 class="text-primary mb-2">Kondisi Fisik</h6>
+                                                <div class="row">
+                                                    <div class="col-md-4">
+                                                        <div class="mb-3">
+                                                            <label class="form-label"><strong>Penampakan</strong></label>
+                                                            <div class="form-check">
+                                                                <input class="form-check-input" type="radio" name="penampakan[]" value="1" {{ old('penampakan.0') == '1' ? 'checked' : '' }}>
+                                                                <label class="form-check-label">Ya ✓</label>
+                                                            </div>
+                                                            <div class="form-check">
+                                                                <input class="form-check-input" type="radio" name="penampakan[]" value="0" {{ old('penampakan.0') == '0' ? 'checked' : '' }}>
+                                                                <label class="form-check-label">Tidak ✗</label>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <div class="mb-3">
+                                                            <label class="form-label"><strong>Sealing</strong></label>
+                                                            <div class="form-check">
+                                                                <input class="form-check-input" type="radio" name="sealing[]" value="1" {{ old('sealing.0') == '1' ? 'checked' : '' }}>
+                                                                <label class="form-check-label">Ya ✓</label>
+                                                            </div>
+                                                            <div class="form-check">
+                                                                <input class="form-check-input" type="radio" name="sealing[]" value="0" {{ old('sealing.0') == '0' ? 'checked' : '' }}>
+                                                                <label class="form-check-label">Tidak ✗</label>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <div class="mb-3">
+                                                            <label class="form-label"><strong>Cetakan</strong></label>
+                                                            <div class="form-check">
+                                                                <input class="form-check-input" type="radio" name="cetakan[]" value="1" {{ old('cetakan.0') == '1' ? 'checked' : '' }}>
+                                                                <label class="form-check-label">Ya ✓</label>
+                                                            </div>
+                                                            <div class="form-check">
+                                                                <input class="form-check-input" type="radio" name="cetakan[]" value="0" {{ old('cetakan.0') == '0' ? 'checked' : '' }}>
+                                                                <label class="form-check-label">Tidak ✗</label>
+                                                            </div>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </div>
-                                            <div class="col-md-6">
-                                                <div class="form-group">
-                                                    <label for="jumlah_sampling">Jumlah Kemasan yang di sampling (pcs/kg/roll)</label>
-                                                    <input type="text" id="jumlah_sampling" class="form-control @error('jumlah_sampling') is-invalid @enderror"
-                                                        name="jumlah_sampling" value="{{ old('jumlah_sampling') }}" placeholder="Jumlah Sampling">
-                                                    @error('jumlah_sampling')
-                                                        <div class="invalid-feedback">{{ $message }}</div>
-                                                    @enderror
-                                                </div>
-                                            </div>
-                                        </div>
 
-                                        <div class="form-group">
-                                            <label for="spesifikasi">Spesifikasi</label>
-                                            <textarea id="spesifikasi" class="form-control @error('spesifikasi') is-invalid @enderror"
-                                                name="spesifikasi" rows="3" placeholder="Spesifikasi">{{ old('spesifikasi') }}</textarea>
-                                            @error('spesifikasi')
-                                                <div class="invalid-feedback">{{ $message }}</div>
-                                            @enderror
-                                        </div>
-                                    </div>
+                                            <!-- Detail Tambahan -->
+                                            <div class="form-section mb-3">
+                                                <h6 class="text-primary mb-2">Detail Tambahan</h6>
+                                                <div class="row">
+                                                    <div class="col-md-4">
+                                                        <div class="form-group">
+                                                            <label class="form-label">Ketebalan (Micron)</label>
+                                                            <input type="number" step="0.01" class="form-control @error('ketebalan_micron.0') is-invalid @enderror"
+                                                                name="ketebalan_micron[]" value="{{ old('ketebalan_micron.0') }}" placeholder="Ketebalan">
+                                                            @error('ketebalan_micron.0')
+                                                                <div class="invalid-feedback">{{ $message }}</div>
+                                                            @enderror
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <div class="form-group">
+                                                            <label class="form-label">Dimensi</label>
+                                                            <input type="text" class="form-control @error('dimensi.0') is-invalid @enderror"
+                                                                name="dimensi[]" value="{{ old('dimensi.0') }}" placeholder="Dimensi">
+                                                            @error('dimensi.0')
+                                                                <div class="invalid-feedback">{{ $message }}</div>
+                                                            @enderror
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <div class="form-group">
+                                                            <label class="form-label">Status</label>
+                                                            <select class="form-control @error('status.0') is-invalid @enderror" name="status[]">
+                                                                <option value="">Pilih Status</option>
+                                                                <option value="Hold" {{ old('status.0') == 'Hold' ? 'selected' : '' }}>Hold</option>
+                                                                <option value="Release" {{ old('status.0') == 'Release' ? 'selected' : '' }}>Release</option>
+                                                            </select>
+                                                            @error('status.0')
+                                                                <div class="invalid-feedback">{{ $message }}</div>
+                                                            @enderror
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
 
-                                    <!-- Kondisi Fisik -->
-                                    <div class="form-section mb-4">
-                                        <h5 class="text-primary mb-3">Kondisi Fisik</h5>
-                                        <div class="row">
-                                            <div class="col-md-4">
-                                                <div class="mb-3">
-                                                    <label class="form-label"><strong>Penampakan</strong></label>
-                                                    <div class="form-check">
-                                                        <input class="form-check-input" type="radio" name="kondisi_fisik[penampakan]" id="penampakan_ya" value="1" {{ old('kondisi_fisik.penampakan') == '1' ? 'checked' : '' }}>
-                                                        <label class="form-check-label" for="penampakan_ya">Ya ✓</label>
+                                            <!-- Dokumen -->
+                                            <div class="form-section mb-3">
+                                                <h6 class="text-primary mb-2">Dokumen</h6>
+                                                <div class="row">
+                                                    <div class="col-md-4">
+                                                        <div class="mb-3">
+                                                            <label class="form-label"><strong>Logo Halal</strong></label>
+                                                            <div class="form-check">
+                                                                <input class="form-check-input" type="radio" name="logo_halal[]" value="1" {{ old('logo_halal.0') == '1' ? 'checked' : '' }}>
+                                                                <label class="form-check-label">Ya ✓</label>
+                                                            </div>
+                                                            <div class="form-check">
+                                                                <input class="form-check-input" type="radio" name="logo_halal[]" value="0" {{ old('logo_halal.0') == '0' ? 'checked' : '' }}>
+                                                                <label class="form-check-label">Tidak ✗</label>
+                                                            </div>
+                                                        </div>
                                                     </div>
-                                                    <div class="form-check">
-                                                        <input class="form-check-input" type="radio" name="kondisi_fisik[penampakan]" id="penampakan_tidak" value="0" {{ old('kondisi_fisik.penampakan') == '0' ? 'checked' : '' }}>
-                                                        <label class="form-check-label" for="penampakan_tidak">Tidak ✗</label>
+                                                    <div class="col-md-4">
+                                                        <div class="mb-3">
+                                                            <label class="form-label"><strong>Dokumen Halal</strong></label>
+                                                            <div class="form-check">
+                                                                <input class="form-check-input" type="radio" name="dokumen_halal[]" value="1" {{ old('dokumen_halal.0') == '1' ? 'checked' : '' }}>
+                                                                <label class="form-check-label">Ya ✓</label>
+                                                            </div>
+                                                            <div class="form-check">
+                                                                <input class="form-check-input" type="radio" name="dokumen_halal[]" value="0" {{ old('dokumen_halal.0') == '0' ? 'checked' : '' }}>
+                                                                <label class="form-check-label">Tidak ✗</label>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <div class="mb-3">
+                                                            <label class="form-label"><strong>COA</strong></label>
+                                                            <div class="form-check">
+                                                                <input class="form-check-input" type="radio" name="coa[]" value="1" {{ old('coa.0') == '1' ? 'checked' : '' }}>
+                                                                <label class="form-check-label">Ya ✓</label>
+                                                            </div>
+                                                            <div class="form-check">
+                                                                <input class="form-check-input" type="radio" name="coa[]" value="0" {{ old('coa.0') == '0' ? 'checked' : '' }}>
+                                                                <label class="form-check-label">Tidak ✗</label>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="row">
+                                                    <div class="col-md-12">
+                                                        <div class="form-group">
+                                                            <label class="form-label">Keterangan</label>
+                                                            <textarea class="form-control @error('keterangan.0') is-invalid @enderror"
+                                                                name="keterangan[]" rows="2" placeholder="Keterangan tambahan">{{ old('keterangan.0') }}</textarea>
+                                                            @error('keterangan.0')
+                                                                <div class="invalid-feedback">{{ $message }}</div>
+                                                            @enderror
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
-                                            <div class="col-md-4">
-                                                <div class="mb-3">
-                                                    <label class="form-label"><strong>Sealing</strong></label>
-                                                    <div class="form-check">
-                                                        <input class="form-check-input" type="radio" name="kondisi_fisik[sealing]" id="sealing_ya" value="1" {{ old('kondisi_fisik.sealing') == '1' ? 'checked' : '' }}>
-                                                        <label class="form-check-label" for="sealing_ya">Ya ✓</label>
-                                                    </div>
-                                                    <div class="form-check">
-                                                        <input class="form-check-input" type="radio" name="kondisi_fisik[sealing]" id="sealing_tidak" value="0" {{ old('kondisi_fisik.sealing') == '0' ? 'checked' : '' }}>
-                                                        <label class="form-check-label" for="sealing_tidak">Tidak ✗</label>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-4">
-                                                <div class="mb-3">
-                                                    <label class="form-label"><strong>Cetakan</strong></label>
-                                                    <div class="form-check">
-                                                        <input class="form-check-input" type="radio" name="kondisi_fisik[cetakan]" id="cetakan_ya" value="1" {{ old('kondisi_fisik.cetakan') == '1' ? 'checked' : '' }}>
-                                                        <label class="form-check-label" for="cetakan_ya">Ya ✓</label>
-                                                    </div>
-                                                    <div class="form-check">
-                                                        <input class="form-check-input" type="radio" name="kondisi_fisik[cetakan]" id="cetakan_tidak" value="0" {{ old('kondisi_fisik.cetakan') == '0' ? 'checked' : '' }}>
-                                                        <label class="form-check-label" for="cetakan_tidak">Tidak ✗</label>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <!-- Field Tambahan yang Hilang -->
-                                    <div class="form-section mb-4">
-                                        <h5 class="text-primary mb-3">Detail Tambahan</h5>
-                                        
-                                        <div class="row">
-                                            <div class="col-md-6">
-                                                <div class="form-group">
-                                                    <label for="ketebalan_micron">Ketebalan (Micron)</label>
-                                                    <input type="number" step="0.01" id="ketebalan_micron" class="form-control @error('ketebalan_micron') is-invalid @enderror"
-                                                        name="ketebalan_micron" value="{{ old('ketebalan_micron') }}" placeholder="Ketebalan dalam micron">
-                                                    @error('ketebalan_micron')
-                                                        <div class="invalid-feedback">{{ $message }}</div>
-                                                    @enderror
-                                                </div>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <div class="form-group">
-                                                    <label for="status">Status</label>
-                                                    <select id="status" class="form-control @error('status') is-invalid @enderror" name="status" required>
-                                                        <option value="">Pilih Status</option>
-                                                        <option value="Hold" {{ old('status') == 'Hold' ? 'selected' : '' }}>Hold</option>
-                                                        <option value="Release" {{ old('status') == 'Release' ? 'selected' : '' }}>Release</option>
-                                                    </select>
-                                                    @error('status')
-                                                        <div class="invalid-feedback">{{ $message }}</div>
-                                                    @enderror
-                                                </div>
-                                            </div>
-                                        </div>
 
-                                        <!-- Radio Button untuk Dokumen -->
-                                        <div class="row">
-                                            <div class="col-md-4">
-                                                <div class="mb-3">
-                                                    <label class="form-label"><strong>Logo Halal</strong></label>
-                                                    <div class="form-check">
-                                                        <input class="form-check-input" type="radio" name="logo_halal" id="logo_halal_ya" value="1" {{ old('logo_halal') == '1' ? 'checked' : '' }}>
-                                                        <label class="form-check-label" for="logo_halal_ya">Ya ✓</label>
-                                                    </div>
-                                                    <div class="form-check">
-                                                        <input class="form-check-input" type="radio" name="logo_halal" id="logo_halal_tidak" value="0" {{ old('logo_halal') == '0' ? 'checked' : '' }}>
-                                                        <label class="form-check-label" for="logo_halal_tidak">Tidak ✗</label>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-4">
-                                                <div class="mb-3">
-                                                    <label class="form-label"><strong>Dokumen Halal</strong></label>
-                                                    <div class="form-check">
-                                                        <input class="form-check-input" type="radio" name="dokumen_halal" id="dokumen_halal_ya" value="1" {{ old('dokumen_halal') == '1' ? 'checked' : '' }}>
-                                                        <label class="form-check-label" for="dokumen_halal_ya">Ya ✓</label>
-                                                    </div>
-                                                    <div class="form-check">
-                                                        <input class="form-check-input" type="radio" name="dokumen_halal" id="dokumen_halal_tidak" value="0" {{ old('dokumen_halal') == '0' ? 'checked' : '' }}>
-                                                        <label class="form-check-label" for="dokumen_halal_tidak">Tidak ✗</label>
+                                            <div class="form-section mb-3">
+                                                <h6 class="text-primary mb-2">Upload Gambar</h6>
+                                                <div class="row">
+                                                    <div class="col-md-6">
+                                                        <div class="form-group">
+                                                            <label class="form-label">Gambar Kemasan (Max 1MB)</label>
+                                                            <input type="file" name="image_kemasan[]" class="form-control image-kemasan-input" accept="image/*" capture="camera">
+                                                            @error('image_kemasan.0')
+                                                                <div class="invalid-feedback d-block">{{ $message }}</div>
+                                                            @enderror
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
-                                            <div class="col-md-4">
-                                                <div class="mb-3">
-                                                    <label class="form-label"><strong>COA</strong></label>
-                                                    <div class="form-check">
-                                                        <input class="form-check-input" type="radio" name="coa" id="coa_ya" value="1" {{ old('coa') == '1' ? 'checked' : '' }}>
-                                                        <label class="form-check-label" for="coa_ya">Ya ✓</label>
-                                                    </div>
-                                                    <div class="form-check">
-                                                        <input class="form-check-input" type="radio" name="coa" id="coa_tidak" value="0" {{ old('coa') == '0' ? 'checked' : '' }}>
-                                                        <label class="form-check-label" for="coa_tidak">Tidak ✗</label>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
 
-                                        <div class="form-group mt-3">
-                                            <label for="keterangan">Keterangan</label>
-                                            <textarea id="keterangan" class="form-control @error('keterangan') is-invalid @enderror"
-                                                name="keterangan" rows="3" placeholder="Keterangan tambahan">{{ old('keterangan') }}</textarea>
-                                            @error('keterangan')
-                                                <div class="invalid-feedback">{{ $message }}</div>
-                                            @enderror
+                                            <!-- Unified Buttons -->
+                                            <div class="row mt-3 pt-3 border-top">
+                                                <div class="col-md-12">
+                                                    <button type="button" class="btn btn-success btn-sm add-unified-btn"><i class="bi bi-plus"></i> Tambah Baris</button>
+                                                    <button type="button" class="btn btn-danger btn-sm remove-unified-btn" style="display: none;"><i class="bi bi-trash"></i> Hapus Baris</button>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                     <div class="col-md-12 d-flex justify-content-end mt-3">
@@ -579,4 +626,448 @@
         </section>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const choicesInstances = new WeakMap();
+    
+    // Initialize Choices.js for all existing selects
+    function initializeAllChoices() {
+        const selects = document.querySelectorAll('select.choices');
+        selects.forEach(select => {
+            if (!select.dataset.choicesInitialized) {
+                const instance = new Choices(select, {
+                    searchEnabled: true,
+                    searchPlaceholderValue: 'Cari...',
+                    itemSelectText: 'Tekan untuk memilih',
+                    noResultsText: 'Tidak ada hasil ditemukan',
+                    noChoicesText: 'Tidak ada pilihan tersedia',
+                    placeholder: true,
+                    placeholderValue: 'Pilih...'
+                });
+                choicesInstances.set(select, instance);
+                select.dataset.choicesInitialized = 'true';
+            }
+        });
+    }
+    
+    // Initialize on page load
+    initializeAllChoices();
+    
+    const bahanKemasanMeta = @json($bahanKemasanMeta ?? []);
+    
+    // Add unified row
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.add-unified-btn')) {
+            const container = document.getElementById('unified-container');
+            const newRow = document.createElement('div');
+            newRow.className = 'unified-row mb-4 p-3 border rounded';
+            newRow.style.backgroundColor = '#f8f9fa';
+            
+            const timestamp = Date.now();
+            newRow.innerHTML = `
+                <!-- Bahan Kemasan -->
+                <div class="form-section mb-3">
+                    <h6 class="text-primary mb-2">Bahan Kemasan</h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label">Bahan Kemasan</label>
+                                <select class="choices form-control bahan-kemasan-select" name="id_bahan[]">
+                                    <option value="">Pilih Bahan</option>
+                                    @foreach($bahanKemasans as $bahanKemasan)
+                                        <option value="{{ $bahanKemasan->id }}">{{ $bahanKemasan->nama_kemasan }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Informasi Kemasan & Supplier -->
+                <div class="form-section mb-3">
+                    <h6 class="text-primary mb-2">Informasi Kemasan & Supplier</h6>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label class="form-label">Produsen</label>
+                                <select class="form-control produsen-select" name="produsen[]">
+                                    <option value="">Pilih Produsen</option>
+                                    @foreach ($produsens as $produsen)
+                                        <option value="{{ $produsen->nama_produsen }}">{{ $produsen->nama_produsen }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label class="form-label">Distributor</label>
+                                <select class="form-control distributor-select" name="distributor[]">
+                                    <option value="">Pilih Distributor</option>
+                                    @foreach ($distributors as $distributor)
+                                        <option value="{{ $distributor->nama_distributor }}">{{ $distributor->nama_distributor }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label class="form-label">Kode Produksi</label>
+                                <input type="text" class="form-control" name="kode_produksi[]" placeholder="Kode Produksi">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label class="form-label">Jumlah Datang (Kg/pcs/roll)</label>
+                                <input type="text" class="form-control" name="jumlah_datang[]" placeholder="Jumlah Datang">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label class="form-label">Jumlah Sampling (pcs/kg/roll)</label>
+                                <input type="text" class="form-control" name="jumlah_sampling[]" placeholder="Jumlah Sampling">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label class="form-label">Spesifikasi</label>
+                                <textarea class="form-control" name="spesifikasi[]" rows="2" placeholder="Spesifikasi"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Kondisi Fisik -->
+                <div class="form-section mb-3">
+                    <h6 class="text-primary mb-2">Kondisi Fisik</h6>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="form-label"><strong>Penampakan</strong></label>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="penampakan[]" value="1">
+                                    <label class="form-check-label">Ya ✓</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="penampakan[]" value="0">
+                                    <label class="form-check-label">Tidak ✗</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="form-label"><strong>Sealing</strong></label>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="sealing[]" value="1">
+                                    <label class="form-check-label">Ya ✓</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="sealing[]" value="0">
+                                    <label class="form-check-label">Tidak ✗</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="form-label"><strong>Cetakan</strong></label>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="cetakan[]" value="1">
+                                    <label class="form-check-label">Ya ✓</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="cetakan[]" value="0">
+                                    <label class="form-check-label">Tidak ✗</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Detail Tambahan -->
+                <div class="form-section mb-3">
+                    <h6 class="text-primary mb-2">Detail Tambahan</h6>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label class="form-label">Ketebalan (Micron)</label>
+                                <input type="number" step="0.01" class="form-control" name="ketebalan_micron[]" placeholder="Ketebalan">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label class="form-label">Dimensi</label>
+                                <input type="text" class="form-control" name="dimensi[]" placeholder="Dimensi">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label class="form-label">Status</label>
+                                <select class="form-control" name="status[]">
+                                    <option value="">Pilih Status</option>
+                                    <option value="Hold">Hold</option>
+                                    <option value="Release">Release</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dokumen -->
+                <div class="form-section mb-3">
+                    <h6 class="text-primary mb-2">Dokumen</h6>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="form-label"><strong>Logo Halal</strong></label>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="logo_halal[]" value="1">
+                                    <label class="form-check-label">Ya ✓</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="logo_halal[]" value="0">
+                                    <label class="form-check-label">Tidak ✗</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="form-label"><strong>Dokumen Halal</strong></label>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="dokumen_halal[]" value="1">
+                                    <label class="form-check-label">Ya ✓</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="dokumen_halal[]" value="0">
+                                    <label class="form-check-label">Tidak ✗</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="form-label"><strong>COA</strong></label>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="coa[]" value="1">
+                                    <label class="form-check-label">Ya ✓</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="coa[]" value="0">
+                                    <label class="form-check-label">Tidak ✗</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label class="form-label">Keterangan</label>
+                                <textarea class="form-control" name="keterangan[]" rows="2" placeholder="Keterangan tambahan"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section mb-3">
+                    <h6 class="text-primary mb-2">Upload Gambar</h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label">Gambar Kemasan (Max 1MB)</label>
+                                <input type="file" name="image_kemasan[]" class="form-control image-kemasan-input" accept="image/*" capture="camera">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Unified Buttons -->
+                <div class="row mt-3 pt-3 border-top">
+                    <div class="col-md-12">
+                        <button type="button" class="btn btn-success btn-sm add-unified-btn"><i class="bi bi-plus"></i> Tambah Baris</button>
+                        <button type="button" class="btn btn-danger btn-sm remove-unified-btn"><i class="bi bi-trash"></i> Hapus Baris</button>
+                    </div>
+                </div>
+            `;
+            container.appendChild(newRow);
+            
+            // Initialize Choices.js for new selects ONLY in the new row
+            const newSelects = newRow.querySelectorAll('select.choices');
+            newSelects.forEach(select => {
+                const instance = new Choices(select, {
+                    searchEnabled: true,
+                    searchPlaceholderValue: 'Cari...',
+                    itemSelectText: 'Tekan untuk memilih',
+                    noResultsText: 'Tidak ada hasil ditemukan',
+                    noChoicesText: 'Tidak ada pilihan tersedia',
+                    placeholder: true,
+                    placeholderValue: 'Pilih...'
+                });
+                choicesInstances.set(select, instance);
+            });
+
+            const bahanSelect = newRow.querySelector('select.bahan-kemasan-select');
+            if (bahanSelect) {
+                bahanSelect.addEventListener('change', function() {
+                    applyBahanKemasanMetaForRow(newRow);
+                });
+            }
+        }
+    });
+
+    function applyBahanKemasanMetaForRow(rowEl) {
+        const bahanSelect = rowEl.querySelector('select.bahan-kemasan-select');
+        const produsenSelect = rowEl.querySelector('select.produsen-select');
+        const distributorSelect = rowEl.querySelector('select.distributor-select');
+
+        if (!bahanSelect || !produsenSelect || !distributorSelect) return;
+
+        const bahanId = bahanSelect.value;
+        const meta = bahanKemasanMeta[bahanId];
+        if (!meta) return;
+
+        const produsenChoices = choicesInstances.get(produsenSelect);
+        if (produsenChoices) {
+            produsenChoices.setChoiceByValue(meta.produsen || '');
+        } else {
+            produsenSelect.value = meta.produsen || '';
+        }
+
+        const distributorChoices = choicesInstances.get(distributorSelect);
+        if (distributorChoices) {
+            distributorChoices.setChoiceByValue(meta.distributor || '');
+        } else {
+            distributorSelect.value = meta.distributor || '';
+        }
+    }
+
+    document.addEventListener('change', function(e) {
+        const target = e.target;
+        if (target && target.matches('select.bahan-kemasan-select')) {
+            const row = target.closest('.unified-row');
+            if (row) {
+                applyBahanKemasanMetaForRow(row);
+            }
+        }
+    });
+
+    // Bind directly for initial rows (Choices.js can swallow delegated change in some cases)
+    document.querySelectorAll('#unified-container .unified-row').forEach((row) => {
+        const bahanSelect = row.querySelector('select.bahan-kemasan-select');
+        if (!bahanSelect) return;
+
+        bahanSelect.addEventListener('change', function() {
+            applyBahanKemasanMetaForRow(row);
+        });
+
+        if (bahanSelect.value) {
+            applyBahanKemasanMetaForRow(row);
+        }
+    });
+    
+    // Remove unified row
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.remove-unified-btn')) {
+            const rowCount = document.querySelectorAll('#unified-container .unified-row').length;
+            if (rowCount > 1) {
+                e.target.closest('.unified-row').remove();
+                updateRemoveButtons();
+            } else {
+                alert('Minimal harus ada satu baris data!');
+            }
+        }
+    });
+    
+    // Update remove buttons visibility
+    function updateRemoveButtons() {
+        const rows = document.querySelectorAll('#unified-container .unified-row');
+        rows.forEach((row) => {
+            const removeBtn = row.querySelector('.remove-unified-btn');
+            if (rows.length > 1) {
+                removeBtn.style.display = 'inline-block';
+            } else {
+                removeBtn.style.display = 'none';
+            }
+        });
+    }
+    
+    // Initialize on page load
+    updateRemoveButtons();
+
+    const MAX_SIZE = 1024 * 1024;
+
+    function fileToDataURL(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+        });
+    }
+
+    function loadImage(src) {
+        return new Promise((resolve, reject) => {
+            const img = new Image();
+            img.onload = () => resolve(img);
+            img.onerror = reject;
+            img.src = src;
+        });
+    }
+
+    async function compressImage(file) {
+        const dataUrl = await fileToDataURL(file);
+        const img = await loadImage(dataUrl);
+
+        const maxDimension = 1920;
+        let { width, height } = img;
+        if (width > height && width > maxDimension) {
+            height = Math.round((height * maxDimension) / width);
+            width = maxDimension;
+        } else if (height >= width && height > maxDimension) {
+            width = Math.round((width * maxDimension) / height);
+            height = maxDimension;
+        }
+
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+
+        let quality = 0.85;
+        let blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', quality));
+        while (blob && blob.size > MAX_SIZE && quality > 0.4) {
+            quality -= 0.1;
+            blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', quality));
+        }
+
+        const newName = (file.name || 'image')
+            .replace(/\.[^/.]+$/, '') + '.jpg';
+        return new File([blob], newName, { type: 'image/jpeg', lastModified: Date.now() });
+    }
+
+    async function handleImageInputChange(input) {
+        const file = input.files && input.files[0] ? input.files[0] : null;
+        if (!file) return;
+
+        if (file.size <= MAX_SIZE) return;
+
+        try {
+            const compressedFile = await compressImage(file);
+            const dt = new DataTransfer();
+            dt.items.add(compressedFile);
+            input.files = dt.files;
+        } catch (e) {
+            input.value = '';
+            alert('Gagal mengkompres gambar. Silakan coba lagi.');
+        }
+    }
+
+    document.addEventListener('change', function(e) {
+        const input = e.target;
+        if (input && input.classList && input.classList.contains('image-kemasan-input')) {
+            handleImageInputChange(input);
+        }
+    });
+});
+</script>
 @endsection

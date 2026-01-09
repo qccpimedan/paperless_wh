@@ -16,12 +16,18 @@ class PemeriksaanKebersihanAreaDetail extends Model
         'id_pemeriksaan',
         'id_master_form_field',
         'status',
+        'status_sebelum_proses',
+        'status_saat_proses',
+        'verifikasi_hasil',
         'keterangan',
         'tindakan_koreksi',
     ];
 
     protected $casts = [
         'status' => 'boolean',
+        'status_sebelum_proses' => 'boolean',
+        'status_saat_proses' => 'boolean',
+        'verifikasi_hasil' => 'boolean',
     ];
 
     protected static function boot()

@@ -126,13 +126,13 @@
                                             
                                             <!-- Preview Form Fields -->
                                             <div id="preview-container" class="col-md-12 mt-4" style="display: none;">
-                                                <h5 class="mb-3"><strong>Preview Form Fields</strong></h5>
+                                                <h5 class="mb-3"><strong>Preview Aspek Yang Dinilai</strong></h5>
                                                 <div id="fields-list" class="border rounded p-3"></div>
                                             </div>
                                             
                                             <!-- Editable Form Fields -->
                                             <div id="form-fields-container" class="col-md-12 mt-4" style="display: none;">
-                                                <h5 class="mb-3"><strong>Form Fields</strong></h5>
+                                                <h5 class="mb-3"><strong>Aspek Yang Dinilai</strong></h5>
                                                 <div id="editable-fields" class="border rounded p-3"></div>
                                             </div>
                                             
@@ -187,22 +187,34 @@
                                 <div class="col-md-12">
                                     <label class="form-label"><strong>${index + 1}. ${field.nama}</strong></label>
                                 </div>
-                                <div class="col-md-3">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="field_status_${field.id}" 
-                                            id="field_yes_${field.id}" value="1">
-                                        <label class="form-check-label" for="field_yes_${field.id}">
-                                            ✓ Baik
-                                        </label>
+                                <div class="col-md-6 mt-2">
+                                    <label class="form-label">Sebelum Proses</label>
+                                    <div class="d-flex gap-3">
+                                        <div class="form-check">
+                                            <input class="form-check-input kebersihan-status" type="radio" name="field_status_sebelum_${field.id}" 
+                                                id="field_sebelum_ok_${field.id}" value="1" data-field-id="${field.id}">
+                                            <label class="form-check-label" for="field_sebelum_ok_${field.id}">✓ Ok</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input kebersihan-status" type="radio" name="field_status_sebelum_${field.id}" 
+                                                id="field_sebelum_no_${field.id}" value="0" data-field-id="${field.id}">
+                                            <label class="form-check-label" for="field_sebelum_no_${field.id}">✗ Tidak Ok</label>
+                                        </div>
                                     </div>
                                 </div>
-                                <div class="col-md-3">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="field_status_${field.id}" 
-                                            id="field_no_${field.id}" value="0">
-                                        <label class="form-check-label" for="field_no_${field.id}">
-                                            ✗ Tidak Baik
-                                        </label>
+                                <div class="col-md-6 mt-2">
+                                    <label class="form-label">Saat Proses</label>
+                                    <div class="d-flex gap-3">
+                                        <div class="form-check">
+                                            <input class="form-check-input kebersihan-status" type="radio" name="field_status_saat_${field.id}" 
+                                                id="field_saat_ok_${field.id}" value="1" data-field-id="${field.id}">
+                                            <label class="form-check-label" for="field_saat_ok_${field.id}">✓ Ok</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input kebersihan-status" type="radio" name="field_status_saat_${field.id}" 
+                                                id="field_saat_no_${field.id}" value="0" data-field-id="${field.id}">
+                                            <label class="form-check-label" for="field_saat_no_${field.id}">✗ Tidak Ok</label>
+                                        </div>
                                     </div>
                                 </div>
                                 <div class="col-md-6 mt-2">
@@ -210,10 +222,18 @@
                                     <textarea class="form-control form-control-sm" 
                                         name="field_keterangan_${field.id}" placeholder="Keterangan" rows="3"></textarea>
                                 </div>
-                                <div class="col-md-6 mt-2">
+                                <div class="col-md-6 mt-2" id="tindakan_container_${field.id}">
                                     <label class="form-label">Tindakan Koreksi</label>
                                     <textarea class="form-control form-control-sm" 
                                         name="field_tindakan_${field.id}" placeholder="Tindakan Koreksi" rows="3"></textarea>
+                                </div>
+                                <div class="col-md-6 mt-2">
+                                    <label class="form-label">Verifikasi</label>
+                                    <select class="form-control form-control-sm" name="field_verifikasi_${field.id}" required>
+                                        <option value="">-- Pilih --</option>
+                                        <option value="1">OK</option>
+                                        <option value="0">Tidak OK</option>
+                                    </select>
                                 </div>
                             </div>
                         </div>

@@ -46,6 +46,8 @@
                             <thead>
                                 <tr>
                                     <th>No</th>
+                                    <th>Distributor</th>
+                                    <th>Produsen</th>
                                     <th>Nama Chemical</th>
                                     <th>Plant</th>
                                     <th>Aksi</th>
@@ -55,6 +57,20 @@
                                 @forelse($chemicals as $index => $chemical)
                                     <tr>
                                         <td>{{ $index + 1 }}</td>
+                                        <td>
+                                            @if($chemical->distributor)
+                                                {{ $chemical->distributor->nama_distributor }}
+                                            @else
+                                                <span>-</span>
+                                            @endif
+                                        </td>
+                                        <td>
+                                            @if($chemical->produsen)
+                                                {{ $chemical->produsen->nama_produsen }}
+                                            @else
+                                                <span>-</span>
+                                            @endif
+                                        </td>
                                         <td>
                                             <strong>{{ $chemical->nama_chemical }}</strong>
                                         </td>
@@ -86,7 +102,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="4" class="text-center">
+                                        <td colspan="6" class="text-center">
                                             <div class="py-4">
                                                 <i class="bi bi-inbox fs-1 text-muted"></i>
                                                 <p class="text-muted mt-2">Belum ada data chemical</p>

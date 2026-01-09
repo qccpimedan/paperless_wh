@@ -35,13 +35,16 @@ use App\Http\Controllers\PemeriksaanSuhuRuangV2Controller;
 use App\Http\Controllers\DetailKomplainController;
 use App\Http\Controllers\GoldenSampleReportController;
 use App\Http\Controllers\PemeriksaanBarangMudahPecahController;
-
+use App\Http\Controllers\BahanKemasanController;
+use Illuminate\Support\Facades\Auth;
 
 // Redirect root to login
-Route::get('/', function () {
+Route::match(['get', 'post'], '/', function () {
+    if (Auth::check()) {
+        return redirect('/dashboard');
+    }
     return redirect('/login');
 });
-
 // Authentication Routes
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [AuthController::class, 'login']);
@@ -122,6 +125,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::resource('produsens', ProdusenController::class);
         // Chemical Management Routes
         Route::resource('chemicals', ChemicalController::class);
+        // Bahan Kemasan Management Routes
+        Route::resource('bahan-kemasans', BahanKemasanController::class);
         // Jenis Kendaraan Management Routes
         Route::resource('jenis-kendaraans', JenisKendaraanController::class);
         // Tujuan Pengiriman Management Routes
@@ -149,6 +154,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('pemeriksaan-bahan-baku/export-pdf', [PemeriksaanKedatanganBahanBakuPenunjangController::class, 'exportPDF'])->name('pemeriksaan-bahan-baku.export-pdf');
         Route::get('pemeriksaan-chemical/export-pdf', [PemeriksaanKedatanganChemicalController::class, 'exportPDF'])->name('pemeriksaan-chemical.export-pdf');
         Route::get('detail-komplain/{detailKomplain:uuid}/export-pdf', [DetailKomplainController::class, 'exportPdf'])->name('detail-komplain.export-pdf');
+        
+        // Routes Tambah data per uuid
+        Route::get('pemeriksaan-kedatangan-kemasan/{pemeriksaanKedatanganKemasan:uuid}/tambah-baris', [PemeriksaanKedatanganKemasanController::class, 'createRow'])->name('pemeriksaan-kedatangan-kemasan.tambah-baris');
+        Route::post('pemeriksaan-kedatangan-kemasan/{pemeriksaanKedatanganKemasan:uuid}/tambah-baris', [PemeriksaanKedatanganKemasanController::class, 'storeRow'])->name('pemeriksaan-kedatangan-kemasan.tambah-baris.store');
+        Route::get('pemeriksaan-bahan-baku/{pemeriksaanBahanBaku:uuid}/tambah-baris', [PemeriksaanKedatanganBahanBakuPenunjangController::class, 'createRow'])->name('pemeriksaan-bahan-baku.tambah-baris');
+        Route::post('pemeriksaan-bahan-baku/{pemeriksaanBahanBaku:uuid}/tambah-baris', [PemeriksaanKedatanganBahanBakuPenunjangController::class, 'storeRow'])->name('pemeriksaan-bahan-baku.store-baris');
+        Route::get('pemeriksaan-chemical/{pemeriksaanChemical:uuid}/tambah-baris', [PemeriksaanKedatanganChemicalController::class, 'createRow'])->name('pemeriksaan-chemical.tambah-baris');
+        Route::post('pemeriksaan-chemical/{pemeriksaanChemical:uuid}/tambah-baris', [PemeriksaanKedatanganChemicalController::class, 'storeRow'])->name('pemeriksaan-chemical.store-baris');
         
         // Upload File Detail Komplain
         Route::post('detail-komplain/{detailKomplain:uuid}/upload-suplier', [DetailKomplainController::class, 'uploadSuplier'])->name('detail-komplain.upload-suplier');

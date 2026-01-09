@@ -252,7 +252,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function loadAreaLocations() {
         if (!idAreaSelect || !idAreaSelect.value) return;
         
-        fetch(`/qc-sistem/api/area-locations/${idAreaSelect.value}`)
+        fetch(`{{ url('/qc-sistem/api/area-locations') }}/${idAreaSelect.value}`)
             .then(r => r.ok ? r.json() : Promise.reject(`HTTP ${r.status}`))
             .then(data => {
                 document.querySelectorAll('.lokasi-area-select-db, .lokasi-area-select-manual').forEach(select => {
@@ -352,7 +352,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.addEventListener('change', function(e) {
         if (e.target.classList.contains('barang-select') && e.target.value) {
             const row = e.target.closest('.barang-row');
-            fetch(`/qc-sistem/api/barang-details/${e.target.value}`)
+            fetch(`{{ url('/qc-sistem/api/barang-details') }}/${e.target.value}`)
                 .then(r => r.ok ? r.json() : Promise.reject(`HTTP ${r.status}`))
                 .then(data => row.querySelector('.jumlah-barang').value = data.jumlah_barang || 0)
                 .catch(err => console.error('Error loading barang:', err));

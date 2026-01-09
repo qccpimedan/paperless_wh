@@ -133,7 +133,7 @@
                                         </td>
                                         <td>
                                             <div class="btn-vertical">
-                                                @can('view_pemeriksaan_suhu_ruang_3')
+                                                @can('view_pemeriksaan_suhu_ruang_v3')
                                                     <a href="{{ route('pemeriksaan-suhu-ruang-v3.show', $pemeriksaan->uuid) }}" 
                                                     class="btn btn-sm btn-info" title="Lihat Detail">
                                                         <i class="bi bi-eye"></i>
@@ -144,18 +144,18 @@
                                                     class="btn btn-sm btn-warning" title="Edit Data">
                                                         <i class="bi bi-pencil"></i>
                                                     </a>
+                                                @endcan
                                                     <a href="{{ route('pemeriksaan-suhu-ruang-v3.edit', $pemeriksaan->uuid) }}?edit_per_2jam=1" 
                                                     class="btn btn-sm btn-success" title="Edit Per 2 Jam">
                                                         <i class="bi bi-hourglass-bottom"></i>
                                                     </a>
-                                                @endcan
-                                                @can('view_pemeriksaan_suhu_ruang_3')
+                                                @can('view_pemeriksaan_suhu_ruang_v3')
                                                     <a href="{{ route('pemeriksaan-suhu-ruang-v3.history', $pemeriksaan->uuid) }}" 
                                                     class="btn btn-sm btn-secondary" title="Lihat History">
                                                         <i class="bi bi-clock-history"></i>
                                                     </a>
                                                 @endcan
-                                                @can('delete_pemeriksaan_suhu_ruang_3')
+                                                @can('delete_pemeriksaan_suhu_ruang_v3')
                                                     <form action="{{ route('pemeriksaan-suhu-ruang-v3.destroy', $pemeriksaan->uuid) }}" 
                                                         method="POST" 
                                                         style="display: inline-block;"

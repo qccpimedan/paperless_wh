@@ -56,29 +56,29 @@
                             <div class="col-md-12 mb-3">
                                 <h6 class="mb-3"><i class="bi bi-funnel"></i> Filter & Cetak PDF</h6>
                             </div>
-                            <form action="{{ route('pemeriksaan-chemical.export-pdf') }}" method="GET" class="row g-3">
-                                <div class="col-md-3">
-                                    <label class="form-label">Tanggal</label>
-                                    <input type="date" name="tanggal" class="form-control" value="{{ request('tanggal') }}">
-                                </div>
+                            <form action="{{ route('pemeriksaan-chemical.export-pdf') }}" method="GET" class="row g-3" id="pdfFilterForm">
                                 <div class="col-md-3">
                                     <label class="form-label">Shift</label>
-                                    <select name="id_shift" class="form-select">
+                                    <select name="id_shift" class="form-select" id="shiftSelect" required>
                                         <option value="">-- Pilih Shift --</option>
                                         @foreach($shifts ?? [] as $shift)
-                                            <option value="{{ $shift->id }}" {{ request('id_shift') == $shift->id ? 'selected' : '' }}>
+                                            <option value="{{ $shift->id }}" data-shift-name="{{ $shift->shift }}" {{ request('id_shift') == $shift->id ? 'selected' : '' }}>
                                                 {{ $shift->shift }}
                                             </option>
                                         @endforeach
                                     </select>
                                 </div>
-                                <div class="col-md-2">
-                                    <label class="form-label">Jam Mulai</label>
-                                    <input type="time" name="jam_awal" class="form-control" value="{{ request('jam_awal') }}">
+                                <div class="col-md-3" id="tanggalDariWrapper">
+                                    <label class="form-label">Tanggal Dari</label>
+                                    <input type="date" name="tanggal_dari" class="form-control" id="tanggalDari" value="{{ request('tanggal_dari') }}">
                                 </div>
-                                <div class="col-md-2">
-                                    <label class="form-label">Jam Akhir</label>
-                                    <input type="time" name="jam_akhir" class="form-control" value="{{ request('jam_akhir') }}">
+                                <div class="col-md-3" id="tanggalSampaiWrapper">
+                                    <label class="form-label">Tanggal Sampai</label>
+                                    <input type="date" name="tanggal_sampai" class="form-control" id="tanggalSampai" value="{{ request('tanggal_sampai') }}">
+                                </div>
+                                <div class="col-md-3" id="tanggalSingleWrapper" style="display: none;">
+                                    <label class="form-label">Tanggal</label>
+                                    <input type="date" name="tanggal" class="form-control" id="tanggalSingle" value="{{ request('tanggal') }}">
                                 </div>
                                 <div class="col-md-2 d-flex align-items-end">
                                     <button type="submit" class="btn btn-success w-100">
@@ -87,6 +87,63 @@
                                 </div>
                             </form>
                         </div>
+
+                        <script>
+                            document.addEventListener('DOMContentLoaded', function() {
+                                const shiftSelect = document.getElementById('shiftSelect');
+                                const tanggalDariWrapper = document.getElementById('tanggalDariWrapper');
+                                const tanggalSampaiWrapper = document.getElementById('tanggalSampaiWrapper');
+                                const tanggalSingleWrapper = document.getElementById('tanggalSingleWrapper');
+                                const tanggalDari = document.getElementById('tanggalDari');
+                                const tanggalSampai = document.getElementById('tanggalSampai');
+                                const tanggalSingle = document.getElementById('tanggalSingle');
+
+                                function updateDateFields() {
+                                    if (!shiftSelect) return;
+
+                                    const selectedOption = shiftSelect.options[shiftSelect.selectedIndex];
+                                    const shiftName = selectedOption ? selectedOption.getAttribute('data-shift-name') : null;
+
+                                    const isShift1 = shiftName === '1' || shiftName === 'Shift 1' || shiftName === 'shift 1';
+                                    const isShift2or3 = shiftName === '2' || shiftName === 'Shift 2' || shiftName === 'shift 2' ||
+                                                        shiftName === '3' || shiftName === 'Shift 3' || shiftName === 'shift 3';
+
+                                    if (isShift1) {
+                                        tanggalDariWrapper.style.display = 'block';
+                                        tanggalSampaiWrapper.style.display = 'block';
+                                        tanggalSingleWrapper.style.display = 'none';
+
+                                        tanggalDari.required = true;
+                                        tanggalSampai.required = true;
+                                        tanggalSingle.required = false;
+                                        tanggalSingle.value = '';
+                                    } else if (isShift2or3) {
+                                        tanggalDariWrapper.style.display = 'none';
+                                        tanggalSampaiWrapper.style.display = 'none';
+                                        tanggalSingleWrapper.style.display = 'block';
+
+                                        tanggalDari.required = false;
+                                        tanggalSampai.required = false;
+                                        tanggalSingle.required = true;
+                                        tanggalDari.value = '';
+                                        tanggalSampai.value = '';
+                                    } else {
+                                        tanggalDariWrapper.style.display = 'none';
+                                        tanggalSampaiWrapper.style.display = 'none';
+                                        tanggalSingleWrapper.style.display = 'none';
+
+                                        tanggalDari.required = false;
+                                        tanggalSampai.required = false;
+                                        tanggalSingle.required = false;
+                                    }
+                                }
+
+                                if (shiftSelect) {
+                                    shiftSelect.addEventListener('change', updateDateFields);
+                                    updateDateFields();
+                                }
+                            });
+                        </script>
                         <div class="table-responsive">
                             <table class="table table-striped text-center" id="table1" style="white-space: nowrap;">
                                 <thead>
@@ -97,6 +154,7 @@
                                         <th>Plant</th>
                                         <th>Nama Chemical</th>
                                         <th>Produsen</th>
+                                        <th>Kode Produksi</th>
                                         <th>Status</th>
                                         <th>Verifikasi</th>
                                         <th>Catatan Verifikasi</th>
@@ -123,34 +181,67 @@
                                                 @endif
                                             </td>
                                             <td>
-                                                @if($pemeriksaan->chemical)
-                                                    <span class="badge bg-info">{{ $pemeriksaan->chemical->nama_chemical }}</span>
+                                                @php
+                                                    $detailChemicals = $pemeriksaan->detail_chemicals ?? [];
+                                                    $chemicalNames = [];
+                                                    foreach($detailChemicals as $detail) {
+                                                        if(isset($detail['id_chemical'])) {
+                                                            $chemical = \App\Models\Chemical::find($detail['id_chemical']);
+                                                            if($chemical) {
+                                                                $chemicalNames[] = $chemical->nama_chemical;
+                                                            }
+                                                        }
+                                                    }
+                                                @endphp
+                                                @if(count($chemicalNames) > 0)
+                                                    @foreach($chemicalNames as $name)
+                                                        <span class="badge bg-info">{{ $name }}</span><br>
+                                                    @endforeach
                                                 @else
                                                     <span class="text-muted">-</span>
                                                 @endif
                                             </td>
-                                            <!-- <td>
-                                                @if($pemeriksaan->kondisi_chemical)
-                                                    <span class="badge bg-secondary">{{ $pemeriksaan->kondisi_chemical }}</span>
-                                                @else
-                                                    <span class="text-muted">-</span>
-                                                @endif
-                                            </td> -->
                                             <td>
-                                                @if($pemeriksaan->produsen)
-                                                    {{ $pemeriksaan->produsen->nama_produsen }}
+                                                @php
+                                                    $produsenNames = [];
+                                                    foreach($detailChemicals as $detail) {
+                                                        if(isset($detail['id_produsen'])) {
+                                                            $produsen = \App\Models\Produsen::find($detail['id_produsen']);
+                                                            if($produsen) {
+                                                                $produsenNames[] = $produsen->nama_produsen;
+                                                            }
+                                                        }
+                                                    }
+                                                @endphp
+                                                @if(count($produsenNames) > 0)
+                                                    {{ implode(', ', array_unique($produsenNames)) }}
                                                 @else
                                                     <span class="text-muted">-</span>
                                                 @endif
                                             </td>
-                                            <!-- <td>
-                                                {{ $pemeriksaan->kode_produksi ?? '-' }}
-                                            </td> -->
                                             <td>
-                                                @if($pemeriksaan->status === 'Release')
-                                                    <span class="badge bg-success">{{ $pemeriksaan->status }}</span>
+                                                {{ $detail['kode_produksi'] ?? '-' }}
+                                            </td>
+                                            <td>
+                                                @php
+                                                    $statuses = [];
+                                                    foreach($detailChemicals as $detail) {
+                                                        if(isset($detail['status'])) {
+                                                            $statuses[] = $detail['status'];
+                                                        }
+                                                    }
+                                                    $uniqueStatuses = array_unique($statuses);
+                                                @endphp
+                                                @if(count($uniqueStatuses) > 0)
+                                                    @foreach($uniqueStatuses as $status)
+                                                        @if($status === 'Release')
+                                                            <span class="badge bg-success">{{ $status }}</span>
+                                                        @else
+                                                            <span class="badge bg-danger">{{ $status }}</span>
+                                                        @endif
+                                                    @endforeach
                                                 @else
-                                                    <span class="badge bg-danger">{{ $pemeriksaan->status }}</span>
+                                                    <span class="text-muted">-</span>
                                                 @endif
                                             </td>
                                             <td>
@@ -196,6 +287,9 @@
                                             </td>
                                             <td>
                                                 <div class="btn-vertical">
+                                                    <a href="{{ route('pemeriksaan-chemical.tambah-baris', $pemeriksaan->uuid) }}" class="btn btn-sm btn-success" title="Tambah Baris">
+                                                        <i class="bi bi-plus-circle"></i>
+                                                    </a>
                                                     @can('view_pemeriksaan_kedatangan_chemical')
                                                         <a href="{{ route('pemeriksaan-chemical.show', $pemeriksaan->uuid) }}" class="btn btn-sm btn-info" title="Detail">
                                                             <i class="bi bi-eye"></i>

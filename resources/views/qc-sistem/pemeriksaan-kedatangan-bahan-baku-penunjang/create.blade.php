@@ -36,7 +36,21 @@
                             <h4 class="card-title">Form Pemeriksaan Kedatangan Bahan Baku Penunjang</h4>
                         </div>
                         <div class="card-body">
-                            <form action="{{ route('pemeriksaan-bahan-baku.store') }}" method="POST">
+                            <!-- Error Messages -->
+                            @if ($errors->any())
+                                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                    <h4 class="alert-heading">Error Validasi!</h4>
+                                    <hr>
+                                    <ul class="mb-0">
+                                        @foreach ($errors->all() as $error)
+                                            <li>{{ $error }}</li>
+                                        @endforeach
+                                    </ul>
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                </div>
+                            @endif
+
+                            <form action="{{ route('pemeriksaan-bahan-baku.store') }}" method="POST" enctype="multipart/form-data">
                                 @csrf
                                 
                                 <!-- Informasi Dasar -->
@@ -104,6 +118,16 @@
                                                 <input type="text" id="nama_supir" class="form-control @error('nama_supir') is-invalid @enderror"
                                                     name="nama_supir" value="{{ old('nama_supir') }}" placeholder="Nama Supir">
                                                 @error('nama_supir')
+                                                    <div class="invalid-feedback">{{ $message }}</div>
+                                                @enderror
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="no_po">No. PO</label>
+                                                <input type="text" id="no_po" class="form-control @error('no_po') is-invalid @enderror"
+                                                    name="no_po" value="{{ old('no_po') }}" placeholder="No. PO">
+                                                @error('no_po')
                                                     <div class="invalid-feedback">{{ $message }}</div>
                                                 @enderror
                                             </div>
@@ -319,396 +343,455 @@
                                         </div>
                                     </div>
                                 </div>
-        
-                                <!-- Informasi Produk -->
+                                <!-- Dynamic Rows Section -->
                                 <div class="form-section mb-4">
-                                    <h5 class="text-primary mb-3">Informasi Produk</h5>
+                                    <h5 class="text-primary mb-3">Detail Produk (Baris Dinamis)</h5>
+                                    <div id="unified-container">
+                                        <div class="unified-row mb-4 p-3 border rounded" style="background-color: #f8f9fa;">
+                                            <h6 class="text-primary mb-3">Baris 1</h6>
+                                            
+                                            <!-- Informasi Produk -->
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <div class="form-group">
+                                                        <label class="form-label">Nama Bahan</label>
+                                                        <select class="choices form-control" name="id_bahan[]">
+                                                            <option value="">Pilih Bahan</option>
+                                                            @foreach($bahans as $bahan)
+                                                                <option value="{{ $bahan->id }}">{{ $bahan->nama_bahan }}</option>
+                                                            @endforeach
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="form-group">
+                                                        <label class="form-label">Produsen</label>
+                                                        <select class="choices form-control" name="produsen[]">
+                                                            <option value="">Pilih Produsen</option>
+                                                            @foreach ($produsens as $produsen)
+                                                                <option value="{{ $produsen->nama_produsen }}">{{ $produsen->nama_produsen }}</option>
+                                                            @endforeach
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <div class="form-group">
+                                                        <label class="form-label">Negara Produsen</label>
+                                                        <select class="choices form-control" name="negara_produsen[]">
+                                                            <option value="">Pilih Negara</option>
+                                                            @foreach ($countries as $code => $name)
+                                                                <option value="{{ $name }}">{{ $name }}</option>
+                                                            @endforeach
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="form-group">
+                                                        <label class="form-label">Distributor</label>
+                                                        <select class="choices form-control" name="distributor[]">
+                                                            <option value="">Pilih Distributor</option>
+                                                            @foreach ($distributors as $distributor)
+                                                                <option value="{{ $distributor->nama_distributor }}">{{ $distributor->nama_distributor }}</option>
+                                                            @endforeach
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <div class="form-group">
+                                                        <label class="form-label">Kode Produksi</label>
+                                                        <input type="text" class="form-control" name="kode_produksi[]" placeholder="Kode Produksi">
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="form-group">
+                                                        <label class="form-label">Expire Date</label>
+                                                        <input type="date" class="form-control" name="expire_date[]">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <div class="form-group">
+                                                        <label class="form-label">Jumlah Datang (kg)</label>
+                                                        <input type="text" class="form-control" name="jumlah_datang[]" placeholder="Jumlah Datang">
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="form-group">
+                                                        <label class="form-label">Jumlah Sampling</label>
+                                                        <input type="text" class="form-control" name="jumlah_sampling[]" placeholder="Jumlah Sampling">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="row">
+                                                <div class="col-md-12">
+                                                    <div class="form-group">
+                                                        <label class="form-label">Spesifikasi</label>
+                                                        <textarea class="form-control" name="spesifikasi[]" rows="2" placeholder="Spesifikasi"></textarea>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                            <!-- SUHU PRODUK -->
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <div class="form-group">
+                                                        <label class="form-label">Suhu Produk</label>
+                                                        <select class="form-control suhu-produk-type" name="suhu_produk_type[]" id="suhu_produk_type_1">
+                                                            <option value="">Pilih Jenis Suhu Produk</option>
+                                                            <option value="Fresh">Fresh</option>
+                                                            <option value="Frozen">Frozen</option>
+                                                            <option value="Tidak Ada">Tidak Ada</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="form-group suhu-produk-input" id="suhu_produk_input_1" style="display: none;">
+                                                        <label class="form-label">Nilai Suhu Produk (°C)</label>
+                                                        <input type="text" class="form-control" name="suhu_produk[]" id="suhu_produk_val_1" placeholder="Contoh: -18°C atau 4°C">
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- SUHU MOBIL -->
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <div class="form-group">
+                                                        <label class="form-label">Suhu Mobil</label>
+                                                        <select class="form-control suhu-mobil-type" name="suhu_mobil_type[]" id="suhu_mobil_type_1">
+                                                            <option value="">Pilih Jenis Suhu Mobil</option>
+                                                            <option value="Fresh">Fresh</option>
+                                                            <option value="Frozen">Frozen</option>
+                                                            <option value="Tidak Ada">Tidak Ada</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="form-group suhu-mobil-input" id="suhu_mobil_input_1" style="display: none;">
+                                                        <label class="form-label">Nilai Suhu Mobil (°C)</label>
+                                                        <input type="text" class="form-control" name="suhu_mobil[]" id="suhu_mobil_val_1" placeholder="Contoh: -18°C atau 4°C">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                            <!-- KONDISI PRODUK -->
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <div class="form-group">
+                                                        <label class="form-label">Kondisi Produk</label>
+                                                        <select class="form-control kondisi-produk" name="kondisi_produk[]" id="kondisi_produk_1">
+                                                            <option value="">Pilih Kondisi Produk</option>
+                                                            <option value="Fresh">Fresh</option>
+                                                            <option value="Frozen">Frozen</option>
+                                                            <option value="Dry">Dry</option>
+                                                            <option value="Minyak">Minyak</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="form-group kondisi-produk-suhu" id="kondisi_produk_suhu_1" style="display: none;">
+                                                        <label class="form-label">Suhu Kondisi Produk (°C)</label>
+                                                        <input type="text" class="form-control" name="kondisi_produk_suhu[]" id="kondisi_produk_suhu_val_1" placeholder="Suhu Produk">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                            <!-- Kondisi Fisik -->
+                                            <div class="form-section mb-3">
+                                                <h6 class="text-primary mb-2">Kondisi Fisik</h6>
+                                                <div class="row">
+                                                    <div class="col-md-3">
+                                                        <div class="mb-3">
+                                                            <label class="form-label"><strong>Kemasan</strong></label>
+                                                            <div class="form-check">
+                                                                <input class="form-check-input" type="radio" name="kondisi_fisik_kemasan_1" id="kemasan_ya_1" value="1">
+                                                                <label class="form-check-label" for="kemasan_ya_1">Ya ✓</label>
+                                                            </div>
+                                                            <div class="form-check">
+                                                                <input class="form-check-input" type="radio" name="kondisi_fisik_kemasan_1" id="kemasan_tidak_1" value="0">
+                                                                <label class="form-check-label" for="kemasan_tidak_1">Tidak ✗</label>
+                                                            </div>
+                                                            <input type="hidden" name="kondisi_fisik_kemasan[]" class="radio-value-kemasan-1">
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-3">
+                                                        <div class="mb-3">
+                                                            <label class="form-label"><strong>Warna</strong></label>
+                                                            <div class="form-check">
+                                                                <input class="form-check-input" type="radio" name="kondisi_fisik_warna_1" id="warna_ya_1" value="1">
+                                                                <label class="form-check-label" for="warna_ya_1">Ya ✓</label>
+                                                            </div>
+                                                            <div class="form-check">
+                                                                <input class="form-check-input" type="radio" name="kondisi_fisik_warna_1" id="warna_tidak_1" value="0">
+                                                                <label class="form-check-label" for="warna_tidak_1">Tidak ✗</label>
+                                                            </div>
+                                                            <input type="hidden" name="kondisi_fisik_warna[]" class="radio-value-warna-1">
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-3">
+                                                        <div class="mb-3">
+                                                            <label class="form-label"><strong>Benda Asing</strong></label>
+                                                            <div class="form-check">
+                                                                <input class="form-check-input" type="radio" name="kondisi_fisik_benda_asing_1" id="benda_ya_1" value="1">
+                                                                <label class="form-check-label" for="benda_ya_1">Ya ✓</label>
+                                                            </div>
+                                                            <div class="form-check">
+                                                                <input class="form-check-input" type="radio" name="kondisi_fisik_benda_asing_1" id="benda_tidak_1" value="0">
+                                                                <label class="form-check-label" for="benda_tidak_1">Tidak ✗</label>
+                                                            </div>
+                                                            <input type="hidden" name="kondisi_fisik_benda_asing[]" class="radio-value-benda-1">
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-3">
+                                                        <div class="mb-3">
+                                                            <label class="form-label"><strong>Aroma</strong></label>
+                                                            <div class="form-check">
+                                                                <input class="form-check-input" type="radio" name="kondisi_fisik_aroma_1" id="aroma_ya_1" value="1">
+                                                                <label class="form-check-label" for="aroma_ya_1">Ya ✓</label>
+                                                            </div>
+                                                            <div class="form-check">
+                                                                <input class="form-check-input" type="radio" name="kondisi_fisik_aroma_1" id="aroma_tidak_1" value="0">
+                                                                <label class="form-check-label" for="aroma_tidak_1">Tidak ✗</label>
+                                                            </div>
+                                                            <input type="hidden" name="kondisi_fisik_aroma[]" class="radio-value-aroma-1">
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                            <!-- Dokumen -->
+                                            <div class="form-section mb-3">
+                                                <h6 class="text-primary mb-2">Dokumen</h6>
+                                                <div class="row">
+                                                    <div class="col-md-4">
+                                                        <div class="mb-3">
+                                                            <label class="form-label"><strong>Logo Halal</strong></label>
+                                                            <div class="form-check">
+                                                                <input class="form-check-input" type="radio" name="logo_halal_1" id="logo_ya_1" value="1">
+                                                                <label class="form-check-label" for="logo_ya_1">Ya ✓</label>
+                                                            </div>
+                                                            <div class="form-check">
+                                                                <input class="form-check-input" type="radio" name="logo_halal_1" id="logo_tidak_1" value="0">
+                                                                <label class="form-check-label" for="logo_tidak_1">Tidak ✗</label>
+                                                            </div>
+                                                            <input type="hidden" name="logo_halal[]" class="radio-value-logo-1">
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <div class="mb-3">
+                                                            <label class="form-label"><strong>Dokumen Halal</strong></label>
+                                                            <div class="form-check">
+                                                                <input class="form-check-input" type="radio" name="dokumen_halal_1" id="dokumen_ya_1" value="1">
+                                                                <label class="form-check-label" for="dokumen_ya_1">Ya ✓</label>
+                                                            </div>
+                                                            <div class="form-check">
+                                                                <input class="form-check-input" type="radio" name="dokumen_halal_1" id="dokumen_tidak_1" value="0">
+                                                                <label class="form-check-label" for="dokumen_tidak_1">Tidak ✗</label>
+                                                            </div>
+                                                            <input type="hidden" name="dokumen_halal[]" class="radio-value-dokumen-1">
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <div class="mb-3">
+                                                            <label class="form-label"><strong>COA</strong></label>
+                                                            <div class="form-check">
+                                                                <input class="form-check-input" type="radio" name="coa_1" id="coa_ya_1" value="1">
+                                                                <label class="form-check-label" for="coa_ya_1">Ya ✓</label>
+                                                            </div>
+                                                            <div class="form-check">
+                                                                <input class="form-check-input" type="radio" name="coa_1" id="coa_tidak_1" value="0">
+                                                                <label class="form-check-label" for="coa_tidak_1">Tidak ✗</label>
+                                                            </div>
+                                                            <input type="hidden" name="coa[]" class="radio-value-coa-1">
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="form-section mb-3">
+                                                <h6 class="text-primary mb-2">Upload COA (PDF)</h6>
+                                                <div class="row">
+                                                    <div class="col-md-6">
+                                                        <div class="form-group">
+                                                            <label class="form-label">File COA (PDF)</label>
+                                                            <input type="file" name="file_coa[]" class="form-control" accept="application/pdf">
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                            <!-- Hasil Pemeriksaan -->
+                                            <div class="form-section mb-3">
+                                                <h6 class="text-primary mb-2">Hasil Pemeriksaan</h6>
+                                                <div class="row">
+                                                    <div class="col-md-6">
+                                                        <div class="form-group">
+                                                            <label class="form-label">Hasil Uji FFA</label>
+                                                            <input type="text" class="form-control" name="hasil_uji_ffa[]" placeholder="Hasil Uji FFA">
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <div class="form-group">
+                                                            <label for="status">Status <span class="text-danger">*</span></label>
+                                                            <select id="status" class="form-control @error('status_baris') is-invalid @enderror" name="status_baris[]" required>
+                                                                <option value="">Pilih Status</option>
+                                                                <option value="Hold">Hold</option>
+                                                                <option value="Release">Release</option>
+                                                            </select>
+                                                            @error('status_baris')
+                                                                <div class="invalid-feedback">{{ $message }}</div>
+                                                            @enderror
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="row">
+                                                    <div class="col-md-12">
+                                                        <div class="form-group">
+                                                            <label class="form-label">Keterangan Hasil</label>
+                                                            <textarea class="form-control" name="keterangan_hasil[]" rows="2" placeholder="Keterangan hasil pemeriksaan"></textarea>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                            <!-- Buttons -->
+                                            <div class="row mt-3 pt-3 border-top">
+                                                <div class="col-md-12">
+                                                    <button type="button" class="btn btn-success btn-sm add-unified-btn"><i class="bi bi-plus"></i> Tambah Baris</button>
+                                                    <button type="button" class="btn btn-danger btn-sm remove-unified-btn"><i class="bi bi-trash"></i> Hapus Baris</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <script>
+                                // Setup conditional logic and radio listeners for first row
+                                document.addEventListener('DOMContentLoaded', function() {
                                     
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <div class="form-group">
-                                                <label for="no_po">No. PO</label>
-                                                <input type="text" id="no_po" class="form-control @error('no_po') is-invalid @enderror"
-                                                    name="no_po" value="{{ old('no_po') }}" placeholder="No. PO">
-                                                @error('no_po')
-                                                    <div class="invalid-feedback">{{ $message }}</div>
-                                                @enderror
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="form-group">
-                                                <label for="id_bahan">Nama Bahan</label>
-                                                <select id="id_bahan" class="form-control @error('id_bahan') is-invalid @enderror" name="id_bahan">
-                                                    <option value="">Pilih Bahan</option>
-                                                    @foreach($bahans as $bahan)
-                                                        <option value="{{ $bahan->id }}" {{ old('id_bahan') == $bahan->id ? 'selected' : '' }}>
-                                                            {{ $bahan->nama_bahan }}
-                                                            @if($bahan->user && $bahan->user->plant)
-                                                                - {{ $bahan->user->plant->plant }}
-                                                            @endif
-                                                        </option>
-                                                    @endforeach
-                                                </select>
-                                                @error('id_bahan')
-                                                    <div class="invalid-feedback">{{ $message }}</div>
-                                                @enderror
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Row untuk Suhu Mobil -->
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <div class="form-group">
-                                                <label for="suhu_mobil_type">Suhu Mobil</label>
-                                                <select id="suhu_mobil_type" class="form-control @error('suhu_mobil_type') is-invalid @enderror" name="suhu_mobil_type">
-                                                    <option value="">Pilih Jenis Suhu Mobil</option>
-                                                    <option value="Fresh" {{ old('suhu_mobil_type') == 'Fresh' ? 'selected' : '' }}>Fresh</option>
-                                                    <option value="Frozen" {{ old('suhu_mobil_type') == 'Frozen' ? 'selected' : '' }}>Frozen</option>
-                                                </select>
-                                                @error('suhu_mobil_type')
-                                                    <div class="invalid-feedback">{{ $message }}</div>
-                                                @enderror
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <!-- Input Suhu Mobil - Conditional -->
-                                            <div class="form-group" id="suhu_mobil_input_field" style="display: none;">
-                                                <label for="suhu_mobil">Nilai Suhu Mobil (°C)</label>
-                                                <input type="text" id="suhu_mobil" class="form-control @error('suhu_mobil') is-invalid @enderror"
-                                                    name="suhu_mobil" value="{{ old('suhu_mobil') }}" placeholder="Contoh: -18°C atau 4°C">
-                                                @error('suhu_mobil')
-                                                    <div class="invalid-feedback">{{ $message }}</div>
-                                                @enderror
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Row untuk Suhu Produk -->
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <div class="form-group">
-                                                <label for="suhu_produk_type">Suhu Produk</label>
-                                                <select id="suhu_produk_type" class="form-control @error('suhu_produk_type') is-invalid @enderror" name="suhu_produk_type">
-                                                    <option value="">Pilih Jenis Suhu Produk</option>
-                                                    <option value="Fresh" {{ old('suhu_produk_type') == 'Fresh' ? 'selected' : '' }}>Fresh</option>
-                                                    <option value="Frozen" {{ old('suhu_produk_type') == 'Frozen' ? 'selected' : '' }}>Frozen</option>
-                                                </select>
-                                                @error('suhu_produk_type')
-                                                    <div class="invalid-feedback">{{ $message }}</div>
-                                                @enderror
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <!-- Input Suhu Produk - Conditional -->
-                                            <div class="form-group" id="suhu_produk_input_field" style="display: none;">
-                                                <label for="suhu_produk">Nilai Suhu Produk (°C)</label>
-                                                <input type="text" id="suhu_produk" class="form-control @error('suhu_produk') is-invalid @enderror"
-                                                    name="suhu_produk" value="{{ old('suhu_produk') }}" placeholder="Contoh: -18°C atau 4°C">
-                                                @error('suhu_produk')
-                                                    <div class="invalid-feedback">{{ $message }}</div>
-                                                @enderror
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Row untuk Kondisi Produk -->
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <div class="form-group">
-                                                <label for="kondisi_produk">Kondisi Produk</label>
-                                                <select id="kondisi_produk" class="form-control @error('kondisi_produk') is-invalid @enderror" name="kondisi_produk">
-                                                    <option value="">Pilih Kondisi Produk</option>
-                                                    <option value="Fresh" {{ old('kondisi_produk') == 'Fresh' ? 'selected' : '' }}>Fresh</option>
-                                                    <option value="Frozen" {{ old('kondisi_produk') == 'Frozen' ? 'selected' : '' }}>Frozen</option>
-                                                    <option value="Dry" {{ old('kondisi_produk') == 'Dry' ? 'selected' : '' }}>Dry</option>
-                                                    <option value="Minyak" {{ old('kondisi_produk') == 'Minyak' ? 'selected' : '' }}>Minyak</option>
-                                                </select>
-                                                @error('kondisi_produk')
-                                                    <div class="invalid-feedback">{{ $message }}</div>
-                                                @enderror
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <!-- Input Suhu Kondisi Produk - Conditional (Opsional) -->
-                                            <div class="form-group" id="kondisi_produk_suhu_field" style="display: none;">
-                                                <label for="kondisi_produk_suhu">Suhu Kondisi Produk (°C) <small class="text-muted">(Opsional)</small></label>
-                                                <input type="text" id="kondisi_produk_suhu" class="form-control @error('kondisi_produk_suhu') is-invalid @enderror"
-                                                    name="kondisi_produk_suhu" value="{{ old('kondisi_produk_suhu') }}" placeholder="Contoh: -18°C, 4°C, 25°C">
-                                                @error('kondisi_produk_suhu')
-                                                    <div class="invalid-feedback">{{ $message }}</div>
-                                                @enderror
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-        
-                                <!-- Detail Pemeriksaan -->
-                                <div class="form-section mb-4">
-                                    <h5 class="text-primary mb-3">Detail Pemeriksaan</h5>
+                                    // Suhu Produk - Row 1
+                                    const suhuProdukType1 = document.getElementById('suhu_produk_type_1');
+                                    const suhuProdukInput1 = document.getElementById('suhu_produk_input_1');
                                     
-                                    <div class="row">
-                                        <div class="col-md-12">
-                                            <div class="form-group">
-                                                <label for="spesifikasi">Spesifikasi</label>
-                                                <textarea id="spesifikasi" class="form-control @error('spesifikasi') is-invalid @enderror"
-                                                    name="spesifikasi" rows="3" placeholder="Spesifikasi">{{ old('spesifikasi') }}</textarea>
-                                                @error('spesifikasi')
-                                                    <div class="invalid-feedback">{{ $message }}</div>
-                                                @enderror
-                                            </div>
-                                        </div>
-                                    </div>
-        
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <div class="form-group">
-                                                <label for="produsen">Produsen</label>
-                                                <select id="produsen" class="choices form-control @error('produsen') is-invalid @enderror" name="produsen">
-                                                    <option value="">Pilih Produsen</option>
-                                                    @foreach ($produsens as $produsen)
-                                                        <option value="{{ $produsen->nama_produsen }}" {{ old('produsen') == $produsen->nama_produsen ? 'selected' : '' }}>
-                                                            {{ $produsen->nama_produsen }}
-                                                        </option>
-                                                    @endforeach
-                                                </select>
-                                                @error('produsen')
-                                                    <div class="invalid-feedback">{{ $message }}</div>
-                                                @enderror
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="form-group">
-                                                <label for="negara_produsen">Negara Produsen</label>
-                                                <select id="negara_produsen" class="choices form-control @error('negara_produsen') is-invalid @enderror" name="negara_produsen">
-                                                    <option value="">Pilih Negara Produsen</option>
-                                                    @foreach ($countries as $code => $name)
-                                                        <option value="{{ $name }}" {{ old('negara_produsen') == $name ? 'selected' : '' }}>{{ $name }}</option>
-                                                    @endforeach
-                                                </select>
-                                                @error('negara_produsen')
-                                                    <div class="invalid-feedback">{{ $message }}</div>
-                                                @enderror
-                                            </div>
-                                        </div>
+                                    if (suhuProdukType1 && suhuProdukInput1) {
+                                        suhuProdukType1.addEventListener('change', function() {
+                                            if (this.value === 'Fresh' || this.value === 'Frozen') {
+                                                suhuProdukInput1.style.display = 'block';
+                                            } else {
+                                                suhuProdukInput1.style.display = 'none';
+                                                document.getElementById('suhu_produk_val_1').value = '';
+                                            }
+                                        });
+                                    }
+                                    
+                                    // Kondisi Produk - Row 1
+                                    const kondisiProduk1 = document.getElementById('kondisi_produk_1');
+                                    const kondisiProdukSuhu1 = document.getElementById('kondisi_produk_suhu_1');
+                                    
+                                    if (kondisiProduk1 && kondisiProdukSuhu1) {
+                                        kondisiProduk1.addEventListener('change', function() {
+                                            if (this.value === 'Fresh' || this.value === 'Frozen' || this.value === 'Dry' || this.value === 'Minyak') {
+                                                kondisiProdukSuhu1.style.display = 'block';
+                                            } else {
+                                                kondisiProdukSuhu1.style.display = 'none';
+                                                document.getElementById('kondisi_produk_suhu_val_1').value = '';
+                                            }
+                                        });
+                                    }
+                                    // Suhu Mobil - Row 1
+                                    const suhuMobilType1 = document.getElementById('suhu_mobil_type_1');
+                                    const suhuMobilInput1 = document.getElementById('suhu_mobil_input_1');
+                                    
+                                    if (suhuMobilType1 && suhuMobilInput1) {
+                                        suhuMobilType1.addEventListener('change', function() {
+                                            if (this.value === 'Fresh' || this.value === 'Frozen') {
+                                                suhuMobilInput1.style.display = 'block';
+                                            } else {
+                                                suhuMobilInput1.style.display = 'none';
+                                                document.getElementById('suhu_mobil_val_1').value = '';
+                                            }
+                                        });
+                                    }
 
-                                    </div>
-        
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <div class="form-group">
-                                                <label for="distributor">Distributor</label>
-                                                <select id="distributor" class="choices form-control @error('distributor') is-invalid @enderror" name="distributor">
-                                                    <option value="">Pilih Distributor</option>
-                                                    @foreach ($distributors as $distributor)
-                                                        <option value="{{ $distributor->nama_distributor }}" {{ old('distributor') == $distributor->nama_distributor ? 'selected' : '' }}>
-                                                            {{ $distributor->nama_distributor }}
-                                                        </option>
-                                                    @endforeach
-                                                </select>
-                                                @error('distributor')
-                                                    <div class="invalid-feedback">{{ $message }}</div>
-                                                @enderror
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="form-group">
-                                                <label for="kode_produksi">Kode Produksi</label>
-                                                <input type="text" id="kode_produksi" class="form-control @error('kode_produksi') is-invalid @enderror"
-                                                    name="kode_produksi" value="{{ old('kode_produksi') }}" placeholder="Kode Produksi">
-                                                @error('kode_produksi')
-                                                    <div class="invalid-feedback">{{ $message }}</div>
-                                                @enderror
-                                            </div>
-                                        </div>
-                                    </div>
-        
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <div class="form-group">
-                                                <label for="expire_date">Expire Date</label>
-                                                <input type="date" id="expire_date" class="form-control @error('expire_date') is-invalid @enderror"
-                                                    name="expire_date" value="{{ old('expire_date') }}">
-                                                @error('expire_date')
-                                                    <div class="invalid-feedback">{{ $message }}</div>
-                                                @enderror
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="form-group">
-                                                <label for="jumlah_datang">Jumlah Barang Datang (kg)</label>
-                                                <input type="text" id="jumlah_datang" class="form-control @error('jumlah_datang') is-invalid @enderror"
-                                                    name="jumlah_datang" value="{{ old('jumlah_datang') }}" placeholder="Jumlah Barang Datang">
-                                                @error('jumlah_datang')
-                                                    <div class="invalid-feedback">{{ $message }}</div>
-                                                @enderror
-                                            </div>
-                                        </div>
-                                    </div>
-        
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <div class="form-group">
-                                                <label for="jumlah_sampling">Jumlah Barang yang di sampling</label>
-                                                <input type="text" id="jumlah_sampling" class="form-control @error('jumlah_sampling') is-invalid @enderror"
-                                                    name="jumlah_sampling" value="{{ old('jumlah_sampling') }}" placeholder="Jumlah Sampling">
-                                                @error('jumlah_sampling')
-                                                    <div class="invalid-feedback">{{ $message }}</div>
-                                                @enderror
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-        
-                                <!-- Kondisi Fisik -->
-                                <div class="form-section mb-4">
-                                    <h5 class="text-primary mb-3">Kondisi Fisik</h5>
-                                    <div class="row">
-                                        <div class="col-md-3">
-                                            <div class="mb-3">
-                                                <label class="form-label"><strong>Kemasan</strong></label>
-                                                <div class="form-check">
-                                                    <input class="form-check-input" type="radio" name="kondisi_fisik[kemasan]" id="kemasan_ya" value="1" {{ old('kondisi_fisik.kemasan') == '1' ? 'checked' : '' }}>
-                                                    <label class="form-check-label" for="kemasan_ya">Ya ✓</label>
-                                                </div>
-                                                <div class="form-check">
-                                                    <input class="form-check-input" type="radio" name="kondisi_fisik[kemasan]" id="kemasan_tidak" value="0" {{ old('kondisi_fisik.kemasan') == '0' ? 'checked' : '' }}>
-                                                    <label class="form-check-label" for="kemasan_tidak">Tidak ✗</label>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-3">
-                                            <div class="mb-3">
-                                                <label class="form-label"><strong>Warna</strong></label>
-                                                <div class="form-check">
-                                                    <input class="form-check-input" type="radio" name="kondisi_fisik[warna]" id="warna_ya" value="1" {{ old('kondisi_fisik.warna') == '1' ? 'checked' : '' }}>
-                                                    <label class="form-check-label" for="warna_ya">Ya ✓</label>
-                                                </div>
-                                                <div class="form-check">
-                                                    <input class="form-check-input" type="radio" name="kondisi_fisik[warna]" id="warna_tidak" value="0" {{ old('kondisi_fisik.warna') == '0' ? 'checked' : '' }}>
-                                                    <label class="form-check-label" for="warna_tidak">Tidak ✗</label>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-3">
-                                            <div class="mb-3">
-                                                <label class="form-label"><strong>Benda Asing/Kotoran</strong></label>
-                                                <div class="form-check">
-                                                    <input class="form-check-input" type="radio" name="kondisi_fisik[benda_asing]" id="benda_asing_ya" value="1" {{ old('kondisi_fisik.benda_asing') == '1' ? 'checked' : '' }}>
-                                                    <label class="form-check-label" for="benda_asing_ya">Ya ✓</label>
-                                                </div>
-                                                <div class="form-check">
-                                                    <input class="form-check-input" type="radio" name="kondisi_fisik[benda_asing]" id="benda_asing_tidak" value="0" {{ old('kondisi_fisik.benda_asing') == '0' ? 'checked' : '' }}>
-                                                    <label class="form-check-label" for="benda_asing_tidak">Tidak ✗</label>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-3">
-                                            <div class="mb-3">
-                                                <label class="form-label"><strong>Aroma</strong></label>
-                                                <div class="form-check">
-                                                    <input class="form-check-input" type="radio" name="kondisi_fisik[aroma]" id="aroma_ya" value="1" {{ old('kondisi_fisik.aroma') == '1' ? 'checked' : '' }}>
-                                                    <label class="form-check-label" for="aroma_ya">Ya ✓</label>
-                                                </div>
-                                                <div class="form-check">
-                                                    <input class="form-check-input" type="radio" name="kondisi_fisik[aroma]" id="aroma_tidak" value="0" {{ old('kondisi_fisik.aroma') == '0' ? 'checked' : '' }}>
-                                                    <label class="form-check-label" for="aroma_tidak">Tidak ✗</label>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-        
-                                <!-- Dokumen & Sertifikasi -->
-                                <div class="form-section mb-4">
-                                    <h5 class="text-primary mb-3">Dokumen & Sertifikasi</h5>
-                                    <div class="row">
-                                        <div class="col-md-3">
-                                            <div class="mb-3">
-                                                <label class="form-label"><strong>Logo Halal</strong></label>
-                                                <div class="form-check">
-                                                    <input class="form-check-input" type="radio" name="logo_halal" id="logo_halal_ya" value="1" {{ old('logo_halal') == '1' ? 'checked' : '' }}>
-                                                    <label class="form-check-label" for="logo_halal_ya">Ya ✓</label>
-                                                </div>
-                                                <div class="form-check">
-                                                    <input class="form-check-input" type="radio" name="logo_halal" id="logo_halal_tidak" value="0" {{ old('logo_halal') == '0' ? 'checked' : '' }}>
-                                                    <label class="form-check-label" for="logo_halal_tidak">Tidak ✗</label>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        
-                                        <div class="col-md-3">
-                                            <div class="mb-3">
-                                                <label class="form-label"><strong>Dokumen Halal</strong></label>
-                                                <div class="form-check">
-                                                    <input class="form-check-input" type="radio" name="dokumen_halal" id="dokumen_halal_ya" value="1" {{ old('dokumen_halal') == '1' ? 'checked' : '' }}>
-                                                    <label class="form-check-label" for="dokumen_halal_ya">Ya ✓</label>
-                                                </div>
-                                                <div class="form-check">
-                                                    <input class="form-check-input" type="radio" name="dokumen_halal" id="dokumen_halal_tidak" value="0" {{ old('dokumen_halal') == '0' ? 'checked' : '' }}>
-                                                    <label class="form-check-label" for="dokumen_halal_tidak">Tidak ✗</label>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-3">
-                                            <div class="mb-3">
-                                                <label class="form-label"><strong>COA</strong></label>
-                                                <div class="form-check">
-                                                    <input class="form-check-input" type="radio" name="coa" id="coa_ya" value="1" {{ old('coa') == '1' ? 'checked' : '' }}>
-                                                    <label class="form-check-label" for="coa_ya">Ya ✓</label>
-                                                </div>
-                                                <div class="form-check">
-                                                    <input class="form-check-input" type="radio" name="coa" id="coa_tidak" value="0" {{ old('coa') == '0' ? 'checked' : '' }}>
-                                                    <label class="form-check-label" for="coa_tidak">Tidak ✗</label>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-        
-                                <!-- Hasil Pemeriksaan -->
-                                <div class="form-section mb-4">
-                                    <h5 class="text-primary mb-3">Hasil Pemeriksaan</h5>
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <div class="form-group">
-                                                <label for="status">Status <span class="text-danger">*</span></label>
-                                                <select id="status" class="form-control @error('status') is-invalid @enderror" name="status" required>
-                                                    <option value="">Pilih Status</option>
-                                                    <option value="Hold" {{ old('status') == 'Hold' ? 'selected' : '' }}>Hold</option>
-                                                    <option value="Release" {{ old('status') == 'Release' ? 'selected' : '' }}>Release</option>
-                                                </select>
-                                                @error('status')
-                                                    <div class="invalid-feedback">{{ $message }}</div>
-                                                @enderror
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="form-group">
-                                                <label for="hasil_uji_ffa">Hasil Uji FFA</label>
-                                                <input type="text" id="hasil_uji_ffa" class="form-control @error('hasil_uji_ffa') is-invalid @enderror"
-                                                    name="hasil_uji_ffa" value="{{ old('hasil_uji_ffa') }}" placeholder="Hasil Uji FFA">
-                                                @error('hasil_uji_ffa')
-                                                    <div class="invalid-feedback">{{ $message }}</div>
-                                                @enderror
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="form-group">
-                                                <label for="keterangan">Keterangan</label>
-                                                <textarea id="keterangan" class="form-control @error('keterangan') is-invalid @enderror"
-                                                    name="keterangan" rows="3" placeholder="Keterangan">{{ old('keterangan') }}</textarea>
-                                                @error('keterangan')
-                                                    <div class="invalid-feedback">{{ $message }}</div>
-                                                @enderror
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-        
-                                <div class="form-group">
-                                    <button type="submit" class="btn btn-primary">Simpan</button>
-                                    <a href="{{ route('pemeriksaan-bahan-baku.index') }}" class="btn btn-secondary">Batal</a>
+                                    
+                                    // Radio listeners for Row 1
+                                    // Kondisi Fisik - Kemasan
+                                    document.querySelectorAll('input[name="kondisi_fisik_kemasan_1"]').forEach(radio => {
+                                        radio.addEventListener('change', function() {
+                                            if (this.checked) {
+                                                document.querySelector('.radio-value-kemasan-1').value = this.value;
+                                            }
+                                        });
+                                    });
+                                    
+                                    // Kondisi Fisik - Warna
+                                    document.querySelectorAll('input[name="kondisi_fisik_warna_1"]').forEach(radio => {
+                                        radio.addEventListener('change', function() {
+                                            if (this.checked) {
+                                                document.querySelector('.radio-value-warna-1').value = this.value;
+                                            }
+                                        });
+                                    });
+                                    
+                                    // Kondisi Fisik - Benda Asing
+                                    document.querySelectorAll('input[name="kondisi_fisik_benda_asing_1"]').forEach(radio => {
+                                        radio.addEventListener('change', function() {
+                                            if (this.checked) {
+                                                document.querySelector('.radio-value-benda-1').value = this.value;
+                                            }
+                                        });
+                                    });
+                                    
+                                    // Kondisi Fisik - Aroma
+                                    document.querySelectorAll('input[name="kondisi_fisik_aroma_1"]').forEach(radio => {
+                                        radio.addEventListener('change', function() {
+                                            if (this.checked) {
+                                                document.querySelector('.radio-value-aroma-1').value = this.value;
+                                            }
+                                        });
+                                    });
+                                    
+                                    // Dokumen - Logo Halal
+                                    document.querySelectorAll('input[name="logo_halal_1"]').forEach(radio => {
+                                        radio.addEventListener('change', function() {
+                                            if (this.checked) {
+                                                document.querySelector('.radio-value-logo-1').value = this.value;
+                                            }
+                                        });
+                                    });
+                                    
+                                    // Dokumen - Dokumen Halal
+                                    document.querySelectorAll('input[name="dokumen_halal_1"]').forEach(radio => {
+                                        radio.addEventListener('change', function() {
+                                            if (this.checked) {
+                                                document.querySelector('.radio-value-dokumen-1').value = this.value;
+                                            }
+                                        });
+                                    });
+                                    
+                                    // Dokumen - COA
+                                    document.querySelectorAll('input[name="coa_1"]').forEach(radio => {
+                                        radio.addEventListener('change', function() {
+                                            if (this.checked) {
+                                                document.querySelector('.radio-value-coa-1').value = this.value;
+                                            }
+                                        });
+                                    });
+                                });
+                                </script>
+                                
+                                <div class="col-md-12 d-flex justify-content-end mt-3">
+                                    <a href="{{ route('pemeriksaan-bahan-baku.index') }}" class="btn btn-light-secondary me-1 mb-1">Kembali</a>
+                                    <button type="submit" class="btn btn-primary me-1 mb-1">Simpan</button>
+                                    <button type="reset" class="btn btn-light-secondary me-1 mb-1">Reset</button>
                                 </div>
                             </form>
                         </div>
@@ -721,73 +804,762 @@
 
 @push('scripts')
 <script>
-// 1. Suhu Mobil Conditional Logic
-document.getElementById('suhu_mobil_type').addEventListener('change', function() {
-    const suhuMobilType = this.value;
-    const inputField = document.getElementById('suhu_mobil_input_field');
-    
-    if (suhuMobilType === 'Fresh' || suhuMobilType === 'Frozen') {
-        inputField.style.display = 'block';
-    } else {
-        inputField.style.display = 'none';
-        document.getElementById('suhu_mobil').value = ''; // Clear input
-    }
-});
+// Global variable to store select options
+let selectOptionsCache = {
+    bahan: [],
+    produsen: [],
+    negara: [],
+    distributor: []
+};
 
-// 2. Suhu Produk Conditional Logic
-document.getElementById('suhu_produk_type').addEventListener('change', function() {
-    const suhuProdukType = this.value;
-    const inputField = document.getElementById('suhu_produk_input_field');
-    
-    if (suhuProdukType === 'Fresh' || suhuProdukType === 'Frozen') {
-        inputField.style.display = 'block';
-    } else {
-        inputField.style.display = 'none';
-        document.getElementById('suhu_produk').value = ''; // Clear input
-    }
-});
-
-// 3. Kondisi Produk Conditional Logic
-document.getElementById('kondisi_produk').addEventListener('change', function() {
-    const kondisiProduk = this.value;
-    
-    // Hide all conditional fields first
-    document.getElementById('kondisi_produk_suhu_field').style.display = 'none';
-    // document.getElementById('hasil_uji_ffa_field').style.display = 'none';
-    
-    // Clear all inputs
-    document.getElementById('kondisi_produk_suhu').value = '';
-    // document.getElementById('hasil_uji_ffa').value = '';
-    
-    // Show relevant fields based on selection
-    if (kondisiProduk === 'Fresh' || kondisiProduk === 'Frozen' || kondisiProduk === 'Dry') {
-        document.getElementById('kondisi_produk_suhu_field').style.display = 'block';
-    } else if (kondisiProduk === 'Minyak') {
-        document.getElementById('kondisi_produk_suhu_field').style.display = 'block';
-        // document.getElementById('hasil_uji_ffa_field').style.display = 'block';
-    }
-});
-
-// Trigger on page load if old values exist
 document.addEventListener('DOMContentLoaded', function() {
-    // Check Suhu Mobil
-    const suhuMobilType = document.getElementById('suhu_mobil_type').value;
-    if (suhuMobilType) {
-        document.getElementById('suhu_mobil_type').dispatchEvent(new Event('change'));
+    
+    // 1. Suhu Mobil Conditional Logic
+    const suhuMobilTypeEl = document.getElementById('suhu_mobil_type');
+    if (suhuMobilTypeEl) {
+        suhuMobilTypeEl.addEventListener('change', function() {
+            const suhuMobilType = this.value;
+            const inputField = document.getElementById('suhu_mobil_input_field');
+            
+            if (suhuMobilType === 'Fresh' || suhuMobilType === 'Frozen') {
+                inputField.style.display = 'block';
+            } else {
+                inputField.style.display = 'none';
+                document.getElementById('suhu_mobil').value = '';
+            }
+        });
+        
+        // Trigger on load if value exists
+        if (suhuMobilTypeEl.value) {
+            suhuMobilTypeEl.dispatchEvent(new Event('change'));
+        }
+    }
+
+    // 2. Suhu Produk Conditional Logic
+    const suhuProdukTypeEl = document.getElementById('suhu_produk_type');
+    if (suhuProdukTypeEl) {
+        suhuProdukTypeEl.addEventListener('change', function() {
+            const suhuProdukType = this.value;
+            const inputField = document.getElementById('suhu_produk_input_field');
+            
+            if (suhuProdukType === 'Fresh' || suhuProdukType === 'Frozen') {
+                inputField.style.display = 'block';
+            } else {
+                inputField.style.display = 'none';
+                document.getElementById('suhu_produk').value = '';
+            }
+        });
+        
+        // Trigger on load if value exists
+        if (suhuProdukTypeEl.value) {
+            suhuProdukTypeEl.dispatchEvent(new Event('change'));
+        }
+    }
+
+    // 3. Kondisi Produk Conditional Logic
+    const kondisiProdukEl = document.getElementById('kondisi_produk');
+    if (kondisiProdukEl) {
+        kondisiProdukEl.addEventListener('change', function() {
+            const kondisiProduk = this.value;
+            
+            const kondisiProdukSuhuField = document.getElementById('kondisi_produk_suhu_field');
+            if (kondisiProdukSuhuField) {
+                kondisiProdukSuhuField.style.display = 'none';
+            }
+            
+            const kondisiProdukSuhu = document.getElementById('kondisi_produk_suhu');
+            if (kondisiProdukSuhu) {
+                kondisiProdukSuhu.value = '';
+            }
+            
+            if (kondisiProduk === 'Fresh' || kondisiProduk === 'Frozen' || kondisiProduk === 'Dry') {
+                if (kondisiProdukSuhuField) kondisiProdukSuhuField.style.display = 'block';
+            } else if (kondisiProduk === 'Minyak') {
+                if (kondisiProdukSuhuField) kondisiProdukSuhuField.style.display = 'block';
+            }
+        });
+        
+        // Trigger on load if value exists
+        if (kondisiProdukEl.value) {
+            kondisiProdukEl.dispatchEvent(new Event('change'));
+        }
+    }
+
+    // Initialize Choices.js for all select elements
+    try {
+        initializeAllChoices();
+        
+        // Cache select options AFTER Choices.js initialization
+        setTimeout(function() {
+            cacheSelectOptions();
+        }, 100);
+    } catch(err) {
+        console.error('Error initializing Choices.js:', err);
     }
     
-    // Check Suhu Produk
-    const suhuProdukType = document.getElementById('suhu_produk_type').value;
-    if (suhuProdukType) {
-        document.getElementById('suhu_produk_type').dispatchEvent(new Event('change'));
+    // Update delete button status
+    try {
+        updateRemoveButtons();
+    } catch(err) {
+        console.error('Error updating remove buttons:', err);
     }
     
-    // Check Kondisi Produk
-    const kondisiProduk = document.getElementById('kondisi_produk').value;
-    if (kondisiProduk) {
-        document.getElementById('kondisi_produk').dispatchEvent(new Event('change'));
+    // Setup event listeners for dynamic form
+    try {
+        setupDynamicFormListeners();
+    } catch(err) {
+        console.error('Error setting up dynamic form listeners:', err);
     }
 });
+
+function setupDynamicFormListeners() {
+    // Add new row
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.add-unified-btn')) {
+            addNewRow();
+        }
+    });
+
+    // Remove unified row
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.remove-unified-btn')) {
+            let row = e.target.closest('.unified-row');
+            
+            const rowCount = document.querySelectorAll('#unified-container .unified-row').length;
+            
+            if (rowCount > 1 && row) {
+                row.remove();
+                updateRowNumbers();
+                updateRemoveButtons();
+            } else if (!row) {
+                console.error('Error: Row element not found');
+            } else {
+                alert('Minimal harus ada satu baris data!');
+            }
+        }
+    });
+}
+
+// Initialize Choices.js for select elements
+function initializeAllChoices() {
+    const selectElements = document.querySelectorAll('select.choices');
+    
+    selectElements.forEach(function(select) {
+        // Skip if already initialized
+        if (select.dataset.choicesInitialized === 'true') {
+            return;
+        }
+        
+        // Skip if it's inside a Choices wrapper (already processed)
+        if (select.classList.contains('choices__input')) {
+            return;
+        }
+        
+        try {
+            new Choices(select, {
+                searchEnabled: true,
+                removeItemButton: true,
+                placeholder: true,
+                placeholderValue: 'Pilih opsi',
+                noResultsText: 'Tidak ada hasil',
+                noChoicesText: 'Tidak ada pilihan',
+                searchPlaceholderValue: 'Cari...',
+                itemSelectText: 'Tekan untuk memilih'
+            });
+            select.dataset.choicesInitialized = 'true';
+        } catch(err) {
+            console.error('Error initializing Choices:', err);
+        }
+    });
+}
+
+// Add new row - METODE LENGKAP
+function addNewRow() {
+    const container = document.getElementById('unified-container');
+    const rowCount = container.querySelectorAll('.unified-row').length + 1;
+    
+    // Create new row element
+    const newRow = document.createElement('div');
+    newRow.className = 'unified-row mb-4 p-3 border rounded';
+    newRow.style.backgroundColor = '#f8f9fa';
+    
+    // Generate unique ID for radio buttons in this row
+    const uniqueId = Date.now();
+    
+    // Set the HTML content - TEMPLATE LENGKAP DENGAN SUHU & KONDISI
+    newRow.innerHTML = `
+        <h6 class="text-primary mb-3">Baris ${rowCount}</h6>
+        
+        <!-- Informasi Produk -->
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label class="form-label">Nama Bahan</label>
+                    <select class="choices form-control" name="id_bahan[]">
+                        <option value="">Pilih Bahan</option>
+                        @foreach($bahans as $bahan)
+                            <option value="{{ $bahan->id }}">{{ $bahan->nama_bahan }}</option>
+                        @endforeach
+                    </select>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label class="form-label">Produsen</label>
+                    <select class="choices form-control" name="produsen[]">
+                        <option value="">Pilih Produsen</option>
+                        @foreach ($produsens as $produsen)
+                            <option value="{{ $produsen->nama_produsen }}">{{ $produsen->nama_produsen }}</option>
+                        @endforeach
+                    </select>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label class="form-label">Negara Produsen</label>
+                    <select class="choices form-control" name="negara_produsen[]">
+                        <option value="">Pilih Negara</option>
+                        @foreach ($countries as $code => $name)
+                            <option value="{{ $name }}">{{ $name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label class="form-label">Distributor</label>
+                    <select class="choices form-control" name="distributor[]">
+                        <option value="">Pilih Distributor</option>
+                        @foreach ($distributors as $distributor)
+                            <option value="{{ $distributor->nama_distributor }}">{{ $distributor->nama_distributor }}</option>
+                        @endforeach
+                    </select>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label class="form-label">Kode Produksi</label>
+                    <input type="text" class="form-control" name="kode_produksi[]" placeholder="Kode Produksi">
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label class="form-label">Expire Date</label>
+                    <input type="date" class="form-control" name="expire_date[]">
+                </div>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label class="form-label">Jumlah Datang (kg)</label>
+                    <input type="text" class="form-control" name="jumlah_datang[]" placeholder="Jumlah Datang">
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label class="form-label">Jumlah Sampling</label>
+                    <input type="text" class="form-control" name="jumlah_sampling[]" placeholder="Jumlah Sampling">
+                </div>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-12">
+                <div class="form-group">
+                    <label class="form-label">Spesifikasi</label>
+                    <textarea class="form-control" name="spesifikasi[]" rows="2" placeholder="Spesifikasi"></textarea>
+                </div>
+            </div>
+        </div>
+        
+        <!-- SUHU PRODUK -->
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label class="form-label">Suhu Produk</label>
+                    <select class="form-control suhu-produk-type" name="suhu_produk_type[]" data-row-id="${uniqueId}">
+                        <option value="">Pilih Jenis Suhu Produk</option>
+                        <option value="Fresh">Fresh</option>
+                        <option value="Frozen">Frozen</option>
+                        <option value="Tidak Ada">Tidak Ada</option>
+                    </select>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-group suhu-produk-input" id="suhu_produk_input_${uniqueId}" style="display: none;">
+                    <label class="form-label">Nilai Suhu Produk (°C)</label>
+                    <input type="text" class="form-control" name="suhu_produk[]" placeholder="Contoh: -18°C atau 4°C">
+                </div>
+            </div>
+        </div>
+
+        <!-- SUHU MOBIL -->
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label class="form-label">Suhu Mobil</label>
+                    <select class="form-control suhu-mobil-type" name="suhu_mobil_type[]" data-row-id="${uniqueId}">
+                        <option value="">Pilih Jenis Suhu Mobil</option>
+                        <option value="Fresh">Fresh</option>
+                        <option value="Frozen">Frozen</option>
+                        <option value="Tidak Ada">Tidak Ada</option>
+                    </select>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-group suhu-mobil-input" id="suhu_mobil_input_${uniqueId}" style="display: none;">
+                    <label class="form-label">Nilai Suhu Mobil (°C)</label>
+                    <input type="text" class="form-control" name="suhu_mobil[]" placeholder="Contoh: -18°C atau 4°C">
+                </div>
+            </div>
+        </div>
+        
+        <!-- KONDISI PRODUK -->
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label class="form-label">Kondisi Produk</label>
+                    <select class="form-control kondisi-produk" name="kondisi_produk[]" data-row-id="${uniqueId}">
+                        <option value="">Pilih Kondisi Produk</option>
+                        <option value="Fresh">Fresh</option>
+                        <option value="Frozen">Frozen</option>
+                        <option value="Dry">Dry</option>
+                        <option value="Minyak">Minyak</option>
+                    </select>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-group kondisi-produk-suhu" id="kondisi_produk_suhu_${uniqueId}" style="display: none;">
+                    <label class="form-label">Suhu Kondisi Produk (°C)</label>
+                    <input type="text" class="form-control" name="kondisi_produk_suhu[]" placeholder="Suhu Produk">
+                </div>
+            </div>
+        </div>
+        
+        <!-- Kondisi Fisik -->
+        <div class="form-section mb-3">
+            <h6 class="text-primary mb-2">Kondisi Fisik</h6>
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Kemasan</strong></label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="kondisi_fisik_kemasan_${uniqueId}" value="1">
+                            <label class="form-check-label">Ya ✓</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="kondisi_fisik_kemasan_${uniqueId}" value="0">
+                            <label class="form-check-label">Tidak ✗</label>
+                        </div>
+                        <input type="hidden" name="kondisi_fisik_kemasan[]" class="radio-value-kemasan-${uniqueId}">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Warna</strong></label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="kondisi_fisik_warna_${uniqueId}" value="1">
+                            <label class="form-check-label">Ya ✓</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="kondisi_fisik_warna_${uniqueId}" value="0">
+                            <label class="form-check-label">Tidak ✗</label>
+                        </div>
+                        <input type="hidden" name="kondisi_fisik_warna[]" class="radio-value-warna-${uniqueId}">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Benda Asing</strong></label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="kondisi_fisik_benda_asing_${uniqueId}" value="1">
+                            <label class="form-check-label">Ya ✓</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="kondisi_fisik_benda_asing_${uniqueId}" value="0">
+                            <label class="form-check-label">Tidak ✗</label>
+                        </div>
+                        <input type="hidden" name="kondisi_fisik_benda_asing[]" class="radio-value-benda-${uniqueId}">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Aroma</strong></label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="kondisi_fisik_aroma_${uniqueId}" value="1">
+                            <label class="form-check-label">Ya ✓</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="kondisi_fisik_aroma_${uniqueId}" value="0">
+                            <label class="form-check-label">Tidak ✗</label>
+                        </div>
+                        <input type="hidden" name="kondisi_fisik_aroma[]" class="radio-value-aroma-${uniqueId}">
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Dokumen -->
+        <div class="form-section mb-3">
+            <h6 class="text-primary mb-2">Dokumen</h6>
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Logo Halal</strong></label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="logo_halal_${uniqueId}" value="1">
+                            <label class="form-check-label">Ya ✓</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="logo_halal_${uniqueId}" value="0">
+                            <label class="form-check-label">Tidak ✗</label>
+                        </div>
+                        <input type="hidden" name="logo_halal[]" class="radio-value-logo-${uniqueId}">
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Dokumen Halal</strong></label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="dokumen_halal_${uniqueId}" value="1">
+                            <label class="form-check-label">Ya ✓</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="dokumen_halal_${uniqueId}" value="0">
+                            <label class="form-check-label">Tidak ✗</label>
+                        </div>
+                        <input type="hidden" name="dokumen_halal[]" class="radio-value-dokumen-${uniqueId}">
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label class="form-label"><strong>COA</strong></label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="coa_${uniqueId}" value="1">
+                            <label class="form-check-label">Ya ✓</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="coa_${uniqueId}" value="0">
+                            <label class="form-check-label">Tidak ✗</label>
+                        </div>
+                        <input type="hidden" name="coa[]" class="radio-value-coa-${uniqueId}">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-section mb-3">
+            <h6 class="text-primary mb-2">Upload COA (PDF)</h6>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label">File COA (PDF)</label>
+                        <input type="file" name="file_coa[]" class="form-control" accept="application/pdf">
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Hasil Pemeriksaan -->
+        <div class="form-section mb-3">
+            <h6 class="text-primary mb-2">Hasil Pemeriksaan</h6>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label">Hasil Uji FFA</label>
+                        <input type="text" class="form-control" name="hasil_uji_ffa[]" placeholder="Hasil Uji FFA">
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="status">Status <span class="text-danger">*</span></label>
+                        <select id="status" class="form-control @error('status_baris') is-invalid @enderror" name="status_baris[]" required>
+                            <option value="">Pilih Status</option>
+                            <option value="Hold">Hold</option>
+                            <option value="Release">Release</option>
+                        </select>
+                        @error('status_baris')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="form-group">
+                        <label class="form-label">Keterangan Hasil</label>
+                        <textarea class="form-control" name="keterangan_hasil[]" rows="2" placeholder="Keterangan hasil pemeriksaan"></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Buttons -->
+        <div class="row mt-3 pt-3 border-top">
+            <div class="col-md-12">
+                <button type="button" class="btn btn-success btn-sm add-unified-btn"><i class="bi bi-plus"></i> Tambah Baris</button>
+                <button type="button" class="btn btn-danger btn-sm remove-unified-btn"><i class="bi bi-trash"></i> Hapus Baris</button>
+            </div>
+        </div>
+    `;
+    
+    container.appendChild(newRow);
+    
+    // Setup conditional logic for Suhu Produk in new row
+    setupSuhuProdukLogic(newRow, uniqueId);
+    
+    // Setup conditional logic for Suhu Mobil in new row
+    setupSuhuMobilLogic(newRow, uniqueId);
+    
+    // Setup conditional logic for Kondisi Produk in new row
+    setupKondisiProdukLogic(newRow, uniqueId);
+    
+    // Setup radio button listeners for the new row
+    setupRadioListeners(newRow, uniqueId);
+    
+    // Initialize Choices.js ONLY for selects in the new row
+    const newSelects = newRow.querySelectorAll('select.choices');
+    
+    newSelects.forEach(select => {
+        try {
+            new Choices(select, {
+                searchEnabled: true,
+                removeItemButton: true,
+                placeholder: true,
+                placeholderValue: 'Pilih opsi',
+                noResultsText: 'Tidak ada hasil',
+                noChoicesText: 'Tidak ada pilihan',
+                searchPlaceholderValue: 'Cari...',
+                itemSelectText: 'Tekan untuk memilih'
+            });
+            select.dataset.choicesInitialized = 'true';
+        } catch(err) {
+            console.error('Error initializing new select:', err);
+        }
+    });
+    
+    updateRemoveButtons();
+}
+
+// Setup Suhu Produk conditional logic for dynamic rows
+function setupSuhuProdukLogic(row, uniqueId) {
+    const suhuProdukSelect = row.querySelector('.suhu-produk-type');
+    const suhuProdukInput = row.querySelector(`#suhu_produk_input_${uniqueId}`);
+    
+    if (suhuProdukSelect && suhuProdukInput) {
+        suhuProdukSelect.addEventListener('change', function() {
+            const value = this.value;
+            if (value === 'Fresh' || value === 'Frozen') {
+                suhuProdukInput.style.display = 'block';
+            } else {
+                suhuProdukInput.style.display = 'none';
+                const input = suhuProdukInput.querySelector('input');
+                if (input) input.value = '';
+            }
+        });
+    }
+}
+
+// Setup Suhu Mobil conditional logic for dynamic rows
+function setupSuhuMobilLogic(row, uniqueId) {
+    const suhuMobilSelect = row.querySelector('.suhu-mobil-type');
+    const suhuMobilInput = row.querySelector(`#suhu_mobil_input_${uniqueId}`);
+    
+    if (suhuMobilSelect && suhuMobilInput) {
+        suhuMobilSelect.addEventListener('change', function() {
+            const value = this.value;
+            if (value === 'Fresh' || value === 'Frozen') {
+                suhuMobilInput.style.display = 'block';
+            } else {
+                suhuMobilInput.style.display = 'none';
+                const input = suhuMobilInput.querySelector('input');
+                if (input) input.value = '';
+            }
+        });
+    }
+}
+
+function setupKondisiProdukLogic(row, uniqueId) {
+    const kondisiProdukSelect = row.querySelector('.kondisi-produk');
+    const kondisiProdukSuhu = row.querySelector(`#kondisi_produk_suhu_${uniqueId}`);
+    
+    if (kondisiProdukSelect && kondisiProdukSuhu) {
+        kondisiProdukSelect.addEventListener('change', function() {
+            const value = this.value;
+            if (value === 'Fresh' || value === 'Frozen' || value === 'Dry' || value === 'Minyak') {
+                kondisiProdukSuhu.style.display = 'block';
+            } else {
+                kondisiProdukSuhu.style.display = 'none';
+                const input = kondisiProdukSuhu.querySelector('input');
+                if (input) input.value = '';
+            }
+        });
+    }
+}
+
+// Setup radio button listeners
+function setupRadioListeners(row, uniqueId) {
+    // Kondisi Fisik - Kemasan
+    row.querySelectorAll(`input[name="kondisi_fisik_kemasan_${uniqueId}"]`).forEach(radio => {
+        radio.addEventListener('change', function() {
+            if (this.checked) {
+                row.querySelector(`.radio-value-kemasan-${uniqueId}`).value = this.value;
+            }
+        });
+    });
+    
+    // Kondisi Fisik - Warna
+    row.querySelectorAll(`input[name="kondisi_fisik_warna_${uniqueId}"]`).forEach(radio => {
+        radio.addEventListener('change', function() {
+            if (this.checked) {
+                row.querySelector(`.radio-value-warna-${uniqueId}`).value = this.value;
+            }
+        });
+    });
+    
+    // Kondisi Fisik - Benda Asing
+    row.querySelectorAll(`input[name="kondisi_fisik_benda_asing_${uniqueId}"]`).forEach(radio => {
+        radio.addEventListener('change', function() {
+            if (this.checked) {
+                row.querySelector(`.radio-value-benda-${uniqueId}`).value = this.value;
+            }
+        });
+    });
+    
+    // Kondisi Fisik - Aroma
+    row.querySelectorAll(`input[name="kondisi_fisik_aroma_${uniqueId}"]`).forEach(radio => {
+        radio.addEventListener('change', function() {
+            if (this.checked) {
+                row.querySelector(`.radio-value-aroma-${uniqueId}`).value = this.value;
+            }
+        });
+    });
+    
+    // Dokumen - Logo Halal
+    row.querySelectorAll(`input[name="logo_halal_${uniqueId}"]`).forEach(radio => {
+        radio.addEventListener('change', function() {
+            if (this.checked) {
+                row.querySelector(`.radio-value-logo-${uniqueId}`).value = this.value;
+            }
+        });
+    });
+    
+    // Dokumen - Dokumen Halal
+    row.querySelectorAll(`input[name="dokumen_halal_${uniqueId}"]`).forEach(radio => {
+        radio.addEventListener('change', function() {
+            if (this.checked) {
+                row.querySelector(`.radio-value-dokumen-${uniqueId}`).value = this.value;
+            }
+        });
+    });
+    
+    // Dokumen - COA
+    row.querySelectorAll(`input[name="coa_${uniqueId}"]`).forEach(radio => {
+        radio.addEventListener('change', function() {
+            if (this.checked) {
+                row.querySelector(`.radio-value-coa-${uniqueId}`).value = this.value;
+            }
+        });
+    });
+}
+
+// Cache select options from first row using Choices instance
+function cacheSelectOptions() {
+    const container = document.getElementById('unified-container');
+    const firstRow = container.querySelector('.unified-row');
+    
+    if (!firstRow) return;
+    
+    // Cache Bahan options from Choices instance
+    const bahanSelect = firstRow.querySelector('select[name="id_bahan[]"]');
+    if (bahanSelect && bahanSelect.choicesInstance) {
+        selectOptionsCache.bahan = bahanSelect.choicesInstance.config.choices
+            .map(opt => ({ value: opt.value, text: opt.label }));
+    }
+    
+    // Cache Produsen options from Choices instance
+    const produsenSelect = firstRow.querySelector('select[name="produsen[]"]');
+    if (produsenSelect && produsenSelect.choicesInstance) {
+        selectOptionsCache.produsen = produsenSelect.choicesInstance.config.choices
+            .map(opt => ({ value: opt.value, text: opt.label }));
+    }
+    
+    // Cache Negara options from Choices instance
+    const negaraSelect = firstRow.querySelector('select[name="negara_produsen[]"]');
+    if (negaraSelect && negaraSelect.choicesInstance) {
+        selectOptionsCache.negara = negaraSelect.choicesInstance.config.choices
+            .map(opt => ({ value: opt.value, text: opt.label }));
+    }
+    
+    // Cache Distributor options from Choices instance
+    const distributorSelect = firstRow.querySelector('select[name="distributor[]"]');
+    if (distributorSelect && distributorSelect.choicesInstance) {
+        selectOptionsCache.distributor = distributorSelect.choicesInstance.config.choices
+            .map(opt => ({ value: opt.value, text: opt.label }));
+    }
+}
+
+// Helper functions to get options from cache
+function getBahanOptions() {
+    return selectOptionsCache.bahan
+        .map(opt => `<option value="${opt.value}">${opt.text}</option>`)
+        .join('');
+}
+
+function getProdusenOptions() {
+    return selectOptionsCache.produsen
+        .map(opt => `<option value="${opt.value}">${opt.text}</option>`)
+        .join('');
+}
+
+function getCountryOptions() {
+    return selectOptionsCache.negara
+        .map(opt => `<option value="${opt.value}">${opt.text}</option>`)
+        .join('');
+}
+
+function getDistributorOptions() {
+    return selectOptionsCache.distributor
+        .map(opt => `<option value="${opt.value}">${opt.text}</option>`)
+        .join('');
+}
+
+// Update row numbers
+function updateRowNumbers() {
+    const rows = document.querySelectorAll('#unified-container .unified-row');
+    rows.forEach((row, index) => {
+        const title = row.querySelector('h6');
+        if (title) {
+            title.textContent = `Baris ${index + 1}`;
+        }
+    });
+}
+
+// Update remove buttons visibility
+function updateRemoveButtons() {
+    const rows = document.querySelectorAll('#unified-container .unified-row');
+    rows.forEach((row) => {
+        const removeBtn = row.querySelector('.remove-unified-btn');
+        if (removeBtn) {
+            if (rows.length > 1) {
+                removeBtn.style.display = 'inline-block';
+            } else {
+                removeBtn.style.display = 'none';
+            }
+        }
+    });
+}
+
+// Initialize on page load
+updateRemoveButtons();
 </script>
 @endpush
 @endsection

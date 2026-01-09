@@ -130,6 +130,9 @@
                                 <div class="col-md-6">
                                     <label class="form-label fw-bold">Dokumentasi Komplain</label>
                                     @if($detailKomplain->dokumentasi)
+                                        <div class="mb-2">
+                                            <img src="{{ asset('storage/' . $detailKomplain->dokumentasi) }}" alt="Dokumentasi Komplain" style="max-width: 260px; height: auto; border: 1px solid #ddd; padding: 4px; background: #fff;">
+                                        </div>
                                         <div>
                                             <a href="{{ asset('storage/' . $detailKomplain->dokumentasi) }}" 
                                                target="_blank" class="btn btn-sm btn-info">

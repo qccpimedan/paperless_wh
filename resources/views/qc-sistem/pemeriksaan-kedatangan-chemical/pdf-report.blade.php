@@ -342,12 +342,69 @@
     <div class="container">
         @if($pemeriksaans->count() > 0)
             @php
-                $recordsPerPage = 4;
-                $chunks = $pemeriksaans->chunk($recordsPerPage);
-                $firstRecord = $pemeriksaans->first();
+                $columnsPerPage = 4;
+
+                $allChemicalIds = [];
+                $allProdusenIds = [];
+                $allDistributorIds = [];
+
+                $pdfColumns = collect();
+                foreach ($pemeriksaans as $p) {
+                    $detailChemicals = $p->detail_chemicals ?? [];
+
+                    if (!empty($detailChemicals)) {
+                        foreach ($detailChemicals as $d) {
+                            if (!empty($d['id_chemical'])) {
+                                $allChemicalIds[] = $d['id_chemical'];
+                            }
+                            if (!empty($d['id_produsen'])) {
+                                $allProdusenIds[] = $d['id_produsen'];
+                            }
+                            if (!empty($d['id_distributor'])) {
+                                $allDistributorIds[] = $d['id_distributor'];
+                            }
+                        }
+                    }
+
+                    $rowCount = count($detailChemicals);
+
+                    for ($i = 0; $i < $rowCount; $i++) {
+                        $pdfColumns->push([
+                            'record' => $p,
+                            'rowIndex' => $i,
+                        ]);
+                    }
+                }
+
+                $chunks = $pdfColumns->chunk($columnsPerPage);
+
+                $chemicalMap = [];
+                if (!empty($allChemicalIds)) {
+                    $chemicalMap = \App\Models\Chemical::whereIn('id', array_values(array_unique($allChemicalIds)))
+                        ->pluck('nama_chemical', 'id')
+                        ->toArray();
+                }
+
+                $produsenMap = [];
+                if (!empty($allProdusenIds)) {
+                    $produsenMap = \App\Models\Produsen::whereIn('id', array_values(array_unique($allProdusenIds)))
+                        ->pluck('nama_produsen', 'id')
+                        ->toArray();
+                }
+
+                $distributorMap = [];
+                if (!empty($allDistributorIds)) {
+                    $distributorMap = \App\Models\Distributor::whereIn('id', array_values(array_unique($allDistributorIds)))
+                        ->pluck('nama_distributor', 'id')
+                        ->toArray();
+                }
             @endphp
             
             @foreach($chunks as $pageIndex => $pageRecords)
+                @php
+                    $firstColumn = $pageRecords->first();
+                    $firstRecord = $firstColumn ? $firstColumn['record'] : null;
+                @endphp
                 {{-- HEADER (Setiap halaman) --}}
                 <div class="header">
                     <div class="header-left">
@@ -416,9 +473,11 @@
                 <div class="page-break">
                     <table class="data-table">
                         <tr>
-                            @foreach($pageRecords as $index => $pemeriksaan)
+                            @foreach($pageRecords as $index => $column)
                                 @php
-                                    $columnNumber = ($pageIndex * $recordsPerPage) + $loop->iteration;
+                                    $pemeriksaan = $column['record'];
+                                    $rowIndex = $column['rowIndex'];
+                                    $columnNumber = ($pageIndex * $columnsPerPage) + $loop->iteration;
                                 @endphp
                                 <td class="data-column" data-numbered="true">
                                     <div class="column-header">
@@ -441,126 +500,137 @@
                                         @endforeach
                                     @endif
 
-                                    {{-- CHEMICAL --}}
-                                    @if($pemeriksaan->chemical || $pemeriksaan->negara_produsen || $pemeriksaan->kode_produksi || $pemeriksaan->expire_date || $pemeriksaan->jumlah_datang || $pemeriksaan->jumlah_sampling)
-                                        <div class="section-title">Chemical</div>
-                                        @if($pemeriksaan->chemical)
-                                            <div class="field-row">
-                                                <span class="field-label">Nama:</span>
-                                                <span class="field-value">{{ $pemeriksaan->chemical->nama_chemical }}</span>
-                                            </div>
-                                        @endif
-                                        @if($pemeriksaan->negara_produsen)
-                                            <div class="field-row">
-                                                <span class="field-label">Negara:</span>
-                                                <span class="field-value">{{ $pemeriksaan->negara_produsen }}</span>
-                                            </div>
-                                        @endif
-                                        @if($pemeriksaan->kode_produksi && $pemeriksaan->kode_produksi !== '')
-                                            <div class="field-row">
-                                                <span class="field-label">Kode Produksi:</span>
-                                                <span class="field-value">{{ $pemeriksaan->kode_produksi }}</span>
-                                            </div>
-                                        @endif
-                                        @if($pemeriksaan->expire_date)
-                                            <div class="field-row">
-                                                <span class="field-label">Expire:</span>
-                                                <span class="field-value">{{ $pemeriksaan->expire_date->format('d/m/Y') }}</span>
-                                            </div>
-                                        @endif
-                                        @if($pemeriksaan->jumlah_datang)
-                                            <div class="field-row">
-                                                <span class="field-label">Jumlah:</span>
-                                                <span class="field-value">{{ $pemeriksaan->jumlah_datang }}</span>
-                                            </div>
-                                        @endif
-                                        @if($pemeriksaan->jumlah_sampling)
-                                            <div class="field-row">
-                                                <span class="field-label">Sampling:</span>
-                                                <span class="field-value">{{ $pemeriksaan->jumlah_sampling }}</span>
-                                            </div>
-                                        @endif
-                                    @endif
-
-                                    {{-- KONDISI FISIK --}}
+                                    {{-- DETAIL CHEMICALS (Single Row) --}}
                                     @php
-                                        $hasFisikFields = isset($pemeriksaan->kondisi_fisik) && is_array($pemeriksaan->kondisi_fisik) && count($pemeriksaan->kondisi_fisik) > 0;
+                                        $detailChemicals = $pemeriksaan->detail_chemicals ?? [];
+                                        $chemicalDetail = $detailChemicals[$rowIndex] ?? [];
                                     @endphp
-                                    @if($hasFisikFields)
-                                        <div class="section-title">Kondisi Fisik</div>
-                                        @if(isset($pemeriksaan->kondisi_fisik['kemasan']))
-                                            <div class="field-row">
-                                                <span class="field-label">Kemasan:</span>
-                                                <span class="field-value">{{ $pemeriksaan->kondisi_fisik['kemasan'] ? 'V' : 'X' }}</span>
-                                            </div>
-                                        @endif
-                                        @if(isset($pemeriksaan->kondisi_fisik['warna']))
-                                            <div class="field-row">
-                                                <span class="field-label">Warna:</span>
-                                                <span class="field-value">{{ $pemeriksaan->kondisi_fisik['warna'] ? 'V' : 'X' }}</span>
-                                            </div>
-                                        @endif
-                                        @if(isset($pemeriksaan->kondisi_fisik['benda_asing']))
-                                            <div class="field-row">
-                                                <span class="field-label">Benda Asing:</span>
-                                                <span class="field-value">{{ $pemeriksaan->kondisi_fisik['benda_asing'] ? 'V' : 'X' }}</span>
-                                            </div>
-                                        @endif
-                                        @if(isset($pemeriksaan->kondisi_fisik['aroma']))
-                                            <div class="field-row">
-                                                <span class="field-label">Aroma:</span>
-                                                <span class="field-value">{{ $pemeriksaan->kondisi_fisik['aroma'] ? 'V' : 'X' }}</span>
-                                            </div>
-                                        @endif
-                                    @endif
+                                    @if(!empty($chemicalDetail))
+                                        {{-- CHEMICAL INFO --}}
+                                        <div class="section-title">Chemical</div>
+                                        <div style="margin-top: 6px; padding-top: 6px; border-top: 1px solid #ddd; font-size: 8px;">
+                                            @if(!empty($chemicalDetail['id_chemical']))
+                                                <div class="field-row">
+                                                    <span class="field-label">Nama:</span>
+                                                    <span class="field-value">{{ $chemicalMap[$chemicalDetail['id_chemical']] ?? 'N/A' }}</span>
+                                                </div>
+                                            @endif
+                                            @if(isset($chemicalDetail['kondisi_chemical']))
+                                                <div class="field-row">
+                                                    <span class="field-label">Kondisi:</span>
+                                                    <span class="field-value">{{ $chemicalDetail['kondisi_chemical'] ?? '-' }}</span>
+                                                </div>
+                                            @endif
+                                            @if(!empty($chemicalDetail['id_produsen']))
+                                                <div class="field-row">
+                                                    <span class="field-label">Produsen:</span>
+                                                    <span class="field-value">{{ $produsenMap[$chemicalDetail['id_produsen']] ?? 'N/A' }}</span>
+                                                </div>
+                                            @endif
+                                            @if(isset($chemicalDetail['negara_produsen']))
+                                                <div class="field-row">
+                                                    <span class="field-label">Negara:</span>
+                                                    <span class="field-value">{{ $chemicalDetail['negara_produsen'] ?? '-' }}</span>
+                                                </div>
+                                            @endif
+                                            @if(!empty($chemicalDetail['id_distributor']))
+                                                <div class="field-row">
+                                                    <span class="field-label">Dist:</span>
+                                                    <span class="field-value">{{ $distributorMap[$chemicalDetail['id_distributor']] ?? 'N/A' }}</span>
+                                                </div>
+                                            @endif
+                                            @if(isset($chemicalDetail['kode_produksi']))
+                                                <div class="field-row">
+                                                    <span class="field-label">Kode:</span>
+                                                    <span class="field-value">{{ $chemicalDetail['kode_produksi'] ?? '-' }}</span>
+                                                </div>
+                                            @endif
+                                            @if(!empty($chemicalDetail['expire_date']))
+                                                <div class="field-row">
+                                                    <span class="field-label">Expire:</span>
+                                                    <span class="field-value">{{ \Carbon\Carbon::parse($chemicalDetail['expire_date'])->format('d/m/Y') }}</span>
+                                                </div>
+                                            @endif
+                                            @if(isset($chemicalDetail['jumlah_datang']))
+                                                <div class="field-row">
+                                                    <span class="field-label">Jumlah:</span>
+                                                    <span class="field-value">{{ $chemicalDetail['jumlah_datang'] ?? '-' }}</span>
+                                                </div>
+                                            @endif
+                                            @if(isset($chemicalDetail['jumlah_sampling']))
+                                                <div class="field-row">
+                                                    <span class="field-label">Samp:</span>
+                                                    <span class="field-value">{{ $chemicalDetail['jumlah_sampling'] ?? '-' }}</span>
+                                                </div>
+                                            @endif
+                                        </div>
 
-                                    {{-- DOKUMEN --}}
-                                    <div class="section-title">Dokumen</div>
-                                    <div class="field-row">
-                                        <span class="field-label">Halal:</span>
-                                        <span class="field-value">{{ $pemeriksaan->persyaratan_dokumen_halal ? 'V' : 'X' }}</span>
-                                    </div>
-                                    <div class="field-row">
-                                        <span class="field-label">COA:</span>
-                                        <span class="field-value">{{ $pemeriksaan->coa ? 'V' : 'X' }}</span>
-                                    </div>
+                                        {{-- KONDISI FISIK (Single Row) --}}
+                                        @php
+                                            $kondisiFisik = $chemicalDetail['kondisi_fisik'] ?? [];
+                                        @endphp
+                                        @if(!empty($kondisiFisik))
+                                            <div class="section-title">Kondisi Fisik</div>
+                                            <div style="margin-top: 6px; padding-top: 6px; border-top: 1px solid #ddd; font-size: 8px;">
+                                                @if(isset($kondisiFisik['kemasan']))
+                                                    <div class="field-row">
+                                                        <span class="field-label">Kemasan:</span>
+                                                        <span class="field-value">{{ ($kondisiFisik['kemasan'] ?? false) ? 'V' : 'X' }}</span>
+                                                    </div>
+                                                @endif
+                                                @if(isset($kondisiFisik['warna']))
+                                                    <div class="field-row">
+                                                        <span class="field-label">Warna:</span>
+                                                        <span class="field-value">{{ ($kondisiFisik['warna'] ?? false) ? 'V' : 'X' }}</span>
+                                                    </div>
+                                                @endif
+                                            </div>
+                                        @endif
 
-                                    {{-- STATUS --}}
-                                    @if($pemeriksaan->status || $pemeriksaan->keterangan)
+                                        {{-- DOKUMEN (Single Row) --}}
+                                        <div class="section-title">Dokumen</div>
+                                        <div style="margin-top: 6px; padding-top: 6px; border-top: 1px solid #ddd; font-size: 8px;">
+                                            <div class="field-row">
+                                                <span class="field-label">Halal:</span>
+                                                <span class="field-value">{{ ($chemicalDetail['persyaratan_dokumen_halal'] ?? false) ? 'V' : 'X' }}</span>
+                                            </div>
+                                            <div class="field-row">
+                                                <span class="field-label">COA:</span>
+                                                <span class="field-value">{{ ($chemicalDetail['coa'] ?? false) ? 'V' : 'X' }}</span>
+                                            </div>
+                                        </div>
+
+                                        {{-- STATUS (Single Row) --}}
                                         <div class="section-title">Status</div>
-                                        @if($pemeriksaan->status)
+                                        <div style="margin-top: 6px; padding-top: 6px; border-top: 1px solid #ddd; font-size: 8px;">
                                             <div class="field-row">
                                                 <span class="field-label">Status:</span>
                                                 <span class="field-value">
-                                                    @if(strtolower($pemeriksaan->status) == 'release')
-                                                        <span class="status-badge status-release">{{ $pemeriksaan->status }}</span>
-                                                    @elseif(strtolower($pemeriksaan->status) == 'hold')
-                                                        <span class="status-badge status-hold">{{ $pemeriksaan->status }}</span>
+                                                    @php
+                                                        $status = $chemicalDetail['status'] ?? null;
+                                                    @endphp
+                                                    @if(strtolower($status ?? '') == 'release')
+                                                        <span class="status-badge status-release">{{ $status ?? '-' }}</span>
+                                                    @elseif(strtolower($status ?? '') == 'hold')
+                                                        <span class="status-badge status-hold">{{ $status ?? '-' }}</span>
                                                     @else
-                                                        {{ $pemeriksaan->status }}
+                                                        {{ $status ?? '-' }}
                                                     @endif
                                                 </span>
                                             </div>
-                                        @endif
-                                        @if($pemeriksaan->keterangan)
-                                            <div class="field-row">
-                                                <span class="field-label">Ket:</span>
-                                                <span class="field-value">{{ $pemeriksaan->keterangan }}</span>
-                                            </div>
-                                        @endif
+                                            @if(isset($chemicalDetail['keterangan']))
+                                                <div class="field-row">
+                                                    <span class="field-label">Ket:</span>
+                                                    <span class="field-value">{{ $chemicalDetail['keterangan'] ?? '-' }}</span>
+                                                </div>
+                                            @endif
+                                        </div>
                                     @endif
+
                                 </td>
                             @endforeach
-                            
-                            {{-- Fill empty columns if less than 4 records --}}
-                            @for($i = $pageRecords->count(); $i < $recordsPerPage; $i++)
-                                <td class="data-column" style="background: #f8f9fa;"></td>
-                            @endfor
                         </tr>
                     </table>
-                    <div style="text-align: right; padding-right: 10px; font-style: italic; font-size: 9px; color: #666; margin-top: 5px;">
-                        QW 03/00
-                    </div>
                 </div>
 
                 {{-- SIGNATURE (Setiap halaman) --}}

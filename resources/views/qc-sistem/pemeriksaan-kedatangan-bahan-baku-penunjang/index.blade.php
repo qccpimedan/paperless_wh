@@ -46,7 +46,7 @@
                             <h4 class="card-title">Data Pemeriksaan Kedatangan Bahan Baku Penunjang</h4>
                             @can('create_pemeriksaan_kedatangan_bahan_baku_penunjang')
                                 <a href="{{ route('pemeriksaan-bahan-baku.create') }}" class="btn btn-primary">
-                                    <i class="bi bi-plus-circle"></i> Tambah Data
+                                    <i class="bi bi-plus-circle"></i> Tambah Bahan Baku
                                 </a>
                             @endcan
                         </div>
@@ -57,37 +57,98 @@
                             <div class="col-md-12 mb-3">
                                 <h6 class="mb-3"><i class="bi bi-funnel"></i> Filter & Cetak PDF</h6>
                             </div>
-                            <form action="{{ route('pemeriksaan-bahan-baku.export-pdf') }}" method="GET" class="row g-3">
-                                <div class="col-md-3">
-                                    <label class="form-label">Tanggal</label>
-                                    <input type="date" name="tanggal" class="form-control" value="{{ request('tanggal') }}">
-                                </div>
+                            <form action="{{ route('pemeriksaan-bahan-baku.export-pdf') }}" method="GET" class="row g-3" id="pdfFilterForm">
                                 <div class="col-md-3">
                                     <label class="form-label">Shift</label>
-                                    <select name="id_shift" class="form-select">
+                                    <select name="id_shift" class="form-select" id="shiftSelect" required>
                                         <option value="">-- Pilih Shift --</option>
                                         @foreach($shifts ?? [] as $shift)
-                                            <option value="{{ $shift->id }}" {{ request('id_shift') == $shift->id ? 'selected' : '' }}>
+                                            <option value="{{ $shift->id }}" data-shift-name="{{ $shift->shift }}" {{ request('id_shift') == $shift->id ? 'selected' : '' }}>
                                                 {{ $shift->shift }}
                                             </option>
                                         @endforeach
                                     </select>
                                 </div>
-                                <div class="col-md-2">
-                                    <label class="form-label">Jam Mulai</label>
-                                    <input type="time" name="jam_awal" class="form-control" value="{{ request('jam_awal') }}">
+                                <div class="col-md-3" id="tanggalDariWrapper">
+                                    <label class="form-label">Tanggal Dari</label>
+                                    <input type="date" name="tanggal_dari" class="form-control" id="tanggalDari" value="{{ request('tanggal_dari') }}">
                                 </div>
-                                <div class="col-md-2">
-                                    <label class="form-label">Jam Akhir</label>
-                                    <input type="time" name="jam_akhir" class="form-control" value="{{ request('jam_akhir') }}">
+                                <div class="col-md-3" id="tanggalSampaiWrapper">
+                                    <label class="form-label">Tanggal Sampai</label>
+                                    <input type="date" name="tanggal_sampai" class="form-control" id="tanggalSampai" value="{{ request('tanggal_sampai') }}">
                                 </div>
-                                <div class="col-md-2 d-flex align-items-end">
+                                <div class="col-md-3" id="tanggalSingleWrapper" style="display: none;">
+                                    <label class="form-label">Tanggal</label>
+                                    <input type="date" name="tanggal" class="form-control" id="tanggalSingle" value="{{ request('tanggal') }}">
+                                </div>
+                                <div class="col-md-3 d-flex align-items-end">
                                     <button type="submit" class="btn btn-success w-100">
                                         <i class="bi bi-file-pdf"></i> Cetak PDF
                                     </button>
                                 </div>
                             </form>
                         </div>
+
+                        <script>
+                            document.addEventListener('DOMContentLoaded', function() {
+                                const shiftSelect = document.getElementById('shiftSelect');
+                                const tanggalDariWrapper = document.getElementById('tanggalDariWrapper');
+                                const tanggalSampaiWrapper = document.getElementById('tanggalSampaiWrapper');
+                                const tanggalSingleWrapper = document.getElementById('tanggalSingleWrapper');
+                                const tanggalDari = document.getElementById('tanggalDari');
+                                const tanggalSampai = document.getElementById('tanggalSampai');
+                                const tanggalSingle = document.getElementById('tanggalSingle');
+
+                                function updateDateFields() {
+                                    const selectedOption = shiftSelect.options[shiftSelect.selectedIndex];
+                                    const shiftName = selectedOption.getAttribute('data-shift-name');
+
+                                    // Cek apakah shift mengandung "1" atau sama dengan "1" atau "Shift 1"
+                                    const isShift1 = shiftName === '1' || shiftName === 'Shift 1' || shiftName === 'shift 1';
+                                    // Cek apakah shift mengandung "2" atau "3"
+                                    const isShift2or3 = shiftName === '2' || shiftName === 'Shift 2' || shiftName === 'shift 2' ||
+                                                        shiftName === '3' || shiftName === 'Shift 3' || shiftName === 'shift 3';
+
+                                    if (isShift1) {
+                                        // Shift 1: Tampilkan date range
+                                        tanggalDariWrapper.style.display = 'block';
+                                        tanggalSampaiWrapper.style.display = 'block';
+                                        tanggalSingleWrapper.style.display = 'none';
+                                        
+                                        tanggalDari.required = true;
+                                        tanggalSampai.required = true;
+                                        tanggalSingle.required = false;
+                                        tanggalSingle.value = '';
+                                    } else if (isShift2or3) {
+                                        // Shift 2 & 3: Tampilkan single date
+                                        tanggalDariWrapper.style.display = 'none';
+                                        tanggalSampaiWrapper.style.display = 'none';
+                                        tanggalSingleWrapper.style.display = 'block';
+                                        
+                                        tanggalDari.required = false;
+                                        tanggalSampai.required = false;
+                                        tanggalSingle.required = true;
+                                        tanggalDari.value = '';
+                                        tanggalSampai.value = '';
+                                    } else {
+                                        // Belum pilih shift: sembunyikan semua
+                                        tanggalDariWrapper.style.display = 'none';
+                                        tanggalSampaiWrapper.style.display = 'none';
+                                        tanggalSingleWrapper.style.display = 'none';
+                                        
+                                        tanggalDari.required = false;
+                                        tanggalSampai.required = false;
+                                        tanggalSingle.required = false;
+                                    }
+                                }
+
+                                // Trigger saat shift berubah
+                                shiftSelect.addEventListener('change', updateDateFields);
+
+                                // Trigger saat halaman load (untuk maintain state setelah submit)
+                                updateDateFields();
+                            });
+                        </script>
                         <div class="table-responsive">
                             <table class="table table-striped text-center" id="table1" style="white-space: nowrap;">
                                 <thead>
@@ -100,7 +161,7 @@
                                         <th>Nama Bahan</th>
                                         <!-- <th>Kondisi Produk</th> -->
                                         <th>Produsen</th>
-                                        <!-- <th>Kode Produksi</th> -->
+                                        <th>Kode Produksi</th>
                                         <th>Status</th>
                                         <th>Verifikasi</th>
                                         <!-- <th>Verifikasi QC</th>
@@ -145,11 +206,31 @@
                                                 @endif
                                             </td> -->
                                             <td>
-                                                {{ $pemeriksaan->produsen ?? '-' }}
+                                                @php
+                                                    $produsenArray = json_decode($pemeriksaan->produsen_array ?? '[]', true);
+                                                    $produsenArray = is_array($produsenArray) ? array_values(array_filter($produsenArray, function ($v) {
+                                                        return $v !== null && $v !== '';
+                                                    })) : [];
+                                                @endphp
+                                                @if(count($produsenArray) > 0)
+                                                    {{ implode(', ', $produsenArray) }}
+                                                @else
+                                                    {{ $pemeriksaan->produsen ?? '-' }}
+                                                @endif
                                             </td>
-                                            <!-- <td>
-                                                {{ $pemeriksaan->kode_produksi ?? '-' }}
-                                            </td> -->
+                                            <td>
+                                                @php
+                                                    $kodeProduksiArray = json_decode($pemeriksaan->kode_produksi_array ?? '[]', true);
+                                                    $kodeProduksiArray = is_array($kodeProduksiArray) ? array_values(array_filter($kodeProduksiArray, function ($v) {
+                                                        return $v !== null && $v !== '';
+                                                    })) : [];
+                                                @endphp
+                                                @if(count($kodeProduksiArray) > 0)
+                                                    {{ implode(', ', $kodeProduksiArray) }}
+                                                @else
+                                                    {{ $pemeriksaan->kode_produksi ?? '-' }}
+                                                @endif
+                                            </td>
                                             <td>
                                                 @if($pemeriksaan->status === 'Release')
                                                     <span class="badge bg-success">{{ $pemeriksaan->status }}</span>
@@ -200,6 +281,10 @@
                                             </td>
                                             <td>
                                                 <div class="btn-vertical" role="group">
+                                                    <a href="{{ route('pemeriksaan-bahan-baku.tambah-baris', $pemeriksaan->uuid) }}" 
+                                                    class="btn btn-sm btn-success" title="Tambah Baris">
+                                                        <i class="bi bi-plus-circle"></i>
+                                                    </a>
                                                     @can('view_pemeriksaan_kedatangan_bahan_baku_penunjang')
                                                         <a href="{{ route('pemeriksaan-bahan-baku.show', $pemeriksaan->uuid) }}" 
                                                         class="btn btn-sm btn-info" title="Lihat Detail">

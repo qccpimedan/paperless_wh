@@ -15,9 +15,6 @@ class PemeriksaanKedatanganChemical extends Model
         'uuid',
         'id_user',
         'id_shift',
-        'id_chemical',
-        'id_produsen',
-        'id_distributor',
         'tanggal',
         'jenis_mobil',
         'no_mobil',
@@ -25,17 +22,7 @@ class PemeriksaanKedatanganChemical extends Model
         'segel_gembok',
         'no_segel',
         'kondisi_mobil',
-        'negara_produsen',
-        'kode_produksi',
-        'expire_date',
-        'kondisi_chemical',
-        'jumlah_datang',
-        'jumlah_sampling',
-        'kondisi_fisik',
-        'persyaratan_dokumen_halal',
-        'coa',
-        'status',
-        'keterangan',
+        'detail_chemicals', // JSON untuk multiple rows
         'status_verifikasi',
         'verified_by',
         'verified_by_qc',
@@ -47,11 +34,8 @@ class PemeriksaanKedatanganChemical extends Model
 
     protected $casts = [
         'kondisi_mobil' => 'array',
-        'kondisi_fisik' => 'array',
-        'persyaratan_dokumen_halal' => 'boolean',
-        'coa' => 'boolean',
+        'detail_chemicals' => 'array', // Cast JSON ke array
         'tanggal' => 'date',
-        'expire_date' => 'date',
     ];
 
     protected static function boot()
@@ -81,20 +65,8 @@ class PemeriksaanKedatanganChemical extends Model
         return $this->belongsTo(Shift::class, 'id_shift');
     }
 
-    public function chemical()
-    {
-        return $this->belongsTo(Chemical::class, 'id_chemical');
-    }
-
-    public function produsen()
-    {
-        return $this->belongsTo(Produsen::class, 'id_produsen');
-    }
-
-    public function distributor()
-    {
-        return $this->belongsTo(Distributor::class, 'id_distributor');
-    }
+    // Relasi chemical, produsen, distributor sudah tidak digunakan
+    // karena data sekarang disimpan dalam JSON detail_chemicals
 
     public function verifiedBy()
     {

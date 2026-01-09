@@ -11,7 +11,7 @@
         <div class="page-title">
             <div class="row">
                 <div class="col-12 col-md-6 order-md-1 order-last">
-                    <h3>Edit Bahan</h3>
+                    <h3>Edit Bahan Baku</h3>
                     <p class="text-subtitle text-muted">Edit bahan yang sudah ada</p>
                 </div>
                 <div class="col-12 col-md-6 order-md-2 order-first">
@@ -31,7 +31,7 @@
                 <div class="col-md-12 col-12">
                     <div class="card">
                         <div class="card-header">
-                            <h4 class="card-title">Form Edit Bahan</h4>
+                            <h4 class="card-title">Form Edit Bahan Baku</h4>
                         </div>
                         <div class="card-content">
                             <div class="card-body">
@@ -51,9 +51,9 @@
                                     <div class="form-body">
                                         <div class="row">
                                             <div class="col-md-12">
-                                                <label for="nama_bahan">Nama Bahan <span class="text-danger">*</span></label>
+                                                <label for="nama_bahan">Nama Bahan Baku<span class="text-danger">*</span></label>
                                                 <input type="text" id="nama_bahan" class="form-control @error('nama_bahan') is-invalid @enderror"
-                                                    name="nama_bahan" placeholder="Nama Bahan" 
+                                                    name="nama_bahan" placeholder="Nama Bahan Baku" 
                                                     value="{{ old('nama_bahan', $bahan->nama_bahan) }}" required>
                                                 @error('nama_bahan')
                                                     <div class="invalid-feedback">{{ $message }}</div>

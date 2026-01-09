@@ -69,9 +69,6 @@
                                                         @foreach($shifts as $shift)
                                                             <option value="{{ $shift->id }}" {{ old('id_shift') == $shift->id ? 'selected' : '' }}>
                                                                 {{ $shift->shift }}
-                                                                @if($shift->user && $shift->user->plant)
-                                                                    ({{ $shift->user->plant->plant }})
-                                                                @endif
                                                             </option>
                                                         @endforeach
                                                     </select>
@@ -85,18 +82,48 @@
                                         <div class="row">
                                             <div class="col-md-6">
                                                 <div class="form-group">
-                                                    <label for="id_tujuan_pengiriman">Tujuan Pengiriman</label>
+                                                    <label for="id_tujuan_pengiriman">Customer & Tujuan Pengiriman</label>
                                                     <select id="id_tujuan_pengiriman" class="choices form-select @error('id_tujuan_pengiriman') is-invalid @enderror" name="id_tujuan_pengiriman">
                                                         <option value="">-- Pilih Tujuan --</option>
                                                         @foreach($tujuanPengirimans as $tujuan)
                                                             <option value="{{ $tujuan->id }}" {{ old('id_tujuan_pengiriman') == $tujuan->id ? 'selected' : '' }}>
-                                                                {{ $tujuan->nama_tujuan }}
+                                                                @if($tujuan->customer)
+                                                                    {{ $tujuan->customer->nama_cust }} - {{ $tujuan->nama_tujuan }}
+                                                                @else
+                                                                    {{ $tujuan->nama_tujuan }}
+                                                                @endif
                                                             </option>
                                                         @endforeach
+                                                        <option value="other" {{ old('id_tujuan_pengiriman') == 'other' ? 'selected' : '' }}>-- Lainnya (Input Manual) --</option>
                                                     </select>
                                                     @error('id_tujuan_pengiriman')
                                                         <div class="invalid-feedback">{{ $message }}</div>
                                                     @enderror
+
+                                                    <div id="manual_tujuan_pengiriman_input" class="mt-2" style="display: none;">
+                                                        <div class="row">
+                                                            <div class="col-md-6">
+                                                                <div class="form-group">
+                                                                    <label for="nama_customer_manual">Customer</label>
+                                                                    <input type="text" id="nama_customer_manual" class="form-control @error('nama_customer_manual') is-invalid @enderror"
+                                                                        name="nama_customer_manual" value="{{ old('nama_customer_manual') }}" placeholder="Masukkan nama customer">
+                                                                    @error('nama_customer_manual')
+                                                                        <div class="invalid-feedback">{{ $message }}</div>
+                                                                    @enderror
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-md-6">
+                                                                <div class="form-group">
+                                                                    <label for="nama_tujuan_manual">Tujuan Pengiriman</label>
+                                                                    <input type="text" id="nama_tujuan_manual" class="form-control @error('nama_tujuan_manual') is-invalid @enderror"
+                                                                        name="nama_tujuan_manual" value="{{ old('nama_tujuan_manual') }}" placeholder="Masukkan tujuan pengiriman">
+                                                                    @error('nama_tujuan_manual')
+                                                                        <div class="invalid-feedback">{{ $message }}</div>
+                                                                    @enderror
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </div>
                                             <div class="col-md-6">
@@ -114,7 +141,7 @@
                                                     @error('id_kendaraan')
                                                         <div class="invalid-feedback">{{ $message }}</div>
                                                     @enderror
-                                                    
+
                                                     <!-- Input manual yang awalnya disembunyikan -->
                                                     <div id="manual_kendaraan_input" class="mt-2" style="display: none;">
                                                         <div class="row">
@@ -142,27 +169,29 @@
                                             <div class="col-md-6">
                                                 <div class="form-group">
                                                     <label for="id_supir">Nama Supir</label>
-                                                    <select id="id_supir" class="choices form-select @error('id_supir') is-invalid @enderror" name="id_supir">
-                                                        <option value="">-- Pilih Supir --</option>
+                                                    <select id="id_supir" class="choices form-control @error('id_supir') is-invalid @enderror" name="id_supir">
+                                                        <option value="">Pilih Supir</option>
                                                         @foreach($supirs as $supir)
                                                             <option value="{{ $supir->id }}" {{ old('id_supir') == $supir->id ? 'selected' : '' }}>
                                                                 {{ $supir->nama_supir }}
                                                             </option>
                                                         @endforeach
+                                                        <option value="other" {{ old('id_supir') == 'other' ? 'selected' : '' }}>-- Lainnya (Input Manual) --</option>
                                                     </select>
                                                     @error('id_supir')
                                                         <div class="invalid-feedback">{{ $message }}</div>
                                                     @enderror
-                                                </div>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <div class="form-group">
-                                                    <label for="no_po">No. PO</label>
-                                                    <input type="text" id="no_po" class="form-control @error('no_po') is-invalid @enderror"
-                                                        name="no_po" value="{{ old('no_po') }}" placeholder="Nomor PO">
-                                                    @error('no_po')
-                                                        <div class="invalid-feedback">{{ $message }}</div>
-                                                    @enderror
+
+                                                    <div id="manual_supir_input" class="mt-2" style="display: none;">
+                                                        <div class="form-group">
+                                                            <label for="nama_supir_manual">Nama Supir</label>
+                                                            <input type="text" id="nama_supir_manual" class="form-control @error('nama_supir_manual') is-invalid @enderror"
+                                                                name="nama_supir_manual" value="{{ old('nama_supir_manual') }}" placeholder="Masukkan nama supir">
+                                                            @error('nama_supir_manual')
+                                                                <div class="invalid-feedback">{{ $message }}</div>
+                                                            @enderror
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
@@ -244,16 +273,22 @@
                                         <div class="row">
                                             <div class="col-md-6">
                                                 <div class="form-group">
+                                                    <label><strong>Segel/Gembok</strong></label>
                                                     <div class="form-check">
-                                                        <input class="form-check-input" type="checkbox" id="segel_gembok" 
-                                                            name="segel_gembok" value="1" {{ old('segel_gembok') ? 'checked' : '' }}>
-                                                        <label class="form-check-label" for="segel_gembok">
-                                                            Segel/Gembok
+                                                        <input class="form-check-input" type="radio" id="segel_option" name="segel_gembok" value="segel" {{ old('segel_gembok') == 'segel' ? 'checked' : '' }}>
+                                                        <label class="form-check-label" for="segel_option">
+                                                            Segel
+                                                        </label>
+                                                    </div>
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" type="radio" id="gembok_option" name="segel_gembok" value="gembok" {{ old('segel_gembok') == 'gembok' ? 'checked' : '' }}>
+                                                        <label class="form-check-label" for="gembok_option">
+                                                            Gembok
                                                         </label>
                                                     </div>
                                                 </div>
                                             </div>
-                                            <div class="col-md-6">
+                                            <div class="col-md-6" id="no_segel_container" style="display: {{ old('segel_gembok') == 'segel' ? 'block' : 'none' }};">
                                                 <div class="form-group">
                                                     <label for="no_segel">No. Segel</label>
                                                     <input type="text" id="no_segel" class="form-control @error('no_segel') is-invalid @enderror"
@@ -265,44 +300,66 @@
                                             </div>
                                         </div>
 
-                                        <!-- DATA PRODUK MULTIPLE -->
+                                        <script>
+                                            document.querySelectorAll('input[name="segel_gembok"]').forEach(function(radio) {
+                                                radio.addEventListener('change', function() {
+                                                    const container = document.getElementById('no_segel_container');
+                                                    if (this.value === 'segel') {
+                                                        container.style.display = 'block';
+                                                    } else {
+                                                        container.style.display = 'none';
+                                                        document.getElementById('no_segel').value = '';
+                                                    }
+                                                });
+                                            });
+                                        </script>
+
+                                        <!-- DATA PRODUK -->
                                         <h5 class="text-primary mb-3 mt-4">Data Produk <span class="text-danger">*</span></h5>
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="form-group">
+                                                    <label>Nama Produk <span class="text-danger">*</span></label>
+                                                    <select class="choices form-select @error('id_produk') is-invalid @enderror" name="id_produk" required>
+                                                        <option value="">-- Pilih Produk --</option>
+                                                        @foreach($produks as $produk)
+                                                            <option value="{{ $produk->id }}" {{ old('id_produk') == $produk->id ? 'selected' : '' }}>{{ $produk->nama_produk }}</option>
+                                                        @endforeach
+                                                    </select>
+                                                    @error('id_produk')
+                                                        <div class="invalid-feedback">{{ $message }}</div>
+                                                    @enderror
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <h6 class="text-secondary mt-3">Detail Produk</h6>
                                         <div id="produk-container">
                                             <div class="produk-row mb-4 p-3 border rounded" style="background-color: #f8f9fa;">
-                                                <h6 class="text-secondary mb-3">Produk #1</h6>
+                                                <h6 class="text-secondary mb-3">Detail #1</h6>
+                                                <input type="hidden" class="produk-id-hidden" name="produk_data[0][id_produk]" value="{{ old('id_produk') }}">
                                                 <div class="row">
-                                                    <div class="col-md-6">
-                                                        <label>Nama Produk <span class="text-danger">*</span></label>
-                                                        <select class="choices form-select produk-select" name="produk_data[0][id_produk]" required>
-                                                            <option value="">-- Pilih Produk --</option>
-                                                            @foreach($produks as $produk)
-                                                                <option value="{{ $produk->id }}">{{ $produk->nama_produk }}</option>
-                                                            @endforeach
-                                                        </select>
-                                                    </div>
-                                                    <div class="col-md-6">
+                                                    <div class="col-md-3">
                                                         <label>Kode Produksi</label>
-                                                        <input type="text" class="form-control" name="produk_data[0][kode_produksi]" placeholder="Kode Produksi">
+                                                        <input type="text" class="form-control" name="produk_data[0][kode_produksi]" value="{{ old('produk_data.0.kode_produksi') }}" placeholder="Kode Produksi">
                                                     </div>
-                                                </div>
-                                                <div class="row mt-3">
-                                                    <div class="col-md-4">
+                                                    <div class="col-md-3">
                                                         <label>Best Before</label>
-                                                        <input type="date" class="form-control" name="produk_data[0][best_before]">
+                                                        <input type="date" class="form-control" name="produk_data[0][best_before]" value="{{ old('produk_data.0.best_before') }}">
                                                     </div>
-                                                    <div class="col-md-4">
+                                                    <div class="col-md-3">
                                                         <label>Jumlah Kemasan</label>
-                                                        <input type="text" class="form-control" name="produk_data[0][jumlah_kemasan]" placeholder="Contoh: 100 Karton">
+                                                        <input type="text" class="form-control" name="produk_data[0][jumlah_kemasan]" value="{{ old('produk_data.0.jumlah_kemasan') }}" placeholder="Contoh: 100 Karton">
                                                     </div>
-                                                    <div class="col-md-4">
+                                                    <div class="col-md-3">
                                                         <label>Jumlah Sampling</label>
-                                                        <input type="text" class="form-control" name="produk_data[0][jumlah_sampling]" placeholder="Contoh: 10 Karton">
+                                                        <input type="text" class="form-control" name="produk_data[0][jumlah_sampling]" value="{{ old('produk_data.0.jumlah_sampling') }}" placeholder="Contoh: 10 Karton">
                                                     </div>
                                                 </div>
                                                 <div class="row mt-3">
                                                     <div class="col-md-12">
                                                         <div class="form-check">
-                                                            <input class="form-check-input" type="checkbox" name="produk_data[0][kondisi_kemasan]" value="1" checked>
+                                                            <input class="form-check-input" type="checkbox" name="produk_data[0][kondisi_kemasan]" value="1" {{ old('produk_data.0.kondisi_kemasan', 1) ? 'checked' : '' }}>
                                                             <label class="form-check-label">Kondisi Kemasan Baik</label>
                                                         </div>
                                                     </div>
@@ -310,17 +367,17 @@
                                                 <div class="row mt-3">
                                                     <div class="col-md-12">
                                                         <label>Keterangan</label>
-                                                        <textarea class="form-control" name="produk_data[0][keterangan]" rows="2" placeholder="Keterangan tambahan untuk produk ini"></textarea>
+                                                        <textarea class="form-control" name="produk_data[0][keterangan]" rows="2" placeholder="Keterangan tambahan untuk detail ini">{{ old('produk_data.0.keterangan') }}</textarea>
                                                     </div>
                                                 </div>
                                                 <div class="row mt-3">
                                                     <div class="col-md-12">
-                                                        <button type="button" class="btn btn-sm btn-danger remove-produk" style="display: none;">Hapus Produk</button>
+                                                        <button type="button" class="btn btn-sm btn-danger remove-produk" style="display: none;">Hapus Detail</button>
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
-                                        <button type="button" class="btn btn-sm btn-primary mt-2" id="add-produk">+ Tambah Produk</button>
+                                        <button type="button" class="btn btn-sm btn-primary mt-2" id="add-produk">+ Tambah Detail</button>
 
                                         <div class="col-md-12 d-flex justify-content-end mt-3">
                                             <button type="submit" class="btn btn-primary me-1 mb-1">Simpan Loading Produk</button>
@@ -339,6 +396,7 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+
     // Kendaraan manual input handling
     const kendaraanSelect = document.getElementById('id_kendaraan');
     const manualInput = document.getElementById('manual_kendaraan_input');
@@ -354,6 +412,42 @@ document.addEventListener('DOMContentLoaded', function() {
     // Cek nilai awal saat halaman dimuat
     if (kendaraanSelect.value === 'other') {
         manualInput.style.display = 'block';
+    }
+
+    // Tujuan pengiriman manual input handling
+    const tujuanSelect = document.getElementById('id_tujuan_pengiriman');
+    const manualTujuanInput = document.getElementById('manual_tujuan_pengiriman_input');
+
+    if (tujuanSelect && manualTujuanInput) {
+        tujuanSelect.addEventListener('change', function() {
+            if (this.value === 'other') {
+                manualTujuanInput.style.display = 'block';
+            } else {
+                manualTujuanInput.style.display = 'none';
+            }
+        });
+
+        if (tujuanSelect.value === 'other') {
+            manualTujuanInput.style.display = 'block';
+        }
+    }
+
+    // Supir manual input handling
+    const supirSelect = document.getElementById('id_supir');
+    const manualSupirInput = document.getElementById('manual_supir_input');
+
+    if (supirSelect && manualSupirInput) {
+        supirSelect.addEventListener('change', function() {
+            if (this.value === 'other') {
+                manualSupirInput.style.display = 'block';
+            } else {
+                manualSupirInput.style.display = 'none';
+            }
+        });
+
+        if (supirSelect.value === 'other') {
+            manualSupirInput.style.display = 'block';
+        }
     }
 
     // Add temperature field
@@ -380,81 +474,101 @@ document.addEventListener('DOMContentLoaded', function() {
             e.target.closest('.temp-row').remove();
         }
     });
-    
-    // Add produk field
-    let produkIndex = 1;
+
+    function syncHiddenProdukIds() {
+        const idProduk = document.querySelector('select[name="id_produk"]')?.value || '';
+        document.querySelectorAll('#produk-container .produk-id-hidden').forEach((el) => {
+            el.value = idProduk;
+        });
+    }
+
+    function updateProdukRows() {
+        const rows = Array.from(document.querySelectorAll('#produk-container .produk-row'));
+        rows.forEach((row, index) => {
+            const title = row.querySelector('h6');
+            if (title) title.textContent = `Detail #${index + 1}`;
+
+            row.querySelectorAll('input, textarea').forEach((el) => {
+                const name = el.getAttribute('name');
+                if (!name) return;
+                const updated = name.replace(/produk_data\[\d+\]/g, `produk_data[${index}]`);
+                if (updated !== name) el.setAttribute('name', updated);
+            });
+
+            const removeBtn = row.querySelector('.remove-produk');
+            if (removeBtn) {
+                removeBtn.style.display = rows.length > 1 ? 'inline-block' : 'none';
+            }
+        });
+
+        syncHiddenProdukIds();
+    }
+
+    document.querySelector('select[name="id_produk"]')?.addEventListener('change', function() {
+        syncHiddenProdukIds();
+    });
+
+    updateProdukRows();
+
     document.getElementById('add-produk').addEventListener('click', function() {
         const container = document.getElementById('produk-container');
         const newRow = document.createElement('div');
         newRow.className = 'produk-row mb-4 p-3 border rounded';
         newRow.style.backgroundColor = '#f8f9fa';
+        const index = document.querySelectorAll('#produk-container .produk-row').length;
         newRow.innerHTML = `
-            <h6 class="text-secondary mb-3">Produk #${produkIndex + 1}</h6>
+            <h6 class="text-secondary mb-3">Detail #${index + 1}</h6>
+            <input type="hidden" class="produk-id-hidden" name="produk_data[${index}][id_produk]" value="">
             <div class="row">
-                <div class="col-md-6">
-                    <label>Nama Produk <span class="text-danger">*</span></label>
-                    <select class="choices form-select produk-select" name="produk_data[${produkIndex}][id_produk]" required>
-                        <option value="">-- Pilih Produk --</option>
-                        @foreach($produks as $produk)
-                            <option value="{{ $produk->id }}">{{ $produk->nama_produk }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="col-md-6">
+                <div class="col-md-3">
                     <label>Kode Produksi</label>
-                    <input type="text" class="form-control" name="produk_data[${produkIndex}][kode_produksi]" placeholder="Kode Produksi">
+                    <input type="text" class="form-control" name="produk_data[${index}][kode_produksi]" placeholder="Kode Produksi">
                 </div>
-            </div>
-            <div class="row mt-3">
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <label>Best Before</label>
-                    <input type="date" class="form-control" name="produk_data[${produkIndex}][best_before]">
+                    <input type="date" class="form-control" name="produk_data[${index}][best_before]">
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <label>Jumlah Kemasan</label>
-                    <input type="text" class="form-control" name="produk_data[${produkIndex}][jumlah_kemasan]" placeholder="Contoh: 100 Karton">
+                    <input type="text" class="form-control" name="produk_data[${index}][jumlah_kemasan]" placeholder="Contoh: 100 Karton">
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <label>Jumlah Sampling</label>
-                    <input type="text" class="form-control" name="produk_data[${produkIndex}][jumlah_sampling]" placeholder="Contoh: 10 Karton">
+                    <input type="text" class="form-control" name="produk_data[${index}][jumlah_sampling]" placeholder="Contoh: 10 Karton">
                 </div>
             </div>
             <div class="row mt-3">
                 <div class="col-md-12">
                     <div class="form-check">
-                        <input class="form-check-input" type="checkbox" name="produk_data[${produkIndex}][kondisi_kemasan]" value="1" checked>
+                        <input class="form-check-input" type="checkbox" name="produk_data[${index}][kondisi_kemasan]" value="1" checked>
                         <label class="form-check-label">Kondisi Kemasan Baik</label>
                     </div>
                 </div>
             </div>
             <div class="row mt-3">
                 <div class="col-md-12">
-                    <button type="button" class="btn btn-sm btn-danger remove-produk">Hapus Produk</button>
+                    <label>Keterangan</label>
+                    <textarea class="form-control" name="produk_data[${index}][keterangan]" rows="2" placeholder="Keterangan tambahan untuk detail ini"></textarea>
+                </div>
+            </div>
+            <div class="row mt-3">
+                <div class="col-md-12">
+                    <button type="button" class="btn btn-sm btn-danger remove-produk">Hapus Detail</button>
                 </div>
             </div>
         `;
         container.appendChild(newRow);
-        produkIndex++;
-        
-        // Re-initialize Choices.js for new select
-        const newSelect = newRow.querySelector('.produk-select');
-        new Choices(newSelect, {
-            searchEnabled: true,
-            searchPlaceholderValue: 'Cari...',
-            itemSelectText: 'Tekan untuk memilih',
-            noResultsText: 'Tidak ada hasil ditemukan',
-            noChoicesText: 'Tidak ada pilihan tersedia',
-        });
+        updateProdukRows();
     });
-    
-    // Remove produk field
+
     document.getElementById('produk-container').addEventListener('click', function(e) {
         if (e.target.closest('.remove-produk')) {
-            const rows = document.querySelectorAll('.produk-row');
+            const rows = document.querySelectorAll('#produk-container .produk-row');
             if (rows.length > 1) {
                 e.target.closest('.produk-row').remove();
+                updateProdukRows();
             } else {
-                alert('Minimal harus ada 1 produk!');
+                alert('Minimal harus ada 1 detail!');
             }
         }
     });

@@ -27,7 +27,6 @@ class PemeriksaanKedatanganKemasan extends Model
         'jenis_pemeriksaan',
         'kondisi_mobil',
         'no_po',
-        // 'nama_bahan_kemasan',
         'spesifikasi',
         'produsen',
         'distributor',
@@ -36,6 +35,7 @@ class PemeriksaanKedatanganKemasan extends Model
         'jumlah_sampling',
         'kondisi_fisik',
         'ketebalan_micron',
+        'dimensi',
         'logo_halal',
         'dokumen_halal',
         'coa',
@@ -51,6 +51,24 @@ class PemeriksaanKedatanganKemasan extends Model
         'verified_by_qc',
         'verified_by_produksi',
         'verified_by_spv',
+        'id_bahan_array',
+        'produsen_array',
+        'distributor_array',
+        'kode_produksi_array',
+        'jumlah_datang_array',
+        'jumlah_sampling_array',
+        'spesifikasi_array',
+        'penampakan_array',
+        'sealing_array',
+        'cetakan_array',
+        'ketebalan_micron_array',
+        'dimensi_array',
+        'status_array',
+        'logo_halal_array',
+        'dokumen_halal_array',
+        'coa_array',
+        'keterangan_array',
+        'image_kemasan_array',
     ];
 
     /**
@@ -66,6 +84,7 @@ class PemeriksaanKedatanganKemasan extends Model
         'logo_halal' => 'boolean',
         'dokumen_halal' => 'boolean',
         'coa' => 'boolean',
+        'image_kemasan_array' => 'array',
     ];
 
     /**

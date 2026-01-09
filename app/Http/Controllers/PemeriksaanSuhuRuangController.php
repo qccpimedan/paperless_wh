@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\PemeriksaanSuhuRuang;
 use App\Models\PemeriksaanSuhuRuangHistory;
 use App\Models\Shift;
-use App\Models\Bahan;
+use App\Models\Produk;
 use App\Models\InputArea;
 use App\Traits\EditablePer2JamTrait;
 use Illuminate\Http\Request;
@@ -47,7 +47,7 @@ class PemeriksaanSuhuRuangController extends Controller
                 $query->where('id_plant', $user->id_plant);
             }
         })->get();
-        $produks = Bahan::whereHas('user', function($query) use ($user) {
+        $produks = Produk::whereHas('user', function($query) use ($user) {
             if ($user->role && strtolower($user->role->role) !== 'superadmin') {
                 $query->where('id_plant', $user->id_plant);
             }
@@ -65,9 +65,11 @@ class PemeriksaanSuhuRuangController extends Controller
     {
         $request->validate([
             'id_shift' => 'required|exists:shifts,id',
-            'id_produk' => 'required|exists:bahans,id',
+            'id_produk' => 'required|exists:produks,id',
             'id_area' => 'required|exists:input_areas,id',
             'tanggal' => 'required|date',
+            'suhu_produk' => 'nullable|string',
+            'pukul' => 'nullable|date_format:H:i',
         ]);
 
         $suhuData = $this->prepareSuhuData($request);
@@ -78,6 +80,8 @@ class PemeriksaanSuhuRuangController extends Controller
             'id_produk' => $request->id_produk,
             'id_area' => $request->id_area,
             'tanggal' => $request->tanggal,
+            'suhu_produk' => $request->suhu_produk,
+            'pukul' => $request->pukul,
             'suhu_data' => $suhuData,
             'keterangan' => $request->keterangan,
             'tindakan_koreksi' => $request->tindakan_koreksi,
@@ -115,7 +119,7 @@ class PemeriksaanSuhuRuangController extends Controller
                 $query->where('id_plant', $user->id_plant);
             }
         })->get();
-        $produks = Bahan::whereHas('user', function($query) use ($user) {
+        $produks = Produk::whereHas('user', function($query) use ($user) {
             if ($user->role && strtolower($user->role->role) !== 'superadmin') {
                 $query->where('id_plant', $user->id_plant);
             }

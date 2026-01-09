@@ -100,13 +100,39 @@
                                                     <label class="form-label"><strong>{{ $loop->iteration }}. {{ $detail->field->field_name }}</strong></label>
                                                 </div>
 
-                                                <div class="col-md-3">
+                                                <div class="col-md-4">
                                                     <div class="mb-2">
-                                                        <label class="form-label"><strong>Status</strong></label>
-                                                        @if($detail->status == 1)
-                                                            <p><span class="badge bg-success">✓ Baik</span></p>
-                                                        @elseif($detail->status == 0)
-                                                            <p><span class="badge bg-danger">✗ Tidak Baik</span></p>
+                                                        <label class="form-label"><strong>Form Verifikasi</strong></label>
+                                                        @if($detail->verifikasi_hasil === true)
+                                                            <p><span class="badge bg-success">✓ OK</span></p>
+                                                        @elseif($detail->verifikasi_hasil === false)
+                                                            <p><span class="badge bg-danger">✗ Tidak OK</span></p>
+                                                        @else
+                                                            <p><span class="badge bg-secondary">Belum Diisi</span></p>
+                                                        @endif
+                                                    </div>
+                                                </div>
+
+                                                <div class="col-md-4">
+                                                    <div class="mb-2">
+                                                        <label class="form-label"><strong>Sebelum Proses</strong></label>
+                                                        @if($detail->status_sebelum_proses === true)
+                                                            <p><span class="badge bg-success">✓ OK</span></p>
+                                                        @elseif($detail->status_sebelum_proses === false)
+                                                            <p><span class="badge bg-danger">✗ Tidak OK</span></p>
+                                                        @else
+                                                            <p><span class="badge bg-secondary">Belum Diisi</span></p>
+                                                        @endif
+                                                    </div>
+                                                </div>
+
+                                                <div class="col-md-4">
+                                                    <div class="mb-2">
+                                                        <label class="form-label"><strong>Saat Proses</strong></label>
+                                                        @if($detail->status_saat_proses === true)
+                                                            <p><span class="badge bg-success">✓ OK</span></p>
+                                                        @elseif($detail->status_saat_proses === false)
+                                                            <p><span class="badge bg-danger">✗ Tidak OK</span></p>
                                                         @else
                                                             <p><span class="badge bg-secondary">Belum Diisi</span></p>
                                                         @endif

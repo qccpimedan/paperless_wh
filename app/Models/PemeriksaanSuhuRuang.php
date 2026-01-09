@@ -18,6 +18,8 @@ class PemeriksaanSuhuRuang extends Model
         'id_produk',
         'id_area',
         'tanggal',
+        'suhu_produk',
+        'pukul',
         'suhu_data',
         'keterangan',
         'tindakan_koreksi',
@@ -60,7 +62,7 @@ class PemeriksaanSuhuRuang extends Model
 
     public function produk()
     {
-        return $this->belongsTo(Bahan::class, 'id_produk');
+        return $this->belongsTo(Produk::class, 'id_produk');
     }
 
     public function area()
