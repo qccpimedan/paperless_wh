@@ -146,7 +146,7 @@
                                                     </a>
                                                 @endcan
                                                     <a href="{{ route('pemeriksaan-suhu-ruang-v3.edit', $pemeriksaan->uuid) }}?edit_per_2jam=1" 
-                                                    class="btn btn-sm btn-success" title="Edit Per 2 Jam">
+                                                    class="btn btn-sm btn-success" title="Edit Per Jam">
                                                         <i class="bi bi-hourglass-bottom"></i>
                                                     </a>
                                                 @can('view_pemeriksaan_suhu_ruang_v3')

@@ -13,7 +13,7 @@
                 <div class="col-12 col-md-6 order-md-1 order-last">
                     <h3>CS Meat</h3>
                     @if(request()->query('edit_per_2jam'))
-                        <p class="text-subtitle text-muted">CS Meat (Per 2 Jam)</p>
+                        <p class="text-subtitle text-muted">CS Meat (Per 1 jam)</p>
                     @else
                         <p class="text-subtitle text-muted">CS Meat</p>
                     @endif
@@ -36,7 +36,7 @@
                     <div class="card">
                         <div class="card-header">
                             @if(request()->query('edit_per_2jam'))
-                                <h4 class="card-title">Form CS Meat (Per 2 Jam)</h4>
+                                <h4 class="card-title">Form CS Meat (Per 1 jam)</h4>
                             @else
                                 <h4 class="card-title">Form CS Meat</h4>
                             @endif
@@ -58,13 +58,13 @@
                                         <div class="alert alert-warning" role="alert">
                                             <h4 class="alert-heading">⏱️ Edit Belum Tersedia</h4>
                                             <p class="mb-0">
-                                                Anda hanya bisa melakukan edit setiap 2 jam sekali.<br>
+                                                Anda hanya bisa melakukan edit setiap 1 jam sekali.<br>
                                                 <strong>Edit berikutnya bisa dilakukan pada: {{ $nextEditTime->format('d/m/Y H:i') }}</strong>
                                             </p>
                                         </div>
                                     @else
                                         <div class="alert alert-info" role="alert">
-                                            <h4 class="alert-heading">✅ Edit Per 2 Jam Tersedia</h4>
+                                            <h4 class="alert-heading">✅ Edit Per 1 jam Tersedia</h4>
                                             <p class="mb-0">
                                                 Anda dapat melakukan edit data sekarang. Data lama akan disimpan di history.
                                             </p>
@@ -99,6 +99,11 @@
                                             <div class="col-md-6 mt-3">
                                                 <label for="id_produk">Produk</label>
                                                 <input type="text" id="id_produk" class="form-control" value="{{ $pemeriksaanSuhuRuangV2->produk->nama_bahan }}" disabled>
+                                            </div>
+
+                                            <div class="col-md-6 mt-3">
+                                                <label for="kategori_produk">Kategori Produk</label>
+                                                <input type="text" id="kategori_produk" class="form-control" value="{{ $pemeriksaanSuhuRuangV2->produk->kategori_code ?? '-' }}" disabled>
                                             </div>
 
                                             <!-- Suhu Cold Storage -->

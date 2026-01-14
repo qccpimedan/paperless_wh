@@ -539,17 +539,21 @@
                                             <!-- Buttons -->
                                             <div class="row mt-3 pt-3 border-top">
                                                 <div class="col-md-12">
-                                                    <button type="button" class="btn btn-success btn-sm add-unified-btn"><i class="bi bi-plus"></i> Tambah Baris</button>
                                                     <button type="button" class="btn btn-danger btn-sm remove-unified-btn"><i class="bi bi-trash"></i> Hapus Baris</button>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
+                                    <div class="row mt-3 pt-3 border-top">
+                                        <div class="col-md-12">
+                                            <button type="button" class="btn btn-primary btn-sm add-unified-btn"><i class="bi bi-plus"></i> Tambah Baris</button>
+                                        </div>
+                                    </div>
                                 </div>
 
                                 <!-- Submit Buttons -->
-                                <div class="form-group">
-                                    <button type="submit" class="btn btn-primary">
+                                <div class="form-group d-flex justify-content-end">
+                                    <button type="submit" class="btn btn-primary me-1 mb-1">
                                         Simpan Data
                                     </button>
                                     <a href="{{ route('pemeriksaan-chemical.index') }}" class="btn btn-secondary btn-kembali-confirm">
@@ -934,7 +938,6 @@ function addNewRow() {
         <!-- Buttons -->
         <div class="row mt-3 pt-3 border-top">
             <div class="col-md-12">
-                <button type="button" class="btn btn-success btn-sm add-unified-btn"><i class="bi bi-plus"></i> Tambah Baris</button>
                 <button type="button" class="btn btn-danger btn-sm remove-unified-btn"><i class="bi bi-trash"></i> Hapus Baris</button>
             </div>
         </div>

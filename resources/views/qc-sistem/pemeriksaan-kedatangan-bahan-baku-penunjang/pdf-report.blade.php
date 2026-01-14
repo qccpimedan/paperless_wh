@@ -368,7 +368,7 @@
             @php
                 $columnsPerPage = 4;
 
-                $allBahanIds = [];
+                $allProdukIds = [];
 
                 $pdfColumns = collect();
                 foreach ($pemeriksaans as $p) {
@@ -377,7 +377,7 @@
                     if (!empty($idBahansTmp)) {
                         foreach ($idBahansTmp as $tmpId) {
                             if ($tmpId) {
-                                $allBahanIds[] = $tmpId;
+                                $allProdukIds[] = $tmpId;
                             }
                         }
                     }
@@ -430,10 +430,10 @@
 
                 $chunks = $pdfColumns->chunk($columnsPerPage);
 
-                $bahanMap = [];
-                if (!empty($allBahanIds)) {
-                    $bahanMap = \App\Models\Bahan::whereIn('id', array_values(array_unique($allBahanIds)))
-                        ->pluck('nama_bahan', 'id')
+                $produkMap = [];
+                if (!empty($allProdukIds)) {
+                    $produkMap = \App\Models\Produk::whereIn('id', array_values(array_unique($allProdukIds)))
+                        ->pluck('nama_produk', 'id')
                         ->toArray();
                 }
             @endphp
@@ -566,7 +566,7 @@
                                             @if($id_bahan)
                                                 <div class="field-row">
                                                     <span class="field-label">Nama:</span>
-                                                    <span class="field-value">{{ $bahanMap[$id_bahan] ?? 'N/A' }}</span>
+                                                    <span class="field-value">{{ $produkMap[$id_bahan] ?? 'N/A' }}</span>
                                                 </div>
                                             @endif
                                             @if($produsen_val)

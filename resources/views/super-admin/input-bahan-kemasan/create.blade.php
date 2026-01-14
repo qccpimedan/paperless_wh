@@ -56,39 +56,51 @@
                                         <div class="row">
                                             <div class="col-md-12">
                                                 <label for="nama_kemasan">Nama Kemasan <span class="text-danger">*</span></label>
-                                                <div id="dynamic-fields">
-                                                    <div class="input-group mb-2">
-                                                        <select name="id_distributor[]" class="form-select @error('id_distributor.0') is-invalid @enderror">
-                                                            <option value="">-- Pilih Distributor (Opsional) --</option>
-                                                            @foreach($distributors as $distributor)
-                                                                <option value="{{ $distributor->id }}" {{ old('id_distributor.0') == $distributor->id ? 'selected' : '' }}>
-                                                                    {{ $distributor->nama_distributor }}
-                                                                </option>
-                                                            @endforeach
-                                                        </select>
-                                                        <select name="id_produsen[]" class="form-select @error('id_produsen.0') is-invalid @enderror">
-                                                            <option value="">-- Pilih Produsen (Opsional) --</option>
-                                                            @foreach($produsens as $produsen)
-                                                                <option value="{{ $produsen->id }}" {{ old('id_produsen.0') == $produsen->id ? 'selected' : '' }}>
-                                                                    {{ $produsen->nama_produsen }}
-                                                                </option>
-                                                            @endforeach
-                                                        </select>
-                                                        <input type="text" class="form-control @error('nama_kemasan.0') is-invalid @enderror"
-                                                            name="nama_kemasan[]" placeholder="Nama Kemasan" value="{{ old('nama_kemasan.0') }}" required>
-                                                        <button type="button" class="btn btn-success" id="add-field">
-                                                            <i class="bi bi-plus"></i>
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                                @error('id_distributor')
-                                                    <div class="text-danger small">{{ $message }}</div>
-                                                @enderror
-                                                @error('id_produsen')
-                                                    <div class="text-danger small">{{ $message }}</div>
-                                                @enderror
+                                                <input type="text" id="nama_kemasan" class="form-control @error('nama_kemasan') is-invalid @enderror"
+                                                    name="nama_kemasan" placeholder="Nama Kemasan" value="{{ old('nama_kemasan') }}" required>
                                                 @error('nama_kemasan')
-                                                    <div class="text-danger small">{{ $message }}</div>
+                                                    <div class="invalid-feedback">{{ $message }}</div>
+                                                @enderror
+                                            </div>
+
+                                            <div class="col-md-12 mt-2">
+                                                <label for="kategori_code">Kategori <span class="text-danger">*</span></label>
+                                                <select name="kategori_code" id="kategori_code" class="form-select @error('kategori_code') is-invalid @enderror" required>
+                                                    <option value="">-- Pilih Kategori --</option>
+                                                    @foreach(['WHD2','WHDS'] as $kategori)
+                                                        <option value="{{ $kategori }}" {{ old('kategori_code') === $kategori ? 'selected' : '' }}>{{ $kategori }}</option>
+                                                    @endforeach
+                                                </select>
+                                                @error('kategori_code')
+                                                    <div class="invalid-feedback">{{ $message }}</div>
+                                                @enderror
+                                            </div>
+
+                                            <div class="col-md-12 mt-2">
+                                                <label for="id_produsen">Produsen (Bisa lebih dari 1)</label>
+                                                <select name="id_produsen[]" id="id_produsen" class="form-select select2-multiple @error('id_produsen') is-invalid @enderror" multiple>
+                                                    @foreach($produsens as $produsen)
+                                                        <option value="{{ $produsen->id }}" {{ in_array($produsen->id, old('id_produsen', [])) ? 'selected' : '' }}>
+                                                            {{ $produsen->nama_produsen }}
+                                                        </option>
+                                                    @endforeach
+                                                </select>
+                                                @error('id_produsen')
+                                                    <div class="invalid-feedback">{{ $message }}</div>
+                                                @enderror
+                                            </div>
+
+                                            <div class="col-md-12 mt-2">
+                                                <label for="id_distributor">Distributor (Bisa lebih dari 1)</label>
+                                                <select name="id_distributor[]" id="id_distributor" class="form-select select2-multiple @error('id_distributor') is-invalid @enderror" multiple>
+                                                    @foreach($distributors as $distributor)
+                                                        <option value="{{ $distributor->id }}" {{ in_array($distributor->id, old('id_distributor', [])) ? 'selected' : '' }}>
+                                                            {{ $distributor->nama_distributor }}
+                                                        </option>
+                                                    @endforeach
+                                                </select>
+                                                @error('id_distributor')
+                                                    <div class="invalid-feedback">{{ $message }}</div>
                                                 @enderror
                                             </div>
                                             
@@ -107,47 +119,4 @@
         </section>
     </div>
 </div>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    let fieldIndex = 1;
-    
-    document.getElementById('add-field').addEventListener('click', function() {
-        const dynamicFields = document.getElementById('dynamic-fields');
-        const newField = document.createElement('div');
-        newField.className = 'input-group mb-2';
-        newField.innerHTML = `
-            <select name="id_distributor[]" class="form-select">
-                <option value="">-- Pilih Distributor (Opsional) --</option>
-                @foreach($distributors as $distributor)
-                    <option value="{{ $distributor->id }}">{{ $distributor->nama_distributor }}</option>
-                @endforeach
-            </select>
-            <select name="id_produsen[]" class="form-select">
-                <option value="">-- Pilih Produsen (Opsional) --</option>
-                @foreach($produsens as $produsen)
-                    <option value="{{ $produsen->id }}">{{ $produsen->nama_produsen }}</option>
-                @endforeach
-            </select>
-            <input type="text" class="form-control" name="nama_kemasan[]" placeholder="Nama Kemasan" required>
-            <button type="button" class="btn btn-danger remove-field">
-                <i class="bi bi-trash"></i>
-            </button>
-        `;
-        dynamicFields.appendChild(newField);
-        fieldIndex++;
-    });
-    
-    document.getElementById('dynamic-fields').addEventListener('click', function(e) {
-        if (e.target.closest('.remove-field')) {
-            const fieldCount = document.querySelectorAll('#dynamic-fields .input-group').length;
-            if (fieldCount > 1) {
-                e.target.closest('.input-group').remove();
-            } else {
-                alert('Minimal harus ada satu field nama kemasan!');
-            }
-        }
-    });
-});
-</script>
 @endsection

@@ -87,12 +87,38 @@ class PemeriksaanLoadingProdukController extends Controller
             })->with(['user.plant'])->get();
         }
 
+        $produkKategoriOptions = $produks
+            ->pluck('kategori_code')
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+
+        $produkByKategori = $produks
+            ->groupBy('kategori_code')
+            ->map(function ($items) {
+                return $items->map(function ($p) {
+                    return [
+                        'id' => $p->id,
+                        'nama' => $p->nama_produk,
+                    ];
+                })->values();
+            })
+            ->all();
+
+        $produkKategoriById = $produks
+            ->pluck('kategori_code', 'id')
+            ->all();
+
         return view('qc-sistem.pemeriksaan-loading-produk.create', compact(
             'shifts', 
             'tujuanPengirimans', 
             'kendaraans', 
             'supirs', 
-            'produks'
+            'produks',
+            'produkKategoriOptions',
+            'produkByKategori',
+            'produkKategoriById'
         ));
     }
 
@@ -135,6 +161,7 @@ class PemeriksaanLoadingProdukController extends Controller
             'produk_detail.*.best_before' => 'nullable|date',
             'produk_detail.*.jumlah_kemasan' => 'nullable|string|max:255',
             'produk_detail.*.jumlah_sampling' => 'nullable|string|max:255',
+            'produk_detail.*.berat_perkarung' => 'nullable|string|max:255',
             'produk_detail.*.kondisi_kemasan' => 'nullable|boolean',
             'produk_detail.*.keterangan' => 'nullable|string',
             'produk_data' => 'nullable|array|min:1',
@@ -143,6 +170,7 @@ class PemeriksaanLoadingProdukController extends Controller
             'produk_data.*.best_before' => 'nullable|date',
             'produk_data.*.jumlah_kemasan' => 'nullable|string|max:255',
             'produk_data.*.jumlah_sampling' => 'nullable|string|max:255',
+            'produk_data.*.berat_perkarung' => 'nullable|string|max:255',
             'produk_data.*.kondisi_kemasan' => 'nullable|boolean',
             'produk_data.*.keterangan' => 'nullable|string',
         ]);
@@ -224,6 +252,7 @@ class PemeriksaanLoadingProdukController extends Controller
                         'best_before' => $produk['best_before'] ?? null,
                         'jumlah_kemasan' => $produk['jumlah_kemasan'] ?? null,
                         'jumlah_sampling' => $produk['jumlah_sampling'] ?? null,
+                        'berat_perkarung' => $produk['berat_perkarung'] ?? null,
                         'kondisi_kemasan' => isset($produk['kondisi_kemasan']) ? (bool)$produk['kondisi_kemasan'] : true,
                         'keterangan' => $produk['keterangan'] ?? null,
                     ];
@@ -238,6 +267,7 @@ class PemeriksaanLoadingProdukController extends Controller
                     'best_before' => $detail['best_before'] ?? null,
                     'jumlah_kemasan' => $detail['jumlah_kemasan'] ?? null,
                     'jumlah_sampling' => $detail['jumlah_sampling'] ?? null,
+                    'berat_perkarung' => $detail['berat_perkarung'] ?? null,
                     'kondisi_kemasan' => isset($detail['kondisi_kemasan']) ? (bool)$detail['kondisi_kemasan'] : true,
                     'keterangan' => $detail['keterangan'] ?? null,
                 ];
@@ -356,6 +386,7 @@ class PemeriksaanLoadingProdukController extends Controller
             'produk_data.*.best_before' => 'nullable|date',
             'produk_data.*.jumlah_kemasan' => 'nullable|string|max:255',
             'produk_data.*.jumlah_sampling' => 'nullable|string|max:255',
+            'produk_data.*.berat_perkarung' => 'nullable|string|max:255',
             'produk_data.*.kondisi_kemasan' => 'nullable|boolean',
             'produk_data.*.keterangan' => 'nullable|string|max:500',
         ]);
@@ -435,6 +466,7 @@ class PemeriksaanLoadingProdukController extends Controller
                         'best_before' => $produk['best_before'] ?? null,
                         'jumlah_kemasan' => $produk['jumlah_kemasan'] ?? null,
                         'jumlah_sampling' => $produk['jumlah_sampling'] ?? null,
+                        'berat_perkarung' => $produk['berat_perkarung'] ?? null,
                         'kondisi_kemasan' => isset($produk['kondisi_kemasan']) ? (bool)$produk['kondisi_kemasan'] : true,
                         'keterangan' => $produk['keterangan'] ?? null,
                     ];

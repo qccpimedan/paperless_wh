@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\PemeriksaanKedatanganKemasan;
 use App\Models\BahanKemasan;
+use App\Models\Produk;
 use App\Models\Shift;
 use App\Models\Produsen;
 use App\Models\User;
@@ -36,7 +37,7 @@ class PemeriksaanKedatanganKemasanController extends Controller
                 ->get();
         }
 
-        $bahanIds = $pemeriksaans
+        $produkIds = $pemeriksaans
             ->flatMap(function ($pemeriksaan) {
                 $ids = json_decode($pemeriksaan->id_bahan_array ?? '[]', true);
                 return is_array($ids) ? $ids : [];
@@ -45,11 +46,11 @@ class PemeriksaanKedatanganKemasanController extends Controller
             ->unique()
             ->values();
 
-        $bahanNamaById = $bahanIds->isNotEmpty()
-            ? BahanKemasan::whereIn('id', $bahanIds)->pluck('nama_kemasan', 'id')
+        $produkNamaById = $produkIds->isNotEmpty()
+            ? Produk::whereIn('id', $produkIds)->pluck('nama_produk', 'id')
             : collect();
         
-        return view('qc-sistem.pemeriksaan-kedatangan-kemasan.index', compact('pemeriksaans', 'bahanNamaById'));
+        return view('qc-sistem.pemeriksaan-kedatangan-kemasan.index', compact('pemeriksaans', 'produkNamaById'));
     }
 
     /**
@@ -142,7 +143,55 @@ class PemeriksaanKedatanganKemasanController extends Controller
                 ];
             });
 
-        return view('qc-sistem.pemeriksaan-kedatangan-kemasan.create', compact('bahanKemasans', 'shifts', 'produsens', 'distributors', 'bahanKemasanMeta'));
+        $plantId = $user->id_plant;
+
+        $produkKategoriOptions = Produk::query()
+            ->whereNotNull('kategori_code')
+            ->select('kategori_code')
+            ->distinct()
+            ->orderBy('kategori_code')
+            ->pluck('kategori_code')
+            ->values();
+
+        $produkList = Produk::query()
+            ->select(['id', 'nama_produk', 'kategori_code'])
+            ->orderBy('nama_produk')
+            ->get();
+
+        $produkByKategori = $produkList
+            ->groupBy('kategori_code')
+            ->map(function ($items) {
+                return $items->map(function ($p) {
+                    return [
+                        'id' => $p->id,
+                        'nama' => $p->nama_produk,
+                    ];
+                })->values();
+            });
+
+        $produkMeta = Produk::with([
+                'produsens' => function ($q) use ($plantId) {
+                    if ($plantId) {
+                        $q->wherePivot('id_plant', $plantId);
+                    }
+                },
+                'distributors' => function ($q) use ($plantId) {
+                    if ($plantId) {
+                        $q->wherePivot('id_plant', $plantId);
+                    }
+                },
+            ])
+            ->get()
+            ->mapWithKeys(function ($p) {
+                return [
+                    $p->id => [
+                        'produsen' => $p->produsens->pluck('nama_produsen')->values()->toArray(),
+                        'distributor' => $p->distributors->pluck('nama_distributor')->values()->toArray(),
+                    ],
+                ];
+            });
+
+        return view('qc-sistem.pemeriksaan-kedatangan-kemasan.create', compact('bahanKemasans', 'shifts', 'produsens', 'distributors', 'bahanKemasanMeta', 'produkKategoriOptions', 'produkByKategori', 'produkMeta'));
     }
     /**
      * Store a newly created resource in storage.
@@ -156,9 +205,14 @@ class PemeriksaanKedatanganKemasanController extends Controller
             'nama_supir' => 'nullable|string|max:255',
             'jenis_pemeriksaan' => 'nullable|string|max:255',
             'no_po' => 'nullable|string|max:255',
-            'id_bahan.*' => 'nullable|exists:bahan_kemasans,id',
-            'produsen.*' => 'nullable|string|max:255',
-            'distributor.*' => 'nullable|string|max:255',
+            'kategori_code.*' => 'nullable|string|in:WHSE,WHD2,WHDS,RT01,CR01,CR02,SHTS,SHCS,OTRM,SHCS & OTRM',
+            'id_produk.*' => 'nullable|exists:produks,id',
+            'produsen' => 'array',
+            'produsen.*' => 'array',
+            'produsen.*.*' => 'nullable|string|max:255',
+            'distributor' => 'array',
+            'distributor.*' => 'array',
+            'distributor.*.*' => 'nullable|string|max:255',
             'kode_produksi.*' => 'nullable|string|max:255',
             'jumlah_datang.*' => 'nullable|string|max:255',
             'jumlah_sampling.*' => 'nullable|string|max:255',
@@ -193,9 +247,9 @@ class PemeriksaanKedatanganKemasanController extends Controller
         ];
     
         // Get array data from dynamic form
-        $id_bahans = $request->input('id_bahan', []);
-        $produsens = $request->input('produsen', []);
-        $distributors = $request->input('distributor', []);
+        $id_produks = $request->input('id_produk', []);
+        $produsenInput = $request->input('produsen', []);
+        $distributorInput = $request->input('distributor', []);
         $kode_produksis = $request->input('kode_produksi', []);
         $jumlah_datangs = $request->input('jumlah_datang', []);
         $jumlah_samplings = $request->input('jumlah_sampling', []);
@@ -222,6 +276,26 @@ class PemeriksaanKedatanganKemasanController extends Controller
             }
         }
     
+        $normalizeMultiSelectRows = function ($input, int $rowCount) {
+            $out = [];
+            for ($i = 0; $i < $rowCount; $i++) {
+                $vals = $input[$i] ?? [];
+                if (is_string($vals)) {
+                    $vals = [$vals];
+                }
+                if (!is_array($vals)) {
+                    $vals = [];
+                }
+                $vals = array_values(array_filter($vals, fn ($v) => $v !== null && $v !== ''));
+                $out[$i] = implode(', ', $vals);
+            }
+            return $out;
+        };
+
+        $rowCountForSupplier = max(count($id_produks), count($kode_produksis), count($jumlah_datangs), count($jumlah_samplings), count((array) $produsenInput), count((array) $distributorInput));
+        $produsens = $normalizeMultiSelectRows((array) $produsenInput, $rowCountForSupplier);
+        $distributors = $normalizeMultiSelectRows((array) $distributorInput, $rowCountForSupplier);
+
         // Ensure all arrays are properly formatted as JSON
         $data = [
             'tanggal' => $request->input('tanggal'),
@@ -235,7 +309,7 @@ class PemeriksaanKedatanganKemasanController extends Controller
             'kondisi_mobil' => $kondisiMobil,
             'id_user' => Auth::id(),
             'id_shift' => $request->input('id_shift'),
-            'id_bahan_array' => json_encode(is_array($id_bahans) ? $id_bahans : []),
+            'id_bahan_array' => json_encode(is_array($id_produks) ? $id_produks : []),
             'produsen_array' => json_encode(is_array($produsens) ? $produsens : []),
             'distributor_array' => json_encode(is_array($distributors) ? $distributors : []),
             'kode_produksi_array' => json_encode(is_array($kode_produksis) ? $kode_produksis : []),
@@ -271,16 +345,16 @@ class PemeriksaanKedatanganKemasanController extends Controller
         
         $pemeriksaanKedatanganKemasan->load(['user', 'bahan', 'shift']);
 
-        $bahanIds = collect(json_decode($pemeriksaanKedatanganKemasan->id_bahan_array ?? '[]', true))
+        $produkIds = collect(json_decode($pemeriksaanKedatanganKemasan->id_bahan_array ?? '[]', true))
             ->filter(fn ($id) => !empty($id))
             ->unique()
             ->values();
 
-        $bahanNamaById = $bahanIds->isNotEmpty()
-            ? BahanKemasan::whereIn('id', $bahanIds)->pluck('nama_kemasan', 'id')->toArray()
+        $produkNamaById = $produkIds->isNotEmpty()
+            ? Produk::whereIn('id', $produkIds)->pluck('nama_produk', 'id')->toArray()
             : [];
 
-        return view('qc-sistem.pemeriksaan-kedatangan-kemasan.show', compact('pemeriksaanKedatanganKemasan', 'bahanNamaById'));
+        return view('qc-sistem.pemeriksaan-kedatangan-kemasan.show', compact('pemeriksaanKedatanganKemasan', 'produkNamaById'));
     }
 
     /**
@@ -352,18 +426,63 @@ class PemeriksaanKedatanganKemasanController extends Controller
         $distributors = $distributors->concat($referencedDistributors)->unique('id')->values();
     }
 
-    $bahanKemasanMeta = $bahanKemasans
-        ->mapWithKeys(function ($bk) {
+    $plantId = $user->id_plant;
+
+    $produkKategoriOptions = Produk::query()
+        ->whereNotNull('kategori_code')
+        ->select('kategori_code')
+        ->distinct()
+        ->orderBy('kategori_code')
+        ->pluck('kategori_code')
+        ->values();
+
+    $produkList = Produk::query()
+        ->select(['id', 'nama_produk', 'kategori_code'])
+        ->orderBy('nama_produk')
+        ->get();
+
+    $produkByKategori = $produkList
+        ->groupBy('kategori_code')
+        ->map(function ($items) {
+            return $items->map(function ($p) {
+                return [
+                    'id' => $p->id,
+                    'nama' => $p->nama_produk,
+                ];
+            })->values();
+        });
+
+    $produkMeta = Produk::with([
+            'produsens' => function ($q) use ($plantId) {
+                if ($plantId) {
+                    $q->wherePivot('id_plant', $plantId);
+                }
+            },
+            'distributors' => function ($q) use ($plantId) {
+                if ($plantId) {
+                    $q->wherePivot('id_plant', $plantId);
+                }
+            },
+        ])
+        ->get()
+        ->mapWithKeys(function ($p) {
             return [
-                $bk->id => [
-                    'produsen' => $bk->produsen ? $bk->produsen->nama_produsen : '',
-                    'distributor' => $bk->distributor ? $bk->distributor->nama_distributor : '',
+                $p->id => [
+                    'produsen' => $p->produsens->pluck('nama_produsen')->values()->toArray(),
+                    'distributor' => $p->distributors->pluck('nama_distributor')->values()->toArray(),
                 ],
             ];
         });
 
+    $existingProdukIds = json_decode($pemeriksaanKedatanganKemasan->id_bahan_array ?? '[]', true);
+    $existingProdukIds = is_array($existingProdukIds) ? array_values(array_filter($existingProdukIds, fn ($v) => $v !== null && $v !== '')) : [];
+
+    $existingKategoriByProdukId = !empty($existingProdukIds)
+        ? Produk::whereIn('id', $existingProdukIds)->pluck('kategori_code', 'id')->toArray()
+        : [];
+
     return view('qc-sistem.pemeriksaan-kedatangan-kemasan.edit', 
-    compact('pemeriksaanKedatanganKemasan', 'bahanKemasans', 'shifts', 'produsens', 'distributors', 'bahanKemasanMeta'));
+    compact('pemeriksaanKedatanganKemasan', 'bahanKemasans', 'shifts', 'produsens', 'distributors', 'produkKategoriOptions', 'produkByKategori', 'produkMeta', 'existingKategoriByProdukId'));
     }
     /**
      * Update the specified resource in storage.
@@ -380,9 +499,14 @@ class PemeriksaanKedatanganKemasanController extends Controller
             'nama_supir' => 'nullable|string|max:255',
             'jenis_pemeriksaan' => 'nullable|string|max:255',
             'no_po' => 'nullable|string|max:255',
-            'id_bahan.*' => 'nullable|exists:bahan_kemasans,id',
-            'produsen.*' => 'nullable|string|max:255',
-            'distributor.*' => 'nullable|string|max:255',
+            'kategori_code.*' => 'nullable|string|in:WHSE,WHD2,WHDS,RT01,CR01,CR02,SHTS,SHCS,OTRM,SHCS & OTRM',
+            'id_produk.*' => 'nullable|exists:produks,id',
+            'produsen' => 'array',
+            'produsen.*' => 'array',
+            'produsen.*.*' => 'nullable|string|max:255',
+            'distributor' => 'array',
+            'distributor.*' => 'array',
+            'distributor.*.*' => 'nullable|string|max:255',
             'kode_produksi.*' => 'nullable|string|max:255',
             'jumlah_datang.*' => 'nullable|string|max:255',
             'jumlah_sampling.*' => 'nullable|string|max:255',
@@ -417,9 +541,9 @@ class PemeriksaanKedatanganKemasanController extends Controller
         ];
     
         // Get array data from dynamic form
-        $id_bahans = $request->input('id_bahan', []);
-        $produsens = $request->input('produsen', []);
-        $distributors = $request->input('distributor', []);
+        $id_produks = $request->input('id_produk', []);
+        $produsenInput = $request->input('produsen', []);
+        $distributorInput = $request->input('distributor', []);
         $kode_produksis = $request->input('kode_produksi', []);
         $jumlah_datangs = $request->input('jumlah_datang', []);
         $jumlah_samplings = $request->input('jumlah_sampling', []);
@@ -443,7 +567,7 @@ class PemeriksaanKedatanganKemasanController extends Controller
         $newImageKemasan = [];
         $uploadedImages = (array) $request->file('image_kemasan', []);
 
-        $rowCount = max(count($id_bahans), count($produsens), count($distributors), count($kode_produksis));
+        $rowCount = max(count($id_produks), count($kode_produksis), count($uploadedImages), count($existingImageKemasan));
         for ($i = 0; $i < $rowCount; $i++) {
             $uploadedFile = $uploadedImages[$i] ?? null;
             if ($uploadedFile) {
@@ -452,6 +576,26 @@ class PemeriksaanKedatanganKemasanController extends Controller
                 $newImageKemasan[$i] = $existingImageKemasan[$i] ?? null;
             }
         }
+
+        $normalizeMultiSelectRows = function ($input, int $rowCount) {
+            $out = [];
+            for ($i = 0; $i < $rowCount; $i++) {
+                $vals = $input[$i] ?? [];
+                if (is_string($vals)) {
+                    $vals = [$vals];
+                }
+                if (!is_array($vals)) {
+                    $vals = [];
+                }
+                $vals = array_values(array_filter($vals, fn ($v) => $v !== null && $v !== ''));
+                $out[$i] = implode(', ', $vals);
+            }
+            return $out;
+        };
+
+        $rowCountForSupplier = max(count($id_produks), count($kode_produksis), count($jumlah_datangs), count($jumlah_samplings), count((array) $produsenInput), count((array) $distributorInput));
+        $produsens = $normalizeMultiSelectRows((array) $produsenInput, $rowCountForSupplier);
+        $distributors = $normalizeMultiSelectRows((array) $distributorInput, $rowCountForSupplier);
     
         // Ensure all arrays are properly formatted as JSON
         $data = [
@@ -465,7 +609,7 @@ class PemeriksaanKedatanganKemasanController extends Controller
             'no_segel' => $request->input('no_segel'),
             'kondisi_mobil' => $kondisiMobil,
             'id_shift' => $request->input('id_shift'),
-            'id_bahan_array' => json_encode(is_array($id_bahans) ? $id_bahans : []),
+            'id_bahan_array' => json_encode(is_array($id_produks) ? $id_produks : []),
             'produsen_array' => json_encode(is_array($produsens) ? $produsens : []),
             'distributor_array' => json_encode(is_array($distributors) ? $distributors : []),
             'kode_produksi_array' => json_encode(is_array($kode_produksis) ? $kode_produksis : []),
@@ -540,12 +684,50 @@ class PemeriksaanKedatanganKemasanController extends Controller
             $distributors = Distributor::all();
         }
 
-        $bahanKemasanMeta = $bahanKemasans
-            ->mapWithKeys(function ($bk) {
+        $plantId = $user->id_plant;
+
+        $produkKategoriOptions = Produk::query()
+            ->whereNotNull('kategori_code')
+            ->select('kategori_code')
+            ->distinct()
+            ->orderBy('kategori_code')
+            ->pluck('kategori_code')
+            ->values();
+
+        $produkList = Produk::query()
+            ->select(['id', 'nama_produk', 'kategori_code'])
+            ->orderBy('nama_produk')
+            ->get();
+
+        $produkByKategori = $produkList
+            ->groupBy('kategori_code')
+            ->map(function ($items) {
+                return $items->map(function ($p) {
+                    return [
+                        'id' => $p->id,
+                        'nama' => $p->nama_produk,
+                    ];
+                })->values();
+            });
+
+        $produkMeta = Produk::with([
+                'produsens' => function ($q) use ($plantId) {
+                    if ($plantId) {
+                        $q->wherePivot('id_plant', $plantId);
+                    }
+                },
+                'distributors' => function ($q) use ($plantId) {
+                    if ($plantId) {
+                        $q->wherePivot('id_plant', $plantId);
+                    }
+                },
+            ])
+            ->get()
+            ->mapWithKeys(function ($p) {
                 return [
-                    $bk->id => [
-                        'produsen' => $bk->produsen ? $bk->produsen->nama_produsen : '',
-                        'distributor' => $bk->distributor ? $bk->distributor->nama_distributor : '',
+                    $p->id => [
+                        'produsen' => $p->produsens->pluck('nama_produsen')->values()->toArray(),
+                        'distributor' => $p->distributors->pluck('nama_distributor')->values()->toArray(),
                     ],
                 ];
             });
@@ -556,7 +738,9 @@ class PemeriksaanKedatanganKemasanController extends Controller
             'shifts',
             'produsens',
             'distributors',
-            'bahanKemasanMeta'
+            'produkKategoriOptions',
+            'produkByKategori',
+            'produkMeta'
         ));
     }
 
@@ -565,9 +749,14 @@ class PemeriksaanKedatanganKemasanController extends Controller
         $this->checkPlantAccess($pemeriksaanKedatanganKemasan);
 
         $request->validate([
-            'id_bahan.*' => 'nullable|exists:bahan_kemasans,id',
-            'produsen.*' => 'nullable|string|max:255',
-            'distributor.*' => 'nullable|string|max:255',
+            'kategori_code.*' => 'nullable|string|in:WHSE,WHD2,WHDS,RT01,CR01,CR02,SHTS,SHCS,OTRM,SHCS & OTRM',
+            'id_produk.*' => 'nullable|exists:produks,id',
+            'produsen' => 'array',
+            'produsen.*' => 'array',
+            'produsen.*.*' => 'nullable|string|max:255',
+            'distributor' => 'array',
+            'distributor.*' => 'array',
+            'distributor.*.*' => 'nullable|string|max:255',
             'kode_produksi.*' => 'nullable|string|max:255',
             'jumlah_datang.*' => 'nullable|string|max:255',
             'jumlah_sampling.*' => 'nullable|string|max:255',
@@ -604,9 +793,20 @@ class PemeriksaanKedatanganKemasanController extends Controller
         $existingKeterangans = json_decode($pemeriksaanKedatanganKemasan->keterangan_array ?? '[]', true) ?? [];
         $existingImageKemasans = json_decode($pemeriksaanKedatanganKemasan->image_kemasan_array ?? '[]', true) ?? [];
 
-        $existingIdBahans[] = $request->input('id_bahan.0');
-        $existingProdusens[] = $request->input('produsen.0');
-        $existingDistributors[] = $request->input('distributor.0');
+        $normalizeMultiSelectRow = function ($vals) {
+            if (is_string($vals)) {
+                $vals = [$vals];
+            }
+            if (!is_array($vals)) {
+                $vals = [];
+            }
+            $vals = array_values(array_filter($vals, fn ($v) => $v !== null && $v !== ''));
+            return implode(', ', $vals);
+        };
+
+        $existingIdBahans[] = $request->input('id_produk.0');
+        $existingProdusens[] = $normalizeMultiSelectRow($request->input('produsen.0'));
+        $existingDistributors[] = $normalizeMultiSelectRow($request->input('distributor.0'));
         $existingKodeProduksis[] = $request->input('kode_produksi.0');
         $existingJumlahDatangs[] = $request->input('jumlah_datang.0');
         $existingJumlahSamplings[] = $request->input('jumlah_sampling.0');

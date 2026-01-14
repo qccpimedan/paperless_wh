@@ -74,7 +74,7 @@
                                         </td>
                                         <td>
                                             @if($report->id_plant && $report->plant)
-                                                <span class="badge bg-success">{{ $report->plant->plant }}</span>
+                                                <span class="badge bg-primary">{{ $report->plant->plant }}</span>
                                             @elseif($report->plant_manual)
                                                 <span class="badge bg-warning">{{ $report->plant_manual }}</span>
                                             @else

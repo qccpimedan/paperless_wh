@@ -158,7 +158,7 @@
                                         <th>Shift</th>
                                         <th>Plant</th>
                                         <!-- <th>No. PO</th> -->
-                                        <th>Nama Bahan</th>
+                                        <th>Nama Produk</th>
                                         <!-- <th>Kondisi Produk</th> -->
                                         <th>Produsen</th>
                                         <th>Kode Produksi</th>
@@ -193,7 +193,7 @@
                                             </td>
                                             <td>
                                                 @if($pemeriksaan->bahan)
-                                                    {{ $pemeriksaan->bahan->nama_bahan }}
+                                                    {{ $pemeriksaan->bahan->nama_produk }}
                                                 @else
                                                     <span class="text-muted">-</span>
                                                 @endif

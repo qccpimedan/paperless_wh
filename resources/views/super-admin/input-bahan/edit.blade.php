@@ -59,6 +59,53 @@
                                                     <div class="invalid-feedback">{{ $message }}</div>
                                                 @enderror
                                             </div>
+
+                                            <div class="col-md-12 mt-2">
+                                                <label for="kategori_code">Kategori <span class="text-danger">*</span></label>
+                                                <select name="kategori_code" id="kategori_code" class="form-select @error('kategori_code') is-invalid @enderror" required>
+                                                    <option value="">-- Pilih Kategori --</option>
+                                                    @php
+                                                        $selectedKategori = old('kategori_code', $bahan->kategori_code);
+                                                        if (in_array($selectedKategori, ['SHCS', 'OTRM'], true)) {
+                                                            $selectedKategori = 'SHCS & OTRM';
+                                                        }
+                                                    @endphp
+                                                    @foreach(['WHSE','RT01','CR01','CR02','SHTS','SHCS & OTRM'] as $kategori)
+                                                        <option value="{{ $kategori }}" {{ $selectedKategori === $kategori ? 'selected' : '' }}>{{ $kategori }}</option>
+                                                    @endforeach
+                                                </select>
+                                                @error('kategori_code')
+                                                    <div class="invalid-feedback">{{ $message }}</div>
+                                                @enderror
+                                            </div>
+
+                                            <div class="col-md-12 mt-2">
+                                                <label for="id_produsen">Produsen (Bisa lebih dari 1)</label>
+                                                <select name="id_produsen[]" id="id_produsen" class="form-select select2-multiple @error('id_produsen') is-invalid @enderror" multiple>
+                                                    @foreach($produsens as $produsen)
+                                                        <option value="{{ $produsen->id }}" {{ in_array($produsen->id, old('id_produsen', $selectedProdusenIds ?? [])) ? 'selected' : '' }}>
+                                                            {{ $produsen->nama_produsen }}
+                                                        </option>
+                                                    @endforeach
+                                                </select>
+                                                @error('id_produsen')
+                                                    <div class="invalid-feedback">{{ $message }}</div>
+                                                @enderror
+                                            </div>
+
+                                            <div class="col-md-12 mt-2">
+                                                <label for="id_distributor">Distributor (Bisa lebih dari 1)</label>
+                                                <select name="id_distributor[]" id="id_distributor" class="form-select select2-multiple @error('id_distributor') is-invalid @enderror" multiple>
+                                                    @foreach($distributors as $distributor)
+                                                        <option value="{{ $distributor->id }}" {{ in_array($distributor->id, old('id_distributor', $selectedDistributorIds ?? [])) ? 'selected' : '' }}>
+                                                            {{ $distributor->nama_distributor }}
+                                                        </option>
+                                                    @endforeach
+                                                </select>
+                                                @error('id_distributor')
+                                                    <div class="invalid-feedback">{{ $message }}</div>
+                                                @enderror
+                                            </div>
                                             <div class="col-md-12 d-flex justify-content-end mt-3">
                                                 <a href="{{ route('bahans.index') }}" class="btn btn-light-secondary me-1 mb-1">Kembali</a>
                                                 <button type="submit" class="btn btn-primary me-1 mb-1">Update</button>

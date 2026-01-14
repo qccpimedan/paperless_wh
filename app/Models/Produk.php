@@ -20,6 +20,7 @@ class Produk extends Model
         'uuid',
         'id_user',
         'nama_produk',
+        'kategori_code',
     ];
 
     /**
@@ -50,6 +51,20 @@ class Produk extends Model
     public function user()
     {
         return $this->belongsTo(User::class, 'id_user');
+    }
+
+    public function produsens()
+    {
+        return $this->belongsToMany(Produsen::class, 'produk_produsen', 'id_produk', 'id_produsen')
+            ->withPivot('id_plant')
+            ->withTimestamps();
+    }
+
+    public function distributors()
+    {
+        return $this->belongsToMany(Distributor::class, 'produk_distributor', 'id_produk', 'id_distributor')
+            ->withPivot('id_plant')
+            ->withTimestamps();
     }
     
     /**

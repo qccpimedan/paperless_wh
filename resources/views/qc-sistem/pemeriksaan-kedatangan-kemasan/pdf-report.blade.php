@@ -455,8 +455,8 @@
 
                 $bahanMap = [];
                 if (!empty($allBahanIds)) {
-                    $bahanMap = \App\Models\BahanKemasan::whereIn('id', array_values(array_unique($allBahanIds)))
-                        ->pluck('nama_kemasan', 'id')
+                    $bahanMap = \App\Models\Produk::whereIn('id', array_values(array_unique($allBahanIds)))
+                        ->pluck('nama_produk', 'id')
                         ->toArray();
                 }
             @endphp
@@ -566,6 +566,13 @@
                                         $jumlah_datang_val = $jumlah_datangs[$rowIndex] ?? null;
                                         $jumlah_sampling_val = $jumlah_samplings[$rowIndex] ?? null;
                                         $spesifikasi_val = $spesifikasis[$rowIndex] ?? null;
+
+                                        if (is_array($produsen_val)) {
+                                            $produsen_val = implode(', ', array_values(array_filter($produsen_val, fn ($v) => $v !== null && $v !== '')));
+                                        }
+                                        if (is_array($distributor_val)) {
+                                            $distributor_val = implode(', ', array_values(array_filter($distributor_val, fn ($v) => $v !== null && $v !== '')));
+                                        }
                                     @endphp
                                     @if($id_bahan || $produsen_val || $distributor_val || $kode_produksi_val || $jumlah_datang_val || $jumlah_sampling_val || $spesifikasi_val || $pemeriksaan->no_po)
                                         <div class="section-title">Bahan Kemasan</div>

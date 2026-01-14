@@ -64,7 +64,7 @@
                                         <td>{{ $index + 1 }}</td>
                                         <td>{{ $pemeriksaan->tanggal->format('d/m/Y') }}</td>
                                         <td>
-                                            <span class="badge bg-info">{{ $pemeriksaan->shift->shift }}</span>
+                                            <span class="badge bg-info">{{ $pemeriksaan->shift->shift ?? '-' }}</span>
                                         </td>
                                         <td>
                                             @if($pemeriksaan->user->plant)
@@ -74,10 +74,17 @@
                                             @endif
                                         </td>
                                         <td>
-                                            <strong>{{ $pemeriksaan->produk->nama_bahan }}</strong>
+                                            @if($pemeriksaan->produk)
+                                                @if($pemeriksaan->produk->kategori_code)
+                                                    <span class="badge bg-primary">{{ $pemeriksaan->produk->kategori_code }}</span>
+                                                @endif
+                                                <strong>{{ $pemeriksaan->produk->nama_bahan ?? '-' }}</strong>
+                                            @else
+                                                <span class="text-muted">-</span>
+                                            @endif
                                         </td>
                                         <td>
-                                            <strong>{{ $pemeriksaan->area->nama_area }}</strong>
+                                            <strong>{{ $pemeriksaan->area->nama_area ?? '-' }}</strong>
                                         </td>
                                         <td>
                                             @php
@@ -146,7 +153,7 @@
                                                     </a>
                                                 @endcan
                                                     <a href="{{ route('pemeriksaan-suhu-ruang-v2.edit', $pemeriksaan->uuid) }}?edit_per_2jam=1" 
-                                                    class="btn btn-sm btn-success" title="Edit Per 2 Jam">
+                                                    class="btn btn-sm btn-success" title="Edit Per Jam">
                                                         <i class="bi bi-hourglass-bottom"></i>
                                                     </a>
                                                 @can('view_pemeriksaan_suhu_ruang_v2')

@@ -71,7 +71,7 @@
                                         </td>
                                         <td>
                                             @if($pemeriksaan->user->plant)
-                                                <span class="badge bg-success">{{ $pemeriksaan->user->plant->plant }}</span>
+                                                <span class="badge bg-primary">{{ $pemeriksaan->user->plant->plant }}</span>
                                             @else
                                                 <span class="badge bg-secondary">No Plant</span>
                                             @endif

@@ -99,7 +99,7 @@
                                         @endif
                                     </td>
                                 </tr>
-                                <tr>
+                                <!-- <tr>
                                     <td><strong>Plant:</strong></td>
                                     <td>
                                         @if($pemeriksaanLoading->user->plant)
@@ -108,7 +108,7 @@
                                             <span class="badge bg-secondary">No Plant</span>
                                         @endif
                                     </td>
-                                </tr>
+                                </tr> -->
                                 <tr>
                                     <td><strong>Dibuat Oleh:</strong></td>
                                     <td>{{ $pemeriksaanLoading->user->name ?? '-' }}</td>
@@ -280,6 +280,10 @@
                                                         <tr>
                                                             <td><strong>Jumlah Sampling:</strong></td>
                                                             <td>{{ $produk['jumlah_sampling'] ?? '-' }}</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td><strong>Berat per Karung:</strong></td>
+                                                            <td>{{ $produk['berat_perkarung'] ?? '-' }}</td>
                                                         </tr>
                                                         <tr>
                                                             <td><strong>Kondisi Kemasan:</strong></td>

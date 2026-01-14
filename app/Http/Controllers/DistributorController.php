@@ -2,9 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\DistributorTemplateExport;
+use App\Imports\DistributorImport;
 use App\Models\Distributor;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Maatwebsite\Excel\Facades\Excel;
 
 class DistributorController extends Controller
 {
@@ -29,6 +32,31 @@ class DistributorController extends Controller
         }
         
         return view('super-admin.input-distributor.index', compact('distributors'));
+    }
+
+    public function import(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|file|mimes:xlsx,xls,csv',
+        ]);
+
+        $import = new DistributorImport();
+        Excel::import($import, $request->file('file'));
+
+        $message = "Import selesai. Inserted: {$import->inserted}. Skipped: {$import->skipped}.";
+
+        if (!empty($import->errors)) {
+            return redirect()->route('distributors.index')
+                ->with('success', $message)
+                ->with('import_errors', $import->errors);
+        }
+
+        return redirect()->route('distributors.index')->with('success', $message);
+    }
+
+    public function template()
+    {
+        return Excel::download(new DistributorTemplateExport(), 'template_import_distributor.xlsx');
     }
 
     /**

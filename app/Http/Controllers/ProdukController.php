@@ -2,9 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Distributor;
+use App\Models\Produsen;
 use App\Models\Produk;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Imports\ProdukImport;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\ProdukTemplateExport;
 
 class ProdukController extends Controller
 {
@@ -13,22 +18,38 @@ class ProdukController extends Controller
      */
     public function index()
     {
-        $user = Auth::user();
-        
-        // SuperAdmin dapat melihat semua data
-        if ($user->role && strtolower($user->role->role) === 'superadmin') {
-            $produks = Produk::with(['user.role', 'user.plant'])->latest()->get();
-        } else {
-            // Admin dan role lain hanya melihat data sesuai plant mereka
-            $produks = Produk::with(['user.role', 'user.plant'])
-                ->whereHas('user', function($query) use ($user) {
-                    $query->where('id_plant', $user->id_plant);
-                })
-                ->latest()
-                ->get();
-        }
-        
-        return view('super-admin.input-produk.index', compact('produks'));
+        $selectedKategori = request('kategori_code');
+
+        $plantId = Auth::user()->id_plant;
+
+        $kategoriOptions = [
+            'WHSE',
+            'WHD2',
+            'WHDS',
+            'RT01',
+            'CR01',
+            'CR02',
+            'SHTS',
+            'SHCS & OTRM',
+        ];
+
+        $produks = Produk::with([
+                'user.role',
+                'user.plant',
+                'produsens' => function ($q) use ($plantId) {
+                    $q->wherePivot('id_plant', $plantId);
+                },
+                'distributors' => function ($q) use ($plantId) {
+                    $q->wherePivot('id_plant', $plantId);
+                },
+            ])
+            ->when($selectedKategori, function ($q) use ($selectedKategori) {
+                $q->where('kategori_code', $selectedKategori);
+            })
+            ->latest()
+            ->get();
+
+        return view('super-admin.input-produk.index', compact('produks', 'selectedKategori', 'kategoriOptions'));
     }
 
     /**
@@ -36,7 +57,28 @@ class ProdukController extends Controller
      */
     public function create()
     {
-        return view('super-admin.input-produk.create');
+        $user = Auth::user();
+
+        if ($user->role && strtolower($user->role->role) === 'superadmin') {
+            $distributors = Distributor::with(['user.plant'])->latest()->get();
+            $produsens = Produsen::with(['user.plant'])->latest()->get();
+        } else {
+            $distributors = Distributor::with(['user.plant'])
+                ->whereHas('user', function ($query) use ($user) {
+                    $query->where('id_plant', $user->id_plant);
+                })
+                ->latest()
+                ->get();
+
+            $produsens = Produsen::with(['user.plant'])
+                ->whereHas('user', function ($query) use ($user) {
+                    $query->where('id_plant', $user->id_plant);
+                })
+                ->latest()
+                ->get();
+        }
+
+        return view('super-admin.input-produk.create', compact('distributors', 'produsens'));
     }
 
     /**
@@ -45,25 +87,38 @@ class ProdukController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'nama_produk' => 'required|array|min:1',
-            'nama_produk.*' => 'required|string|max:255',
+            'nama_produk' => 'required|string|max:255',
+            'kategori_code' => 'required|string|in:WHSE,WHD2,WHDS,RT01,CR01,CR02,SHTS,SHCS,OTRM,SHCS & OTRM',
+            'id_produsen' => 'nullable|array',
+            'id_produsen.*' => 'nullable|exists:produsens,id',
+            'id_distributor' => 'nullable|array',
+            'id_distributor.*' => 'nullable|exists:distributors,id',
         ]);
 
-        // Filter empty values
-        $namaProduk = array_filter($request->nama_produk, function($value) {
-            return !empty(trim($value));
-        });
+        $produk = Produk::create([
+            'id_user' => Auth::id(),
+            'nama_produk' => trim($request->nama_produk),
+            'kategori_code' => $request->kategori_code,
+        ]);
 
-        if (empty($namaProduk)) {
-            return back()->withErrors(['nama_produk' => 'Minimal harus ada satu nama produk.']);
+        $plantId = Auth::user()->id_plant;
+
+        $produk->produsens()->wherePivot('id_plant', $plantId)->detach();
+        $produk->distributors()->wherePivot('id_plant', $plantId)->detach();
+
+        $produsenIds = array_values(array_filter($request->input('id_produsen', [])));
+        $distributorIds = array_values(array_filter($request->input('id_distributor', [])));
+
+        if (!empty($produsenIds)) {
+            $produk->produsens()->attach(collect($produsenIds)->mapWithKeys(function ($id) use ($plantId) {
+                return [$id => ['id_plant' => $plantId]];
+            })->all());
         }
 
-        // Create separate record for each nama_produk
-        foreach ($namaProduk as $nama) {
-            Produk::create([
-                'id_user' => Auth::id(),
-                'nama_produk' => trim($nama),
-            ]);
+        if (!empty($distributorIds)) {
+            $produk->distributors()->attach(collect($distributorIds)->mapWithKeys(function ($id) use ($plantId) {
+                return [$id => ['id_plant' => $plantId]];
+            })->all());
         }
 
         return redirect()->route('produks.index')->with('success', 'Produk berhasil ditambahkan!');
@@ -74,9 +129,6 @@ class ProdukController extends Controller
      */
     public function show(Produk $produk)
     {
-        // Check access based on plant
-        $this->checkPlantAccess($produk);
-        
         $produk->load('user');
         return view('super-admin.input-produk.show', compact('produk'));
     }
@@ -86,10 +138,32 @@ class ProdukController extends Controller
      */
     public function edit(Produk $produk)
     {
-        // Check access based on plant
-        $this->checkPlantAccess($produk);
-        
-        return view('super-admin.input-produk.edit', compact('produk'));
+        $user = Auth::user();
+
+        if ($user->role && strtolower($user->role->role) === 'superadmin') {
+            $distributors = Distributor::with(['user.plant'])->latest()->get();
+            $produsens = Produsen::with(['user.plant'])->latest()->get();
+        } else {
+            $distributors = Distributor::with(['user.plant'])
+                ->whereHas('user', function ($query) use ($user) {
+                    $query->where('id_plant', $user->id_plant);
+                })
+                ->latest()
+                ->get();
+
+            $produsens = Produsen::with(['user.plant'])
+                ->whereHas('user', function ($query) use ($user) {
+                    $query->where('id_plant', $user->id_plant);
+                })
+                ->latest()
+                ->get();
+        }
+
+        $plantId = $user->id_plant;
+        $selectedProdusenIds = $produk->produsens()->wherePivot('id_plant', $plantId)->pluck('produsens.id')->toArray();
+        $selectedDistributorIds = $produk->distributors()->wherePivot('id_plant', $plantId)->pluck('distributors.id')->toArray();
+
+        return view('super-admin.input-produk.edit', compact('produk', 'distributors', 'produsens', 'selectedProdusenIds', 'selectedDistributorIds'));
     }
 
     /**
@@ -97,16 +171,39 @@ class ProdukController extends Controller
      */
     public function update(Request $request, Produk $produk)
     {
-        // Check access based on plant
-        $this->checkPlantAccess($produk);
-        
         $request->validate([
             'nama_produk' => 'required|string|max:255',
+            'kategori_code' => 'required|string|in:WHSE,WHD2,WHDS,RT01,CR01,CR02,SHTS,SHCS,OTRM,SHCS & OTRM',
+            'id_produsen' => 'nullable|array',
+            'id_produsen.*' => 'nullable|exists:produsens,id',
+            'id_distributor' => 'nullable|array',
+            'id_distributor.*' => 'nullable|exists:distributors,id',
         ]);
 
         $produk->update([
             'nama_produk' => trim($request->nama_produk),
+            'kategori_code' => $request->kategori_code,
         ]);
+
+        $plantId = Auth::user()->id_plant;
+
+        $produk->produsens()->wherePivot('id_plant', $plantId)->detach();
+        $produk->distributors()->wherePivot('id_plant', $plantId)->detach();
+
+        $produsenIds = array_values(array_filter($request->input('id_produsen', [])));
+        $distributorIds = array_values(array_filter($request->input('id_distributor', [])));
+
+        if (!empty($produsenIds)) {
+            $produk->produsens()->attach(collect($produsenIds)->mapWithKeys(function ($id) use ($plantId) {
+                return [$id => ['id_plant' => $plantId]];
+            })->all());
+        }
+
+        if (!empty($distributorIds)) {
+            $produk->distributors()->attach(collect($distributorIds)->mapWithKeys(function ($id) use ($plantId) {
+                return [$id => ['id_plant' => $plantId]];
+            })->all());
+        }
 
         return redirect()->route('produks.index')->with('success', 'Produk berhasil diupdate!');
     }
@@ -116,9 +213,6 @@ class ProdukController extends Controller
      */
     public function destroy(Produk $produk)
     {
-        // Check access based on plant
-        $this->checkPlantAccess($produk);
-        
         $produk->delete();
         return redirect()->route('produks.index')->with('success', 'Produk berhasil dihapus!');
     }
@@ -128,16 +222,31 @@ class ProdukController extends Controller
      */
     private function checkPlantAccess(Produk $produk)
     {
-        $user = Auth::user();
-        
-        // SuperAdmin dapat akses semua data
-        if ($user->role && strtolower($user->role->role) === 'superadmin') {
-            return;
+        return;
+    }
+
+    public function import(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|file|mimes:xlsx,xls,csv',
+        ]);
+
+        $import = new ProdukImport();
+        Excel::import($import, $request->file('file'));
+
+        $message = "Import selesai. Inserted: {$import->inserted}. Skipped: {$import->skipped}.";
+
+        if (!empty($import->errors)) {
+            return redirect()->route('produks.index')
+                ->with('success', $message)
+                ->with('import_errors', $import->errors);
         }
-        
-        // Admin dan role lain hanya dapat akses data dari plant mereka
-        if ($produk->user->id_plant !== $user->id_plant) {
-            abort(403, 'Anda tidak memiliki akses ke data ini.');
-        }
+
+        return redirect()->route('produks.index')->with('success', $message);
+    }
+
+    public function template()
+    {
+        return Excel::download(new ProdukTemplateExport(), 'template_import_produk.xlsx');
     }
 }

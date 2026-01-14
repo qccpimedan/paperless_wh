@@ -24,6 +24,7 @@ class BahanKemasan extends Model
         'id_distributor',
         'id_produsen',
         'nama_kemasan',
+        'kategori_code',
     ];
 
     /**
@@ -64,6 +65,20 @@ class BahanKemasan extends Model
     public function produsen()
     {
         return $this->belongsTo(Produsen::class, 'id_produsen');
+    }
+
+    public function produsens()
+    {
+        return $this->belongsToMany(Produsen::class, 'bahan_kemasan_produsen', 'id_bahan_kemasan', 'id_produsen')
+            ->withPivot('id_plant')
+            ->withTimestamps();
+    }
+
+    public function distributors()
+    {
+        return $this->belongsToMany(Distributor::class, 'bahan_kemasan_distributor', 'id_bahan_kemasan', 'id_distributor')
+            ->withPivot('id_plant')
+            ->withTimestamps();
     }
 
     /**

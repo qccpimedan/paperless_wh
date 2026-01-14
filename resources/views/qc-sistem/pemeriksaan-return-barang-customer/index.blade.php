@@ -69,7 +69,7 @@
                                             <span class="badge bg-primary">{{ $pemeriksaan->shift->shift ?? '-' }}</span>
                                         </td>
                                         <td>
-                                            <span class="badge bg-secondary">{{ $pemeriksaan->user->plant->plant ?? '-' }}</span>
+                                            <span class="badge bg-primary">{{ $pemeriksaan->user->plant->plant ?? '-' }}</span>
                                         </td>
                                         <td>
                                             <strong>{{ $pemeriksaan->customer->nama_cust ?? '-' }}</strong>

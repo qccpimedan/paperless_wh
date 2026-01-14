@@ -102,20 +102,20 @@
                         <li class="submenu-item {{ request()->routeIs('produsens.*') ? 'active' : '' }}">
                             <a href="{{ route('produsens.index')}}">Input Produsen</a>
                         </li>
-                        <li class="submenu-item {{ request()->routeIs('bahans.*') ? 'active' : '' }}">
+                        <li class="submenu-item {{ request()->routeIs('produks.*') ? 'active' : '' }}">
+                            <a href="{{ route('produks.index')}}">Input Produk</a>
+                        </li>
+                        <!-- <li class="submenu-item {{ request()->routeIs('bahans.*') ? 'active' : '' }}">
                             <a href="{{ route('bahans.index')}}">Input Bahan Baku</a>
-                        </li>
-                        <li class="submenu-item {{ request()->routeIs('bahan-kemasans.*') ? 'active' : '' }}">
+                        </li> -->
+                        <!-- <li class="submenu-item {{ request()->routeIs('bahan-kemasans.*') ? 'active' : '' }}">
                             <a href="{{ route('bahan-kemasans.index')}}">Input Bahan Kemasan</a>
-                        </li>
+                        </li> -->
                         <li class="submenu-item {{ request()->routeIs('chemicals.*') ? 'active' : '' }}">
                             <a href="{{ route('chemicals.index')}}">Input Chemical</a>
                         </li>
                         <li class="submenu-item {{ request()->routeIs('supirs.*') ? 'active' : '' }}">
                             <a href="{{ route('supirs.index')}}">Input Supir</a>
-                        </li>
-                        <li class="submenu-item {{ request()->routeIs('produks.*') ? 'active' : '' }}">
-                            <a href="{{ route('produks.index')}}">Input Produk</a>
                         </li>
                         <li class="submenu-item {{ request()->routeIs('ekspedisis.*') ? 'active' : '' }}">
                             <a href="{{ route('ekspedisis.index')}}">Input Ekspedisi</a>
