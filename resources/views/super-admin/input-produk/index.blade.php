@@ -79,7 +79,7 @@
                                     <th>Kategori</th>
                                     <th>Produsen</th>
                                     <th>Distributor</th>
-                                    <th>Plant</th>
+                                    <!-- <th>Plant</th> -->
                                     <th>Aksi</th>
                                 </tr>
                             </thead>
@@ -105,13 +105,13 @@
                                                 -
                                             @endif
                                         </td>
-                                        <td>
+                                        <!-- <td>
                                             @if($produk->user->plant)
                                                 <span class="badge bg-info">{{ $produk->user->plant->plant }}</span>
                                             @else
                                                 <span class="badge bg-secondary">No Plant</span>
                                             @endif
-                                        </td>
+                                        </td> -->
                                         <td>
                                             <div class="btn-vertical">
                                                 <a href="{{ route('produks.edit', $produk->uuid) }}" 
