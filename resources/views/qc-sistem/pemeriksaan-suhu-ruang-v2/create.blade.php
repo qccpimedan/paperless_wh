@@ -75,15 +75,31 @@
                                             </div>
 
                                             <div class="col-md-6 mt-3">
-                                                <label for="id_produk">Produk <span class="text-danger">*</span></label>
-                                                <select id="id_produk" class="form-control @error('id_produk') is-invalid @enderror"
-                                                    name="id_produk" required>
-                                                    <option value="">-- Pilih Produk --</option>
-                                                    @foreach($produks as $produk)
-                                                        <option value="{{ $produk->id }}" {{ old('id_produk') == $produk->id ? 'selected' : '' }}>
-                                                            {{ $produk->nama_bahan }}
+                                                @php
+                                                    $selectedProdukId = old('id_produk', '');
+                                                    $selectedKategori = old('kategori_code', '');
+                                                    if (($selectedKategori === null || $selectedKategori === '') && $selectedProdukId) {
+                                                        $selectedKategori = $produkKategoriById[$selectedProdukId] ?? '';
+                                                    }
+                                                @endphp
+
+                                                <label>Kategori Produk <span class="text-danger">*</span></label>
+                                                <select class="form-control kategori-produk-select @error('kategori_code') is-invalid @enderror" name="kategori_code" required>
+                                                    <option value="">-- Pilih Kategori --</option>
+                                                    @foreach(($produkKategoriOptions ?? []) as $kategori)
+                                                        <option value="{{ $kategori }}" {{ $selectedKategori == $kategori ? 'selected' : '' }}>
+                                                            {{ $kategori }}
                                                         </option>
                                                     @endforeach
+                                                </select>
+                                                @error('kategori_code')
+                                                    <div class="invalid-feedback">{{ $message }}</div>
+                                                @enderror
+
+                                                <label for="id_produk" class="mt-2">Produk <span class="text-danger">*</span></label>
+                                                <select id="id_produk" class="form-control produk-select @error('id_produk') is-invalid @enderror"
+                                                    name="id_produk" data-selected="{{ old('id_produk', '') }}" required>
+                                                    <option value="">-- Pilih Produk --</option>
                                                 </select>
                                                 @error('id_produk')
                                                     <div class="invalid-feedback">{{ $message }}</div>

@@ -2,9 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\ProdusenTemplateExport;
+use App\Imports\ProdusenImport;
 use App\Models\Produsen;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Maatwebsite\Excel\Facades\Excel;
 
 class ProdusenController extends Controller
 {
@@ -29,6 +32,31 @@ class ProdusenController extends Controller
         }
         
         return view('super-admin.input-produsen.index', compact('produsens'));
+    }
+
+    public function import(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|file|mimes:xlsx,xls,csv',
+        ]);
+
+        $import = new ProdusenImport();
+        Excel::import($import, $request->file('file'));
+
+        $message = "Import selesai. Inserted: {$import->inserted}. Skipped: {$import->skipped}.";
+
+        if (!empty($import->errors)) {
+            return redirect()->route('produsens.index')
+                ->with('success', $message)
+                ->with('import_errors', $import->errors);
+        }
+
+        return redirect()->route('produsens.index')->with('success', $message);
+    }
+
+    public function template()
+    {
+        return Excel::download(new ProdusenTemplateExport(), 'template_import_produsen.xlsx');
     }
 
     /**

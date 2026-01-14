@@ -317,14 +317,32 @@
                                         <!-- DATA PRODUK -->
                                         <h5 class="text-primary mb-3 mt-4">Data Produk <span class="text-danger">*</span></h5>
                                         <div class="row">
+                                            @php
+                                                $selectedProdukId = old('id_produk', '');
+                                                $selectedKategori = old('kategori_code', '');
+                                                if (($selectedKategori === null || $selectedKategori === '') && $selectedProdukId) {
+                                                    $selectedKategori = $produkKategoriById[$selectedProdukId] ?? '';
+                                                }
+                                            @endphp
+                                            <div class="col-md-6">
+                                                <div class="form-group">
+                                                    <label>Kategori <span class="text-danger">*</span></label>
+                                                    <select class="choices form-select kategori-produk-select @error('kategori_code') is-invalid @enderror" name="kategori_code" required>
+                                                        <option value="">-- Pilih Kategori --</option>
+                                                        @foreach(($produkKategoriOptions ?? []) as $kategori)
+                                                            <option value="{{ $kategori }}" {{ $selectedKategori == $kategori ? 'selected' : '' }}>{{ $kategori }}</option>
+                                                        @endforeach
+                                                    </select>
+                                                    @error('kategori_code')
+                                                        <div class="invalid-feedback">{{ $message }}</div>
+                                                    @enderror
+                                                </div>
+                                            </div>
                                             <div class="col-md-6">
                                                 <div class="form-group">
                                                     <label>Nama Produk <span class="text-danger">*</span></label>
-                                                    <select class="choices form-select @error('id_produk') is-invalid @enderror" name="id_produk" required>
+                                                    <select class="form-select produk-select @error('id_produk') is-invalid @enderror" name="id_produk" data-selected="{{ old('id_produk', '') }}" required>
                                                         <option value="">-- Pilih Produk --</option>
-                                                        @foreach($produks as $produk)
-                                                            <option value="{{ $produk->id }}" {{ old('id_produk') == $produk->id ? 'selected' : '' }}>{{ $produk->nama_produk }}</option>
-                                                        @endforeach
                                                     </select>
                                                     @error('id_produk')
                                                         <div class="invalid-feedback">{{ $message }}</div>
@@ -354,6 +372,12 @@
                                                     <div class="col-md-3">
                                                         <label>Jumlah Sampling</label>
                                                         <input type="text" class="form-control" name="produk_data[0][jumlah_sampling]" value="{{ old('produk_data.0.jumlah_sampling') }}" placeholder="Contoh: 10 Karton">
+                                                    </div>
+                                                </div>
+                                                <div class="row mt-3">
+                                                    <div class="col-md-3">
+                                                        <label>Berat per Karung</label>
+                                                        <input type="text" class="form-control" name="produk_data[0][berat_perkarung]" value="{{ old('produk_data.0.berat_perkarung') }}" placeholder="Contoh: 25 Kg">
                                                     </div>
                                                 </div>
                                                 <div class="row mt-3">
@@ -482,6 +506,103 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
+    const produkByKategori = @json($produkByKategori ?? []);
+
+    // Dependent dropdown: Kategori -> Produk
+    const kategoriSelect = document.querySelector('select.kategori-produk-select[name="kategori_code"]');
+    const produkSelect = document.querySelector('select.produk-select[name="id_produk"]');
+
+    const choicesInstances = new WeakMap();
+
+    const rebuildProdukChoices = function(choiceItems, desiredValue) {
+        if (!produkSelect) return;
+
+        const existing = choicesInstances.get(produkSelect);
+        if (existing && typeof existing.destroy === 'function') {
+            try { existing.destroy(); } catch (e) {}
+            try { choicesInstances.delete(produkSelect); } catch (e) {}
+        }
+
+        if (typeof Choices === 'undefined') {
+            while (produkSelect.options.length > 0) {
+                produkSelect.remove(0);
+            }
+            produkSelect.add(new Option('-- Pilih Produk --', ''));
+            (choiceItems || []).forEach((it) => {
+                produkSelect.add(new Option(it.label, it.value));
+            });
+            if (desiredValue) {
+                produkSelect.value = desiredValue;
+            }
+            return;
+        }
+
+        try {
+            const instance = new Choices(produkSelect, {
+                searchEnabled: true,
+                searchPlaceholderValue: 'Cari...',
+                itemSelectText: 'Tekan untuk memilih',
+                noResultsText: 'Tidak ada hasil ditemukan',
+                noChoicesText: 'Tidak ada pilihan tersedia',
+                removeItemButton: true,
+                shouldSort: false,
+                placeholder: true,
+                placeholderValue: 'Pilih...'
+            });
+
+            instance.setChoices(choiceItems, 'value', 'label', true);
+
+            if (desiredValue) {
+                try {
+                    instance.setChoiceByValue(String(desiredValue));
+                } catch (e) {
+                }
+            }
+
+            choicesInstances.set(produkSelect, instance);
+        } catch (e) {
+        }
+    };
+
+    const populateProdukOptions = function(kategoriCode) {
+        if (!produkSelect) return;
+
+        const selectedFromAttr = produkSelect.getAttribute('data-selected') || '';
+        const rawOptions = (kategoriCode && produkByKategori && produkByKategori[kategoriCode]) ? produkByKategori[kategoriCode] : [];
+        const options = Array.isArray(rawOptions) ? rawOptions : Object.values(rawOptions || {});
+
+        const choiceItems = [
+            { value: '', label: '-- Pilih Produk --', selected: false, disabled: false }
+        ];
+        options.forEach((p) => {
+            choiceItems.push({
+                value: String(p.id),
+                label: String(p.nama),
+                selected: false,
+                disabled: false
+            });
+        });
+
+        rebuildProdukChoices(choiceItems, selectedFromAttr);
+    };
+
+    if (kategoriSelect) {
+        kategoriSelect.addEventListener('change', function() {
+            if (produkSelect) {
+                produkSelect.setAttribute('data-selected', '');
+            }
+            populateProdukOptions(kategoriSelect.value);
+            if (produkSelect) {
+                syncHiddenProdukIds();
+            }
+        });
+    }
+
+    // Init produk options on load
+    if (kategoriSelect) {
+        populateProdukOptions(kategoriSelect.value);
+    }
+
     function syncHiddenProdukIds() {
         const idProduk = document.querySelector('select[name="id_produk"]')?.value || '';
         document.querySelectorAll('#produk-container .produk-id-hidden').forEach((el) => {
@@ -542,6 +663,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 <div class="col-md-3">
                     <label>Jumlah Sampling</label>
                     <input type="text" class="form-control" name="produk_data[${index}][jumlah_sampling]" placeholder="Contoh: 10 Karton">
+                </div>
+            </div>
+            <div class="row mt-3">
+                <div class="col-md-3">
+                    <label>Berat per Karung</label>
+                    <input type="text" class="form-control" name="produk_data[${index}][berat_perkarung]" placeholder="Contoh: 25 Kg">
                 </div>
             </div>
             <div class="row mt-3">

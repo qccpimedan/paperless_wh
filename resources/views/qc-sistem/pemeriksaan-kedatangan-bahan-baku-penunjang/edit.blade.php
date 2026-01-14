@@ -393,28 +393,85 @@
                                             <div class="row">
                                                 <div class="col-md-6">
                                                     <div class="form-group">
-                                                        <label class="form-label">Nama Bahan</label>
-                                                        <select class="choices form-control" name="id_bahan[]">
-                                                            <option value="">Pilih Bahan</option>
-                                                            @foreach($bahans as $bahan)
-                                                                <option value="{{ $bahan->id }}" {{ ($idBahanArray[$i] ?? '') == $bahan->id ? 'selected' : '' }}>{{ $bahan->nama_bahan }}</option>
+                                                        <label class="form-label">Kategori</label>
+                                                        @php
+                                                            $selectedProdukId = $idBahanArray[$i] ?? '';
+                                                            $selectedKategori = old('kategori_code.' . $i);
+                                                            if ($selectedKategori === null || $selectedKategori === '') {
+                                                                $selectedKategori = $selectedProdukId ? ($produkKategoriById[$selectedProdukId] ?? '') : '';
+                                                            }
+                                                        @endphp
+                                                        <select class="choices form-control kategori-produk-select" name="kategori_code[]" data-row-index="{{ $i }}">
+                                                            <option value="">Pilih Kategori</option>
+                                                            @foreach(($produkKategoriOptions ?? []) as $kategori)
+                                                                <option value="{{ $kategori }}" {{ $selectedKategori == $kategori ? 'selected' : '' }}>
+                                                                    {{ $kategori }}
+                                                                </option>
                                                             @endforeach
                                                         </select>
                                                     </div>
                                                 </div>
                                                 <div class="col-md-6">
                                                     <div class="form-group">
-                                                        <label class="form-label">Produsen</label>
-                                                        <select class="choices form-control" name="produsen[]">
-                                                            <option value="">Pilih Produsen</option>
-                                                            @foreach ($produsens as $produsen)
-                                                                <option value="{{ $produsen->nama_produsen }}" {{ ($produsenArray[$i] ?? '') == $produsen->nama_produsen ? 'selected' : '' }}>{{ $produsen->nama_produsen }}</option>
-                                                            @endforeach
+                                                        <label class="form-label">Produk</label>
+                                                        <select class="form-control produk-select" name="id_bahan[]" data-row-index="{{ $i }}" data-selected="{{ old('id_bahan.' . $i, $idBahanArray[$i] ?? '') }}">
+                                                            <option value="">Pilih Produk</option>
                                                         </select>
                                                     </div>
                                                 </div>
                                             </div>
                                             
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <div class="card border-0 shadow-sm">
+                                                        <div class="card-body p-3">
+                                                            <div class="fw-semibold">Distributor</div>
+                                                            <div class="small text-muted mb-2">Otomatis terisi sesuai Produk yang dipilih</div>
+                                                            <div class="distributor-badges d-flex flex-wrap gap-1">
+                                                                @php
+                                                                    $existingDistributor = $distributorArray[$i] ?? '';
+                                                                    $existingDistributorItems = array_values(array_filter(array_map('trim', explode(',', (string) $existingDistributor)), fn ($v) => $v !== ''));
+                                                                @endphp
+                                                                @forelse ($existingDistributorItems as $d)
+                                                                    <span class="badge bg-light-info text-info">{{ $d }}</span>
+                                                                @empty
+                                                                    <span class="text-muted small">-</span>
+                                                                @endforelse
+                                                            </div>
+                                                            <div class="distributor-hidden-inputs">
+                                                                @foreach ($existingDistributorItems as $d)
+                                                                    <input type="hidden" name="distributor[{{ $i }}][]" value="{{ $d }}">
+                                                                @endforeach
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="card border-0 shadow-sm">
+                                                        <div class="card-body p-3">
+                                                            <div class="fw-semibold">Produsen</div>
+                                                            <div class="small text-muted mb-2">Otomatis terisi sesuai Produk yang dipilih</div>
+                                                            <div class="produsen-badges d-flex flex-wrap gap-1">
+                                                                @php
+                                                                    $existingProdusen = $produsenArray[$i] ?? '';
+                                                                    $existingProdusenItems = array_values(array_filter(array_map('trim', explode(',', (string) $existingProdusen)), fn ($v) => $v !== ''));
+                                                                @endphp
+                                                                @forelse ($existingProdusenItems as $p)
+                                                                    <span class="badge bg-light-primary text-primary">{{ $p }}</span>
+                                                                @empty
+                                                                    <span class="text-muted small">-</span>
+                                                                @endforelse
+                                                            </div>
+                                                            <div class="produsen-hidden-inputs">
+                                                                @foreach ($existingProdusenItems as $p)
+                                                                    <input type="hidden" name="produsen[{{ $i }}][]" value="{{ $p }}">
+                                                                @endforeach
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
                                             <div class="row">
                                                 <div class="col-md-6">
                                                     <div class="form-group">
@@ -423,17 +480,6 @@
                                                             <option value="">Pilih Negara</option>
                                                             @foreach ($countries as $code => $name)
                                                                 <option value="{{ $name }}" {{ ($negaraProdusenArray[$i] ?? '') == $name ? 'selected' : '' }}>{{ $name }}</option>
-                                                            @endforeach
-                                                        </select>
-                                                    </div>
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <div class="form-group">
-                                                        <label class="form-label">Distributor</label>
-                                                        <select class="choices form-control" name="distributor[]">
-                                                            <option value="">Pilih Distributor</option>
-                                                            @foreach ($distributors as $distributor)
-                                                                <option value="{{ $distributor->nama_distributor }}" {{ ($distributorArray[$i] ?? '') == $distributor->nama_distributor ? 'selected' : '' }}>{{ $distributor->nama_distributor }}</option>
                                                             @endforeach
                                                         </select>
                                                     </div>
@@ -715,7 +761,7 @@
                                 <div class="col-md-12 d-flex justify-content-end mt-3">
                                     <a href="{{ route('pemeriksaan-bahan-baku.index') }}" class="btn btn-light-secondary me-1 mb-1">Kembali</a>
                                     <button type="submit" class="btn btn-primary me-1 mb-1">Update Data</button>
-                                    <button type="reset" class="btn btn-light-secondary me-1 mb-1">Reset</button>
+                                    <!-- <button type="reset" class="btn btn-light-secondary me-1 mb-1">Reset</button> -->
                                 </div>
                             </form>
                         </div>
@@ -730,7 +776,141 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
 
+    const produkByKategori = @json($produkByKategori ?? []);
+    const produkMeta = @json($produkMeta ?? []);
+
     const isFreshOrFrozen = (val) => val === 'Fresh' || val === 'Frozen';
+
+    const populateProdukOptionsForRow = function(unifiedRow, kategoriCode) {
+        if (!unifiedRow) return;
+        const produkSelect = unifiedRow.querySelector('select.produk-select');
+        if (!produkSelect) return;
+
+        const selectedFromAttr = produkSelect.getAttribute('data-selected') || '';
+
+        while (produkSelect.options.length > 0) {
+            produkSelect.remove(0);
+        }
+        produkSelect.add(new Option('Pilih Produk', ''));
+
+        if (kategoriCode && produkByKategori && produkByKategori[kategoriCode]) {
+            (produkByKategori[kategoriCode] || []).forEach(function(p) {
+                const opt = new Option(p.nama, p.id);
+                produkSelect.add(opt);
+            });
+        }
+
+        if (selectedFromAttr) {
+            produkSelect.value = selectedFromAttr;
+        }
+    };
+
+    const renderBadgesAndHiddenInputs = function(containerBadges, containerInputs, values, badgeClass) {
+        if (!containerBadges || !containerInputs) return;
+        const safeValues = Array.isArray(values) ? values.filter(v => v !== null && v !== undefined && String(v).trim() !== '').map(v => String(v)) : [];
+
+        containerBadges.innerHTML = '';
+        containerInputs.innerHTML = '';
+
+        if (!safeValues.length) {
+            const span = document.createElement('span');
+            span.className = 'text-muted small';
+            span.textContent = '-';
+            containerBadges.appendChild(span);
+            return;
+        }
+
+        safeValues.forEach(function(val) {
+            const badge = document.createElement('span');
+            badge.className = badgeClass;
+            badge.textContent = val;
+            containerBadges.appendChild(badge);
+
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.value = val;
+            containerInputs.appendChild(input);
+        });
+    };
+
+    const applyProdukMetaForRow = function(unifiedRow) {
+        if (!unifiedRow) return;
+        const rowIndex = unifiedRow.getAttribute('data-row-index');
+        const produkSelect = unifiedRow.querySelector('select.produk-select');
+        if (!produkSelect) return;
+
+        const produkId = produkSelect.value;
+        const meta = (produkId && produkMeta) ? (produkMeta[produkId] || null) : null;
+        const produsenVals = meta && Array.isArray(meta.produsen) ? meta.produsen : [];
+        const distributorVals = meta && Array.isArray(meta.distributor) ? meta.distributor : [];
+
+        const produsenBadges = unifiedRow.querySelector('.produsen-badges');
+        const produsenInputs = unifiedRow.querySelector('.produsen-hidden-inputs');
+        const distributorBadges = unifiedRow.querySelector('.distributor-badges');
+        const distributorInputs = unifiedRow.querySelector('.distributor-hidden-inputs');
+
+        if (produsenInputs) {
+            // update hidden input names
+            produsenInputs.querySelectorAll('input[type="hidden"]').forEach(i => i.remove());
+        }
+        if (distributorInputs) {
+            distributorInputs.querySelectorAll('input[type="hidden"]').forEach(i => i.remove());
+        }
+
+        // Render badges first
+        if (produsenBadges) produsenBadges.innerHTML = '';
+        if (distributorBadges) distributorBadges.innerHTML = '';
+
+        if (produsenBadges && produsenInputs) {
+            produsenBadges.innerHTML = '';
+            produsenInputs.innerHTML = '';
+            const safeProdusen = Array.isArray(produsenVals) ? produsenVals.filter(v => v && String(v).trim() !== '') : [];
+            if (!safeProdusen.length) {
+                const span = document.createElement('span');
+                span.className = 'text-muted small';
+                span.textContent = '-';
+                produsenBadges.appendChild(span);
+            } else {
+                safeProdusen.forEach(function(v) {
+                    const badge = document.createElement('span');
+                    badge.className = 'badge bg-light-primary text-primary';
+                    badge.textContent = v;
+                    produsenBadges.appendChild(badge);
+
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = `produsen[${rowIndex}][]`;
+                    input.value = v;
+                    produsenInputs.appendChild(input);
+                });
+            }
+        }
+
+        if (distributorBadges && distributorInputs) {
+            distributorBadges.innerHTML = '';
+            distributorInputs.innerHTML = '';
+            const safeDistributor = Array.isArray(distributorVals) ? distributorVals.filter(v => v && String(v).trim() !== '') : [];
+            if (!safeDistributor.length) {
+                const span = document.createElement('span');
+                span.className = 'text-muted small';
+                span.textContent = '-';
+                distributorBadges.appendChild(span);
+            } else {
+                safeDistributor.forEach(function(v) {
+                    const badge = document.createElement('span');
+                    badge.className = 'badge bg-light-info text-info';
+                    badge.textContent = v;
+                    distributorBadges.appendChild(badge);
+
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = `distributor[${rowIndex}][]`;
+                    input.value = v;
+                    distributorInputs.appendChild(input);
+                });
+            }
+        }
+    };
 
     const initChoices = function() {
         const selectElements = document.querySelectorAll('select.choices');
@@ -814,6 +994,17 @@ document.addEventListener('DOMContentLoaded', function() {
         const target = e.target;
         if (!target) return;
 
+        if (target.matches('select.kategori-produk-select')) {
+            const unifiedRow = target.closest('.unified-row');
+            populateProdukOptionsForRow(unifiedRow, target.value);
+            applyProdukMetaForRow(unifiedRow);
+        }
+
+        if (target.matches('select.produk-select')) {
+            const unifiedRow = target.closest('.unified-row');
+            applyProdukMetaForRow(unifiedRow);
+        }
+
         if (target.matches('select.suhu-produk-type, select.suhu-mobil-type, select.kondisi-produk')) {
             const unifiedRow = target.closest('.unified-row');
             updateConditionalForRow(unifiedRow);
@@ -883,6 +1074,15 @@ document.addEventListener('DOMContentLoaded', function() {
             } else {
                 alert('Minimal harus ada satu baris data!');
             }
+        }
+    });
+
+    // Initial populate for existing rows
+    document.querySelectorAll('#unified-container .unified-row').forEach(function(unifiedRow) {
+        const kategoriSelect = unifiedRow.querySelector('select.kategori-produk-select');
+        if (kategoriSelect) {
+            populateProdukOptionsForRow(unifiedRow, kategoriSelect.value);
+            applyProdukMetaForRow(unifiedRow);
         }
     });
 });

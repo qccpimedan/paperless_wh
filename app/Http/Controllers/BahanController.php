@@ -3,8 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Models\Bahan;
+use App\Models\Distributor;
+use App\Models\Produsen;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Imports\BahanImport;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\BahanTemplateExport;
 
 class BahanController extends Controller
 {
@@ -13,20 +18,7 @@ class BahanController extends Controller
      */
     public function index()
     {
-        $user = Auth::user();
-        
-        // SuperAdmin dapat melihat semua data
-        if ($user->role && strtolower($user->role->role) === 'superadmin') {
-            $bahans = Bahan::with(['user.role', 'user.plant'])->latest()->get();
-        } else {
-            // Admin dan role lain hanya melihat data sesuai plant mereka
-            $bahans = Bahan::with(['user.role', 'user.plant'])
-                ->whereHas('user', function($query) use ($user) {
-                    $query->where('id_plant', $user->id_plant);
-                })
-                ->latest()
-                ->get();
-        }
+        $bahans = Bahan::with(['user.role', 'user.plant'])->latest()->get();
         
         return view('super-admin.input-bahan.index', compact('bahans'));
     }
@@ -36,7 +28,28 @@ class BahanController extends Controller
      */
     public function create()
     {
-        return view('super-admin.input-bahan.create');
+        $user = Auth::user();
+
+        if ($user->role && strtolower($user->role->role) === 'superadmin') {
+            $distributors = Distributor::with(['user.plant'])->latest()->get();
+            $produsens = Produsen::with(['user.plant'])->latest()->get();
+        } else {
+            $distributors = Distributor::with(['user.plant'])
+                ->whereHas('user', function ($query) use ($user) {
+                    $query->where('id_plant', $user->id_plant);
+                })
+                ->latest()
+                ->get();
+
+            $produsens = Produsen::with(['user.plant'])
+                ->whereHas('user', function ($query) use ($user) {
+                    $query->where('id_plant', $user->id_plant);
+                })
+                ->latest()
+                ->get();
+        }
+
+        return view('super-admin.input-bahan.create', compact('distributors', 'produsens'));
     }
 
     /**
@@ -45,25 +58,38 @@ class BahanController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'nama_bahan' => 'required|array|min:1',
-            'nama_bahan.*' => 'required|string|max:255',
+            'nama_bahan' => 'required|string|max:255',
+            'kategori_code' => 'required|string|in:WHSE,RT01,CR01,CR02,SHTS,SHCS,OTRM,SHCS & OTRM',
+            'id_produsen' => 'nullable|array',
+            'id_produsen.*' => 'nullable|exists:produsens,id',
+            'id_distributor' => 'nullable|array',
+            'id_distributor.*' => 'nullable|exists:distributors,id',
         ]);
 
-        // Filter empty values
-        $namaBahan = array_filter($request->nama_bahan, function($value) {
-            return !empty(trim($value));
-        });
+        $bahan = Bahan::create([
+            'id_user' => Auth::id(),
+            'nama_bahan' => trim($request->nama_bahan),
+            'kategori_code' => $request->kategori_code,
+        ]);
 
-        if (empty($namaBahan)) {
-            return back()->withErrors(['nama_bahan' => 'Minimal harus ada satu nama bahan.']);
+        $plantId = Auth::user()->id_plant;
+
+        $bahan->produsens()->wherePivot('id_plant', $plantId)->detach();
+        $bahan->distributors()->wherePivot('id_plant', $plantId)->detach();
+
+        $produsenIds = array_values(array_filter($request->input('id_produsen', [])));
+        $distributorIds = array_values(array_filter($request->input('id_distributor', [])));
+
+        if (!empty($produsenIds)) {
+            $bahan->produsens()->attach(collect($produsenIds)->mapWithKeys(function ($id) use ($plantId) {
+                return [$id => ['id_plant' => $plantId]];
+            })->all());
         }
 
-        // Create separate record for each nama_bahan
-        foreach ($namaBahan as $nama) {
-            Bahan::create([
-                'id_user' => Auth::id(),
-                'nama_bahan' => trim($nama),
-            ]);
+        if (!empty($distributorIds)) {
+            $bahan->distributors()->attach(collect($distributorIds)->mapWithKeys(function ($id) use ($plantId) {
+                return [$id => ['id_plant' => $plantId]];
+            })->all());
         }
 
         return redirect()->route('bahans.index')->with('success', 'Bahan berhasil ditambahkan!');
@@ -74,9 +100,6 @@ class BahanController extends Controller
      */
     public function show(Bahan $bahan)
     {
-        // Check access based on plant
-        $this->checkPlantAccess($bahan);
-        
         $bahan->load('user');
         return view('super-admin.input-bahan.show', compact('bahan'));
     }
@@ -86,10 +109,32 @@ class BahanController extends Controller
      */
     public function edit(Bahan $bahan)
     {
-        // Check access based on plant
-        $this->checkPlantAccess($bahan);
-        
-        return view('super-admin.input-bahan.edit', compact('bahan'));
+        $user = Auth::user();
+
+        if ($user->role && strtolower($user->role->role) === 'superadmin') {
+            $distributors = Distributor::with(['user.plant'])->latest()->get();
+            $produsens = Produsen::with(['user.plant'])->latest()->get();
+        } else {
+            $distributors = Distributor::with(['user.plant'])
+                ->whereHas('user', function ($query) use ($user) {
+                    $query->where('id_plant', $user->id_plant);
+                })
+                ->latest()
+                ->get();
+
+            $produsens = Produsen::with(['user.plant'])
+                ->whereHas('user', function ($query) use ($user) {
+                    $query->where('id_plant', $user->id_plant);
+                })
+                ->latest()
+                ->get();
+        }
+
+        $plantId = $user->id_plant;
+        $selectedProdusenIds = $bahan->produsens()->wherePivot('id_plant', $plantId)->pluck('produsens.id')->toArray();
+        $selectedDistributorIds = $bahan->distributors()->wherePivot('id_plant', $plantId)->pluck('distributors.id')->toArray();
+
+        return view('super-admin.input-bahan.edit', compact('bahan', 'distributors', 'produsens', 'selectedProdusenIds', 'selectedDistributorIds'));
     }
 
     /**
@@ -97,16 +142,39 @@ class BahanController extends Controller
      */
     public function update(Request $request, Bahan $bahan)
     {
-        // Check access based on plant
-        $this->checkPlantAccess($bahan);
-        
         $request->validate([
             'nama_bahan' => 'required|string|max:255',
+            'kategori_code' => 'required|string|in:WHSE,RT01,CR01,CR02,SHTS,SHCS,OTRM,SHCS & OTRM',
+            'id_produsen' => 'nullable|array',
+            'id_produsen.*' => 'nullable|exists:produsens,id',
+            'id_distributor' => 'nullable|array',
+            'id_distributor.*' => 'nullable|exists:distributors,id',
         ]);
 
         $bahan->update([
             'nama_bahan' => trim($request->nama_bahan),
+            'kategori_code' => $request->kategori_code,
         ]);
+
+        $plantId = Auth::user()->id_plant;
+
+        $bahan->produsens()->wherePivot('id_plant', $plantId)->detach();
+        $bahan->distributors()->wherePivot('id_plant', $plantId)->detach();
+
+        $produsenIds = array_values(array_filter($request->input('id_produsen', [])));
+        $distributorIds = array_values(array_filter($request->input('id_distributor', [])));
+
+        if (!empty($produsenIds)) {
+            $bahan->produsens()->attach(collect($produsenIds)->mapWithKeys(function ($id) use ($plantId) {
+                return [$id => ['id_plant' => $plantId]];
+            })->all());
+        }
+
+        if (!empty($distributorIds)) {
+            $bahan->distributors()->attach(collect($distributorIds)->mapWithKeys(function ($id) use ($plantId) {
+                return [$id => ['id_plant' => $plantId]];
+            })->all());
+        }
 
         return redirect()->route('bahans.index')->with('success', 'Bahan berhasil diupdate!');
     }
@@ -116,9 +184,6 @@ class BahanController extends Controller
      */
     public function destroy(Bahan $bahan)
     {
-        // Check access based on plant
-        $this->checkPlantAccess($bahan);
-        
         $bahan->delete();
         return redirect()->route('bahans.index')->with('success', 'Bahan berhasil dihapus!');
     }
@@ -128,16 +193,31 @@ class BahanController extends Controller
      */
     private function checkPlantAccess(Bahan $bahan)
     {
-        $user = Auth::user();
-        
-        // SuperAdmin dapat akses semua data
-        if ($user->role && strtolower($user->role->role) === 'superadmin') {
-            return;
+        return;
+    }
+
+    public function import(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|file|mimes:xlsx,xls,csv',
+        ]);
+
+        $import = new BahanImport();
+        Excel::import($import, $request->file('file'));
+
+        $message = "Import selesai. Inserted: {$import->inserted}. Skipped: {$import->skipped}.";
+
+        if (!empty($import->errors)) {
+            return redirect()->route('bahans.index')
+                ->with('success', $message)
+                ->with('import_errors', $import->errors);
         }
-        
-        // Admin dan role lain hanya dapat akses data dari plant mereka
-        if ($bahan->user->id_plant !== $user->id_plant) {
-            abort(403, 'Anda tidak memiliki akses ke data ini.');
-        }
+
+        return redirect()->route('bahans.index')->with('success', $message);
+    }
+
+    public function template()
+    {
+        return Excel::download(new BahanTemplateExport(), 'template_import_bahan.xlsx');
     }
 }

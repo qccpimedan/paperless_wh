@@ -35,11 +35,20 @@
                     <div class="row">
                         <div class="col-md-12">
                             <p><strong>Nama Kemasan:</strong> {{ $bahanKemasan->nama_kemasan }}</p>
+                            <p><strong>Kategori:</strong> {{ $bahanKemasan->kategori_code ?? '-' }}</p>
                             <p><strong>Distributor:</strong>
-                                {{ $bahanKemasan->distributor ? $bahanKemasan->distributor->nama_distributor : '-' }}
+                                @if($bahanKemasan->distributors && $bahanKemasan->distributors->count() > 0)
+                                    {{ $bahanKemasan->distributors->pluck('nama_distributor')->implode(', ') }}
+                                @else
+                                    -
+                                @endif
                             </p>
                             <p><strong>Produsen:</strong>
-                                {{ $bahanKemasan->produsen ? $bahanKemasan->produsen->nama_produsen : '-' }}
+                                @if($bahanKemasan->produsens && $bahanKemasan->produsens->count() > 0)
+                                    {{ $bahanKemasan->produsens->pluck('nama_produsen')->implode(', ') }}
+                                @else
+                                    -
+                                @endif
                             </p>
                             <p><strong>Plant:</strong>
                                 @if($bahanKemasan->user && $bahanKemasan->user->plant)

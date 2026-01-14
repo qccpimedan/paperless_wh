@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\PemeriksaanKedatanganBahanBakuPenunjang;
 use App\Models\Shift;
 use App\Models\Bahan;
+use App\Models\Produk;
 use App\Models\Produsen;
 use App\Models\Distributor;
 use App\Models\User;
@@ -41,32 +42,80 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
     public function create()
     {
         $user = Auth::user();
+        $plantId = $user->id_plant;
+        $produkKategoriOptions = collect();
+        $produkByKategori = collect();
+        $produkMeta = collect();
+        $produkKategoriById = collect();
         
         // SuperAdmin dapat melihat semua data
         if ($user->role && strtolower($user->role->role) === 'superadmin') {
             $shifts = Shift::with(['user.plant'])->get();
-            $bahans = Bahan::with(['user.plant'])->get();
             $countries = Countries::getList('en', 'php');
-            $produsens = Produsen::all();
-            $distributors = Distributor::all();
         } else {
             $shifts = Shift::whereHas('user', function ($query) use ($user) {
                 $query->where('id_plant', $user->id_plant); // ✅ GUNAKAN id_plant
             })->with(['user.plant'])->get();
             
-            $bahans = Bahan::whereHas('user', function ($query) use ($user) {
-                $query->where('id_plant', $user->id_plant); // ✅ GUNAKAN id_plant
-            })->with(['user.plant'])->get();
             $countries = Countries::getList('en', 'php');
-            $produsens = Produsen::whereHas('user', function ($query) use ($user) {
-                $query->where('id_plant', $user->id_plant); // ✅ GUNAKAN id_plant
-            })->get();
-            $distributors = Distributor::whereHas('user', function ($query) use ($user) {
-                $query->where('id_plant', $user->id_plant); // ✅ GUNAKAN id_plant
-            })->get();
         }
 
-        return view('qc-sistem.pemeriksaan-kedatangan-bahan-baku-penunjang.create', compact('shifts', 'bahans', 'countries', 'produsens', 'distributors'));
+        $produkKategoriOptions = Produk::query()
+            ->whereNotNull('kategori_code')
+            ->select('kategori_code')
+            ->distinct()
+            ->orderBy('kategori_code')
+            ->pluck('kategori_code')
+            ->values();
+
+        $produkList = Produk::query()
+            ->select(['id', 'nama_produk', 'kategori_code'])
+            ->orderBy('nama_produk')
+            ->get();
+
+        $produkByKategori = $produkList
+            ->groupBy('kategori_code')
+            ->map(function ($items) {
+                return $items->map(function ($p) {
+                    return [
+                        'id' => $p->id,
+                        'nama' => $p->nama_produk,
+                    ];
+                })->values();
+            });
+
+        $produkKategoriById = $produkList->pluck('kategori_code', 'id');
+
+        $produkMeta = Produk::with([
+                'produsens' => function ($q) use ($plantId) {
+                    if ($plantId) {
+                        $q->wherePivot('id_plant', $plantId);
+                    }
+                },
+                'distributors' => function ($q) use ($plantId) {
+                    if ($plantId) {
+                        $q->wherePivot('id_plant', $plantId);
+                    }
+                },
+            ])
+            ->get()
+            ->mapWithKeys(function ($p) {
+                return [
+                    $p->id => [
+                        'produsen' => $p->produsens->pluck('nama_produsen')->values()->toArray(),
+                        'distributor' => $p->distributors->pluck('nama_distributor')->values()->toArray(),
+                    ],
+                ];
+            });
+
+        return view('qc-sistem.pemeriksaan-kedatangan-bahan-baku-penunjang.create', compact(
+            'shifts',
+            'countries',
+            'produkKategoriOptions',
+            'produkByKategori',
+            'produkMeta',
+            'produkKategoriById'
+        ));
     }
 
     private function checkPlantAccess($pemeriksaan)
@@ -97,13 +146,15 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
             'status_baris.*' => 'required|in:Release,Hold',
             // Validasi array fields dari dynamic rows
             'id_bahan' => 'nullable|array',
-            'id_bahan.*' => 'nullable|exists:bahans,id',
+            'id_bahan.*' => 'nullable|exists:produks,id',
             'produsen' => 'nullable|array',
-            'produsen.*' => 'nullable|string|max:255',
+            'produsen.*' => 'nullable|array',
+            'produsen.*.*' => 'nullable|string|max:255',
             'negara_produsen' => 'nullable|array',
             'negara_produsen.*' => 'nullable|string|max:255',
             'distributor' => 'nullable|array',
-            'distributor.*' => 'nullable|string|max:255',
+            'distributor.*' => 'nullable|array',
+            'distributor.*.*' => 'nullable|string|max:255',
             'kode_produksi' => 'nullable|array',
             'kode_produksi.*' => 'nullable|string|max:255',
             'expire_date' => 'nullable|array',
@@ -149,6 +200,28 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
         ];
 
         $data = $request->all();
+
+        // Normalize nested produsen/distributor arrays (produsen[row][]) into string per row for storage
+        $normalizeNestedMulti = function ($rows) {
+            if (!is_array($rows)) return [];
+            $out = [];
+            foreach ($rows as $row) {
+                if (is_array($row)) {
+                    $vals = array_values(array_filter(array_map('strval', $row), fn ($v) => $v !== ''));
+                    $out[] = implode(', ', $vals);
+                } else {
+                    $out[] = (string) $row;
+                }
+            }
+            return $out;
+        };
+
+        if ($request->has('produsen')) {
+            $data['produsen'] = $normalizeNestedMulti($request->input('produsen', []));
+        }
+        if ($request->has('distributor')) {
+            $data['distributor'] = $normalizeNestedMulti($request->input('distributor', []));
+        }
         $data['id_user'] = Auth::id();
         $data['segel_gembok'] = $request->input('segel_gembok');
         $data['kondisi_mobil'] = $kondisiMobil;
@@ -320,31 +393,80 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
         $this->checkPlantAccess($pemeriksaanBahanBaku);
         
         $user = Auth::user();
+        $plantId = $user->id_plant;
+        $produkKategoriOptions = collect();
+        $produkByKategori = collect();
+        $produkMeta = collect();
+        $produkKategoriById = collect();
         
         if ($user->role && strtolower($user->role->role) === 'superadmin') {
             $shifts = Shift::with(['user.plant'])->get();
-            $bahans = Bahan::with(['user.plant'])->get();
             $countries = Countries::getList('en', 'php');
-            $produsens = Produsen::all();
-            $distributors = Distributor::all();
         } else {
             $shifts = Shift::whereHas('user', function ($query) use ($user) {
                 $query->where('id_plant', $user->id_plant); // ✅ GUNAKAN id_plant
             })->with(['user.plant'])->get();
             
-            $bahans = Bahan::whereHas('user', function ($query) use ($user) {
-                $query->where('id_plant', $user->id_plant); // ✅ GUNAKAN id_plant
-            })->with(['user.plant'])->get();
-            $produsens = Produsen::whereHas('user', function ($query) use ($user) {
-                $query->where('id_plant', $user->id_plant); // ✅ GUNAKAN id_plant
-            })->get();
-            $distributors = Distributor::whereHas('user', function ($query) use ($user) {
-                $query->where('id_plant', $user->id_plant); // ✅ GUNAKAN id_plant
-            })->get();
             $countries = Countries::getList('en', 'php');
         }
+
+        $produkKategoriOptions = Produk::query()
+            ->whereNotNull('kategori_code')
+            ->select('kategori_code')
+            ->distinct()
+            ->orderBy('kategori_code')
+            ->pluck('kategori_code')
+            ->values();
+
+        $produkList = Produk::query()
+            ->select(['id', 'nama_produk', 'kategori_code'])
+            ->orderBy('nama_produk')
+            ->get();
+
+        $produkByKategori = $produkList
+            ->groupBy('kategori_code')
+            ->map(function ($items) {
+                return $items->map(function ($p) {
+                    return [
+                        'id' => $p->id,
+                        'nama' => $p->nama_produk,
+                    ];
+                })->values();
+            });
+
+        $produkKategoriById = $produkList->pluck('kategori_code', 'id');
+
+        $produkMeta = Produk::with([
+                'produsens' => function ($q) use ($plantId) {
+                    if ($plantId) {
+                        $q->wherePivot('id_plant', $plantId);
+                    }
+                },
+                'distributors' => function ($q) use ($plantId) {
+                    if ($plantId) {
+                        $q->wherePivot('id_plant', $plantId);
+                    }
+                },
+            ])
+            ->get()
+            ->mapWithKeys(function ($p) {
+                return [
+                    $p->id => [
+                        'produsen' => $p->produsens->pluck('nama_produsen')->values()->toArray(),
+                        'distributor' => $p->distributors->pluck('nama_distributor')->values()->toArray(),
+                    ],
+                ];
+            });
     
-        return view('qc-sistem.pemeriksaan-kedatangan-bahan-baku-penunjang.edit', compact('pemeriksaanBahanBaku', 'shifts', 'bahans', 'produsens', 'distributors', 'countries'));
+        return view('qc-sistem.pemeriksaan-kedatangan-bahan-baku-penunjang.edit', compact(
+            'pemeriksaanBahanBaku',
+            'shifts',
+            'countries',
+            'produkKategoriOptions',
+            'produkByKategori',
+            'produkMeta',
+            'produkKategoriById'
+        ));
     }
 
     public function update(Request $request, PemeriksaanKedatanganBahanBakuPenunjang $pemeriksaanBahanBaku)
@@ -363,13 +485,15 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
             'status_baris.*' => 'required|in:Release,Hold',
             // Validasi array fields dari dynamic rows
             'id_bahan' => 'nullable|array',
-            'id_bahan.*' => 'nullable|exists:bahans,id',
+            'id_bahan.*' => 'nullable|exists:produks,id',
             'produsen' => 'nullable|array',
-            'produsen.*' => 'nullable|string|max:255',
+            'produsen.*' => 'nullable|array',
+            'produsen.*.*' => 'nullable|string|max:255',
             'negara_produsen' => 'nullable|array',
             'negara_produsen.*' => 'nullable|string|max:255',
             'distributor' => 'nullable|array',
-            'distributor.*' => 'nullable|string|max:255',
+            'distributor.*' => 'nullable|array',
+            'distributor.*.*' => 'nullable|string|max:255',
             'kode_produksi' => 'nullable|array',
             'kode_produksi.*' => 'nullable|string|max:255',
             'expire_date' => 'nullable|array',
@@ -417,6 +541,29 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
         $data = $request->all();
         $data['segel_gembok'] = $request->input('segel_gembok');
         $data['kondisi_mobil'] = $kondisiMobil;
+
+        // Normalize nested produsen/distributor arrays (produsen[row][]) into string per row for storage
+        $normalizeNestedMulti = function ($rows) {
+            if (!is_array($rows)) return [];
+            $out = [];
+            foreach ($rows as $row) {
+                if (is_array($row)) {
+                    $vals = array_values(array_filter(array_map('strval', $row), fn ($v) => $v !== ''));
+                    $out[] = implode(', ', $vals);
+                } else {
+                    $out[] = (string) $row;
+                }
+            }
+            return $out;
+        };
+
+        if ($request->has('produsen')) {
+            $data['produsen'] = $normalizeNestedMulti($request->input('produsen', []));
+        }
+        if ($request->has('distributor')) {
+            $data['distributor'] = $normalizeNestedMulti($request->input('distributor', []));
+        }
+
         // Hapus kondisi_fisik, logo_halal, dokumen_halal, coa dari data karena akan diproses sebagai array
         unset($data['kondisi_fisik']);
         unset($data['logo_halal']);
@@ -572,31 +719,73 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
         $this->checkPlantAccess($pemeriksaanBahanBaku);
 
         $user = Auth::user();
+        $plantId = $user->id_plant;
+        $produkKategoriOptions = collect();
+        $produkByKategori = collect();
+        $produkMeta = collect();
+        $produkKategoriById = collect();
 
         if ($user->role && strtolower($user->role->role) === 'superadmin') {
-            $bahans = Bahan::with(['user.plant'])->get();
             $countries = Countries::getList('en', 'php');
-            $produsens = Produsen::all();
-            $distributors = Distributor::all();
         } else {
-            $bahans = Bahan::whereHas('user', function ($query) use ($user) {
-                $query->where('id_plant', $user->id_plant);
-            })->with(['user.plant'])->get();
             $countries = Countries::getList('en', 'php');
-            $produsens = Produsen::whereHas('user', function ($query) use ($user) {
-                $query->where('id_plant', $user->id_plant);
-            })->get();
-            $distributors = Distributor::whereHas('user', function ($query) use ($user) {
-                $query->where('id_plant', $user->id_plant);
-            })->get();
         }
+
+        $produkKategoriOptions = Produk::query()
+            ->whereNotNull('kategori_code')
+            ->select('kategori_code')
+            ->distinct()
+            ->orderBy('kategori_code')
+            ->pluck('kategori_code')
+            ->values();
+
+        $produkList = Produk::query()
+            ->select(['id', 'nama_produk', 'kategori_code'])
+            ->orderBy('nama_produk')
+            ->get();
+
+        $produkByKategori = $produkList
+            ->groupBy('kategori_code')
+            ->map(function ($items) {
+                return $items->map(function ($p) {
+                    return [
+                        'id' => $p->id,
+                        'nama' => $p->nama_produk,
+                    ];
+                })->values();
+            });
+
+        $produkKategoriById = $produkList->pluck('kategori_code', 'id');
+
+        $produkMeta = Produk::with([
+                'produsens' => function ($q) use ($plantId) {
+                    if ($plantId) {
+                        $q->wherePivot('id_plant', $plantId);
+                    }
+                },
+                'distributors' => function ($q) use ($plantId) {
+                    if ($plantId) {
+                        $q->wherePivot('id_plant', $plantId);
+                    }
+                },
+            ])
+            ->get()
+            ->mapWithKeys(function ($p) {
+                return [
+                    $p->id => [
+                        'produsen' => $p->produsens->pluck('nama_produsen')->values()->toArray(),
+                        'distributor' => $p->distributors->pluck('nama_distributor')->values()->toArray(),
+                    ],
+                ];
+            });
 
         return view('qc-sistem.pemeriksaan-kedatangan-bahan-baku-penunjang.tambah-baris', compact(
             'pemeriksaanBahanBaku',
-            'bahans',
             'countries',
-            'produsens',
-            'distributors'
+            'produkKategoriOptions',
+            'produkByKategori',
+            'produkMeta',
+            'produkKategoriById'
         ));
     }
 
@@ -606,10 +795,12 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
 
         $request->validate([
             'status_baris' => 'required|in:Release,Hold',
-            'id_bahan' => 'nullable|exists:bahans,id',
-            'produsen' => 'nullable|string|max:255',
+            'id_bahan' => 'nullable|exists:produks,id',
+            'produsen' => 'nullable|array',
+            'produsen.*' => 'nullable|string|max:255',
             'negara_produsen' => 'nullable|string|max:255',
-            'distributor' => 'nullable|string|max:255',
+            'distributor' => 'nullable|array',
+            'distributor.*' => 'nullable|string|max:255',
             'kode_produksi' => 'nullable|string|max:255',
             'expire_date' => 'nullable|date',
             'jumlah_datang' => 'nullable|string|max:255',
@@ -642,10 +833,16 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
             return $arr;
         };
 
+        $normalizeSingleMulti = function ($vals): ?string {
+            if (!is_array($vals)) return $vals !== null ? (string) $vals : null;
+            $out = array_values(array_filter(array_map('strval', $vals), fn ($v) => $v !== ''));
+            return count($out) ? implode(', ', $out) : null;
+        };
+
         $idBahanArr = $appendJsonArray($pemeriksaanBahanBaku->id_bahan_array, $request->input('id_bahan'));
-        $produsenArr = $appendJsonArray($pemeriksaanBahanBaku->produsen_array, $request->input('produsen'));
+        $produsenArr = $appendJsonArray($pemeriksaanBahanBaku->produsen_array, $normalizeSingleMulti($request->input('produsen')));
         $negaraProdusenArr = $appendJsonArray($pemeriksaanBahanBaku->negara_produsen_array, $request->input('negara_produsen'));
-        $distributorArr = $appendJsonArray($pemeriksaanBahanBaku->distributor_array, $request->input('distributor'));
+        $distributorArr = $appendJsonArray($pemeriksaanBahanBaku->distributor_array, $normalizeSingleMulti($request->input('distributor')));
         $kodeProduksiArr = $appendJsonArray($pemeriksaanBahanBaku->kode_produksi_array, $request->input('kode_produksi'));
         $expireDateArr = $appendJsonArray($pemeriksaanBahanBaku->expire_date_array, $request->input('expire_date'));
         $jumlahDatangArr = $appendJsonArray($pemeriksaanBahanBaku->jumlah_datang_array, $request->input('jumlah_datang'));

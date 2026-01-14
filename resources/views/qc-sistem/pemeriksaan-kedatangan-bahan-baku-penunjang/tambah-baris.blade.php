@@ -65,23 +65,27 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="form-group mb-3">
-                                    <label class="form-label">Nama Bahan</label>
-                                    <select class="choices form-control" name="id_bahan">
-                                        <option value="">Pilih Bahan</option>
-                                        @foreach($bahans as $bahan)
-                                            <option value="{{ $bahan->id }}" {{ old('id_bahan') == $bahan->id ? 'selected' : '' }}>{{ $bahan->nama_bahan }}</option>
+                                    <label class="form-label">Kategori</label>
+                                    @php
+                                        $selectedProdukId = old('id_bahan', '');
+                                        $selectedKategori = old('kategori_code', '');
+                                        if (($selectedKategori === null || $selectedKategori === '') && $selectedProdukId) {
+                                            $selectedKategori = $produkKategoriById[$selectedProdukId] ?? '';
+                                        }
+                                    @endphp
+                                    <select class="choices form-control kategori-produk-select" name="kategori_code">
+                                        <option value="">Pilih Kategori</option>
+                                        @foreach(($produkKategoriOptions ?? []) as $kategori)
+                                            <option value="{{ $kategori }}" {{ $selectedKategori == $kategori ? 'selected' : '' }}>{{ $kategori }}</option>
                                         @endforeach
                                     </select>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group mb-3">
-                                    <label class="form-label">Produsen</label>
-                                    <select class="choices form-control" name="produsen">
-                                        <option value="">Pilih Produsen</option>
-                                        @foreach ($produsens as $produsen)
-                                            <option value="{{ $produsen->nama_produsen }}" {{ old('produsen') == $produsen->nama_produsen ? 'selected' : '' }}>{{ $produsen->nama_produsen }}</option>
-                                        @endforeach
+                                    <label class="form-label">Produk</label>
+                                    <select class="form-control produk-select" name="id_bahan" data-selected="{{ old('id_bahan', '') }}">
+                                        <option value="">Pilih Produk</option>
                                     </select>
                                 </div>
                             </div>
@@ -89,6 +93,29 @@
 
                         <div class="row">
                             <div class="col-md-6">
+                                <div class="card border-0 shadow-sm mb-3">
+                                    <div class="card-body p-3">
+                                        <div class="fw-semibold">Distributor</div>
+                                        <div class="small text-muted mb-2">Otomatis terisi sesuai Produk yang dipilih</div>
+                                        <div class="distributor-badges d-flex flex-wrap gap-1">
+                                            @php
+                                                $oldDistributor = old('distributor', []);
+                                                $oldDistributor = is_array($oldDistributor) ? $oldDistributor : [$oldDistributor];
+                                                $oldDistributor = array_values(array_filter($oldDistributor, fn ($v) => $v !== null && $v !== ''));
+                                            @endphp
+                                            @forelse ($oldDistributor as $d)
+                                                <span class="badge bg-light-info text-info">{{ $d }}</span>
+                                            @empty
+                                                <span class="text-muted small">-</span>
+                                            @endforelse
+                                        </div>
+                                        <div class="distributor-hidden-inputs">
+                                            @foreach ($oldDistributor as $d)
+                                                <input type="hidden" name="distributor[]" value="{{ $d }}">
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                </div>
                                 <div class="form-group mb-3">
                                     <label class="form-label">Negara Produsen</label>
                                     <select class="choices form-control" name="negara_produsen">
@@ -100,14 +127,28 @@
                                 </div>
                             </div>
                             <div class="col-md-6">
-                                <div class="form-group mb-3">
-                                    <label class="form-label">Distributor</label>
-                                    <select class="choices form-control" name="distributor">
-                                        <option value="">Pilih Distributor</option>
-                                        @foreach ($distributors as $distributor)
-                                            <option value="{{ $distributor->nama_distributor }}" {{ old('distributor') == $distributor->nama_distributor ? 'selected' : '' }}>{{ $distributor->nama_distributor }}</option>
-                                        @endforeach
-                                    </select>
+                                <div class="card border-0 shadow-sm mb-3">
+                                    <div class="card-body p-3">
+                                        <div class="fw-semibold">Produsen</div>
+                                        <div class="small text-muted mb-2">Otomatis terisi sesuai Produk yang dipilih</div>
+                                        <div class="produsen-badges d-flex flex-wrap gap-1">
+                                            @php
+                                                $oldProdusen = old('produsen', []);
+                                                $oldProdusen = is_array($oldProdusen) ? $oldProdusen : [$oldProdusen];
+                                                $oldProdusen = array_values(array_filter($oldProdusen, fn ($v) => $v !== null && $v !== ''));
+                                            @endphp
+                                            @forelse ($oldProdusen as $p)
+                                                <span class="badge bg-light-primary text-primary">{{ $p }}</span>
+                                            @empty
+                                                <span class="text-muted small">-</span>
+                                            @endforelse
+                                        </div>
+                                        <div class="produsen-hidden-inputs">
+                                            @foreach ($oldProdusen as $p)
+                                                <input type="hidden" name="produsen[]" value="{{ $p }}">
+                                            @endforeach
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -359,6 +400,9 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {
+        const produkByKategori = @json($produkByKategori ?? []);
+        const produkMeta = @json($produkMeta ?? []);
+
         try {
             if (typeof window.Choices !== 'undefined') {
                 document.querySelectorAll('.choices').forEach(function (element) {
@@ -371,6 +415,104 @@
             }
         } catch (e) {
             // do nothing
+        }
+
+        const kategoriSelect = document.querySelector('select.kategori-produk-select');
+        const produkSelect = document.querySelector('select.produk-select');
+
+        const populateProdukOptions = function(kategoriCode) {
+            if (!produkSelect) return;
+            const selectedFromAttr = produkSelect.getAttribute('data-selected') || '';
+
+            while (produkSelect.options.length > 0) {
+                produkSelect.remove(0);
+            }
+            produkSelect.add(new Option('Pilih Produk', ''));
+
+            if (kategoriCode && produkByKategori && produkByKategori[kategoriCode]) {
+                (produkByKategori[kategoriCode] || []).forEach(function(p) {
+                    produkSelect.add(new Option(p.nama, p.id));
+                });
+            }
+
+            if (selectedFromAttr) {
+                produkSelect.value = selectedFromAttr;
+            }
+        };
+
+        const applyProdukMeta = function() {
+            if (!produkSelect) return;
+            const produkId = produkSelect.value;
+            const meta = (produkId && produkMeta) ? (produkMeta[produkId] || null) : null;
+            const produsenVals = meta && Array.isArray(meta.produsen) ? meta.produsen : [];
+            const distributorVals = meta && Array.isArray(meta.distributor) ? meta.distributor : [];
+
+            const produsenBadges = document.querySelector('.produsen-badges');
+            const produsenInputs = document.querySelector('.produsen-hidden-inputs');
+            const distributorBadges = document.querySelector('.distributor-badges');
+            const distributorInputs = document.querySelector('.distributor-hidden-inputs');
+
+            if (produsenBadges && produsenInputs) {
+                produsenBadges.innerHTML = '';
+                produsenInputs.innerHTML = '';
+                const safe = Array.isArray(produsenVals) ? produsenVals.filter(v => v && String(v).trim() !== '') : [];
+                if (!safe.length) {
+                    const span = document.createElement('span');
+                    span.className = 'text-muted small';
+                    span.textContent = '-';
+                    produsenBadges.appendChild(span);
+                } else {
+                    safe.forEach(function(v) {
+                        const badge = document.createElement('span');
+                        badge.className = 'badge bg-light-primary text-primary';
+                        badge.textContent = v;
+                        produsenBadges.appendChild(badge);
+
+                        const input = document.createElement('input');
+                        input.type = 'hidden';
+                        input.name = 'produsen[]';
+                        input.value = v;
+                        produsenInputs.appendChild(input);
+                    });
+                }
+            }
+
+            if (distributorBadges && distributorInputs) {
+                distributorBadges.innerHTML = '';
+                distributorInputs.innerHTML = '';
+                const safe = Array.isArray(distributorVals) ? distributorVals.filter(v => v && String(v).trim() !== '') : [];
+                if (!safe.length) {
+                    const span = document.createElement('span');
+                    span.className = 'text-muted small';
+                    span.textContent = '-';
+                    distributorBadges.appendChild(span);
+                } else {
+                    safe.forEach(function(v) {
+                        const badge = document.createElement('span');
+                        badge.className = 'badge bg-light-info text-info';
+                        badge.textContent = v;
+                        distributorBadges.appendChild(badge);
+
+                        const input = document.createElement('input');
+                        input.type = 'hidden';
+                        input.name = 'distributor[]';
+                        input.value = v;
+                        distributorInputs.appendChild(input);
+                    });
+                }
+            }
+        };
+
+        if (kategoriSelect) {
+            kategoriSelect.addEventListener('change', function() {
+                populateProdukOptions(kategoriSelect.value);
+                applyProdukMeta();
+            });
+        }
+        if (produkSelect) {
+            produkSelect.addEventListener('change', function() {
+                applyProdukMeta();
+            });
         }
 
         const suhuProdukType = document.getElementById('suhuProdukType');
@@ -422,6 +564,12 @@
         toggleSuhuProduk();
         toggleSuhuMobil();
         toggleKondisiProdukSuhu();
+
+        // Init dependent selects + badges
+        if (kategoriSelect) {
+            populateProdukOptions(kategoriSelect.value);
+        }
+        applyProdukMeta();
     });
 </script>
 @endsection

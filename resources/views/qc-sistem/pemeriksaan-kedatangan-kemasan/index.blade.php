@@ -170,7 +170,7 @@
                                         </td>
                                         <td>
                                             @if($pemeriksaan->user->plant)
-                                                <span class="badge bg-info">{{ $pemeriksaan->user->plant->plant }}</span>
+                                                <span class="badge bg-primary">{{ $pemeriksaan->user->plant->plant }}</span>
                                             @else
                                                 <span class="badge bg-secondary">No Plant</span>
                                             @endif
@@ -187,8 +187,8 @@
                                                     $idBahanArray = is_array($idBahanArray) ? array_values(array_filter($idBahanArray, function ($v) {
                                                         return $v !== null && $v !== '';
                                                     })) : [];
-                                                    $namaBahanArray = array_values(array_filter(array_map(function ($id) use ($bahanNamaById) {
-                                                        return $bahanNamaById[$id] ?? null;
+                                                    $namaBahanArray = array_values(array_filter(array_map(function ($id) use ($produkNamaById) {
+                                                        return $produkNamaById[$id] ?? null;
                                                     }, $idBahanArray)));
                                                 @endphp
                                                 @if(count($namaBahanArray) > 0)

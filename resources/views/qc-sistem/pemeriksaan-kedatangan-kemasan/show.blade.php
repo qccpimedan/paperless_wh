@@ -143,7 +143,7 @@
                                 <div class="row">
                                     <div class="col-md-6">
                                         <div class="p-2 bg-white rounded">
-                                            <strong>Bahan:</strong> {{ $bahanNamaById[$id_bahan] ?? '-' }}
+                                            <strong>Bahan:</strong> {{ $produkNamaById[$id_bahan] ?? '-' }}
                                         </div>
                                     </div>
                                 </div>
@@ -155,12 +155,28 @@
                                 <div class="row">
                                     <div class="col-md-4">
                                         <div class="p-2 bg-white rounded mb-2">
-                                            <strong>Produsen:</strong> {{ $produsens[$index] ?? '-' }}
+                                            @php
+                                                $prodVal = $produsens[$index] ?? null;
+                                                if (is_array($prodVal)) {
+                                                    $prodText = implode(', ', array_values(array_filter($prodVal, fn ($v) => $v !== null && $v !== '')));
+                                                } else {
+                                                    $prodText = trim((string) $prodVal);
+                                                }
+                                            @endphp
+                                            <strong>Produsen:</strong> {{ $prodText !== '' ? $prodText : '-' }}
                                         </div>
                                     </div>
                                     <div class="col-md-4">
                                         <div class="p-2 bg-white rounded mb-2">
-                                            <strong>Distributor:</strong> {{ $distributors[$index] ?? '-' }}
+                                            @php
+                                                $distVal = $distributors[$index] ?? null;
+                                                if (is_array($distVal)) {
+                                                    $distText = implode(', ', array_values(array_filter($distVal, fn ($v) => $v !== null && $v !== '')));
+                                                } else {
+                                                    $distText = trim((string) $distVal);
+                                                }
+                                            @endphp
+                                            <strong>Distributor:</strong> {{ $distText !== '' ? $distText : '-' }}
                                         </div>
                                     </div>
                                     <div class="col-md-4">

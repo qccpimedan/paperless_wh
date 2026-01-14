@@ -51,17 +51,51 @@
                                         <div class="row">
                                             <div class="col-md-12">
                                                 <label for="nama_bahan">Nama Bahan <span class="text-danger">*</span></label>
-                                                <div id="dynamic-fields">
-                                                    <div class="input-group mb-2">
-                                                        <input type="text" class="form-control @error('nama_bahan.0') is-invalid @enderror"
-                                                            name="nama_bahan[]" placeholder="Nama Bahan" value="{{ old('nama_bahan.0') }}" required>
-                                                        <button type="button" class="btn btn-success" id="add-field">
-                                                            <i class="bi bi-plus"></i>
-                                                        </button>
-                                                    </div>
-                                                </div>
+                                                <input type="text" id="nama_bahan" class="form-control @error('nama_bahan') is-invalid @enderror"
+                                                    name="nama_bahan" placeholder="Nama Bahan" value="{{ old('nama_bahan') }}" required>
                                                 @error('nama_bahan')
-                                                    <div class="text-danger small">{{ $message }}</div>
+                                                    <div class="invalid-feedback">{{ $message }}</div>
+                                                @enderror
+                                            </div>
+
+                                            <div class="col-md-12 mt-2">
+                                                <label for="kategori_code">Kategori <span class="text-danger">*</span></label>
+                                                <select name="kategori_code" id="kategori_code" class="form-select @error('kategori_code') is-invalid @enderror" required>
+                                                    <option value="">-- Pilih Kategori --</option>
+                                                    @foreach(['WHSE','RT01','CR01','CR02','SHTS','SHCS & OTRM'] as $kategori)
+                                                        <option value="{{ $kategori }}" {{ old('kategori_code') === $kategori ? 'selected' : '' }}>{{ $kategori }}</option>
+                                                    @endforeach
+                                                </select>
+                                                @error('kategori_code')
+                                                    <div class="invalid-feedback">{{ $message }}</div>
+                                                @enderror
+                                            </div>
+
+                                            <div class="col-md-12 mt-2">
+                                                <label for="id_produsen">Produsen (Bisa lebih dari 1)</label>
+                                                <select name="id_produsen[]" id="id_produsen" class="form-select select2-multiple @error('id_produsen') is-invalid @enderror" multiple>
+                                                    @foreach($produsens as $produsen)
+                                                        <option value="{{ $produsen->id }}" {{ in_array($produsen->id, old('id_produsen', [])) ? 'selected' : '' }}>
+                                                            {{ $produsen->nama_produsen }}
+                                                        </option>
+                                                    @endforeach
+                                                </select>
+                                                @error('id_produsen')
+                                                    <div class="invalid-feedback">{{ $message }}</div>
+                                                @enderror
+                                            </div>
+
+                                            <div class="col-md-12 mt-2">
+                                                <label for="id_distributor">Distributor (Bisa lebih dari 1)</label>
+                                                <select name="id_distributor[]" id="id_distributor" class="form-select select2-multiple @error('id_distributor') is-invalid @enderror" multiple>
+                                                    @foreach($distributors as $distributor)
+                                                        <option value="{{ $distributor->id }}" {{ in_array($distributor->id, old('id_distributor', [])) ? 'selected' : '' }}>
+                                                            {{ $distributor->nama_distributor }}
+                                                        </option>
+                                                    @endforeach
+                                                </select>
+                                                @error('id_distributor')
+                                                    <div class="invalid-feedback">{{ $message }}</div>
                                                 @enderror
                                             </div>
                                             
@@ -80,37 +114,4 @@
         </section>
     </div>
 </div>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    let fieldIndex = 1;
-    
-    // Add new field
-    document.getElementById('add-field').addEventListener('click', function() {
-        const dynamicFields = document.getElementById('dynamic-fields');
-        const newField = document.createElement('div');
-        newField.className = 'input-group mb-2';
-        newField.innerHTML = `
-            <input type="text" class="form-control" name="nama_bahan[]" placeholder="Nama Bahan" required>
-            <button type="button" class="btn btn-danger remove-field">
-                <i class="bi bi-trash"></i>
-            </button>
-        `;
-        dynamicFields.appendChild(newField);
-        fieldIndex++;
-    });
-    
-    // Remove field (using event delegation)
-    document.getElementById('dynamic-fields').addEventListener('click', function(e) {
-        if (e.target.closest('.remove-field')) {
-            const fieldCount = document.querySelectorAll('#dynamic-fields .input-group').length;
-            if (fieldCount > 1) {
-                e.target.closest('.input-group').remove();
-            } else {
-                alert('Minimal harus ada satu field nama bahan!');
-            }
-        }
-    });
-});
-</script>
 @endsection

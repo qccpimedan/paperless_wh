@@ -15,7 +15,8 @@
     <link rel="stylesheet" href="{{asset('dist/css/app.css')}}">
     <link rel="stylesheet" href="{{asset('dist/vendors/simple-datatables/style.css')}}">
     <!-- Choices.js CSS -->
-    <link rel="stylesheet" href="{{ asset('assets/extensions/choices.js/public/assets/styles/choices.css') }}">
+    <link rel="stylesheet" href="{{ asset('dist/vendors/choices.js/choices.css') }}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css">
     <link rel="icon" href="{{asset('dist/images/logo/logo5.png')}}" type="image/x-icon">
     <!-- select negara -->
     <link rel="stylesheet" href="{{asset('dist/vendors/choices.js/choices.min.css')}}">
@@ -292,7 +293,9 @@
     <!-- Choices.js Script -->
     <script src="{{asset('dist/vendors/choices.js/choices.min.js')}}"></script>
     <!-- script negara -->
-    <script src="{{ asset('assets/extensions/choices.js/public/assets/scripts/choices.js') }}"></script>
+    <script src="{{ asset('dist/vendors/choices.js/choices.js') }}"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
     
 <script>
@@ -314,6 +317,13 @@ document.addEventListener('DOMContentLoaded', function() {
             noChoicesText: 'Tidak ada pilihan tersedia',
         });
     });
+
+    if (window.jQuery && window.jQuery.fn && typeof window.jQuery.fn.select2 === 'function') {
+        window.jQuery('.select2-multiple').select2({
+            width: '100%',
+            placeholder: 'Pilih...'
+        });
+    }
 });
 // Auto-check untuk notifikasi edit per 2 jam dengan list UUID dari V1 dan V2
 function checkEditableRecords() {

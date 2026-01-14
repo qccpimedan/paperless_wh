@@ -32,21 +32,53 @@
             </div>
         @endif
 
+        @if(session('import_errors'))
+            <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                <strong>Import selesai dengan beberapa error:</strong>
+                <ul class="mb-0">
+                    @foreach(session('import_errors') as $err)
+                        <li>{{ $err }}</li>
+                    @endforeach
+                </ul>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
+
         <section class="section">
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="card-title mb-0">Daftar Produk</h5>
-                    <a href="{{ route('produks.create') }}" class="btn btn-primary">
-                        <i class="bi bi-plus-circle"></i> Tambah Produk
-                    </a>
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#importModal">
+                            <i class="bi bi-file-earmark-excel"></i> Import Excel
+                        </button>
+                        <a href="{{ route('produks.create') }}" class="btn btn-primary">
+                            <i class="bi bi-plus-circle"></i> Tambah Produk
+                        </a>
+                    </div>
                 </div>
                 <div class="card-body">
+                    <div class="d-flex flex-wrap gap-2 mb-3">
+                        <a href="{{ route('produks.index') }}"
+                           class="btn btn-sm {{ empty($selectedKategori) ? 'btn-primary' : 'btn-outline-primary' }}">
+                            Semua
+                        </a>
+                        @foreach(($kategoriOptions ?? []) as $kat)
+                            <a href="{{ route('produks.index', ['kategori_code' => $kat]) }}"
+                               class="btn btn-sm {{ ($selectedKategori ?? null) === $kat ? 'btn-primary' : 'btn-outline-primary' }}">
+                                {{ $kat }}
+                            </a>
+                        @endforeach
+                    </div>
                     <div class="table-responsive">
                         <table class="table table-striped text-center" id="table1">
                             <thead>
                                 <tr>
                                     <th>No</th>
                                     <th>Nama Produk</th>
+                                    <th>Kategori</th>
+                                    <th>Produsen</th>
+                                    <th>Distributor</th>
                                     <th>Plant</th>
                                     <th>Aksi</th>
                                 </tr>
@@ -57,6 +89,21 @@
                                         <td>{{ $index + 1 }}</td>
                                         <td>
                                             <strong>{{ $produk->nama_produk }}</strong>
+                                        </td>
+                                        <td>{{ $produk->kategori_code ?? '-' }}</td>
+                                        <td>
+                                            @if($produk->produsens && $produk->produsens->count() > 0)
+                                                {{ $produk->produsens->pluck('nama_produsen')->implode(', ') }}
+                                            @else
+                                                -
+                                            @endif
+                                        </td>
+                                        <td>
+                                            @if($produk->distributors && $produk->distributors->count() > 0)
+                                                {{ $produk->distributors->pluck('nama_distributor')->implode(', ') }}
+                                            @else
+                                                -
+                                            @endif
                                         </td>
                                         <td>
                                             @if($produk->user->plant)
@@ -86,7 +133,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="4" class="text-center">
+                                        <td colspan="7" class="text-center">
                                             <div class="py-4">
                                                 <i class="bi bi-inbox fs-1 text-muted"></i>
                                                 <p class="text-muted mt-2 mb-3">Belum ada data produk</p>
@@ -103,6 +150,65 @@
                 </div>
             </div>
         </section>
+    </div>
+</div>
+
+<!-- Modal Import Excel -->
+<div class="modal fade" id="importModal" tabindex="-1" aria-labelledby="importModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="importModalLabel">
+                    <i class="bi bi-file-earmark-excel"></i> Import Data Produk
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{{ route('produks.import') }}" method="POST" enctype="multipart/form-data">
+                @csrf
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i> 
+                        <strong>Panduan Import:</strong>
+                        <ol class="mb-0 mt-2">
+                            <li>Download template Excel terlebih dahulu</li>
+                            <li>Isi data sesuai format template</li>
+                            <li>Upload file Excel yang sudah diisi</li>
+                            <li>Format file yang diterima: .xlsx, .xls, .csv</li>
+                        </ol>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Download Template</label>
+                        <div>
+                            <a href="{{ route('produks.template') }}" class="btn btn-outline-primary w-100">
+                                <i class="bi bi-download"></i> Download Template Excel
+                            </a>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <div class="mb-3">
+                        <label for="file" class="form-label">Upload File Excel <span class="text-danger">*</span></label>
+                        <input type="file" 
+                               name="file" 
+                               id="file" 
+                               class="form-control" 
+                               accept=".xlsx,.xls,.csv" 
+                               required>
+                        <small class="text-muted">Format: .xlsx, .xls, atau .csv (Max: 2MB)</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-circle"></i> Batal
+                    </button>
+                    <button type="submit" class="btn btn-success">
+                        <i class="bi bi-upload"></i> Import Sekarang
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
 @endsection

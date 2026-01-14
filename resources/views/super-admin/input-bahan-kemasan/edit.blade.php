@@ -51,25 +51,33 @@
                                     <div class="form-body">
                                         <div class="row">
                                             <div class="col-md-12">
-                                                <label for="id_distributor">Distributor</label>
-                                                <select name="id_distributor" id="id_distributor" class="form-select @error('id_distributor') is-invalid @enderror">
-                                                    <option value="">-- Pilih Distributor (Opsional) --</option>
-                                                    @foreach($distributors as $distributor)
-                                                        <option value="{{ $distributor->id }}" {{ old('id_distributor', $bahanKemasan->id_distributor) == $distributor->id ? 'selected' : '' }}>
-                                                            {{ $distributor->nama_distributor }}
-                                                        </option>
-                                                    @endforeach
-                                                </select>
-                                                @error('id_distributor')
+                                                <label for="nama_kemasan">Nama Kemasan <span class="text-danger">*</span></label>
+                                                <input type="text" id="nama_kemasan" class="form-control @error('nama_kemasan') is-invalid @enderror"
+                                                    name="nama_kemasan" placeholder="Nama Kemasan" 
+                                                    value="{{ old('nama_kemasan', $bahanKemasan->nama_kemasan) }}" required>
+                                                @error('nama_kemasan')
                                                     <div class="invalid-feedback">{{ $message }}</div>
                                                 @enderror
                                             </div>
+
                                             <div class="col-md-12 mt-2">
-                                                <label for="id_produsen">Produsen</label>
-                                                <select name="id_produsen" id="id_produsen" class="form-select @error('id_produsen') is-invalid @enderror">
-                                                    <option value="">-- Pilih Produsen (Opsional) --</option>
+                                                <label for="kategori_code">Kategori <span class="text-danger">*</span></label>
+                                                <select name="kategori_code" id="kategori_code" class="form-select @error('kategori_code') is-invalid @enderror" required>
+                                                    <option value="">-- Pilih Kategori --</option>
+                                                    @foreach(['WHD2','WHDS'] as $kategori)
+                                                        <option value="{{ $kategori }}" {{ old('kategori_code', $bahanKemasan->kategori_code) === $kategori ? 'selected' : '' }}>{{ $kategori }}</option>
+                                                    @endforeach
+                                                </select>
+                                                @error('kategori_code')
+                                                    <div class="invalid-feedback">{{ $message }}</div>
+                                                @enderror
+                                            </div>
+
+                                            <div class="col-md-12 mt-2">
+                                                <label for="id_produsen">Produsen (Bisa lebih dari 1)</label>
+                                                <select name="id_produsen[]" id="id_produsen" class="form-select select2-multiple @error('id_produsen') is-invalid @enderror" multiple>
                                                     @foreach($produsens as $produsen)
-                                                        <option value="{{ $produsen->id }}" {{ old('id_produsen', $bahanKemasan->id_produsen) == $produsen->id ? 'selected' : '' }}>
+                                                        <option value="{{ $produsen->id }}" {{ in_array($produsen->id, old('id_produsen', $selectedProdusenIds ?? [])) ? 'selected' : '' }}>
                                                             {{ $produsen->nama_produsen }}
                                                         </option>
                                                     @endforeach
@@ -78,12 +86,17 @@
                                                     <div class="invalid-feedback">{{ $message }}</div>
                                                 @enderror
                                             </div>
+
                                             <div class="col-md-12 mt-2">
-                                                <label for="nama_kemasan">Nama Kemasan <span class="text-danger">*</span></label>
-                                                <input type="text" id="nama_kemasan" class="form-control @error('nama_kemasan') is-invalid @enderror"
-                                                    name="nama_kemasan" placeholder="Nama Kemasan" 
-                                                    value="{{ old('nama_kemasan', $bahanKemasan->nama_kemasan) }}" required>
-                                                @error('nama_kemasan')
+                                                <label for="id_distributor">Distributor (Bisa lebih dari 1)</label>
+                                                <select name="id_distributor[]" id="id_distributor" class="form-select select2-multiple @error('id_distributor') is-invalid @enderror" multiple>
+                                                    @foreach($distributors as $distributor)
+                                                        <option value="{{ $distributor->id }}" {{ in_array($distributor->id, old('id_distributor', $selectedDistributorIds ?? [])) ? 'selected' : '' }}>
+                                                            {{ $distributor->nama_distributor }}
+                                                        </option>
+                                                    @endforeach
+                                                </select>
+                                                @error('id_distributor')
                                                     <div class="invalid-feedback">{{ $message }}</div>
                                                 @enderror
                                             </div>

@@ -171,17 +171,41 @@
                                 <div class="row">
                                     <div class="col-md-6">
                                         <table class="table table-borderless table-sm">
-                                            <tr><td width="40%"><strong>Nama Bahan:</strong></td><td>
+                                            <tr><td width="40%"><strong>Nama Produk:</strong></td><td>
                                                 @if(isset($idBahanArray[$i]) && $idBahanArray[$i])
-                                                    @php $bahan = \App\Models\Bahan::find($idBahanArray[$i]); @endphp
-                                                    <span class="badge bg-info">{{ $bahan->nama_bahan ?? '-' }}</span>
+                                                    @php $produk = \App\Models\Produk::find($idBahanArray[$i]); @endphp
+                                                    <span class="badge bg-info">{{ $produk->nama_produk ?? '-' }}</span>
                                                 @else
                                                     -
                                                 @endif
                                             </td></tr>
-                                            <tr><td><strong>Produsen:</strong></td><td>{{ $produsenArray[$i] ?? '-' }}</td></tr>
+                                            <tr><td><strong>Produsen:</strong></td><td>
+                                                @php
+                                                    $produsenDisplay = $produsenArray[$i] ?? '';
+                                                    $produsenItems = array_values(array_filter(array_map('trim', explode(',', (string) $produsenDisplay)), fn($v) => $v !== ''));
+                                                @endphp
+                                                @if(count($produsenItems))
+                                                    @foreach($produsenItems as $p)
+                                                        <span class="badge bg-light-primary text-primary">{{ $p }}</span>
+                                                    @endforeach
+                                                @else
+                                                    -
+                                                @endif
+                                            </td></tr>
                                             <tr><td><strong>Negara Produsen:</strong></td><td>{{ $negaraProdusenArray[$i] ?? '-' }}</td></tr>
-                                            <tr><td><strong>Distributor:</strong></td><td>{{ $distributorArray[$i] ?? '-' }}</td></tr>
+                                            <tr><td><strong>Distributor:</strong></td><td>
+                                                @php
+                                                    $distributorDisplay = $distributorArray[$i] ?? '';
+                                                    $distributorItems = array_values(array_filter(array_map('trim', explode(',', (string) $distributorDisplay)), fn($v) => $v !== ''));
+                                                @endphp
+                                                @if(count($distributorItems))
+                                                    @foreach($distributorItems as $d)
+                                                        <span class="badge bg-light-info text-info">{{ $d }}</span>
+                                                    @endforeach
+                                                @else
+                                                    -
+                                                @endif
+                                            </td></tr>
                                             <tr><td><strong>Kode Produksi:</strong></td><td>{{ $kodeProduksiArray[$i] ?? '-' }}</td></tr>
                                         </table>
                                     </div>

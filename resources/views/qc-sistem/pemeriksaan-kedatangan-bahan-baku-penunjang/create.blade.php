@@ -345,6 +345,7 @@
                                             </div>
                                         </div>
                                     </div>
+
                                 </div>
 
                                 <script>
@@ -375,35 +376,90 @@
                                 <div class="form-section mb-4">
                                     <h5 class="text-primary mb-3">Detail Produk (Baris Dinamis)</h5>
                                     <div id="unified-container">
-                                        <div class="unified-row mb-4 p-3 border rounded" style="background-color: #f8f9fa;">
+                                        <div class="unified-row mb-4 p-3 border rounded" style="background-color: #f8f9fa;" data-row-index="0">
                                             <h6 class="text-primary mb-3">Baris 1</h6>
                                             
                                             <!-- Informasi Produk -->
                                             <div class="row">
                                                 <div class="col-md-6">
                                                     <div class="form-group">
-                                                        <label class="form-label">Nama Bahan</label>
-                                                        <select class="choices form-control" name="id_bahan[]">
-                                                            <option value="">Pilih Bahan</option>
-                                                            @foreach($bahans as $bahan)
-                                                                <option value="{{ $bahan->id }}">{{ $bahan->nama_bahan }}</option>
+                                                        <label class="form-label">Kategori</label>
+                                                        <select class="choices form-control kategori-produk-select" name="kategori_code[]">
+                                                            <option value="">Pilih Kategori</option>
+                                                            @foreach(($produkKategoriOptions ?? []) as $kategori)
+                                                                <option value="{{ $kategori }}" {{ old('kategori_code.0') == $kategori ? 'selected' : '' }}>
+                                                                    {{ $kategori }}
+                                                                </option>
                                                             @endforeach
                                                         </select>
                                                     </div>
                                                 </div>
                                                 <div class="col-md-6">
                                                     <div class="form-group">
-                                                        <label class="form-label">Produsen</label>
-                                                        <select class="choices form-control" name="produsen[]">
-                                                            <option value="">Pilih Produsen</option>
-                                                            @foreach ($produsens as $produsen)
-                                                                <option value="{{ $produsen->nama_produsen }}">{{ $produsen->nama_produsen }}</option>
-                                                            @endforeach
+                                                        <label class="form-label">Produk</label>
+                                                        <select class="form-control produk-select @error('id_bahan.0') is-invalid @enderror" name="id_bahan[]">
+                                                            <option value="">Pilih Produk</option>
                                                         </select>
+                                                        @error('id_bahan.0')
+                                                            <div class="invalid-feedback">{{ $message }}</div>
+                                                        @enderror
                                                     </div>
                                                 </div>
                                             </div>
                                             
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <div class="card border-0 shadow-sm">
+                                                        <div class="card-body p-3">
+                                                            <div class="fw-semibold">Distributor</div>
+                                                            <div class="small text-muted mb-2">Otomatis terisi sesuai Produk yang dipilih</div>
+                                                            <div class="distributor-badges d-flex flex-wrap gap-1">
+                                                                @php
+                                                                    $oldDistributor0 = old('distributor.0', []);
+                                                                    $oldDistributor0 = is_array($oldDistributor0) ? $oldDistributor0 : [$oldDistributor0];
+                                                                    $oldDistributor0 = array_values(array_filter($oldDistributor0, fn ($v) => $v !== null && $v !== ''));
+                                                                @endphp
+                                                                @forelse ($oldDistributor0 as $d)
+                                                                    <span class="badge bg-light-info text-info">{{ $d }}</span>
+                                                                @empty
+                                                                    <span class="text-muted small">-</span>
+                                                                @endforelse
+                                                            </div>
+                                                            <div class="distributor-hidden-inputs">
+                                                                @foreach ($oldDistributor0 as $d)
+                                                                    <input type="hidden" name="distributor[0][]" value="{{ $d }}">
+                                                                @endforeach
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="card border-0 shadow-sm">
+                                                        <div class="card-body p-3">
+                                                            <div class="fw-semibold">Produsen</div>
+                                                            <div class="small text-muted mb-2">Otomatis terisi sesuai Produk yang dipilih</div>
+                                                            <div class="produsen-badges d-flex flex-wrap gap-1">
+                                                                @php
+                                                                    $oldProdusen0 = old('produsen.0', []);
+                                                                    $oldProdusen0 = is_array($oldProdusen0) ? $oldProdusen0 : [$oldProdusen0];
+                                                                    $oldProdusen0 = array_values(array_filter($oldProdusen0, fn ($v) => $v !== null && $v !== ''));
+                                                                @endphp
+                                                                @forelse ($oldProdusen0 as $p)
+                                                                    <span class="badge bg-light-primary text-primary">{{ $p }}</span>
+                                                                @empty
+                                                                    <span class="text-muted small">-</span>
+                                                                @endforelse
+                                                            </div>
+                                                            <div class="produsen-hidden-inputs">
+                                                                @foreach ($oldProdusen0 as $p)
+                                                                    <input type="hidden" name="produsen[0][]" value="{{ $p }}">
+                                                                @endforeach
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
                                             <div class="row">
                                                 <div class="col-md-6">
                                                     <div class="form-group">
@@ -416,19 +472,7 @@
                                                         </select>
                                                     </div>
                                                 </div>
-                                                <div class="col-md-6">
-                                                    <div class="form-group">
-                                                        <label class="form-label">Distributor</label>
-                                                        <select class="choices form-control" name="distributor[]">
-                                                            <option value="">Pilih Distributor</option>
-                                                            @foreach ($distributors as $distributor)
-                                                                <option value="{{ $distributor->nama_distributor }}">{{ $distributor->nama_distributor }}</option>
-                                                            @endforeach
-                                                        </select>
-                                                    </div>
-                                                </div>
                                             </div>
-                                            
                                             <div class="row">
                                                 <div class="col-md-6">
                                                     <div class="form-group">
@@ -693,10 +737,15 @@
                                             <!-- Buttons -->
                                             <div class="row mt-3 pt-3 border-top">
                                                 <div class="col-md-12">
-                                                    <button type="button" class="btn btn-success btn-sm add-unified-btn"><i class="bi bi-plus"></i> Tambah Baris</button>
                                                     <button type="button" class="btn btn-danger btn-sm remove-unified-btn"><i class="bi bi-trash"></i> Hapus Baris</button>
                                                 </div>
                                             </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="row mt-3 pt-3 border-top">
+                                        <div class="col-md-12">
+                                            <button type="button" class="btn btn-primary btn-sm add-unified-btn"><i class="bi bi-plus"></i> Tambah Baris</button>
                                         </div>
                                     </div>
                                 </div>
@@ -819,7 +868,7 @@
                                 <div class="col-md-12 d-flex justify-content-end mt-3">
                                     <a href="{{ route('pemeriksaan-bahan-baku.index') }}" class="btn btn-light-secondary me-1 mb-1 btn-kembali-confirm">Kembali</a>
                                     <button type="submit" class="btn btn-primary me-1 mb-1">Simpan Data</button>
-                                    <button type="reset" class="btn btn-light-secondary me-1 mb-1">Reset</button>
+                                    <!-- <button type="reset" class="btn btn-light-secondary me-1 mb-1">Reset</button> -->
                                 </div>
                             </form>
                         </div>
@@ -832,6 +881,11 @@
 
 @push('scripts')
 <script>
+const produkByKategori = @json($produkByKategori ?? []);
+const produkMeta = @json($produkMeta ?? []);
+const oldKategoriCodes = @json(old('kategori_code', []));
+const oldProdukIds = @json(old('id_bahan', []));
+
 // Global variable to store select options
 let selectOptionsCache = {
     bahan: [],
@@ -839,6 +893,8 @@ let selectOptionsCache = {
     negara: [],
     distributor: []
 };
+
+const choicesInstances = new WeakMap();
 
 document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.btn-kembali-confirm').forEach((el) => {
@@ -944,9 +1000,203 @@ document.addEventListener('DOMContentLoaded', function() {
     } catch(err) {
         console.error('Error setting up dynamic form listeners:', err);
     }
+
+    try {
+        initializeProdukFlow();
+    } catch(err) {
+        console.error('Error initializing produk flow:', err);
+    }
 });
 
+function initializeProdukFlow() {
+    document.querySelectorAll('#unified-container .unified-row').forEach((row, idx) => {
+        if (!row.dataset.rowIndex) row.dataset.rowIndex = String(idx);
+    });
+
+    document.querySelectorAll('#unified-container .unified-row').forEach((row) => {
+        setupProdukRowListeners(row);
+    });
+
+    document.querySelectorAll('#unified-container .unified-row').forEach((row, idx) => {
+        const kategoriSelect = row.querySelector('select.kategori-produk-select');
+        const produkSelect = row.querySelector('select.produk-select');
+
+        const desiredKategori = (oldKategoriCodes && oldKategoriCodes[idx]) ? String(oldKategoriCodes[idx]) : '';
+        if (kategoriSelect && desiredKategori) {
+            kategoriSelect.value = desiredKategori;
+        }
+
+        const desiredProduk = (oldProdukIds && oldProdukIds[idx]) ? String(oldProdukIds[idx]) : '';
+        if (desiredProduk) {
+            row.dataset.oldProdukId = desiredProduk;
+        }
+
+        if (kategoriSelect && kategoriSelect.value) {
+            populateProdukOptionsForRow(row);
+        } else if (produkSelect && produkSelect.value) {
+            applyProdukMetaForRow(row);
+        }
+    });
+}
+
+function setupProdukRowListeners(rowEl) {
+    const kategoriSelect = rowEl.querySelector('select.kategori-produk-select');
+    const produkSelect = rowEl.querySelector('select.produk-select');
+
+    if (kategoriSelect) {
+        kategoriSelect.addEventListener('change', function() {
+            populateProdukOptionsForRow(rowEl);
+        });
+        kategoriSelect.addEventListener('addItem', function() {
+            setTimeout(() => populateProdukOptionsForRow(rowEl), 0);
+        });
+    }
+
+    if (produkSelect) {
+        produkSelect.addEventListener('change', function() {
+            applyProdukMetaForRow(rowEl);
+        });
+        produkSelect.addEventListener('addItem', function() {
+            applyProdukMetaForRow(rowEl);
+        });
+    }
+}
+
+function populateProdukOptionsForRow(rowEl) {
+    const kategoriSelect = rowEl.querySelector('select.kategori-produk-select');
+    const produkSelect = rowEl.querySelector('select.produk-select');
+
+    if (!kategoriSelect || !produkSelect) return;
+
+    const kategori = (kategoriSelect.value || '').toString();
+    const rawOptions = (produkByKategori && produkByKategori[kategori]) ? produkByKategori[kategori] : [];
+    const options = Array.isArray(rawOptions) ? rawOptions : Object.values(rawOptions || {});
+
+    const desiredProdukId = rowEl.dataset.oldProdukId ? String(rowEl.dataset.oldProdukId) : '';
+
+    const choiceItems = [{ value: '', label: 'Pilih Produk', selected: true }].concat(
+        options.map((opt) => {
+            const v = String(opt.id);
+            return {
+                value: v,
+                label: String(opt.nama),
+                selected: desiredProdukId ? (v === desiredProdukId) : false,
+            };
+        })
+    );
+
+    if (rowEl._populateProdukTimer) {
+        clearTimeout(rowEl._populateProdukTimer);
+    }
+
+    rowEl._populateProdukTimer = setTimeout(() => {
+        const existing = choicesInstances.get(produkSelect);
+        if (existing) {
+            try {
+                existing.destroy();
+            } catch (e) {
+            }
+            try {
+                choicesInstances.delete(produkSelect);
+            } catch (e) {
+            }
+        }
+
+        try {
+            const instance = new Choices(produkSelect, {
+                searchEnabled: true,
+                searchPlaceholderValue: 'Cari...',
+                itemSelectText: 'Tekan untuk memilih',
+                noResultsText: 'Tidak ada hasil ditemukan',
+                noChoicesText: 'Tidak ada pilihan tersedia',
+                removeItemButton: true,
+                shouldSort: false,
+                placeholder: true,
+                placeholderValue: 'Pilih...'
+            });
+            instance.setChoices(choiceItems, 'value', 'label', true);
+            choicesInstances.set(produkSelect, instance);
+            produkSelect.dataset.choicesInitialized = 'true';
+        } catch (e) {
+            // fallback without choices
+            produkSelect.innerHTML = '<option value="">Pilih Produk</option>';
+            options.forEach((opt) => {
+                const o = document.createElement('option');
+                o.value = String(opt.id);
+                o.textContent = String(opt.nama);
+                if (desiredProdukId && String(opt.id) === desiredProdukId) {
+                    o.selected = true;
+                }
+                produkSelect.appendChild(o);
+            });
+        }
+
+        applyProdukMetaForRow(rowEl);
+    }, 0);
+}
+
+function applyProdukMetaForRow(rowEl) {
+    const produkSelect = rowEl.querySelector('select.produk-select');
+    const produsenBadges = rowEl.querySelector('.produsen-badges');
+    const distributorBadges = rowEl.querySelector('.distributor-badges');
+    const produsenHidden = rowEl.querySelector('.produsen-hidden-inputs');
+    const distributorHidden = rowEl.querySelector('.distributor-hidden-inputs');
+
+    if (!produkSelect || !produsenBadges || !distributorBadges || !produsenHidden || !distributorHidden) return;
+
+    const rowIndex = rowEl.dataset.rowIndex ? String(rowEl.dataset.rowIndex) : '0';
+
+    const produkId = String(produkSelect.value || '');
+    const meta = produkId && produkMeta ? produkMeta[produkId] : null;
+
+    const normalizeMulti = (v) => {
+        if (Array.isArray(v)) return v.map(x => String(x));
+        if (v === null || v === undefined) return [];
+        const s = String(v);
+        return s ? [s] : [];
+    };
+
+    const prodVals = meta ? normalizeMulti(meta.produsen) : [];
+    const distVals = meta ? normalizeMulti(meta.distributor) : [];
+
+    const renderBadges = (containerEl, values, badgeClass) => {
+        if (!values || values.length === 0) {
+            containerEl.innerHTML = '<span class="text-muted small">-</span>';
+            return;
+        }
+        containerEl.innerHTML = '';
+        values.forEach((v) => {
+            const span = document.createElement('span');
+            span.className = badgeClass;
+            span.textContent = String(v);
+            containerEl.appendChild(span);
+        });
+    };
+
+    const renderHiddenInputs = (containerEl, namePrefix, values) => {
+        containerEl.innerHTML = '';
+        (values || []).forEach((v) => {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = `${namePrefix}[${rowIndex}][]`;
+            input.value = String(v);
+            containerEl.appendChild(input);
+        });
+    };
+
+    renderBadges(produsenBadges, prodVals, 'badge bg-light-primary text-primary');
+    renderBadges(distributorBadges, distVals, 'badge bg-light-info text-info');
+    renderHiddenInputs(produsenHidden, 'produsen', prodVals);
+    renderHiddenInputs(distributorHidden, 'distributor', distVals);
+}
+
 function setupDynamicFormListeners() {
+    // Prevent duplicate bindings when this function is called multiple times
+    if (window.__bbpUnifiedRowListenersBound) {
+        return;
+    }
+    window.__bbpUnifiedRowListenersBound = true;
+
     // Add new row
     document.addEventListener('click', function(e) {
         if (e.target.closest('.add-unified-btn')) {
@@ -979,6 +1229,9 @@ function initializeAllChoices() {
     const selectElements = document.querySelectorAll('select.choices');
     
     selectElements.forEach(function(select) {
+        if (select.classList && select.classList.contains('produk-select')) {
+            return;
+        }
         // Skip if already initialized
         if (select.dataset.choicesInitialized === 'true') {
             return;
@@ -1000,6 +1253,12 @@ function initializeAllChoices() {
                 searchPlaceholderValue: 'Cari...',
                 itemSelectText: 'Tekan untuk memilih'
             });
+            if (select) {
+                try {
+                    choicesInstances.set(select, select.choicesInstance);
+                } catch (e) {
+                }
+            }
             select.dataset.choicesInitialized = 'true';
         } catch(err) {
             console.error('Error initializing Choices:', err);
@@ -1016,6 +1275,7 @@ function addNewRow() {
     const newRow = document.createElement('div');
     newRow.className = 'unified-row mb-4 p-3 border rounded';
     newRow.style.backgroundColor = '#f8f9fa';
+    newRow.dataset.rowIndex = String(rowCount - 1);
     
     // Generate unique ID for radio buttons in this row
     const uniqueId = Date.now();
@@ -1028,28 +1288,48 @@ function addNewRow() {
         <div class="row">
             <div class="col-md-6">
                 <div class="form-group">
-                    <label class="form-label">Nama Bahan</label>
-                    <select class="choices form-control" name="id_bahan[]">
-                        <option value="">Pilih Bahan</option>
-                        @foreach($bahans as $bahan)
-                            <option value="{{ $bahan->id }}">{{ $bahan->nama_bahan }}</option>
+                    <label class="form-label">Kategori</label>
+                    <select class="choices form-control kategori-produk-select" name="kategori_code[]">
+                        <option value="">Pilih Kategori</option>
+                        @foreach(($produkKategoriOptions ?? []) as $kategori)
+                            <option value="{{ $kategori }}">{{ $kategori }}</option>
                         @endforeach
                     </select>
                 </div>
             </div>
             <div class="col-md-6">
                 <div class="form-group">
-                    <label class="form-label">Produsen</label>
-                    <select class="choices form-control" name="produsen[]">
-                        <option value="">Pilih Produsen</option>
-                        @foreach ($produsens as $produsen)
-                            <option value="{{ $produsen->nama_produsen }}">{{ $produsen->nama_produsen }}</option>
-                        @endforeach
+                    <label class="form-label">Produk</label>
+                    <select class="form-control produk-select" name="id_bahan[]">
+                        <option value="">Pilih Produk</option>
                     </select>
                 </div>
             </div>
         </div>
         
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body p-3">
+                        <div class="fw-semibold">Produsen</div>
+                        <div class="small text-muted mb-2">Otomatis terisi sesuai Produk yang dipilih</div>
+                        <div class="produsen-badges d-flex flex-wrap gap-1"><span class="text-muted small">-</span></div>
+                        <div class="produsen-hidden-inputs"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body p-3">
+                        <div class="fw-semibold">Distributor</div>
+                        <div class="small text-muted mb-2">Otomatis terisi sesuai Produk yang dipilih</div>
+                        <div class="distributor-badges d-flex flex-wrap gap-1"><span class="text-muted small">-</span></div>
+                        <div class="distributor-hidden-inputs"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div class="row">
             <div class="col-md-6">
                 <div class="form-group">
@@ -1058,17 +1338,6 @@ function addNewRow() {
                         <option value="">Pilih Negara</option>
                         @foreach ($countries as $code => $name)
                             <option value="{{ $name }}">{{ $name }}</option>
-                        @endforeach
-                    </select>
-                </div>
-            </div>
-            <div class="col-md-6">
-                <div class="form-group">
-                    <label class="form-label">Distributor</label>
-                    <select class="choices form-control" name="distributor[]">
-                        <option value="">Pilih Distributor</option>
-                        @foreach ($distributors as $distributor)
-                            <option value="{{ $distributor->nama_distributor }}">{{ $distributor->nama_distributor }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -1339,13 +1608,19 @@ function addNewRow() {
         <!-- Buttons -->
         <div class="row mt-3 pt-3 border-top">
             <div class="col-md-12">
-                <button type="button" class="btn btn-success btn-sm add-unified-btn"><i class="bi bi-plus"></i> Tambah Baris</button>
                 <button type="button" class="btn btn-danger btn-sm remove-unified-btn"><i class="bi bi-trash"></i> Hapus Baris</button>
             </div>
         </div>
     `;
     
     container.appendChild(newRow);
+
+    // Initialize produk meta badges for new row
+    try {
+        setupProdukRowListeners(newRow);
+        applyProdukMetaForRow(newRow);
+    } catch (err) {
+    }
     
     // Setup conditional logic for Suhu Produk in new row
     setupSuhuProdukLogic(newRow, uniqueId);

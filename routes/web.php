@@ -52,7 +52,6 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 // Dashboard
 Route::get('/dashboard', [AuthController::class, 'dashboard'])->name('dashboard');
 
-
 // Protected Routes (require authentication)
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/debug/check-roles', function () {
@@ -90,7 +89,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         return '<pre style="background: #f4f4f4; padding: 20px; font-family: monospace; white-space: pre-wrap;">' . 
                json_encode($info, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . 
                '</pre>';
-    } catch (\Exception $e) {
+    }   catch (\Exception $e) {
         return '<pre style="color: red; padding: 20px;">' . 
                'Error: ' . $e->getMessage() . 
                '\nFile: ' . $e->getFile() . 
@@ -105,6 +104,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     
     // Data Master Routes (Super Admin)
     Route::prefix('super-admin')->group(function () {
+        // Download template excel
+        Route::get('bahans/template', [BahanController::class, 'template'])->name('bahans.template');
+        Route::get('bahan-kemasans/template', [BahanKemasanController::class, 'template'])->name('bahan-kemasans.template');
+        Route::get('produks/template', [ProdukController::class, 'template'])->name('produks.template');
+
         // Role Management Routes
         Route::resource('roles', RoleController::class);
         // Plant Management Routes
@@ -115,18 +119,24 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::resource('barangs', BarangController::class);
         // Bahan Management Routes
         Route::resource('bahans', BahanController::class);
+        Route::post('bahans/import', [BahanController::class, 'import'])->name('bahans.import');
         // Customer Management Routes
         Route::resource('customers', CustomerController::class);
         // Shift Management Routes
         Route::resource('shifts', ShiftController::class);
         // Distributor Management Routes
+        Route::get('distributors/template', [DistributorController::class, 'template'])->name('distributors.template');
+        Route::post('distributors/import', [DistributorController::class, 'import'])->name('distributors.import');
         Route::resource('distributors', DistributorController::class);
         // Produsen Management Routes
+        Route::get('produsens/template', [ProdusenController::class, 'template'])->name('produsens.template');
+        Route::post('produsens/import', [ProdusenController::class, 'import'])->name('produsens.import');
         Route::resource('produsens', ProdusenController::class);
         // Chemical Management Routes
         Route::resource('chemicals', ChemicalController::class);
         // Bahan Kemasan Management Routes
         Route::resource('bahan-kemasans', BahanKemasanController::class);
+        Route::post('bahan-kemasans/import', [BahanKemasanController::class, 'import'])->name('bahan-kemasans.import');
         // Jenis Kendaraan Management Routes
         Route::resource('jenis-kendaraans', JenisKendaraanController::class);
         // Tujuan Pengiriman Management Routes
@@ -135,6 +145,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::resource('supirs', SupirController::class);
         // Produk Management Routes
         Route::resource('produks', ProdukController::class);
+        Route::post('produks/import', [ProdukController::class, 'import'])->name('produks.import');
         // Ekspedisi Management Routes
         Route::resource('ekspedisis', EkspedisiController::class);
         // Input Area Management Routes

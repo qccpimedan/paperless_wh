@@ -46,7 +46,7 @@
                                     <div class="col-md-4">
                                         <div class="mb-3">
                                             <label class="form-label"><strong>Shift</strong></label>
-                                            <p class="form-control-plaintext"><span class="badge bg-info">{{ $pemeriksaanSuhuRuang->shift->shift }}</span></p>
+                                            <p class="form-control-plaintext"><span class="badge bg-info">{{ $pemeriksaanSuhuRuang->shift->shift ?? '-' }}</span></p>
                                         </div>
                                     </div>
                                     <div class="col-md-4">
@@ -59,14 +59,23 @@
                                     <div class="col-md-6">
                                         <div class="mb-3">
                                             <label class="form-label"><strong>Area</strong></label>
-                                            <p class="form-control-plaintext">{{ $pemeriksaanSuhuRuang->area->nama_area }}</p>
+                                            <p class="form-control-plaintext">{{ $pemeriksaanSuhuRuang->area->nama_area ?? '-' }}</p>
                                         </div>
                                     </div>
 
                                     <div class="col-md-6">
                                         <div class="mb-3">
                                             <label class="form-label"><strong>Produk</strong></label>
-                                            <p class="form-control-plaintext">{{ $pemeriksaanSuhuRuang->produk->nama_produk }}</p>
+                                            <p class="form-control-plaintext">
+                                                @if($pemeriksaanSuhuRuang->produk)
+                                                    @if($pemeriksaanSuhuRuang->produk->kategori_code)
+                                                        <span class="badge bg-primary">{{ $pemeriksaanSuhuRuang->produk->kategori_code }}</span>
+                                                    @endif
+                                                    {{ $pemeriksaanSuhuRuang->produk->nama_produk ?? '-' }}
+                                                @else
+                                                    -
+                                                @endif
+                                            </p>
                                         </div>
                                     </div>
                                 </div>

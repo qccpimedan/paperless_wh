@@ -46,21 +46,30 @@
                                     <div class="col-md-6">
                                         <div class="mb-3">
                                             <label class="form-label"><strong>Shift</strong></label>
-                                            <p class="form-control-plaintext"><span class="badge bg-info">{{ $pemeriksaanSuhuRuangV2->shift->shift }}</span></p>
+                                            <p class="form-control-plaintext"><span class="badge bg-info">{{ $pemeriksaanSuhuRuangV2->shift->shift ?? '-' }}</span></p>
                                         </div>
                                     </div>
 
                                     <div class="col-md-6">
                                         <div class="mb-3">
                                             <label class="form-label"><strong>Area</strong></label>
-                                            <p class="form-control-plaintext">{{ $pemeriksaanSuhuRuangV2->area->nama_area }}</p>
+                                            <p class="form-control-plaintext">{{ $pemeriksaanSuhuRuangV2->area->nama_area ?? '-' }}</p>
                                         </div>
                                     </div>
 
                                     <div class="col-md-6">
                                         <div class="mb-3">
                                             <label class="form-label"><strong>Produk</strong></label>
-                                            <p class="form-control-plaintext">{{ $pemeriksaanSuhuRuangV2->produk->nama_bahan }}</p>
+                                            <p class="form-control-plaintext">
+                                                @if($pemeriksaanSuhuRuangV2->produk)
+                                                    @if($pemeriksaanSuhuRuangV2->produk->kategori_code)
+                                                        <span class="badge bg-primary">{{ $pemeriksaanSuhuRuangV2->produk->kategori_code }}</span>
+                                                    @endif
+                                                    {{ $pemeriksaanSuhuRuangV2->produk->nama_bahan ?? '-' }}
+                                                @else
+                                                    -
+                                                @endif
+                                            </p>
                                         </div>
                                     </div>
 

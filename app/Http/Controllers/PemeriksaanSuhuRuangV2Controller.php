@@ -58,8 +58,38 @@ class PemeriksaanSuhuRuangV2Controller extends Controller
                 $query->where('id_plant', $user->id_plant);
             }
         })->get();
+
+        $produkKategoriOptions = $produks
+            ->pluck('kategori_code')
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+
+        $produkByKategori = $produks
+            ->groupBy('kategori_code')
+            ->map(function ($items) {
+                return $items->map(function ($p) {
+                    return [
+                        'id' => $p->id,
+                        'nama' => $p->nama_bahan,
+                    ];
+                })->values();
+            })
+            ->all();
+
+        $produkKategoriById = $produks
+            ->pluck('kategori_code', 'id')
+            ->all();
         
-        return view('qc-sistem.pemeriksaan-suhu-ruang-v2.create', compact('shifts', 'produks', 'areas'));
+        return view('qc-sistem.pemeriksaan-suhu-ruang-v2.create', compact(
+            'shifts',
+            'produks',
+            'areas',
+            'produkKategoriOptions',
+            'produkByKategori',
+            'produkKategoriById'
+        ));
     }
 
     public function store(Request $request)
@@ -133,8 +163,43 @@ class PemeriksaanSuhuRuangV2Controller extends Controller
                 $query->where('id_plant', $user->id_plant);
             }
         })->get();
+
+        $produkKategoriOptions = $produks
+            ->pluck('kategori_code')
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+
+        $produkByKategori = $produks
+            ->groupBy('kategori_code')
+            ->map(function ($items) {
+                return $items->map(function ($p) {
+                    return [
+                        'id' => $p->id,
+                        'nama' => $p->nama_bahan,
+                    ];
+                })->values();
+            })
+            ->all();
+
+        $produkKategoriById = $produks
+            ->pluck('kategori_code', 'id')
+            ->all();
         
-        return view('qc-sistem.pemeriksaan-suhu-ruang-v2.edit', compact('pemeriksaanSuhuRuangV2', 'shifts', 'produks', 'areas', 'canEdit', 'nextEditTime', 'hoursDiff', 'editPer2Jam'));
+        return view('qc-sistem.pemeriksaan-suhu-ruang-v2.edit', compact(
+            'pemeriksaanSuhuRuangV2',
+            'shifts',
+            'produks',
+            'areas',
+            'canEdit',
+            'nextEditTime',
+            'hoursDiff',
+            'editPer2Jam',
+            'produkKategoriOptions',
+            'produkByKategori',
+            'produkKategoriById'
+        ));
     }
 
     public function update(Request $request, PemeriksaanSuhuRuangV2 $pemeriksaanSuhuRuangV2)

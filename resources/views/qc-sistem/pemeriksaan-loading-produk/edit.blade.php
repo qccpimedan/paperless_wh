@@ -317,77 +317,87 @@
 
                                         <h6 class="text-secondary mt-3">Detail Produk</h6>
                                         <div id="produk-container">
-                                            @if($pemeriksaanLoading->produk_data && count($pemeriksaanLoading->produk_data) > 0)
-                                                @foreach($pemeriksaanLoading->produk_data as $index => $produk)
-                                                    <div class="produk-row mb-4 p-3 border rounded" style="background-color: #f8f9fa;">
-                                                        <h6 class="text-secondary mb-3">Detail #{{ $index + 1 }}</h6>
-                                                        <input type="hidden" class="produk-id-hidden" name="produk_data[{{ $index }}][id_produk]" value="{{ $selectedProdukId }}">
-                                                        <div class="row">
-                                                            <div class="col-md-3">
-                                                                <label>Kode Produksi</label>
-                                                                <input type="text" class="form-control" name="produk_data[{{ $index }}][kode_produksi]" value="{{ $produk['kode_produksi'] ?? '' }}" placeholder="Kode Produksi">
-                                                            </div>
-                                                            <div class="col-md-3">
-                                                                <label>Best Before</label>
-                                                                <input type="date" class="form-control" name="produk_data[{{ $index }}][best_before]" value="{{ $produk['best_before'] ?? '' }}">
-                                                            </div>
-                                                            <div class="col-md-3">
-                                                                <label>Jumlah Kemasan</label>
-                                                                <input type="text" class="form-control" name="produk_data[{{ $index }}][jumlah_kemasan]" value="{{ $produk['jumlah_kemasan'] ?? '' }}" placeholder="Contoh: 100 Karton">
-                                                            </div>
-                                                            <div class="col-md-3">
-                                                                <label>Jumlah Sampling</label>
-                                                                <input type="text" class="form-control" name="produk_data[{{ $index }}][jumlah_sampling]" value="{{ $produk['jumlah_sampling'] ?? '' }}" placeholder="Contoh: 10 Karton">
-                                                            </div>
                                                         </div>
-                                                        <div class="row mt-3">
-                                                            <div class="col-md-12">
-                                                                <div class="form-check">
-                                                                    <input class="form-check-input" type="checkbox" name="produk_data[{{ $index }}][kondisi_kemasan]" value="1" {{ ($produk['kondisi_kemasan'] ?? true) ? 'checked' : '' }}>
-                                                                    <label class="form-check-label">Kondisi Kemasan Baik</label>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                        <div class="row mt-3">
-                                                            <div class="col-md-12">
-                                                                <label>Keterangan</label>
-                                                                <textarea class="form-control" name="produk_data[{{ $index }}][keterangan]" rows="2" placeholder="Keterangan tambahan untuk detail ini">{{ $produk['keterangan'] ?? '' }}</textarea>
-                                                            </div>
-                                                        </div>
-                                                        <div class="row mt-3">
-                                                            <div class="col-md-12">
-                                                                <button type="button" class="btn btn-sm btn-danger remove-produk" style="display: {{ ($pemeriksaanLoading->produk_data && count($pemeriksaanLoading->produk_data) > 1) ? 'inline-block' : 'none' }};">Hapus Detail</button>
-                                                            </div>
+                                                        <div class="form-check">
+                                                            <input class="form-check-input" type="radio" id="gembok_option" name="segel_gembok" value="gembok" {{ $segelGembokValue == 'gembok' ? 'checked' : '' }}>
+                                                            <label class="form-check-label" for="gembok_option">Gembok</label>
                                                         </div>
                                                     </div>
-                                                @endforeach
+                                                </div>
+                                                <div class="col-md-6" id="no_segel_container" style="display: {{ $segelGembokValue == 'segel' ? 'block' : 'none' }};">
+                                                    <div class="form-group">
+                                                        <label for="no_segel">No. Segel</label>
+                                                        <input type="text" id="no_segel" class="form-control @error('no_segel') is-invalid @enderror"
+                                                            name="no_segel" value="{{ old('no_segel', $pemeriksaanLoading->no_segel) }}" placeholder="Nomor Segel" style="max-width: 300px;">
+                                                        @error('no_segel')
+                                                            <div class="invalid-feedback">{{ $message }}</div>
+                                                        @enderror
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
 
-                                            @else
+                                    <!-- DATA PRODUK MULTIPLE -->
+                                    <h5 class="text-primary mb-3 mt-4">Data Produk <span class="text-danger">*</span></h5>
+                                    @php
+                                        $selectedProdukId = old('id_produk');
+                                        if ($selectedProdukId === null) {
+                                            $selectedProdukId = $pemeriksaanLoading->produk_data[0]['id_produk'] ?? null;
+                                        }
+                                    @endphp
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label>Nama Produk <span class="text-danger">*</span></label>
+                                                <select class="choices form-select" name="id_produk" required>
+                                                    <option value="">-- Pilih Produk --</option>
+                                                    @foreach($produks as $p)
+                                                        <option value="{{ $p->id }}" {{ $selectedProdukId == $p->id ? 'selected' : '' }}>{{ $p->nama_produk }}</option>
+                                                    @endforeach
+                                                </select>
+                                                @error('id_produk')
+                                                    <div class="text-danger">{{ $message }}</div>
+                                                @enderror
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <h6 class="text-secondary mt-3">Detail Produk</h6>
+                                    <div id="produk-container">
+                                        @if($pemeriksaanLoading->produk_data && count($pemeriksaanLoading->produk_data) > 0)
+                                            @foreach($pemeriksaanLoading->produk_data as $index => $produk)
                                                 <div class="produk-row mb-4 p-3 border rounded" style="background-color: #f8f9fa;">
-                                                    <h6 class="text-secondary mb-3">Detail #1</h6>
-                                                    <input type="hidden" class="produk-id-hidden" name="produk_data[0][id_produk]" value="{{ $selectedProdukId }}">
+                                                    <h6 class="text-secondary mb-3">Detail #{{ $index + 1 }}</h6>
+                                                    <input type="hidden" class="produk-id-hidden" name="produk_data[{{ $index }}][id_produk]" value="{{ $selectedProdukId }}">
                                                     <div class="row">
                                                         <div class="col-md-3">
                                                             <label>Kode Produksi</label>
-                                                            <input type="text" class="form-control" name="produk_data[0][kode_produksi]" placeholder="Kode Produksi">
+                                                            <input type="text" class="form-control" name="produk_data[{{ $index }}][kode_produksi]" value="{{ $produk['kode_produksi'] ?? '' }}" placeholder="Kode Produksi">
                                                         </div>
                                                         <div class="col-md-3">
                                                             <label>Best Before</label>
-                                                            <input type="date" class="form-control" name="produk_data[0][best_before]">
+                                                            <input type="date" class="form-control" name="produk_data[{{ $index }}][best_before]" value="{{ $produk['best_before'] ?? '' }}">
                                                         </div>
                                                         <div class="col-md-3">
                                                             <label>Jumlah Kemasan</label>
-                                                            <input type="text" class="form-control" name="produk_data[0][jumlah_kemasan]" placeholder="Contoh: 100 Karton">
+                                                            <input type="text" class="form-control" name="produk_data[{{ $index }}][jumlah_kemasan]" value="{{ $produk['jumlah_kemasan'] ?? '' }}" placeholder="Contoh: 100 Karton">
                                                         </div>
                                                         <div class="col-md-3">
                                                             <label>Jumlah Sampling</label>
-                                                            <input type="text" class="form-control" name="produk_data[0][jumlah_sampling]" placeholder="Contoh: 10 Karton">
+                                                            <input type="text" class="form-control" name="produk_data[{{ $index }}][jumlah_sampling]" value="{{ $produk['jumlah_sampling'] ?? '' }}" placeholder="Contoh: 10 Karton">
+                                                        </div>
+                                                    </div>
+                                                    <div class="row mt-3">
+                                                        <div class="col-md-3">
+                                                            <label>Berat per Karung</label>
+                                                            <input type="text" class="form-control" name="produk_data[{{ $index }}][berat_perkarung]" value="{{ $produk['berat_perkarung'] ?? '' }}" placeholder="Contoh: 25 Kg">
                                                         </div>
                                                     </div>
                                                     <div class="row mt-3">
                                                         <div class="col-md-12">
                                                             <div class="form-check">
-                                                                <input class="form-check-input" type="checkbox" name="produk_data[0][kondisi_kemasan]" value="1" checked>
+                                                                <input class="form-check-input" type="checkbox" name="produk_data[{{ $index }}][kondisi_kemasan]" value="1" {{ ($produk['kondisi_kemasan'] ?? true) ? 'checked' : '' }}>
                                                                 <label class="form-check-label">Kondisi Kemasan Baik</label>
                                                             </div>
                                                         </div>
@@ -395,26 +405,75 @@
                                                     <div class="row mt-3">
                                                         <div class="col-md-12">
                                                             <label>Keterangan</label>
-                                                            <textarea class="form-control" name="produk_data[0][keterangan]" rows="2" placeholder="Keterangan tambahan untuk detail ini"></textarea>
+                                                            <textarea class="form-control" name="produk_data[{{ $index }}][keterangan]" rows="2" placeholder="Keterangan tambahan untuk detail ini">{{ $produk['keterangan'] ?? '' }}</textarea>
                                                         </div>
                                                     </div>
                                                     <div class="row mt-3">
                                                         <div class="col-md-12">
-                                                            <button type="button" class="btn btn-sm btn-danger remove-produk" style="display: none;">Hapus Detail</button>
+                                                            <button type="button" class="btn btn-sm btn-danger remove-produk" style="display: {{ ($pemeriksaanLoading->produk_data && count($pemeriksaanLoading->produk_data) > 1) ? 'inline-block' : 'none' }};">Hapus Detail</button>
                                                         </div>
                                                     </div>
                                                 </div>
-                                            @endif
-                                        </div>
-                                        <button type="button" class="btn btn-sm btn-primary mt-2" id="add-produk">+ Tambah Detail</button>
+                                            @endforeach
 
-                                        <div class="col-md-12 d-flex justify-content-end mt-3">
-                                            <button type="submit" class="btn btn-primary me-1 mb-1">Update Loading Produk</button>
-                                            <a href="{{ route('pemeriksaan-loading-produk.index') }}" class="btn btn-light-secondary me-1 mb-1">Kembali</a>
-                                        </div>
+                                        @else
+                                            <div class="produk-row mb-4 p-3 border rounded" style="background-color: #f8f9fa;">
+                                                <h6 class="text-secondary mb-3">Detail #1</h6>
+                                                <input type="hidden" class="produk-id-hidden" name="produk_data[0][id_produk]" value="{{ $selectedProdukId }}">
+                                                <div class="row">
+                                                    <div class="col-md-3">
+                                                        <label>Kode Produksi</label>
+                                                        <input type="text" class="form-control" name="produk_data[0][kode_produksi]" placeholder="Kode Produksi">
+                                                    </div>
+                                                    <div class="col-md-3">
+                                                        <label>Best Before</label>
+                                                        <input type="date" class="form-control" name="produk_data[0][best_before]">
+                                                    </div>
+                                                    <div class="col-md-3">
+                                                        <label>Jumlah Kemasan</label>
+                                                        <input type="text" class="form-control" name="produk_data[0][jumlah_kemasan]" placeholder="Contoh: 100 Karton">
+                                                    </div>
+                                                    <div class="col-md-3">
+                                                        <label>Jumlah Sampling</label>
+                                                        <input type="text" class="form-control" name="produk_data[0][jumlah_sampling]" placeholder="Contoh: 10 Karton">
+                                                    </div>
+                                                </div>
+                                                <div class="row mt-3">
+                                                    <div class="col-md-3">
+                                                        <label>Berat per Karung</label>
+                                                        <input type="text" class="form-control" name="produk_data[0][berat_perkarung]" placeholder="Contoh: 25 Kg">
+                                                    </div>
+                                                </div>
+                                                <div class="row mt-3">
+                                                    <div class="col-md-12">
+                                                        <div class="form-check">
+                                                            <input class="form-check-input" type="checkbox" name="produk_data[0][kondisi_kemasan]" value="1" checked>
+                                                            <label class="form-check-label">Kondisi Kemasan Baik</label>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="row mt-3">
+                                                    <div class="col-md-12">
+                                                        <label>Keterangan</label>
+                                                        <textarea class="form-control" name="produk_data[0][keterangan]" rows="2" placeholder="Keterangan tambahan untuk detail ini"></textarea>
+                                                    </div>
+                                                </div>
+                                                <div class="row mt-3">
+                                                    <div class="col-md-12">
+                                                        <button type="button" class="btn btn-sm btn-danger remove-produk" style="display: none;">Hapus Detail</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        @endif
                                     </div>
-                                </form>
-                            </div>
+                                    <button type="button" class="btn btn-sm btn-primary mt-2" id="add-produk">+ Tambah Detail</button>
+
+                                    <div class="col-md-12 d-flex justify-content-end mt-3">
+                                        <button type="submit" class="btn btn-primary me-1 mb-1">Update Loading Produk</button>
+                                        <a href="{{ route('pemeriksaan-loading-produk.index') }}" class="btn btn-light-secondary me-1 mb-1">Kembali</a>
+                                    </div>
+                                </div>
+                            </form>
                         </div>
                     </div>
                 </div>
@@ -551,6 +610,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     <div class="col-md-3">
                         <label>Jumlah Sampling</label>
                         <input type="text" class="form-control" name="produk_data[${index}][jumlah_sampling]" placeholder="Contoh: 10 Karton">
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-md-3">
+                        <label>Berat per Karung</label>
+                        <input type="text" class="form-control" name="produk_data[${index}][berat_perkarung]" placeholder="Contoh: 25 Kg">
                     </div>
                 </div>
                 <div class="row mt-3">
