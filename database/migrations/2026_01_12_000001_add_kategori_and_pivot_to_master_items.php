@@ -37,7 +37,7 @@ return new class extends Migration
                 $table->unsignedBigInteger('id_plant');
                 $table->timestamps();
 
-                $table->unique(['id_plant', 'id_produk', 'id_produsen']);
+                $table->unique(['id_plant', 'id_produk', 'id_produsen'], 'u_pp_plant_produk_produsen');
 
                 $table->foreign('id_produk')->references('id')->on('produks')->cascadeOnDelete();
                 $table->foreign('id_produsen')->references('id')->on('produsens')->cascadeOnDelete();
@@ -53,7 +53,7 @@ return new class extends Migration
                 $table->unsignedBigInteger('id_plant');
                 $table->timestamps();
 
-                $table->unique(['id_plant', 'id_produk', 'id_distributor']);
+                $table->unique(['id_plant', 'id_produk', 'id_distributor'], 'u_pd_plant_produk_distributor');
 
                 $table->foreign('id_produk')->references('id')->on('produks')->cascadeOnDelete();
                 $table->foreign('id_distributor')->references('id')->on('distributors')->cascadeOnDelete();
@@ -69,7 +69,7 @@ return new class extends Migration
                 $table->unsignedBigInteger('id_plant');
                 $table->timestamps();
 
-                $table->unique(['id_plant', 'id_bahan', 'id_produsen']);
+                $table->unique(['id_plant', 'id_bahan', 'id_produsen'], 'u_bp_plant_bahan_produsen');
 
                 $table->foreign('id_bahan')->references('id')->on('bahans')->cascadeOnDelete();
                 $table->foreign('id_produsen')->references('id')->on('produsens')->cascadeOnDelete();
@@ -85,7 +85,7 @@ return new class extends Migration
                 $table->unsignedBigInteger('id_plant');
                 $table->timestamps();
 
-                $table->unique(['id_plant', 'id_bahan', 'id_distributor']);
+                $table->unique(['id_plant', 'id_bahan', 'id_distributor'], 'u_bd_plant_bahan_distributor');
 
                 $table->foreign('id_bahan')->references('id')->on('bahans')->cascadeOnDelete();
                 $table->foreign('id_distributor')->references('id')->on('distributors')->cascadeOnDelete();
@@ -101,7 +101,7 @@ return new class extends Migration
                 $table->unsignedBigInteger('id_plant');
                 $table->timestamps();
 
-                $table->unique(['id_plant', 'id_bahan_kemasan', 'id_produsen']);
+                $table->unique(['id_plant', 'id_bahan_kemasan', 'id_produsen'], 'u_bkp_plant_bk_produsen');
 
                 $table->foreign('id_bahan_kemasan')->references('id')->on('bahan_kemasans')->cascadeOnDelete();
                 $table->foreign('id_produsen')->references('id')->on('produsens')->cascadeOnDelete();
@@ -117,7 +117,7 @@ return new class extends Migration
                 $table->unsignedBigInteger('id_plant');
                 $table->timestamps();
 
-                $table->unique(['id_plant', 'id_bahan_kemasan', 'id_distributor']);
+                $table->unique(['id_plant', 'id_bahan_kemasan', 'id_distributor'], 'u_bkd_plant_bk_distributor');
 
                 $table->foreign('id_bahan_kemasan')->references('id')->on('bahan_kemasans')->cascadeOnDelete();
                 $table->foreign('id_distributor')->references('id')->on('distributors')->cascadeOnDelete();
