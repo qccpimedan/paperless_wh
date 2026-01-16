@@ -8,8 +8,10 @@ use App\Models\Chemical;
 use App\Models\Produsen;
 use App\Models\User;
 use App\Models\Distributor;
+use App\Models\Produk;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\ValidationException;
 use Monarobase\CountryList\CountryListFacade as Countries;
 
 class PemeriksaanKedatanganChemicalController extends Controller
@@ -64,7 +66,102 @@ class PemeriksaanKedatanganChemicalController extends Controller
             $countries = Countries::getList('en', 'php');
         }
 
-        return view('qc-sistem.pemeriksaan-kedatangan-chemical.create', compact('shifts', 'chemicals', 'produsens', 'distributors', 'countries'));
+        $plantId = $user->id_plant;
+
+        $produkKategoriOptions = Produk::query()
+            ->select('kategori_code')
+            ->distinct()
+            ->orderBy('kategori_code')
+            ->pluck('kategori_code')
+            ->values();
+
+        if ($produkKategoriOptions->isEmpty()) {
+            $produkKategoriOptions = collect(['CHEMICAL']);
+        }
+
+        $produkList = Produk::query()
+            ->select(['id', 'nama_produk', 'kategori_code'])
+            ->orderBy('nama_produk')
+            ->get();
+
+        $produkByKategori = $produkList
+            ->groupBy('kategori_code')
+            ->map(function ($items) {
+                return $items->map(function ($p) {
+                    return [
+                        'id' => $p->id,
+                        'nama' => $p->nama_produk,
+                    ];
+                })->values();
+            });
+
+        $produkMeta = Produk::with([
+                'produsens' => function ($q) use ($plantId) {
+                    if ($plantId) {
+                        $q->wherePivot('id_plant', $plantId);
+                    }
+                },
+                'distributors' => function ($q) use ($plantId) {
+                    if ($plantId) {
+                        $q->wherePivot('id_plant', $plantId);
+                    }
+                },
+            ])
+            ->get()
+            ->mapWithKeys(function ($p) {
+                return [
+                    $p->id => [
+                        'produsen_ids' => $p->produsens->pluck('id')->values()->toArray(),
+                        'produsen_names' => $p->produsens->pluck('nama_produsen')->values()->toArray(),
+                        'distributor_ids' => $p->distributors->pluck('id')->values()->toArray(),
+                        'distributor_names' => $p->distributors->pluck('nama_distributor')->values()->toArray(),
+                    ],
+                ];
+            });
+
+        $chemicalByName = $chemicals
+            ->mapWithKeys(function ($c) {
+                $key = strtolower(trim((string) $c->nama_chemical));
+                return [$key => $c->id];
+            });
+
+        $normalizeName = function ($value) {
+            $v = strtolower(trim((string) $value));
+            $v = preg_replace('/[^a-z0-9]+/i', '', $v);
+            return $v;
+        };
+
+        $chemicalByNorm = $chemicals
+            ->mapWithKeys(function ($c) use ($normalizeName) {
+                return [$normalizeName($c->nama_chemical) => $c->id];
+            });
+
+        $chemicalByProdukId = $produkList
+            ->mapWithKeys(function ($p) use ($chemicalByName, $chemicalByNorm, $normalizeName) {
+                $rawKey = strtolower(trim((string) $p->nama_produk));
+                $normKey = $normalizeName($p->nama_produk);
+
+                $exact = $chemicalByName[$rawKey] ?? null;
+                if ($exact) {
+                    return [$p->id => $exact];
+                }
+
+                $normExact = $chemicalByNorm[$normKey] ?? null;
+                if ($normExact) {
+                    return [$p->id => $normExact];
+                }
+
+                // Fallback partial match on normalized strings
+                foreach ($chemicalByNorm as $chemNorm => $chemId) {
+                    if ($chemNorm && $normKey && (str_contains($chemNorm, $normKey) || str_contains($normKey, $chemNorm))) {
+                        return [$p->id => $chemId];
+                    }
+                }
+
+                return [$p->id => null];
+            });
+
+        return view('qc-sistem.pemeriksaan-kedatangan-chemical.create', compact('shifts', 'chemicals', 'produsens', 'distributors', 'countries', 'produkKategoriOptions', 'produkByKategori', 'produkMeta', 'chemicalByName', 'chemicalByProdukId'));
     }
 
     private function checkPlantAccess($pemeriksaan)
@@ -80,6 +177,120 @@ class PemeriksaanKedatanganChemicalController extends Controller
 
     public function store(Request $request)
     {
+        $inputProdukIds = $request->input('id_produk', []);
+        $inputChemicalIds = $request->input('id_chemical', []);
+
+        if (is_array($inputProdukIds) && is_array($inputChemicalIds)) {
+            $produkRows = Produk::query()
+                ->select(['id', 'nama_produk'])
+                ->whereIn('id', array_filter($inputProdukIds))
+                ->get();
+
+            $produkNameById = $produkRows
+                ->mapWithKeys(function ($p) {
+                    return [$p->id => strtolower(trim((string) $p->nama_produk))];
+                });
+
+            $produkRawNameById = $produkRows
+                ->mapWithKeys(function ($p) {
+                    return [$p->id => (string) $p->nama_produk];
+                });
+
+            $user = Auth::user();
+
+            if ($user->role && strtolower($user->role->role) === 'superadmin') {
+                $chemicalRows = Chemical::query()
+                    ->select(['id', 'nama_chemical'])
+                    ->get();
+            } else {
+                $chemicalRows = Chemical::query()
+                    ->select(['id', 'nama_chemical'])
+                    ->whereHas('user', function ($q) use ($user) {
+                        $q->where('id_plant', $user->id_plant);
+                    })
+                    ->get();
+            }
+
+            $chemicalIdByName = $chemicalRows
+                ->mapWithKeys(function ($c) {
+                    return [strtolower(trim((string) $c->nama_chemical)) => $c->id];
+                });
+
+            $normalizeName = function ($value) {
+                $v = strtolower(trim((string) $value));
+                $v = preg_replace('/[^a-z0-9]+/i', '', $v);
+                return $v;
+            };
+
+            $chemicalIdByNorm = $chemicalRows
+                ->mapWithKeys(function ($c) use ($normalizeName) {
+                    return [$normalizeName($c->nama_chemical) => $c->id];
+                });
+
+            $mappedChemicalIds = [];
+            $missingMapErrors = [];
+            foreach ($inputProdukIds as $idx => $produkId) {
+                $produkKey = $produkNameById[(int) $produkId] ?? null;
+                $produkRawName = $produkRawNameById[(int) $produkId] ?? null;
+                $currentChemicalId = $inputChemicalIds[$idx] ?? null;
+
+                if (!empty($currentChemicalId)) {
+                    $mappedChemicalIds[$idx] = $currentChemicalId;
+                    continue;
+                }
+
+                $mapped = $produkKey ? ($chemicalIdByName[$produkKey] ?? null) : null;
+                if (!$mapped && $produkKey) {
+                    $normProdukKey = $normalizeName($produkKey);
+                    $mapped = $chemicalIdByNorm[$normProdukKey] ?? null;
+                }
+
+                if (!$mapped && $produkKey) {
+                    $normProdukKey = $normalizeName($produkKey);
+                    foreach ($chemicalIdByNorm as $chemNorm => $chemId) {
+                        if ($chemNorm && $normProdukKey && (str_contains($chemNorm, $normProdukKey) || str_contains($normProdukKey, $chemNorm))) {
+                            $mapped = $chemId;
+                            break;
+                        }
+                    }
+                }
+
+                if (!$mapped && $produkRawName) {
+                    $createPayload = [
+                        'id_user' => $user->id,
+                        'nama_chemical' => $produkRawName,
+                    ];
+
+                    $incomingProdusen = $request->input('id_produsen.' . $idx);
+                    if (!empty($incomingProdusen)) {
+                        $createPayload['id_produsen'] = $incomingProdusen;
+                    }
+
+                    $incomingDistributor = $request->input('id_distributor.' . $idx);
+                    if (!empty($incomingDistributor)) {
+                        $createPayload['id_distributor'] = $incomingDistributor;
+                    }
+
+                    $createdChemical = Chemical::create($createPayload);
+                    $mapped = $createdChemical->id;
+                }
+
+                if (!$mapped) {
+                    $missingMapErrors['id_chemical.' . $idx] = 'Produk "' . ($produkRawName ?? $produkKey ?? '-') . '" belum terhubung ke master Chemical dan tidak bisa dibuat otomatis. Silakan cek master Chemical.';
+                }
+
+                $mappedChemicalIds[$idx] = $mapped;
+            }
+
+            $request->merge([
+                'id_chemical' => $mappedChemicalIds,
+            ]);
+
+            if (!empty($missingMapErrors)) {
+                throw ValidationException::withMessages($missingMapErrors);
+            }
+        }
+
         $request->validate([
             'tanggal' => 'required|date',
             'jenis_mobil' => 'nullable|string|max:255',
@@ -175,8 +386,59 @@ class PemeriksaanKedatanganChemicalController extends Controller
         
         // Load hanya relasi yang masih digunakan (tidak ada relasi chemical, produsen, distributor lagi)
         $pemeriksaanChemical->load(['user.plant', 'shift']);
+
+        $user = Auth::user();
+        $plantId = $user->id_plant;
+
+        $produkList = Produk::query()
+            ->select(['id', 'nama_produk', 'kategori_code'])
+            ->orderBy('nama_produk')
+            ->get();
+
+        $produkMeta = Produk::with([
+                'produsens' => function ($q) use ($plantId) {
+                    if ($plantId) {
+                        $q->wherePivot('id_plant', $plantId);
+                    }
+                },
+                'distributors' => function ($q) use ($plantId) {
+                    if ($plantId) {
+                        $q->wherePivot('id_plant', $plantId);
+                    }
+                },
+            ])
+            ->get()
+            ->mapWithKeys(function ($p) {
+                return [
+                    $p->id => [
+                        'produsen_ids' => $p->produsens->pluck('id')->values()->toArray(),
+                        'produsen_names' => $p->produsens->pluck('nama_produsen')->values()->toArray(),
+                        'distributor_ids' => $p->distributors->pluck('id')->values()->toArray(),
+                        'distributor_names' => $p->distributors->pluck('nama_distributor')->values()->toArray(),
+                    ],
+                ];
+            });
+
+        $produkByName = $produkList
+            ->mapWithKeys(function ($p) {
+                $key = strtolower(trim((string) $p->nama_produk));
+                return [$key => ['id' => $p->id, 'kategori_code' => $p->kategori_code]];
+            });
+
+        $chemicals = Chemical::query()->select(['id', 'nama_chemical'])->get();
+        $produkByChemicalId = $chemicals
+            ->mapWithKeys(function ($c) use ($produkByName) {
+                $key = strtolower(trim((string) $c->nama_chemical));
+                $produk = $produkByName[$key] ?? null;
+                return [
+                    $c->id => [
+                        'id_produk' => $produk['id'] ?? null,
+                        'kategori_code' => $produk['kategori_code'] ?? null,
+                    ],
+                ];
+            });
         
-        return view('qc-sistem.pemeriksaan-kedatangan-chemical.show', compact('pemeriksaanChemical'));
+        return view('qc-sistem.pemeriksaan-kedatangan-chemical.show', compact('pemeriksaanChemical', 'produkMeta', 'produkByChemicalId'));
     }
 
     public function edit(PemeriksaanKedatanganChemical $pemeriksaanChemical)
@@ -210,7 +472,119 @@ class PemeriksaanKedatanganChemicalController extends Controller
         
         $countries = Countries::getList('en', 'php');
 
-        return view('qc-sistem.pemeriksaan-kedatangan-chemical.edit', compact('pemeriksaanChemical', 'shifts', 'chemicals', 'produsens', 'distributors', 'countries'));
+        $plantId = $user->id_plant;
+
+        $produkKategoriOptions = Produk::query()
+            ->select('kategori_code')
+            ->distinct()
+            ->orderBy('kategori_code')
+            ->pluck('kategori_code')
+            ->values();
+
+        if ($produkKategoriOptions->isEmpty()) {
+            $produkKategoriOptions = collect(['CHEMICAL']);
+        }
+
+        $produkList = Produk::query()
+            ->select(['id', 'nama_produk', 'kategori_code'])
+            ->orderBy('nama_produk')
+            ->get();
+
+        $produkByKategori = $produkList
+            ->groupBy('kategori_code')
+            ->map(function ($items) {
+                return $items->map(function ($p) {
+                    return [
+                        'id' => $p->id,
+                        'nama' => $p->nama_produk,
+                    ];
+                })->values();
+            });
+
+        $produkMeta = Produk::with([
+                'produsens' => function ($q) use ($plantId) {
+                    if ($plantId) {
+                        $q->wherePivot('id_plant', $plantId);
+                    }
+                },
+                'distributors' => function ($q) use ($plantId) {
+                    if ($plantId) {
+                        $q->wherePivot('id_plant', $plantId);
+                    }
+                },
+            ])
+            ->get()
+            ->mapWithKeys(function ($p) {
+                return [
+                    $p->id => [
+                        'produsen_ids' => $p->produsens->pluck('id')->values()->toArray(),
+                        'produsen_names' => $p->produsens->pluck('nama_produsen')->values()->toArray(),
+                        'distributor_ids' => $p->distributors->pluck('id')->values()->toArray(),
+                        'distributor_names' => $p->distributors->pluck('nama_distributor')->values()->toArray(),
+                    ],
+                ];
+            });
+
+        $chemicalByName = $chemicals
+            ->mapWithKeys(function ($c) {
+                $key = strtolower(trim((string) $c->nama_chemical));
+                return [$key => $c->id];
+            });
+
+        $produkByName = $produkList
+            ->mapWithKeys(function ($p) {
+                $key = strtolower(trim((string) $p->nama_produk));
+                return [$key => ['id' => $p->id, 'kategori_code' => $p->kategori_code]];
+            });
+
+        $produkByChemicalId = $chemicals
+            ->mapWithKeys(function ($c) use ($produkByName) {
+                $key = strtolower(trim((string) $c->nama_chemical));
+                $produk = $produkByName[$key] ?? null;
+                return [
+                    $c->id => [
+                        'id_produk' => $produk['id'] ?? null,
+                        'kategori_code' => $produk['kategori_code'] ?? null,
+                    ],
+                ];
+            });
+
+        $normalizeName = function ($value) {
+            $v = strtolower(trim((string) $value));
+            $v = preg_replace('/[^a-z0-9]+/i', '', $v);
+            return $v;
+        };
+
+        $chemicalByNorm = $chemicals
+            ->mapWithKeys(function ($c) use ($normalizeName) {
+                return [$normalizeName($c->nama_chemical) => $c->id];
+            });
+
+        $chemicalByProdukId = $produkList
+            ->mapWithKeys(function ($p) use ($chemicalByName, $chemicalByNorm, $normalizeName) {
+                $rawKey = strtolower(trim((string) $p->nama_produk));
+                $normKey = $normalizeName($p->nama_produk);
+
+                $exact = $chemicalByName[$rawKey] ?? null;
+                if ($exact) {
+                    return [$p->id => $exact];
+                }
+
+                $normExact = $chemicalByNorm[$normKey] ?? null;
+                if ($normExact) {
+                    return [$p->id => $normExact];
+                }
+
+                foreach ($chemicalByNorm as $chemNorm => $chemId) {
+                    if ($chemNorm && $normKey && (str_contains($chemNorm, $normKey) || str_contains($normKey, $chemNorm))) {
+                        return [$p->id => $chemId];
+                    }
+                }
+
+                return [$p->id => null];
+            });
+
+        return view('qc-sistem.pemeriksaan-kedatangan-chemical.edit', compact('pemeriksaanChemical', 'shifts', 'chemicals', 'produsens', 'distributors', 'countries', 'produkKategoriOptions', 'produkByKategori', 'produkMeta', 'chemicalByName', 'produkByChemicalId', 'chemicalByProdukId'));
     }
 
     public function createRow(PemeriksaanKedatanganChemical $pemeriksaanChemical)
@@ -239,12 +613,111 @@ class PemeriksaanKedatanganChemicalController extends Controller
 
         $countries = Countries::getList('en', 'php');
 
+        $plantId = $user->id_plant;
+
+        $produkKategoriOptions = Produk::query()
+            ->select('kategori_code')
+            ->distinct()
+            ->orderBy('kategori_code')
+            ->pluck('kategori_code')
+            ->values();
+
+        if ($produkKategoriOptions->isEmpty()) {
+            $produkKategoriOptions = collect(['CHEMICAL']);
+        }
+
+        $produkList = Produk::query()
+            ->select(['id', 'nama_produk', 'kategori_code'])
+            ->orderBy('nama_produk')
+            ->get();
+
+        $produkByKategori = $produkList
+            ->groupBy('kategori_code')
+            ->map(function ($items) {
+                return $items->map(function ($p) {
+                    return [
+                        'id' => $p->id,
+                        'nama' => $p->nama_produk,
+                    ];
+                })->values();
+            });
+
+        $produkMeta = Produk::with([
+                'produsens' => function ($q) use ($plantId) {
+                    if ($plantId) {
+                        $q->wherePivot('id_plant', $plantId);
+                    }
+                },
+                'distributors' => function ($q) use ($plantId) {
+                    if ($plantId) {
+                        $q->wherePivot('id_plant', $plantId);
+                    }
+                },
+            ])
+            ->get()
+            ->mapWithKeys(function ($p) {
+                return [
+                    $p->id => [
+                        'produsen_ids' => $p->produsens->pluck('id')->values()->toArray(),
+                        'produsen_names' => $p->produsens->pluck('nama_produsen')->values()->toArray(),
+                        'distributor_ids' => $p->distributors->pluck('id')->values()->toArray(),
+                        'distributor_names' => $p->distributors->pluck('nama_distributor')->values()->toArray(),
+                    ],
+                ];
+            });
+
+        $chemicalByName = $chemicals
+            ->mapWithKeys(function ($c) {
+                $key = strtolower(trim((string) $c->nama_chemical));
+                return [$key => $c->id];
+            });
+
+        $normalizeName = function ($value) {
+            $v = strtolower(trim((string) $value));
+            $v = preg_replace('/[^a-z0-9]+/i', '', $v);
+            return $v;
+        };
+
+        $chemicalByNorm = $chemicals
+            ->mapWithKeys(function ($c) use ($normalizeName) {
+                return [$normalizeName($c->nama_chemical) => $c->id];
+            });
+
+        $chemicalByProdukId = $produkList
+            ->mapWithKeys(function ($p) use ($chemicalByName, $chemicalByNorm, $normalizeName) {
+                $rawKey = strtolower(trim((string) $p->nama_produk));
+                $normKey = $normalizeName($p->nama_produk);
+
+                $exact = $chemicalByName[$rawKey] ?? null;
+                if ($exact) {
+                    return [$p->id => $exact];
+                }
+
+                $normExact = $chemicalByNorm[$normKey] ?? null;
+                if ($normExact) {
+                    return [$p->id => $normExact];
+                }
+
+                foreach ($chemicalByNorm as $chemNorm => $chemId) {
+                    if ($chemNorm && $normKey && (str_contains($chemNorm, $normKey) || str_contains($normKey, $chemNorm))) {
+                        return [$p->id => $chemId];
+                    }
+                }
+
+                return [$p->id => null];
+            });
+
         return view('qc-sistem.pemeriksaan-kedatangan-chemical.tambah-baris', compact(
             'pemeriksaanChemical',
             'chemicals',
             'produsens',
             'distributors',
-            'countries'
+            'countries',
+            'produkKategoriOptions',
+            'produkByKategori',
+            'produkMeta',
+            'chemicalByName',
+            'chemicalByProdukId'
         ));
     }
 
@@ -252,8 +725,89 @@ class PemeriksaanKedatanganChemicalController extends Controller
     {
         $this->checkPlantAccess($pemeriksaanChemical);
 
+        $inputProdukId = $request->input('id_produk');
+        $inputChemicalId = $request->input('id_chemical');
+
+        if (!empty($inputProdukId)) {
+            $produk = Produk::query()->select(['id', 'nama_produk'])->find($inputProdukId);
+            $user = Auth::user();
+
+            if ($produk) {
+                if ($user->role && strtolower($user->role->role) === 'superadmin') {
+                    $chemicalRows = Chemical::query()->select(['id', 'nama_chemical'])->get();
+                } else {
+                    $chemicalRows = Chemical::query()
+                        ->select(['id', 'nama_chemical'])
+                        ->whereHas('user', function ($q) use ($user) {
+                            $q->where('id_plant', $user->id_plant);
+                        })
+                        ->get();
+                }
+
+                $chemicalIdByName = $chemicalRows
+                    ->mapWithKeys(function ($c) {
+                        return [strtolower(trim((string) $c->nama_chemical)) => $c->id];
+                    });
+
+                $normalizeName = function ($value) {
+                    $v = strtolower(trim((string) $value));
+                    $v = preg_replace('/[^a-z0-9]+/i', '', $v);
+                    return $v;
+                };
+
+                $chemicalIdByNorm = $chemicalRows
+                    ->mapWithKeys(function ($c) use ($normalizeName) {
+                        return [$normalizeName($c->nama_chemical) => $c->id];
+                    });
+
+                $produkKey = strtolower(trim((string) $produk->nama_produk));
+                $mapped = $chemicalIdByName[$produkKey] ?? null;
+                if (!$mapped) {
+                    $normKey = $normalizeName($produkKey);
+                    $mapped = $chemicalIdByNorm[$normKey] ?? null;
+                }
+                if (!$mapped) {
+                    $normKey = $normalizeName($produkKey);
+                    foreach ($chemicalIdByNorm as $chemNorm => $chemId) {
+                        if ($chemNorm && $normKey && (str_contains($chemNorm, $normKey) || str_contains($normKey, $chemNorm))) {
+                            $mapped = $chemId;
+                            break;
+                        }
+                    }
+                }
+
+                if (!$mapped) {
+                    $createPayload = [
+                        'id_user' => $user->id,
+                        'nama_chemical' => (string) $produk->nama_produk,
+                    ];
+
+                    $incomingProdusen = $request->input('id_produsen');
+                    if (!empty($incomingProdusen)) {
+                        $createPayload['id_produsen'] = $incomingProdusen;
+                    }
+
+                    $incomingDistributor = $request->input('id_distributor');
+                    if (!empty($incomingDistributor)) {
+                        $createPayload['id_distributor'] = $incomingDistributor;
+                    }
+
+                    $createdChemical = Chemical::create($createPayload);
+                    $mapped = $createdChemical->id;
+                }
+
+                if (!empty($mapped)) {
+                    $request->merge(['id_chemical' => $mapped]);
+                } elseif (!empty($inputChemicalId)) {
+                    $request->merge(['id_chemical' => $inputChemicalId]);
+                }
+            }
+        }
+
         $request->validate([
             'status_baris' => 'required|in:Release,Hold',
+            'kategori_code' => 'required|string',
+            'id_produk' => 'required|exists:produks,id',
             'id_chemical' => 'required|exists:chemicals,id',
             'kondisi_chemical' => 'nullable|string|max:255',
             'id_produsen' => 'nullable|exists:produsens,id',
@@ -308,6 +862,122 @@ class PemeriksaanKedatanganChemicalController extends Controller
     public function update(Request $request, PemeriksaanKedatanganChemical $pemeriksaanChemical)
     {
         $this->checkPlantAccess($pemeriksaanChemical);
+
+        $inputProdukIds = $request->input('id_produk', []);
+        $inputChemicalIds = $request->input('id_chemical', []);
+
+        if (is_array($inputProdukIds) && is_array($inputChemicalIds)) {
+            $produkRows = Produk::query()
+                ->select(['id', 'nama_produk'])
+                ->whereIn('id', array_filter($inputProdukIds))
+                ->get();
+
+            $produkNameById = $produkRows
+                ->mapWithKeys(function ($p) {
+                    return [$p->id => strtolower(trim((string) $p->nama_produk))];
+                });
+
+            $produkRawNameById = $produkRows
+                ->mapWithKeys(function ($p) {
+                    return [$p->id => (string) $p->nama_produk];
+                });
+
+            $user = Auth::user();
+
+            if ($user->role && strtolower($user->role->role) === 'superadmin') {
+                $chemicalRows = Chemical::query()
+                    ->select(['id', 'nama_chemical'])
+                    ->get();
+            } else {
+                $chemicalRows = Chemical::query()
+                    ->select(['id', 'nama_chemical'])
+                    ->whereHas('user', function ($q) use ($user) {
+                        $q->where('id_plant', $user->id_plant);
+                    })
+                    ->get();
+            }
+
+            $chemicalIdByName = $chemicalRows
+                ->mapWithKeys(function ($c) {
+                    return [strtolower(trim((string) $c->nama_chemical)) => $c->id];
+                });
+
+            $normalizeName = function ($value) {
+                $v = strtolower(trim((string) $value));
+                $v = preg_replace('/[^a-z0-9]+/i', '', $v);
+                return $v;
+            };
+
+            $chemicalIdByNorm = $chemicalRows
+                ->mapWithKeys(function ($c) use ($normalizeName) {
+                    return [$normalizeName($c->nama_chemical) => $c->id];
+                });
+
+            $mappedChemicalIds = [];
+            $missingMapErrors = [];
+            foreach ($inputProdukIds as $idx => $produkId) {
+                $produkKey = $produkNameById[(int) $produkId] ?? null;
+                $produkRawName = $produkRawNameById[(int) $produkId] ?? null;
+                $currentChemicalId = $inputChemicalIds[$idx] ?? null;
+
+                // Always prefer mapping based on the selected product.
+                $mapped = $produkKey ? ($chemicalIdByName[$produkKey] ?? null) : null;
+                if (!$mapped && $produkKey) {
+                    $normProdukKey = $normalizeName($produkKey);
+                    $mapped = $chemicalIdByNorm[$normProdukKey] ?? null;
+                }
+
+                if (!$mapped && $produkKey) {
+                    $normProdukKey = $normalizeName($produkKey);
+                    foreach ($chemicalIdByNorm as $chemNorm => $chemId) {
+                        if ($chemNorm && $normProdukKey && (str_contains($chemNorm, $normProdukKey) || str_contains($normProdukKey, $chemNorm))) {
+                            $mapped = $chemId;
+                            break;
+                        }
+                    }
+                }
+
+                // If there is still no mapping, auto-create chemical master using product name.
+                if (!$mapped && $produkRawName) {
+                    $createPayload = [
+                        'id_user' => $user->id,
+                        'nama_chemical' => $produkRawName,
+                    ];
+
+                    $incomingProdusen = $request->input('id_produsen.' . $idx);
+                    if (!empty($incomingProdusen)) {
+                        $createPayload['id_produsen'] = $incomingProdusen;
+                    }
+
+                    $incomingDistributor = $request->input('id_distributor.' . $idx);
+                    if (!empty($incomingDistributor)) {
+                        $createPayload['id_distributor'] = $incomingDistributor;
+                    }
+
+                    $createdChemical = Chemical::create($createPayload);
+                    $mapped = $createdChemical->id;
+                }
+
+                if (!$mapped && !empty($currentChemicalId)) {
+                    // As a last resort, keep the submitted chemical id.
+                    $mapped = $currentChemicalId;
+                }
+
+                if (!$mapped) {
+                    $missingMapErrors['id_chemical.' . $idx] = 'Produk "' . ($produkRawName ?? $produkKey ?? '-') . '" belum terhubung ke master Chemical dan tidak bisa dibuat otomatis. Silakan cek master Chemical.';
+                }
+
+                $mappedChemicalIds[$idx] = $mapped;
+            }
+
+            $request->merge([
+                'id_chemical' => $mappedChemicalIds,
+            ]);
+
+            if (!empty($missingMapErrors)) {
+                throw ValidationException::withMessages($missingMapErrors);
+            }
+        }
         
         $request->validate([
             'tanggal' => 'required|date',
@@ -315,6 +985,8 @@ class PemeriksaanKedatanganChemicalController extends Controller
             'no_mobil' => 'nullable|string|max:255',
             'nama_supir' => 'nullable|string|max:255',
             'id_shift' => 'nullable|exists:shifts,id',
+            'id_produk' => 'required|array',
+            'id_produk.*' => 'required|exists:produks,id',
             // Validasi array untuk dynamic rows
             'id_chemical' => 'required|array',
             'id_chemical.*' => 'required|exists:chemicals,id',

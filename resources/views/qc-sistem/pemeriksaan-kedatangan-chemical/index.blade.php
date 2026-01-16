@@ -153,9 +153,9 @@
                                         <th>Shift</th>
                                         <th>Plant</th>
                                         <th>Nama Chemical</th>
-                                        <th>Produsen</th>
+                                        <!-- <th>Produsen</th> -->
                                         <th>Kode Produksi</th>
-                                        <th>Status</th>
+                                        <!-- <th>Status</th> -->
                                         <th>Verifikasi</th>
                                         <th>Catatan Verifikasi</th>
                                         <th>Aksi</th>
@@ -201,7 +201,7 @@
                                                     <span class="text-muted">-</span>
                                                 @endif
                                             </td>
-                                            <td>
+                                            <!-- <td>
                                                 @php
                                                     $produsenNames = [];
                                                     foreach($detailChemicals as $detail) {
@@ -218,11 +218,11 @@
                                                 @else
                                                     <span class="text-muted">-</span>
                                                 @endif
-                                            </td>
+                                            </td> -->
                                             <td>
                                                 {{ $detail['kode_produksi'] ?? '-' }}
                                             </td>
-                                            <td>
+                                            <!-- <td>
                                                 @php
                                                     $statuses = [];
                                                     foreach($detailChemicals as $detail) {
@@ -243,7 +243,7 @@
                                                 @else
                                                     <span class="text-muted">-</span>
                                                 @endif
-                                            </td>
+                                            </td> -->
                                             <td>
                                                 @php
                                                     $userRole = auth()->user()->role ? strtolower(auth()->user()->role->role) : null;

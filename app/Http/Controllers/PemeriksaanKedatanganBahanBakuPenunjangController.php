@@ -17,6 +17,134 @@ use Monarobase\CountryList\CountryListFacade as Countries; // Menggunakan Facade
 class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
 {
 
+    private function mapProdukToBahanIds(Request $request, $produkIds, $currentBahanIds = [])
+    {
+        if (!is_array($produkIds)) {
+            return [$currentBahanIds, []];
+        }
+
+        $produkRows = Produk::query()
+            ->select(['id', 'nama_produk'])
+            ->whereIn('id', array_filter($produkIds))
+            ->get();
+
+        $produkNameById = $produkRows
+            ->mapWithKeys(function ($p) {
+                return [$p->id => strtolower(trim((string) $p->nama_produk))];
+            });
+
+        $produkRawNameById = $produkRows
+            ->mapWithKeys(function ($p) {
+                return [$p->id => (string) $p->nama_produk];
+            });
+
+        $user = Auth::user();
+        $plantId = $user->id_plant;
+
+        $bahanRows = Bahan::query()
+            ->select(['id', 'nama_bahan'])
+            ->get();
+
+        $bahanIdByName = $bahanRows
+            ->mapWithKeys(function ($b) {
+                return [strtolower(trim((string) $b->nama_bahan)) => $b->id];
+            });
+
+        $normalizeName = function ($value) {
+            $v = strtolower(trim((string) $value));
+            $v = preg_replace('/[^a-z0-9]+/i', '', $v);
+            return $v;
+        };
+
+        $bahanIdByNorm = $bahanRows
+            ->mapWithKeys(function ($b) use ($normalizeName) {
+                return [$normalizeName($b->nama_bahan) => $b->id];
+            });
+
+        $mappedBahanIds = [];
+        $missingMapErrors = [];
+
+        foreach ($produkIds as $idx => $produkId) {
+            $produkKey = $produkNameById[(int) $produkId] ?? null;
+            $produkRawName = $produkRawNameById[(int) $produkId] ?? null;
+            $currentBahanId = $currentBahanIds[$idx] ?? null;
+
+            // Prefer mapping by selected product name
+            $mapped = $produkKey ? ($bahanIdByName[$produkKey] ?? null) : null;
+            if (!$mapped && $produkKey) {
+                $normKey = $normalizeName($produkKey);
+                $mapped = $bahanIdByNorm[$normKey] ?? null;
+            }
+            if (!$mapped && $produkKey) {
+                $normKey = $normalizeName($produkKey);
+                foreach ($bahanIdByNorm as $bNorm => $bId) {
+                    if ($bNorm && $normKey && (str_contains($bNorm, $normKey) || str_contains($normKey, $bNorm))) {
+                        $mapped = $bId;
+                        break;
+                    }
+                }
+            }
+
+            // Auto-create bahan if missing
+            if (!$mapped && $produkRawName) {
+                $createPayload = [
+                    'id_user' => $user->id,
+                    'nama_bahan' => $produkRawName,
+                ];
+
+                $kategoriCode = $request->input('kategori_code.' . $idx);
+                if (!empty($kategoriCode)) {
+                    $createPayload['kategori_code'] = $kategoriCode;
+                }
+
+                $createdBahan = Bahan::create($createPayload);
+                $mapped = $createdBahan->id;
+
+                $produsenNames = $request->input('produsen.' . $idx);
+                if (is_array($produsenNames) && $plantId) {
+                    $produsenIds = Produsen::query()
+                        ->whereIn('nama_produsen', array_values(array_filter($produsenNames, fn ($v) => (string) $v !== '')))
+                        ->pluck('id')
+                        ->values();
+
+                    foreach ($produsenIds as $pid) {
+                        try {
+                            $createdBahan->produsens()->syncWithoutDetaching([$pid => ['id_plant' => $plantId]]);
+                        } catch (\Throwable $e) {
+                        }
+                    }
+                }
+
+                $distributorNames = $request->input('distributor.' . $idx);
+                if (is_array($distributorNames) && $plantId) {
+                    $distributorIds = Distributor::query()
+                        ->whereIn('nama_distributor', array_values(array_filter($distributorNames, fn ($v) => (string) $v !== '')))
+                        ->pluck('id')
+                        ->values();
+
+                    foreach ($distributorIds as $did) {
+                        try {
+                            $createdBahan->distributors()->syncWithoutDetaching([$did => ['id_plant' => $plantId]]);
+                        } catch (\Throwable $e) {
+                        }
+                    }
+                }
+            }
+
+            if (!$mapped && !empty($currentBahanId)) {
+                $mapped = $currentBahanId;
+            }
+
+            if (!$mapped) {
+                $missingMapErrors['id_bahan.' . $idx] = 'Produk "' . ($produkRawName ?? $produkKey ?? '-') . '" belum terhubung ke master Bahan dan tidak bisa dibuat otomatis. Silakan cek master Bahan.';
+            }
+
+            $mappedBahanIds[$idx] = $mapped;
+        }
+
+        return [$mappedBahanIds, $missingMapErrors];
+    }
+
     public function index()
     {
         $user = Auth::user();
@@ -133,6 +261,18 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
     {
         // Log semua input untuk debugging
         \Log::info('Form Submit Data:', $request->all());
+
+        $inputProdukIds = $request->input('id_produk', $request->input('id_bahan', []));
+        $inputBahanIds = $request->input('id_bahan', []);
+        [$mappedBahanIds, $missingMapErrors] = $this->mapProdukToBahanIds($request, $inputProdukIds, $inputBahanIds);
+        if (!empty($missingMapErrors)) {
+            throw \Illuminate\Validation\ValidationException::withMessages($missingMapErrors);
+        }
+        if (is_array($mappedBahanIds) && !empty($mappedBahanIds)) {
+            $request->merge([
+                'id_bahan' => $mappedBahanIds,
+            ]);
+        }
         
         $request->validate([
             'tanggal' => 'required|date',
@@ -145,8 +285,10 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
             'status_baris' => 'required|array|min:1',
             'status_baris.*' => 'required|in:Release,Hold',
             // Validasi array fields dari dynamic rows
+            'id_produk' => 'nullable|array',
+            'id_produk.*' => 'nullable|exists:produks,id',
             'id_bahan' => 'nullable|array',
-            'id_bahan.*' => 'nullable|exists:produks,id',
+            'id_bahan.*' => 'nullable|exists:bahans,id',
             'produsen' => 'nullable|array',
             'produsen.*' => 'nullable|array',
             'produsen.*.*' => 'nullable|string|max:255',
@@ -457,6 +599,28 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
                     ],
                 ];
             });
+
+        $normalizeName = function ($value) {
+            $v = strtolower(trim((string) $value));
+            $v = preg_replace('/[^a-z0-9]+/i', '', $v);
+            return $v;
+        };
+
+        $produkByNormName = $produkList
+            ->mapWithKeys(function ($p) use ($normalizeName) {
+                return [$normalizeName($p->nama_produk) => $p->id];
+            });
+
+        $produkByBahanId = [];
+        $bahanIds = json_decode($pemeriksaanBahanBaku->id_bahan_array ?? '[]', true);
+        $bahanIds = is_array($bahanIds) ? array_values(array_filter($bahanIds)) : [];
+        if (!empty($bahanIds)) {
+            $bahans = Bahan::query()->select(['id', 'nama_bahan'])->whereIn('id', $bahanIds)->get();
+            foreach ($bahans as $b) {
+                $norm = $normalizeName($b->nama_bahan);
+                $produkByBahanId[$b->id] = $produkByNormName[$norm] ?? null;
+            }
+        }
     
         return view('qc-sistem.pemeriksaan-kedatangan-bahan-baku-penunjang.edit', compact(
             'pemeriksaanBahanBaku',
@@ -465,13 +629,26 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
             'produkKategoriOptions',
             'produkByKategori',
             'produkMeta',
-            'produkKategoriById'
+            'produkKategoriById',
+            'produkByBahanId'
         ));
     }
 
     public function update(Request $request, PemeriksaanKedatanganBahanBakuPenunjang $pemeriksaanBahanBaku)
     {
         $this->checkPlantAccess($pemeriksaanBahanBaku);
+
+        $inputProdukIds = $request->input('id_produk', $request->input('id_bahan', []));
+        $inputBahanIds = $request->input('id_bahan', []);
+        [$mappedBahanIds, $missingMapErrors] = $this->mapProdukToBahanIds($request, $inputProdukIds, $inputBahanIds);
+        if (!empty($missingMapErrors)) {
+            throw \Illuminate\Validation\ValidationException::withMessages($missingMapErrors);
+        }
+        if (is_array($mappedBahanIds) && !empty($mappedBahanIds)) {
+            $request->merge([
+                'id_bahan' => $mappedBahanIds,
+            ]);
+        }
         
         $request->validate([
             'tanggal' => 'required|date',
@@ -484,8 +661,10 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
             'status_baris' => 'required|array|min:1',
             'status_baris.*' => 'required|in:Release,Hold',
             // Validasi array fields dari dynamic rows
+            'id_produk' => 'nullable|array',
+            'id_produk.*' => 'nullable|exists:produks,id',
             'id_bahan' => 'nullable|array',
-            'id_bahan.*' => 'nullable|exists:produks,id',
+            'id_bahan.*' => 'nullable|exists:bahans,id',
             'produsen' => 'nullable|array',
             'produsen.*' => 'nullable|array',
             'produsen.*.*' => 'nullable|string|max:255',
@@ -793,9 +972,32 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
     {
         $this->checkPlantAccess($pemeriksaanBahanBaku);
 
+        $inputProdukId = $request->input('id_produk');
+        if (empty($inputProdukId)) {
+            $inputProdukId = $request->input('id_bahan');
+        }
+
+        if (!empty($inputProdukId)) {
+            $tmp = new Request($request->all());
+            $tmp->merge([
+                'kategori_code' => [$request->input('kategori_code')],
+                'produsen' => [$request->input('produsen')],
+                'distributor' => [$request->input('distributor')],
+            ]);
+            [$mappedBahanIds, $missingMapErrors] = $this->mapProdukToBahanIds($tmp, [$inputProdukId], [$request->input('id_bahan')]);
+            if (!empty($missingMapErrors)) {
+                throw \Illuminate\Validation\ValidationException::withMessages($missingMapErrors);
+            }
+            $request->merge([
+                'id_bahan' => $mappedBahanIds[0] ?? null,
+            ]);
+        }
+
         $request->validate([
             'status_baris' => 'required|in:Release,Hold',
-            'id_bahan' => 'nullable|exists:produks,id',
+            'kategori_code' => 'nullable|string',
+            'id_produk' => 'nullable|exists:produks,id',
+            'id_bahan' => 'nullable|exists:bahans,id',
             'produsen' => 'nullable|array',
             'produsen.*' => 'nullable|string|max:255',
             'negara_produsen' => 'nullable|string|max:255',

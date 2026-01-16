@@ -15,7 +15,7 @@ class ProdukTemplateExport implements FromArray, WithHeadings
     public function array(): array
     {
         return [
-            ['WHSE', 'Contoh Produk'],
+            ['CHEMICAL', 'Contoh Produk'],
         ];
     }
 }

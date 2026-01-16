@@ -172,9 +172,18 @@
                                     <div class="col-md-6">
                                         <table class="table table-borderless table-sm">
                                             <tr><td width="40%"><strong>Nama Produk:</strong></td><td>
-                                                @if(isset($idBahanArray[$i]) && $idBahanArray[$i])
-                                                    @php $produk = \App\Models\Produk::find($idBahanArray[$i]); @endphp
-                                                    <span class="badge bg-info">{{ $produk->nama_produk ?? '-' }}</span>
+                                                @php
+                                                    $bahanId = $idBahanArray[$i] ?? null;
+                                                    if (is_array($bahanId)) {
+                                                        $bahanId = $bahanId[0] ?? null;
+                                                    }
+                                                    $bahanModel = null;
+                                                    if (!empty($bahanId)) {
+                                                        $bahanModel = \App\Models\Bahan::find($bahanId);
+                                                    }
+                                                @endphp
+                                                @if($bahanModel)
+                                                    <span class="badge bg-info">{{ $bahanModel->nama_bahan ?? '-' }}</span>
                                                 @else
                                                     -
                                                 @endif
@@ -182,6 +191,9 @@
                                             <tr><td><strong>Produsen:</strong></td><td>
                                                 @php
                                                     $produsenDisplay = $produsenArray[$i] ?? '';
+                                                    if (is_array($produsenDisplay)) {
+                                                        $produsenDisplay = implode(', ', array_values(array_filter(array_map('strval', $produsenDisplay), fn ($v) => $v !== '')));
+                                                    }
                                                     $produsenItems = array_values(array_filter(array_map('trim', explode(',', (string) $produsenDisplay)), fn($v) => $v !== ''));
                                                 @endphp
                                                 @if(count($produsenItems))
@@ -196,6 +208,9 @@
                                             <tr><td><strong>Distributor:</strong></td><td>
                                                 @php
                                                     $distributorDisplay = $distributorArray[$i] ?? '';
+                                                    if (is_array($distributorDisplay)) {
+                                                        $distributorDisplay = implode(', ', array_values(array_filter(array_map('strval', $distributorDisplay), fn ($v) => $v !== '')));
+                                                    }
                                                     $distributorItems = array_values(array_filter(array_map('trim', explode(',', (string) $distributorDisplay)), fn($v) => $v !== ''));
                                                 @endphp
                                                 @if(count($distributorItems))

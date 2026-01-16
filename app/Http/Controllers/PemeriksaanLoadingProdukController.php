@@ -338,13 +338,39 @@ class PemeriksaanLoadingProdukController extends Controller
             })->with(['user.plant'])->get();
         }
 
+        $produkKategoriOptions = $produks
+            ->pluck('kategori_code')
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+
+        $produkByKategori = $produks
+            ->groupBy('kategori_code')
+            ->map(function ($items) {
+                return $items->map(function ($p) {
+                    return [
+                        'id' => $p->id,
+                        'nama' => $p->nama_produk,
+                    ];
+                })->values();
+            })
+            ->all();
+
+        $produkKategoriById = $produks
+            ->pluck('kategori_code', 'id')
+            ->all();
+
         return view('qc-sistem.pemeriksaan-loading-produk.edit', [
             'pemeriksaanLoading' => $pemeriksaan_loading_produk,
             'shifts' => $shifts,
             'tujuanPengirimans' => $tujuanPengirimans,
             'kendaraans' => $kendaraans,
             'supirs' => $supirs,
-            'produks' => $produks
+            'produks' => $produks,
+            'produkKategoriOptions' => $produkKategoriOptions,
+            'produkByKategori' => $produkByKategori,
+            'produkKategoriById' => $produkKategoriById,
         ]);
     }
     public function update(Request $request, PemeriksaanLoadingProduk $pemeriksaan_loading_produk)

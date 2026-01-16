@@ -114,7 +114,7 @@ class PemeriksaanKedatanganBahanBakuPenunjang extends Model
 
     public function bahan()
     {
-        return $this->belongsTo(Produk::class, 'id_bahan');
+        return $this->belongsTo(Bahan::class, 'id_bahan');
     }
 
     public function verifiedBy()

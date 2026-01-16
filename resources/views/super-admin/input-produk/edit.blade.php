@@ -70,7 +70,7 @@
                                                             $selectedKategori = 'SHCS & OTRM';
                                                         }
                                                     @endphp
-                                                    @foreach(['WHSE','WHD2','WHDS','RT01','CR01','CR02','SHTS','SHCS & OTRM'] as $kategori)
+                                                    @foreach(['WHSE','WHD2','WHDS','RT01','CR01','CR02','SHTS','SHCS & OTRM','CHEMICAL'] as $kategori)
                                                         <option value="{{ $kategori }}" {{ $selectedKategori === $kategori ? 'selected' : '' }}>{{ $kategori }}</option>
                                                     @endforeach
                                                 </select>
