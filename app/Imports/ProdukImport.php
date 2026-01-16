@@ -18,7 +18,7 @@ class ProdukImport implements ToCollection, WithHeadingRow
 
     public function collection(Collection $rows)
     {
-        $allowedKategori = ['WHSE', 'WHD2', 'WHDS', 'RT01', 'CR01', 'CR02', 'SHTS', 'SHCS', 'OTRM', 'SHCS & OTRM'];
+        $allowedKategori = ['WHSE', 'WHD2', 'WHDS', 'RT01', 'CR01', 'CR02', 'SHTS', 'SHCS', 'OTRM', 'SHCS & OTRM', 'CHEMICAL'];
 
         foreach ($rows as $index => $row) {
             $rowNumber = $index + 2;

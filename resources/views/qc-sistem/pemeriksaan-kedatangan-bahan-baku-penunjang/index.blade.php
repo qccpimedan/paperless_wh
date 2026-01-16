@@ -160,9 +160,9 @@
                                         <!-- <th>No. PO</th> -->
                                         <th>Nama Produk</th>
                                         <!-- <th>Kondisi Produk</th> -->
-                                        <th>Produsen</th>
+                                        <!-- <th>Produsen</th> -->
                                         <th>Kode Produksi</th>
-                                        <th>Status</th>
+                                        <!-- <th>Status</th> -->
                                         <th>Verifikasi</th>
                                         <!-- <th>Verifikasi QC</th>
                                         <th>Verifikasi Produksi</th>
@@ -176,6 +176,7 @@
                                         <tr>
                                             <td>{{ $pemeriksaans->firstItem() + $index }}</td>
                                             <td>{{ $pemeriksaan->tanggal ? $pemeriksaan->tanggal->format('d/m/Y') : '-' }}</td>
+                                            
                                             <!-- <td>{{ $pemeriksaan->no_po ?? '-' }}</td> -->
                                             <td>
                                                 @if($pemeriksaan->shift)
@@ -192,32 +193,30 @@
                                                 @endif
                                             </td>
                                             <td>
-                                                @if($pemeriksaan->bahan)
-                                                    {{ $pemeriksaan->bahan->nama_produk }}
+                                                @php
+                                                    $idBahanArr = json_decode($pemeriksaan->id_bahan_array ?? '[]', true);
+                                                    $idBahanArr = is_array($idBahanArr) ? array_values(array_filter($idBahanArr, function ($v) {
+                                                        return $v !== null && $v !== '';
+                                                    })) : [];
+                                                    $bahanNames = [];
+                                                    foreach ($idBahanArr as $bid) {
+                                                        $bahan = \App\Models\Bahan::find($bid);
+                                                        if ($bahan) {
+                                                            $bahanNames[] = $bahan->nama_bahan;
+                                                        }
+                                                    }
+                                                @endphp
+                                                @if(count($bahanNames) > 0)
+                                                    @foreach($bahanNames as $name)
+                                                        <span class="badge bg-info">{{ $name }}</span><br>
+                                                    @endforeach
+                                                @elseif($pemeriksaan->bahan)
+                                                    <span class="badge bg-info">{{ $pemeriksaan->bahan->nama_bahan }}</span>
                                                 @else
                                                     <span class="text-muted">-</span>
                                                 @endif
                                             </td>
-                                            <!-- <td>
-                                                @if($pemeriksaan->kondisi_produk)
-                                                <span class="badge bg-secondary">{{ $pemeriksaan->kondisi_produk }}</span>
-                                                @else
-                                                <span class="text-muted">-</span>
-                                                @endif
-                                            </td> -->
-                                            <td>
-                                                @php
-                                                    $produsenArray = json_decode($pemeriksaan->produsen_array ?? '[]', true);
-                                                    $produsenArray = is_array($produsenArray) ? array_values(array_filter($produsenArray, function ($v) {
-                                                        return $v !== null && $v !== '';
-                                                    })) : [];
-                                                @endphp
-                                                @if(count($produsenArray) > 0)
-                                                    {{ implode(', ', $produsenArray) }}
-                                                @else
-                                                    {{ $pemeriksaan->produsen ?? '-' }}
-                                                @endif
-                                            </td>
+
                                             <td>
                                                 @php
                                                     $kodeProduksiArray = json_decode($pemeriksaan->kode_produksi_array ?? '[]', true);
@@ -231,13 +230,13 @@
                                                     {{ $pemeriksaan->kode_produksi ?? '-' }}
                                                 @endif
                                             </td>
-                                            <td>
+                                            <!-- <td>
                                                 @if($pemeriksaan->status === 'Release')
                                                     <span class="badge bg-success">{{ $pemeriksaan->status }}</span>
                                                 @else
                                                     <span class="badge bg-danger">{{ $pemeriksaan->status }}</span>
                                                 @endif
-                                            </td>
+                                            </td> -->
                                             <td>
                                                 @php
                                                     $userRole = auth()->user()->role ? strtolower(auth()->user()->role->role) : null;

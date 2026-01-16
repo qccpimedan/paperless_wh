@@ -180,7 +180,7 @@
                                         </td> -->
                                         <td>
                                             @if($pemeriksaan->bahan)
-                                                {{ $pemeriksaan->bahan->nama_bahan }}
+                                                <span class="badge bg-info">{{ $pemeriksaan->bahan->nama_bahan }}</span>
                                             @else
                                                 @php
                                                     $idBahanArray = json_decode($pemeriksaan->id_bahan_array ?? '[]', true);
@@ -192,7 +192,9 @@
                                                     }, $idBahanArray)));
                                                 @endphp
                                                 @if(count($namaBahanArray) > 0)
-                                                    {{ implode(', ', $namaBahanArray) }}
+                                                    @foreach($namaBahanArray as $name)
+                                                        <span class="badge bg-info">{{ $name }}</span><br>
+                                                    @endforeach
                                                 @else
                                                     -
                                                 @endif

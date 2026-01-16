@@ -344,8 +344,6 @@
                                         </div>
                                     </div>
                                 </div>
-                                <!-- Static Rows Section (Edit Mode) -->
-                                <div class="form-section mb-4">
                                     <h5 class="text-primary mb-3">Detail Produk</h5>
                                     
                                     @php
@@ -395,7 +393,11 @@
                                                     <div class="form-group">
                                                         <label class="form-label">Kategori</label>
                                                         @php
-                                                            $selectedProdukId = $idBahanArray[$i] ?? '';
+                                                            $bahanIdForRow = $idBahanArray[$i] ?? '';
+                                                            if (is_array($bahanIdForRow)) {
+                                                                $bahanIdForRow = $bahanIdForRow[0] ?? '';
+                                                            }
+                                                            $selectedProdukId = $bahanIdForRow ? ($produkByBahanId[$bahanIdForRow] ?? '') : '';
                                                             $selectedKategori = old('kategori_code.' . $i);
                                                             if ($selectedKategori === null || $selectedKategori === '') {
                                                                 $selectedKategori = $selectedProdukId ? ($produkKategoriById[$selectedProdukId] ?? '') : '';
@@ -414,7 +416,7 @@
                                                 <div class="col-md-6">
                                                     <div class="form-group">
                                                         <label class="form-label">Produk</label>
-                                                        <select class="form-control produk-select" name="id_bahan[]" data-row-index="{{ $i }}" data-selected="{{ old('id_bahan.' . $i, $idBahanArray[$i] ?? '') }}">
+                                                        <select class="form-control produk-select" name="id_produk[]" data-row-index="{{ $i }}" data-selected="{{ old('id_produk.' . $i, $selectedProdukId) }}">
                                                             <option value="">Pilih Produk</option>
                                                         </select>
                                                     </div>
@@ -430,6 +432,9 @@
                                                             <div class="distributor-badges d-flex flex-wrap gap-1">
                                                                 @php
                                                                     $existingDistributor = $distributorArray[$i] ?? '';
+                                                                    if (is_array($existingDistributor)) {
+                                                                        $existingDistributor = implode(', ', array_values(array_filter(array_map('strval', $existingDistributor), fn ($v) => $v !== '')));
+                                                                    }
                                                                     $existingDistributorItems = array_values(array_filter(array_map('trim', explode(',', (string) $existingDistributor)), fn ($v) => $v !== ''));
                                                                 @endphp
                                                                 @forelse ($existingDistributorItems as $d)
@@ -454,6 +459,9 @@
                                                             <div class="produsen-badges d-flex flex-wrap gap-1">
                                                                 @php
                                                                     $existingProdusen = $produsenArray[$i] ?? '';
+                                                                    if (is_array($existingProdusen)) {
+                                                                        $existingProdusen = implode(', ', array_values(array_filter(array_map('strval', $existingProdusen), fn ($v) => $v !== '')));
+                                                                    }
                                                                     $existingProdusenItems = array_values(array_filter(array_map('trim', explode(',', (string) $existingProdusen)), fn ($v) => $v !== ''));
                                                                 @endphp
                                                                 @forelse ($existingProdusenItems as $p)
@@ -788,6 +796,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const selectedFromAttr = produkSelect.getAttribute('data-selected') || '';
 
+        if (produkSelect.choicesInstance) {
+            try { produkSelect.choicesInstance.destroy(); } catch (e) {}
+            produkSelect.choicesInstance = null;
+        }
+        if (produkSelect.dataset) {
+            produkSelect.dataset.choicesInitialized = 'false';
+        }
+
         while (produkSelect.options.length > 0) {
             produkSelect.remove(0);
         }
@@ -802,6 +818,22 @@ document.addEventListener('DOMContentLoaded', function() {
 
         if (selectedFromAttr) {
             produkSelect.value = selectedFromAttr;
+        }
+
+        try {
+            produkSelect.choicesInstance = new Choices(produkSelect, {
+                searchEnabled: true,
+                removeItemButton: true,
+                placeholder: true,
+                placeholderValue: 'Pilih opsi',
+                noResultsText: 'Tidak ada hasil',
+                noChoicesText: 'Tidak ada pilihan',
+                searchPlaceholderValue: 'Cari...',
+                itemSelectText: 'Tekan untuk memilih'
+            });
+            produkSelect.dataset.choicesInitialized = 'true';
+        } catch (err) {
+            console.error('Error initializing Choices (produk):', err);
         }
     };
 
@@ -979,17 +1011,20 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const initAllRows = function() {
         document.querySelectorAll('#unified-container .unified-row').forEach(function(row) {
+            const kategoriSelect = row.querySelector('select.kategori-produk-select');
+            if (kategoriSelect) {
+                populateProdukOptionsForRow(row, kategoriSelect.value);
+                applyProdukMetaForRow(row);
+            }
             updateConditionalForRow(row);
         });
     };
 
-    // 1) Init plugins
+    // Init plugins and populate existing rows (edit mode)
     initChoices();
-
-    // 2) Init conditional fields based on existing values (pre-filled edit)
     initAllRows();
 
-    // 3) Event delegation: update conditional fields reliably even after refresh / Choices rendering
+    // Event delegation
     document.addEventListener('change', function(e) {
         const target = e.target;
         if (!target) return;
@@ -1077,26 +1112,18 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Initial populate for existing rows
-    document.querySelectorAll('#unified-container .unified-row').forEach(function(unifiedRow) {
-        const kategoriSelect = unifiedRow.querySelector('select.kategori-produk-select');
-        if (kategoriSelect) {
-            populateProdukOptionsForRow(unifiedRow, kategoriSelect.value);
-            applyProdukMetaForRow(unifiedRow);
-        }
-    });
+    // Update row numbers after delete
+    function updateRowNumbers() {
+        const rows = document.querySelectorAll('#unified-container .unified-row');
+        rows.forEach((row, index) => {
+            const title = row.querySelector('h6');
+            if (title) {
+                title.textContent = `Baris ${index + 1}`;
+            }
+        });
+    }
 });
 
-// Update row numbers after delete
-function updateRowNumbers() {
-    const rows = document.querySelectorAll('#unified-container .unified-row');
-    rows.forEach((row, index) => {
-        const title = row.querySelector('h6');
-        if (title) {
-            title.textContent = `Baris ${index + 1}`;
-        }
-    });
-}
 </script>
 @endpush
 @endsection

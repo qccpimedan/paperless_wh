@@ -31,6 +31,7 @@ class ProdukController extends Controller
             'CR02',
             'SHTS',
             'SHCS & OTRM',
+            'CHEMICAL',
         ];
 
         $produks = Produk::with([
@@ -88,7 +89,7 @@ class ProdukController extends Controller
     {
         $request->validate([
             'nama_produk' => 'required|string|max:255',
-            'kategori_code' => 'required|string|in:WHSE,WHD2,WHDS,RT01,CR01,CR02,SHTS,SHCS,OTRM,SHCS & OTRM',
+            'kategori_code' => 'required|string|in:WHSE,WHD2,WHDS,RT01,CR01,CR02,SHTS,SHCS,OTRM,SHCS & OTRM,CHEMICAL',
             'id_produsen' => 'nullable|array',
             'id_produsen.*' => 'nullable|exists:produsens,id',
             'id_distributor' => 'nullable|array',
@@ -173,7 +174,7 @@ class ProdukController extends Controller
     {
         $request->validate([
             'nama_produk' => 'required|string|max:255',
-            'kategori_code' => 'required|string|in:WHSE,WHD2,WHDS,RT01,CR01,CR02,SHTS,SHCS,OTRM,SHCS & OTRM',
+            'kategori_code' => 'required|string|in:WHSE,WHD2,WHDS,RT01,CR01,CR02,SHTS,SHCS,OTRM,SHCS & OTRM,CHEMICAL',
             'id_produsen' => 'nullable|array',
             'id_produsen.*' => 'nullable|exists:produsens,id',
             'id_distributor' => 'nullable|array',

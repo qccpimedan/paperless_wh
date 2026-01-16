@@ -403,6 +403,10 @@
         const produkByKategori = @json($produkByKategori ?? []);
         const produkMeta = @json($produkMeta ?? []);
 
+        const kategoriSelect = document.querySelector('select.kategori-produk-select');
+        const produkSelect = document.querySelector('select.produk-select');
+        const oldProdukId = @json(old('id_bahan', ''));
+
         try {
             if (typeof window.Choices !== 'undefined') {
                 document.querySelectorAll('.choices').forEach(function (element) {
@@ -417,27 +421,57 @@
             // do nothing
         }
 
-        const kategoriSelect = document.querySelector('select.kategori-produk-select');
-        const produkSelect = document.querySelector('select.produk-select');
+        function initProdukChoices(selectEl) {
+            if (!selectEl) return;
+            if (typeof window.Choices === 'undefined') {
+                return;
+            }
+            if (selectEl.choicesInstance) {
+                try { selectEl.choicesInstance.destroy(); } catch (e) {}
+                selectEl.choicesInstance = null;
+            }
+            try {
+                const instance = new Choices(selectEl, {
+                    searchEnabled: true,
+                    searchPlaceholderValue: 'Cari...',
+                    itemSelectText: 'Tekan untuk memilih',
+                    noResultsText: 'Tidak ada hasil ditemukan',
+                    noChoicesText: 'Tidak ada pilihan tersedia',
+                    placeholder: true,
+                    placeholderValue: 'Pilih...'
+                });
+                selectEl.choicesInstance = instance;
+            } catch (e) {}
+        }
 
         const populateProdukOptions = function(kategoriCode) {
             if (!produkSelect) return;
-            const selectedFromAttr = produkSelect.getAttribute('data-selected') || '';
 
-            while (produkSelect.options.length > 0) {
-                produkSelect.remove(0);
-            }
-            produkSelect.add(new Option('Pilih Produk', ''));
+            const kategori = (kategoriCode || '').toString();
+            const raw = produkByKategori ? produkByKategori[kategori] : null;
+            const items = Array.isArray(raw) ? raw : (raw ? Object.values(raw) : []);
 
-            if (kategoriCode && produkByKategori && produkByKategori[kategoriCode]) {
-                (produkByKategori[kategoriCode] || []).forEach(function(p) {
-                    produkSelect.add(new Option(p.nama, p.id));
-                });
+            const desiredProdukId = (kategoriSelect && kategoriSelect.dataset && kategoriSelect.dataset.desiredProduk)
+                ? String(kategoriSelect.dataset.desiredProduk)
+                : (produkSelect.value ? String(produkSelect.value) : (oldProdukId ? String(oldProdukId) : (produkSelect.getAttribute('data-selected') ? String(produkSelect.getAttribute('data-selected')) : '')));
+
+            if (produkSelect.choicesInstance) {
+                try { produkSelect.choicesInstance.destroy(); } catch (e) {}
+                produkSelect.choicesInstance = null;
             }
 
-            if (selectedFromAttr) {
-                produkSelect.value = selectedFromAttr;
-            }
+            produkSelect.innerHTML = '<option value="">Pilih Produk</option>';
+            items.forEach((p) => {
+                const opt = document.createElement('option');
+                opt.value = String(p.id);
+                opt.textContent = String(p.nama);
+                if (desiredProdukId && String(p.id) === String(desiredProdukId)) {
+                    opt.selected = true;
+                }
+                produkSelect.appendChild(opt);
+            });
+
+            initProdukChoices(produkSelect);
         };
 
         const applyProdukMeta = function() {
@@ -503,17 +537,32 @@
             }
         };
 
-        if (kategoriSelect) {
-            kategoriSelect.addEventListener('change', function() {
-                populateProdukOptions(kategoriSelect.value);
+        document.addEventListener('change', function(e) {
+            const target = e.target;
+            if (!target) return;
+
+            if (target && target.matches('select.kategori-produk-select')) {
+                if (target.dataset) {
+                    target.dataset.desiredProduk = '';
+                }
+                if (produkSelect) {
+                    if (produkSelect.choicesInstance) {
+                        try { produkSelect.choicesInstance.destroy(); } catch (e) {}
+                        produkSelect.choicesInstance = null;
+                    }
+                    produkSelect.innerHTML = '<option value="">Pilih Produk</option>';
+                }
+                populateProdukOptions(target.value);
                 applyProdukMeta();
-            });
-        }
-        if (produkSelect) {
-            produkSelect.addEventListener('change', function() {
+            }
+
+            if (target && target.matches('select.produk-select')) {
+                if (kategoriSelect && kategoriSelect.dataset) {
+                    kategoriSelect.dataset.desiredProduk = (target.value || '').toString();
+                }
                 applyProdukMeta();
-            });
-        }
+            }
+        });
 
         const suhuProdukType = document.getElementById('suhuProdukType');
         const suhuProdukInputWrapper = document.getElementById('suhuProdukInputWrapper');
@@ -566,9 +615,7 @@
         toggleKondisiProdukSuhu();
 
         // Init dependent selects + badges
-        if (kategoriSelect) {
-            populateProdukOptions(kategoriSelect.value);
-        }
+        populateProdukOptions(kategoriSelect ? kategoriSelect.value : '');
         applyProdukMeta();
     });
 </script>

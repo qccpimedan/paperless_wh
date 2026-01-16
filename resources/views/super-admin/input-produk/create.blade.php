@@ -62,7 +62,7 @@
                                                 <label for="kategori_code">Kategori <span class="text-danger">*</span></label>
                                                 <select name="kategori_code" id="kategori_code" class="form-select @error('kategori_code') is-invalid @enderror" required>
                                                     <option value="">-- Pilih Kategori --</option>
-                                                    @foreach(['WHSE','WHD2','WHDS','RT01','CR01','CR02','SHTS','SHCS & OTRM'] as $kategori)
+                                                    @foreach(['WHSE','WHD2','WHDS','RT01','CR01','CR02','SHTS','SHCS & OTRM','CHEMICAL'] as $kategori)
                                                         <option value="{{ $kategori }}" {{ old('kategori_code') === $kategori ? 'selected' : '' }}>{{ $kategori }}</option>
                                                     @endforeach
                                                 </select>

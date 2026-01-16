@@ -36,6 +36,16 @@
                             <h4 class="card-title">Form Pemeriksaan Kedatangan Chemical</h4>
                         </div>
                         <div class="card-body">
+                            @if ($errors->any())
+                                <div class="alert alert-danger" role="alert">
+                                    <div class="fw-semibold mb-1">Data tidak bisa disimpan, periksa error berikut:</div>
+                                    <ul class="mb-0">
+                                        @foreach ($errors->all() as $error)
+                                            <li>{{ $error }}</li>
+                                        @endforeach
+                                    </ul>
+                                </div>
+                            @endif
                             <form action="{{ route('pemeriksaan-chemical.store') }}" method="POST">
                                 @csrf
                                 
@@ -349,13 +359,24 @@
                                             <div class="row">
                                                 <div class="col-md-6">
                                                     <div class="form-group">
-                                                        <label class="form-label">Nama Chemical</label>
-                                                        <select class="choices form-control" name="id_chemical[]">
-                                                            <option value="">Pilih Chemical</option>
-                                                            @foreach($chemicals as $chemical)
-                                                                <option value="{{ $chemical->id }}">{{ $chemical->nama_chemical }}</option>
+                                                        <label class="form-label">Kategori</label>
+                                                        <select class="choices form-control kategori-produk-select" name="kategori_code[]">
+                                                            <option value="">Pilih Kategori</option>
+                                                            @foreach(($produkKategoriOptions ?? []) as $kategori)
+                                                                <option value="{{ $kategori }}" {{ old('kategori_code.0') == $kategori ? 'selected' : '' }}>
+                                                                    {{ $kategori }}
+                                                                </option>
                                                             @endforeach
                                                         </select>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="form-group">
+                                                        <label class="form-label">Produk</label>
+                                                        <select class="form-control produk-select" name="id_produk[]">
+                                                            <option value="">Pilih Produk</option>
+                                                        </select>
+                                                        <input type="hidden" name="id_chemical[]" class="id-chemical-hidden" value="{{ old('id_chemical.0') }}">
                                                     </div>
                                                 </div>
                                                 <div class="col-md-6">
@@ -373,16 +394,32 @@
                                             <!-- Detail Pemeriksaan -->
                                             <div class="row">
                                                 <div class="col-md-6">
-                                                    <div class="form-group">
-                                                        <label class="form-label">Produsen</label>
-                                                        <select class="choices form-control" name="id_produsen[]">
-                                                            <option value="">Pilih Produsen</option>
-                                                            @foreach($produsens as $produsen)
-                                                                <option value="{{ $produsen->id }}">{{ $produsen->nama_produsen }}</option>
-                                                            @endforeach
-                                                        </select>
+                                                    <div class="card border-0 shadow-sm">
+                                                        <div class="card-body p-3">
+                                                            <div class="fw-semibold">Produsen</div>
+                                                            <div class="small text-muted mb-2">Otomatis terisi sesuai Produk yang dipilih</div>
+                                                            <div class="produsen-badges d-flex flex-wrap gap-1">
+                                                                <span class="text-muted small">-</span>
+                                                            </div>
+                                                            <input type="hidden" name="id_produsen[]" class="id-produsen-hidden" value="{{ old('id_produsen.0') }}">
+                                                        </div>
                                                     </div>
                                                 </div>
+                                                <div class="col-md-6">
+                                                    <div class="card border-0 shadow-sm">
+                                                        <div class="card-body p-3">
+                                                            <div class="fw-semibold">Distributor</div>
+                                                            <div class="small text-muted mb-2">Otomatis terisi sesuai Produk yang dipilih</div>
+                                                            <div class="distributor-badges d-flex flex-wrap gap-1">
+                                                                <span class="text-muted small">-</span>
+                                                            </div>
+                                                            <input type="hidden" name="id_distributor[]" class="id-distributor-hidden" value="{{ old('id_distributor.0') }}">
+                                                        </div>
+                                                    </div>
+                                                </div>   
+                                            </div>
+                                            
+                                            <div class="row">
                                                 <div class="col-md-6">
                                                     <div class="form-group">
                                                         <label class="form-label">Negara Produsen</label>
@@ -390,20 +427,6 @@
                                                             <option value="">Pilih Negara</option>
                                                             @foreach($countries as $code => $name)
                                                                 <option value="{{ $name }}">{{ $name }}</option>
-                                                            @endforeach
-                                                        </select>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            
-                                            <div class="row">
-                                                <div class="col-md-6">
-                                                    <div class="form-group">
-                                                        <label class="form-label">Distributor</label>
-                                                        <select class="choices form-control" name="id_distributor[]">
-                                                            <option value="">Pilih Distributor</option>
-                                                            @foreach($distributors as $distributor)
-                                                                <option value="{{ $distributor->id }}">{{ $distributor->nama_distributor }}</option>
                                                             @endforeach
                                                         </select>
                                                     </div>
@@ -553,12 +576,12 @@
 
                                 <!-- Submit Buttons -->
                                 <div class="form-group d-flex justify-content-end">
-                                    <button type="submit" class="btn btn-primary me-1 mb-1">
-                                        Simpan Data
-                                    </button>
-                                    <a href="{{ route('pemeriksaan-chemical.index') }}" class="btn btn-secondary btn-kembali-confirm">
+                                    <a href="{{ route('pemeriksaan-chemical.index') }}" class="me-1 btn btn-secondary btn-md btn-kembali-confirm">
                                         Kembali
                                     </a>
+                                    <button type="submit" class="btn btn-primary btn-md">
+                                        Simpan Data
+                                    </button>
                                 </div>
                             </form>
                         </div>
@@ -580,6 +603,11 @@ let selectOptionsCache = {
     distributor: []
 };
 
+const produkByKategori = @json($produkByKategori ?? []);
+const produkMeta = @json($produkMeta ?? []);
+const chemicalByName = @json($chemicalByName ?? []);
+const chemicalByProdukId = @json($chemicalByProdukId ?? []);
+
 document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.btn-kembali-confirm').forEach((el) => {
         el.addEventListener('click', function(e) {
@@ -598,7 +626,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Cache options SETELAH Choices.js dengan delay untuk memastikan data sudah load
     setTimeout(function() {
         try {
-            cacheSelectOptionsFromChoices();
+            cacheSelectOptions();
         } catch(err) {
             console.error('Error caching options:', err);
         }
@@ -620,6 +648,141 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Setup radio listeners for first row
     setupRadioListenersForRow1();
+
+    function populateProdukOptionsForRow(rowEl) {
+        const kategoriSelect = rowEl.querySelector('select.kategori-produk-select');
+        const produkSelect = rowEl.querySelector('select.produk-select');
+        if (!kategoriSelect || !produkSelect) return;
+
+        const kategori = (kategoriSelect.value || '').toString();
+        const raw = produkByKategori ? produkByKategori[kategori] : null;
+        const items = Array.isArray(raw) ? raw : (raw ? Object.values(raw) : []);
+
+        const desiredProdukId = (produkSelect.dataset && produkSelect.dataset.desiredValue) ? String(produkSelect.dataset.desiredValue) : '';
+
+        // If produkSelect already has a Choices instance, destroy it before rebuilding options
+        if (produkSelect.choicesInstance) {
+            try {
+                produkSelect.choicesInstance.destroy();
+            } catch (e) {
+            }
+            produkSelect.choicesInstance = null;
+            delete produkSelect.dataset.choicesInitialized;
+        }
+
+        produkSelect.innerHTML = '<option value="">Pilih Produk</option>';
+        items.forEach((p) => {
+            const opt = document.createElement('option');
+            opt.value = String(p.id);
+            opt.textContent = String(p.nama);
+            if (desiredProdukId && String(p.id) === desiredProdukId) {
+                opt.selected = true;
+            }
+            produkSelect.appendChild(opt);
+        });
+
+        // Initialize Choices for produk-select (searchable) like kemasan page
+        if (typeof window.Choices !== 'undefined') {
+            try {
+                const instance = new Choices(produkSelect, {
+                    searchEnabled: true,
+                    searchPlaceholderValue: 'Cari...',
+                    itemSelectText: 'Tekan untuk memilih',
+                    noResultsText: 'Tidak ada hasil ditemukan',
+                    noChoicesText: 'Tidak ada pilihan tersedia',
+                    placeholder: true,
+                    placeholderValue: 'Pilih...'
+                });
+                produkSelect.choicesInstance = instance;
+                produkSelect.dataset.choicesInitialized = 'true';
+            } catch (e) {
+            }
+        }
+    }
+
+    function applyProdukForRow(rowEl) {
+        const produkSelect = rowEl.querySelector('select.produk-select');
+        const idChemicalHidden = rowEl.querySelector('.id-chemical-hidden');
+        const idProdusenHidden = rowEl.querySelector('.id-produsen-hidden');
+        const idDistributorHidden = rowEl.querySelector('.id-distributor-hidden');
+        const produsenBadges = rowEl.querySelector('.produsen-badges');
+        const distributorBadges = rowEl.querySelector('.distributor-badges');
+
+        if (!produkSelect || !idChemicalHidden || !idProdusenHidden || !idDistributorHidden || !produsenBadges || !distributorBadges) return;
+
+        const produkId = (produkSelect.value || '').toString();
+        const selectedName = (produkSelect.selectedOptions && produkSelect.selectedOptions[0])
+            ? String(produkSelect.selectedOptions[0].textContent || '')
+            : '';
+
+        const mappedByProduk = chemicalByProdukId ? chemicalByProdukId[produkId] : null;
+        if (mappedByProduk) {
+            idChemicalHidden.value = String(mappedByProduk);
+        } else {
+            const chemicalKey = selectedName ? selectedName.trim().toLowerCase() : '';
+            const mappedChemicalId = (chemicalKey && chemicalByName) ? chemicalByName[chemicalKey] : null;
+            idChemicalHidden.value = mappedChemicalId ? String(mappedChemicalId) : '';
+        }
+
+        const meta = produkMeta ? produkMeta[produkId] : null;
+        const produsenIds = meta && meta.produsen_ids ? meta.produsen_ids : [];
+        const distributorIds = meta && meta.distributor_ids ? meta.distributor_ids : [];
+        const produsenNames = meta && meta.produsen_names ? meta.produsen_names : [];
+        const distributorNames = meta && meta.distributor_names ? meta.distributor_names : [];
+
+        idProdusenHidden.value = (Array.isArray(produsenIds) && produsenIds.length > 0) ? String(produsenIds[0]) : '';
+        idDistributorHidden.value = (Array.isArray(distributorIds) && distributorIds.length > 0) ? String(distributorIds[0]) : '';
+
+        const renderBadges = (containerEl, values, badgeClass) => {
+            if (!Array.isArray(values) || values.length === 0) {
+                containerEl.innerHTML = '<span class="text-muted small">-</span>';
+                return;
+            }
+            containerEl.innerHTML = '';
+            values.forEach((v) => {
+                const span = document.createElement('span');
+                span.className = badgeClass;
+                span.textContent = String(v);
+                containerEl.appendChild(span);
+            });
+        };
+
+        renderBadges(produsenBadges, produsenNames, 'badge bg-light-primary text-primary');
+        renderBadges(distributorBadges, distributorNames, 'badge bg-light-info text-info');
+    }
+
+    document.addEventListener('change', function(e) {
+        const target = e.target;
+        if (target && target.matches('select.kategori-produk-select')) {
+            const row = target.closest('.unified-row');
+            if (row) {
+                populateProdukOptionsForRow(row);
+                applyProdukForRow(row);
+            }
+        }
+        if (target && target.matches('select.produk-select')) {
+            const row = target.closest('.unified-row');
+            if (row) {
+                applyProdukForRow(row);
+            }
+        }
+    });
+
+    const oldProdukIds = @json(old('id_produk', []));
+    document.querySelectorAll('#unified-container .unified-row').forEach((row, idx) => {
+        const kategoriSelect = row.querySelector('select.kategori-produk-select');
+        const produkSelect = row.querySelector('select.produk-select');
+        if (produkSelect) {
+            const desiredProduk = (oldProdukIds && oldProdukIds[idx]) ? String(oldProdukIds[idx]) : '';
+            if (desiredProduk) {
+                produkSelect.dataset.desiredValue = desiredProduk;
+            }
+        }
+        if (kategoriSelect && kategoriSelect.value) {
+            populateProdukOptionsForRow(row);
+            applyProdukForRow(row);
+        }
+    });
 });
 
 function setupDynamicFormListeners() {
@@ -751,13 +914,22 @@ function addNewRow() {
         <div class="row">
             <div class="col-md-6">
                 <div class="form-group">
-                    <label class="form-label">Nama Chemical</label>
-                    <select class="choices form-control" name="id_chemical[]">
-                        <option value="">Pilih Chemical</option>
-                        @foreach($chemicals as $chemical)
-                            <option value="{{ $chemical->id }}">{{ $chemical->nama_chemical }}</option>
+                    <label class="form-label">Kategori</label>
+                    <select class="choices form-control kategori-produk-select" name="kategori_code[]">
+                        <option value="">Pilih Kategori</option>
+                        @foreach(($produkKategoriOptions ?? []) as $kategori)
+                            <option value="{{ $kategori }}">{{ $kategori }}</option>
                         @endforeach
                     </select>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label class="form-label">Produk</label>
+                    <select class="form-control produk-select" name="id_produk[]">
+                        <option value="">Pilih Produk</option>
+                    </select>
+                    <input type="hidden" name="id_chemical[]" class="id-chemical-hidden">
                 </div>
             </div>
             <div class="col-md-6">
@@ -775,25 +947,27 @@ function addNewRow() {
         <!-- Detail Pemeriksaan -->
         <div class="row">
             <div class="col-md-6">
-                <div class="form-group">
-                    <label class="form-label">Produsen</label>
-                    <select class="choices form-control" name="id_produsen[]">
-                        <option value="">Pilih Produsen</option>
-                        @foreach($produsens as $produsen)
-                            <option value="{{ $produsen->id }}">{{ $produsen->nama_produsen }}</option>
-                        @endforeach
-                    </select>
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body p-3">
+                        <div class="fw-semibold">Produsen</div>
+                        <div class="small text-muted mb-2">Otomatis terisi sesuai Produk yang dipilih</div>
+                        <div class="produsen-badges d-flex flex-wrap gap-1">
+                            <span class="text-muted small">-</span>
+                        </div>
+                        <input type="hidden" name="id_produsen[]" class="id-produsen-hidden">
+                    </div>
                 </div>
             </div>
             <div class="col-md-6">
-                <div class="form-group">
-                    <label class="form-label">Negara Produsen</label>
-                    <select class="choices form-control" name="negara_produsen[]">
-                        <option value="">Pilih Negara</option>
-                        @foreach($countries as $code => $name)
-                            <option value="{{ $name }}">{{ $name }}</option>
-                        @endforeach
-                    </select>
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body p-3">
+                        <div class="fw-semibold">Distributor</div>
+                        <div class="small text-muted mb-2">Otomatis terisi sesuai Produk yang dipilih</div>
+                        <div class="distributor-badges d-flex flex-wrap gap-1">
+                            <span class="text-muted small">-</span>
+                        </div>
+                        <input type="hidden" name="id_distributor[]" class="id-distributor-hidden">
+                    </div>
                 </div>
             </div>
         </div>
@@ -801,11 +975,11 @@ function addNewRow() {
         <div class="row">
             <div class="col-md-6">
                 <div class="form-group">
-                    <label class="form-label">Distributor</label>
-                    <select class="choices form-control" name="id_distributor[]">
-                        <option value="">Pilih Distributor</option>
-                        @foreach($distributors as $distributor)
-                            <option value="{{ $distributor->id }}">{{ $distributor->nama_distributor }}</option>
+                    <label class="form-label">Negara Produsen</label>
+                    <select class="choices form-control" name="negara_produsen[]">
+                        <option value="">Pilih Negara</option>
+                        @foreach($countries as $code => $name)
+                            <option value="{{ $name }}">{{ $name }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -968,6 +1142,14 @@ function addNewRow() {
             console.error('Error initializing new select:', err);
         }
     });
+    
+    const kategoriSelect = newRow.querySelector('select.kategori-produk-select');
+    if (kategoriSelect && kategoriSelect.value) {
+        const produkSelect = newRow.querySelector('select.produk-select');
+        if (produkSelect) {
+            produkSelect.innerHTML = '<option value="">Pilih Produk</option>';
+        }
+    }
     
     updateRemoveButtons();
 }

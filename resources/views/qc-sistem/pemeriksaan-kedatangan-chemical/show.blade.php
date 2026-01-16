@@ -137,21 +137,25 @@
                                                     @endif
                                                 </td></tr>
                                                 <tr><td><strong>Produsen:</strong></td><td>
-                                                    @if(isset($detail['id_produsen']) && $detail['id_produsen'])
-                                                        @php $produsen = \App\Models\Produsen::find($detail['id_produsen']); @endphp
-                                                        {{ $produsen->nama_produsen ?? '-' }}
-                                                    @else
-                                                        -
-                                                    @endif
+                                                    @php
+                                                        $existingChemicalId = $detail['id_chemical'] ?? null;
+                                                        $mappedProdukId = $existingChemicalId ? ($produkByChemicalId[$existingChemicalId]['id_produk'] ?? null) : null;
+                                                        $prodVal = $mappedProdukId ? ($produkMeta[$mappedProdukId]['produsen_names'] ?? []) : [];
+                                                        $prodText = is_array($prodVal)
+                                                            ? implode(', ', array_values(array_filter($prodVal, fn ($v) => $v !== null && $v !== '')))
+                                                            : trim((string) $prodVal);
+                                                    @endphp
+                                                    {{ $prodText !== '' ? $prodText : '-' }}
                                                 </td></tr>
                                                 <tr><td><strong>Negara Produsen:</strong></td><td>{{ $detail['negara_produsen'] ?? '-' }}</td></tr>
                                                 <tr><td><strong>Distributor:</strong></td><td>
-                                                    @if(isset($detail['id_distributor']) && $detail['id_distributor'])
-                                                        @php $distributor = \App\Models\Distributor::find($detail['id_distributor']); @endphp
-                                                        {{ $distributor->nama_distributor ?? '-' }}
-                                                    @else
-                                                        -
-                                                    @endif
+                                                    @php
+                                                        $distVal = $mappedProdukId ? ($produkMeta[$mappedProdukId]['distributor_names'] ?? []) : [];
+                                                        $distText = is_array($distVal)
+                                                            ? implode(', ', array_values(array_filter($distVal, fn ($v) => $v !== null && $v !== '')))
+                                                            : trim((string) $distVal);
+                                                    @endphp
+                                                    {{ $distText !== '' ? $distText : '-' }}
                                                 </td></tr>
                                             </table>
                                         </div>
