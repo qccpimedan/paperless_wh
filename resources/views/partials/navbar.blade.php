@@ -111,9 +111,9 @@
                         <!-- <li class="submenu-item {{ request()->routeIs('bahan-kemasans.*') ? 'active' : '' }}">
                             <a href="{{ route('bahan-kemasans.index')}}">Input Bahan Kemasan</a>
                         </li> -->
-                        <li class="submenu-item {{ request()->routeIs('chemicals.*') ? 'active' : '' }}">
+                        <!-- <li class="submenu-item {{ request()->routeIs('chemicals.*') ? 'active' : '' }}">
                             <a href="{{ route('chemicals.index')}}">Input Chemical</a>
-                        </li>
+                        </li> -->
                         <li class="submenu-item {{ request()->routeIs('supirs.*') ? 'active' : '' }}">
                             <a href="{{ route('supirs.index')}}">Input Supir</a>
                         </li>
@@ -146,12 +146,14 @@
                 @if($userRole === 'superadmin' || $userRole === 'admin' || $userRole === 'spv qc' || $userRole === 'qc inspector' || $userRole === 'produksi')
                 {{-- Pemeriksaan Kedatangan --}}
                 <li class="sidebar-item has-sub {{ request()->routeIs('pemeriksaan-kedatangan-kemasan.*') || 
-                request()->routeIs('pemeriksaan-bahan-baku.*') || request()->routeIs('pemeriksaan-chemical.*') ? 'active' : '' }}">
+                request()->routeIs('pemeriksaan-bahan-baku.*') || request()->routeIs('pemeriksaan-chemical.*') || 
+                request()->routeIs('pemeriksaan-produk-finish-good.*') 
+                ? 'active' : '' }}">
                     <a href="#" class='sidebar-link'>
                         <i class="bi bi-hexagon-fill"></i>
                         <span>Pemeriksaan Kedatangan</span>
                     </a>
-                    <ul class="submenu {{ request()->routeIs('pemeriksaan-kedatangan-kemasan.*') || request()->routeIs('pemeriksaan-bahan-baku.*') || request()->routeIs('pemeriksaan-chemical.*') ? 'active' : '' }}">
+                    <ul class="submenu {{ request()->routeIs('pemeriksaan-kedatangan-kemasan.*') || request()->routeIs('pemeriksaan-bahan-baku.*') || request()->routeIs('pemeriksaan-chemical.*') || request()->routeIs('pemeriksaan-produk-finish-good.*') ? 'active' : '' }}">
                         <li class="submenu-item {{ request()->routeIs('pemeriksaan-kedatangan-kemasan.*') ? 'active' : '' }}">
                             <a href="{{ route('pemeriksaan-kedatangan-kemasan.index') }}">Kemasan</a>
                         </li>
@@ -161,6 +163,10 @@
                         <li class="submenu-item {{ request()->routeIs('pemeriksaan-chemical.*') ? 'active' : '' }}">
                             <a href="{{ route('pemeriksaan-chemical.index') }}">Chemical</a>
                         </li>
+                        <li class="submenu-item {{ request()->routeIs('pemeriksaan-produk-finish-good.*') ? 'active' : '' }}">
+                            <a href="{{ route('pemeriksaan-produk-finish-good.index') }}">Produk Finish Good</a>
+                        </li>
+
                     </ul>
                 </li>
                 <li class="sidebar-item has-sub {{ request()->routeIs('pemeriksaan-loading-produk.*') || request()->routeIs('pemeriksaan-loading-kendaraan.*') ? 'active' : '' }}">
