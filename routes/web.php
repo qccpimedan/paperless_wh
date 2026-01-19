@@ -26,6 +26,7 @@ use App\Http\Controllers\PemeriksaanKebersihanAreaController;
 use App\Http\Controllers\PemeriksaanKedatanganChemicalController;
 use App\Http\Controllers\PemeriksaanKedatanganKemasanController;
 use App\Http\Controllers\PemeriksaanKedatanganBahanBakuPenunjangController;
+use App\Http\Controllers\PemeriksaanProdukFinishGoodController;
 use App\Http\Controllers\PemeriksaanLoadingProdukController;
 use App\Http\Controllers\PemeriksaanLoadingKendaraanController;
 use App\Http\Controllers\PemeriksaanReturnBarangCustomerController;
@@ -182,6 +183,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::resource('pemeriksaan-kedatangan-kemasan', PemeriksaanKedatanganKemasanController::class);
         Route::resource('pemeriksaan-bahan-baku', PemeriksaanKedatanganBahanBakuPenunjangController::class);
         Route::resource('pemeriksaan-chemical', PemeriksaanKedatanganChemicalController::class);
+        Route::resource('pemeriksaan-produk-finish-good', PemeriksaanProdukFinishGoodController::class);
         Route::resource('pemeriksaan-loading-produk', PemeriksaanLoadingProdukController::class);
         Route::resource('pemeriksaan-loading-kendaraan', PemeriksaanLoadingKendaraanController::class);
         Route::resource('return-barang', PemeriksaanReturnBarangCustomerController::class)->parameters(['return-barang' => 'pemeriksaanReturnBarangCustomer:uuid']);
