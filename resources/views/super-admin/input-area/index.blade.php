@@ -47,7 +47,7 @@
                                 <tr>
                                     <th>No</th>
                                     <th>Nama Area</th>
-                                    <th>Lokasi Area</th>
+                                    <th>Sub Area</th>
                                     <th>Plant</th>
                                     <th>Aksi</th>
                                 </tr>

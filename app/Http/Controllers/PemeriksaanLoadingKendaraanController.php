@@ -10,6 +10,8 @@ use App\Models\StdPrecooling;
 use Illuminate\Http\Request;
 use App\Models\Shift;
 use Illuminate\Support\Facades\Auth;
+use App\Models\User;
+use Barryvdh\DomPDF\Facade\Pdf as PDF;
 
 class PemeriksaanLoadingKendaraanController extends Controller
 {
@@ -282,6 +284,7 @@ class PemeriksaanLoadingKendaraanController extends Controller
         $pemeriksaanLoadingKendaraan->update([
             'status_verifikasi' => 'sent_to_produksi',
             'verified_by' => $user->id,
+            'verified_by_qc' => $user->id,
             'verified_at' => now(),
         ]);
         
@@ -300,6 +303,7 @@ class PemeriksaanLoadingKendaraanController extends Controller
         $pemeriksaanLoadingKendaraan->update([
             'status_verifikasi' => 'approved_produksi',
             'verified_by' => $user->id,
+            'verified_by_produksi' => $user->id,
             'verified_at' => now(),
             'verification_notes' => $request->input('notes'),
         ]);
@@ -320,6 +324,7 @@ class PemeriksaanLoadingKendaraanController extends Controller
         $pemeriksaanLoadingKendaraan->update([
             'status_verifikasi' => 'rejected_produksi',
             'verified_by' => $user->id,
+            'verified_by_produksi' => $user->id,
             'verified_at' => now(),
             'verification_notes' => $request->input('notes'),
         ]);
@@ -339,6 +344,7 @@ class PemeriksaanLoadingKendaraanController extends Controller
         $pemeriksaanLoadingKendaraan->update([
             'status_verifikasi' => 'approved_spv',
             'verified_by' => $user->id,
+            'verified_by_spv' => $user->id,
             'verified_at' => now(),
             'verification_notes' => $request->input('notes'),
         ]);
@@ -359,10 +365,86 @@ class PemeriksaanLoadingKendaraanController extends Controller
         $pemeriksaanLoadingKendaraan->update([
             'status_verifikasi' => 'rejected_spv',
             'verified_by' => $user->id,
+            'verified_by_spv' => $user->id,
             'verified_at' => now(),
             'verification_notes' => $request->input('notes'),
         ]);
         
         return redirect()->back()->with('error', 'Pemeriksaan ditolak oleh SPV QC. Silakan perbaiki dan kirim ulang.');
+    }
+
+    public function exportPDF(Request $request)
+    {
+        $user = Auth::user();
+        $id_shift = $request->input('id_shift');
+        $tanggalDari = $request->input('tanggal_dari');
+        $tanggalSampai = $request->input('tanggal_sampai');
+        $tanggal = $request->input('tanggal');
+
+        $query = PemeriksaanLoadingKendaraan::with([
+            'user.role',
+            'user.plant',
+            'ekspedisi',
+            'kendaraan',
+            'tujuanPengiriman',
+            'stdPrecooling',
+            'shift',
+            'verifiedBy',
+            'qcVerifier',
+            'produksiVerifier',
+            'spvVerifier',
+        ]);
+
+        if ($user->role && strtolower($user->role->role) !== 'superadmin') {
+            $query->whereHas('user', function ($q) use ($user) {
+                $q->where('id_plant', $user->id_plant);
+            });
+        }
+
+        if ($id_shift) {
+            $query->where('id_shift', $id_shift);
+        }
+
+        if ($id_shift) {
+            $shift = Shift::find($id_shift);
+            $shiftName = $shift ? trim(strtolower((string) $shift->shift)) : null;
+
+            if ($shiftName === '1' || $shiftName === 'shift 1') {
+                if ($tanggalDari && $tanggalSampai) {
+                    $query->whereBetween('tanggal', [$tanggalDari, $tanggalSampai]);
+                } elseif ($tanggalDari) {
+                    $query->whereDate('tanggal', '>=', $tanggalDari);
+                } elseif ($tanggalSampai) {
+                    $query->whereDate('tanggal', '<=', $tanggalSampai);
+                }
+            } else {
+                if ($tanggal) {
+                    $query->whereDate('tanggal', $tanggal);
+                }
+            }
+        } else {
+            if ($tanggal) {
+                $query->whereDate('tanggal', $tanggal);
+            }
+        }
+
+        $pemeriksaans = $query->latest()->get();
+        if ($pemeriksaans->isEmpty()) {
+            return redirect()->back()->with('error', 'Tidak ada data yang sesuai dengan filter yang dipilih.');
+        }
+
+        $shift = $id_shift ? Shift::find($id_shift) : null;
+
+        $pdf = PDF::loadView('qc-sistem.pemeriksaan-loading-kendaraan.pdf-report', [
+            'pemeriksaans' => $pemeriksaans,
+            'tanggal' => $tanggal,
+            'tanggal_dari' => $tanggalDari,
+            'tanggal_sampai' => $tanggalSampai,
+            'shift' => $shift,
+        ]);
+
+        $filenameDate = $tanggal ?? $tanggalDari ?? date('Y-m-d');
+        $filename = 'laporan-pemeriksaan-loading-kendaraan-' . $filenameDate . '.pdf';
+        return $pdf->download($filename);
     }
 }

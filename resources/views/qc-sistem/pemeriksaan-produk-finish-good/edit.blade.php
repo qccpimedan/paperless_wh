@@ -438,7 +438,12 @@
                                                     <div class="col-md-6">
                                                         <div class="form-group">
                                                             <label class="form-label">Negara Produsen</label>
-                                                            <input type="text" class="form-control" name="negara_produsen[]" value="{{ old('negara_produsen.'.$i, $negaraArr[$i] ?? '') }}" placeholder="Negara Produsen">
+                                                            <select class="choices form-control" name="negara_produsen[]">
+                                                                <option value="">Pilih Negara</option>
+                                                                @foreach($countries as $code => $name)
+                                                                    <option value="{{ $name }}" {{ old('negara_produsen.'.$i, $negaraArr[$i] ?? '') == $name ? 'selected' : '' }}>{{ $name }}</option>
+                                                                @endforeach
+                                                            </select>
                                                         </div>
                                                     </div>
                                                     <div class="col-md-6">
@@ -623,6 +628,7 @@ const produkByKategori = @json($produkByKategori ?? []);
 const produkMeta = @json($produkMeta ?? []);
 const oldKategoriCodes = @json(old('kategori_code', $kategoriArr ?? []));
 const oldProdukIds = @json(old('id_produk', $idProdukArr ?? []));
+const countriesList = @json(array_values($countries ?? []));
 
 function initChoicesForContainer(containerEl) {
     if (!containerEl) return;
@@ -667,6 +673,27 @@ function refreshChoices(selectEl) {
         selectEl.dataset.choicesInitialized = '1';
     } catch (e) {
     }
+}
+
+function rebuildNegaraProdusenOptions(selectEl) {
+    if (!selectEl) return;
+    if (!countriesList || !Array.isArray(countriesList)) return;
+
+    const currentValue = selectEl.value || '';
+
+    selectEl.innerHTML = '';
+    const placeholder = document.createElement('option');
+    placeholder.value = '';
+    placeholder.textContent = 'Pilih Negara';
+    selectEl.appendChild(placeholder);
+
+    countriesList.forEach((name) => {
+        const opt = document.createElement('option');
+        opt.value = name;
+        opt.textContent = name;
+        if (currentValue && currentValue === name) opt.selected = true;
+        selectEl.appendChild(opt);
+    });
 }
 
 function getProdukOptionsForKategori(kategoriRaw) {
@@ -1067,6 +1094,16 @@ document.addEventListener('DOMContentLoaded', function() {
             });
 
             container.appendChild(newRow);
+
+            // Ensure Negara Produsen keeps its options in dynamic rows
+            const negaraSelect = newRow.querySelector('select[name="negara_produsen[]"]');
+            if (negaraSelect) {
+                const optionCount = negaraSelect.querySelectorAll('option').length;
+                if (optionCount <= 1) {
+                    rebuildNegaraProdusenOptions(negaraSelect);
+                }
+            }
+
             initChoicesForContainer(newRow);
             updateRowNumbers();
             updateRemoveButtons();

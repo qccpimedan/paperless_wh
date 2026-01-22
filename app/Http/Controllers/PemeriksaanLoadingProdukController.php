@@ -12,13 +12,15 @@ use App\Models\Produk;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
+use App\Models\User;
+use Barryvdh\DomPDF\Facade\Pdf as PDF;
 
 class PemeriksaanLoadingProdukController extends Controller
 {
     public function index()
     {
         $user = Auth::user();
-        
+
         // SuperAdmin dapat melihat semua data
         if ($user->role && strtolower($user->role->role) === 'superadmin') {
             $pemeriksaans = PemeriksaanLoadingProduk::with([
@@ -518,9 +520,24 @@ class PemeriksaanLoadingProdukController extends Controller
             ->with('success', 'Data pemeriksaan loading produk berhasil dihapus.');
     }
 
+    private function checkPlantAccess(PemeriksaanLoadingProduk $pemeriksaan)
+    {
+        $user = Auth::user();
+
+        if ($user->role && strtolower($user->role->role) === 'superadmin') {
+            return;
+        }
+
+        $pemeriksaan->loadMissing('user');
+        if ($pemeriksaan->user && $pemeriksaan->user->id_plant !== $user->id_plant) {
+            abort(403, 'Anda tidak memiliki akses ke data ini.');
+        }
+    }
+
     public function sendToProduksi(PemeriksaanLoadingProduk $pemeriksaanLoadingProduk)
     {
         $user = Auth::user();
+        $this->checkPlantAccess($pemeriksaanLoadingProduk);
         
         if ($pemeriksaanLoadingProduk->status_verifikasi !== 'pending') {
             return redirect()->back()->with('error', 'Hanya pemeriksaan dengan status pending yang dapat dikirim.');
@@ -529,6 +546,7 @@ class PemeriksaanLoadingProdukController extends Controller
         $pemeriksaanLoadingProduk->update([
             'status_verifikasi' => 'sent_to_produksi',
             'verified_by' => $user->id,
+            'verified_by_qc' => $user->id,
             'verified_at' => now(),
         ]);
         
@@ -538,6 +556,7 @@ class PemeriksaanLoadingProdukController extends Controller
     public function approveProduksi(Request $request, PemeriksaanLoadingProduk $pemeriksaanLoadingProduk)
     {
         $user = Auth::user();
+        $this->checkPlantAccess($pemeriksaanLoadingProduk);
         
         if ($pemeriksaanLoadingProduk->status_verifikasi !== 'sent_to_produksi') {
             return redirect()->back()->with('error', 'Status pemeriksaan tidak valid untuk di-approve.');
@@ -546,6 +565,7 @@ class PemeriksaanLoadingProdukController extends Controller
         $pemeriksaanLoadingProduk->update([
             'status_verifikasi' => 'approved_produksi',
             'verified_by' => $user->id,
+            'verified_by_produksi' => $user->id,
             'verified_at' => now(),
             'verification_notes' => $request->input('notes'),
         ]);
@@ -560,6 +580,7 @@ class PemeriksaanLoadingProdukController extends Controller
         ]);
         
         $user = Auth::user();
+        $this->checkPlantAccess($pemeriksaanLoadingProduk);
         
         if ($pemeriksaanLoadingProduk->status_verifikasi !== 'sent_to_produksi') {
             return redirect()->back()->with('error', 'Status pemeriksaan tidak valid untuk di-reject.');
@@ -568,6 +589,7 @@ class PemeriksaanLoadingProdukController extends Controller
         $pemeriksaanLoadingProduk->update([
             'status_verifikasi' => 'rejected_produksi',
             'verified_by' => $user->id,
+            'verified_by_produksi' => $user->id,
             'verified_at' => now(),
             'verification_notes' => $request->input('notes'),
         ]);
@@ -578,6 +600,7 @@ class PemeriksaanLoadingProdukController extends Controller
     public function approveSPV(Request $request, PemeriksaanLoadingProduk $pemeriksaanLoadingProduk)
     {
         $user = Auth::user();
+        $this->checkPlantAccess($pemeriksaanLoadingProduk);
         
         if ($pemeriksaanLoadingProduk->status_verifikasi !== 'approved_produksi') {
             return redirect()->back()->with('error', 'Pemeriksaan harus disetujui Produksi terlebih dahulu.');
@@ -586,6 +609,7 @@ class PemeriksaanLoadingProdukController extends Controller
         $pemeriksaanLoadingProduk->update([
             'status_verifikasi' => 'approved_spv',
             'verified_by' => $user->id,
+            'verified_by_spv' => $user->id,
             'verified_at' => now(),
             'verification_notes' => $request->input('notes'),
         ]);
@@ -600,6 +624,7 @@ class PemeriksaanLoadingProdukController extends Controller
         ]);
         
         $user = Auth::user();
+        $this->checkPlantAccess($pemeriksaanLoadingProduk);
         
         if ($pemeriksaanLoadingProduk->status_verifikasi !== 'approved_produksi') {
             return redirect()->back()->with('error', 'Status pemeriksaan tidak valid untuk di-reject.');
@@ -608,10 +633,131 @@ class PemeriksaanLoadingProdukController extends Controller
         $pemeriksaanLoadingProduk->update([
             'status_verifikasi' => 'rejected_spv',
             'verified_by' => $user->id,
+            'verified_by_spv' => $user->id,
             'verified_at' => now(),
             'verification_notes' => $request->input('notes'),
         ]);
         
         return redirect()->back()->with('error', 'Pemeriksaan ditolak oleh SPV QC. Silakan perbaiki dan kirim ulang.');
+    }
+
+    public function exportPDF(Request $request)
+    {
+        $user = Auth::user();
+        $id_shift = $request->input('id_shift');
+        $tanggalDari = $request->input('tanggal_dari');
+        $tanggalSampai = $request->input('tanggal_sampai');
+        $tanggal = $request->input('tanggal');
+
+        $query = PemeriksaanLoadingProduk::with([
+            'user.role',
+            'user.plant',
+            'shift',
+            'tujuanPengiriman.customer',
+            'kendaraan',
+            'supir',
+            'qcVerifier' => function ($q) {
+                $q->select('id', 'name');
+            },
+            'produksiVerifier' => function ($q) {
+                $q->select('id', 'name');
+            },
+            'spvVerifier' => function ($q) {
+                $q->select('id', 'name');
+            },
+        ]);
+
+        if ($user->role && strtolower($user->role->role) !== 'superadmin') {
+            $query->whereHas('user', function ($q) use ($user) {
+                $q->where('id_plant', $user->id_plant);
+            });
+        }
+
+        if ($id_shift) {
+            $query->where('id_shift', $id_shift);
+        }
+
+        if ($id_shift) {
+            $shift = Shift::find($id_shift);
+            $shiftName = $shift ? trim(strtolower((string) $shift->shift)) : null;
+
+            if ($shiftName === '1' || $shiftName === 'shift 1') {
+                if ($tanggalDari && $tanggalSampai) {
+                    $query->whereBetween('tanggal', [$tanggalDari, $tanggalSampai]);
+                } elseif ($tanggalDari) {
+                    $query->whereDate('tanggal', '>=', $tanggalDari);
+                } elseif ($tanggalSampai) {
+                    $query->whereDate('tanggal', '<=', $tanggalSampai);
+                }
+            } else {
+                if ($tanggal) {
+                    $query->whereDate('tanggal', $tanggal);
+                }
+            }
+        } else {
+            if ($tanggal) {
+                $query->whereDate('tanggal', $tanggal);
+            }
+        }
+
+        $pemeriksaans = $query->latest()->get();
+
+        if ($pemeriksaans->isEmpty()) {
+            return redirect()->back()->with('error', 'Tidak ada data yang sesuai dengan filter yang dipilih.');
+        }
+
+        $shift = $id_shift ? Shift::find($id_shift) : null;
+
+        $qcUser = null;
+        $produksiUser = null;
+        $spvQcUser = null;
+
+        $allQcIds = $pemeriksaans->pluck('verified_by_qc')->filter()->unique();
+        $allProduksiIds = $pemeriksaans->pluck('verified_by_produksi')->filter()->unique();
+        $allSpvIds = $pemeriksaans->pluck('verified_by_spv')->filter()->unique();
+
+        if ($allQcIds->count() > 0) {
+            $qcUserData = User::whereIn('id', $allQcIds->toArray())->first();
+            if ($qcUserData) $qcUser = $qcUserData->name;
+        }
+        if ($allProduksiIds->count() > 0) {
+            $produksiUserData = User::whereIn('id', $allProduksiIds->toArray())->first();
+            if ($produksiUserData) $produksiUser = $produksiUserData->name;
+        }
+        if ($allSpvIds->count() > 0) {
+            $spvUserData = User::whereIn('id', $allSpvIds->toArray())->first();
+            if ($spvUserData) $spvQcUser = $spvUserData->name;
+        }
+
+        $produkIds = $pemeriksaans
+            ->flatMap(function ($p) {
+                $rows = is_array($p->produk_data) ? $p->produk_data : [];
+                return collect($rows)->pluck('id_produk');
+            })
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+
+        $produkMap = Produk::query()
+            ->whereIn('id', $produkIds)
+            ->pluck('nama_produk', 'id')
+            ->all();
+
+        $pdf = PDF::loadView('qc-sistem.pemeriksaan-loading-produk.pdf-report', [
+            'pemeriksaans' => $pemeriksaans,
+            'tanggal' => $tanggal,
+            'tanggal_dari' => $tanggalDari,
+            'tanggal_sampai' => $tanggalSampai,
+            'shift' => $shift,
+            'qcUser' => $qcUser,
+            'produksiUser' => $produksiUser,
+            'spvQcUser' => $spvQcUser,
+            'produkMap' => $produkMap,
+        ]);
+
+        $filenameDate = $tanggal ?? $tanggalDari ?? date('Y-m-d');
+        $filename = 'laporan-pemeriksaan-loading-produk-' . $filenameDate . '.pdf';
+        return $pdf->download($filename);
     }
 }

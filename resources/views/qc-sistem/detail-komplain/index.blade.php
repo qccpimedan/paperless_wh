@@ -115,7 +115,7 @@
                                                 @if($userRole === 'qc inspector')
                                                     <form action="{{ route('detail-komplain.send-to-qc', $komplain->uuid) }}" method="POST" style="display: inline-block;">
                                                         @csrf
-                                                        <button type="submit" class="btn btn-sm btn-primary" title="Kirim ke Produksi">
+                                                        <button type="submit" class="btn btn-sm btn-primary" title="Kirim ke Tim Warehouse">
                                                             <i class="bi bi-send"></i> Kirim
                                                         </button>
                                                     </form>
@@ -123,7 +123,7 @@
                                                     <span class="badge bg-secondary">Pending</span>
                                                 @endif
                                             @elseif($status === 'sent_to_qc')
-                                                <span class="badge bg-warning">Menunggu Produksi</span>
+                                                <span class="badge bg-warning">Menunggu Tim Warehouse</span>
                                                 @if($userRole === 'produksi')
                                                     <button class="btn btn-sm btn-success mt-1" data-bs-toggle="modal" data-bs-target="#approveQCModal{{ $komplain->id }}" title="Approve">
                                                         <i class="bi bi-check-circle"></i> Approve
@@ -133,7 +133,7 @@
                                                     </button>
                                                 @endif
                                             @elseif($status === 'approved_qc')
-                                                <span class="badge bg-info">Disetujui Produksi</span>
+                                                <span class="badge bg-info">Disetujui Tim Warehouse</span>
                                                 @if($userRole === 'spv qc')
                                                     <button class="btn btn-sm btn-success mt-1" data-bs-toggle="modal" data-bs-target="#approveSPVModal{{ $komplain->id }}" title="Verifikasi">
                                                         <i class="bi bi-check-circle"></i> Verifikasi
@@ -210,7 +210,7 @@
                                                                    id="upload_suplier{{ $komplain->uuid }}" 
                                                                    name="upload_suplier" 
                                                                    accept=".pdf,.doc,.docx,.xls,.xlsx" required>
-                                                            <small class="text-muted">Format: PDF, Word (.doc, .docx), Excel (.xls, .xlsx) | Max 5MB</small>
+                                                            <small class="text-muted">Format: PDF, Word (.doc, .docx), Excel (.xls, .xlsx) | Max 2MB</small>
                                                         </div>
                                                     </div>
                                                     <div class="modal-footer">

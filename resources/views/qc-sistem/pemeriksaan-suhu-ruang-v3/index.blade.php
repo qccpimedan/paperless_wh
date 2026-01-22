@@ -89,7 +89,7 @@
                                                 @if($userRole === 'qc inspector')
                                                     <form action="{{ route('pemeriksaan-suhu-ruang-v3.send-to-produksi', $pemeriksaan->uuid) }}" method="POST" style="display: inline-block;">
                                                         @csrf
-                                                        <button type="submit" class="btn btn-sm btn-primary" title="Kirim ke Produksi">
+                                                        <button type="submit" class="btn btn-sm btn-primary" title="Kirim ke Tim Warehouse">
                                                             <i class="bi bi-send"></i> Kirim
                                                         </button>
                                                     </form>
@@ -97,7 +97,7 @@
                                                     <span class="badge bg-secondary">Pending</span>
                                                 @endif
                                             @elseif($status === 'sent_to_produksi')
-                                                <span class="badge bg-warning">Menunggu Produksi</span>
+                                                <span class="badge bg-warning">Menunggu Tim Warehouse</span>
                                                 @if($userRole === 'produksi')
                                                     <button class="btn btn-sm btn-success mt-1" data-bs-toggle="modal" data-bs-target="#approveProduksiModal{{ $pemeriksaan->id }}" title="Approve">
                                                         <i class="bi bi-check-circle"></i> Approve
@@ -107,7 +107,7 @@
                                                     </button>
                                                 @endif
                                             @elseif($status === 'approved_produksi')
-                                                <span class="badge bg-info">Disetujui Produksi</span>
+                                                <span class="badge bg-info">Disetujui Tim Warehouse</span>
                                                 @if($userRole === 'spv qc')
                                                     <button class="btn btn-sm btn-success mt-1" data-bs-toggle="modal" data-bs-target="#approveSPVModal{{ $pemeriksaan->id }}" title="Verifikasi">
                                                         <i class="bi bi-check-circle"></i> Verifikasi
@@ -119,7 +119,7 @@
                                             @elseif($status === 'approved_spv')
                                                 <span class="badge bg-success">Disetujui SPV QC</span>
                                             @elseif($status === 'rejected_produksi')
-                                                <span class="badge bg-danger">Ditolak Produksi</span>
+                                                <span class="badge bg-danger">Ditolak Tim Warehouse</span>
                                             @elseif($status === 'rejected_spv')
                                                 <span class="badge bg-danger">Ditolak SPV QC</span>
                                             @endif

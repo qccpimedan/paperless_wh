@@ -118,7 +118,7 @@
                                                    class="btn btn-sm btn-warning" title="Edit Data">
                                                     <i class="bi bi-pencil"></i>
                                                 </a>
-                                                <form action="{{ route('produks.destroy', $produk->uuid) }}" 
+                                                <!-- <form action="{{ route('produks.destroy', $produk->uuid) }}" 
                                                       method="POST" 
                                                       style="display: inline-block;"
                                                       onsubmit="return confirm('Yakin ingin menghapus produk {{ $produk->nama_produk }}?')">
@@ -127,7 +127,7 @@
                                                     <button type="submit" class="btn btn-sm btn-danger" title="Hapus Data">
                                                         <i class="bi bi-trash"></i>
                                                     </button>
-                                                </form>
+                                                </form> -->
                                             </div>
                                         </td>
                                     </tr>

@@ -305,7 +305,7 @@
             
             <!-- Title dengan gradient -->
             <h1 class="main-title fs-2 text-center">Paperless</h1>
-            <h4 class="sub-title fs-4 text-center">QC Warehouse</h4>
+            <h4 class="sub-title fs-4 text-center"><b>SmartWH</b></h4>
 
             <!-- Alert Messages -->
             @if(session('success'))
@@ -351,9 +351,9 @@
                 </div>
 
                 <!-- Buttons -->
-                <button type="button" class="btn btn-info btn-block btn-lg w-100 shadow-sm" data-bs-toggle="modal" data-bs-target="#loginGuideModal">
+                <!-- <button type="button" class="btn btn-info btn-block btn-lg w-100 shadow-sm" data-bs-toggle="modal" data-bs-target="#loginGuideModal">
                     <i class="bi bi-info-circle me-2"></i>Petunjuk Login
-                </button>
+                </button> -->
                 
                 <button type="submit" class="btn btn-primary btn-block btn-lg w-100 mt-3 shadow">
                     <i class="bi bi-box-arrow-in-right me-2"></i>Log in

@@ -134,8 +134,8 @@
                                                                 <input type="text" class="form-control jumlah-barang" value="{{ $detail->jumlah_barang }}" readonly>
                                                             </div>
                                                             <div class="col-md-4">
-                                                                <label class="form-label">Lokasi Area <span class="text-danger">*</span></label>
-                                                                <select class="form-select lokasi-area-select" name="details[{{ $index }}][id_input_area_locations]" {{ $detail->nama_barang_manual ? '' : 'required' }}>
+                                                                <label class="form-label">Lokasi Area</label>
+                                                                <select class="form-select lokasi-area-select" name="details[{{ $index }}][id_input_area_locations]">
                                                                     <option value="">-- Pilih Lokasi Area --</option>
                                                                     @if($detail->areaLocation)
                                                                         <option value="{{ $detail->areaLocation->id }}" selected>
@@ -162,8 +162,8 @@
                                                                 <input type="number" class="form-control jumlah-manual" name="details[{{ $index }}][jumlah_manual]" placeholder="Jumlah" min="0" value="{{ $detail->nama_barang_manual ? $detail->jumlah_barang : '' }}" {{ $detail->nama_barang_manual ? 'required' : '' }}>
                                                             </div>
                                                             <div class="col-md-4">
-                                                                <label class="form-label">Lokasi Area <span class="text-danger">*</span></label>
-                                                                <select class="form-select lokasi-area-select-manual" name="details[{{ $index }}][id_input_area_locations]{{ !$detail->nama_barang_manual ? '_manual' : '' }}" {{ $detail->nama_barang_manual ? 'required' : '' }}>
+                                                                <label class="form-label">Lokasi Area</label>
+                                                                <select class="form-select lokasi-area-select-manual" name="details[{{ $index }}][id_input_area_locations]{{ !$detail->nama_barang_manual ? '_manual' : '' }}">
                                                                     <option value="">-- Pilih Lokasi Area --</option>
                                                                     @if($detail->areaLocation)
                                                                         <option value="{{ $detail->areaLocation->id }}" selected>
@@ -189,10 +189,10 @@
 
                                                         <div class="row mb-3">
                                                             <div class="col-md-3">
-                                                                <label class="form-label">Awal <span class="text-danger">*</span></label>
+                                                                <label class="form-label">Awal</label>
                                                                 <div>
                                                                     <div class="form-check form-check-inline">
-                                                                        <input class="form-check-input" type="radio" name="details[{{ $index }}][awal]" id="awal_baik_{{ $index }}" value="baik" {{ $detail->awal === 'baik' ? 'checked' : '' }} required>
+                                                                        <input class="form-check-input" type="radio" name="details[{{ $index }}][awal]" id="awal_baik_{{ $index }}" value="baik" {{ $detail->awal === 'baik' ? 'checked' : '' }}>
                                                                         <label class="form-check-label" for="awal_baik_{{ $index }}"> baik</label>
                                                                     </div>
                                                                     <div class="form-check form-check-inline">
@@ -202,10 +202,10 @@
                                                                 </div>
                                                             </div>
                                                             <div class="col-md-3">
-                                                                <label class="form-label">Akhir <span class="text-danger">*</span></label>
+                                                                <label class="form-label">Akhir</label>
                                                                 <div>
                                                                     <div class="form-check form-check-inline">
-                                                                        <input class="form-check-input" type="radio" name="details[{{ $index }}][akhir]" id="akhir_baik_{{ $index }}" value="baik" {{ $detail->akhir === 'baik' ? 'checked' : '' }} required>
+                                                                        <input class="form-check-input" type="radio" name="details[{{ $index }}][akhir]" id="akhir_baik_{{ $index }}" value="baik" {{ $detail->akhir === 'baik' ? 'checked' : '' }}>
                                                                         <label class="form-check-label" for="akhir_baik_{{ $index }}"> baik</label>
                                                                     </div>
                                                                     <div class="form-check form-check-inline">
@@ -263,8 +263,8 @@
                                                                 <input type="text" class="form-control jumlah-barang" readonly>
                                                             </div>
                                                             <div class="col-md-4">
-                                                                <label class="form-label">Lokasi Area <span class="text-danger">*</span></label>
-                                                                <select class="form-select lokasi-area-select" name="details[0][id_input_area_locations]" required>
+                                                                <label class="form-label">Lokasi Area</label>
+                                                                <select class="form-select lokasi-area-select" name="details[0][id_input_area_locations]">
                                                                     <option value="">-- Pilih Lokasi Area --</option>
                                                                 </select>
                                                             </div>
@@ -277,10 +277,10 @@
 
                                                         <div class="row mb-3">
                                                             <div class="col-md-3">
-                                                                <label class="form-label">Awal <span class="text-danger">*</span></label>
+                                                                <label class="form-label">Awal</label>
                                                                 <div>
                                                                     <div class="form-check form-check-inline">
-                                                                        <input class="form-check-input" type="radio" name="details[0][awal]" id="awal_baik_0" value="baik" required>
+                                                                        <input class="form-check-input" type="radio" name="details[0][awal]" id="awal_baik_0" value="baik">
                                                                         <label class="form-check-label" for="awal_baik_0"> baik</label>
                                                                     </div>
                                                                     <div class="form-check form-check-inline">
@@ -290,10 +290,10 @@
                                                                 </div>
                                                             </div>
                                                             <div class="col-md-3">
-                                                                <label class="form-label">Akhir <span class="text-danger">*</span></label>
+                                                                <label class="form-label">Akhir</label>
                                                                 <div>
                                                                     <div class="form-check form-check-inline">
-                                                                        <input class="form-check-input" type="radio" name="details[0][akhir]" id="akhir_baik_0" value="baik" required>
+                                                                        <input class="form-check-input" type="radio" name="details[0][akhir]" id="akhir_baik_0" value="baik">
                                                                         <label class="form-check-label" for="akhir_baik_0"> baik</label>
                                                                     </div>
                                                                     <div class="form-check form-check-inline">
@@ -318,7 +318,7 @@
                                                 @endforelse
                                             </div>
 
-                                            <button type="button" class="btn btn-success" id="addBarang">
+                                            <button type="button" class="btn btn-primary" id="addBarang">
                                                 <i class="bi bi-plus-circle"></i> Tambah Barang
                                             </button>
                                         </div>
@@ -413,7 +413,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Enable manual fields dan pastikan name benar
                 namaBarangManual.required = true;
                 jumlahManual.required = true;
-                lokasiManualSelect.required = true;
+                lokasiManualSelect.required = false;
                 
                 // Rename lokasi manual dari _manual ke normal
                 if (lokasiManualSelect.name.includes('_manual')) {
@@ -481,19 +481,19 @@ document.addEventListener('DOMContentLoaded', function() {
                 <div class="row mb-3 barang-select-row" data-index="${idx}">
                     <div class="col-md-3"><label class="form-label">Barang <span class="text-danger">*</span></label><select class="choices form-select barang-select" name="details[${idx}][id_barang]" required><option value="">-- Pilih Barang --</option>@foreach($barangs as $b)<option value="{{ $b->id }}">{{ $b->nama_barang }}</option>@endforeach</select></div>
                     <div class="col-md-2"><label class="form-label">Jumlah</label><input type="text" class="form-control jumlah-barang" readonly></div>
-                    <div class="col-md-4"><label class="form-label">Lokasi Area <span class="text-danger">*</span></label><select class="form-select lokasi-area-select" name="details[${idx}][id_input_area_locations]" required><option value="">-- Pilih Lokasi Area --</option></select></div>
+                    <div class="col-md-4"><label class="form-label">Lokasi Area</label><select class="form-select lokasi-area-select" name="details[${idx}][id_input_area_locations]"><option value="">-- Pilih Lokasi Area --</option></select></div>
                     <div class="col-md-3"><button type="button" class="btn btn-danger btn-sm mt-4 remove-barang"><i class="bi bi-trash"></i> Hapus</button></div>
                 </div>
                 <div class="row mb-3 barang-manual-row" data-index="${idx}" style="display:none;">
                     <div class="col-md-3"><label class="form-label">Nama Barang <span class="text-danger">*</span></label><input type="text" class="form-control nama-barang-manual" name="details[${idx}][nama_barang_manual]" placeholder="Masukkan nama barang"></div>
                     <div class="col-md-2"><label class="form-label">Jumlah <span class="text-danger">*</span></label><input type="number" class="form-control" name="details[${idx}][jumlah_manual]" placeholder="Jumlah" min="0"></div>
-                    <div class="col-md-4"><label class="form-label">Lokasi Area <span class="text-danger">*</span></label><select class="form-select lokasi-area-select-manual" name="details[${idx}][id_input_area_locations_manual]"><option value="">-- Pilih Lokasi Area --</option></select></div>
+                    <div class="col-md-4"><label class="form-label">Lokasi Area</label><select class="form-select lokasi-area-select-manual" name="details[${idx}][id_input_area_locations_manual]"><option value="">-- Pilih Lokasi Area --</option></select></div>
                     <div class="col-md-3"><button type="button" class="btn btn-danger btn-sm mt-4 remove-barang"><i class="bi bi-trash"></i> Hapus</button></div>
                 </div>
                 <div class="row mb-3 nama_karyawan_row" data-index="${idx}" style="display:none;"><div class="col-md-6"><label class="form-label">Nama Karyawan</label><input type="text" class="form-control" name="details[${idx}][nama_karyawan]" placeholder="Nama karyawan (opsional)"></div></div>
                 <div class="row mb-3">
-                    <div class="col-md-3"><label class="form-label">Awal <span class="text-danger">*</span></label><div><div class="form-check form-check-inline"><input class="form-check-input" type="radio" name="details[${idx}][awal]" id="awal_baik_${idx}" value="baik" required><label class="form-check-label" for="awal_baik_${idx}">baik</label></div><div class="form-check form-check-inline"><input class="form-check-input" type="radio" name="details[${idx}][awal]" id="awal_tidak-baik_${idx}" value="tidak-baik"><label class="form-check-label" for="awal_tidak-baik_${idx}">tidak-baik</label></div></div></div>
-                    <div class="col-md-3"><label class="form-label">Akhir <span class="text-danger">*</span></label><div><div class="form-check form-check-inline"><input class="form-check-input" type="radio" name="details[${idx}][akhir]" id="akhir_baik_${idx}" value="baik" required><label class="form-check-label" for="akhir_baik_${idx}">baik</label></div><div class="form-check form-check-inline"><input class="form-check-input" type="radio" name="details[${idx}][akhir]" id="akhir_tidak-baik_${idx}" value="tidak-baik"><label class="form-check-label" for="akhir_tidak-baik_${idx}">tidak-baik</label></div></div></div>
+                    <div class="col-md-3"><label class="form-label">Awal</label><div><div class="form-check form-check-inline"><input class="form-check-input" type="radio" name="details[${idx}][awal]" id="awal_baik_${idx}" value="baik"><label class="form-check-label" for="awal_baik_${idx}">baik</label></div><div class="form-check form-check-inline"><input class="form-check-input" type="radio" name="details[${idx}][awal]" id="awal_tidak-baik_${idx}" value="tidak-baik"><label class="form-check-label" for="awal_tidak-baik_${idx}">tidak-baik</label></div></div></div>
+                    <div class="col-md-3"><label class="form-label">Akhir</label><div><div class="form-check form-check-inline"><input class="form-check-input" type="radio" name="details[${idx}][akhir]" id="akhir_baik_${idx}" value="baik"><label class="form-check-label" for="akhir_baik_${idx}">baik</label></div><div class="form-check form-check-inline"><input class="form-check-input" type="radio" name="details[${idx}][akhir]" id="akhir_tidak-baik_${idx}" value="tidak-baik"><label class="form-check-label" for="akhir_tidak-baik_${idx}">tidak-baik</label></div></div></div>
                 </div>
                 <div class="row mb-3"><div class="col-md-6"><label class="form-label">Temuan Ketidaksesuaian</label><textarea class="form-control" name="details[${idx}][temuan_ketidaksesuaian]" rows="3"></textarea></div><div class="col-md-6"><label class="form-label">Tindakan Koreksi</label><textarea class="form-control" name="details[${idx}][tindakan_koreksi]" rows="3"></textarea></div></div>
             </div>

@@ -773,6 +773,10 @@
                     </table>
                 </div>
 
+                <div style="text-align: right; padding-right: 10px; font-style: italic; font-size: 9px; color: #666; margin-top: 5px;">
+                    QW 01/00
+                </div>
+
                 <!-- {{-- FOOTER (Setiap halaman) --}}
                 <div class="footer">
                     <p>PT. CHAROEN POKPHAND INDONESIA</p>

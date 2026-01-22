@@ -7,8 +7,10 @@ use App\Models\PemeriksaanKebersihanAreaDetail;
 use App\Models\InputMasterForm;
 use App\Models\InputArea;
 use App\Models\Shift;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Barryvdh\DomPDF\Facade\Pdf as PDF;
 
 class PemeriksaanKebersihanAreaController extends Controller
 {
@@ -73,10 +75,13 @@ class PemeriksaanKebersihanAreaController extends Controller
             'id_area' => 'required|exists:input_areas,id',
             'id_shift' => 'required|exists:shifts,id',
             'tanggal' => 'required|date',
-            'jam_sebelum_proses' => 'nullable|date_format:H:i',
-            'jam_saat_proses' => 'nullable|date_format:H:i',
+            'jam_sebelum_proses' => ['nullable', 'regex:/^\d{2}:\d{2}(:\d{2})?$/'],
+            'jam_saat_proses' => ['nullable', 'regex:/^\d{2}:\d{2}(:\d{2})?$/'],
             'verifikasi_hasil' => 'nullable|boolean',
         ]);
+
+        $jamSebelum = $request->jam_sebelum_proses ? substr((string) $request->jam_sebelum_proses, 0, 5) : null;
+        $jamSaat = $request->jam_saat_proses ? substr((string) $request->jam_saat_proses, 0, 5) : null;
 
         // Create pemeriksaan
         $pemeriksaan = PemeriksaanKebersihanArea::create([
@@ -85,8 +90,8 @@ class PemeriksaanKebersihanAreaController extends Controller
             'id_area' => $request->id_area,
             'id_master_form' => $request->id_master_form,
             'tanggal' => $request->tanggal,
-            'jam_sebelum_proses' => $request->jam_sebelum_proses,
-            'jam_saat_proses' => $request->jam_saat_proses,
+            'jam_sebelum_proses' => $jamSebelum,
+            'jam_saat_proses' => $jamSaat,
             'verifikasi_hasil' => $request->has('verifikasi_hasil') ? (bool) $request->input('verifikasi_hasil') : null,
         ]);
 
@@ -155,15 +160,18 @@ class PemeriksaanKebersihanAreaController extends Controller
         
         $request->validate([
             'tanggal' => 'required|date',
-            'jam_sebelum_proses' => 'nullable|date_format:H:i',
-            'jam_saat_proses' => 'nullable|date_format:H:i',
+            'jam_sebelum_proses' => ['nullable', 'regex:/^\d{2}:\d{2}(:\d{2})?$/'],
+            'jam_saat_proses' => ['nullable', 'regex:/^\d{2}:\d{2}(:\d{2})?$/'],
         ]);
+
+        $jamSebelum = $request->jam_sebelum_proses ? substr((string) $request->jam_sebelum_proses, 0, 5) : null;
+        $jamSaat = $request->jam_saat_proses ? substr((string) $request->jam_saat_proses, 0, 5) : null;
 
         // Update pemeriksaan
         $pemeriksaanKebersihanArea->update([
             'tanggal' => $request->tanggal,
-            'jam_sebelum_proses' => $request->jam_sebelum_proses,
-            'jam_saat_proses' => $request->jam_saat_proses,
+            'jam_sebelum_proses' => $jamSebelum,
+            'jam_saat_proses' => $jamSaat,
         ]);
 
         // Update details
@@ -242,6 +250,7 @@ class PemeriksaanKebersihanAreaController extends Controller
         $pemeriksaanKebersihanArea->update([
             'status_verifikasi' => 'sent_to_produksi',
             'verified_by' => $user->id,
+            'verified_by_qc' => $user->id,
             'verified_at' => now(),
         ]);
         
@@ -264,6 +273,7 @@ class PemeriksaanKebersihanAreaController extends Controller
         $pemeriksaanKebersihanArea->update([
             'status_verifikasi' => 'approved_produksi',
             'verified_by' => $user->id,
+            'verified_by_produksi' => $user->id,
             'verified_at' => now(),
             'verification_notes' => $request->input('notes'),
         ]);
@@ -291,6 +301,7 @@ class PemeriksaanKebersihanAreaController extends Controller
         $pemeriksaanKebersihanArea->update([
             'status_verifikasi' => 'rejected_produksi',
             'verified_by' => $user->id,
+            'verified_by_produksi' => $user->id,
             'verified_at' => now(),
             'verification_notes' => $request->input('notes'),
         ]);
@@ -314,6 +325,7 @@ class PemeriksaanKebersihanAreaController extends Controller
         $pemeriksaanKebersihanArea->update([
             'status_verifikasi' => 'approved_spv',
             'verified_by' => $user->id,
+            'verified_by_spv' => $user->id,
             'verified_at' => now(),
             'verification_notes' => $request->input('notes'),
         ]);
@@ -341,10 +353,124 @@ class PemeriksaanKebersihanAreaController extends Controller
         $pemeriksaanKebersihanArea->update([
             'status_verifikasi' => 'rejected_spv',
             'verified_by' => $user->id,
+            'verified_by_spv' => $user->id,
             'verified_at' => now(),
             'verification_notes' => $request->input('notes'),
         ]);
-        
+
         return redirect()->back()->with('error', 'Pemeriksaan ditolak oleh SPV QC. Silakan perbaiki dan kirim ulang.');
+    }
+
+    /**
+     * Export data to PDF based on filters
+     */
+    public function exportPDF(Request $request)
+    {
+        $user = Auth::user();
+
+        $id_shift = $request->input('id_shift');
+        $tanggalDari = $request->input('tanggal_dari');
+        $tanggalSampai = $request->input('tanggal_sampai');
+        $tanggal = $request->input('tanggal');
+
+        $query = PemeriksaanKebersihanArea::with([
+            'user.role',
+            'user.plant',
+            'shift',
+            'area.locations',
+            'masterForm',
+            'details.field',
+        ])->with([
+            'qcVerifier' => function ($q) {
+                $q->select('id', 'name');
+            },
+            'produksiVerifier' => function ($q) {
+                $q->select('id', 'name');
+            },
+            'spvVerifier' => function ($q) {
+                $q->select('id', 'name');
+            },
+        ]);
+
+        if ($user->role && strtolower($user->role->role) !== 'superadmin') {
+            $query->whereHas('user', function ($q) use ($user) {
+                $q->where('id_plant', $user->id_plant);
+            });
+        }
+
+        if ($id_shift) {
+            $query->where('id_shift', $id_shift);
+        }
+
+        if ($id_shift) {
+            $shift = Shift::find($id_shift);
+            $shiftName = $shift ? trim(strtolower((string) $shift->shift)) : null;
+
+            if ($shiftName === '1' || $shiftName === 'shift 1') {
+                if ($tanggalDari && $tanggalSampai) {
+                    $query->whereBetween('tanggal', [$tanggalDari, $tanggalSampai]);
+                } elseif ($tanggalDari) {
+                    $query->whereDate('tanggal', '>=', $tanggalDari);
+                } elseif ($tanggalSampai) {
+                    $query->whereDate('tanggal', '<=', $tanggalSampai);
+                }
+            } else {
+                if ($tanggal) {
+                    $query->whereDate('tanggal', $tanggal);
+                }
+            }
+        } else {
+            if ($tanggal) {
+                $query->whereDate('tanggal', $tanggal);
+            }
+        }
+
+        $pemeriksaans = $query->latest()->get();
+
+        $shift = $id_shift ? Shift::find($id_shift) : null;
+
+        $qcUser = null;
+        $produksiUser = null;
+        $spvQcUser = null;
+
+        $allQcIds = $pemeriksaans->pluck('verified_by_qc')->filter()->unique();
+        $allProduksiIds = $pemeriksaans->pluck('verified_by_produksi')->filter()->unique();
+        $allSpvIds = $pemeriksaans->pluck('verified_by_spv')->filter()->unique();
+
+        if ($allQcIds->count() > 0) {
+            $qcUserData = User::with('role')->whereIn('id', $allQcIds->toArray())->first();
+            if ($qcUserData) {
+                $qcUser = $qcUserData->name;
+            }
+        }
+
+        if ($allProduksiIds->count() > 0) {
+            $produksiUserData = User::with('role')->whereIn('id', $allProduksiIds->toArray())->first();
+            if ($produksiUserData) {
+                $produksiUser = $produksiUserData->name;
+            }
+        }
+
+        if ($allSpvIds->count() > 0) {
+            $spvUserData = User::with('role')->whereIn('id', $allSpvIds->toArray())->first();
+            if ($spvUserData) {
+                $spvQcUser = $spvUserData->name;
+            }
+        }
+
+        $pdf = PDF::loadView('qc-sistem.pemeriksaan-kebersihan-area.pdf-report', [
+            'pemeriksaans' => $pemeriksaans,
+            'tanggal' => $tanggal,
+            'tanggal_dari' => $tanggalDari,
+            'tanggal_sampai' => $tanggalSampai,
+            'shift' => $shift,
+            'qcUser' => $qcUser,
+            'produksiUser' => $produksiUser,
+            'spvQcUser' => $spvQcUser,
+        ]);
+
+        $filenameDate = $tanggal ?? $tanggalDari ?? date('Y-m-d');
+        $filename = 'laporan-pemeriksaan-kebersihan-area-' . $filenameDate . '.pdf';
+        return $pdf->download($filename);
     }
 }

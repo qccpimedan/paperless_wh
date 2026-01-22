@@ -50,6 +50,13 @@ class PemeriksaanProdukFinishGood extends Model
         'coa_array',
         'status_array',
         'keterangan_array',
+        'status_verifikasi',
+        'verified_by',
+        'verified_at',
+        'verification_notes',
+        'verified_by_qc',
+        'verified_by_produksi',
+        'verified_by_spv',
     ];
 
     protected $casts = [
@@ -104,6 +111,26 @@ class PemeriksaanProdukFinishGood extends Model
     public function shift()
     {
         return $this->belongsTo(Shift::class, 'id_shift');
+    }
+
+    public function verifiedBy()
+    {
+        return $this->belongsTo(User::class, 'verified_by');
+    }
+
+    public function qcVerifier()
+    {
+        return $this->belongsTo(User::class, 'verified_by_qc');
+    }
+
+    public function produksiVerifier()
+    {
+        return $this->belongsTo(User::class, 'verified_by_produksi');
+    }
+
+    public function spvVerifier()
+    {
+        return $this->belongsTo(User::class, 'verified_by_spv');
     }
 
     protected function serializeDate($date)

@@ -66,11 +66,11 @@
                                             </div>
 
                                             <div class="col-md-12 mt-4">
-                                                <label for="lokasi_area">Lokasi Area <span class="text-muted">(Opsional)</span></label>
+                                                <label for="lokasi_area">Sub Area <span class="text-muted">(Opsional)</span></label>
                                                 <div id="dynamic-lokasi-fields">
                                                     <div class="input-group mb-2">
                                                         <input type="text" class="form-control @error('lokasi_area.0') is-invalid @enderror"
-                                                            name="lokasi_area[]" placeholder="Lokasi Area" value="{{ old('lokasi_area.0') }}">
+                                                            name="lokasi_area[]" placeholder="Sub Area" value="{{ old('lokasi_area.0') }}">
                                                         <button type="button" class="btn btn-success" id="add-lokasi-field">
                                                             <i class="bi bi-plus"></i>
                                                         </button>
@@ -135,7 +135,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const newField = document.createElement('div');
         newField.className = 'input-group mb-2';
         newField.innerHTML = `
-            <input type="text" class="form-control" name="lokasi_area[]" placeholder="Lokasi Area">
+            <input type="text" class="form-control" name="lokasi_area[]" placeholder="Sub Area">
             <button type="button" class="btn btn-danger remove-lokasi-field">
                 <i class="bi bi-trash"></i>
             </button>

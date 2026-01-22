@@ -45,7 +45,7 @@
                                     </div>
                                 @endif
 
-                                <form class="form form-horizontal" action="{{ route('return-barang.store') }}" method="POST">
+                                <form id="return-barang-form" class="form form-horizontal" action="{{ route('return-barang.store') }}" method="POST" novalidate>
                                     @csrf
                                     <div class="form-body">
                                         <div class="row">
@@ -103,7 +103,7 @@
                                                 <div id="manual_ekspedisi_input" class="mt-2" style="display: none;">
                                                     <label for="nama_ekspedisi_manual">Nama Ekspedisi <span class="text-danger">*</span></label>
                                                     <input type="text" id="nama_ekspedisi_manual" class="form-control @error('nama_ekspedisi_manual') is-invalid @enderror" 
-                                                        name="nama_ekspedisi_manual" value="{{ old('nama_ekspedisi_manual') }}" placeholder="Masukkan nama ekspedisi" required>
+                                                        name="nama_ekspedisi_manual" value="{{ old('nama_ekspedisi_manual') }}" placeholder="Masukkan nama ekspedisi">
                                                     @error('nama_ekspedisi_manual')
                                                         <div class="invalid-feedback">{{ $message }}</div>
                                                     @enderror
@@ -150,45 +150,35 @@
                                                 @enderror
                                             </div>
 
-                                            <!-- SECTION: DATA CUSTOMER & ALASAN -->
-                                            <div class="col-md-12 mb-3 mt-3">
-                                                <h5 class="text-primary"><strong>Data Customer & Alasan Return</strong></h5>
-                                                <hr>
-                                            </div>
-
-                                            <!-- Customer -->
-                                            <div class="col-md-6">
-                                                <label for="id_customer">Customer <span class="text-danger">*</span></label>
-                                                <select id="id_customer" class="choices form-select @error('id_customer') is-invalid @enderror"
-                                                    name="id_customer" required>
-                                                    <option value="">-- Pilih Customer --</option>
-                                                    @foreach($customers as $customer)
-                                                        <option value="{{ $customer->id }}" {{ old('id_customer') == $customer->id ? 'selected' : '' }}>
-                                                            {{ $customer->nama_cust }}
-                                                        </option>
-                                                    @endforeach
-                                                </select>
-                                                @error('id_customer')
-                                                    <div class="invalid-feedback">{{ $message }}</div>
-                                                @enderror
-                                            </div>
-
-                                            <!-- Alasan Return -->
-                                            <div class="col-md-6">
-                                                <label for="alasan_return">Alasan Return <span class="text-danger">*</span></label>
-                                                <input type="text" id="alasan_return" class="form-control @error('alasan_return') is-invalid @enderror"
-                                                    name="alasan_return" value="{{ old('alasan_return') }}" required>
-                                                @error('alasan_return')
-                                                    <div class="invalid-feedback">{{ $message }}</div>
-                                                @enderror
-                                            </div>
-
                                             <!-- DATA PRODUK MULTIPLE -->
                                             <h5 class="text-primary mb-3 mt-4">Data Produk <span class="text-danger">*</span></h5>
                                             <div id="produk-container">
-                                                <div class="produk-row mb-4 p-3 border rounded" style="background-color: #f8f9fa;">
+                                                <div class="produk-row mb-4 p-3 border rounded" style="background-color: #f8f9fa;" data-row-index="0" data-old-produk-id="{{ old('produk_data.0.id_produk') }}">
                                                     <h6 class="text-secondary mb-3">Produk #1</h6>
                                                     <div class="row">
+                                                        <div class="col-md-6">
+                                                            <label>Customer <span class="text-danger">*</span></label>
+                                                            <select class="choices form-select @error('produk_data.0.id_customer') is-invalid @enderror" name="produk_data[0][id_customer]" required>
+                                                                <option value="">-- Pilih Customer --</option>
+                                                                @foreach($customers as $customer)
+                                                                    <option value="{{ $customer->id }}" {{ old('produk_data.0.id_customer') == $customer->id ? 'selected' : '' }}>
+                                                                        {{ $customer->nama_cust }}
+                                                                    </option>
+                                                                @endforeach
+                                                            </select>
+                                                            @error('produk_data.0.id_customer')
+                                                                <div class="invalid-feedback">{{ $message }}</div>
+                                                            @enderror
+                                                        </div>
+
+                                                        <div class="col-md-6">
+                                                            <label>Alasan Return <span class="text-danger">*</span></label>
+                                                            <input type="text" class="form-control @error('produk_data.0.alasan_return') is-invalid @enderror" name="produk_data[0][alasan_return]" value="{{ old('produk_data.0.alasan_return') }}" required>
+                                                            @error('produk_data.0.alasan_return')
+                                                                <div class="invalid-feedback">{{ $message }}</div>
+                                                            @enderror
+                                                        </div>
+
                                                         <!-- Kondisi Produk -->
                                                         <div class="col-md-6">
                                                             <label>Kondisi Produk <span class="text-danger">*</span></label>
@@ -204,17 +194,29 @@
                                                             @enderror
                                                         </div>
 
+                                                        <!-- Kategori -->
+                                                        <div class="col-md-6">
+                                                            <label>Kategori <span class="text-danger">*</span></label>
+                                                            <select class="choices form-select kategori-produk-select @error('produk_data.0.kategori_code') is-invalid @enderror"
+                                                                name="produk_data[0][kategori_code]" required>
+                                                                <option value="">Pilih Kategori</option>
+                                                                @foreach(($produkKategoriOptions ?? []) as $kategori)
+                                                                    <option value="{{ $kategori }}" {{ old('produk_data.0.kategori_code') == $kategori ? 'selected' : '' }}>
+                                                                        {{ $kategori }}
+                                                                    </option>
+                                                                @endforeach
+                                                            </select>
+                                                            @error('produk_data.0.kategori_code')
+                                                                <div class="invalid-feedback">{{ $message }}</div>
+                                                            @enderror
+                                                        </div>
+
                                                         <!-- Nama Produk -->
                                                         <div class="col-md-6">
                                                             <label>Nama Produk <span class="text-danger">*</span></label>
-                                                            <select class="choices form-select produk-select @error('produk_data.0.id_produk') is-invalid @enderror"
+                                                            <select class="form-select produk-select @error('produk_data.0.id_produk') is-invalid @enderror"
                                                                 name="produk_data[0][id_produk]" required>
-                                                                <option value="">-- Pilih Produk --</option>
-                                                                @foreach($produks as $produk)
-                                                                    <option value="{{ $produk->id }}" {{ old('produk_data.0.id_produk') == $produk->id ? 'selected' : '' }}>
-                                                                        {{ $produk->nama_produk }}
-                                                                    </option>
-                                                                @endforeach
+                                                                <option value="">Pilih Produk</option>
                                                             </select>
                                                             @error('produk_data.0.id_produk')
                                                                 <div class="invalid-feedback">{{ $message }}</div>
@@ -318,7 +320,7 @@
                                                                 <div class="invalid-feedback">{{ $message }}</div>
                                                             @enderror
                                                         </div>
-                                                        <button type="button" class="btn btn-sm btn-primary mt-2" id="add-produk">+ Tambah Produk</button>
+                                                        
                                                         <!-- Remove Button -->
                                                         <div class="col-md-12 mt-3">
                                                             <button type="button" class="btn btn-sm btn-danger remove-produk" style="display: none;">Hapus Produk</button>
@@ -327,11 +329,12 @@
                                                 </div>
                                             </div>
                                         </div>
+                                        <button type="button" class="btn btn-sm btn-primary" id="add-produk">+ Tambah Produk</button>
                                     </div>
-                                    <div class="col-md-12 d-flex justify-content-end align-items-center mt-3">
+                                    <div class="col-md-12 d-flex justify-content-end align-items-center mt-3" style="position: relative; z-index: 9999;">
                                         <div>
-                                            <button type="submit" class="btn btn-primary me-1 mb-1">Simpan Return Barang</button>
-                                            <a href="{{ route('return-barang.index') }}" class="btn btn-secondary mb-1 btn-kembali-confirm">Kembali</a>
+                                            <button id="btn-submit-return" type="submit" class="btn btn-primary me-1 mb-1" style="position: relative; z-index: 10000;">Simpan Return Barang</button>
+                                            <a href="{{ route('return-barang.index') }}" class="btn btn-light-secondary me-1 mb-1 btn-kembali-confirm">Kembali</a>
                                         </div>
                                     </div>
                                 </form>
@@ -344,8 +347,78 @@
     </div>
 </div>
 
+<style>
+    .choices,
+    .choices__inner,
+    .choices__list,
+    .choices__list--single {
+        z-index: 1;
+    }
+
+    .choices__list--dropdown {
+        z-index: 100;
+        pointer-events: none;
+    }
+
+    .choices.is-open .choices__list--dropdown {
+        pointer-events: auto;
+    }
+</style>
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('return-barang-form');
+    const submitBtn = document.getElementById('btn-submit-return');
+
+    function initChoicesOnce(selectEl) {
+        if (!selectEl) return null;
+        if (selectEl.dataset && selectEl.dataset.choicesInitialized) return null;
+        const instance = new Choices(selectEl, {
+            searchEnabled: true,
+            searchPlaceholderValue: 'Cari...',
+            itemSelectText: 'Tekan untuk memilih',
+            noResultsText: 'Tidak ada hasil ditemukan',
+            noChoicesText: 'Tidak ada pilihan tersedia',
+        });
+        if (selectEl.dataset) {
+            selectEl.dataset.choicesInitialized = 'true';
+        }
+        return instance;
+    }
+
+    document.querySelectorAll('select.choices').forEach((selectEl) => {
+        if (selectEl.classList && selectEl.classList.contains('produk-select')) {
+            return;
+        }
+        initChoicesOnce(selectEl);
+    });
+
+    if (submitBtn && form) {
+        submitBtn.addEventListener('click', function(e) {
+            if (typeof form.requestSubmit === 'function') {
+                e.preventDefault();
+                form.requestSubmit();
+            }
+        });
+    }
+
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            if (!form.checkValidity()) {
+                e.preventDefault();
+                e.stopPropagation();
+                form.classList.add('was-validated');
+                const firstInvalid = form.querySelector(':invalid');
+                if (firstInvalid && typeof firstInvalid.scrollIntoView === 'function') {
+                    firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    if (typeof firstInvalid.focus === 'function') {
+                        firstInvalid.focus();
+                    }
+                }
+            }
+        });
+    }
+
     document.querySelectorAll('.btn-kembali-confirm').forEach((el) => {
         el.addEventListener('click', function(e) {
             const ok = confirm('Data belum disimpan. Yakin ingin kembali ke halaman index?');
@@ -355,20 +428,40 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const ekspedisiSelect = document.getElementById('id_ekspedisi');
     const manualInput = document.getElementById('manual_ekspedisi_input');
+    const manualEkspedisiField = document.getElementById('nama_ekspedisi_manual');
 
     // Tampilkan/sembunyikan input manual saat halaman dimuat
     if (ekspedisiSelect.value === 'other') {
         manualInput.style.display = 'block';
+        if (manualEkspedisiField) manualEkspedisiField.required = true;
+    } else {
+        if (manualEkspedisiField) manualEkspedisiField.required = false;
     }
 
     // Tampilkan/sembunyikan input manual saat dropdown berubah
     ekspedisiSelect.addEventListener('change', function() {
         if (this.value === 'other') {
             manualInput.style.display = 'block';
+            if (manualEkspedisiField) manualEkspedisiField.required = true;
         } else {
             manualInput.style.display = 'none';
+            if (manualEkspedisiField) {
+                manualEkspedisiField.required = false;
+                manualEkspedisiField.value = '';
+            }
         }
     });
+
+    // Update remove button visibility
+    function updateRemoveButtons() {
+        const rows = document.querySelectorAll('#produk-container .produk-row');
+        rows.forEach((row, index) => {
+            const removeBtn = row.querySelector('.remove-produk');
+            if (removeBtn) {
+                removeBtn.style.display = rows.length > 1 ? 'inline-block' : 'none';
+            }
+        });
+    }
 
     // Add produk field
     let produkIndex = 1;
@@ -377,9 +470,25 @@ document.addEventListener('DOMContentLoaded', function() {
         const newRow = document.createElement('div');
         newRow.className = 'produk-row mb-4 p-3 border rounded';
         newRow.style.backgroundColor = '#f8f9fa';
+        newRow.dataset.rowIndex = String(produkIndex);
         newRow.innerHTML = `
             <h6 class="text-secondary mb-3">Produk #${produkIndex + 1}</h6>
             <div class="row">
+                <div class="col-md-6">
+                    <label>Customer <span class="text-danger">*</span></label>
+                    <select class="choices form-select" name="produk_data[${produkIndex}][id_customer]" required>
+                        <option value="">-- Pilih Customer --</option>
+                        @foreach($customers as $customer)
+                            <option value="{{ $customer->id }}">{{ $customer->nama_cust }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div class="col-md-6">
+                    <label>Alasan Return <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" name="produk_data[${produkIndex}][alasan_return]" required>
+                </div>
+
                 <!-- Kondisi Produk -->
                 <div class="col-md-6">
                     <label>Kondisi Produk <span class="text-danger">*</span></label>
@@ -390,15 +499,22 @@ document.addEventListener('DOMContentLoaded', function() {
                         <option value="Dry">Dry</option>
                     </select>
                 </div>
+                <!-- Kategori -->
+                <div class="col-md-6">
+                    <label>Kategori <span class="text-danger">*</span></label>
+                    <select class="choices form-select kategori-produk-select" name="produk_data[${produkIndex}][kategori_code]" required>
+                        <option value="">Pilih Kategori</option>
+                        @foreach(($produkKategoriOptions ?? []) as $kategori)
+                            <option value="{{ $kategori }}">{{ $kategori }}</option>
+                        @endforeach
+                    </select>
+                </div>
 
                 <!-- Nama Produk -->
                 <div class="col-md-6">
                     <label>Nama Produk <span class="text-danger">*</span></label>
-                    <select class="choices form-select produk-select" name="produk_data[${produkIndex}][id_produk]" required>
-                        <option value="">-- Pilih Produk --</option>
-                        @foreach($produks as $produk)
-                            <option value="{{ $produk->id }}">{{ $produk->nama_produk }}</option>
-                        @endforeach
+                    <select class="form-select produk-select" name="produk_data[${produkIndex}][id_produk]" required>
+                        <option value="">Pilih Produk</option>
                     </select>
                 </div>
 
@@ -478,29 +594,169 @@ document.addEventListener('DOMContentLoaded', function() {
         `;
         container.appendChild(newRow);
         produkIndex++;
+
+        const newCustomerSelect = newRow.querySelector('select[name="produk_data[' + String(produkIndex - 1) + '][id_customer]"]');
+        if (newCustomerSelect) {
+            initChoicesOnce(newCustomerSelect);
+        }
+
+        // Re-initialize Choices.js for new kategori select only
+        const newKategoriSelect = newRow.querySelector('select.kategori-produk-select');
+        if (newKategoriSelect) {
+            initChoicesOnce(newKategoriSelect);
+        }
+
+        populateProdukOptionsForRow(newRow);
         
-        // Re-initialize Choices.js for new select
-        const newSelect = newRow.querySelector('.produk-select');
-        new Choices(newSelect, {
-            searchEnabled: true,
-            searchPlaceholderValue: 'Cari...',
-            itemSelectText: 'Tekan untuk memilih',
-            noResultsText: 'Tidak ada hasil ditemukan',
-            noChoicesText: 'Tidak ada pilihan tersedia',
-        });
+        updateRemoveButtons();
     });
     
     // Remove produk field
     document.getElementById('produk-container').addEventListener('click', function(e) {
         if (e.target.closest('.remove-produk')) {
-            const rows = document.querySelectorAll('.produk-row');
+            const ok = confirm('Yakin ingin menghapus produk ini?');
+            if (!ok) return;
+
+            const rows = document.querySelectorAll('#produk-container .produk-row');
             if (rows.length > 1) {
                 e.target.closest('.produk-row').remove();
+
+                const remainingRows = document.querySelectorAll('#produk-container .produk-row');
+                remainingRows.forEach((row, idx) => {
+                    row.dataset.rowIndex = String(idx);
+
+                    const title = row.querySelector('h6.text-secondary');
+                    if (title) {
+                        title.textContent = `Produk #${idx + 1}`;
+                    }
+
+                    row.querySelectorAll('input[name], select[name], textarea[name]').forEach((el) => {
+                        const name = el.getAttribute('name');
+                        if (!name) return;
+                        const nextName = name.replace(/produk_data\[\d+\]\[/g, `produk_data[${idx}][`);
+                        if (nextName !== name) el.setAttribute('name', nextName);
+                    });
+                });
+
+                updateRemoveButtons();
             } else {
                 alert('Minimal harus ada 1 produk!');
             }
         }
     });
+
+    const produkByKategori = @json($produkByKategori ?? []);
+    const produkKategoriById = @json($produkKategoriById ?? []);
+
+    function populateProdukOptionsForRow(rowEl) {
+        const kategoriSelect = rowEl.querySelector('select.kategori-produk-select');
+        const produkSelect = rowEl.querySelector('select.produk-select');
+
+        if (!kategoriSelect || !produkSelect) return;
+
+        const kategori = kategoriSelect.value;
+        const rawOptions = (produkByKategori && produkByKategori[kategori]) ? produkByKategori[kategori] : [];
+        const options = Array.isArray(rawOptions) ? rawOptions : Object.values(rawOptions || {});
+
+        const choiceItems = [{ value: '', label: 'Pilih Produk', selected: true }].concat(
+            options.map((opt) => ({
+                value: String(opt.id),
+                label: opt.nama,
+            }))
+        );
+
+        const desiredProdukId = rowEl.dataset.oldProdukId ? String(rowEl.dataset.oldProdukId) : '';
+
+        if (rowEl._populateProdukTimer) {
+            clearTimeout(rowEl._populateProdukTimer);
+        }
+
+        rowEl._populateProdukTimer = setTimeout(() => {
+            // Always resolve current select from DOM to avoid stale references
+            const currentProdukSelect = rowEl.querySelector('select.produk-select');
+            if (!currentProdukSelect) return;
+
+            // Destroy previous Choices instance (if any) to prevent DOM corruption
+            if (rowEl._produkChoicesInstance) {
+                try {
+                    rowEl._produkChoicesInstance.destroy();
+                } catch (e) {
+                    // ignore
+                }
+                rowEl._produkChoicesInstance = null;
+            }
+
+            const freshProdukSelect = currentProdukSelect.cloneNode(false);
+            freshProdukSelect.innerHTML = '';
+
+            choiceItems.forEach((it) => {
+                const o = document.createElement('option');
+                o.value = String(it.value);
+                o.textContent = it.label;
+                if (it.selected) o.selected = true;
+                freshProdukSelect.appendChild(o);
+            });
+
+            const wrapper = currentProdukSelect.closest('.choices');
+            if (wrapper && wrapper.parentNode) {
+                wrapper.parentNode.replaceChild(freshProdukSelect, wrapper);
+            } else if (currentProdukSelect.parentNode) {
+                currentProdukSelect.parentNode.replaceChild(freshProdukSelect, currentProdukSelect);
+            }
+
+            const instance = new Choices(freshProdukSelect, {
+                searchEnabled: true,
+                searchPlaceholderValue: 'Cari...',
+                itemSelectText: 'Tekan untuk memilih',
+                noResultsText: 'Tidak ada hasil ditemukan',
+                noChoicesText: 'Tidak ada pilihan tersedia',
+                placeholder: true,
+                placeholderValue: 'Pilih...'
+            });
+
+            if (desiredProdukId) {
+                instance.setChoiceByValue(desiredProdukId);
+            }
+
+            rowEl._produkChoicesInstance = instance;
+        }, 50);
+    }
+
+    document.addEventListener('change', function(e) {
+        const target = e.target;
+        if (target && target.matches('select.kategori-produk-select')) {
+            const row = target.closest('.produk-row');
+            if (row) {
+                populateProdukOptionsForRow(row);
+            }
+        }
+    });
+
+    document.querySelectorAll('#produk-container .produk-row').forEach((row, idx) => {
+        row.dataset.rowIndex = String(idx);
+
+        const produkSelect = row.querySelector('select.produk-select');
+        if (produkSelect) {
+            if (!row.dataset.oldProdukId) {
+                const oldVal = produkSelect.value;
+                row.dataset.oldProdukId = oldVal || '';
+            }
+        }
+
+        const kategoriSelect = row.querySelector('select.kategori-produk-select');
+        if (kategoriSelect) {
+            if (!kategoriSelect.value) {
+                const desiredProdukId = row.dataset.oldProdukId;
+                if (desiredProdukId && produkKategoriById && produkKategoriById[desiredProdukId]) {
+                    kategoriSelect.value = String(produkKategoriById[desiredProdukId]);
+                }
+            }
+        }
+
+        populateProdukOptionsForRow(row);
+    });
+
+    // no-op: customer & alasan sekarang per-produk (produk_data[index][...])
 });
 </script>
 @endsection
