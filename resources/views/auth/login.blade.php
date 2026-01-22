@@ -305,7 +305,7 @@
             
             <!-- Title dengan gradient -->
             <h1 class="main-title fs-2 text-center">Paperless</h1>
-            <h4 class="sub-title fs-4 text-center">QC Warehouse</h4>
+            <h4 class="sub-title fs-4 text-center"><b>SmartWH</b></h4>
 
             <!-- Alert Messages -->
             @if(session('success'))
