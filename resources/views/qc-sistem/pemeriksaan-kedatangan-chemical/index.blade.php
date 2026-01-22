@@ -80,7 +80,7 @@
                                     <label class="form-label">Tanggal</label>
                                     <input type="date" name="tanggal" class="form-control" id="tanggalSingle" value="{{ request('tanggal') }}">
                                 </div>
-                                <div class="col-md-2 d-flex align-items-end">
+                                <div class="col-md-3 d-flex align-items-end">
                                     <button type="submit" class="btn btn-success w-100">
                                         <i class="bi bi-file-pdf"></i> Cetak PDF
                                     </button>
@@ -259,13 +259,13 @@
                                                         <span class="badge bg-secondary">Pending</span>
                                                     @endif
                                                 @elseif($status === 'sent_to_produksi')
-                                                    <span class="badge bg-warning">Menunggu Produksi</span>
+                                                    <span class="badge bg-warning">Menunggu Tim Warehouse</span>
                                                     @if($userRole === 'produksi')
                                                         <button class="btn btn-sm btn-success mt-1" data-bs-toggle="modal" data-bs-target="#approveProduksiModal{{ $pemeriksaan->id }}"><i class="bi bi-check-circle"></i> Approve</button>
                                                         <button class="btn btn-sm btn-danger mt-1" data-bs-toggle="modal" data-bs-target="#rejectProduksiModal{{ $pemeriksaan->id }}"><i class="bi bi-x-circle"></i> Reject</button>
                                                     @endif
                                                 @elseif($status === 'approved_produksi')
-                                                    <span class="badge bg-info">Disetujui Produksi</span>
+                                                    <span class="badge bg-info">Disetujui Tim Warehouse</span>
                                                     @if($userRole === 'spv qc')
                                                         <button class="btn btn-sm btn-success mt-1" data-bs-toggle="modal" data-bs-target="#approveSPVModal{{ $pemeriksaan->id }}"><i class="bi bi-check-circle"></i> Verifikasi</button>
                                                         <button class="btn btn-sm btn-danger mt-1" data-bs-toggle="modal" data-bs-target="#rejectSPVModal{{ $pemeriksaan->id }}"><i class="bi bi-x-circle"></i> Reject</button>
@@ -273,7 +273,7 @@
                                                 @elseif($status === 'approved_spv')
                                                     <span class="badge bg-success">Disetujui SPV QC</span>
                                                 @elseif($status === 'rejected_produksi')
-                                                    <span class="badge bg-danger">Ditolak Produksi</span>
+                                                    <span class="badge bg-danger">Ditolak Tim Warehouse</span>
                                                 @elseif($status === 'rejected_spv')
                                                     <span class="badge bg-danger">Ditolak SPV QC</span>
                                                 @endif

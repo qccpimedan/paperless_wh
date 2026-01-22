@@ -7,8 +7,10 @@ use App\Models\Shift;
 use App\Models\Ekspedisi;
 use App\Models\Customer;
 use App\Models\Produk;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Barryvdh\DomPDF\Facade\Pdf as PDF;
 
 class PemeriksaanReturnBarangCustomerController extends Controller
 {
@@ -50,8 +52,10 @@ class PemeriksaanReturnBarangCustomerController extends Controller
     {
         $user = Auth::user();
 
+        $isSuperAdmin = $user->role && strtolower($user->role->role) === 'superadmin';
+
         // SuperAdmin dapat melihat semua data
-        if ($user->role && strtolower($user->role->role) === 'superadmin') {
+        if ($isSuperAdmin) {
             $shifts = Shift::with(['user.plant'])->get();
             $ekspedisis = Ekspedisi::with(['user.plant'])->get();
             $customers = Customer::with(['user.plant'])->get();
@@ -75,35 +79,88 @@ class PemeriksaanReturnBarangCustomerController extends Controller
             })->with(['user.plant'])->get();
         }
 
+        $produkKategoriOptions = Produk::query()
+            ->whereNotNull('kategori_code')
+            ->select('kategori_code')
+            ->distinct()
+            ->orderBy('kategori_code')
+            ->pluck('kategori_code')
+            ->values();
+
+        if (!$isSuperAdmin) {
+            $produkKategoriOptions = Produk::query()
+                ->whereNotNull('kategori_code')
+                ->whereHas('user', function ($q) use ($user) {
+                    $q->where('id_plant', $user->id_plant);
+                })
+                ->select('kategori_code')
+                ->distinct()
+                ->orderBy('kategori_code')
+                ->pluck('kategori_code')
+                ->values();
+        }
+
+        $produkList = Produk::query()
+            ->select(['id', 'nama_produk', 'kategori_code'])
+            ->orderBy('nama_produk');
+
+        if (!$isSuperAdmin) {
+            $produkList->whereHas('user', function ($q) use ($user) {
+                $q->where('id_plant', $user->id_plant);
+            });
+        }
+
+        $produkList = $produkList->get();
+
+        $produkByKategori = $produkList
+            ->groupBy('kategori_code')
+            ->map(function ($items) {
+                return $items->map(function ($p) {
+                    return [
+                        'id' => $p->id,
+                        'nama' => $p->nama_produk,
+                    ];
+                })->values();
+            });
+
+        $produkKategoriById = $produkList->pluck('kategori_code', 'id');
+
         return view('qc-sistem.pemeriksaan-return-barang-customer.create', compact(
             'shifts',
             'ekspedisis',
             'customers',
-            'produks'
+            'produks',
+            'produkKategoriOptions',
+            'produkByKategori',
+            'produkKategoriById'
         ));
     }
 
     public function store(Request $request)
     {
+        // Debug: Uncomment untuk melihat data yang dikirim
+        // dd($request->all());
+        
         // Validasi dinamis berdasarkan pilihan ekspedisi
         $rules = [
             'tanggal' => 'required|date',
             'id_shift' => 'nullable|exists:shifts,id',
             'no_polisi' => 'required|string|max:20',
             'nama_supir' => 'required|string|max:100',
-            'waktu_kedatangan' => 'nullable|date_format:H:i',
+            'waktu_kedatangan' => 'nullable|date_format:H:i', // Diperbaiki: format yang lebih fleksibel
             'suhu_mobil' => 'required|string|max:50',
-            'id_customer' => 'required|exists:customers,id',
-            'alasan_return' => 'required|string|max:255',
             'produk_data' => 'required|array|min:1',
+            'produk_data.*.id_customer' => 'required|exists:customers,id',
+            'produk_data.*.alasan_return' => 'required|string|max:255',
             'produk_data.*.kondisi_produk' => 'required|in:Frozen,Fresh,Dry',
+            'produk_data.*.kategori_code' => 'required|string',
             'produk_data.*.id_produk' => 'required|exists:produks,id',
             'produk_data.*.suhu_produk' => 'nullable|string|max:50',
             'produk_data.*.kode_produksi' => 'required|string|max:100',
             'produk_data.*.expired_date' => 'required|date',
             'produk_data.*.jumlah_barang' => 'required|string|max:100',
-            'produk_data.*.kondisi_kemasan' => 'required|boolean',
-            'produk_data.*.kondisi_produk_check' => 'required|boolean',
+            'produk_data.*.kondisi_kemasan' => 'required|in:0,1', // Diperbaiki: validasi sebagai string
+            'produk_data.*.kondisi_produk_check' => 'required|in:0,1', // Diperbaiki: validasi sebagai string
             'produk_data.*.rekomendasi' => 'required|string|max:255',
             'produk_data.*.keterangan' => 'nullable|string|max:500',
         ];
@@ -111,6 +168,7 @@ class PemeriksaanReturnBarangCustomerController extends Controller
         // Jika pilih input manual ekspedisi, validasi nama_ekspedisi_manual
         if ($request->id_ekspedisi === 'other') {
             $rules['nama_ekspedisi_manual'] = 'required|string|max:100';
+            $rules['id_ekspedisi'] = 'nullable'; // Ubah menjadi nullable
         } else {
             $rules['id_ekspedisi'] = 'nullable|exists:ekspedisis,id';
         }
@@ -133,6 +191,9 @@ class PemeriksaanReturnBarangCustomerController extends Controller
                 // Jika input manual tidak diisi, set id_ekspedisi ke null
                 $validated['id_ekspedisi'] = null;
             }
+            
+            // PENTING: Hapus field manual dari validated data
+            unset($validated['nama_ekspedisi_manual']);
         }
 
         $validated['id_user'] = Auth::id();
@@ -143,30 +204,43 @@ class PemeriksaanReturnBarangCustomerController extends Controller
             foreach ($request->produk_data as $produk) {
                 if (!empty($produk['id_produk'])) {
                     $produkData[] = [
+                        'id_customer' => $produk['id_customer'] ?? null,
+                        'alasan_return' => $produk['alasan_return'] ?? null,
                         'kondisi_produk' => $produk['kondisi_produk'],
                         'id_produk' => $produk['id_produk'],
                         'suhu_produk' => $produk['suhu_produk'] ?? null,
                         'kode_produksi' => $produk['kode_produksi'],
                         'expired_date' => $produk['expired_date'],
                         'jumlah_barang' => $produk['jumlah_barang'],
-                        'kondisi_kemasan' => isset($produk['kondisi_kemasan']) ? (bool)$produk['kondisi_kemasan'] : false,
-                        'kondisi_produk_check' => isset($produk['kondisi_produk_check']) ? (bool)$produk['kondisi_produk_check'] : false,
+                        'kondisi_kemasan' => isset($produk['kondisi_kemasan']) ? (int)$produk['kondisi_kemasan'] : 0, // Cast ke integer
+                        'kondisi_produk_check' => isset($produk['kondisi_produk_check']) ? (int)$produk['kondisi_produk_check'] : 0, // Cast ke integer
                         'rekomendasi' => $produk['rekomendasi'],
                         'keterangan' => $produk['keterangan'] ?? null,
+                        'kategori_code' => $produk['kategori_code'],
                     ];
                 }
             }
         }
         
         $validated['produk_data'] = !empty($produkData) ? $produkData : null;
-        // Remove old fields if they exist
-        unset($validated['kondisi_produk'], $validated['id_produk'], $validated['suhu_produk'], 
-              $validated['kode_produksi'], $validated['expired_date'], $validated['jumlah_barang'],
-              $validated['kondisi_kemasan'], $validated['kondisi_produk_check'], $validated['rekomendasi'], $validated['keterangan']);
 
-        PemeriksaanReturnBarangCustomer::create($validated);
+        $firstProduk = !empty($produkData) ? $produkData[0] : null;
+        $validated['id_customer'] = $firstProduk['id_customer'] ?? null;
+        $validated['alasan_return'] = $firstProduk['alasan_return'] ?? null;
 
-        return redirect()->route('return-barang.index')->with('success', 'Pemeriksaan return barang berhasil ditambahkan!');
+        // Debug sebelum create (uncomment jika perlu)
+        // dd($validated);
+        
+        try {
+            PemeriksaanReturnBarangCustomer::create($validated);
+            return redirect()->route('return-barang.index')->with('success', 'Pemeriksaan return barang berhasil ditambahkan!');
+        } catch (\Exception $e) {
+            // Log error untuk debugging
+            \Log::error('Error saving return barang: ' . $e->getMessage());
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Terjadi kesalahan saat menyimpan data: ' . $e->getMessage());
+        }
     }
 
     public function show(PemeriksaanReturnBarangCustomer $pemeriksaanReturnBarangCustomer)
@@ -181,8 +255,10 @@ class PemeriksaanReturnBarangCustomerController extends Controller
         $this->checkPlantAccess($pemeriksaanReturnBarangCustomer);
         $user = Auth::user();
 
+        $isSuperAdmin = $user->role && strtolower($user->role->role) === 'superadmin';
+
         // SuperAdmin dapat melihat semua data
-        if ($user->role && strtolower($user->role->role) === 'superadmin') {
+        if ($isSuperAdmin) {
             $shifts = Shift::with(['user.plant'])->get();
             $ekspedisis = Ekspedisi::with(['user.plant'])->get();
             $customers = Customer::with(['user.plant'])->get();
@@ -205,13 +281,60 @@ class PemeriksaanReturnBarangCustomerController extends Controller
                 $query->where('id_plant', $user->id_plant);
             })->with(['user.plant'])->get();
         }
+        $produkKategoriOptions = Produk::query()
+            ->whereNotNull('kategori_code')
+            ->select('kategori_code')
+            ->distinct()
+            ->orderBy('kategori_code')
+            ->pluck('kategori_code')
+            ->values();
 
+        if (!$isSuperAdmin) {
+            $produkKategoriOptions = Produk::query()
+                ->whereNotNull('kategori_code')
+                ->whereHas('user', function ($q) use ($user) {
+                    $q->where('id_plant', $user->id_plant);
+                })
+                ->select('kategori_code')
+                ->distinct()
+                ->orderBy('kategori_code')
+                ->pluck('kategori_code')
+                ->values();
+        }
+
+        $produkList = Produk::query()
+            ->select(['id', 'nama_produk', 'kategori_code'])
+            ->orderBy('nama_produk');
+
+        if (!$isSuperAdmin) {
+            $produkList->whereHas('user', function ($q) use ($user) {
+                $q->where('id_plant', $user->id_plant);
+            });
+        }
+
+        $produkList = $produkList->get();
+
+        $produkByKategori = $produkList
+            ->groupBy('kategori_code')
+            ->map(function ($items) {
+                return $items->map(function ($p) {
+                    return [
+                        'id' => $p->id,
+                        'nama' => $p->nama_produk,
+                    ];
+                })->values();
+            });
+
+        $produkKategoriById = $produkList->pluck('kategori_code', 'id');
         return view('qc-sistem.pemeriksaan-return-barang-customer.edit', compact(
             'pemeriksaanReturnBarangCustomer',
             'shifts',
             'ekspedisis',
             'customers',
-            'produks'
+            'produks',
+            'produkKategoriOptions',
+            'produkByKategori',
+            'produkKategoriById'
         ));
     }
 
@@ -225,12 +348,13 @@ class PemeriksaanReturnBarangCustomerController extends Controller
             'id_shift' => 'nullable|exists:shifts,id',
             'no_polisi' => 'required|string|max:20',
             'nama_supir' => 'required|string|max:100',
-            'waktu_kedatangan' => 'nullable|date_format:H:i',
+            'waktu_kedatangan' => ['nullable', 'regex:/^\d{2}:\d{2}(:\d{2})?$/'],
             'suhu_mobil' => 'required|string|max:50',
-            'id_customer' => 'required|exists:customers,id',
-            'alasan_return' => 'required|string|max:255',
             'produk_data' => 'required|array|min:1',
+            'produk_data.*.id_customer' => 'required|exists:customers,id',
+            'produk_data.*.alasan_return' => 'required|string|max:255',
             'produk_data.*.kondisi_produk' => 'required|in:Frozen,Fresh,Dry',
+            'produk_data.*.kategori_code' => 'required|string',
             'produk_data.*.id_produk' => 'required|exists:produks,id',
             'produk_data.*.suhu_produk' => 'nullable|string|max:50',
             'produk_data.*.kode_produksi' => 'required|string|max:100',
@@ -275,6 +399,8 @@ class PemeriksaanReturnBarangCustomerController extends Controller
             foreach ($request->produk_data as $produk) {
                 if (!empty($produk['id_produk'])) {
                     $produkData[] = [
+                        'id_customer' => $produk['id_customer'] ?? null,
+                        'alasan_return' => $produk['alasan_return'] ?? null,
                         'kondisi_produk' => $produk['kondisi_produk'],
                         'id_produk' => $produk['id_produk'],
                         'suhu_produk' => $produk['suhu_produk'] ?? null,
@@ -285,12 +411,18 @@ class PemeriksaanReturnBarangCustomerController extends Controller
                         'kondisi_produk_check' => isset($produk['kondisi_produk_check']) ? (bool)$produk['kondisi_produk_check'] : false,
                         'rekomendasi' => $produk['rekomendasi'],
                         'keterangan' => $produk['keterangan'] ?? null,
+                        'kategori_code' => $produk['kategori_code'],
                     ];
                 }
             }
         }
         
         $validated['produk_data'] = !empty($produkData) ? $produkData : null;
+
+        $firstProduk = !empty($produkData) ? $produkData[0] : null;
+        $validated['id_customer'] = $firstProduk['id_customer'] ?? null;
+        $validated['alasan_return'] = $firstProduk['alasan_return'] ?? null;
+
         // Remove old fields if they exist
         unset($validated['kondisi_produk'], $validated['id_produk'], $validated['suhu_produk'], 
               $validated['kode_produksi'], $validated['expired_date'], $validated['jumlah_barang'],
@@ -335,6 +467,7 @@ class PemeriksaanReturnBarangCustomerController extends Controller
         $pemeriksaanReturnBarangCustomer->update([
             'status_verifikasi' => 'sent_to_produksi',
             'verified_by' => $user->id,
+            'verified_by_qc' => $user->id,
             'verified_at' => now(),
         ]);
         
@@ -353,6 +486,7 @@ class PemeriksaanReturnBarangCustomerController extends Controller
         $pemeriksaanReturnBarangCustomer->update([
             'status_verifikasi' => 'approved_produksi',
             'verified_by' => $user->id,
+            'verified_by_produksi' => $user->id,
             'verified_at' => now(),
             'verification_notes' => $request->input('notes'),
         ]);
@@ -376,6 +510,7 @@ class PemeriksaanReturnBarangCustomerController extends Controller
         $pemeriksaanReturnBarangCustomer->update([
             'status_verifikasi' => 'rejected_produksi',
             'verified_by' => $user->id,
+            'verified_by_produksi' => $user->id,
             'verified_at' => now(),
             'verification_notes' => $request->input('notes'),
         ]);
@@ -395,6 +530,7 @@ class PemeriksaanReturnBarangCustomerController extends Controller
         $pemeriksaanReturnBarangCustomer->update([
             'status_verifikasi' => 'approved_spv',
             'verified_by' => $user->id,
+            'verified_by_spv' => $user->id,
             'verified_at' => now(),
             'verification_notes' => $request->input('notes'),
         ]);
@@ -418,10 +554,138 @@ class PemeriksaanReturnBarangCustomerController extends Controller
         $pemeriksaanReturnBarangCustomer->update([
             'status_verifikasi' => 'rejected_spv',
             'verified_by' => $user->id,
+            'verified_by_spv' => $user->id,
             'verified_at' => now(),
             'verification_notes' => $request->input('notes'),
         ]);
         
         return redirect()->back()->with('error', 'Pemeriksaan ditolak oleh SPV QC. Silakan perbaiki dan kirim ulang.');
+    }
+
+    /**
+     * Export data to PDF based on filters
+     */
+    public function exportPDF(Request $request)
+    {
+        $user = Auth::user();
+        $id_shift = $request->input('id_shift');
+        $tanggalDari = $request->input('tanggal_dari');
+        $tanggalSampai = $request->input('tanggal_sampai');
+        $tanggal = $request->input('tanggal');
+
+        $query = PemeriksaanReturnBarangCustomer::with([
+            'user.role',
+            'user.plant',
+            'shift',
+            'ekspedisi',
+            'customer',
+            'verifiedBy.role'
+        ])->with([
+            'qcVerifier' => function ($q) {
+                $q->select('id', 'name');
+            },
+            'produksiVerifier' => function ($q) {
+                $q->select('id', 'name');
+            },
+            'spvVerifier' => function ($q) {
+                $q->select('id', 'name');
+            },
+        ]);
+
+        if ($user->role && strtolower($user->role->role) !== 'superadmin') {
+            $query->whereHas('user', function ($q) use ($user) {
+                $q->where('id_plant', $user->id_plant);
+            });
+        }
+
+        if ($id_shift) {
+            $query->where('id_shift', $id_shift);
+        }
+
+        if ($id_shift) {
+            $shift = Shift::find($id_shift);
+            $shiftName = $shift ? trim(strtolower((string) $shift->shift)) : null;
+
+            if ($shiftName === '1' || $shiftName === 'shift 1') {
+                if ($tanggalDari && $tanggalSampai) {
+                    $query->whereBetween('tanggal', [$tanggalDari, $tanggalSampai]);
+                } elseif ($tanggalDari) {
+                    $query->whereDate('tanggal', '>=', $tanggalDari);
+                } elseif ($tanggalSampai) {
+                    $query->whereDate('tanggal', '<=', $tanggalSampai);
+                }
+            } else {
+                if ($tanggal) {
+                    $query->whereDate('tanggal', $tanggal);
+                }
+            }
+        } else {
+            if ($tanggal) {
+                $query->whereDate('tanggal', $tanggal);
+            }
+        }
+
+        $pemeriksaans = $query->latest()->get();
+
+        $produkIds = $pemeriksaans
+            ->flatMap(function ($p) {
+                $rows = is_array($p->produk_data) ? $p->produk_data : [];
+                return collect($rows)
+                    ->pluck('id_produk')
+                    ->filter(fn ($id) => !empty($id));
+            })
+            ->unique()
+            ->values();
+
+        $produkNamaById = $produkIds->isNotEmpty()
+            ? Produk::whereIn('id', $produkIds)->pluck('nama_produk', 'id')->toArray()
+            : [];
+
+        $qcUser = null;
+        $produksiUser = null;
+        $spvQcUser = null;
+
+        $allQcIds = $pemeriksaans->pluck('verified_by_qc')->filter()->unique();
+        $allProduksiIds = $pemeriksaans->pluck('verified_by_produksi')->filter()->unique();
+        $allSpvIds = $pemeriksaans->pluck('verified_by_spv')->filter()->unique();
+
+        if ($allQcIds->count() > 0) {
+            $qcUserData = User::with('role')->whereIn('id', $allQcIds->toArray())->first();
+            if ($qcUserData) {
+                $qcUser = $qcUserData->name;
+            }
+        }
+
+        if ($allProduksiIds->count() > 0) {
+            $produksiUserData = User::with('role')->whereIn('id', $allProduksiIds->toArray())->first();
+            if ($produksiUserData) {
+                $produksiUser = $produksiUserData->name;
+            }
+        }
+
+        if ($allSpvIds->count() > 0) {
+            $spvUserData = User::with('role')->whereIn('id', $allSpvIds->toArray())->first();
+            if ($spvUserData) {
+                $spvQcUser = $spvUserData->name;
+            }
+        }
+
+        $shift = $id_shift ? Shift::find($id_shift) : null;
+
+        $pdf = PDF::loadView('qc-sistem.pemeriksaan-return-barang-customer.pdf-report', [
+            'pemeriksaans' => $pemeriksaans,
+            'produkNamaById' => $produkNamaById,
+            'tanggal' => $tanggal,
+            'tanggal_dari' => $tanggalDari,
+            'tanggal_sampai' => $tanggalSampai,
+            'shift' => $shift,
+            'qcUser' => $qcUser,
+            'produksiUser' => $produksiUser,
+            'spvQcUser' => $spvQcUser,
+        ]);
+
+        $filenameDate = $tanggal ?? $tanggalDari ?? date('Y-m-d');
+        $filename = 'laporan-return-barang-' . $filenameDate . '.pdf';
+        return $pdf->download($filename);
     }
 }

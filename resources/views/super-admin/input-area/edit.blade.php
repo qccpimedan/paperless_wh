@@ -61,7 +61,7 @@
                                             </div>
 
                                             <div class="col-md-12 mt-4">
-                                                <label for="lokasi_area">Lokasi Area <span class="text-muted">(Opsional)</span></label>
+                                                <label for="lokasi_area">Sub Area <span class="text-muted">(Opsional)</span></label>
                                                 <div id="dynamic-lokasi-fields">
                                                     @forelse($inputArea->locations as $location)
                                                         <div class="input-group mb-2">
@@ -90,7 +90,7 @@
                                             <div class="col-md-12 d-flex justify-content-end mt-3">
                                                 <a href="{{ route('input-areas.index') }}" class="btn btn-light-secondary me-1 mb-1">Kembali</a>
                                                 <button type="submit" class="btn btn-primary me-1 mb-1">Update</button>
-                                                <button type="button" class="btn btn-light-secondary me-1 mb-1">Reset</button>
+                                                <!-- <button type="button" class="btn btn-light-secondary me-1 mb-1">Reset</button> -->
                                             </div>
                                         </div>
                                     </div>

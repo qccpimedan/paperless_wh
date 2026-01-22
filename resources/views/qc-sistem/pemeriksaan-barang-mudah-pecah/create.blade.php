@@ -132,9 +132,9 @@
                                                             <input type="text" class="form-control jumlah-barang" readonly>
                                                         </div>
                                                         <div class="col-md-4">
-                                                            <label class="form-label">Lokasi Area <span class="text-danger">*</span></label>
-                                                            <select class="form-select lokasi-area-select lokasi-area-select-db" name="details[0][id_input_area_locations]" required>
-                                                                <option value="">-- Pilih Lokasi Area --</option>
+                                                            <label class="form-label">Sub Area <span class="text-danger">*</span></label>
+                                                            <select class="form-select lokasi-area-select lokasi-area-select-db" name="details[0][id_input_area_locations]">
+                                                                <option value="">-- Pilih Sub Area --</option>
                                                             </select>
                                                         </div>
                                                         <div class="col-md-3">
@@ -155,9 +155,9 @@
                                                             <input type="number" class="form-control jumlah-manual" name="details[0][jumlah_manual]" placeholder="Jumlah" min="0">
                                                         </div>
                                                         <div class="col-md-4">
-                                                            <label class="form-label">Lokasi Area <span class="text-danger">*</span></label>
+                                                            <label class="form-label">Sub Area <span class="text-danger">*</span></label>
                                                             <select class="form-select lokasi-area-select lokasi-area-select-manual" name="details[0][id_input_area_locations_disabled]">
-                                                                <option value="">-- Pilih Lokasi Area --</option>
+                                                                <option value="">-- Pilih Sub Area --</option>
                                                             </select>
                                                         </div>
                                                         <div class="col-md-3">
@@ -245,6 +245,7 @@
 </div>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Konfirmasi tombol kembali
     document.querySelectorAll('.btn-kembali-confirm').forEach((el) => {
         el.addEventListener('click', function(e) {
             const ok = confirm('Data belum disimpan. Yakin ingin kembali ke halaman index?');
@@ -254,8 +255,155 @@ document.addEventListener('DOMContentLoaded', function() {
 
     let barangIndex = 1;
     const idAreaSelect = document.getElementById('id_area');
+    const choicesMap = new WeakMap();
+    const masterBarangChoices = (@json($barangs)).map((b) => ({
+        value: String(b.id),
+        label: String(b.nama_barang ?? ''),
+        jumlah: Number(b.jumlah_barang ?? 0),
+    }));
+
+    function stringifyValue(v) {
+        return v === null || typeof v === 'undefined' ? '' : String(v);
+    }
+
+    function rebuildBarangOptions(select, selectedValues) {
+        const current = select.value;
+        const placeholder = '-- Pilih Barang --';
+
+        select.innerHTML = `<option value="">${placeholder}</option>`;
+
+        (masterBarangChoices || []).forEach((item) => {
+            const val = stringifyValue(item.value);
+            if (selectedValues.has(val) && val !== current) return;
+            const opt = document.createElement('option');
+            opt.value = val;
+            opt.textContent = item.label;
+            opt.setAttribute('data-jumlah', item.jumlah ?? 0);
+            select.appendChild(opt);
+        });
+
+        if (current && Array.from(select.options).some(o => o.value === current)) {
+            select.value = current;
+        } else {
+            select.value = '';
+        }
+    }
+
+    // ========== FUNGSI CHOICES.JS ==========
+    function initChoices(select) {
+        if (!select) {
+            return;
+        }
+        
+        if (select.classList.contains('choices-initialized')) {
+            return;
+        }
+        
+        try {
+            const instance = new Choices(select, { 
+                removeItemButton: true, 
+                placeholder: true, 
+                searchEnabled: true,
+                shouldSort: false // Jangan sort otomatis agar disabled tetap di tempat
+            });
+            choicesMap.set(select, instance);
+            select.classList.add('choices-initialized');
+        } catch (error) {
+            console.error('❌ Error initializing Choices:', error);
+        }
+    }
+
+    function rebuildChoices(select) {
+        if (!select) {
+            return;
+        }
+        
+        let instance = choicesMap.get(select);
+        
+        // Jika instance tidak ada atau rusak, destroy dan buat ulang
+        if (!instance || !instance._isSelectElement) {
+            
+            // Destroy instance lama jika ada
+            if (instance && typeof instance.destroy === 'function') {
+                try {
+                    instance.destroy();
+                } catch (e) {
+                }
+            }
+            
+            // Hapus class dan buat ulang
+            select.classList.remove('choices-initialized');
+            choicesMap.delete(select);
+            initChoices(select);
+            instance = choicesMap.get(select);
+            
+            if (!instance) {
+                console.error('❌ Failed to create Choices instance');
+                return;
+            }
+        }
+
+        try {
+            const currentValue = select.value;
+            const placeholderText = select.options[0] ? select.options[0].textContent : '-- Pilih Barang --';
+
+            const choicesData = Array.from(select.options)
+                .filter((opt, idx) => idx !== 0)
+                .map((opt) => ({
+                    value: opt.value,
+                    label: opt.textContent,
+                    disabled: !!opt.disabled,
+                }));
+
+            instance.clearChoices();
+            instance.setChoices(
+                [{ value: '', label: placeholderText, selected: !currentValue, disabled: false, placeholder: true }].concat(choicesData),
+                'value',
+                'label',
+                true
+            );
+
+            if (currentValue) {
+                instance.setChoiceByValue(currentValue);
+            }
+        } catch (error) {
+            console.error('❌ Error in rebuildChoices:', error);
+            // Jika error, coba destroy dan reinit
+            select.classList.remove('choices-initialized');
+            choicesMap.delete(select);
+            initChoices(select);
+        }
+    }
+
+    // ========== FUNGSI UPDATE SELECTED BARANG OPTIONS ==========
+    function updateSelectedBarangOptions() {
+        const selects = Array.from(document.querySelectorAll('select.barang-select'));
+        
+        // Kumpulkan semua nilai yang sudah dipilih
+        const selectedValues = new Set();
+        selects.forEach((s) => {
+            const row = s.closest('.barang-row');
+            if (!row) return;
+            
+            const manualToggle = row.querySelector('.input-manual-toggle');
+            const isManualMode = manualToggle ? manualToggle.checked : false;
+            const selectRow = s.closest('.barang-select-row');
+            const isVisible = selectRow && selectRow.style.display !== 'none';
+            
+            // Hanya tambahkan ke selectedValues jika tidak dalam mode manual dan visible
+            if (!isManualMode && isVisible && s.value) {
+                selectedValues.add(s.value);
+            }
+        });
+
+        // Rebuild opsi dari master list, supaya row baru tidak kosong dan tidak ikut copy
+        selects.forEach((select, idx) => {
+            rebuildBarangOptions(select, selectedValues);
+            rebuildChoices(select);
+        });
+    }
     
-    // Load lokasi area
+    // ========== FUNGSI LOAD AREA LOCATIONS ==========
     function loadAreaLocations() {
         if (!idAreaSelect || !idAreaSelect.value) return;
         
@@ -277,12 +425,13 @@ document.addEventListener('DOMContentLoaded', function() {
             .catch(err => console.error('Error loading locations:', err));
     }
     
+    // Event listener untuk Area select
     if (idAreaSelect) {
         idAreaSelect.addEventListener('change', loadAreaLocations);
         loadAreaLocations();
     }
     
-    // Toggle manual - SOLUSI: UBAH NAME ATTRIBUTE
+    // ========== TOGGLE MANUAL INPUT ==========
     document.addEventListener('change', function(e) {
         if (e.target.classList.contains('input-manual-toggle')) {
             const idx = e.target.getAttribute('data-index');
@@ -314,15 +463,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Enable manual fields dan PASTIKAN NAME BENAR
                 namaBarangManual.required = true;
                 jumlahManual.required = true;
-                lokasiManualSelect.required = true;
-                // Pastikan name manual select benar
+                lokasiManualSelect.required = false;
+                
                 if (!lokasiManualSelect.name.includes('[id_input_area_locations]') || 
                     lokasiManualSelect.name.includes('_disabled')) {
                     lokasiManualSelect.name = `details[${idx}][id_input_area_locations]`;
                 }
                 
                 console.log(`Mode MANUAL - Lokasi Manual name: ${lokasiManualSelect.name}`);
-                
+
             } else {
                 // === MODE DATABASE ===
                 selectRow.style.display = 'flex';
@@ -343,8 +492,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 barangSelect.required = true;
                 barangSelect.name = barangSelect.name.replace('[id_barang_disabled]', '[id_barang]');
                 
-                lokasiDbSelect.required = true;
-                // Pastikan name DB select benar
+                lokasiDbSelect.required = false;
+                
                 if (!lokasiDbSelect.name.includes('[id_input_area_locations]') || 
                     lokasiDbSelect.name.includes('_disabled')) {
                     lokasiDbSelect.name = `details[${idx}][id_input_area_locations]`;
@@ -352,99 +501,222 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 console.log(`Mode DATABASE - Lokasi DB name: ${lokasiDbSelect.name}`);
             }
+            
+            // Update selected options setelah toggle
+            updateSelectedBarangOptions();
         }
     });
     
-    // Load barang quantity
+    // ========== LOAD BARANG QUANTITY ==========
     document.addEventListener('change', function(e) {
-        if (e.target.classList.contains('barang-select') && e.target.value) {
-            const row = e.target.closest('.barang-row');
-            fetch(`{{ url('/qc-sistem/api/barang-details') }}/${e.target.value}`)
-                .then(r => r.ok ? r.json() : Promise.reject(`HTTP ${r.status}`))
-                .then(data => row.querySelector('.jumlah-barang').value = data.jumlah_barang || 0)
-                .catch(err => console.error('Error loading barang:', err));
+        if (e.target.classList.contains('barang-select')) {
+            console.log('🎯 Barang selected:', e.target.value);
+            
+            if (e.target.value) {
+                const row = e.target.closest('.barang-row');
+                fetch(`{{ url('/qc-sistem/api/barang-details') }}/${e.target.value}`)
+                    .then(r => r.ok ? r.json() : Promise.reject(`HTTP ${r.status}`))
+                    .then(data => {
+                        const jumlahInput = row.querySelector('.jumlah-barang');
+                        if (jumlahInput) {
+                            jumlahInput.value = data.jumlah_barang || 0;
+                        }
+                    })
+                    .catch(err => console.error('Error loading barang:', err));
+            }
+            
+            // Update selected options dengan delay untuk memastikan Choices sudah ter-update
+            setTimeout(() => {
+                updateSelectedBarangOptions();
+            }, 150);
         }
     });
     
-    // Initialize Choices
+    // ========== INITIALIZE CHOICES UNTUK SELECT YANG SUDAH ADA ==========
     document.querySelectorAll('select.choices:not(.choices-initialized)').forEach(select => {
-        new Choices(select, { removeItemButton: true, placeholder: true, searchEnabled: true });
-        select.classList.add('choices-initialized');
+        initChoices(select);
     });
     
-    // Add barang
+    // ========== TAMBAH BARANG BARU ==========
     document.getElementById('addBarang').addEventListener('click', function(e) {
         e.preventDefault();
         const idx = barangIndex;
+
         const html = `
             <div class="barang-row card p-3 mb-3">
-                <div class="row mb-2"><div class="col-md-12"><h6><strong>Barang #<span class="barang-number">${idx + 1}</span></strong></h6></div></div>
-                <div class="row mb-3"><div class="col-md-12"><div class="form-check"><input class="form-check-input input-manual-toggle" type="checkbox" id="manual_${idx}" data-index="${idx}"><label class="form-check-label" for="manual_${idx}">Input Manual Barang</label></div></div></div>
-                <div class="row mb-3 barang-select-row" data-index="${idx}">
-                    <div class="col-md-3"><label class="form-label">Barang <span class="text-danger">*</span></label><select class="choices form-select barang-select" name="details[${idx}][id_barang]" required><option value="">-- Pilih Barang --</option>@foreach($barangs as $b)<option value="{{ $b->id }}">{{ $b->nama_barang }}</option>@endforeach</select></div>
-                    <div class="col-md-2"><label class="form-label">Jumlah</label><input type="text" class="form-control jumlah-barang" readonly></div>
-                    <div class="col-md-4"><label class="form-label">Lokasi Area <span class="text-danger">*</span></label><select class="form-select lokasi-area-select lokasi-area-select-db" name="details[${idx}][id_input_area_locations]" required><option value="">-- Pilih Lokasi Area --</option></select></div>
-                    <div class="col-md-3"><button type="button" class="btn btn-danger btn-sm mt-4 remove-barang"><i class="bi bi-trash"></i> Hapus</button></div>
+                <div class="row mb-2">
+                    <div class="col-md-12">
+                        <h6><strong>Barang #<span class="barang-number">${idx + 1}</span></strong></h6>
+                    </div>
                 </div>
-                <div class="row mb-3 barang-manual-row" data-index="${idx}" style="display:none;">
-                    <div class="col-md-3"><label class="form-label">Nama Barang <span class="text-danger">*</span></label><input type="text" class="form-control nama-barang-manual" name="details[${idx}][nama_barang_manual]" placeholder="Masukkan nama barang"></div>
-                    <div class="col-md-2"><label class="form-label">Jumlah <span class="text-danger">*</span></label><input type="number" class="form-control" name="details[${idx}][jumlah_manual]" placeholder="Jumlah" min="0"></div>
-                    <div class="col-md-4"><label class="form-label">Lokasi Area <span class="text-danger">*</span></label><select class="form-select lokasi-area-select lokasi-area-select-manual" name="details[${idx}][id_input_area_locations_disabled]"><option value="">-- Pilih Lokasi Area --</option></select></div>
-                    <div class="col-md-3"><button type="button" class="btn btn-danger btn-sm mt-4 remove-barang"><i class="bi bi-trash"></i> Hapus</button></div>
-                </div>
-                <div class="row mb-3 nama_karyawan_row" data-index="${idx}" style="display:none;"><div class="col-md-6"><label class="form-label">Nama Karyawan</label><input type="text" class="form-control" name="details[${idx}][nama_karyawan]" placeholder="Nama karyawan (opsional)"></div></div>
                 <div class="row mb-3">
-                    <div class="col-md-3"><label class="form-label">Awal <span class="text-danger">*</span></label><div><div class="form-check form-check-inline"><input class="form-check-input" type="radio" name="details[${idx}][awal]" id="awal_baik_${idx}" value="baik" required><label class="form-check-label" for="awal_baik_${idx}">baik</label></div><div class="form-check form-check-inline"><input class="form-check-input" type="radio" name="details[${idx}][awal]" id="awal_tidak-baik_${idx}" value="tidak-baik"><label class="form-check-label" for="awal_tidak-baik_${idx}">tidak-baik</label></div></div></div>
-                    <div class="col-md-3"><label class="form-label">Akhir <span class="text-danger">*</span></label><div><div class="form-check form-check-inline"><input class="form-check-input" type="radio" name="details[${idx}][akhir]" id="akhir_baik_${idx}" value="baik" required><label class="form-check-label" for="akhir_baik_${idx}">baik</label></div><div class="form-check form-check-inline"><input class="form-check-input" type="radio" name="details[${idx}][akhir]" id="akhir_tidak-baik_${idx}" value="tidak-baik"><label class="form-check-label" for="akhir_tidak-baik_${idx}">tidak-baik</label></div></div></div>
+                    <div class="col-md-12">
+                        <div class="form-check">
+                            <input class="form-check-input input-manual-toggle" type="checkbox" id="manual_${idx}" data-index="${idx}">
+                            <label class="form-check-label" for="manual_${idx}">
+                                Input Manual Barang
+                            </label>
+                        </div>
+                    </div>
                 </div>
-                <div class="row mb-3"><div class="col-md-6"><label class="form-label">Temuan Ketidaksesuaian</label><textarea class="form-control" name="details[${idx}][temuan_ketidaksesuaian]" rows="3"></textarea></div><div class="col-md-6"><label class="form-label">Tindakan Koreksi</label><textarea class="form-control" name="details[${idx}][tindakan_koreksi]" rows="3"></textarea></div></div>
+                
+                <!-- Pilih dari Database -->
+                <div class="row mb-3 barang-select-row" data-index="${idx}">
+                    <div class="col-md-3">
+                        <label class="form-label">Barang <span class="text-danger">*</span></label>
+                        <select class="choices form-select barang-select" name="details[${idx}][id_barang]" required>
+                            <option value="">-- Pilih Barang --</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Jumlah</label>
+                        <input type="text" class="form-control jumlah-barang" readonly>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Sub Area <span class="text-danger">*</span></label>
+                        <select class="form-select lokasi-area-select lokasi-area-select-db" name="details[${idx}][id_input_area_locations]">
+                            <option value="">-- Pilih Sub Area --</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <button type="button" class="btn btn-danger btn-sm mt-4 remove-barang">
+                            <i class="bi bi-trash"></i> Hapus
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Input Manual -->
+                <div class="row mb-3 barang-manual-row" data-index="${idx}" style="display: none;">
+                    <div class="col-md-3">
+                        <label class="form-label">Nama Barang <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control nama-barang-manual" name="details[${idx}][nama_barang_manual]" placeholder="Masukkan nama barang">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Jumlah <span class="text-danger">*</span></label>
+                        <input type="number" class="form-control jumlah-manual" name="details[${idx}][jumlah_manual]" placeholder="Jumlah" min="0">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Sub Area <span class="text-danger">*</span></label>
+                        <select class="form-select lokasi-area-select lokasi-area-select-manual" name="details[${idx}][id_input_area_locations_disabled]">
+                            <option value="">-- Pilih Sub Area --</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <button type="button" class="btn btn-danger btn-sm mt-4 remove-barang">
+                            <i class="bi bi-trash"></i> Hapus
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Nama Karyawan (Opsional) -->
+                <div class="row mb-3 nama_karyawan_row" data-index="${idx}" style="display: none;">
+                    <div class="col-md-6">
+                        <label class="form-label">Nama Karyawan</label>
+                        <input type="text" class="form-control" name="details[${idx}][nama_karyawan]" placeholder="Nama karyawan (opsional)">
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-3">
+                        <label class="form-label">Awal</label>
+                        <div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="details[${idx}][awal]" id="awal_baik_${idx}" value="baik">
+                                <label class="form-check-label" for="awal_baik_${idx}"> baik</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="details[${idx}][awal]" id="awal_tidak-baik_${idx}" value="tidak-baik">
+                                <label class="form-check-label" for="awal_tidak-baik_${idx}"> tidak-baik</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Akhir</label>
+                        <div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="details[${idx}][akhir]" id="akhir_baik_${idx}" value="baik">
+                                <label class="form-check-label" for="akhir_baik_${idx}"> baik</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="details[${idx}][akhir]" id="akhir_tidak-baik_${idx}" value="tidak-baik">
+                                <label class="form-check-label" for="akhir_tidak-baik_${idx}"> tidak-baik</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Temuan Ketidaksesuaian</label>
+                        <textarea class="form-control" name="details[${idx}][temuan_ketidaksesuaian]" rows="3"></textarea>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Tindakan Koreksi</label>
+                        <textarea class="form-control" name="details[${idx}][tindakan_koreksi]" rows="3"></textarea>
+                    </div>
+                </div>
             </div>
         `;
         
         const div = document.createElement('div');
         div.innerHTML = html;
-        document.getElementById('barangContainer').appendChild(div.firstElementChild);
+        const newRow = div.firstElementChild;
+        document.getElementById('barangContainer').appendChild(newRow);
         
-        const newSelect = document.querySelector(`.barang-row:last-child select.choices`);
+        // Initialize Choices untuk select baru
+        const newSelect = newRow.querySelector('select.choices');
         if (newSelect) {
-            new Choices(newSelect, { removeItemButton: true, placeholder: true, searchEnabled: true });
-            newSelect.classList.add('choices-initialized');
+            newSelect.value = '';
+            initChoices(newSelect);
         }
         
+        // Load area locations untuk select baru
         loadAreaLocations();
+        
         barangIndex++;
         updateUI();
+        
+        // PENTING: Update selected options setelah menambah barang baru dengan delay
+        setTimeout(() => {
+            updateSelectedBarangOptions();
+        }, 200);
     });
     
-    // Remove barang
+    // ========== REMOVE BARANG ==========
     document.addEventListener('click', function(e) {
         if (e.target.closest('.remove-barang')) {
             e.preventDefault();
             e.target.closest('.barang-row').remove();
             updateUI();
+            // Update selected options setelah menghapus barang
+            updateSelectedBarangOptions();
         }
     });
     
+    // ========== UPDATE UI (NUMBERING & SHOW/HIDE REMOVE BUTTON) ==========
     function updateUI() {
         const rows = document.querySelectorAll('.barang-row');
         rows.forEach((row, i) => {
-            row.querySelector('.barang-number').textContent = i + 1;
+            const numberSpan = row.querySelector('.barang-number');
+            if (numberSpan) {
+                numberSpan.textContent = i + 1;
+            }
             row.querySelectorAll('.remove-barang').forEach(btn => {
                 btn.style.display = rows.length > 1 ? 'inline-block' : 'none';
             });
         });
     }
     
+    // Initialize UI
     updateUI();
+    updateSelectedBarangOptions();
     
-    // Debug sebelum submit
+    // ========== DEBUG FORM SUBMISSION ==========
     document.addEventListener('submit', function(e) {
         if (e.target.tagName === 'FORM') {
-            console.log('\n=== FORM SUBMISSION ===');
             const formData = new FormData(e.target);
             for (let [key, value] of formData.entries()) {
-                if (key.includes('id_input_area_locations')) {
-                    console.log(`>>> ${key} = ${value}`);
+                if (key.includes('id_input_area_locations') || key.includes('id_barang')) {
                 }
             }
         }

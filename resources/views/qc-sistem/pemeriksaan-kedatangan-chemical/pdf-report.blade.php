@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>Pemeriksaan Kedatangan Chemical</title>
+    <title>Pemeriksaan Kedatangan Bahan Kimia</title>
     <style>
         @page {
             size: A4;
@@ -660,14 +660,10 @@
                         </tr>
                     </table>
                 </div>
-<!-- 
-                {{-- FOOTER (Setiap halaman) --}}
-                <div class="footer">
-                    <p>PT. CHAROEN POKPHAND INDONESIA</p>
-                    <p>FOOD DIVISION MEDAN</p>
-                    <p>MEDAN - INDONESIA</p>
-                    <p class="footer-main">QW 02/02</p>
-                </div> -->
+
+                <div style="text-align: right; padding-right: 10px; font-style: italic; font-size: 9px; color: #666; margin-top: 5px;">
+                    QW 03/00
+                </div>
 
                 {{-- PAGE BREAK (Hanya jika bukan halaman terakhir) --}}
                 @if(!$loop->last)

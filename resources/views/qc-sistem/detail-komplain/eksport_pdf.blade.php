@@ -10,9 +10,55 @@
             font-size: 11px;
         }
         .header {
-            text-align: left;
+            width: 100%;
             margin-bottom: 10px;
+            border-bottom: 2px solid #000;
+            padding-bottom: 8px;
+        }
+        .header-left,
+        .header-right {
+            display: inline-block;
+            vertical-align: top;
+        }
+        .header-left {
+            width: 70%;
+        }
+        .header-right {
+            width: 29%;
+            text-align: right;
+        }
+        .logo-company {
+            width: 100%;
+        }
+        .header-logo {
+            display: inline-block;
+            vertical-align: top;
+            width: 60px;
+        }
+        .header-logo img {
+            width: 55px;
+            height: auto;
+        }
+        .header-company {
+            display: inline-block;
+            vertical-align: top;
+            width: calc(100% - 70px);
+            padding-left: 8px;
+        }
+        .header-company h2 {
+            margin: 0;
+            font-size: 12px;
             font-weight: bold;
+        }
+        .header-company p {
+            margin: 0;
+            font-size: 10px;
+        }
+        .header-title h1 {
+            margin: 0;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
         }
         .title {
             text-align: center;
@@ -80,17 +126,32 @@
 <body>
     <!-- HEADER -->
     <div class="header">
-        <div>PT. Charoen Pokphand Indonesia</div>
-        <div>Food Division</div>
+        <div class="header-left">
+            <div class="logo-company">
+                <div class="header-logo">
+                    <img src="{{ public_path('dist/images/logo/cpi-logo.png') }}" alt="Logo CPI">
+                </div>
+                <div class="header-company">
+                    <h2>PT. CHAROEN POKPHAND INDONESIA</h2>
+                    <p>FOOD DIVISION MEDAN</p>
+                    <p>MEDAN - INDONESIA</p>
+                </div>
+            </div>
+        </div>
+        <!-- <div class="header-right">
+            <div class="header-title">
+                <h1>DETAIL KOMPLAIN</h1>
+            </div>
+        </div> -->
     </div>
 
     <!-- TITLE -->
     <div class="title">Ketidaksesuaian Kedatangan Produk Dari Supplier</div>
 
     <!-- DATE -->
-    <div class="date-info">
+    <!-- <div class="date-info">
         Hari/tanggal : {{ $detailKomplain->tanggal_kedatangan->format('d M Y') }}
-    </div>
+    </div> -->
 
     <!-- DETAIL KOMPLAIN TABLE -->
     <table>
@@ -103,7 +164,7 @@
         </tr>
         <tr>
             <td style="font-weight: bold;">Tanggal Kedatangan</td>
-            <td>{{ $detailKomplain->tanggal_kedatangan->format('d m Y') }}</td>
+            <td>{{ $detailKomplain->tanggal_kedatangan->format('d-m-Y') }}</td>
         </tr>
         <tr>
             <td style="font-weight: bold;">No. PO</td>

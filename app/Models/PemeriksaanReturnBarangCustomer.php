@@ -28,6 +28,9 @@ class PemeriksaanReturnBarangCustomer extends Model
         'produk_data',
         'status_verifikasi',
         'verified_by',
+        'verified_by_qc',
+        'verified_by_produksi',
+        'verified_by_spv',
         'verified_at',
         'verification_notes',
     ];
@@ -81,6 +84,21 @@ class PemeriksaanReturnBarangCustomer extends Model
     public function verifiedBy()
     {
         return $this->belongsTo(User::class, 'verified_by');
+    }
+
+    public function qcVerifier()
+    {
+        return $this->belongsTo(User::class, 'verified_by_qc');
+    }
+
+    public function produksiVerifier()
+    {
+        return $this->belongsTo(User::class, 'verified_by_produksi');
+    }
+
+    public function spvVerifier()
+    {
+        return $this->belongsTo(User::class, 'verified_by_spv');
     }
 
     public function getWaktuKedatanganDisplayAttribute()

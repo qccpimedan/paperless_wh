@@ -77,7 +77,7 @@
                                             <div class="col-md-6 mt-3">
                                                 <label for="jam_sebelum_proses">Jam Sebelum Proses</label>
                                                 <input type="time" id="jam_sebelum_proses" class="form-control @error('jam_sebelum_proses') is-invalid @enderror"
-                                                    name="jam_sebelum_proses" value="{{ old('jam_sebelum_proses', $pemeriksaanKebersihanArea->jam_sebelum_proses) }}">
+                                                    name="jam_sebelum_proses" value="{{ old('jam_sebelum_proses', $pemeriksaanKebersihanArea->jam_sebelum_proses ? substr((string) $pemeriksaanKebersihanArea->jam_sebelum_proses, 0, 5) : '') }}">
                                                 @error('jam_sebelum_proses')
                                                     <div class="invalid-feedback">{{ $message }}</div>
                                                 @enderror
@@ -86,7 +86,7 @@
                                             <div class="col-md-6 mt-3">
                                                 <label for="jam_saat_proses">Jam Saat Proses</label>
                                                 <input type="time" id="jam_saat_proses" class="form-control @error('jam_saat_proses') is-invalid @enderror"
-                                                    name="jam_saat_proses" value="{{ old('jam_saat_proses', $pemeriksaanKebersihanArea->jam_saat_proses) }}">
+                                                    name="jam_saat_proses" value="{{ old('jam_saat_proses', $pemeriksaanKebersihanArea->jam_saat_proses ? substr((string) $pemeriksaanKebersihanArea->jam_saat_proses, 0, 5) : '') }}">
                                                 @error('jam_saat_proses')
                                                     <div class="invalid-feedback">{{ $message }}</div>
                                                 @enderror

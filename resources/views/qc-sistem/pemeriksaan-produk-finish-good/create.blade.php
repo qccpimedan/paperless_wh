@@ -410,7 +410,12 @@
                                                 <div class="col-md-6">
                                                     <div class="form-group">
                                                         <label class="form-label">Negara Produsen</label>
-                                                        <input type="text" class="form-control" name="negara_produsen[]" value="{{ old('negara_produsen.0') }}" placeholder="Negara Produsen">
+                                                        <select class="choices form-control" name="negara_produsen[]">
+                                                            <option value="">Pilih Negara</option>
+                                                            @foreach($countries as $code => $name)
+                                                                <option value="{{ $name }}" {{ old('negara_produsen.0') == $name ? 'selected' : '' }}>{{ $name }}</option>
+                                                            @endforeach
+                                                        </select>
                                                     </div>
                                                 </div>
                                                 <div class="col-md-6">
@@ -620,6 +625,7 @@ const produkByKategori = @json($produkByKategori ?? []);
 const produkMeta = @json($produkMeta ?? []);
 const oldKategoriCodes = @json(old('kategori_code', []));
 const oldProdukIds = @json(old('id_produk', []));
+const countriesList = @json(array_values($countries ?? []));
 
 let pristineRowTemplate = null;
 
@@ -642,19 +648,74 @@ function initChoicesForContainer(containerEl) {
     if (!containerEl) return;
     if (!window.Choices) return;
 
-    containerEl.querySelectorAll('select.choices').forEach((selectEl) => {
-        if (selectEl.dataset.choicesInitialized === '1') return;
-        try {
-            const instance = new Choices(selectEl, {
-                searchEnabled: true,
-                shouldSort: false,
-                itemSelectText: '',
+    // Cloning from an already-initialized row brings hidden/aria/tabindex attributes and
+    // Choices DOM wrappers, which can make selects in new rows not clickable.
+    try {
+        const firstRow = document.querySelector('#unified-container .unified-row');
+        if (firstRow) {
+            pristineRowTemplate = firstRow.cloneNode(true);
+
+            // Remove Choices.js wrapper divs but KEEP the original select elements
+            pristineRowTemplate.querySelectorAll('.choices').forEach((el) => {
+                if (el.tagName.toLowerCase() !== 'select') {
+                    // Find the select inside this wrapper
+                    const selectInside = el.querySelector('select');
+                    if (selectInside && el.parentNode) {
+                        // Move select out of wrapper before removing wrapper
+                        el.parentNode.insertBefore(selectInside, el);
+                    }
+                    el.remove();
+                }
             });
-            selectEl.__choicesInstance = instance;
-            selectEl.dataset.choicesInitialized = '1';
-        } catch (e) {
+            
+            // Clean up all select.choices elements
+            pristineRowTemplate.querySelectorAll('select.choices').forEach((el) => {
+                delete el.dataset.choicesInitialized;
+                delete el.__choicesInstance;
+                el.removeAttribute('hidden');
+                el.removeAttribute('data-choice');
+                el.removeAttribute('aria-hidden');
+                el.removeAttribute('tabindex');
+                el.style.display = '';
+                
+                // Ensure the select is visible and has proper structure
+                if (el.name === 'negara_produsen[]') {
+                    // Keep all country options intact
+                    el.value = '';
+                }
+            });
+
+            pristineRowTemplate.querySelectorAll('input, textarea, select').forEach((el) => {
+                if (el.tagName.toLowerCase() === 'select') {
+                    if (!el.classList.contains('choices') || el.name === 'negara_produsen[]') {
+                        // Don't reset options for negara_produsen, just clear value
+                        el.value = '';
+                    } else if (el.classList.contains('produk-select')) {
+                        el.innerHTML = '<option value="">Pilih Produk</option>';
+                        el.value = '';
+                    } else {
+                        el.value = '';
+                    }
+                } else if (el.type === 'radio') {
+                    el.checked = false;
+                } else {
+                    el.value = '';
+                }
+            });
+            
+            pristineRowTemplate.querySelectorAll('.produsen-badges, .distributor-badges').forEach((el) => {
+                el.innerHTML = '<span class="text-muted small">-</span>';
+            });
+            pristineRowTemplate.querySelectorAll('input.produsen-hidden, input.distributor-hidden').forEach((el) => {
+                el.value = '';
+            });
+            pristineRowTemplate.querySelectorAll('.suhu-mobil-input, .suhu-produk-input, .kondisi-suhu-input').forEach((el) => {
+                el.style.display = 'none';
+            });
         }
-    });
+    } catch (e) {
+        pristineRowTemplate = null;
+    }
 }
 
 function refreshChoices(selectEl) {
@@ -687,6 +748,27 @@ function refreshChoicesForContainer(containerEl) {
     if (!containerEl) return;
     containerEl.querySelectorAll('select.choices').forEach((selectEl) => {
         refreshChoices(selectEl);
+    });
+}
+
+function rebuildNegaraProdusenOptions(selectEl) {
+    if (!selectEl) return;
+    if (!countriesList || !Array.isArray(countriesList)) return;
+
+    const currentValue = selectEl.value || '';
+
+    selectEl.innerHTML = '';
+    const placeholder = document.createElement('option');
+    placeholder.value = '';
+    placeholder.textContent = 'Pilih Negara';
+    selectEl.appendChild(placeholder);
+
+    countriesList.forEach((name) => {
+        const opt = document.createElement('option');
+        opt.value = name;
+        opt.textContent = name;
+        if (currentValue && currentValue === name) opt.selected = true;
+        selectEl.appendChild(opt);
     });
 }
 
@@ -955,8 +1037,20 @@ function setupProdukRowListeners(rowEl) {
             // User changed kategori: reset desiredProdukId so we don't keep selecting old produk
             delete rowEl.dataset.oldProdukId;
             if (produkSelect) {
+                try {
+                    if (produkSelect.__choicesInstance && typeof produkSelect.__choicesInstance.destroy === 'function') {
+                        produkSelect.__choicesInstance.destroy();
+                    }
+                } catch (e) {
+                }
+                delete produkSelect.__choicesInstance;
+                delete produkSelect.dataset.choicesInitialized;
+
+                produkSelect.innerHTML = '<option value="">Pilih Produk</option>';
                 produkSelect.value = '';
+                refreshChoices(produkSelect);
             }
+            applyProdukMetaForRow(rowEl);
             populateProdukOptionsForRow(rowEl);
         });
     }
@@ -1133,6 +1227,16 @@ document.addEventListener('DOMContentLoaded', function() {
             });
 
             container.appendChild(newRow);
+
+            // Ensure Negara Produsen keeps its options in dynamic rows
+            const negaraSelect = newRow.querySelector('select[name="negara_produsen[]"]');
+            if (negaraSelect) {
+                const optionCount = negaraSelect.querySelectorAll('option').length;
+                if (optionCount <= 1) {
+                    rebuildNegaraProdusenOptions(negaraSelect);
+                }
+            }
+
             // Force re-init Choices in the new row (more reliable than init-once flags)
             refreshChoicesForContainer(newRow);
             initializeProdukFlow();

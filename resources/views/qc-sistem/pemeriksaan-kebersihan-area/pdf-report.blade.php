@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Pemeriksaan Kebersihan Area</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 12mm;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            font-size: 9px;
+            line-height: 1.4;
+            color: #1a1a1a;
+            background: #fff;
+        }
+
+        .header {
+            display: table;
+            width: 100%;
+            margin-bottom: 12px;
+            border-bottom: 2px solid #1a1a1a;
+            padding-bottom: 8px;
+        }
+
+        .logo-company {
+            display: table;
+            width: auto;
+        }
+
+        .header-logo,
+        .header-company {
+            display: table-cell;
+            vertical-align: middle;
+        }
+
+        .header-logo {
+            padding-right: 10px;
+        }
+
+        .header-logo img {
+            width: 40px;
+            height: auto;
+        }
+
+        .header-company h2 {
+            margin: 0;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .header-company p {
+            margin: 0;
+            font-size: 9px;
+            color: #495057;
+        }
+
+        .header-title h1 {
+            margin: 0;
+            font-size: 14px;
+            font-weight: 700;
+            text-align: right;
+        }
+
+        .header-left {
+            display: table-cell;
+            width: 60%;
+            vertical-align: middle;
+        }
+
+        .header-right {
+            display: table-cell;
+            width: 40%;
+            vertical-align: middle;
+            text-align: right;
+        }
+
+        .header-title {
+            font-size: 13px;
+            font-weight: bold;
+            color: #1a1a1a;
+            background: #f8f9fa;
+            padding: 8px 12px;
+            border-radius: 4px;
+            border-left: 4px solid #c41e3a;
+            display: inline-block;
+        }
+
+        .subheader {
+            width: 100%;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            margin-bottom: 12px;
+            background: #f8f9fa;
+        }
+
+        .subheader-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .subheader-table td {
+            padding: 7px 10px;
+            font-size: 8px;
+            border-bottom: 1px solid #e9ecef;
+            vertical-align: top;
+        }
+
+        .subheader-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .subheader-label {
+            font-weight: 600;
+            color: #495057;
+            width: 90px;
+        }
+
+        .subheader-divider {
+            width: 1px;
+            background: #dee2e6;
+            padding: 0;
+        }
+
+        table.report {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid #dee2e6;
+        }
+
+        table.report thead {
+            display: table-header-group;
+        }
+
+        table.report th {
+            background: #8b1428;
+            color: #fff;
+            font-size: 8px;
+            padding: 6px;
+            border: 1px solid #5c0e1a;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        table.report td {
+            font-size: 8px;
+            padding: 6px;
+            border: 1px solid #dee2e6;
+            vertical-align: top;
+        }
+
+        .muted {
+            color: #6c757d;
+        }
+
+        .badge-ok {
+            color: #1f7a1f;
+            font-weight: 600;
+        }
+
+        .badge-no {
+            color: #c41e3a;
+            font-weight: 600;
+        }
+
+        .signature {
+            margin-top: 14px;
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .signature td {
+            width: 33.33%;
+            text-align: center;
+            padding: 10px;
+            border: 1px solid #dee2e6;
+        }
+
+        .signature-title {
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 28px;
+            font-size: 8px;
+        }
+
+        .signature-name {
+            font-weight: 600;
+            font-size: 9px;
+        }
+
+        .signature-role {
+            font-size: 8px;
+            color: #6c757d;
+        }
+
+        .signature-section {
+            margin-top: 14px;
+            page-break-inside: avoid;
+        }
+
+        .signature-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .signature-cell {
+            width: 33.33%;
+            text-align: center;
+            padding: 10px;
+            border: 1px solid #dee2e6;
+        }
+
+        .signature-header-item {
+            font-weight: 600;
+            color: #495057;
+            font-size: 8px;
+        }
+
+        .signature-space {
+            height: 28px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-left">
+            <div class="logo-company">
+                <div class="header-logo">
+                    <img src="{{ public_path('dist/images/logo/cpi-logo.png') }}" alt="Logo CPI">
+                </div>
+                <div class="header-company">
+                    <h2>PT. CHAROEN POKPHAND INDONESIA</h2>
+                    <p>FOOD DIVISION MEDAN</p>
+                    <p>MEDAN - INDONESIA</p>
+                </div>
+            </div>
+        </div>
+        <div class="header-right">
+            <div class="header-title">
+                <h1>PEMERIKSAAN KEBERSIHAN AREA</h1>
+            </div>
+        </div>
+    </div>
+
+    <div class="subheader">
+        <table class="subheader-table">
+            @php
+                $firstPemeriksaan = $pemeriksaans->first();
+            @endphp
+            <tr>
+                <td class="subheader-label">Shift</td>
+                <td>{{ $shift ? ($shift->shift ?? '-') : '-' }}</td>
+                <td class="subheader-divider"></td>
+                <td class="subheader-label">Tanggal</td>
+                <td>
+                    @if(!empty($tanggal_dari) || !empty($tanggal_sampai))
+                        {{ $tanggal_dari ?? '-' }} s/d {{ $tanggal_sampai ?? '-' }}
+                    @elseif(!empty($tanggal))
+                        {{ $tanggal }}
+                    @else
+                        -
+                    @endif
+                </td>
+                <td class="subheader-divider"></td>
+                <td class="subheader-label">Area</td>
+                <td>{{ $firstPemeriksaan && $firstPemeriksaan->area ? $firstPemeriksaan->area->nama_area : '-' }}</td>
+            </tr>
+        </table>
+    </div>
+
+    <table class="report">
+        <tbody>
+            @forelse($pemeriksaans as $i => $p)
+                @php
+                    $details = $p->details ?? collect();
+                @endphp
+                <tr>
+                    <td colspan="4">
+                        <table class="report" style="border: none;">
+                            <thead>
+                                <tr>
+                                    <th style="width: 4%;">#</th>
+                                    <th style="width: 32%;">Aspek Yang Dinilai</th>
+                                    <th style="width: 10%;">Sebelum Proses</th>
+                                    <th style="width: 10%;">Saat Proses</th>
+                                    <th style="width: 10%;">Verifikasi</th>
+                                    <th style="width: 17%;">Keterangan</th>
+                                    <th style="width: 17%;">Tindakan Koreksi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($details as $dIndex => $d)
+                                    <tr>
+                                        <td style="text-align:center;">{{ $dIndex + 1 }}</td>
+                                        <td>{{ $d->field ? $d->field->field_name : '-' }}</td>
+                                        <td>
+                                            @if($d->status_sebelum_proses === true)
+                                                <span class="badge-ok">OK</span>
+                                            @elseif($d->status_sebelum_proses === false)
+                                                <span class="badge-no">Tidak OK</span>
+                                            @else
+                                                <span class="muted">-</span>
+                                            @endif
+                                        </td>
+                                        <td>
+                                            @if($d->status_saat_proses === true)
+                                                <span class="badge-ok">OK</span>
+                                            @elseif($d->status_saat_proses === false)
+                                                <span class="badge-no">Tidak OK</span>
+                                            @else
+                                                <span class="muted">-</span>
+                                            @endif
+                                        </td>
+                                        <td>
+                                            @if($d->verifikasi_hasil === true)
+                                                <span class="badge-ok">OK</span>
+                                            @elseif($d->verifikasi_hasil === false)
+                                                <span class="badge-no">Tidak OK</span>
+                                            @else
+                                                <span class="muted">-</span>
+                                            @endif
+                                        </td>
+                                        <td>{{ $d->keterangan ?? '-' }}</td>
+                                        <td>{{ $d->tindakan_koreksi ?? '-' }}</td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </td>
+                </tr>
+            @empty
+                <tr>
+                    <td colspan="4" style="text-align:center;" class="muted">Tidak ada data</td>
+                </tr>
+            @endforelse
+        </tbody>
+    </table>
+
+    <div class="signature-section">
+        @php
+            $firstRecord = $pemeriksaans->first();
+        @endphp
+        <table class="signature-table">
+            <tr>
+                <td class="signature-cell">
+                    <div class="signature-header-item">Dibuat Oleh (QC)</div>
+                    <div class="signature-space"></div>
+                    <div class="signature-name">{{ $firstRecord && $firstRecord->qcVerifier ? $firstRecord->qcVerifier->name : '-' }}</div>
+                </td>
+                <td class="signature-cell">
+                    <div class="signature-header-item">Disetujui Oleh (Produksi)</div>
+                    <div class="signature-space"></div>
+                    <div class="signature-name">{{ $firstRecord && $firstRecord->produksiVerifier ? $firstRecord->produksiVerifier->name : '-' }}</div>
+                </td>
+                <td class="signature-cell">
+                    <div class="signature-header-item">Diverifikasi Oleh (SPV QC)</div>
+                    <div class="signature-space"></div>
+                    <div class="signature-name">{{ $firstRecord && $firstRecord->spvVerifier ? $firstRecord->spvVerifier->name : '-' }}</div>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <div style="text-align: right; padding-right: 10px; font-style: italic; font-size: 9px; color: #666; margin-top: 5px;">
+        QW 02/00
+    </div>
+</body>
+</html>

@@ -12,6 +12,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use App\Models\User;
+use Barryvdh\DomPDF\Facade\Pdf as PDF;
 
 class PemeriksaanBarangMudahPecahController extends Controller
 {
@@ -96,10 +98,6 @@ class PemeriksaanBarangMudahPecahController extends Controller
         $validDetails = [];
         
         foreach ($request->details as $index => $detail) {
-            // Skip jika tidak ada lokasi area (REQUIRED)
-            if (empty($detail['id_input_area_locations'] ?? null)) {
-                continue;
-            }
             // Awal dan Akhir sekarang NULLABLE - tidak perlu skip
             
             // Tentukan apakah manual atau database
@@ -107,11 +105,14 @@ class PemeriksaanBarangMudahPecahController extends Controller
             
             if ($isManual) {
                 // MANUAL MODE
+                if (empty($detail['nama_barang_manual'] ?? null) && empty($detail['jumlah_manual'] ?? null)) {
+                    continue;
+                }
                 $validDetails[] = [
                     'id_barang' => null,
                     'nama_barang_manual' => $detail['nama_barang_manual'],
                     'jumlah_barang' => $detail['jumlah_manual'] ?? 0,
-                    'id_input_area_locations' => $detail['id_input_area_locations'],
+                    'id_input_area_locations' => $detail['id_input_area_locations'] ?? null,
                     'awal' => $detail['awal'] ?? null,  // Nullable
                     'akhir' => $detail['akhir'] ?? null,  // Nullable
                     'temuan_ketidaksesuaian' => $detail['temuan_ketidaksesuaian'] ?? null,
@@ -129,7 +130,7 @@ class PemeriksaanBarangMudahPecahController extends Controller
                     'id_barang' => $barang->id,
                     'nama_barang_manual' => null,
                     'jumlah_barang' => $barang->jumlah_barang ?? 0,
-                    'id_input_area_locations' => $detail['id_input_area_locations'],
+                    'id_input_area_locations' => $detail['id_input_area_locations'] ?? null,
                     'awal' => $detail['awal'] ?? null,  // Nullable
                     'akhir' => $detail['akhir'] ?? null,  // Nullable
                     'temuan_ketidaksesuaian' => $detail['temuan_ketidaksesuaian'] ?? null,
@@ -257,9 +258,9 @@ class PemeriksaanBarangMudahPecahController extends Controller
             $isManual = !empty($detail['nama_barang_manual'] ?? null);
             
             $rules = [
-                'details.' . $index . '.id_input_area_locations' => 'required|exists:input_area_locations,id',
-                'details.' . $index . '.awal' => 'required|in:baik,tidak-baik',
-                'details.' . $index . '.akhir' => 'required|in:baik,tidak-baik',
+                'details.' . $index . '.id_input_area_locations' => 'nullable|exists:input_area_locations,id',
+                'details.' . $index . '.awal' => 'nullable|in:baik,tidak-baik',
+                'details.' . $index . '.akhir' => 'nullable|in:baik,tidak-baik',
                 'details.' . $index . '.temuan_ketidaksesuaian' => 'nullable|string',
                 'details.' . $index . '.tindakan_koreksi' => 'nullable|string',
                 'details.' . $index . '.nama_karyawan' => 'nullable|string|max:255',
@@ -312,10 +313,10 @@ class PemeriksaanBarangMudahPecahController extends Controller
                     'id_pemeriksaan' => $pemeriksaanBarangMudahPecah->id,
                     'id_barang' => $idBarang,
                     'nama_barang_manual' => $isManual ? $namaBarang : null,
-                    'id_input_area_locations' => $detail['id_input_area_locations'],
+                    'id_input_area_locations' => $detail['id_input_area_locations'] ?? null,
                     'jumlah_barang' => $jumlahBarang,
-                    'awal' => $detail['awal'],
-                    'akhir' => $detail['akhir'],
+                    'awal' => $detail['awal'] ?? null,
+                    'akhir' => $detail['akhir'] ?? null,
                     'temuan_ketidaksesuaian' => $detail['temuan_ketidaksesuaian'] ?? null,
                     'tindakan_koreksi' => $detail['tindakan_koreksi'] ?? null,
                     'nama_karyawan' => $detail['nama_karyawan'] ?? null,
@@ -409,6 +410,7 @@ class PemeriksaanBarangMudahPecahController extends Controller
         $pemeriksaanBarangMudahPecah->update([
             'status_verifikasi' => 'sent_to_produksi',
             'verified_by' => $user->id,
+            'verified_by_qc' => $user->id,
             'verified_at' => now(),
         ]);
         
@@ -436,6 +438,7 @@ class PemeriksaanBarangMudahPecahController extends Controller
         $pemeriksaanBarangMudahPecah->update([
             'status_verifikasi' => 'approved_produksi',
             'verified_by' => $user->id,
+            'verified_by_produksi' => $user->id,
             'verified_at' => now(),
             'verification_notes' => $request->input('notes'),
         ]);
@@ -468,6 +471,7 @@ class PemeriksaanBarangMudahPecahController extends Controller
         $pemeriksaanBarangMudahPecah->update([
             'status_verifikasi' => 'rejected_produksi',
             'verified_by' => $user->id,
+            'verified_by_produksi' => $user->id,
             'verified_at' => now(),
             'verification_notes' => $request->input('notes'),
         ]);
@@ -496,6 +500,7 @@ class PemeriksaanBarangMudahPecahController extends Controller
         $pemeriksaanBarangMudahPecah->update([
             'status_verifikasi' => 'approved_spv',
             'verified_by' => $user->id,
+            'verified_by_spv' => $user->id,
             'verified_at' => now(),
             'verification_notes' => $request->input('notes'),
         ]);
@@ -528,10 +533,82 @@ class PemeriksaanBarangMudahPecahController extends Controller
         $pemeriksaanBarangMudahPecah->update([
             'status_verifikasi' => 'rejected_spv',
             'verified_by' => $user->id,
+            'verified_by_spv' => $user->id,
             'verified_at' => now(),
             'verification_notes' => $request->input('notes'),
         ]);
         
         return redirect()->back()->with('error', 'Pemeriksaan ditolak oleh SPV QC. Silakan perbaiki dan kirim ulang.');
+    }
+
+    public function exportPDF(Request $request)
+    {
+        $user = Auth::user();
+
+        $id_shift = $request->input('id_shift');
+        $tanggalDari = $request->input('tanggal_dari');
+        $tanggalSampai = $request->input('tanggal_sampai');
+        $tanggal = $request->input('tanggal');
+
+        $query = PemeriksaanBarangMudahPecah::with([
+            'user.role',
+            'user.plant',
+            'shift',
+            'area',
+            'details.barang',
+            'details.areaLocation',
+            'qcVerifier',
+            'produksiVerifier',
+            'spvVerifier',
+        ]);
+
+        if ($user->role && strtolower($user->role->role) !== 'superadmin') {
+            $query->whereHas('user', function ($q) use ($user) {
+                $q->where('id_plant', $user->id_plant);
+            });
+        }
+
+        if ($id_shift) {
+            $query->where('id_shift', $id_shift);
+        }
+
+        if ($id_shift) {
+            $shift = Shift::find($id_shift);
+            $shiftName = $shift ? trim(strtolower((string) $shift->shift)) : null;
+
+            if ($shiftName === '1' || $shiftName === 'shift 1') {
+                if ($tanggalDari && $tanggalSampai) {
+                    $query->whereBetween('tanggal', [$tanggalDari, $tanggalSampai]);
+                } elseif ($tanggalDari) {
+                    $query->whereDate('tanggal', '>=', $tanggalDari);
+                } elseif ($tanggalSampai) {
+                    $query->whereDate('tanggal', '<=', $tanggalSampai);
+                }
+            } else {
+                if ($tanggal) {
+                    $query->whereDate('tanggal', $tanggal);
+                }
+            }
+        } else {
+            if ($tanggal) {
+                $query->whereDate('tanggal', $tanggal);
+            }
+        }
+
+        $pemeriksaans = $query->latest()->get();
+
+        $shift = $id_shift ? Shift::find($id_shift) : null;
+
+        $pdf = PDF::loadView('qc-sistem.pemeriksaan-barang-mudah-pecah.pdf-report', [
+            'pemeriksaans' => $pemeriksaans,
+            'tanggal' => $tanggal,
+            'tanggal_dari' => $tanggalDari,
+            'tanggal_sampai' => $tanggalSampai,
+            'shift' => $shift,
+        ]);
+
+        $filenameDate = $tanggal ?? $tanggalDari ?? date('Y-m-d');
+        $filename = 'laporan-pemeriksaan-barang-mudah-pecah-' . $filenameDate . '.pdf';
+        return $pdf->download($filename);
     }
 }

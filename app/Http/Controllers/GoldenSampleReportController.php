@@ -8,6 +8,8 @@ use App\Models\Shift;
 use App\Models\InputDeskripsi;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Models\User;
+use Barryvdh\DomPDF\Facade\Pdf as PDF;
 
 class GoldenSampleReportController extends Controller
 {
@@ -263,6 +265,7 @@ class GoldenSampleReportController extends Controller
         $goldenSampleReport->update([
             'status_verifikasi' => 'sent_to_produksi',
             'verified_by' => $user->id,
+            'verified_by_qc' => $user->id,
             'verified_at' => now(),
         ]);
         
@@ -285,6 +288,7 @@ class GoldenSampleReportController extends Controller
         $goldenSampleReport->update([
             'status_verifikasi' => 'approved_produksi',
             'verified_by' => $user->id,
+            'verified_by_produksi' => $user->id,
             'verified_at' => now(),
             'verification_notes' => $request->input('notes'),
         ]);
@@ -312,6 +316,7 @@ class GoldenSampleReportController extends Controller
         $goldenSampleReport->update([
             'status_verifikasi' => 'rejected_produksi',
             'verified_by' => $user->id,
+            'verified_by_produksi' => $user->id,
             'verified_at' => now(),
             'verification_notes' => $request->input('notes'),
         ]);
@@ -335,6 +340,7 @@ class GoldenSampleReportController extends Controller
         $goldenSampleReport->update([
             'status_verifikasi' => 'approved_spv',
             'verified_by' => $user->id,
+            'verified_by_spv' => $user->id,
             'verified_at' => now(),
             'verification_notes' => $request->input('notes'),
         ]);
@@ -362,10 +368,100 @@ class GoldenSampleReportController extends Controller
         $goldenSampleReport->update([
             'status_verifikasi' => 'rejected_spv',
             'verified_by' => $user->id,
+            'verified_by_spv' => $user->id,
             'verified_at' => now(),
             'verification_notes' => $request->input('notes'),
         ]);
         
         return redirect()->back()->with('error', 'Report ditolak oleh SPV QC. Silakan perbaiki dan kirim ulang.');
+    }
+
+    public function exportPDF(Request $request)
+    {
+        $user = Auth::user();
+
+        $id_shift = $request->input('id_shift');
+        $tanggalDari = $request->input('tanggal_dari');
+        $tanggalSampai = $request->input('tanggal_sampai');
+        $tanggal = $request->input('tanggal');
+
+        $query = GoldenSampleReport::with([
+            'user.role',
+            'user.plant',
+            'plant',
+            'shift',
+            'qcVerifier',
+            'produksiVerifier',
+            'spvVerifier',
+        ]);
+
+        if ($user->role && strtolower($user->role->role) !== 'superadmin') {
+            $query->whereHas('user', function ($q) use ($user) {
+                $q->where('id_plant', $user->id_plant);
+            });
+        }
+
+        if ($id_shift) {
+            $query->where('id_shift', $id_shift);
+        }
+
+        if ($id_shift) {
+            $shift = Shift::find($id_shift);
+            $shiftName = $shift ? trim(strtolower((string) $shift->shift)) : null;
+
+            if ($shiftName === '1' || $shiftName === 'shift 1') {
+                if ($tanggalDari && $tanggalSampai) {
+                    $query->whereBetween('tanggal', [$tanggalDari, $tanggalSampai]);
+                } elseif ($tanggalDari) {
+                    $query->whereDate('tanggal', '>=', $tanggalDari);
+                } elseif ($tanggalSampai) {
+                    $query->whereDate('tanggal', '<=', $tanggalSampai);
+                }
+            } else {
+                if ($tanggal) {
+                    $query->whereDate('tanggal', $tanggal);
+                }
+            }
+        } else {
+            if ($tanggal) {
+                $query->whereDate('tanggal', $tanggal);
+            }
+        }
+
+        $reports = $query->latest()->get();
+
+        $shift = $id_shift ? Shift::find($id_shift) : null;
+
+        $allDeskripsiUuids = $reports
+            ->flatMap(function ($report) {
+                $samples = is_array($report->samples) ? $report->samples : [];
+                return collect($samples)->flatMap(function ($s) {
+                    $ids = (isset($s['id_deskripsi']) && is_array($s['id_deskripsi'])) ? $s['id_deskripsi'] : [];
+                    return collect($ids);
+                });
+            })
+            ->filter()
+            ->unique()
+            ->values();
+
+        $deskripsiMap = [];
+        if ($allDeskripsiUuids->count() > 0) {
+            $deskripsiMap = InputDeskripsi::whereIn('uuid', $allDeskripsiUuids->toArray())
+                ->pluck('nama_deskripsi', 'uuid')
+                ->toArray();
+        }
+
+        $pdf = PDF::loadView('qc-sistem.golden-sample-retort.pdf-report', [
+            'reports' => $reports,
+            'tanggal' => $tanggal,
+            'tanggal_dari' => $tanggalDari,
+            'tanggal_sampai' => $tanggalSampai,
+            'shift' => $shift,
+            'deskripsiMap' => $deskripsiMap,
+        ]);
+
+        $filenameDate = $tanggal ?? $tanggalDari ?? date('Y-m-d');
+        $filename = 'laporan-golden-sample-report-' . $filenameDate . '.pdf';
+        return $pdf->download($filename);
     }
 }

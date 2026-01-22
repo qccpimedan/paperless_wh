@@ -5,8 +5,11 @@ namespace App\Http\Controllers;
 use App\Models\PemeriksaanProdukFinishGood;
 use App\Models\Produk;
 use App\Models\Shift;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Barryvdh\DomPDF\Facade\Pdf as PDF;
+use Monarobase\CountryList\CountryListFacade as Countries;
 
 class PemeriksaanProdukFinishGoodController extends Controller
 {
@@ -55,6 +58,8 @@ class PemeriksaanProdukFinishGoodController extends Controller
     {
         $user = Auth::user();
         $plantId = $user->id_plant;
+
+        $countries = Countries::getList('en', 'php');
 
         if ($user->role && strtolower($user->role->role) === 'superadmin') {
             $shifts = Shift::with(['user.plant'])->get();
@@ -114,6 +119,7 @@ class PemeriksaanProdukFinishGoodController extends Controller
 
         return view('qc-sistem.pemeriksaan-produk-finish-good.create', compact(
             'shifts',
+            'countries',
             'produkKategoriOptions',
             'produkByKategori',
             'produkMeta',
@@ -125,7 +131,7 @@ class PemeriksaanProdukFinishGoodController extends Controller
     {
         $validated = $request->validate([
             'tanggal' => 'required|date',
-            'id_shift' => 'nullable|exists:shifts,id',
+            'id_shift' => 'required|exists:shifts,id',
             'jenis_mobil' => 'nullable|string|max:255',
             'no_mobil' => 'nullable|string|max:255',
             'nama_supir' => 'nullable|string|max:255',
@@ -314,6 +320,8 @@ class PemeriksaanProdukFinishGoodController extends Controller
         $user = Auth::user();
         $plantId = $user->id_plant;
 
+        $countries = Countries::getList('en', 'php');
+
         if ($user->role && strtolower($user->role->role) === 'superadmin') {
             $shifts = Shift::with(['user.plant'])->get();
         } else {
@@ -373,6 +381,7 @@ class PemeriksaanProdukFinishGoodController extends Controller
         return view('qc-sistem.pemeriksaan-produk-finish-good.edit', compact(
             'pemeriksaanProdukFinishGood',
             'shifts',
+            'countries',
             'produkKategoriOptions',
             'produkByKategori',
             'produkMeta',
@@ -384,7 +393,7 @@ class PemeriksaanProdukFinishGoodController extends Controller
     {
         $validated = $request->validate([
             'tanggal' => 'required|date',
-            'id_shift' => 'nullable|exists:shifts,id',
+            'id_shift' => 'required|exists:shifts,id',
             'jenis_mobil' => 'nullable|string|max:255',
             'no_mobil' => 'nullable|string|max:255',
             'nama_supir' => 'nullable|string|max:255',
@@ -553,5 +562,266 @@ class PemeriksaanProdukFinishGoodController extends Controller
         $pemeriksaanProdukFinishGood->delete();
         return redirect()->route('pemeriksaan-produk-finish-good.index')
             ->with('success', 'Data pemeriksaan Finish Good berhasil dihapus');
+    }
+
+    /**
+     * Check if user has access to pemeriksaan based on plant
+     */
+    private function checkPlantAccess(PemeriksaanProdukFinishGood $pemeriksaan)
+    {
+        $user = Auth::user();
+
+        if ($user->role && strtolower($user->role->role) === 'superadmin') {
+            return;
+        }
+
+        if ($pemeriksaan->user && $pemeriksaan->user->id_plant !== $user->id_plant) {
+            abort(403, 'Anda tidak memiliki akses ke data ini.');
+        }
+    }
+
+    public function sendToProduksi(PemeriksaanProdukFinishGood $pemeriksaanProdukFinishGood)
+    {
+        $user = Auth::user();
+        $this->checkPlantAccess($pemeriksaanProdukFinishGood);
+
+        $userRole = $user->role ? strtolower($user->role->role) : null;
+        if ($userRole !== 'qc inspector') {
+            abort(403, 'Anda tidak memiliki akses untuk melakukan aksi ini.');
+        }
+
+        if (($pemeriksaanProdukFinishGood->status_verifikasi ?? 'pending') !== 'pending') {
+            return redirect()->back()->with('error', 'Hanya pemeriksaan dengan status pending yang dapat dikirim.');
+        }
+
+        $pemeriksaanProdukFinishGood->update([
+            'status_verifikasi' => 'sent_to_produksi',
+            'verified_by' => $user->id,
+            'verified_by_qc' => $user->id,
+            'verified_at' => now(),
+        ]);
+
+        return redirect()->back()->with('success', 'Pemeriksaan berhasil dikirim ke Produksi.');
+    }
+
+    public function approveProduksi(Request $request, PemeriksaanProdukFinishGood $pemeriksaanProdukFinishGood)
+    {
+        $user = Auth::user();
+        $this->checkPlantAccess($pemeriksaanProdukFinishGood);
+
+        $userRole = $user->role ? strtolower($user->role->role) : null;
+        if ($userRole !== 'produksi') {
+            abort(403, 'Anda tidak memiliki akses untuk melakukan aksi ini.');
+        }
+
+        if (($pemeriksaanProdukFinishGood->status_verifikasi ?? 'pending') !== 'sent_to_produksi') {
+            return redirect()->back()->with('error', 'Status pemeriksaan tidak valid untuk di-approve.');
+        }
+
+        $pemeriksaanProdukFinishGood->update([
+            'status_verifikasi' => 'approved_produksi',
+            'verified_by' => $user->id,
+            'verified_by_produksi' => $user->id,
+            'verified_at' => now(),
+            'verification_notes' => $request->input('notes'),
+        ]);
+
+        return redirect()->back()->with('success', 'Pemeriksaan berhasil di-approve oleh Produksi.');
+    }
+
+    public function rejectProduksi(Request $request, PemeriksaanProdukFinishGood $pemeriksaanProdukFinishGood)
+    {
+        $request->validate(['notes' => 'required|string|min:5']);
+        $user = Auth::user();
+        $this->checkPlantAccess($pemeriksaanProdukFinishGood);
+
+        $userRole = $user->role ? strtolower($user->role->role) : null;
+        if ($userRole !== 'produksi') {
+            abort(403, 'Anda tidak memiliki akses untuk melakukan aksi ini.');
+        }
+
+        if (($pemeriksaanProdukFinishGood->status_verifikasi ?? 'pending') !== 'sent_to_produksi') {
+            return redirect()->back()->with('error', 'Status pemeriksaan tidak valid untuk di-reject.');
+        }
+
+        $pemeriksaanProdukFinishGood->update([
+            'status_verifikasi' => 'rejected_produksi',
+            'verified_by' => $user->id,
+            'verified_at' => now(),
+            'verification_notes' => $request->input('notes'),
+        ]);
+
+        return redirect()->back()->with('error', 'Pemeriksaan ditolak oleh Produksi. Silakan perbaiki dan kirim ulang.');
+    }
+
+    public function approveSPV(Request $request, PemeriksaanProdukFinishGood $pemeriksaanProdukFinishGood)
+    {
+        $user = Auth::user();
+        $this->checkPlantAccess($pemeriksaanProdukFinishGood);
+
+        $userRole = $user->role ? strtolower($user->role->role) : null;
+        if ($userRole !== 'spv qc') {
+            abort(403, 'Anda tidak memiliki akses untuk melakukan aksi ini.');
+        }
+
+        if (($pemeriksaanProdukFinishGood->status_verifikasi ?? 'pending') !== 'approved_produksi') {
+            return redirect()->back()->with('error', 'Pemeriksaan harus disetujui Produksi terlebih dahulu.');
+        }
+
+        $pemeriksaanProdukFinishGood->update([
+            'status_verifikasi' => 'approved_spv',
+            'verified_by' => $user->id,
+            'verified_by_spv' => $user->id,
+            'verified_at' => now(),
+            'verification_notes' => $request->input('notes'),
+        ]);
+
+        return redirect()->back()->with('success', 'Pemeriksaan berhasil diverifikasi oleh SPV QC.');
+    }
+
+    public function rejectSPV(Request $request, PemeriksaanProdukFinishGood $pemeriksaanProdukFinishGood)
+    {
+        $request->validate(['notes' => 'required|string|min:5']);
+        $user = Auth::user();
+        $this->checkPlantAccess($pemeriksaanProdukFinishGood);
+
+        $userRole = $user->role ? strtolower($user->role->role) : null;
+        if ($userRole !== 'spv qc') {
+            abort(403, 'Anda tidak memiliki akses untuk melakukan aksi ini.');
+        }
+
+        if (($pemeriksaanProdukFinishGood->status_verifikasi ?? 'pending') !== 'approved_produksi') {
+            return redirect()->back()->with('error', 'Status pemeriksaan tidak valid untuk di-reject.');
+        }
+
+        $pemeriksaanProdukFinishGood->update([
+            'status_verifikasi' => 'rejected_spv',
+            'verified_by' => $user->id,
+            'verified_at' => now(),
+            'verification_notes' => $request->input('notes'),
+        ]);
+
+        return redirect()->back()->with('error', 'Pemeriksaan ditolak oleh SPV QC. Silakan perbaiki dan kirim ulang.');
+    }
+
+    public function exportPDF(Request $request)
+    {
+        $user = Auth::user();
+
+        $id_shift = $request->input('id_shift');
+        $tanggalDari = $request->input('tanggal_dari');
+        $tanggalSampai = $request->input('tanggal_sampai');
+        $tanggal = $request->input('tanggal');
+
+        $query = PemeriksaanProdukFinishGood::with([
+            'user.role',
+            'user.plant',
+            'shift',
+            'verifiedBy.role',
+        ])->with([
+            'qcVerifier' => function ($q) {
+                $q->select('id', 'name');
+            },
+            'produksiVerifier' => function ($q) {
+                $q->select('id', 'name');
+            },
+            'spvVerifier' => function ($q) {
+                $q->select('id', 'name');
+            },
+        ]);
+
+        if ($user->role && strtolower($user->role->role) !== 'superadmin') {
+            $query->whereHas('user', function ($q) use ($user) {
+                $q->where('id_plant', $user->id_plant);
+            });
+        }
+
+        if ($id_shift) {
+            $query->where('id_shift', $id_shift);
+        }
+
+        if ($id_shift) {
+            $shift = Shift::find($id_shift);
+            $shiftName = $shift ? trim(strtolower((string) $shift->shift)) : null;
+
+            if ($shiftName === '1' || $shiftName === 'shift 1') {
+                if ($tanggalDari && $tanggalSampai) {
+                    $query->whereBetween('tanggal', [$tanggalDari, $tanggalSampai]);
+                } elseif ($tanggalDari) {
+                    $query->whereDate('tanggal', '>=', $tanggalDari);
+                } elseif ($tanggalSampai) {
+                    $query->whereDate('tanggal', '<=', $tanggalSampai);
+                }
+            } else {
+                if ($tanggal) {
+                    $query->whereDate('tanggal', $tanggal);
+                }
+            }
+        } else {
+            if ($tanggal) {
+                $query->whereDate('tanggal', $tanggal);
+            }
+        }
+
+        $pemeriksaans = $query->latest()->get();
+
+        if ($pemeriksaans->isEmpty()) {
+            return redirect()->back()->with('error', 'Tidak ada data yang sesuai dengan filter yang dipilih. Pastikan data sudah memiliki Shift dan Tanggal yang benar.');
+        }
+
+        $shift = $id_shift ? Shift::find($id_shift) : null;
+
+        $qcUser = null;
+        $produksiUser = null;
+        $spvQcUser = null;
+
+        $allQcIds = $pemeriksaans->pluck('verified_by_qc')->filter()->unique();
+        $allProduksiIds = $pemeriksaans->pluck('verified_by_produksi')->filter()->unique();
+        $allSpvIds = $pemeriksaans->pluck('verified_by_spv')->filter()->unique();
+
+        if ($allQcIds->count() > 0) {
+            $qcUserData = User::with('role')->whereIn('id', $allQcIds->toArray())->first();
+            if ($qcUserData) $qcUser = $qcUserData->name;
+        }
+
+        if ($allProduksiIds->count() > 0) {
+            $produksiUserData = User::with('role')->whereIn('id', $allProduksiIds->toArray())->first();
+            if ($produksiUserData) $produksiUser = $produksiUserData->name;
+        }
+
+        if ($allSpvIds->count() > 0) {
+            $spvUserData = User::with('role')->whereIn('id', $allSpvIds->toArray())->first();
+            if ($spvUserData) $spvQcUser = $spvUserData->name;
+        }
+
+        $allProdukIds = $pemeriksaans
+            ->flatMap(function ($p) {
+                $ids = $p->id_produk_array;
+                $ids = is_array($ids) ? $ids : [];
+                return $ids;
+            })
+            ->filter(fn ($id) => !empty($id))
+            ->unique()
+            ->values();
+
+        $produkMap = $allProdukIds->isNotEmpty()
+            ? Produk::whereIn('id', $allProdukIds->toArray())->pluck('nama_produk', 'id')->toArray()
+            : [];
+
+        $pdf = PDF::loadView('qc-sistem.pemeriksaan-produk-finish-good.pdf-report', [
+            'pemeriksaans' => $pemeriksaans,
+            'tanggal' => $tanggal,
+            'tanggal_dari' => $tanggalDari,
+            'tanggal_sampai' => $tanggalSampai,
+            'shift' => $shift,
+            'qcUser' => $qcUser,
+            'produksiUser' => $produksiUser,
+            'spvQcUser' => $spvQcUser,
+            'produkMap' => $produkMap,
+        ]);
+
+        $filenameDate = $tanggal ?? $tanggalDari ?? date('Y-m-d');
+        $filename = 'laporan-pemeriksaan-finish-good-' . $filenameDate . '.pdf';
+        return $pdf->download($filename);
     }
 }

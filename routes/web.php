@@ -165,6 +165,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('pemeriksaan-kedatangan-kemasan/export-pdf', [PemeriksaanKedatanganKemasanController::class, 'exportPDF'])->name('pemeriksaan-kedatangan-kemasan.export-pdf');
         Route::get('pemeriksaan-bahan-baku/export-pdf', [PemeriksaanKedatanganBahanBakuPenunjangController::class, 'exportPDF'])->name('pemeriksaan-bahan-baku.export-pdf');
         Route::get('pemeriksaan-chemical/export-pdf', [PemeriksaanKedatanganChemicalController::class, 'exportPDF'])->name('pemeriksaan-chemical.export-pdf');
+        Route::get('pemeriksaan-produk-finish-good/export-pdf', [PemeriksaanProdukFinishGoodController::class, 'exportPDF'])->name('pemeriksaan-produk-finish-good.export-pdf');
+        Route::get('pemeriksaan-loading-produk/export-pdf', [PemeriksaanLoadingProdukController::class, 'exportPDF'])->name('pemeriksaan-loading-produk.export-pdf');
+        Route::get('pemeriksaan-loading-kendaraan/export-pdf', [PemeriksaanLoadingKendaraanController::class, 'exportPDF'])->name('pemeriksaan-loading-kendaraan.export-pdf');
+        Route::get('return-barang/export-pdf', [PemeriksaanReturnBarangCustomerController::class, 'exportPDF'])->name('return-barang.export-pdf');
+        Route::get('pemeriksaan-kebersihan-area/export-pdf', [PemeriksaanKebersihanAreaController::class, 'exportPDF'])->name('pemeriksaan-kebersihan-area.export-pdf');
+        Route::get('golden-sample-reports/export-pdf', [GoldenSampleReportController::class, 'exportPDF'])->name('golden-sample-reports.export-pdf');
+        Route::get('pemeriksaan-barang-mudah-pecah/export-pdf', [PemeriksaanBarangMudahPecahController::class, 'exportPDF'])->name('pemeriksaan-barang-mudah-pecah.export-pdf');
         Route::get('detail-komplain/{detailKomplain:uuid}/export-pdf', [DetailKomplainController::class, 'exportPdf'])->name('detail-komplain.export-pdf');
         
         // Routes Tambah data per uuid
@@ -177,7 +184,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
         
         // Upload File Detail Komplain
         Route::post('detail-komplain/{detailKomplain:uuid}/upload-suplier', [DetailKomplainController::class, 'uploadSuplier'])->name('detail-komplain.upload-suplier');
-        
         
         // Routes Menu
         Route::resource('pemeriksaan-kedatangan-kemasan', PemeriksaanKedatanganKemasanController::class);
@@ -272,6 +278,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('pemeriksaan-kedatangan-kemasan/{pemeriksaanKedatanganKemasan:uuid}/reject-produksi', [PemeriksaanKedatanganKemasanController::class, 'rejectProduksi'])->name('pemeriksaan-kedatangan-kemasan.reject-produksi');
         Route::post('pemeriksaan-kedatangan-kemasan/{pemeriksaanKedatanganKemasan:uuid}/approve-spv', [PemeriksaanKedatanganKemasanController::class, 'approveSPV'])->name('pemeriksaan-kedatangan-kemasan.approve-spv');
         Route::post('pemeriksaan-kedatangan-kemasan/{pemeriksaanKedatanganKemasan:uuid}/reject-spv', [PemeriksaanKedatanganKemasanController::class, 'rejectSPV'])->name('pemeriksaan-kedatangan-kemasan.reject-spv');
+
+        // Routes untuk verifikasi pemeriksaan produk finish good
+        Route::post('pemeriksaan-produk-finish-good/{pemeriksaanProdukFinishGood:uuid}/send-to-produksi', [PemeriksaanProdukFinishGoodController::class, 'sendToProduksi'])->name('pemeriksaan-produk-finish-good.send-to-produksi');
+        Route::post('pemeriksaan-produk-finish-good/{pemeriksaanProdukFinishGood:uuid}/approve-produksi', [PemeriksaanProdukFinishGoodController::class, 'approveProduksi'])->name('pemeriksaan-produk-finish-good.approve-produksi');
+        Route::post('pemeriksaan-produk-finish-good/{pemeriksaanProdukFinishGood:uuid}/reject-produksi', [PemeriksaanProdukFinishGoodController::class, 'rejectProduksi'])->name('pemeriksaan-produk-finish-good.reject-produksi');
+        Route::post('pemeriksaan-produk-finish-good/{pemeriksaanProdukFinishGood:uuid}/approve-spv', [PemeriksaanProdukFinishGoodController::class, 'approveSPV'])->name('pemeriksaan-produk-finish-good.approve-spv');
+        Route::post('pemeriksaan-produk-finish-good/{pemeriksaanProdukFinishGood:uuid}/reject-spv', [PemeriksaanProdukFinishGoodController::class, 'rejectSPV'])->name('pemeriksaan-produk-finish-good.reject-spv');
         
         // Routes untuk verifikasi pemeriksaan kedatangan bahan baku penunjang
         Route::post('pemeriksaan-bahan-baku/{pemeriksaanBahanBaku:uuid}/send-to-produksi', [PemeriksaanKedatanganBahanBakuPenunjangController::class, 'sendToProduksi'])->name('pemeriksaan-bahan-baku.send-to-produksi');
