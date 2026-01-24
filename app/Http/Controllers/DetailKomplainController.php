@@ -12,20 +12,37 @@ use Barryvdh\DomPDF\Facade\Pdf;
 
 class DetailKomplainController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $user = Auth::user();
-        $query = DetailKomplain::with('user');
+        $search = trim((string) $request->input('search', ''));
+
+        $query = DetailKomplain::with(['user.role', 'user.plant', 'shift']);
         
         // Role-based filtering
-        if ($user->role->role !== 'SuperAdmin') {
+        if (!($user->role && strtolower($user->role->role) === 'superadmin')) {
             // Admin dan role lain hanya lihat data sesuai plant
             $query->whereHas('user', function ($q) use ($user) {
                 $q->where('id_plant', $user->id_plant);
             });
         }
+
+        if ($search !== '') {
+            $query->where(function ($q) use ($search) {
+                $q->whereDate('tanggal_kedatangan', $search)
+                    ->orWhere('nama_supplier', 'like', '%' . $search . '%')
+                    ->orWhere('no_po', 'like', '%' . $search . '%')
+                    ->orWhere('nama_produk', 'like', '%' . $search . '%')
+                    ->orWhere('kode_produksi', 'like', '%' . $search . '%')
+                    ->orWhere('status_verifikasi', 'like', '%' . $search . '%')
+                    ->orWhere('verification_notes', 'like', '%' . $search . '%')
+                    ->orWhereHas('shift', function ($qs) use ($search) {
+                        $qs->where('shift', 'like', '%' . $search . '%');
+                    });
+            });
+        }
         
-        $komplains = $query->latest()->get();
+        $komplains = $query->latest()->paginate(25);
         return view('qc-sistem.detail-komplain.index', compact('komplains'));
     }
 

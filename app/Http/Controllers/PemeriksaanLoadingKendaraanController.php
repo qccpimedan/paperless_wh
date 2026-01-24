@@ -15,37 +15,49 @@ use Barryvdh\DomPDF\Facade\Pdf as PDF;
 
 class PemeriksaanLoadingKendaraanController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $user = Auth::user();
 
-        // SuperAdmin dapat melihat semua data
-        if ($user->role && strtolower($user->role->role) === 'superadmin') {
-            $pemeriksaans = PemeriksaanLoadingKendaraan::with([
-                'user.role',
-                'user.plant',
-                'ekspedisi',
-                'kendaraan',
-                'tujuanPengiriman',
-                'stdPrecooling'
-            ])->latest()->get();
-        } else {
-            // Admin dan role lain hanya melihat data sesuai plant mereka
-            $pemeriksaans = PemeriksaanLoadingKendaraan::with([
-                'user.role',
-                'user.plant',
-                'ekspedisi',
-                'kendaraan',
-                'tujuanPengiriman',
-                'stdPrecooling'
-            ])
-                ->whereHas('user', function($query) use ($user) {
-                    $query->where('id_plant', $user->id_plant);
-                })
-                ->latest()
-                ->get();
+        $search = trim((string) $request->input('search', ''));
+
+        $query = PemeriksaanLoadingKendaraan::with([
+            'user.role',
+            'user.plant',
+            'ekspedisi',
+            'kendaraan',
+            'tujuanPengiriman',
+            'stdPrecooling'
+        ]);
+
+        if (!($user->role && strtolower($user->role->role) === 'superadmin')) {
+            $query->whereHas('user', function ($q) use ($user) {
+                $q->where('id_plant', $user->id_plant);
+            });
         }
 
+        if ($search !== '') {
+            $query->where(function ($q) use ($search) {
+                $q->whereDate('tanggal', $search)
+                    ->orWhere('status_verifikasi', 'like', '%' . $search . '%')
+                    ->orWhere('verification_notes', 'like', '%' . $search . '%')
+                    ->orWhereHas('shift', function ($qs) use ($search) {
+                        $qs->where('shift', 'like', '%' . $search . '%');
+                    })
+                    ->orWhereHas('ekspedisi', function ($qe) use ($search) {
+                        $qe->where('nama_ekspedisi', 'like', '%' . $search . '%');
+                    })
+                    ->orWhereHas('kendaraan', function ($qk) use ($search) {
+                        $qk->where('jenis_kendaraan', 'like', '%' . $search . '%')
+                            ->orWhere('no_kendaraan', 'like', '%' . $search . '%');
+                    })
+                    ->orWhereHas('tujuanPengiriman', function ($qt) use ($search) {
+                        $qt->where('nama_tujuan', 'like', '%' . $search . '%');
+                    });
+            });
+        }
+
+        $pemeriksaans = $query->latest()->paginate(25);
         return view('qc-sistem.pemeriksaan-loading-kendaraan.index', compact('pemeriksaans'));
     }
 

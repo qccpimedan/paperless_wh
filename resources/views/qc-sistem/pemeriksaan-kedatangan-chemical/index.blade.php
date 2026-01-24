@@ -88,6 +88,15 @@
                             </form>
                         </div>
 
+                        <form action="{{ route('pemeriksaan-chemical.index') }}" method="GET" class="row g-3 mb-3">
+                            <div class="col-md-9">
+                                <input type="text" name="search" class="form-control" placeholder="Cari tanggal/status/shift/catatan..." value="{{ request('search') }}">
+                            </div>
+                            <div class="col-md-3 d-flex align-items-end">
+                                <button type="submit" class="btn btn-primary w-100">Cari</button>
+                            </div>
+                        </form>
+
                         <script>
                             document.addEventListener('DOMContentLoaded', function() {
                                 const shiftSelect = document.getElementById('shiftSelect');
@@ -145,7 +154,7 @@
                             });
                         </script>
                         <div class="table-responsive">
-                            <table class="table table-striped text-center" id="table1" style="white-space: nowrap;">
+                            <table class="table table-striped text-center" id="table1" data-disable-datatable="1" style="white-space: nowrap;">
                                 <thead>
                                     <tr>
                                         <th>No</th>
@@ -220,7 +229,21 @@
                                                 @endif
                                             </td> -->
                                             <td>
-                                                {{ $detail['kode_produksi'] ?? '-' }}
+                                                @php
+                                                    $kodeProduksiArr = [];
+                                                    foreach($detailChemicals as $d) {
+                                                        if(isset($d['kode_produksi']) && $d['kode_produksi'] !== null && $d['kode_produksi'] !== '') {
+                                                            $kodeProduksiArr[] = $d['kode_produksi'];
+                                                        }
+                                                    }
+                                                    $kodeProduksiArr = array_values(array_unique($kodeProduksiArr));
+                                                @endphp
+
+                                                @if(count($kodeProduksiArr) > 0)
+                                                    {{ implode(', ', $kodeProduksiArr) }}
+                                                @else
+                                                    -
+                                                @endif
                                             </td>
                                             <!-- <td>
                                                 @php
@@ -319,6 +342,10 @@
                                     @endforelse
                                 </tbody>
                             </table>
+                        </div>
+
+                        <div class="d-flex justify-content-end mt-3">
+                            {{ $pemeriksaans->appends(request()->query())->links() }}
                         </div>
                     </div>
                 </div>

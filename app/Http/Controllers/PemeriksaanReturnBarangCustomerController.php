@@ -14,36 +14,70 @@ use Barryvdh\DomPDF\Facade\Pdf as PDF;
 
 class PemeriksaanReturnBarangCustomerController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $user = Auth::user();
 
-        // SuperAdmin dapat melihat semua data
-        if ($user->role && strtolower($user->role->role) === 'superadmin') {
-            $pemeriksaans = PemeriksaanReturnBarangCustomer::with([
-                'user.role',
-                'user.plant',
-                'shift',
-                'ekspedisi',
-                'customer',
-                'produk'
-            ])->latest()->get();
-        } else {
-            // Admin dan role lain hanya melihat data sesuai plant mereka
-            $pemeriksaans = PemeriksaanReturnBarangCustomer::with([
-                'user.role',
-                'user.plant',
-                'shift',
-                'ekspedisi',
-                'customer',
-                'produk'
-            ])
-                ->whereHas('user', function($query) use ($user) {
-                    $query->where('id_plant', $user->id_plant);
-                })
-                ->latest()
-                ->get();
+        $search = trim((string) $request->input('search', ''));
+
+        $query = PemeriksaanReturnBarangCustomer::with([
+            'user.role',
+            'user.plant',
+            'shift',
+            'ekspedisi',
+            'customer'
+        ]);
+
+        if (!($user->role && strtolower($user->role->role) === 'superadmin')) {
+            $query->whereHas('user', function ($q) use ($user) {
+                $q->where('id_plant', $user->id_plant);
+            });
         }
+
+        if ($search !== '') {
+            $matchingProductIds = Produk::query()
+                ->select('id')
+                ->where('nama_produk', 'like', '%' . $search . '%')
+                ->pluck('id')
+                ->map(fn ($id) => (int) $id)
+                ->all();
+
+            $query->where(function ($q) use ($search, $matchingProductIds) {
+                $q->whereDate('tanggal', $search)
+                    ->orWhere('status_verifikasi', 'like', '%' . $search . '%')
+                    ->orWhere('verification_notes', 'like', '%' . $search . '%')
+                    ->orWhereHas('shift', function ($qs) use ($search) {
+                        $qs->where('shift', 'like', '%' . $search . '%');
+                    })
+                    ->orWhereHas('ekspedisi', function ($qe) use ($search) {
+                        $qe->where('nama_ekspedisi', 'like', '%' . $search . '%');
+                    })
+                    ->orWhereHas('customer', function ($qc) use ($search) {
+                        $qc->where('nama_cust', 'like', '%' . $search . '%');
+                    });
+
+                if (!empty($matchingProductIds)) {
+                    $q->orWhere(function ($qj) use ($matchingProductIds) {
+                        foreach ($matchingProductIds as $pid) {
+                            $qj->orWhereRaw(
+                                "JSON_CONTAINS(CAST(produk_data AS JSON), ?, '$')",
+                                [json_encode(['id_produk' => $pid])]
+                            );
+
+                            $qj->orWhereRaw(
+                                "JSON_CONTAINS(CAST(produk_data AS JSON), ?, '$')",
+                                [json_encode(['id_produk' => (string) $pid])]
+                            );
+
+                            $qj->orWhere('produk_data', 'like', '%"id_produk":' . $pid . '%');
+                            $qj->orWhere('produk_data', 'like', '%"id_produk":"' . $pid . '"%');
+                        }
+                    });
+                }
+            });
+        }
+
+        $pemeriksaans = $query->latest()->paginate(25);
 
         return view('qc-sistem.pemeriksaan-return-barang-customer.index', compact('pemeriksaans'));
     }

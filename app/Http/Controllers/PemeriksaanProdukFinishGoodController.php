@@ -13,22 +13,58 @@ use Monarobase\CountryList\CountryListFacade as Countries;
 
 class PemeriksaanProdukFinishGoodController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $user = Auth::user();
 
-        if ($user->role && strtolower($user->role->role) === 'superadmin') {
-            $pemeriksaans = PemeriksaanProdukFinishGood::with(['user.role', 'user.plant', 'shift'])
-                ->latest()
-                ->paginate(10);
-        } else {
-            $pemeriksaans = PemeriksaanProdukFinishGood::with(['user.role', 'user.plant', 'shift'])
-                ->whereHas('user', function ($q) use ($user) {
-                    $q->where('id_plant', $user->id_plant);
-                })
-                ->latest()
-                ->paginate(10);
+        $search = trim((string) $request->input('search', ''));
+
+        $query = PemeriksaanProdukFinishGood::with(['user.role', 'user.plant', 'shift']);
+
+        if (!($user->role && strtolower($user->role->role) === 'superadmin')) {
+            $query->whereHas('user', function ($q) use ($user) {
+                $q->where('id_plant', $user->id_plant);
+            });
         }
+
+        if ($search !== '') {
+            $matchingProductIds = Produk::query()
+                ->select('id')
+                ->where('nama_produk', 'like', '%' . $search . '%')
+                ->pluck('id')
+                ->map(fn ($id) => (int) $id)
+                ->all();
+
+            $query->where(function ($q) use ($search, $matchingProductIds) {
+                $q->whereDate('tanggal', $search)
+                    ->orWhere('status_verifikasi', 'like', '%' . $search . '%')
+                    ->orWhere('verification_notes', 'like', '%' . $search . '%')
+                    ->orWhereHas('shift', function ($qs) use ($search) {
+                        $qs->where('shift', 'like', '%' . $search . '%');
+                    });
+
+                if (!empty($matchingProductIds)) {
+                    $q->orWhere(function ($qj) use ($matchingProductIds) {
+                        foreach ($matchingProductIds as $pid) {
+                            $qj->orWhereRaw(
+                                "JSON_CONTAINS(CAST(id_produk_array AS JSON), ?, '$')",
+                                [json_encode($pid)]
+                            );
+
+                            $qj->orWhereRaw(
+                                "JSON_CONTAINS(CAST(id_produk_array AS JSON), ?, '$')",
+                                [json_encode((string) $pid)]
+                            );
+
+                            $qj->orWhere('id_produk_array', 'like', '%"' . $pid . '"%');
+                            $qj->orWhere('id_produk_array', 'like', '%,' . $pid . ',%');
+                        }
+                    });
+                }
+            });
+        }
+
+        $pemeriksaans = $query->latest()->paginate(25);
 
         $allProdukIds = [];
         foreach ($pemeriksaans as $p) {

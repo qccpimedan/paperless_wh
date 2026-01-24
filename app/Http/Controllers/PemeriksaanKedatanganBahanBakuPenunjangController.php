@@ -145,24 +145,40 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
         return [$mappedBahanIds, $missingMapErrors];
     }
 
-    public function index()
+    public function index(Request $request)
     {
         $user = Auth::user();
+        $search = trim((string) $request->input('search', ''));
+
+        $query = PemeriksaanKedatanganBahanBakuPenunjang::with(['user.role', 'user.plant', 'bahan', 'shift']);
         
         // SuperAdmin dapat melihat semua data
         if ($user->role && strtolower($user->role->role) === 'superadmin') {
-            $pemeriksaans = PemeriksaanKedatanganBahanBakuPenunjang::with(['user.role', 'user.plant', 'bahan', 'shift'])
-                ->latest()
-                ->paginate(10);
+            // no additional scope
         } else {
             // Admin dan role lain hanya melihat data sesuai plant mereka
-            $pemeriksaans = PemeriksaanKedatanganBahanBakuPenunjang::with(['user.role', 'user.plant', 'bahan', 'shift'])
-                ->whereHas('user', function($query) use ($user) {
-                    $query->where('id_plant', $user->id_plant); // ✅ GUNAKAN id_plant
-                })
-                ->latest()
-                ->paginate(10);
+            $query->whereHas('user', function ($q) use ($user) {
+                $q->where('id_plant', $user->id_plant); // ✅ GUNAKAN id_plant
+            });
         }
+
+        if ($search !== '') {
+            $query->where(function ($q) use ($search) {
+                $q->whereDate('tanggal', $search)
+                    ->orWhere('no_po', 'like', '%' . $search . '%')
+                    ->orWhere('kode_produksi', 'like', '%' . $search . '%')
+                    ->orWhere('status_verifikasi', 'like', '%' . $search . '%')
+                    ->orWhere('verification_notes', 'like', '%' . $search . '%')
+                    ->orWhereHas('shift', function ($qs) use ($search) {
+                        $qs->where('shift', 'like', '%' . $search . '%');
+                    })
+                    ->orWhereHas('bahan', function ($qb) use ($search) {
+                        $qb->where('nama_bahan', 'like', '%' . $search . '%');
+                    });
+            });
+        }
+
+        $pemeriksaans = $query->latest()->paginate(25);
 
         return view('qc-sistem.pemeriksaan-kedatangan-bahan-baku-penunjang.index', compact('pemeriksaans'));
     }

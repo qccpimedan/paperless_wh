@@ -20,9 +20,11 @@ class PemeriksaanBarangMudahPecahController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
         $user = Auth::user();
+
+        $search = trim((string) $request->input('search', ''));
         
         $query = PemeriksaanBarangMudahPecah::with(['user', 'shift', 'area', 'details.barang', 'details.areaLocation']);
         
@@ -38,8 +40,31 @@ class PemeriksaanBarangMudahPecahController extends Controller
                 });
             }
         }
+
+        if ($search !== '') {
+            $query->where(function ($q) use ($search) {
+                $q->whereDate('tanggal', $search)
+                    ->orWhere('status_verifikasi', 'like', '%' . $search . '%')
+                    ->orWhere('verification_notes', 'like', '%' . $search . '%')
+                    ->orWhereHas('shift', function ($qs) use ($search) {
+                        $qs->where('shift', 'like', '%' . $search . '%');
+                    })
+                    ->orWhereHas('area', function ($qa) use ($search) {
+                        $qa->where('nama_area', 'like', '%' . $search . '%');
+                    })
+                    ->orWhereHas('user.plant', function ($qp) use ($search) {
+                        $qp->where('plant', 'like', '%' . $search . '%');
+                    })
+                    ->orWhereHas('details', function ($qd) use ($search) {
+                        $qd->where('nama_barang_manual', 'like', '%' . $search . '%')
+                            ->orWhereHas('barang', function ($qb) use ($search) {
+                                $qb->where('nama_barang', 'like', '%' . $search . '%');
+                            });
+                    });
+            });
+        }
         
-        $pemeriksaans = $query->latest()->paginate(15);
+        $pemeriksaans = $query->latest()->paginate(25);
         
         return view('qc-sistem.pemeriksaan-barang-mudah-pecah.index', compact('pemeriksaans'));
     }

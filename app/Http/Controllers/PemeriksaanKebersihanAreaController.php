@@ -17,23 +17,39 @@ class PemeriksaanKebersihanAreaController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
         $user = Auth::user();
-        
-        // SuperAdmin dapat melihat semua data
-        if ($user->role && strtolower($user->role->role) === 'superadmin') {
-            $pemeriksaans = PemeriksaanKebersihanArea::with(['user.role', 'user.plant', 'shift', 'area', 'masterForm'])->latest()->get();
-        } else {
-            // Admin dan role lain hanya melihat data sesuai plant mereka
-            $pemeriksaans = PemeriksaanKebersihanArea::with(['user.role', 'user.plant', 'shift', 'area', 'masterForm'])
-                ->whereHas('user', function($query) use ($user) {
-                    $query->where('id_plant', $user->id_plant);
-                })
-                ->latest()
-                ->get();
+
+        $search = trim((string) $request->input('search', ''));
+
+        $query = PemeriksaanKebersihanArea::with(['user.role', 'user.plant', 'shift', 'area', 'masterForm']);
+
+        if (!($user->role && strtolower($user->role->role) === 'superadmin')) {
+            $query->whereHas('user', function ($q) use ($user) {
+                $q->where('id_plant', $user->id_plant);
+            });
         }
-        
+
+        if ($search !== '') {
+            $query->where(function ($q) use ($search) {
+                $q->whereDate('tanggal', $search)
+                    ->orWhere('status_verifikasi', 'like', '%' . $search . '%')
+                    ->orWhere('verification_notes', 'like', '%' . $search . '%')
+                    ->orWhereHas('shift', function ($qs) use ($search) {
+                        $qs->where('shift', 'like', '%' . $search . '%');
+                    })
+                    ->orWhereHas('area', function ($qa) use ($search) {
+                        $qa->where('nama_area', 'like', '%' . $search . '%');
+                    })
+                    ->orWhereHas('masterForm', function ($qm) use ($search) {
+                        $qm->where('nama_form', 'like', '%' . $search . '%');
+                    });
+            });
+        }
+
+        $pemeriksaans = $query->latest()->paginate(25);
+
         return view('qc-sistem.pemeriksaan-kebersihan-area.index', compact('pemeriksaans'));
     }
 
