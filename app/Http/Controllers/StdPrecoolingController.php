@@ -5,6 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\StdPrecooling;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Imports\StdPrecoolingImport;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\StdPrecoolingTemplateExport;
 
 class StdPrecoolingController extends Controller
 {
@@ -93,6 +96,31 @@ class StdPrecoolingController extends Controller
         $this->checkPlantAccess($stdPrecooling);
         $stdPrecooling->delete();
         return redirect()->route('std-precoolings.index')->with('success', 'Std Precooling berhasil dihapus!');
+    }
+
+    public function import(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|file|mimes:xlsx,xls,csv',
+        ]);
+
+        $import = new StdPrecoolingImport();
+        Excel::import($import, $request->file('file'));
+
+        $message = "Import selesai. Inserted: {$import->inserted}. Skipped: {$import->skipped}.";
+
+        if (!empty($import->errors)) {
+            return redirect()->route('std-precoolings.index')
+                ->with('success', $message)
+                ->with('import_errors', $import->errors);
+        }
+
+        return redirect()->route('std-precoolings.index')->with('success', $message);
+    }
+
+    public function template()
+    {
+        return Excel::download(new StdPrecoolingTemplateExport(), 'template_import_std_precooling.xlsx');
     }
 
     private function checkPlantAccess(StdPrecooling $stdPrecooling)
