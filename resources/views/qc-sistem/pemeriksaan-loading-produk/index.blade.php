@@ -89,6 +89,15 @@
                         </form>
                     </div>
 
+                    <form action="{{ route('pemeriksaan-loading-produk.index') }}" method="GET" class="row g-3 mb-3">
+                        <div class="col-md-9">
+                            <input type="text" name="search" class="form-control" placeholder="Cari tanggal/status/shift/kendaraan/supir/customer/produk..." value="{{ request('search') }}">
+                        </div>
+                        <div class="col-md-3 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary w-100">Cari</button>
+                        </div>
+                    </form>
+
                     <script>
                         document.addEventListener('DOMContentLoaded', function() {
                             const shiftSelect = document.getElementById('shiftSelect');
@@ -142,7 +151,7 @@
                         });
                     </script>
                     <div class="table-responsive">
-                        <table class="table table-striped text-center" id="table1" style="white-space: nowrap;">
+                        <table class="table table-striped text-center" id="table1" data-disable-datatable="1" style="white-space: nowrap;">
                             <thead>
                                 <tr>
                                     <th>No</th>
@@ -153,6 +162,7 @@
                                     <th>Kendaraan</th>
                                     <!-- <th>Supir</th> -->
                                     <th>Produk</th>
+                                    <th>Kode Produksi</th>
                                     <!-- <th>Kondisi</th> -->
                                     <th>Verifikasi</th>
                                     <th>Catatan Verifikasi</th>
@@ -207,6 +217,29 @@
                                                     $totalProduk = count($pemeriksaan->produk_data);
                                                 @endphp
                                                 {{ $produkName }} <span class="badge bg-info">{{ $totalProduk }}</span>
+                                            @else
+                                                -
+                                            @endif
+                                        </td>
+
+                                        <td>
+                                            @php
+                                                $kodeProduksiArr = [];
+                                                if (is_array($pemeriksaan->produk_data)) {
+                                                    foreach ($pemeriksaan->produk_data as $row) {
+                                                        if (is_array($row)) {
+                                                            $kode = $row['kode_produksi'] ?? null;
+                                                            if ($kode !== null && $kode !== '') {
+                                                                $kodeProduksiArr[] = $kode;
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                                $kodeProduksiArr = array_values(array_unique($kodeProduksiArr));
+                                            @endphp
+
+                                            @if(count($kodeProduksiArr) > 0)
+                                                {{ implode(', ', $kodeProduksiArr) }}
                                             @else
                                                 -
                                             @endif
@@ -424,7 +457,7 @@
                                     </div>
                                 @empty
                                     <tr>
-                                        <td colspan="11" class="text-center">
+                                        <td colspan="12" class="text-center">
                                             <div class="py-4">
                                                 <i class="bi bi-inbox fs-1 text-muted"></i>
                                                 <p class="text-muted mt-2 mb-3">Belum ada data pemeriksaan loading produk</p>
@@ -437,6 +470,10 @@
                                 @endforelse
                             </tbody>
                         </table>
+                    </div>
+
+                    <div class="d-flex justify-content-end mt-3">
+                        {{ $pemeriksaans->appends(request()->query())->links() }}
                     </div>
                 </div>
             </div>

@@ -302,7 +302,7 @@
     // Initialize DataTable for any table with id="table1"
 document.addEventListener('DOMContentLoaded', function() {
     let table1 = document.querySelector('#table1');
-    if (table1) {
+    if (table1 && !(window.disableSimpleDatatables === true) && table1.getAttribute('data-disable-datatable') !== '1') {
         let dataTable = new simpleDatatables.DataTable(table1);
     }
 

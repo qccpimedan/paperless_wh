@@ -16,22 +16,58 @@ use Monarobase\CountryList\CountryListFacade as Countries;
 
 class PemeriksaanKedatanganChemicalController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $user = Auth::user();
-        
-        if ($user->role && strtolower($user->role->role) === 'superadmin') {
-            $pemeriksaans = PemeriksaanKedatanganChemical::with(['user.role', 'user.plant', 'shift'])
-                ->latest()
-                ->paginate(10);
-        } else {
-            $pemeriksaans = PemeriksaanKedatanganChemical::with(['user.role', 'user.plant', 'shift'])
-                ->whereHas('user', function($query) use ($user) {
-                    $query->where('id_plant', $user->id_plant);
-                })
-                ->latest()
-                ->paginate(10);
+
+        $search = trim((string) $request->input('search', ''));
+
+        $query = PemeriksaanKedatanganChemical::with(['user.role', 'user.plant', 'shift']);
+
+        if (!($user->role && strtolower($user->role->role) === 'superadmin')) {
+            $query->whereHas('user', function ($q) use ($user) {
+                $q->where('id_plant', $user->id_plant);
+            });
         }
+
+        if ($search !== '') {
+            $matchingChemicalIds = Chemical::query()
+                ->select('id')
+                ->where('nama_chemical', 'like', '%' . $search . '%')
+                ->pluck('id')
+                ->map(fn ($id) => (int) $id)
+                ->all();
+
+            $query->where(function ($q) use ($search, $matchingChemicalIds) {
+                $q->whereDate('tanggal', $search)
+                    ->orWhere('status_verifikasi', 'like', '%' . $search . '%')
+                    ->orWhere('verification_notes', 'like', '%' . $search . '%')
+                    ->orWhereHas('shift', function ($qs) use ($search) {
+                        $qs->where('shift', 'like', '%' . $search . '%');
+                    });
+
+                if (!empty($matchingChemicalIds)) {
+                    $q->orWhere(function ($qj) use ($matchingChemicalIds) {
+                        foreach ($matchingChemicalIds as $cid) {
+                            $qj->orWhereRaw(
+                                "JSON_CONTAINS(CAST(detail_chemicals AS JSON), ?, '$')",
+                                [json_encode(['id_chemical' => $cid])]
+                            );
+
+                            $qj->orWhereRaw(
+                                "JSON_CONTAINS(CAST(detail_chemicals AS JSON), ?, '$')",
+                                [json_encode(['id_chemical' => (string) $cid])]
+                            );
+
+                            $qj->orWhere('detail_chemicals', 'like', '%"id_chemical":' . $cid . '%');
+                            $qj->orWhere('detail_chemicals', 'like', '%"id_chemical":"' . $cid . '"%');
+                        }
+                    });
+                }
+            });
+        }
+
+        $pemeriksaans = $query->latest()->paginate(25);
 
         return view('qc-sistem.pemeriksaan-kedatangan-chemical.index', compact('pemeriksaans'));
     }

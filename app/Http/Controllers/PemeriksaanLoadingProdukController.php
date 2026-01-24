@@ -17,40 +17,79 @@ use Barryvdh\DomPDF\Facade\Pdf as PDF;
 
 class PemeriksaanLoadingProdukController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $user = Auth::user();
 
-        // SuperAdmin dapat melihat semua data
-        if ($user->role && strtolower($user->role->role) === 'superadmin') {
-            $pemeriksaans = PemeriksaanLoadingProduk::with([
-                'user.role', 
-                'user.plant', 
-                'shift', 
-                'tujuanPengiriman', 
-                'kendaraan', 
-                'supir', 
-                'produk'
-            ])
-            ->latest()
-            ->paginate(10);
-        } else {
-            // Admin dan role lain hanya melihat data sesuai plant mereka
-            $pemeriksaans = PemeriksaanLoadingProduk::with([
-                'user.role', 
-                'user.plant', 
-                'shift', 
-                'tujuanPengiriman', 
-                'kendaraan', 
-                'supir', 
-                'produk'
-            ])
-            ->whereHas('user', function($query) use ($user) {
-                $query->where('id_plant', $user->id_plant);
-            })
-            ->latest()
-            ->paginate(10);
+        $search = trim((string) $request->input('search', ''));
+
+        $query = PemeriksaanLoadingProduk::with([
+            'user.role',
+            'user.plant',
+            'shift',
+            'tujuanPengiriman',
+            'kendaraan',
+            'supir',
+            'produk'
+        ]);
+
+        if (!($user->role && strtolower($user->role->role) === 'superadmin')) {
+            $query->whereHas('user', function ($q) use ($user) {
+                $q->where('id_plant', $user->id_plant);
+            });
         }
+
+        if ($search !== '') {
+            $matchingProductIds = Produk::query()
+                ->select('id')
+                ->where('nama_produk', 'like', '%' . $search . '%')
+                ->pluck('id')
+                ->map(fn ($id) => (int) $id)
+                ->all();
+
+            $query->where(function ($q) use ($search, $matchingProductIds) {
+                $q->whereDate('tanggal', $search)
+                    ->orWhere('status_verifikasi', 'like', '%' . $search . '%')
+                    ->orWhere('verification_notes', 'like', '%' . $search . '%')
+                    ->orWhereHas('shift', function ($qs) use ($search) {
+                        $qs->where('shift', 'like', '%' . $search . '%');
+                    })
+                    ->orWhereHas('kendaraan', function ($qk) use ($search) {
+                        $qk->where('jenis_kendaraan', 'like', '%' . $search . '%')
+                            ->orWhere('no_kendaraan', 'like', '%' . $search . '%');
+                    })
+                    ->orWhereHas('supir', function ($qsu) use ($search) {
+                        $qsu->where('nama_supir', 'like', '%' . $search . '%');
+                    })
+                    ->orWhereHas('tujuanPengiriman', function ($qt) use ($search) {
+                        $qt->where('nama_tujuan', 'like', '%' . $search . '%')
+                            ->orWhereHas('customer', function ($qc) use ($search) {
+                                $qc->where('nama_cust', 'like', '%' . $search . '%');
+                            });
+                    });
+
+                if (!empty($matchingProductIds)) {
+                    $q->orWhere(function ($qj) use ($matchingProductIds) {
+                        foreach ($matchingProductIds as $pid) {
+                            $qj->orWhereRaw(
+                                "JSON_CONTAINS(CAST(produk_data AS JSON), ?, '$')",
+                                [json_encode(['id_produk' => $pid])]
+                            );
+
+                            $qj->orWhereRaw(
+                                "JSON_CONTAINS(CAST(produk_data AS JSON), ?, '$')",
+                                [json_encode(['id_produk' => (string) $pid])]
+                            );
+
+                            $qj->orWhere('produk_data', 'like', '%"id_produk":' . $pid . '%');
+                            $qj->orWhere('produk_data', 'like', '%"id_produk":"' . $pid . '"%');
+                        }
+                    });
+                }
+            });
+        }
+
+        $pemeriksaans = $query->latest()->paginate(25);
 
         return view('qc-sistem.pemeriksaan-loading-produk.index', compact('pemeriksaans'));
     }

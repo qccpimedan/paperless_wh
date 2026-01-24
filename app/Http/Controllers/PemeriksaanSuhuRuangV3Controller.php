@@ -11,20 +11,35 @@ use Illuminate\Support\Facades\Auth;
 
 class PemeriksaanSuhuRuangV3Controller extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $user = Auth::user();
+
+        $search = trim((string) $request->input('search', ''));
         
-        if ($user->role && strtolower($user->role->role) === 'superadmin') {
-            $pemeriksaans = PemeriksaanSuhuRuangV3::with(['user.role', 'user.plant', 'shift', 'area'])->latest()->get();
-        } else {
-            $pemeriksaans = PemeriksaanSuhuRuangV3::with(['user.role', 'user.plant', 'shift', 'area'])
-                ->whereHas('user', function($query) use ($user) {
-                    $query->where('id_plant', $user->id_plant);
-                })
-                ->latest()
-                ->get();
+        $query = PemeriksaanSuhuRuangV3::with(['user.role', 'user.plant', 'shift', 'area']);
+
+        if (!($user->role && strtolower($user->role->role) === 'superadmin')) {
+            $query->whereHas('user', function ($q) use ($user) {
+                $q->where('id_plant', $user->id_plant);
+            });
         }
+
+        if ($search !== '') {
+            $query->where(function ($q) use ($search) {
+                $q->whereDate('tanggal', $search)
+                    ->orWhere('pukul', 'like', '%' . $search . '%')
+                    ->orWhere('status_verifikasi', 'like', '%' . $search . '%')
+                    ->orWhereHas('shift', function ($qs) use ($search) {
+                        $qs->where('shift', 'like', '%' . $search . '%');
+                    })
+                    ->orWhereHas('area', function ($qa) use ($search) {
+                        $qa->where('nama_area', 'like', '%' . $search . '%');
+                    });
+            });
+        }
+
+        $pemeriksaans = $query->latest()->paginate(25);
         
         return view('qc-sistem.pemeriksaan-suhu-ruang-v3.index', compact('pemeriksaans'));
     }

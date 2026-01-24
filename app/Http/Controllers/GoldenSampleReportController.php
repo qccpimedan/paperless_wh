@@ -16,25 +16,39 @@ class GoldenSampleReportController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
         $user = Auth::user();
-        
-        // SuperAdmin dapat melihat semua data
-        if ($user->role && strtolower($user->role->role) === 'superadmin') {
-            $reports = GoldenSampleReport::with(['user.role', 'user.plant', 'plant', 'shift'])
-            ->latest()
-            ->get();
-        } else {
-            // Admin dan role lain hanya melihat data sesuai plant mereka
-            $reports = GoldenSampleReport::with(['user.role', 'user.plant', 'plant', 'shift'])
-                ->whereHas('user', function($query) use ($user) {
-                    $query->where('id_plant', $user->id_plant);
-                })
-                ->latest()
-                ->get();
+
+        $search = trim((string) $request->input('search', ''));
+
+        $query = GoldenSampleReport::with(['user.role', 'user.plant', 'plant', 'shift']);
+
+        if (!($user->role && strtolower($user->role->role) === 'superadmin')) {
+            $query->whereHas('user', function ($q) use ($user) {
+                $q->where('id_plant', $user->id_plant);
+            });
         }
-        
+
+        if ($search !== '') {
+            $query->where(function ($q) use ($search) {
+                $q->whereDate('tanggal', $search)
+                    ->orWhere('sample_type', 'like', '%' . $search . '%')
+                    ->orWhere('masa_penyimpanan', 'like', '%' . $search . '%')
+                    ->orWhere('plant_manual', 'like', '%' . $search . '%')
+                    ->orWhere('status_verifikasi', 'like', '%' . $search . '%')
+                    ->orWhere('verification_notes', 'like', '%' . $search . '%')
+                    ->orWhereHas('shift', function ($qs) use ($search) {
+                        $qs->where('shift', 'like', '%' . $search . '%');
+                    })
+                    ->orWhereHas('plant', function ($qp) use ($search) {
+                        $qp->where('plant', 'like', '%' . $search . '%');
+                    });
+            });
+        }
+
+        $reports = $query->latest()->paginate(25);
+
         return view('qc-sistem.golden-sample-retort.index', compact('reports'));
     }
 

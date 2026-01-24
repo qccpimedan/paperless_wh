@@ -44,8 +44,17 @@
                     @endcan
                 </div>
                 <div class="card-body">
+                    <form action="{{ route('detail-komplain.index') }}" method="GET" class="row g-3 mb-3">
+                        <div class="col-md-9">
+                            <input type="text" name="search" class="form-control" placeholder="Cari tanggal/shift/supplier/produk/kode/status..." value="{{ request('search') }}">
+                        </div>
+                        <div class="col-md-3 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary w-100">Cari</button>
+                        </div>
+                    </form>
+
                     <div class="table-responsive">
-                        <table class="table table-striped text-center" id="table1" style="white-space:nowrap;">
+                        <table class="table table-striped text-center" id="table1" data-disable-datatable="1" style="white-space:nowrap;">
                             <thead>
                                 <tr>
                                     <th>No</th>
@@ -65,7 +74,7 @@
                             <tbody>
                                 @forelse($komplains as $index => $komplain)
                                     <tr>
-                                        <td>{{ $index + 1 }}</td>
+                                        <td>{{ ($komplains->firstItem() ?? 1) + $index }}</td>
                                         <td>{{ $komplain->tanggal_kedatangan->format('d-m-Y') }}</td>
                                         <td>
                                             <span class="badge bg-info">
@@ -358,6 +367,10 @@
                                 @endforelse
                             </tbody>
                         </table>
+                    </div>
+
+                    <div class="d-flex justify-content-end mt-3">
+                        {{ $komplains->appends(request()->query())->links() }}
                     </div>
                 </div>
             </div>

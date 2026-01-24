@@ -82,6 +82,15 @@
                         </form>
                     </div>
 
+                    <form action="{{ route('pemeriksaan-barang-mudah-pecah.index') }}" method="GET" class="row g-3 mb-3">
+                        <div class="col-md-9">
+                            <input type="text" name="search" class="form-control" placeholder="Cari tanggal/status/shift/area/plant/nama barang..." value="{{ request('search') }}">
+                        </div>
+                        <div class="col-md-3 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary w-100">Cari</button>
+                        </div>
+                    </form>
+
                     <script>
                         document.addEventListener('DOMContentLoaded', function() {
                             const shiftSelect = document.getElementById('shiftSelect');
@@ -135,7 +144,7 @@
                         });
                     </script>
                     <div class="table-responsive">
-                        <table class="table table-striped text-center" id="table1" style="white-space:nowrap">
+                        <table class="table table-striped text-center" id="table1" data-disable-datatable="1" style="white-space:nowrap">
                             <thead>
                                 <tr>
                                     <th>No</th>
@@ -253,7 +262,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="9" class="text-center">
+                                        <td colspan="10" class="text-center">
                                             <div class="py-4">
                                                 <i class="bi bi-inbox fs-1 text-muted"></i>
                                                 <p class="text-muted mt-2 mb-3">Belum ada Pemeriksaan Barang</p>
@@ -266,6 +275,10 @@
                                 @endforelse
                             </tbody>
                         </table>
+                    </div>
+
+                    <div class="d-flex justify-content-end mt-3">
+                        {{ $pemeriksaans->appends(request()->query())->links() }}
                     </div>
                 </div>
             </div>

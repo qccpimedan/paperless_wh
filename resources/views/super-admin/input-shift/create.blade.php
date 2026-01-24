@@ -35,6 +35,17 @@
                         </div>
                         <div class="card-content">
                             <div class="card-body">
+                                <div class="alert alert-info" role="alert">
+                                    <strong>Panduan Shift (Terintegrasi dengan Cetak PDF)</strong><br>
+                                    Pastikan penamaan shift mengikuti jam kerja berikut agar input dan cetak PDF tepat:
+                                    <br>
+                                    Shift 1: 23.00 - 07.00
+                                    <br>
+                                    Shift 2: 07.00 - 15.00
+                                    <br>
+                                    Shift 3: 15.00 - 23.00
+                                </div>
+
                                 @if ($errors->any())
                                     <div class="alert alert-danger">
                                         <ul class="mb-0">
@@ -54,7 +65,7 @@
                                             </div>
                                             <div class="col-md-8 form-group">
                                                 <input type="text" id="shift" class="form-control @error('shift') is-invalid @enderror"
-                                                    name="shift" value="{{ old('shift') }}" placeholder="Contoh: Shift 1, Shift Pagi, dll" required>
+                                                    name="shift" value="{{ old('shift') }}" placeholder="Contoh: Shift 1, 1" required>
                                                 @error('shift')
                                                     <div class="invalid-feedback">{{ $message }}</div>
                                                 @enderror

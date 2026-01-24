@@ -83,7 +83,14 @@
                             </div>
                         </form>
                     </div>
-
+                    <form action="{{ route('pemeriksaan-kedatangan-kemasan.index') }}" method="GET" class="row g-3 mb-3">
+                        <div class="col-md-9">
+                            <input type="text" name="search" class="form-control" placeholder="Cari tanggal/status/shift/bahan/kode produksi..." value="{{ request('search') }}">
+                        </div>
+                        <div class="col-md-3 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary w-100">Cari</button>
+                        </div>
+                    </form>
                     <script>
                         document.addEventListener('DOMContentLoaded', function() {
                             const shiftSelect = document.getElementById('shiftSelect');
@@ -137,7 +144,7 @@
                         });
                     </script>
                     <div class="table-responsive">
-                        <table class="table table-striped text-center" id="table1" style="white-space: nowrap;">
+                        <table class="table table-striped text-center" id="table1" data-disable-datatable="1" style="white-space: nowrap;">
                             <thead>
                                 <tr>
                                     <th>No</th>
@@ -157,7 +164,7 @@
                             <tbody>
                                 @forelse($pemeriksaans as $index => $pemeriksaan)
                                     <tr>
-                                        <td>{{ $index + 1 }}</td>
+                                        <td>{{ ($pemeriksaans->firstItem() ?? 1) + $index }}</td>
                                         <td>
                                             <strong>{{ $pemeriksaan->tanggal->format('d/m/Y') }}</strong>
                                         </td>
@@ -425,6 +432,10 @@
                                 @endforelse
                             </tbody>
                         </table>
+                    </div>
+
+                    <div class="d-flex justify-content-end mt-3">
+                        {{ $pemeriksaans->appends(request()->query())->links() }}
                     </div>
                 </div>
             </div>
