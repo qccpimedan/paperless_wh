@@ -98,7 +98,7 @@
 
                                             <div class="col-md-6 mt-3">
                                                 <label for="id_produk">Produk</label>
-                                                <input type="text" id="id_produk" class="form-control" value="{{ $pemeriksaanSuhuRuangV2->produk->nama_bahan }}" disabled>
+                                                <input type="text" id="id_produk" class="form-control" value="{{ $pemeriksaanSuhuRuangV2->produk->nama_produk }}" disabled>
                                             </div>
 
                                             <div class="col-md-6 mt-3">

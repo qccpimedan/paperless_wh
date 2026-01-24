@@ -100,7 +100,7 @@
                                                 @endphp
 
                                                 <label>Kategori Produk <span class="text-danger">*</span></label>
-                                                <select class="form-control kategori-produk-select @error('kategori_code') is-invalid @enderror" name="kategori_code" required>
+                                                <select class="choices form-control kategori-produk-select @error('kategori_code') is-invalid @enderror" name="kategori_code" required>
                                                     <option value="">-- Pilih Kategori --</option>
                                                     @foreach(($produkKategoriOptions ?? []) as $kategori)
                                                         <option value="{{ $kategori }}" {{ $selectedKategori == $kategori ? 'selected' : '' }}>
@@ -537,24 +537,72 @@ document.addEventListener('DOMContentLoaded', function() {
     const kategoriSelect = document.querySelector('select.kategori-produk-select[name="kategori_code"]');
     const produkSelect = document.querySelector('select.produk-select[name="id_produk"]');
 
+    let kategoriChoices = null;
+    let produkChoices = null;
+
+    const initChoicesSafe = function(selectEl) {
+        try {
+            if (!selectEl) return null;
+            if (typeof Choices === 'undefined') return null;
+            return new Choices(selectEl, {
+                searchEnabled: true,
+                searchPlaceholderValue: 'Cari...',
+                itemSelectText: 'Tekan untuk memilih',
+                noResultsText: 'Tidak ada hasil ditemukan',
+                noChoicesText: 'Tidak ada pilihan tersedia',
+                removeItemButton: true,
+                shouldSort: false,
+                placeholder: true,
+                placeholderValue: 'Pilih...'
+            });
+        } catch (e) {
+            return null;
+        }
+    };
+
+    kategoriChoices = initChoicesSafe(kategoriSelect);
+    produkChoices = initChoicesSafe(produkSelect);
+
     const populateProdukOptions = function(kategoriCode) {
         if (!produkSelect) return;
 
         const selectedFromAttr = produkSelect.getAttribute('data-selected') || '';
 
-        while (produkSelect.options.length > 0) {
-            produkSelect.remove(0);
-        }
-        produkSelect.add(new Option('-- Pilih Produk --', ''));
+        const options = (kategoriCode && produkByKategori && produkByKategori[kategoriCode])
+            ? (produkByKategori[kategoriCode] || [])
+            : [];
 
-        if (kategoriCode && produkByKategori && produkByKategori[kategoriCode]) {
-            (produkByKategori[kategoriCode] || []).forEach(function(p) {
+        // Jika memakai Choices, refresh via setChoices agar UI ikut berubah
+        if (produkChoices) {
+            const choiceItems = [{ value: '', label: '-- Pilih Produk --', selected: !selectedFromAttr }].concat(
+                options.map((p) => {
+                    const v = String(p.id);
+                    return {
+                        value: v,
+                        label: String(p.nama),
+                        selected: selectedFromAttr ? (v === String(selectedFromAttr)) : false,
+                    };
+                })
+            );
+
+            try {
+                produkChoices.clearChoices();
+                produkChoices.setChoices(choiceItems, 'value', 'label', true);
+            } catch (e) {
+            }
+        } else {
+            // fallback tanpa Choices
+            while (produkSelect.options.length > 0) {
+                produkSelect.remove(0);
+            }
+            produkSelect.add(new Option('-- Pilih Produk --', ''));
+            options.forEach(function(p) {
                 produkSelect.add(new Option(p.nama, p.id));
             });
-        }
 
-        if (selectedFromAttr) {
-            produkSelect.value = selectedFromAttr;
+            if (selectedFromAttr) {
+                produkSelect.value = selectedFromAttr;
+            }
         }
     };
 

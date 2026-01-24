@@ -32,6 +32,9 @@ class PemeriksaanSuhuRuangV2 extends Model
         'verified_by',
         'verified_at',
         'verification_notes',
+        'verified_by_qc',
+        'verified_by_produksi',
+        'verified_by_spv',
     ];
 
     protected $casts = [
@@ -73,7 +76,7 @@ class PemeriksaanSuhuRuangV2 extends Model
 
     public function produk()
     {
-        return $this->belongsTo(Bahan::class, 'id_produk');
+        return $this->belongsTo(Produk::class, 'id_produk');
     }
 
     public function area()
@@ -89,6 +92,21 @@ class PemeriksaanSuhuRuangV2 extends Model
     public function verifiedBy()
     {
         return $this->belongsTo(User::class, 'verified_by');
+    }
+
+    public function qcVerifier()
+    {
+        return $this->belongsTo(User::class, 'verified_by_qc');
+    }
+
+    public function produksiVerifier()
+    {
+        return $this->belongsTo(User::class, 'verified_by_produksi');
+    }
+
+    public function spvVerifier()
+    {
+        return $this->belongsTo(User::class, 'verified_by_spv');
     }
 
     /**

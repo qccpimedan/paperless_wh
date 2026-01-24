@@ -2,9 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\BarangTemplateExport;
+use App\Imports\BarangImport;
 use App\Models\Barang;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Maatwebsite\Excel\Facades\Excel;
 
 class BarangController extends Controller
 {
@@ -126,6 +129,31 @@ class BarangController extends Controller
         
         $barang->delete();
         return redirect()->route('barangs.index')->with('success', 'Barang berhasil dihapus!');
+    }
+
+    public function import(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|file|mimes:xlsx,xls,csv',
+        ]);
+
+        $import = new BarangImport();
+        Excel::import($import, $request->file('file'));
+
+        $message = "Import selesai. Inserted: {$import->inserted}. Skipped: {$import->skipped}.";
+
+        if (!empty($import->errors)) {
+            return redirect()->route('barangs.index')
+                ->with('success', $message)
+                ->with('import_errors', $import->errors);
+        }
+
+        return redirect()->route('barangs.index')->with('success', $message);
+    }
+
+    public function template()
+    {
+        return Excel::download(new BarangTemplateExport(), 'template_import_barang.xlsx');
     }
 
     /**

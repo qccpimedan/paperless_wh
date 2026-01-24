@@ -2,9 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\CustomerTemplateExport;
+use App\Imports\CustomerImport;
 use App\Models\Customer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Maatwebsite\Excel\Facades\Excel;
 
 class CustomerController extends Controller
 {
@@ -120,6 +123,31 @@ class CustomerController extends Controller
         
         $customer->delete();
         return redirect()->route('customers.index')->with('success', 'Customer berhasil dihapus!');
+    }
+
+    public function import(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|file|mimes:xlsx,xls,csv',
+        ]);
+
+        $import = new CustomerImport();
+        Excel::import($import, $request->file('file'));
+
+        $message = "Import selesai. Inserted: {$import->inserted}. Skipped: {$import->skipped}.";
+
+        if (!empty($import->errors)) {
+            return redirect()->route('customers.index')
+                ->with('success', $message)
+                ->with('import_errors', $import->errors);
+        }
+
+        return redirect()->route('customers.index')->with('success', $message);
+    }
+
+    public function template()
+    {
+        return Excel::download(new CustomerTemplateExport(), 'template_import_customer.xlsx');
     }
 
     /**

@@ -2,9 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\EkspedisiTemplateExport;
+use App\Imports\EkspedisiImport;
 use App\Models\Ekspedisi;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Maatwebsite\Excel\Facades\Excel;
 
 class EkspedisiController extends Controller
 {
@@ -93,6 +96,31 @@ class EkspedisiController extends Controller
         $this->checkPlantAccess($ekspedisi);
         $ekspedisi->delete();
         return redirect()->route('ekspedisis.index')->with('success', 'Ekspedisi berhasil dihapus!');
+    }
+
+    public function import(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|file|mimes:xlsx,xls,csv',
+        ]);
+
+        $import = new EkspedisiImport();
+        Excel::import($import, $request->file('file'));
+
+        $message = "Import selesai. Inserted: {$import->inserted}. Skipped: {$import->skipped}.";
+
+        if (!empty($import->errors)) {
+            return redirect()->route('ekspedisis.index')
+                ->with('success', $message)
+                ->with('import_errors', $import->errors);
+        }
+
+        return redirect()->route('ekspedisis.index')->with('success', $message);
+    }
+
+    public function template()
+    {
+        return Excel::download(new EkspedisiTemplateExport(), 'template_import_ekspedisi.xlsx');
     }
 
     private function checkPlantAccess(Ekspedisi $ekspedisi)

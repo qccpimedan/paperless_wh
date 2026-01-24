@@ -2,13 +2,13 @@
 
 namespace App\Imports;
 
-use App\Models\Distributor;
+use App\Models\Customer;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 
-class DistributorImport implements ToCollection, WithHeadingRow
+class CustomerImport implements ToCollection, WithHeadingRow
 {
     public int $inserted = 0;
     public int $skipped = 0;
@@ -25,15 +25,14 @@ class DistributorImport implements ToCollection, WithHeadingRow
         foreach ($rows as $index => $row) {
             $rowNumber = $index + 2;
 
-            $nama = isset($row['nama_distributor']) ? trim((string) $row['nama_distributor']) : '';
+            $nama = isset($row['nama_cust']) ? trim((string) $row['nama_cust']) : '';
 
             if ($nama === '') {
-                $this->errors[] = "Baris {$rowNumber}: nama_distributor wajib diisi.";
+                $this->errors[] = "Baris {$rowNumber}: nama_cust wajib diisi.";
                 continue;
             }
 
-            $existsQuery = Distributor::query()
-                ->whereRaw('LOWER(nama_distributor) = ?', [mb_strtolower($nama)]);
+            $existsQuery = Customer::query()->whereRaw('LOWER(nama_cust) = ?', [mb_strtolower($nama)]);
 
             if (!$isSuperadmin && $userPlantId !== null) {
                 $existsQuery->whereHas('user', function ($q) use ($userPlantId) {
@@ -48,9 +47,9 @@ class DistributorImport implements ToCollection, WithHeadingRow
                 continue;
             }
 
-            Distributor::create([
+            Customer::create([
                 'id_user' => Auth::id(),
-                'nama_distributor' => $nama,
+                'nama_cust' => $nama,
             ]);
 
             $this->inserted++;

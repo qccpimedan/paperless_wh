@@ -31,6 +31,30 @@
                 <div class="col-md-12 col-12">
                     <div class="card">
                         <div class="card-header">
+                            <h4 class="card-title">Import Customer (Excel)</h4>
+                        </div>
+                        <div class="card-content">
+                            <div class="card-body">
+                                <form class="form" action="{{ route('customers.import') }}" method="POST" enctype="multipart/form-data">
+                                    @csrf
+                                    <div class="row">
+                                        <div class="col-md-12">
+                                            <label class="form-label">File Excel</label>
+                                            <input type="file" name="file" class="form-control" accept=".xlsx,.xls,.csv" required>
+                                            <div class="form-text">Kolom wajib: nama_cust</div>
+                                        </div>
+                                        <div class="col-md-12 d-flex justify-content-end mt-3">
+                                            <button type="submit" class="btn btn-success me-1 mb-1">Import</button>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-12 col-12">
+                    <div class="card">
+                        <div class="card-header">
                             <h4 class="card-title">Form Input Customer</h4>
                         </div>
                         <div class="card-content">

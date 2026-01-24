@@ -32,6 +32,9 @@ class PemeriksaanSuhuRuangV3 extends Model
         'verified_by',
         'verified_at',
         'verification_notes',
+        'verified_by_qc',
+        'verified_by_produksi',
+        'verified_by_spv',
     ];
 
     protected $casts = [
@@ -90,6 +93,21 @@ class PemeriksaanSuhuRuangV3 extends Model
         return $this->belongsTo(User::class, 'verified_by');
     }
 
+    public function verifiedByQc()
+    {
+        return $this->belongsTo(User::class, 'verified_by_qc');
+    }
+
+    public function verifiedByProduksi()
+    {
+        return $this->belongsTo(User::class, 'verified_by_produksi');
+    }
+
+    public function verifiedBySpv()
+    {
+        return $this->belongsTo(User::class, 'verified_by_spv');
+    }
+
     /**
      * Serialize timestamps to Indonesia timezone (Asia/Jakarta)
      */
@@ -104,7 +122,7 @@ class PemeriksaanSuhuRuangV3 extends Model
     public function getCreatedAtAttribute($value)
     {
         if ($value) {
-            return Carbon::createFromFormat('Y-m-d H:i:s', $value, )
+            return Carbon::createFromFormat('Y-m-d H:i:s', $value)
                 ->setTimezone('Asia/Jakarta');
         }
         return $value;
@@ -116,7 +134,7 @@ class PemeriksaanSuhuRuangV3 extends Model
     public function getUpdatedAtAttribute($value)
     {
         if ($value) {
-            return Carbon::createFromFormat('Y-m-d H:i:s', $value, )
+            return Carbon::createFromFormat('Y-m-d H:i:s', $value)
                 ->setTimezone('Asia/Jakarta');
         }
         return $value;

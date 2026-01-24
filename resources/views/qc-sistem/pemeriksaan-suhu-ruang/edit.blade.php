@@ -93,17 +93,35 @@
 
                                             <div class="col-md-6 mt-3">
                                                 <label for="area">Area</label>
-                                                <input type="text" id="area" class="form-control" value="{{ $pemeriksaanSuhuRuang->area->nama_area }}" disabled>
+                                                <input type="text" id="area" class="form-control" value="{{ $pemeriksaanSuhuRuang->area->nama_area ?? '-' }}" disabled>
                                             </div>
 
                                             <div class="col-md-6 mt-3">
                                                 <label for="produk">Produk</label>
-                                                <input type="text" id="produk" class="form-control" value="{{ $pemeriksaanSuhuRuang->produk->nama_produk }}" disabled>
+                                                <input type="text" id="produk" class="form-control" value="{{ $pemeriksaanSuhuRuang->produk->nama_produk ?? '-' }}" disabled>
                                             </div>
 
                                             <div class="col-md-6 mt-3">
                                                 <label for="kategori_produk">Kategori Produk</label>
                                                 <input type="text" id="kategori_produk" class="form-control" value="{{ $pemeriksaanSuhuRuang->produk->kategori_code ?? '-' }}" disabled>
+                                            </div>
+
+                                            <div class="col-md-6 mt-3">
+                                                <label for="suhu_produk">Suhu Produk</label>
+                                                <input type="text" id="suhu_produk" class="form-control @error('suhu_produk') is-invalid @enderror"
+                                                    name="suhu_produk" value="{{ old('suhu_produk', $pemeriksaanSuhuRuang->suhu_produk) }}">
+                                                @error('suhu_produk')
+                                                    <div class="invalid-feedback">{{ $message }}</div>
+                                                @enderror
+                                            </div>
+
+                                            <div class="col-md-6 mt-3">
+                                                <label for="pukul">Pukul</label>
+                                                <input type="time" id="pukul" class="form-control @error('pukul') is-invalid @enderror"
+                                                    name="pukul" value="{{ old('pukul', $pemeriksaanSuhuRuang->pukul ? \Carbon\Carbon::parse($pemeriksaanSuhuRuang->pukul)->format('H:i') : '') }}">
+                                                @error('pukul')
+                                                    <div class="invalid-feedback">{{ $message }}</div>
+                                                @enderror
                                             </div>
 
                                             <!-- Cold Storage Section -->

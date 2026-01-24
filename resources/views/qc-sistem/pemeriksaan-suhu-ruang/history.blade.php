@@ -33,8 +33,8 @@
                         <h5 class="card-title mb-0">History Perubahan Data</h5>
                         <small class="text-muted">
                             Tanggal: {{ $pemeriksaanSuhuRuang->tanggal->format('d/m/Y') }} | 
-                            Produk: {{ $pemeriksaanSuhuRuang->produk->nama_produk }} | 
-                            Area: {{ $pemeriksaanSuhuRuang->area->nama_area }}
+                            Produk: {{ $pemeriksaanSuhuRuang->produk->nama_produk ?? '-' }} | 
+                            Area: {{ $pemeriksaanSuhuRuang->area->nama_area ?? '-' }}
                         </small>
                     </div>
                     <a href="{{ route('pemeriksaan-suhu-ruang.show', $pemeriksaanSuhuRuang->uuid) }}" class="btn btn-secondary">
