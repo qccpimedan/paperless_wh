@@ -299,7 +299,7 @@
 
     
 <script>
-// Initialize DataTable for any table with id="table1"
+    // Initialize DataTable for any table with id="table1"
 document.addEventListener('DOMContentLoaded', function() {
     let table1 = document.querySelector('#table1');
     if (table1) {

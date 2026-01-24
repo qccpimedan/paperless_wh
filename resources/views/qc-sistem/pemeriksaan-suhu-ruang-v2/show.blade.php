@@ -65,7 +65,7 @@
                                                     @if($pemeriksaanSuhuRuangV2->produk->kategori_code)
                                                         <span class="badge bg-primary">{{ $pemeriksaanSuhuRuangV2->produk->kategori_code }}</span>
                                                     @endif
-                                                    {{ $pemeriksaanSuhuRuangV2->produk->nama_bahan ?? '-' }}
+                                                    {{ $pemeriksaanSuhuRuangV2->produk->nama_produk ?? '-' }}
                                                 @else
                                                     -
                                                 @endif

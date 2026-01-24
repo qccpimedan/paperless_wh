@@ -5,11 +5,12 @@ namespace App\Http\Controllers;
 use App\Models\PemeriksaanSuhuRuangV2;
 use App\Models\PemeriksaanSuhuRuangV2History;
 use App\Models\Shift;
-use App\Models\Bahan;
+use App\Models\Produk;
 use App\Models\InputArea;
 use App\Traits\EditablePer2JamTrait;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Models\User;
 
 class PemeriksaanSuhuRuangV2Controller extends Controller
 {
@@ -47,11 +48,9 @@ class PemeriksaanSuhuRuangV2Controller extends Controller
             }
         })->get();
         
-        $produks = Bahan::whereHas('user', function($query) use ($user) {
-            if ($user->role && strtolower($user->role->role) !== 'superadmin') {
-                $query->where('id_plant', $user->id_plant);
-            }
-        })->get();
+        $produks = Produk::query()
+            ->orderBy('nama_produk')
+            ->get();
         
         $areas = InputArea::whereHas('user', function($query) use ($user) {
             if ($user->role && strtolower($user->role->role) !== 'superadmin') {
@@ -72,7 +71,7 @@ class PemeriksaanSuhuRuangV2Controller extends Controller
                 return $items->map(function ($p) {
                     return [
                         'id' => $p->id,
-                        'nama' => $p->nama_bahan,
+                        'nama' => $p->nama_produk,
                     ];
                 })->values();
             })
@@ -96,7 +95,7 @@ class PemeriksaanSuhuRuangV2Controller extends Controller
     {
         $request->validate([
             'id_shift' => 'required|exists:shifts,id',
-            'id_produk' => 'required|exists:bahans,id',
+            'id_produk' => 'required|exists:produks,id',
             'id_area' => 'required|exists:input_areas,id',
             'tanggal' => 'required|date',
         ]);
@@ -152,11 +151,9 @@ class PemeriksaanSuhuRuangV2Controller extends Controller
             }
         })->get();
         
-        $produks = Bahan::whereHas('user', function($query) use ($user) {
-            if ($user->role && strtolower($user->role->role) !== 'superadmin') {
-                $query->where('id_plant', $user->id_plant);
-            }
-        })->get();
+        $produks = Produk::query()
+            ->orderBy('nama_produk')
+            ->get();
         
         $areas = InputArea::whereHas('user', function($query) use ($user) {
             if ($user->role && strtolower($user->role->role) !== 'superadmin') {
@@ -177,7 +174,7 @@ class PemeriksaanSuhuRuangV2Controller extends Controller
                 return $items->map(function ($p) {
                     return [
                         'id' => $p->id,
-                        'nama' => $p->nama_bahan,
+                        'nama' => $p->nama_produk,
                     ];
                 })->values();
             })
@@ -388,6 +385,7 @@ class PemeriksaanSuhuRuangV2Controller extends Controller
         $pemeriksaanSuhuRuangV2->update([
             'status_verifikasi' => 'sent_to_produksi',
             'verified_by' => $user->id,
+            'verified_by_qc' => $user->id,
             'verified_at' => now(),
         ]);
         
@@ -410,6 +408,7 @@ class PemeriksaanSuhuRuangV2Controller extends Controller
         $pemeriksaanSuhuRuangV2->update([
             'status_verifikasi' => 'approved_produksi',
             'verified_by' => $user->id,
+            'verified_by_produksi' => $user->id,
             'verified_at' => now(),
             'verification_notes' => $request->input('notes'),
         ]);
@@ -437,6 +436,7 @@ class PemeriksaanSuhuRuangV2Controller extends Controller
         $pemeriksaanSuhuRuangV2->update([
             'status_verifikasi' => 'rejected_produksi',
             'verified_by' => $user->id,
+            'verified_by_produksi' => $user->id,
             'verified_at' => now(),
             'verification_notes' => $request->input('notes'),
         ]);
@@ -460,6 +460,7 @@ class PemeriksaanSuhuRuangV2Controller extends Controller
         $pemeriksaanSuhuRuangV2->update([
             'status_verifikasi' => 'approved_spv',
             'verified_by' => $user->id,
+            'verified_by_spv' => $user->id,
             'verified_at' => now(),
             'verification_notes' => $request->input('notes'),
         ]);
@@ -487,10 +488,142 @@ class PemeriksaanSuhuRuangV2Controller extends Controller
         $pemeriksaanSuhuRuangV2->update([
             'status_verifikasi' => 'rejected_spv',
             'verified_by' => $user->id,
+            'verified_by_spv' => $user->id,
             'verified_at' => now(),
             'verification_notes' => $request->input('notes'),
         ]);
         
         return redirect()->back()->with('error', 'Pemeriksaan ditolak oleh SPV QC. Silakan perbaiki dan kirim ulang.');
+    }
+
+    public function exportPDF(Request $request)
+    {
+        $user = Auth::user();
+        $id_shift = $request->input('id_shift');
+        $tanggalDari = $request->input('tanggal_dari');
+        $tanggalSampai = $request->input('tanggal_sampai');
+        $tanggal = $request->input('tanggal');
+
+        $query = PemeriksaanSuhuRuangV2::with([
+            'user.role',
+            'user.plant',
+            'produk',
+            'shift',
+            'area',
+            'verifiedBy.role'
+        ])->with([
+            'qcVerifier' => function ($q) {
+                $q->select('id', 'name');
+            },
+            'produksiVerifier' => function ($q) {
+                $q->select('id', 'name');
+            },
+            'spvVerifier' => function ($q) {
+                $q->select('id', 'name');
+            },
+            'histories' => function ($q) {
+                $q->select(
+                    'id',
+                    'id_pemeriksaan_suhu_ruang_v2',
+                    'created_at',
+                    'suhu_cold_storage_lama',
+                    'suhu_cold_storage_baru',
+                    'suhu_anteroom_loading_lama',
+                    'suhu_anteroom_loading_baru',
+                    'suhu_pre_loading_lama',
+                    'suhu_pre_loading_baru',
+                    'suhu_prestaging_lama',
+                    'suhu_prestaging_baru',
+                    'suhu_anteroom_ekspansi_abf_lama',
+                    'suhu_anteroom_ekspansi_abf_baru',
+                    'suhu_chillroom_rm_lama',
+                    'suhu_chillroom_rm_baru',
+                    'suhu_chillroom_domestik_lama',
+                    'suhu_chillroom_domestik_baru'
+                )
+                    ->orderByDesc('id');
+            }
+        ]);
+
+        if ($user->role && strtolower($user->role->role) !== 'superadmin') {
+            $query->whereHas('user', function ($q) use ($user) {
+                $q->where('id_plant', $user->id_plant);
+            });
+        }
+
+        if ($id_shift) {
+            $query->where('id_shift', $id_shift);
+        }
+
+        if ($id_shift) {
+            $shift = Shift::find($id_shift);
+            $shiftName = $shift ? trim(strtolower((string) $shift->shift)) : null;
+
+            if ($shiftName === '1' || $shiftName === 'shift 1') {
+                if ($tanggalDari && $tanggalSampai) {
+                    $query->whereBetween('tanggal', [$tanggalDari, $tanggalSampai]);
+                } elseif ($tanggalDari) {
+                    $query->whereDate('tanggal', '>=', $tanggalDari);
+                } elseif ($tanggalSampai) {
+                    $query->whereDate('tanggal', '<=', $tanggalSampai);
+                }
+            } else {
+                if ($tanggal) {
+                    $query->whereDate('tanggal', $tanggal);
+                }
+            }
+        } else {
+            if ($tanggal) {
+                $query->whereDate('tanggal', $tanggal);
+            }
+        }
+
+        $pemeriksaans = $query->latest()->get();
+
+        $shift = $id_shift ? Shift::find($id_shift) : null;
+
+        $qcUser = null;
+        $produksiUser = null;
+        $spvQcUser = null;
+
+        $allQcIds = $pemeriksaans->pluck('verified_by_qc')->filter()->unique();
+        $allProduksiIds = $pemeriksaans->pluck('verified_by_produksi')->filter()->unique();
+        $allSpvIds = $pemeriksaans->pluck('verified_by_spv')->filter()->unique();
+
+        if ($allQcIds->count() > 0) {
+            $qcUserData = User::with('role')->whereIn('id', $allQcIds->toArray())->first();
+            if ($qcUserData) {
+                $qcUser = $qcUserData->name;
+            }
+        }
+
+        if ($allProduksiIds->count() > 0) {
+            $produksiUserData = User::with('role')->whereIn('id', $allProduksiIds->toArray())->first();
+            if ($produksiUserData) {
+                $produksiUser = $produksiUserData->name;
+            }
+        }
+
+        if ($allSpvIds->count() > 0) {
+            $spvUserData = User::with('role')->whereIn('id', $allSpvIds->toArray())->first();
+            if ($spvUserData) {
+                $spvQcUser = $spvUserData->name;
+            }
+        }
+
+        $pdf = \PDF::loadView('qc-sistem.pemeriksaan-suhu-ruang-v2.pdf-report', [
+            'pemeriksaans' => $pemeriksaans,
+            'tanggal' => $tanggal,
+            'tanggal_dari' => $tanggalDari,
+            'tanggal_sampai' => $tanggalSampai,
+            'shift' => $shift,
+            'qcUser' => $qcUser,
+            'produksiUser' => $produksiUser,
+            'spvQcUser' => $spvQcUser,
+        ]);
+
+        $filenameDate = $tanggal ?? $tanggalDari ?? date('Y-m-d');
+        $filename = 'laporan-pemeriksaan-suhu-ruang-v2-' . $filenameDate . '.pdf';
+        return $pdf->download($filename);
     }
 }

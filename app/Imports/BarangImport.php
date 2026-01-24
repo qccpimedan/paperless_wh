@@ -2,13 +2,13 @@
 
 namespace App\Imports;
 
-use App\Models\Distributor;
+use App\Models\Barang;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 
-class DistributorImport implements ToCollection, WithHeadingRow
+class BarangImport implements ToCollection, WithHeadingRow
 {
     public int $inserted = 0;
     public int $skipped = 0;
@@ -25,15 +25,28 @@ class DistributorImport implements ToCollection, WithHeadingRow
         foreach ($rows as $index => $row) {
             $rowNumber = $index + 2;
 
-            $nama = isset($row['nama_distributor']) ? trim((string) $row['nama_distributor']) : '';
+            $nama = isset($row['nama_barang']) ? trim((string) $row['nama_barang']) : '';
+            $jumlahRaw = $row['jumlah_barang'] ?? null;
 
             if ($nama === '') {
-                $this->errors[] = "Baris {$rowNumber}: nama_distributor wajib diisi.";
+                $this->errors[] = "Baris {$rowNumber}: nama_barang wajib diisi.";
                 continue;
             }
 
-            $existsQuery = Distributor::query()
-                ->whereRaw('LOWER(nama_distributor) = ?', [mb_strtolower($nama)]);
+            $jumlah = 0;
+            if ($jumlahRaw !== null && $jumlahRaw !== '') {
+                if (!is_numeric($jumlahRaw)) {
+                    $this->errors[] = "Baris {$rowNumber}: jumlah_barang harus angka.";
+                    continue;
+                }
+                $jumlah = (int) $jumlahRaw;
+                if ($jumlah < 0) {
+                    $this->errors[] = "Baris {$rowNumber}: jumlah_barang minimal 0.";
+                    continue;
+                }
+            }
+
+            $existsQuery = Barang::query()->whereRaw('LOWER(nama_barang) = ?', [mb_strtolower($nama)]);
 
             if (!$isSuperadmin && $userPlantId !== null) {
                 $existsQuery->whereHas('user', function ($q) use ($userPlantId) {
@@ -48,9 +61,10 @@ class DistributorImport implements ToCollection, WithHeadingRow
                 continue;
             }
 
-            Distributor::create([
+            Barang::create([
                 'id_user' => Auth::id(),
-                'nama_distributor' => $nama,
+                'nama_barang' => $nama,
+                'jumlah_barang' => $jumlah,
             ]);
 
             $this->inserted++;

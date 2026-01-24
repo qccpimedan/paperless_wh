@@ -109,6 +109,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('bahans/template', [BahanController::class, 'template'])->name('bahans.template');
         Route::get('bahan-kemasans/template', [BahanKemasanController::class, 'template'])->name('bahan-kemasans.template');
         Route::get('produks/template', [ProdukController::class, 'template'])->name('produks.template');
+        Route::get('customers/template', [CustomerController::class, 'template'])->name('customers.template');
+        Route::get('barangs/template', [BarangController::class, 'template'])->name('barangs.template');
+        Route::get('ekspedisis/template', [EkspedisiController::class, 'template'])->name('ekspedisis.template');
 
         // Role Management Routes
         Route::resource('roles', RoleController::class);
@@ -118,11 +121,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::resource('users', UserController::class);
         // Barang Management Routes
         Route::resource('barangs', BarangController::class);
+        Route::post('barangs/import', [BarangController::class, 'import'])->name('barangs.import');
         // Bahan Management Routes
         Route::resource('bahans', BahanController::class);
         Route::post('bahans/import', [BahanController::class, 'import'])->name('bahans.import');
         // Customer Management Routes
         Route::resource('customers', CustomerController::class);
+        Route::post('customers/import', [CustomerController::class, 'import'])->name('customers.import');
         // Shift Management Routes
         Route::resource('shifts', ShiftController::class);
         // Distributor Management Routes
@@ -149,6 +154,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('produks/import', [ProdukController::class, 'import'])->name('produks.import');
         // Ekspedisi Management Routes
         Route::resource('ekspedisis', EkspedisiController::class);
+        Route::post('ekspedisis/import', [EkspedisiController::class, 'import'])->name('ekspedisis.import');
         // Input Area Management Routes
         Route::resource('input-areas', InputAreaController::class);
         // Input Master Form Management Routes
@@ -172,6 +178,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('pemeriksaan-kebersihan-area/export-pdf', [PemeriksaanKebersihanAreaController::class, 'exportPDF'])->name('pemeriksaan-kebersihan-area.export-pdf');
         Route::get('golden-sample-reports/export-pdf', [GoldenSampleReportController::class, 'exportPDF'])->name('golden-sample-reports.export-pdf');
         Route::get('pemeriksaan-barang-mudah-pecah/export-pdf', [PemeriksaanBarangMudahPecahController::class, 'exportPDF'])->name('pemeriksaan-barang-mudah-pecah.export-pdf');
+        Route::get('pemeriksaan-suhu-ruang/export-pdf', [PemeriksaanSuhuRuangController::class, 'exportPDF'])->name('pemeriksaan-suhu-ruang.export-pdf');
+        Route::get('pemeriksaan-suhu-ruang-v2/export-pdf', [PemeriksaanSuhuRuangV2Controller::class, 'exportPDF'])->name('pemeriksaan-suhu-ruang-v2.export-pdf');
+        Route::get('pemeriksaan-suhu-ruang-v3/export-pdf', [PemeriksaanSuhuRuangV3Controller::class, 'exportPDF'])->name('pemeriksaan-suhu-ruang-v3.export-pdf');
         Route::get('detail-komplain/{detailKomplain:uuid}/export-pdf', [DetailKomplainController::class, 'exportPdf'])->name('detail-komplain.export-pdf');
         
         // Routes Tambah data per uuid

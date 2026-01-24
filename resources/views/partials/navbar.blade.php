@@ -212,7 +212,7 @@
                     </a>
                     <ul class="submenu {{ request()->routeIs('pemeriksaan-suhu-ruang.*') || request()->routeIs('pemeriksaan-suhu-ruang-v2.*') || request()->routeIs('pemeriksaan-suhu-ruang-v3.*') ? 'active' : '' }}">
                         <li class="submenu-item {{ request()->routeIs('pemeriksaan-suhu-ruang.*') ? 'active' : '' }}">
-                            <a href="{{ route('pemeriksaan-suhu-ruang.index') }}">Food Prosesing</a>
+                            <a href="{{ route('pemeriksaan-suhu-ruang.index') }}">Food Processing</a>
                         </li>
                         <li class="submenu-item {{ request()->routeIs('pemeriksaan-suhu-ruang-v2.*') ? 'active' : '' }}">
                             <a href="{{ route('pemeriksaan-suhu-ruang-v2.index') }}">CS Meat <span id="v2-badge" class="badge bg-danger" style="display: none;"></span></a>

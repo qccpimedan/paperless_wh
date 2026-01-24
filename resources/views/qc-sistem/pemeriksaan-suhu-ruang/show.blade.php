@@ -49,21 +49,21 @@
                                             <p class="form-control-plaintext"><span class="badge bg-info">{{ $pemeriksaanSuhuRuang->shift->shift ?? '-' }}</span></p>
                                         </div>
                                     </div>
-                                    <div class="col-md-4">
+                                    <!-- <div class="col-md-4">
                                         <div class="mb-3">
                                             <label class="form-label"><strong>Dibuat Pada</strong></label>
                                            <p class="text-muted">{{ $pemeriksaanSuhuRuang->created_at->format('d M Y H:i:s')  }}</p>
                                         </div>
-                                    </div>
+                                    </div> -->
 
-                                    <div class="col-md-6">
+                                    <div class="col-md-4">
                                         <div class="mb-3">
                                             <label class="form-label"><strong>Area</strong></label>
                                             <p class="form-control-plaintext">{{ $pemeriksaanSuhuRuang->area->nama_area ?? '-' }}</p>
                                         </div>
                                     </div>
 
-                                    <div class="col-md-6">
+                                    <div class="col-md-4">
                                         <div class="mb-3">
                                             <label class="form-label"><strong>Produk</strong></label>
                                             <p class="form-control-plaintext">
@@ -76,6 +76,20 @@
                                                     -
                                                 @endif
                                             </p>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <div class="mb-3">
+                                            <label class="form-label"><strong>Suhu Produk</strong></label>
+                                            <p class="form-control-plaintext">{{ $pemeriksaanSuhuRuang->suhu_produk ?? '-' }}</p>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <div class="mb-3">
+                                            <label class="form-label"><strong>Pukul</strong></label>
+                                            <p class="form-control-plaintext">{{ $pemeriksaanSuhuRuang->pukul ? \Carbon\Carbon::parse($pemeriksaanSuhuRuang->pukul)->format('H:i') : '-' }}</p>
                                         </div>
                                     </div>
                                 </div>

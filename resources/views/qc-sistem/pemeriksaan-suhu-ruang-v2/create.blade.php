@@ -639,6 +639,87 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+
+    const produkByKategori = @json($produkByKategori ?? []);
+    const kategoriSelect = document.querySelector('select.kategori-produk-select[name="kategori_code"]');
+    const produkSelect = document.querySelector('select.produk-select[name="id_produk"]');
+
+    let kategoriChoices = null;
+    let produkChoices = null;
+
+    const initChoicesSafe = function(selectEl) {
+        try {
+            if (!selectEl) return null;
+            if (typeof Choices === 'undefined') return null;
+            return new Choices(selectEl, {
+                searchEnabled: true,
+                searchPlaceholderValue: 'Cari...',
+                itemSelectText: 'Tekan untuk memilih',
+                noResultsText: 'Tidak ada hasil ditemukan',
+                noChoicesText: 'Tidak ada pilihan tersedia',
+                removeItemButton: true,
+                shouldSort: false,
+                placeholder: true,
+                placeholderValue: 'Pilih...'
+            });
+        } catch (e) {
+            return null;
+        }
+    };
+
+    kategoriChoices = initChoicesSafe(kategoriSelect);
+    produkChoices = initChoicesSafe(produkSelect);
+
+    const populateProdukOptions = function(kategoriCode) {
+        if (!produkSelect) return;
+
+        const selectedFromAttr = produkSelect.getAttribute('data-selected') || '';
+
+        const options = (kategoriCode && produkByKategori && produkByKategori[kategoriCode])
+            ? (produkByKategori[kategoriCode] || [])
+            : [];
+
+        if (produkChoices) {
+            const choiceItems = [{ value: '', label: '-- Pilih Produk --', selected: !selectedFromAttr }].concat(
+                options.map((p) => {
+                    const v = String(p.id);
+                    return {
+                        value: v,
+                        label: String(p.nama),
+                        selected: selectedFromAttr ? (v === String(selectedFromAttr)) : false,
+                    };
+                })
+            );
+
+            try {
+                produkChoices.clearChoices();
+                produkChoices.setChoices(choiceItems, 'value', 'label', true);
+            } catch (e) {
+            }
+        } else {
+            while (produkSelect.options.length > 0) {
+                produkSelect.remove(0);
+            }
+            produkSelect.add(new Option('-- Pilih Produk --', ''));
+            options.forEach(function(p) {
+                produkSelect.add(new Option(p.nama, p.id));
+            });
+
+            if (selectedFromAttr) {
+                produkSelect.value = selectedFromAttr;
+            }
+        }
+    };
+
+    if (kategoriSelect) {
+        kategoriSelect.addEventListener('change', function() {
+            if (produkSelect) {
+                produkSelect.setAttribute('data-selected', '');
+            }
+            populateProdukOptions(kategoriSelect.value);
+        });
+        populateProdukOptions(kategoriSelect.value);
+    }
 });
 </script>
 @endsection

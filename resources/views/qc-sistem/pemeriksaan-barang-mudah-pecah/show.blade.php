@@ -114,7 +114,9 @@
                                             <div class="col-md-3">
                                                 <label class="form-label"><strong>Awal</strong></label>
                                                 <p>
-                                                    @if($detail->awal === 'baik')
+                                                    @if(empty($detail->awal))
+                                                        <span class="badge bg-secondary">- belum diisi</span>
+                                                    @elseif($detail->awal === 'baik')
                                                         <span class="badge bg-success">✓ baik</span>
                                                     @else
                                                         <span class="badge bg-danger">✗ tidak baik</span>
@@ -124,7 +126,9 @@
                                             <div class="col-md-4">
                                                 <label class="form-label"><strong>Akhir</strong></label>
                                                 <p>
-                                                    @if($detail->akhir === 'baik')
+                                                    @if(empty($detail->akhir))
+                                                        <span class="badge bg-secondary">- belum diisi</span>
+                                                    @elseif($detail->akhir === 'baik')
                                                         <span class="badge bg-success">✓ baik</span>
                                                     @else
                                                         <span class="badge bg-danger">✗ tidak baik</span>
