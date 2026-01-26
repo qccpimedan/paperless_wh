@@ -128,14 +128,26 @@ class PemeriksaanLoadingProdukController extends Controller
             })->with(['user.plant'])->get();
         }
 
-        $produkKategoriOptions = $produks
+        if ($produks->isEmpty()) {
+            $produks = Produk::with(['user.plant'])->get();
+        }
+
+        $produkKategoriOptions = Produk::query()
+            ->whereNotNull('kategori_code')
+            ->select('kategori_code')
+            ->distinct()
+            ->orderBy('kategori_code')
             ->pluck('kategori_code')
-            ->filter()
-            ->unique()
             ->values()
             ->all();
 
-        $produkByKategori = $produks
+        $produkList = Produk::query()
+            ->select(['id', 'nama_produk', 'kategori_code'])
+            ->orderBy('nama_produk')
+            ->get();
+
+        $produkByKategori = $produkList
+            ->whereNotNull('kategori_code')
             ->groupBy('kategori_code')
             ->map(function ($items) {
                 return $items->map(function ($p) {
@@ -147,7 +159,7 @@ class PemeriksaanLoadingProdukController extends Controller
             })
             ->all();
 
-        $produkKategoriById = $produks
+        $produkKategoriById = $produkList
             ->pluck('kategori_code', 'id')
             ->all();
 

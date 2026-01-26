@@ -174,7 +174,11 @@
                                         <td>{{ ($pemeriksaans->firstItem() ?? 1) + $index }}</td>
                                         <td>{{ \Carbon\Carbon::parse($pemeriksaan->tanggal)->format('d/m/Y') }}</td>
                                         <td>
-                                            <span class="badge bg-info">{{ $pemeriksaan->shift->shift }}</span>
+                                            @if($pemeriksaan->shift)
+                                                <span class="badge bg-info">{{ $pemeriksaan->shift->shift }}</span>
+                                            @else
+                                                <span class="badge bg-secondary">-</span>
+                                            @endif
                                         </td>
                                         <td>
                                             @if($pemeriksaan->user->plant)
