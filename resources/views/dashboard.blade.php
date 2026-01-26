@@ -48,7 +48,7 @@
                                         <div class="card-body">
                                             <h5>Data Master</h5>
                                             <p>Kelola data role, plant, dan user</p>
-                                            <a href="{{ route('roles.index') }}" class="btn btn-light btn-sm">Lihat Data</a>
+                                            <a href="#" class="btn btn-light btn-sm">Coming Soon</a>
                                         </div>
                                     </div>
                                 </div>

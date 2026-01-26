@@ -5,6 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\InputDeskripsi;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Imports\InputDeskripsiImport;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\InputDeskripsiTemplateExport;
 
 class InputDeskripsiController extends Controller
 {
@@ -109,6 +112,31 @@ class InputDeskripsiController extends Controller
         
         $inputDeskripsi->delete();
         return redirect()->route('input-deskripsis.index')->with('success', 'Deskripsi berhasil dihapus!');
+    }
+
+    public function import(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|file|mimes:xlsx,xls,csv',
+        ]);
+
+        $import = new InputDeskripsiImport();
+        Excel::import($import, $request->file('file'));
+
+        $message = "Import selesai. Inserted: {$import->inserted}. Skipped: {$import->skipped}.";
+
+        if (!empty($import->errors)) {
+            return redirect()->route('input-deskripsis.index')
+                ->with('success', $message)
+                ->with('import_errors', $import->errors);
+        }
+
+        return redirect()->route('input-deskripsis.index')->with('success', $message);
+    }
+
+    public function template()
+    {
+        return Excel::download(new InputDeskripsiTemplateExport(), 'template_import_deskripsi.xlsx');
     }
 
     /**

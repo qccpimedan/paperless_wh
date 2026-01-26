@@ -53,7 +53,7 @@
                                     <div class="form-body">
                                         <div class="row">
                                             <div class="col-md-12">
-                                                <label for="nama_tujuan">Nama Tujuan <span class="text-danger">*</span></label>
+                                                <label for="nama_tujuan">Nama Customer <span class="text-danger">*</span></label>
                                                 <div id="dynamic-fields">
                                                     <div class="input-group mb-2">
                                                         <select name="id_customer[]" class="form-select @error('id_customer.0') is-invalid @enderror">

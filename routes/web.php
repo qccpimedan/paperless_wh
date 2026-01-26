@@ -160,8 +160,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
         // Input Master Form Management Routes
         Route::resource('input-master-forms', InputMasterFormController::class);
         // Std Precooling Management Routes
+        Route::get('std-precoolings/template', [StdPrecoolingController::class, 'template'])->name('std-precoolings.template');
+        Route::post('std-precoolings/import', [StdPrecoolingController::class, 'import'])->name('std-precoolings.import');
         Route::resource('std-precoolings', StdPrecoolingController::class);
         // Input Deskripsi Management Routes
+        Route::get('input-deskripsis/template', [InputDeskripsiController::class, 'template'])->name('input-deskripsis.template');
+        Route::post('input-deskripsis/import', [InputDeskripsiController::class, 'import'])->name('input-deskripsis.import');
         Route::resource('input-deskripsis', InputDeskripsiController::class);
     });
     

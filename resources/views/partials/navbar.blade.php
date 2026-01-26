@@ -98,6 +98,9 @@
                         </li>
                         <li class="submenu-item {{ request()->routeIs('distributors.*') ? 'active' : '' }}">
                             <a href="{{ route('distributors.index')}}">Input Distributor</a>
+                            <li class="submenu-item {{ request()->routeIs('tujuan-pengirimans.*') ? 'active' : '' }}">
+                                <a href="{{ route('tujuan-pengirimans.index')}}">Input Tujuan Pengiriman</a>
+                            </li>
                         </li>
                         <li class="submenu-item {{ request()->routeIs('produsens.*') ? 'active' : '' }}">
                             <a href="{{ route('produsens.index')}}">Input Produsen</a>
@@ -128,9 +131,6 @@
                         </li>
                         <li class="submenu-item {{ request()->routeIs('jenis-kendaraans.*') ? 'active' : '' }}">
                             <a href="{{ route('jenis-kendaraans.index')}}">Input Jenis Kendaraan</a>
-                        </li>
-                        <li class="submenu-item {{ request()->routeIs('tujuan-pengirimans.*') ? 'active' : '' }}">
-                            <a href="{{ route('tujuan-pengirimans.index')}}">Input Tujuan Pengiriman</a>
                         </li>
                         <li class="submenu-item {{ request()->routeIs('input-master-forms.*') ? 'active' : '' }}">
                             <a href="{{ route('input-master-forms.index')}}">Input Master Form</a>
