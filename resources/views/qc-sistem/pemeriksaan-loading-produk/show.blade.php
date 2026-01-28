@@ -217,7 +217,9 @@
                                 <tr>
                                     <td width="200"><strong>Segel/Gembok:</strong></td>
                                     <td>
-                                        @if($pemeriksaanLoading->segel_gembok)
+                                        @if($pemeriksaanLoading->segel_gembok === null)
+                                            -
+                                        @elseif($pemeriksaanLoading->segel_gembok)
                                             <span class="badge bg-info">Segel</span>
                                         @else
                                             <span class="badge bg-warning text-dark">Gembok</span>
@@ -236,6 +238,16 @@
 
                     <!-- DATA PRODUK MULTIPLE -->
                     @if($pemeriksaanLoading->produk_data && count($pemeriksaanLoading->produk_data) > 0)
+                        @php
+                            $produkIds = collect($pemeriksaanLoading->produk_data)
+                                ->pluck('id_produk')
+                                ->filter()
+                                ->unique()
+                                ->values();
+
+                            $produkNameById = \App\Models\Produk::whereIn('id', $produkIds)
+                                ->pluck('nama_produk', 'id');
+                        @endphp
                         <div class="row mb-4">
                             <div class="col-md-12">
                                 <h6 class="text-secondary mb-3">Detail Produk</h6>
@@ -250,9 +262,10 @@
                                                             <td width="150"><strong>Nama Produk:</strong></td>
                                                             <td>
                                                                 @php
-                                                                    $produkName = \App\Models\Produk::find($produk['id_produk'])?->nama_produk ?? 'Produk tidak ditemukan';
+                                                                    $idProduk = $produk['id_produk'] ?? null;
+                                                                    $produkName = $idProduk ? ($produkNameById[$idProduk] ?? null) : null;
                                                                 @endphp
-                                                                <strong>{{ $produkName }}</strong>
+                                                                <strong>{{ $produkName ?? 'Produk tidak ditemukan' }}</strong>
                                                             </td>
                                                         </tr>
                                                         <tr>
@@ -262,7 +275,7 @@
                                                         <tr>
                                                             <td><strong>Best Before:</strong></td>
                                                             <td>
-                                                                @if($produk['best_before'])
+                                                                @if(($produk['best_before'] ?? null))
                                                                     {{ \Carbon\Carbon::parse($produk['best_before'])->format('d/m/Y') }}
                                                                 @else
                                                                     -
@@ -288,7 +301,7 @@
                                                         <tr>
                                                             <td><strong>Kondisi Kemasan:</strong></td>
                                                             <td>
-                                                                @if($produk['kondisi_kemasan'])
+                                                                @if(($produk['kondisi_kemasan'] ?? true))
                                                                     <span class="badge bg-success">✓ Baik</span>
                                                                 @else
                                                                     <span class="badge bg-danger">✗ Tidak Baik</span>
@@ -298,7 +311,7 @@
                                                     </table>
                                                 </div>
                                             </div>
-                                            @if($produk['keterangan'])
+                                            @if(($produk['keterangan'] ?? null))
                                                 <div class="row mt-2">
                                                     <div class="col-md-12">
                                                         <small class="text-muted"><strong>Keterangan:</strong> {{ $produk['keterangan'] }}</small>

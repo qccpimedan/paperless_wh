@@ -316,7 +316,7 @@
 
                                         <!-- DATA PRODUK -->
                                         <h5 class="text-primary mb-3 mt-4">Data Produk <span class="text-danger">*</span></h5>
-                                        <div class="row">
+                                        <div id="produk-groups">
                                             @php
                                                 $selectedProdukId = old('id_produk', '');
                                                 $selectedKategori = old('kategori_code', '');
@@ -324,84 +324,95 @@
                                                     $selectedKategori = $produkKategoriById[$selectedProdukId] ?? '';
                                                 }
                                             @endphp
-                                            <div class="col-md-6">
-                                                <div class="form-group">
-                                                    <label>Kategori <span class="text-danger">*</span></label>
-                                                    <select class="choices form-select kategori-produk-select @error('kategori_code') is-invalid @enderror" name="kategori_code" required>
-                                                        <option value="">-- Pilih Kategori --</option>
-                                                        @foreach(($produkKategoriOptions ?? []) as $kategori)
-                                                            <option value="{{ $kategori }}" {{ $selectedKategori == $kategori ? 'selected' : '' }}>{{ $kategori }}</option>
-                                                        @endforeach
-                                                    </select>
-                                                    @error('kategori_code')
-                                                        <div class="invalid-feedback">{{ $message }}</div>
-                                                    @enderror
+                                            <div class="produk-group mb-4 p-3 border rounded" style="background-color: #ffffff;" data-group-index="0">
+                                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                                    <h6 class="text-secondary mb-0">Produk #1</h6>
+                                                    <button type="button" class="btn btn-sm btn-outline-danger remove-produk-group" style="display:none;">Hapus Produk</button>
                                                 </div>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <div class="form-group">
-                                                    <label>Nama Produk <span class="text-danger">*</span></label>
-                                                    <select class="form-select produk-select @error('id_produk') is-invalid @enderror" name="id_produk" data-selected="{{ old('id_produk', '') }}" required>
-                                                        <option value="">-- Pilih Produk --</option>
-                                                    </select>
-                                                    @error('id_produk')
-                                                        <div class="invalid-feedback">{{ $message }}</div>
-                                                    @enderror
-                                                </div>
-                                            </div>
-                                        </div>
 
-                                        <h6 class="text-secondary mt-3">Detail Produk</h6>
-                                        <div id="produk-container">
-                                            <div class="produk-row mb-4 p-3 border rounded" style="background-color: #f8f9fa;">
-                                                <h6 class="text-secondary mb-3">Detail #1</h6>
-                                                <input type="hidden" class="produk-id-hidden" name="produk_data[0][id_produk]" value="{{ old('id_produk') }}">
                                                 <div class="row">
-                                                    <div class="col-md-3">
-                                                        <label>Kode Produksi</label>
-                                                        <input type="text" class="form-control" name="produk_data[0][kode_produksi]" value="{{ old('produk_data.0.kode_produksi') }}" placeholder="Kode Produksi">
+                                                    <div class="col-md-6">
+                                                        <div class="form-group">
+                                                            <label>Kategori <span class="text-danger">*</span></label>
+                                                            <select class="choices form-select kategori-produk-select @error('kategori_code') is-invalid @enderror" name="kategori_code" required>
+                                                                <option value="">-- Pilih Kategori --</option>
+                                                                @foreach(($produkKategoriOptions ?? []) as $kategori)
+                                                                    <option value="{{ $kategori }}" {{ $selectedKategori == $kategori ? 'selected' : '' }}>{{ $kategori }}</option>
+                                                                @endforeach
+                                                            </select>
+                                                            @error('kategori_code')
+                                                                <div class="invalid-feedback">{{ $message }}</div>
+                                                            @enderror
+                                                        </div>
                                                     </div>
-                                                    <div class="col-md-3">
-                                                        <label>Best Before</label>
-                                                        <input type="date" class="form-control" name="produk_data[0][best_before]" value="{{ old('produk_data.0.best_before') }}">
-                                                    </div>
-                                                    <div class="col-md-3">
-                                                        <label>Jumlah Kemasan</label>
-                                                        <input type="text" class="form-control" name="produk_data[0][jumlah_kemasan]" value="{{ old('produk_data.0.jumlah_kemasan') }}" placeholder="Contoh: 100 Karton">
-                                                    </div>
-                                                    <div class="col-md-3">
-                                                        <label>Jumlah Sampling</label>
-                                                        <input type="text" class="form-control" name="produk_data[0][jumlah_sampling]" value="{{ old('produk_data.0.jumlah_sampling') }}" placeholder="Contoh: 10 Karton">
-                                                    </div>
-                                                </div>
-                                                <div class="row mt-3">
-                                                    <div class="col-md-3">
-                                                        <label>Berat per Karung</label>
-                                                        <input type="text" class="form-control" name="produk_data[0][berat_perkarung]" value="{{ old('produk_data.0.berat_perkarung') }}" placeholder="Contoh: 25 Kg">
-                                                    </div>
-                                                </div>
-                                                <div class="row mt-3">
-                                                    <div class="col-md-12">
-                                                        <div class="form-check">
-                                                            <input class="form-check-input" type="checkbox" name="produk_data[0][kondisi_kemasan]" value="1" {{ old('produk_data.0.kondisi_kemasan', 1) ? 'checked' : '' }}>
-                                                            <label class="form-check-label">Kondisi Kemasan Baik</label>
+                                                    <div class="col-md-6">
+                                                        <div class="form-group">
+                                                            <label>Nama Produk <span class="text-danger">*</span></label>
+                                                            <select class="form-select produk-select @error('id_produk') is-invalid @enderror" name="id_produk" data-selected="{{ old('id_produk', '') }}" required>
+                                                                <option value="">-- Pilih Produk --</option>
+                                                            </select>
+                                                            @error('id_produk')
+                                                                <div class="invalid-feedback">{{ $message }}</div>
+                                                            @enderror
                                                         </div>
                                                     </div>
                                                 </div>
-                                                <div class="row mt-3">
-                                                    <div class="col-md-12">
-                                                        <label>Keterangan</label>
-                                                        <textarea class="form-control" name="produk_data[0][keterangan]" rows="2" placeholder="Keterangan tambahan untuk detail ini">{{ old('produk_data.0.keterangan') }}</textarea>
+
+                                                <h6 class="text-secondary mt-3">Detail Produk</h6>
+                                                <div class="produk-container">
+                                                    <div class="produk-row mb-4 p-3 border rounded" style="background-color: #f8f9fa;">
+                                                        <h6 class="text-secondary mb-3">Detail #1</h6>
+                                                        <input type="hidden" class="produk-id-hidden" name="produk_data[0][id_produk]" value="{{ old('id_produk') }}">
+                                                        <div class="row">
+                                                            <div class="col-md-3">
+                                                                <label>Kode Produksi</label>
+                                                                <input type="text" class="form-control" name="produk_data[0][kode_produksi]" value="{{ old('produk_data.0.kode_produksi') }}" placeholder="Kode Produksi">
+                                                            </div>
+                                                            <div class="col-md-3">
+                                                                <label>Best Before</label>
+                                                                <input type="date" class="form-control" name="produk_data[0][best_before]" value="{{ old('produk_data.0.best_before') }}">
+                                                            </div>
+                                                            <div class="col-md-3">
+                                                                <label>Jumlah Kemasan</label>
+                                                                <input type="text" class="form-control" name="produk_data[0][jumlah_kemasan]" value="{{ old('produk_data.0.jumlah_kemasan') }}" placeholder="Contoh: 100 Karton">
+                                                            </div>
+                                                            <div class="col-md-3">
+                                                                <label>Jumlah Sampling</label>
+                                                                <input type="text" class="form-control" name="produk_data[0][jumlah_sampling]" value="{{ old('produk_data.0.jumlah_sampling') }}" placeholder="Contoh: 10 Karton">
+                                                            </div>
+                                                        </div>
+                                                        <div class="row mt-3">
+                                                            <div class="col-md-3">
+                                                                <label>Berat per Karung</label>
+                                                                <input type="text" class="form-control" name="produk_data[0][berat_perkarung]" value="{{ old('produk_data.0.berat_perkarung') }}" placeholder="Contoh: 25 Kg">
+                                                            </div>
+                                                        </div>
+                                                        <div class="row mt-3">
+                                                            <div class="col-md-12">
+                                                                <div class="form-check">
+                                                                    <input class="form-check-input" type="checkbox" name="produk_data[0][kondisi_kemasan]" value="1" {{ old('produk_data.0.kondisi_kemasan', 1) ? 'checked' : '' }}>
+                                                                    <label class="form-check-label">Kondisi Kemasan Baik</label>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="row mt-3">
+                                                            <div class="col-md-12">
+                                                                <label>Keterangan</label>
+                                                                <textarea class="form-control" name="produk_data[0][keterangan]" rows="2" placeholder="Keterangan tambahan untuk detail ini">{{ old('produk_data.0.keterangan') }}</textarea>
+                                                            </div>
+                                                        </div>
+                                                        <div class="row mt-3">
+                                                            <div class="col-md-12">
+                                                                <button type="button" class="btn btn-sm btn-danger remove-detail" style="display: none;">Hapus Detail</button>
+                                                            </div>
+                                                        </div>
                                                     </div>
                                                 </div>
-                                                <div class="row mt-3">
-                                                    <div class="col-md-12">
-                                                        <button type="button" class="btn btn-sm btn-danger remove-produk" style="display: none;">Hapus Detail</button>
-                                                    </div>
-                                                </div>
+                                                <button type="button" class="btn btn-sm btn-primary mt-2 add-detail">+ Tambah Detail</button>
                                             </div>
                                         </div>
-                                        <button type="button" class="btn btn-sm btn-primary mt-2" id="add-produk">+ Tambah Detail</button>
+
+                                        <button type="button" class="btn btn-sm btn-success mt-2" id="add-produk-group">+ Tambah Produk</button>
 
                                         <div class="col-md-12 d-flex justify-content-end mt-3">
                                             <button type="submit" class="btn btn-primary me-1 mb-1">Simpan Loading Produk</button>
@@ -508,13 +519,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const produkByKategori = @json($produkByKategori ?? []);
 
-    // Dependent dropdown: Kategori -> Produk
-    const kategoriSelect = document.querySelector('select.kategori-produk-select[name="kategori_code"]');
-    const produkSelect = document.querySelector('select.produk-select[name="id_produk"]');
-
     const choicesInstances = new WeakMap();
 
-    const rebuildProdukChoices = function(choiceItems, desiredValue) {
+    const rebuildProdukChoices = function(produkSelect, choiceItems, desiredValue) {
         if (!produkSelect) return;
 
         const existing = choicesInstances.get(produkSelect);
@@ -564,7 +571,8 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     };
 
-    const populateProdukOptions = function(kategoriCode) {
+    const populateProdukOptions = function(groupEl, kategoriCode) {
+        const produkSelect = groupEl ? groupEl.querySelector('select.produk-select') : null;
         if (!produkSelect) return;
 
         const selectedFromAttr = produkSelect.getAttribute('data-selected') || '';
@@ -583,128 +591,259 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
 
-        rebuildProdukChoices(choiceItems, selectedFromAttr);
+        rebuildProdukChoices(produkSelect, choiceItems, selectedFromAttr);
     };
 
-    if (kategoriSelect) {
-        kategoriSelect.addEventListener('change', function() {
-            if (produkSelect) {
-                produkSelect.setAttribute('data-selected', '');
-            }
-            populateProdukOptions(kategoriSelect.value);
-            if (produkSelect) {
-                syncHiddenProdukIds();
+    function updateGroupTitles() {
+        const groups = Array.from(document.querySelectorAll('#produk-groups .produk-group'));
+        groups.forEach((g, i) => {
+            g.setAttribute('data-group-index', String(i));
+            const title = g.querySelector('h6.text-secondary');
+            if (title) title.textContent = `Produk #${i + 1}`;
+            const removeBtn = g.querySelector('.remove-produk-group');
+            if (removeBtn) {
+                removeBtn.style.display = groups.length > 1 ? 'inline-block' : 'none';
             }
         });
     }
 
-    // Init produk options on load
-    if (kategoriSelect) {
-        populateProdukOptions(kategoriSelect.value);
-    }
-
-    function syncHiddenProdukIds() {
-        const idProduk = document.querySelector('select[name="id_produk"]')?.value || '';
-        document.querySelectorAll('#produk-container .produk-id-hidden').forEach((el) => {
+    function syncGroupHiddenProdukIds(groupEl) {
+        const produkSelect = groupEl ? groupEl.querySelector('select.produk-select') : null;
+        const idProduk = produkSelect ? (produkSelect.value || '') : '';
+        groupEl.querySelectorAll('.produk-id-hidden').forEach((el) => {
             el.value = idProduk;
         });
     }
 
-    function updateProdukRows() {
-        const rows = Array.from(document.querySelectorAll('#produk-container .produk-row'));
-        rows.forEach((row, index) => {
-            const title = row.querySelector('h6');
-            if (title) title.textContent = `Detail #${index + 1}`;
+    function reindexAllDetails() {
+        const groups = Array.from(document.querySelectorAll('#produk-groups .produk-group'));
+        let globalIndex = 0;
 
-            row.querySelectorAll('input, textarea').forEach((el) => {
-                const name = el.getAttribute('name');
-                if (!name) return;
-                const updated = name.replace(/produk_data\[\d+\]/g, `produk_data[${index}]`);
-                if (updated !== name) el.setAttribute('name', updated);
+        groups.forEach((groupEl) => {
+            const rows = Array.from(groupEl.querySelectorAll('.produk-container .produk-row'));
+            rows.forEach((row, idxInGroup) => {
+                const t = row.querySelector('h6');
+                if (t) t.textContent = `Detail #${idxInGroup + 1}`;
+
+                row.querySelectorAll('input, textarea').forEach((el) => {
+                    const name = el.getAttribute('name');
+                    if (!name) return;
+                    const updated = name.replace(/produk_data\[\d+\]/g, `produk_data[${globalIndex}]`);
+                    if (updated !== name) el.setAttribute('name', updated);
+                });
+
+                globalIndex += 1;
             });
 
-            const removeBtn = row.querySelector('.remove-produk');
-            if (removeBtn) {
-                removeBtn.style.display = rows.length > 1 ? 'inline-block' : 'none';
+            rows.forEach((row) => {
+                const removeBtn = row.querySelector('.remove-detail');
+                if (removeBtn) {
+                    removeBtn.style.display = rows.length > 1 ? 'inline-block' : 'none';
+                }
+            });
+
+            syncGroupHiddenProdukIds(groupEl);
+        });
+    }
+
+    function bindGroupEvents(groupEl) {
+        const kategoriSelect = groupEl.querySelector('select.kategori-produk-select');
+        const produkSelect = groupEl.querySelector('select.produk-select');
+
+        if (kategoriSelect) {
+            kategoriSelect.addEventListener('change', function() {
+                if (produkSelect) {
+                    produkSelect.setAttribute('data-selected', '');
+                }
+                populateProdukOptions(groupEl, kategoriSelect.value);
+                syncGroupHiddenProdukIds(groupEl);
+            });
+        }
+
+        if (produkSelect) {
+            produkSelect.addEventListener('change', function() {
+                syncGroupHiddenProdukIds(groupEl);
+            });
+        }
+
+        const addDetailBtn = groupEl.querySelector('.add-detail');
+        if (addDetailBtn) {
+            addDetailBtn.addEventListener('click', function() {
+                const container = groupEl.querySelector('.produk-container');
+                if (!container) return;
+
+                const newRow = document.createElement('div');
+                newRow.className = 'produk-row mb-4 p-3 border rounded';
+                newRow.style.backgroundColor = '#f8f9fa';
+                const tempIndex = 0;
+                newRow.innerHTML = `
+                    <h6 class="text-secondary mb-3">Detail</h6>
+                    <input type="hidden" class="produk-id-hidden" name="produk_data[${tempIndex}][id_produk]" value="">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <label>Kode Produksi</label>
+                            <input type="text" class="form-control" name="produk_data[${tempIndex}][kode_produksi]" placeholder="Kode Produksi">
+                        </div>
+                        <div class="col-md-3">
+                            <label>Best Before</label>
+                            <input type="date" class="form-control" name="produk_data[${tempIndex}][best_before]">
+                        </div>
+                        <div class="col-md-3">
+                            <label>Jumlah Kemasan</label>
+                            <input type="text" class="form-control" name="produk_data[${tempIndex}][jumlah_kemasan]" placeholder="Contoh: 100 Karton">
+                        </div>
+                        <div class="col-md-3">
+                            <label>Jumlah Sampling</label>
+                            <input type="text" class="form-control" name="produk_data[${tempIndex}][jumlah_sampling]" placeholder="Contoh: 10 Karton">
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-md-3">
+                            <label>Berat per Karung</label>
+                            <input type="text" class="form-control" name="produk_data[${tempIndex}][berat_perkarung]" placeholder="Contoh: 25 Kg">
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-md-12">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="produk_data[${tempIndex}][kondisi_kemasan]" value="1" checked>
+                                <label class="form-check-label">Kondisi Kemasan Baik</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-md-12">
+                            <label>Keterangan</label>
+                            <textarea class="form-control" name="produk_data[${tempIndex}][keterangan]" rows="2" placeholder="Keterangan tambahan"></textarea>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-md-12">
+                            <button type="button" class="btn btn-sm btn-danger remove-detail">Hapus Detail</button>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(newRow);
+                reindexAllDetails();
+            });
+        }
+
+        const removeGroupBtn = groupEl.querySelector('.remove-produk-group');
+        if (removeGroupBtn) {
+            removeGroupBtn.addEventListener('click', function() {
+                groupEl.remove();
+                updateGroupTitles();
+                reindexAllDetails();
+            });
+        }
+
+        groupEl.addEventListener('click', function(e) {
+            if (e.target && e.target.classList && e.target.classList.contains('remove-detail')) {
+                const row = e.target.closest('.produk-row');
+                if (row) row.remove();
+                reindexAllDetails();
             }
         });
 
-        syncHiddenProdukIds();
+        if (kategoriSelect) {
+            populateProdukOptions(groupEl, kategoriSelect.value);
+        }
+        reindexAllDetails();
     }
 
-    document.querySelector('select[name="id_produk"]')?.addEventListener('change', function() {
-        syncHiddenProdukIds();
-    });
+    // Init produk options on load
+    document.querySelectorAll('#produk-groups .produk-group').forEach((g) => bindGroupEvents(g));
+    updateGroupTitles();
 
-    updateProdukRows();
+    document.getElementById('add-produk-group')?.addEventListener('click', function() {
+        const groupsWrapper = document.getElementById('produk-groups');
+        if (!groupsWrapper) return;
 
-    document.getElementById('add-produk').addEventListener('click', function() {
-        const container = document.getElementById('produk-container');
-        const newRow = document.createElement('div');
-        newRow.className = 'produk-row mb-4 p-3 border rounded';
-        newRow.style.backgroundColor = '#f8f9fa';
-        const index = document.querySelectorAll('#produk-container .produk-row').length;
-        newRow.innerHTML = `
-            <h6 class="text-secondary mb-3">Detail #${index + 1}</h6>
-            <input type="hidden" class="produk-id-hidden" name="produk_data[${index}][id_produk]" value="">
+        const newGroup = document.createElement('div');
+        newGroup.className = 'produk-group mb-4 p-3 border rounded';
+        newGroup.style.backgroundColor = '#ffffff';
+        newGroup.setAttribute('data-group-index', String(document.querySelectorAll('#produk-groups .produk-group').length));
+
+        newGroup.innerHTML = `
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h6 class="text-secondary mb-0">Produk</h6>
+                <button type="button" class="btn btn-sm btn-outline-danger remove-produk-group">Hapus Produk</button>
+            </div>
             <div class="row">
-                <div class="col-md-3">
-                    <label>Kode Produksi</label>
-                    <input type="text" class="form-control" name="produk_data[${index}][kode_produksi]" placeholder="Kode Produksi">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label>Kategori <span class="text-danger">*</span></label>
+                        <select class="choices form-select kategori-produk-select">
+                            <option value="">-- Pilih Kategori --</option>
+                            ${Object.keys(produkByKategori || {}).map((k) => `<option value="${String(k)}">${String(k)}</option>`).join('')}
+                        </select>
+                    </div>
                 </div>
-                <div class="col-md-3">
-                    <label>Best Before</label>
-                    <input type="date" class="form-control" name="produk_data[${index}][best_before]">
-                </div>
-                <div class="col-md-3">
-                    <label>Jumlah Kemasan</label>
-                    <input type="text" class="form-control" name="produk_data[${index}][jumlah_kemasan]" placeholder="Contoh: 100 Karton">
-                </div>
-                <div class="col-md-3">
-                    <label>Jumlah Sampling</label>
-                    <input type="text" class="form-control" name="produk_data[${index}][jumlah_sampling]" placeholder="Contoh: 10 Karton">
-                </div>
-            </div>
-            <div class="row mt-3">
-                <div class="col-md-3">
-                    <label>Berat per Karung</label>
-                    <input type="text" class="form-control" name="produk_data[${index}][berat_perkarung]" placeholder="Contoh: 25 Kg">
-                </div>
-            </div>
-            <div class="row mt-3">
-                <div class="col-md-12">
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" name="produk_data[${index}][kondisi_kemasan]" value="1" checked>
-                        <label class="form-check-label">Kondisi Kemasan Baik</label>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label>Nama Produk <span class="text-danger">*</span></label>
+                        <select class="form-select produk-select" data-selected="">
+                            <option value="">-- Pilih Produk --</option>
+                        </select>
                     </div>
                 </div>
             </div>
-            <div class="row mt-3">
-                <div class="col-md-12">
-                    <label>Keterangan</label>
-                    <textarea class="form-control" name="produk_data[${index}][keterangan]" rows="2" placeholder="Keterangan tambahan untuk detail ini"></textarea>
+            <h6 class="text-secondary mt-3">Detail Produk</h6>
+            <div class="produk-container">
+                <div class="produk-row mb-4 p-3 border rounded" style="background-color: #f8f9fa;">
+                    <h6 class="text-secondary mb-3">Detail #1</h6>
+                    <input type="hidden" class="produk-id-hidden" name="produk_data[0][id_produk]" value="">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <label>Kode Produksi</label>
+                            <input type="text" class="form-control" name="produk_data[0][kode_produksi]" placeholder="Kode Produksi">
+                        </div>
+                        <div class="col-md-3">
+                            <label>Best Before</label>
+                            <input type="date" class="form-control" name="produk_data[0][best_before]">
+                        </div>
+                        <div class="col-md-3">
+                            <label>Jumlah Kemasan</label>
+                            <input type="text" class="form-control" name="produk_data[0][jumlah_kemasan]" placeholder="Contoh: 100 Karton">
+                        </div>
+                        <div class="col-md-3">
+                            <label>Jumlah Sampling</label>
+                            <input type="text" class="form-control" name="produk_data[0][jumlah_sampling]" placeholder="Contoh: 10 Karton">
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-md-3">
+                            <label>Berat per Karung</label>
+                            <input type="text" class="form-control" name="produk_data[0][berat_perkarung]" placeholder="Contoh: 25 Kg">
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-md-12">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="produk_data[0][kondisi_kemasan]" value="1" checked>
+                                <label class="form-check-label">Kondisi Kemasan Baik</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-md-12">
+                            <label>Keterangan</label>
+                            <textarea class="form-control" name="produk_data[0][keterangan]" rows="2" placeholder="Keterangan tambahan"></textarea>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-md-12">
+                            <button type="button" class="btn btn-sm btn-danger remove-detail" style="display:none;">Hapus Detail</button>
+                        </div>
+                    </div>
                 </div>
             </div>
-            <div class="row mt-3">
-                <div class="col-md-12">
-                    <button type="button" class="btn btn-sm btn-danger remove-produk">Hapus Detail</button>
-                </div>
-            </div>
+            <button type="button" class="btn btn-sm btn-primary mt-2 add-detail">+ Tambah Detail</button>
         `;
-        container.appendChild(newRow);
-        updateProdukRows();
-    });
 
-    document.getElementById('produk-container').addEventListener('click', function(e) {
-        if (e.target.closest('.remove-produk')) {
-            const rows = document.querySelectorAll('#produk-container .produk-row');
-            if (rows.length > 1) {
-                e.target.closest('.produk-row').remove();
-                updateProdukRows();
-            } else {
-                alert('Minimal harus ada 1 detail!');
-            }
-        }
+        groupsWrapper.appendChild(newGroup);
+        updateGroupTitles();
+        bindGroupEvents(newGroup);
     });
 });
 </script>

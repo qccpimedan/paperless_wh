@@ -388,7 +388,7 @@
                             <td class="subheader-divider"></td>
                             <td>
                                 <span class="subheader-label">Segel/Gembok:</span>
-                                <span class="subheader-value">{{ $firstRecord ? ($firstRecord->segel_gembok ? 'Segel' : 'Gembok') : '-' }}</span>
+                                <span class="subheader-value">{{ $firstRecord ? ($firstRecord->segel_gembok === null ? '-' : ($firstRecord->segel_gembok ? 'Segel' : 'Gembok')) : '-' }}</span>
                             </td>
                         </tr>
                     </table>
@@ -436,7 +436,20 @@
                                     </div>
                                     <div class="field-row">
                                         <span class="field-label">Best Before:</span>
-                                        <span class="field-value">{{ $bestBefore ?? '-' }}</span>
+                                        <span class="field-value">
+                                            @if($bestBefore)
+                                                @php
+                                                    try {
+                                                        $bestBeforeFormatted = \Carbon\Carbon::parse($bestBefore)->format('d/m/Y');
+                                                    } catch (\Exception $e) {
+                                                        $bestBeforeFormatted = $bestBefore;
+                                                    }
+                                                @endphp
+                                                {{ $bestBeforeFormatted }}
+                                            @else
+                                                -
+                                            @endif
+                                        </span>
                                     </div>
                                     <div class="field-row">
                                         <span class="field-label">Kemasan:</span>
