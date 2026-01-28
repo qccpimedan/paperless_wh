@@ -36,9 +36,11 @@
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="card-title mb-0">Daftar Plant</h5>
-                    <a href="{{ route('plants.create') }}" class="btn btn-primary">
-                        <i class="bi bi-plus-circle"></i> Tambah Plant
-                    </a>
+                    @can('create_plants')
+                        <a href="{{ route('plants.create') }}" class="btn btn-primary">
+                            <i class="bi bi-plus-circle"></i> Tambah Plant
+                        </a>
+                    @endcan
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
@@ -59,20 +61,24 @@
                                         </td>
                                         <td>
                                             <div class="btn-vertical">
-                                                <a href="{{ route('plants.edit', $plant->uuid) }}" 
-                                                   class="btn btn-sm btn-warning">
-                                                    <i class="bi bi-pencil" title="Edit Data"></i>
-                                                </a>
-                                                <form action="{{ route('plants.destroy', $plant->uuid) }}" 
-                                                      method="POST" 
-                                                      style="display: inline-block;"
-                                                      onsubmit="return confirm('Yakin ingin menghapus plant ini?')">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="submit" class="btn btn-sm btn-danger">
-                                                        <i class="bi bi-trash" title="Hapus Data"></i>
-                                                    </button>
-                                                </form>
+                                                @can('edit_plants')
+                                                    <a href="{{ route('plants.edit', $plant->uuid) }}" 
+                                                       class="btn btn-sm btn-warning">
+                                                        <i class="bi bi-pencil" title="Edit Data"></i>
+                                                    </a>
+                                                @endcan
+                                                @can('delete_plants')
+                                                    <form action="{{ route('plants.destroy', $plant->uuid) }}" 
+                                                          method="POST" 
+                                                          style="display: inline-block;"
+                                                          onsubmit="return confirm('Yakin ingin menghapus plant ini?')">
+                                                        @csrf
+                                                        @method('DELETE')
+                                                        <button type="submit" class="btn btn-sm btn-danger">
+                                                            <i class="bi bi-trash" title="Hapus Data"></i>
+                                                        </button>
+                                                    </form>
+                                                @endcan
                                             </div>
                                         </td>
                                     </tr>
@@ -82,9 +88,11 @@
                                             <div class="py-4">
                                                 <i class="bi bi-inbox fs-1 text-muted"></i>
                                                 <p class="text-muted mt-2">Belum ada data plant</p>
-                                                <a href="{{ route('plants.create') }}" class="btn btn-primary">
-                                                    <i class="bi bi-plus-circle"></i> Tambah Plant Pertama
-                                                </a>
+                                                @can('create_plants')
+                                                    <a href="{{ route('plants.create') }}" class="btn btn-primary">
+                                                        <i class="bi bi-plus-circle"></i> Tambah Plant Pertama
+                                                    </a>
+                                                @endcan
                                             </div>
                                         </td>
                                     </tr>
