@@ -71,6 +71,11 @@ class ApiController extends Controller
 
             $existingUser = User::withTrashed()->where('uuid', $user['uuid'])->first();
 
+            $resolvedRoleId = $userData['id_role'] ?? null;
+            if (empty($resolvedRoleId)) {
+                $resolvedRoleId = $roleData;
+            }
+
 
             if ($existingUser) {
                 if ($existingUser->trashed()) {
@@ -79,7 +84,7 @@ class ApiController extends Controller
                 $existingUser->update($userData);
                 // Assign role to user using Spatie Permission
                 if (!empty($user['project_role']['role'])) {
-                    $roleObj = Role::where('role', 'like', '%' . $user['project_role']['role'] . '%')->first();
+                    $roleObj = !empty($resolvedRoleId) ? Role::where('id', $resolvedRoleId)->first() : null;
                     if ($roleObj) {
                         $existingUser->syncRoles($roleObj->role);
                     }
@@ -89,7 +94,7 @@ class ApiController extends Controller
                  $newUser = User::create(array_merge(['uuid' => $user['uuid']], $userData));
                 // Assign role to user using Spatie Permission
                 if (!empty($user['project_role']['role'])) {
-                    $roleObj = Role::where('role', 'like', '%' . $user['project_role']['role'] . '%')->first();
+                    $roleObj = !empty($resolvedRoleId) ? Role::where('id', $resolvedRoleId)->first() : null;
                     if ($roleObj) {
                         $newUser->syncRoles($roleObj->role);
                     }
