@@ -74,9 +74,12 @@
                     || request()->routeIs('input-master-forms.*') || request()->routeIs('input-deskripsis.*') ? 'active' : '' }}">
                         {{-- Input Role, Plant, User - Only for Superadmin --}}
                         @if($userRole === 'superadmin')
-                        <li class="submenu-item {{ request()->routeIs('roles.*') ? 'active' : '' }}">
-                            <a href="{{ route('roles.index') }}">Input Role</a>
-                        </li>
+                            <li class="submenu-item {{ request()->routeIs('roles.*') ? 'active' : '' }}">
+                                <a href="{{ route('roles.index') }}">Input Role</a>
+                            </li>
+                        @endif
+
+                        @if(in_array($userRole, ['superadmin', 'admin']))
                         <li class="submenu-item {{ request()->routeIs('plants.*') ? 'active' : '' }}">
                             <a href="{{ route('plants.index') }}">Input Plant</a>
                         </li>
