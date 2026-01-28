@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
+use Spatie\Permission\PermissionRegistrar;
 
 class AccessControlController extends Controller
 {
@@ -46,11 +47,14 @@ class AccessControlController extends Controller
             $modules = [
                 'detail_komplain' => 'Detail Komplain',
                 'golden_sample_retort' => 'Golden Sample Retort',
+                'plants' => 'Data Plant',
+                'users' => 'Data User',
                 'pemeriksaan_barang_mudah_pecah' => 'Pemeriksaan Barang Mudah Pecah',
                 'pemeriksaan_kebersihan_area' => 'Pemeriksaan Kebersihan Area',
                 'pemeriksaan_kedatangan_bahan_baku_penunjang' => 'Pemeriksaan Kedatangan Bahan Baku Penunjang',
                 'pemeriksaan_kedatangan_chemical' => 'Pemeriksaan Kedatangan Chemical',
                 'pemeriksaan_kedatangan_kemasan' => 'Pemeriksaan Kedatangan Kemasan',
+                'pemeriksaan_produk_finish_good' => 'Pemeriksaan Produk Finish Good',
                 'pemeriksaan_loading_kendaraan' => 'Pemeriksaan Loading Kendaraan',
                 'pemeriksaan_loading_produk' => 'Pemeriksaan Loading Produk',
                 'pemeriksaan_return_barang_customer' => 'Pemeriksaan Return Barang Customer',
@@ -58,6 +62,15 @@ class AccessControlController extends Controller
                 'pemeriksaan_suhu_ruang_v2' => 'Pemeriksaan Suhu Ruang V2',
                 'pemeriksaan_suhu_ruang_v3' => 'Pemeriksaan Suhu Ruang V3',
             ];
+
+            foreach ($modules as $moduleKey => $moduleName) {
+                Permission::findOrCreate('view_' . $moduleKey);
+                Permission::findOrCreate('create_' . $moduleKey);
+                Permission::findOrCreate('edit_' . $moduleKey);
+                Permission::findOrCreate('delete_' . $moduleKey);
+            }
+
+            app(PermissionRegistrar::class)->forgetCachedPermissions();
 
             // Get all permissions
             $permissions = Permission::all();
@@ -134,6 +147,8 @@ class AccessControlController extends Controller
 
             // Sync permissions for the role
             $role->syncPermissions($allPermissionsToSync);
+
+            app(PermissionRegistrar::class)->forgetCachedPermissions();
 
             return redirect('access-control')->with('success', "Permissions untuk role '{$role->role}' berhasil diupdate!");
         } catch (\Exception $e) {

@@ -36,9 +36,11 @@
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="card-title mb-0">Daftar User</h5>
-                    <a href="{{ route('users.create') }}" class="btn btn-primary">
-                        <i class="bi bi-plus-circle"></i> Tambah User
-                    </a>
+                    @can('create_users')
+                        <a href="{{ route('users.create') }}" class="btn btn-primary">
+                            <i class="bi bi-plus-circle"></i> Tambah User
+                        </a>
+                    @endcan
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
@@ -81,20 +83,24 @@
                                         </td>
                                         <td>
                                             <div class="btn-vertical">
-                                                <a href="{{ route('users.edit', $user->uuid) }}" 
-                                                   class="btn btn-sm btn-warning">
-                                                    <i class="bi bi-pencil" title="Edit Data"></i>
-                                                </a>
-                                                <form action="{{ route('users.destroy', $user->uuid) }}" 
-                                                      method="POST" 
-                                                      style="display: inline-block;"
-                                                      onsubmit="return confirm('Yakin ingin menghapus user ini?')">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="submit" class="btn btn-sm btn-danger">
-                                                        <i class="bi bi-trash" title="Hapus Data"></i>
-                                                    </button>
-                                                </form>
+                                                @can('edit_users')
+                                                    <a href="{{ route('users.edit', $user->uuid) }}" 
+                                                       class="btn btn-sm btn-warning">
+                                                        <i class="bi bi-pencil" title="Edit Data"></i>
+                                                    </a>
+                                                @endcan
+                                                @can('delete_users')
+                                                    <form action="{{ route('users.destroy', $user->uuid) }}" 
+                                                          method="POST" 
+                                                          style="display: inline-block;"
+                                                          onsubmit="return confirm('Yakin ingin menghapus user ini?')">
+                                                        @csrf
+                                                        @method('DELETE')
+                                                        <button type="submit" class="btn btn-sm btn-danger">
+                                                            <i class="bi bi-trash" title="Hapus Data"></i>
+                                                        </button>
+                                                    </form>
+                                                @endcan
                                             </div>
                                         </td>
                                     </tr>
@@ -104,9 +110,11 @@
                                             <div class="py-4">
                                                 <i class="bi bi-inbox fs-1 text-muted"></i>
                                                 <p class="text-muted mt-2">Belum ada data user</p>
-                                                <a href="{{ route('users.create') }}" class="btn btn-primary">
-                                                    <i class="bi bi-plus-circle"></i> Tambah User Pertama
-                                                </a>
+                                                @can('create_users')
+                                                    <a href="{{ route('users.create') }}" class="btn btn-primary">
+                                                        <i class="bi bi-plus-circle"></i> Tambah User Pertama
+                                                    </a>
+                                                @endcan
                                             </div>
                                         </td>
                                     </tr>

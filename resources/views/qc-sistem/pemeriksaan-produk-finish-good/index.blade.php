@@ -58,11 +58,6 @@
                                     <i class="bi bi-plus-circle"></i> Tambah Data
                                 </a>
                             @endcan
-                            @cannot('create_pemeriksaan_produk_finish_good')
-                                <a href="{{ route('pemeriksaan-produk-finish-good.create') }}" class="btn btn-primary">
-                                    <i class="bi bi-plus-circle"></i> Tambah Data
-                                </a>
-                            @endcannot
                         </div>
                     </div>
                     <div class="card-body">
@@ -266,13 +261,19 @@
                                                 @endif
                                             </td>
                                             <td>
-                                                <a href="{{ route('pemeriksaan-produk-finish-good.show', $p->uuid) }}" class="btn btn-sm btn-info"><i class="bi bi-eye"></i></a>
-                                                <a href="{{ route('pemeriksaan-produk-finish-good.edit', $p->uuid) }}" class="btn btn-sm btn-warning"><i class="bi bi-pencil"></i></a>
-                                                <form action="{{ route('pemeriksaan-produk-finish-good.destroy', $p->uuid) }}" method="POST" class="d-inline" onsubmit="return confirm('Yakin ingin menghapus data ini?')">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="submit" class="btn btn-sm btn-danger"><i class="bi bi-trash"></i></button>
-                                                </form>
+                                                @can('view_pemeriksaan_produk_finish_good')
+                                                    <a href="{{ route('pemeriksaan-produk-finish-good.show', $p->uuid) }}" class="btn btn-sm btn-info"><i class="bi bi-eye"></i></a>
+                                                @endcan
+                                                @can('edit_pemeriksaan_produk_finish_good')
+                                                    <a href="{{ route('pemeriksaan-produk-finish-good.edit', $p->uuid) }}" class="btn btn-sm btn-warning"><i class="bi bi-pencil"></i></a>
+                                                @endcan
+                                                @can('delete_pemeriksaan_produk_finish_good')
+                                                    <form action="{{ route('pemeriksaan-produk-finish-good.destroy', $p->uuid) }}" method="POST" class="d-inline" onsubmit="return confirm('Yakin ingin menghapus data ini?')">
+                                                        @csrf
+                                                        @method('DELETE')
+                                                        <button type="submit" class="btn btn-sm btn-danger"><i class="bi bi-trash"></i></button>
+                                                    </form>
+                                                @endcan
                                             </td>
                                         </tr>
 
