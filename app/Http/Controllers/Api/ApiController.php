@@ -40,6 +40,17 @@ class ApiController extends Controller
 
 
             $roleData = $this->mapRole($user['project_role']['role'] ?? '');
+            $roleName = trim($user['project_role']['role'] ?? '');
+            $roleId = null;
+            $roleLabel = null;
+            if ($roleName !== '') {
+                $roleId = Role::whereRaw('LOWER(role) = ?', [strtolower($roleName)])->value('id');
+                $roleLabel = Role::whereRaw('LOWER(role) = ?', [strtolower($roleName)])->value('role');
+                if (empty($roleId)) {
+                    $roleId = Role::where('role', 'like', '%' . $roleName . '%')->value('id');
+                    $roleLabel = Role::where('role', 'like', '%' . $roleName . '%')->value('role');
+                }
+            }
             
             $userData = [
                 'name'            => $user['name'] ?? null,
@@ -47,8 +58,8 @@ class ApiController extends Controller
                 'username'        => $user['username'] ?? null,
                 'password'        => $user['password'] ?? null,
                 'id_plant'         => Plant::where('plant', 'like', '%' . $user['department']['plant'] . '%')->value('id'),
-                'id_role'         => Role::where('role', 'like', '%' . $user['project_role']['role'] . '%')->value('id'),
-                'role'            => Role::where('role', 'like', '%' . $user['project_role']['role'] . '%')->value('role'),
+                'id_role'         => $roleId,
+                'role'            => $roleLabel,
 
             ];
             // Set email_verified_at based on activation status
@@ -71,7 +82,7 @@ class ApiController extends Controller
 
             $existingUser = User::withTrashed()->where('uuid', $user['uuid'])->first();
 
-            $resolvedRoleId = $userData['id_role'] ?? null;
+            $resolvedRoleId = $roleId;
             if (empty($resolvedRoleId)) {
                 $resolvedRoleId = $roleData;
             }
