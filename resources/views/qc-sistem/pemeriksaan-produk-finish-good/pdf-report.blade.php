@@ -324,6 +324,29 @@
                     $s = (string) $val;
                     return str_contains($s, '°') ? $s : ($s . '°C');
                 };
+                $formatDate = function ($val) {
+                    if ($val === null || $val === '') return null;
+                    try {
+                        return \Carbon\Carbon::parse($val)->format('d/m/Y');
+                    } catch (\Throwable $e) {
+                        return (string) $val;
+                    }
+                };
+                $normalizeList = function ($val) {
+                    if ($val === null || $val === '') return null;
+                    if (is_array($val)) {
+                        $arr = array_values(array_filter($val, fn ($v) => $v !== null && $v !== ''));
+                        return count($arr) ? implode(', ', $arr) : null;
+                    }
+                    if (is_string($val)) {
+                        $decoded = json_decode($val, true);
+                        if (is_array($decoded)) {
+                            $arr = array_values(array_filter($decoded, fn ($v) => $v !== null && $v !== ''));
+                            return count($arr) ? implode(', ', $arr) : null;
+                        }
+                    }
+                    return (string) $val;
+                };
                 $kondisiMobilLabels = [
                     'bersih' => 'Bersih',
                     'bebas_hama' => 'Bebas dari hama',
@@ -482,12 +505,8 @@
 
                                 $produsenVal = (is_array($pemeriksaan->produsen_array) ? ($pemeriksaan->produsen_array[$rowIndex] ?? null) : null);
                                 $distributorVal = (is_array($pemeriksaan->distributor_array) ? ($pemeriksaan->distributor_array[$rowIndex] ?? null) : null);
-                                if (is_array($produsenVal)) {
-                                    $produsenVal = implode(', ', array_values(array_filter($produsenVal, fn ($v) => $v !== null && $v !== '')));
-                                }
-                                if (is_array($distributorVal)) {
-                                    $distributorVal = implode(', ', array_values(array_filter($distributorVal, fn ($v) => $v !== null && $v !== '')));
-                                }
+                                $produsenVal = $normalizeList($produsenVal);
+                                $distributorVal = $normalizeList($distributorVal);
 
                                 $isRight = ($loop->iteration % 2 === 0);
                             @endphp
@@ -517,14 +536,14 @@
                                     <span class="field-value">{{ $distributorVal ?: '-' }}</span>
                                 </div>
 
-                                <div class="section-title">Detail</div>
+                                <div class="section-title">Batch</div>
                                 <div class="field-row">
                                     <span class="field-label">Kode Produksi:</span>
                                     <span class="field-value">{{ $kodeProduksi ?? '-' }}</span>
                                 </div>
                                 <div class="field-row">
                                     <span class="field-label">Exp:</span>
-                                    <span class="field-value">{{ $expireDate ?? '-' }}</span>
+                                    <span class="field-value">{{ $expireDate ? ($formatDate($expireDate) ?? '-') : '-' }}</span>
                                 </div>
                                 <div class="field-row">
                                     <span class="field-label">Jumlah Datang:</span>
@@ -571,12 +590,14 @@
                                     <span class="field-label">Aroma:</span>
                                     <span class="field-value">{{ $formatBool($kondisiAroma) }}</span>
                                 </div>
+
+                                <div class="section-title">Dokumen</div>
                                 <div class="field-row">
-                                    <span class="field-label">Logo:</span>
+                                    <span class="field-label">Logo Halal:</span>
                                     <span class="field-value">{{ $formatBool($logoHalal) }}</span>
                                 </div>
                                 <div class="field-row">
-                                    <span class="field-label">Dok:</span>
+                                    <span class="field-label">Dokumen Halal:</span>
                                     <span class="field-value">{{ $formatBool($dokumenHalal) }}</span>
                                 </div>
                                 <div class="field-row">

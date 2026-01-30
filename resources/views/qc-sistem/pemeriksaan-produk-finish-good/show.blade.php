@@ -108,6 +108,7 @@
 
                     <h5 class="text-primary mb-3">Detail Produk</h5>
                     @php
+                        $produkNamaById = $produkNamaById ?? [];
                         $kategoriArr = is_array($pemeriksaanProdukFinishGood->kategori_code_array) ? $pemeriksaanProdukFinishGood->kategori_code_array : [];
                         $idProdukArr = is_array($pemeriksaanProdukFinishGood->id_produk_array) ? $pemeriksaanProdukFinishGood->id_produk_array : [];
                         $suhuMobilTypeArr = is_array($pemeriksaanProdukFinishGood->suhu_mobil_type_array) ? $pemeriksaanProdukFinishGood->suhu_mobil_type_array : [];
@@ -132,233 +133,229 @@
                         $statusArr = is_array($pemeriksaanProdukFinishGood->status_array) ? $pemeriksaanProdukFinishGood->status_array : [];
                         $ketArr = is_array($pemeriksaanProdukFinishGood->keterangan_array) ? $pemeriksaanProdukFinishGood->keterangan_array : [];
                         $rowCount = max(count($idProdukArr), count($kategoriArr), count($kodeArr));
+
+                        $fmtTemp = function ($v) {
+                            if ($v === null || $v === '') return null;
+                            $s = (string) $v;
+                            return str_contains($s, '°') ? $s : ($s . '°C');
+                        };
+
+                        $fmtDate = function ($v) {
+                            if ($v === null || $v === '') return '-';
+                            try {
+                                return \Carbon\Carbon::parse($v)->format('d/m/Y');
+                            } catch (\Throwable $e) {
+                                return (string) $v;
+                            }
+                        };
+
+                        // Group by Produk (Model A) but data is stored flat in *_array.
+                        // Key includes kategori + negara to avoid mixing different headers.
+                        $grouped = [];
+                        for ($i = 0; $i < $rowCount; $i++) {
+                            $pid = $idProdukArr[$i] ?? null;
+                            $kategori = $kategoriArr[$i] ?? null;
+                            $negara = $negaraArr[$i] ?? null;
+
+                            if ($pid === null || $pid === '') continue;
+
+                            $key = (string)$pid . '|' . (string)$kategori . '|' . (string)$negara;
+                            if (!isset($grouped[$key])) {
+                                $grouped[$key] = [
+                                    'id_produk' => $pid,
+                                    'kategori' => $kategori,
+                                    'negara' => $negara,
+                                    'produsen' => $produsenArr[$i] ?? null,
+                                    'distributor' => $distributorArr[$i] ?? null,
+                                    'logo_halal' => $logoArr[$i] ?? null,
+                                    'dokumen_halal' => $dokArr[$i] ?? null,
+                                    'coa' => $coaArr[$i] ?? null,
+                                    'items' => [],
+                                ];
+                            }
+
+                            $grouped[$key]['items'][] = [
+                                'i' => $i,
+                                'kode' => $kodeArr[$i] ?? null,
+                                'expire' => $expireArr[$i] ?? null,
+                                'jumlah_datang' => $jmlDatangArr[$i] ?? null,
+                                'jumlah_sampling' => $jmlSamplingArr[$i] ?? null,
+                                'kemasan' => $kemasanArr[$i] ?? null,
+                                'warna' => $warnaArr[$i] ?? null,
+                                'aroma' => $aromaArr[$i] ?? null,
+                                'status' => $statusArr[$i] ?? null,
+                                'keterangan' => $ketArr[$i] ?? null,
+                                'suhu_mobil_type' => $suhuMobilTypeArr[$i] ?? $pemeriksaanProdukFinishGood->suhu_mobil,
+                                'suhu_mobil_value' => $suhuMobilValueArr[$i] ?? $pemeriksaanProdukFinishGood->suhu_mobil_value,
+                                'suhu_produk_type' => $suhuProdukTypeArr[$i] ?? $pemeriksaanProdukFinishGood->suhu_produk,
+                                'suhu_produk_value' => $suhuProdukValueArr[$i] ?? $pemeriksaanProdukFinishGood->suhu_produk_value,
+                                'kondisi_produk' => $kondisiProdukArr[$i] ?? $pemeriksaanProdukFinishGood->kondisi_produk,
+                                'kondisi_produk_suhu_value' => $kondisiProdukSuhuValueArr[$i] ?? null,
+                            ];
+                        }
                     @endphp
 
                     @if($rowCount < 1)
                         <div class="alert alert-light">Tidak ada detail produk.</div>
                     @else
-                        @for($i = 0; $i < $rowCount; $i++)
-                            @php
-                                $pid = $idProdukArr[$i] ?? null;
-                                $namaProduk = $pid && isset($produkNamaById[$pid]) ? $produkNamaById[$pid] : '-';
-                                $suhuMobilType = $suhuMobilTypeArr[$i] ?? $pemeriksaanProdukFinishGood->suhu_mobil;
-                                $suhuMobilValue = $suhuMobilValueArr[$i] ?? $pemeriksaanProdukFinishGood->suhu_mobil_value;
-                                $suhuProdukType = $suhuProdukTypeArr[$i] ?? $pemeriksaanProdukFinishGood->suhu_produk;
-                                $suhuProdukValue = $suhuProdukValueArr[$i] ?? $pemeriksaanProdukFinishGood->suhu_produk_value;
-                                $kondisiProduk = $kondisiProdukArr[$i] ?? $pemeriksaanProdukFinishGood->kondisi_produk;
-                                $kondisiProdukSuhuValue = $kondisiProdukSuhuValueArr[$i] ?? null;
-                                $produsenList = $produsenArr[$i] ?? [];
-                                $produsenList = is_array($produsenList) ? $produsenList : [];
-                                $distributorList = $distributorArr[$i] ?? [];
-                                $distributorList = is_array($distributorList) ? $distributorList : [];
-                            @endphp
-                            <div class="card mb-3" style="border-left: 4px solid #435ebe;">
-                                <div class="card-header bg-light">
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <h6 class="mb-0">Baris {{ $i + 1 }}</h6>
-                                        @if(($statusArr[$i] ?? null) === 'Release')
-                                            <span class="badge bg-success">Release</span>
-                                        @elseif(($statusArr[$i] ?? null) === 'Hold')
-                                            <span class="badge bg-warning">Hold</span>
-                                        @else
-                                            <span class="badge bg-secondary">-</span>
-                                        @endif
-                                    </div>
-                                </div>
-                                <div class="card-body">
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <table class="table table-borderless table-sm">
-                                                <tr>
-                                                    <td width="40%"><strong>Kategori:</strong></td>
-                                                    <td>
-                                                        <span class="badge bg-info">{{ $kategoriArr[$i] ?? '-' }}</span>
-                                                    </td>
-                                                </tr>
-                                                <tr>
-                                                    <td><strong>Produk:</strong></td>
-                                                    <td>
-                                                        <span class="badge bg-info">{{ $namaProduk }}</span>
-                                                    </td>
-                                                </tr>
-                                                <tr>
-                                                    <td><strong>Suhu Mobil:</strong></td>
-                                                    <td>
-                                                        @php
-                                                            $fmtTemp = function ($v) {
-                                                                if ($v === null || $v === '') return null;
-                                                                $s = (string) $v;
-                                                                return str_contains($s, '°') ? $s : ($s . '°C');
-                                                            };
-                                                        @endphp
-                                                        @if($suhuMobilType)
-                                                            @if($suhuMobilType === 'Frozen')
-                                                                <span class="badge bg-info">{{ $suhuMobilType }}</span>
-                                                            @elseif($suhuMobilType === 'Fresh')
-                                                                <span class="badge bg-success">{{ $suhuMobilType }}</span>
-                                                            @else
-                                                                <span class="badge bg-secondary">{{ $suhuMobilType }}</span>
-                                                            @endif
-                                                            @if($suhuMobilValue)
-                                                                <span class="badge bg-primary">{{ $fmtTemp($suhuMobilValue) }}</span>
-                                                            @endif
-                                                        @else
-                                                            -
-                                                        @endif
-                                                    </td>
-                                                </tr>
-                                                <tr>
-                                                    <td><strong>Suhu Produk:</strong></td>
-                                                    <td>
-                                                        @if($suhuProdukType)
-                                                            @if($suhuProdukType === 'Frozen')
-                                                                <span class="badge bg-info">{{ $suhuProdukType }}</span>
-                                                            @elseif($suhuProdukType === 'Fresh')
-                                                                <span class="badge bg-success">{{ $suhuProdukType }}</span>
-                                                            @else
-                                                                <span class="badge bg-secondary">{{ $suhuProdukType }}</span>
-                                                            @endif
-                                                            @if($suhuProdukValue)
-                                                                <span class="badge bg-primary">{{ $fmtTemp($suhuProdukValue) }}</span>
-                                                            @endif
-                                                        @else
-                                                            -
-                                                        @endif
-                                                    </td>
-                                                </tr>
-                                                <tr>
-                                                    <td><strong>Kondisi Produk:</strong></td>
-                                                    <td>
-                                                        @if($kondisiProduk)
-                                                            @if($kondisiProduk === 'Frozen')
-                                                                <span class="badge bg-info">{{ $kondisiProduk }}</span>
-                                                            @elseif($kondisiProduk === 'Fresh')
-                                                                <span class="badge bg-success">{{ $kondisiProduk }}</span>
-                                                            @else
-                                                                <span class="badge bg-secondary">{{ $kondisiProduk }}</span>
-                                                            @endif
-                                                            @if($kondisiProdukSuhuValue)
-                                                                <span class="badge bg-primary">{{ $fmtTemp($kondisiProdukSuhuValue) }}</span>
-                                                            @endif
-                                                        @else
-                                                            -
-                                                        @endif
-                                                    </td>
-                                                </tr>
-                                                <tr>
-                                                    <td><strong>Produsen:</strong></td>
-                                                    <td>
-                                                        @if(count($produsenList) > 0)
-                                                            @foreach($produsenList as $pr)
-                                                                <span class="badge bg-primary">{{ $pr }}</span>
-                                                            @endforeach
-                                                        @else
-                                                            -
-                                                        @endif
-                                                    </td>
-                                                </tr>
-                                                <tr>
-                                                    <td><strong>Distributor:</strong></td>
-                                                    <td>
-                                                        @if(count($distributorList) > 0)
-                                                        @foreach($distributorList as $ds)
-                                                        <span class="badge bg-primary">{{ $ds }}</span>
-                                                        @endforeach
-                                                        @else
-                                                        -
-                                                        @endif
-                                                    </td>
-                                                </tr>
-                                            </table>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <table class="table table-borderless table-sm">
-                                                <tr><td width="40%"><strong>Expire Date:</strong></td><td>{{ $expireArr[$i] ?? '-' }}</td></tr>
-                                                <tr><td><strong>Jumlah Datang:</strong></td><td>{{ $jmlDatangArr[$i] ?? '-' }}</td></tr>
-                                                <tr><td><strong>Jumlah Sampling:</strong></td><td>{{ $jmlSamplingArr[$i] ?? '-' }}</td></tr>
-                                                <tr><td><strong>Negara Produsen:</strong></td><td>{{ $negaraArr[$i] ?? '-' }}</td></tr>
-                                                <tr><td><strong>Kode Produksi:</strong></td><td>{{ $kodeArr[$i] ?? '-' }}</td></tr>
-                                            </table>
-                                        </div>
-                                    </div>
+                        @php
+                            $groupList = array_values($grouped);
+                        @endphp
+                        @if(count($groupList) < 1)
+                            <div class="alert alert-light">Tidak ada detail produk.</div>
+                        @else
+                            @foreach($groupList as $gIndex => $group)
+                                @php
+                                    $pid = $group['id_produk'] ?? null;
+                                    $namaProduk = $pid && isset($produkNamaById[$pid]) ? $produkNamaById[$pid] : '-';
+                                    $kategori = $group['kategori'] ?? null;
+                                    $negara = $group['negara'] ?? null;
+                                    $produsen = $group['produsen'] ?? null;
+                                    $distributor = $group['distributor'] ?? null;
+                                    $logoHalal = $group['logo_halal'] ?? null;
+                                    $dokumenHalal = $group['dokumen_halal'] ?? null;
+                                    $coa = $group['coa'] ?? null;
+                                    $items = is_array($group['items'] ?? null) ? $group['items'] : [];
+                                @endphp
 
-                                    @php
-                                        $kemasanVal = $kemasanArr[$i] ?? null;
-                                        $warnaVal = $warnaArr[$i] ?? null;
-                                        $aromaVal = $aromaArr[$i] ?? null;
-                                        $logoVal = $logoArr[$i] ?? null;
-                                        $dokVal = $dokArr[$i] ?? null;
-                                        $coaVal = $coaArr[$i] ?? null;
+                                <div class="card mb-3" style="border-left: 4px solid #435ebe;">
+                                    <div class="card-header bg-light">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <h6 class="mb-1">Produk {{ $gIndex + 1 }}</h6>
+                                                <div class="small">
+                                                    <span class="badge bg-info">{{ $namaProduk }}</span>
+                                                    @if($kategori)
+                                                        <span class="badge bg-info">{{ $kategori }}</span>
+                                                    @endif
+                                                    @if($negara)
+                                                        <span class="badge bg-secondary">{{ $negara }}</span>
+                                                    @endif
+                                                    @if($produsen)
+                                                        <span class="badge bg-light text-dark border">Produsen: {{ $produsen }}</span>
+                                                    @endif
+                                                    @if($distributor)
+                                                        <span class="badge bg-light text-dark border">Distributor: {{ $distributor }}</span>
+                                                    @endif
+                                                </div>
 
-                                        $hasKondisiOrDok = (
-                                            $kemasanVal !== null || $warnaVal !== null || $aromaVal !== null
-                                            || $logoVal !== null || $dokVal !== null || $coaVal !== null
-                                        );
-                                    @endphp
-                                    @if($hasKondisiOrDok)
-                                        <div class="row mt-3">
-                                            <div class="col-12">
-                                                <h6 class="text-primary small mb-2">Kondisi Fisik & Dokumentasi</h6>
-                                                <div class="row">
-                                                    <div class="col-md-6">
-                                                        <strong class="small d-block mb-2">Kondisi Fisik:</strong>
-                                                        @php
-                                                            $kondisiFisikLabels = [
-                                                                'kemasan' => ['label' => 'Kemasan', 'value' => $kemasanVal],
-                                                                'warna' => ['label' => 'Warna', 'value' => $warnaVal],
-                                                                'aroma' => ['label' => 'Aroma', 'value' => $aromaVal],
-                                                            ];
-                                                        @endphp
-                                                        @foreach($kondisiFisikLabels as $it)
-                                                            <div class="d-flex align-items-center small mb-1">
-                                                                @if((string)($it['value'] ?? '') === '1')
-                                                                    <span class="badge bg-success me-2" style="min-width: 24px;">✓</span>
-                                                                @elseif((string)($it['value'] ?? '') === '0')
-                                                                    <span class="badge bg-danger me-2" style="min-width: 24px;">✗</span>
-                                                                @else
-                                                                    <span class="badge bg-secondary me-2" style="min-width: 24px;">-</span>
-                                                                @endif
-                                                                <span>{{ $it['label'] }}</span>
-                                                            </div>
-                                                        @endforeach
-                                                    </div>
-                                                    <div class="col-md-6">
-                                                        <strong class="small d-block mb-2">Dokumentasi:</strong>
-                                                        @php
-                                                            $dokLabels = [
-                                                                'logo' => ['label' => 'Logo Halal', 'value' => $logoVal],
-                                                                'dokumen' => ['label' => 'Dokumen Halal', 'value' => $dokVal],
-                                                                'coa' => ['label' => 'COA', 'value' => $coaVal],
-                                                            ];
-                                                        @endphp
-                                                        @foreach($dokLabels as $it)
-                                                            <div class="d-flex align-items-center small mb-1">
-                                                                @if((string)($it['value'] ?? '') === '1')
-                                                                    <span class="badge bg-success me-2" style="min-width: 24px;">✓</span>
-                                                                @elseif((string)($it['value'] ?? '') === '0')
-                                                                    <span class="badge bg-danger me-2" style="min-width: 24px;">✗</span>
-                                                                @else
-                                                                    <span class="badge bg-secondary me-2" style="min-width: 24px;">-</span>
-                                                                @endif
-                                                                <span>{{ $it['label'] }}</span>
-                                                            </div>
-                                                        @endforeach
-                                                    </div>
+                                                <div class="mt-2 small">
+                                                    <span class="me-2"><strong>Dokumen:</strong></span>
+                                                    @if((string)($logoHalal ?? '') === '1')
+                                                        <span class="badge bg-success me-1">Logo Halal ✓</span>
+                                                    @elseif((string)($logoHalal ?? '') === '0')
+                                                        <span class="badge bg-danger me-1">Logo Halal ✗</span>
+                                                    @else
+                                                        <span class="badge bg-secondary me-1">Logo Halal -</span>
+                                                    @endif
+
+                                                    @if((string)($dokumenHalal ?? '') === '1')
+                                                        <span class="badge bg-success me-1">Dokumen Halal ✓</span>
+                                                    @elseif((string)($dokumenHalal ?? '') === '0')
+                                                        <span class="badge bg-danger me-1">Dokumen Halal ✗</span>
+                                                    @else
+                                                        <span class="badge bg-secondary me-1">Dokumen Halal -</span>
+                                                    @endif
+
+                                                    @if((string)($coa ?? '') === '1')
+                                                        <span class="badge bg-success me-1">COA ✓</span>
+                                                    @elseif((string)($coa ?? '') === '0')
+                                                        <span class="badge bg-danger me-1">COA ✗</span>
+                                                    @else
+                                                        <span class="badge bg-secondary me-1">COA -</span>
+                                                    @endif
                                                 </div>
                                             </div>
+                                            <span class="badge bg-primary">{{ count($items) }} Batch</span>
                                         </div>
-                                    @endif
-                                    @if(($ketArr[$i] ?? null))
-                                        <div class="row mt-3">
-                                            <div class="col-12">
-                                                <strong>Keterangan:</strong>
-                                                <p class="mt-1 p-2 bg-light rounded small">{{ $ketArr[$i] }}</p>
+                                    </div>
+
+                                    <div class="card-body">
+                                        @foreach($items as $dIndex => $it)
+                                            @php
+                                                $status = $it['status'] ?? null;
+                                                $kemasanVal = $it['kemasan'] ?? null;
+                                                $warnaVal = $it['warna'] ?? null;
+                                                $aromaVal = $it['aroma'] ?? null;
+                                                $keterangan = $it['keterangan'] ?? null;
+                                            @endphp
+
+                                            <div class="border rounded p-3 mb-3" style="background: #fff;">
+                                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                                    <strong>Detail {{ $dIndex + 1 }}</strong>
+                                                    @if($status === 'Release')
+                                                        <span class="badge bg-success">Release</span>
+                                                    @elseif($status === 'Hold')
+                                                        <span class="badge bg-warning">Hold</span>
+                                                    @else
+                                                        <span class="badge bg-secondary">-</span>
+                                                    @endif
+                                                </div>
+
+                                                <div class="row">
+                                                    <div class="col-md-6">
+                                                        <table class="table table-borderless table-sm mb-0">
+                                                            <tr><td width="40%"><strong>Kode Produksi:</strong></td><td>{{ $it['kode'] ?? '-' }}</td></tr>
+                                                            <tr><td><strong>Expire Date:</strong></td><td>{{ $fmtDate($it['expire'] ?? null) }}</td></tr>
+                                                            <tr><td><strong>Jumlah Datang:</strong></td><td>{{ $it['jumlah_datang'] ?? '-' }}</td></tr>
+                                                            <tr><td><strong>Jumlah Sampling:</strong></td><td>{{ $it['jumlah_sampling'] ?? '-' }}</td></tr>
+                                                        </table>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <table class="table table-borderless table-sm mb-0">
+                                                            <tr>
+                                                                <td width="40%"><strong>Kondisi Fisik:</strong></td>
+                                                                <td>
+                                                                    <div class="d-flex flex-column gap-1">
+                                                                        <div class="d-flex align-items-center small">
+                                                                            @if((string)($kemasanVal ?? '') === '1')
+                                                                                <span class="badge bg-success me-2" style="min-width: 24px;">✓</span>
+                                                                            @elseif((string)($kemasanVal ?? '') === '0')
+                                                                                <span class="badge bg-danger me-2" style="min-width: 24px;">✗</span>
+                                                                            @else
+                                                                                <span class="badge bg-secondary me-2" style="min-width: 24px;">-</span>
+                                                                            @endif
+                                                                            <span>Kemasan</span>
+                                                                        </div>
+                                                                        <div class="d-flex align-items-center small">
+                                                                            @if((string)($warnaVal ?? '') === '1')
+                                                                                <span class="badge bg-success me-2" style="min-width: 24px;">✓</span>
+                                                                            @elseif((string)($warnaVal ?? '') === '0')
+                                                                                <span class="badge bg-danger me-2" style="min-width: 24px;">✗</span>
+                                                                            @else
+                                                                                <span class="badge bg-secondary me-2" style="min-width: 24px;">-</span>
+                                                                            @endif
+                                                                            <span>Warna</span>
+                                                                        </div>
+                                                                        <div class="d-flex align-items-center small">
+                                                                            @if((string)($aromaVal ?? '') === '1')
+                                                                                <span class="badge bg-success me-2" style="min-width: 24px;">✓</span>
+                                                                            @elseif((string)($aromaVal ?? '') === '0')
+                                                                                <span class="badge bg-danger me-2" style="min-width: 24px;">✗</span>
+                                                                            @else
+                                                                                <span class="badge bg-secondary me-2" style="min-width: 24px;">-</span>
+                                                                            @endif
+                                                                            <span>Aroma</span>
+                                                                        </div>
+                                                                    </div>
+                                                                </td>
+                                                            </tr>
+                                                        </table>
+                                                    </div>
+                                                </div>
+
+                                                @if($keterangan)
+                                                    <div class="mt-2">
+                                                        <strong>Keterangan:</strong>
+                                                        <p class="mt-1 p-2 bg-light rounded small mb-0">{{ $keterangan }}</p>
+                                                    </div>
+                                                @endif
                                             </div>
-                                        </div>
-                                    @endif
+                                        @endforeach
+                                    </div>
                                 </div>
-                            </div>
-                        @endfor
+                            @endforeach
+                        @endif
                     @endif
                 </div>
             </div>
