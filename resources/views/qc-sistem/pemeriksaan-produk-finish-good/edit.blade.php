@@ -25,7 +25,82 @@
     $coaArr = is_array($pemeriksaanProdukFinishGood->coa_array) ? $pemeriksaanProdukFinishGood->coa_array : [];
     $statusArr = is_array($pemeriksaanProdukFinishGood->status_array) ? $pemeriksaanProdukFinishGood->status_array : [];
     $ketArr = is_array($pemeriksaanProdukFinishGood->keterangan_array) ? $pemeriksaanProdukFinishGood->keterangan_array : [];
-    $rowCount = max(count($idProdukArr), 1);
+
+    $rowCount = max(count($idProdukArr), count($kategoriArr), count($kodeArr), 1);
+
+    // Group flat arrays by Produk (Model A): key includes kategori + negara.
+    $grouped = [];
+    for ($i = 0; $i < $rowCount; $i++) {
+        $pid = $idProdukArr[$i] ?? null;
+        $kategori = $kategoriArr[$i] ?? null;
+        $negara = $negaraArr[$i] ?? null;
+        if ($pid === null || $pid === '') continue;
+
+        $key = (string)$pid . '|' . (string)$kategori . '|' . (string)$negara;
+        if (!isset($grouped[$key])) {
+            $grouped[$key] = [
+                'id_produk' => $pid,
+                'kategori' => $kategori,
+                'negara' => $negara,
+                'items' => [],
+            ];
+        }
+
+        $grouped[$key]['items'][] = [
+            'i' => $i,
+            'kode' => $kodeArr[$i] ?? null,
+            'expire' => $expireArr[$i] ?? null,
+            'jumlah_datang' => $jmlDatangArr[$i] ?? null,
+            'jumlah_sampling' => $jmlSamplingArr[$i] ?? null,
+            'kemasan' => $kemasanArr[$i] ?? null,
+            'warna' => $warnaArr[$i] ?? null,
+            'aroma' => $aromaArr[$i] ?? null,
+            'status' => $statusArr[$i] ?? null,
+            'keterangan' => $ketArr[$i] ?? null,
+            'suhu_mobil_type' => $suhuMobilTypeArr[$i] ?? null,
+            'suhu_mobil_value' => $suhuMobilValueArr[$i] ?? null,
+            'suhu_produk_type' => $suhuProdukTypeArr[$i] ?? null,
+            'suhu_produk_value' => $suhuProdukValueArr[$i] ?? null,
+            'kondisi_produk' => $kondisiProdukArr[$i] ?? null,
+            'kondisi_produk_suhu_value' => $kondisiProdukSuhuValueArr[$i] ?? null,
+            'logo_halal' => $logoArr[$i] ?? null,
+            'dokumen_halal' => $dokArr[$i] ?? null,
+            'coa' => $coaArr[$i] ?? null,
+        ];
+    }
+
+    $groupList = array_values($grouped);
+    if (count($groupList) < 1) {
+        $groupList = [[
+            'id_produk' => null,
+            'kategori' => null,
+            'negara' => null,
+            'items' => [[
+                'i' => 0,
+                'kode' => null,
+                'expire' => null,
+                'jumlah_datang' => null,
+                'jumlah_sampling' => null,
+                'kemasan' => null,
+                'warna' => null,
+                'aroma' => null,
+                'status' => null,
+                'keterangan' => null,
+                'suhu_mobil_type' => null,
+                'suhu_mobil_value' => null,
+                'suhu_produk_type' => null,
+                'suhu_produk_value' => null,
+                'kondisi_produk' => null,
+                'kondisi_produk_suhu_value' => null,
+                'logo_halal' => null,
+                'dokumen_halal' => null,
+                'coa' => null,
+            ]],
+        ]];
+    }
+
+    $headerKategoriCodes = array_map(fn($g) => $g['kategori'] ?? null, $groupList);
+    $headerProdukIds = array_map(fn($g) => $g['id_produk'] ?? null, $groupList);
 @endphp
 
 <div id="main">
@@ -323,18 +398,27 @@
                                 <div class="form-section mb-4">
                                     <h5 class="text-primary mb-3">Detail Produk (Baris Dinamis)</h5>
                                     <div id="unified-container">
-                                        @for($i = 0; $i < $rowCount; $i++)
-                                            <div class="unified-row mb-4 p-3 border rounded" style="background-color: #f8f9fa;" data-row-index="{{ $i }}">
-                                                <h6 class="text-primary mb-3">Baris {{ $i + 1 }}</h6>
+                                        @php $globalDetail = 1; @endphp
+                                        @foreach($groupList as $gIndex => $group)
+                                            @php
+                                                $items = is_array($group['items'] ?? null) ? $group['items'] : [];
+                                                if (count($items) < 1) $items = [[ 'i' => 0 ]];
+                                                $docLogo = old('logo_halal.'.$gIndex, $items[0]['logo_halal'] ?? null);
+                                                $docDokumen = old('dokumen_halal.'.$gIndex, $items[0]['dokumen_halal'] ?? null);
+                                                $docCoa = old('coa.'.$gIndex, $items[0]['coa'] ?? null);
+                                            @endphp
+
+                                            <div class="unified-row mb-4 p-3 border rounded" style="background-color: #f8f9fa;" data-row-index="{{ $gIndex }}">
+                                                <h6 class="text-primary mb-3">Produk {{ $gIndex + 1 }}</h6>
 
                                                 <div class="row">
                                                     <div class="col-md-6">
                                                         <div class="form-group">
                                                             <label class="form-label">Kategori</label>
-                                                            <select class="form-control kategori-produk-select" name="kategori_code[]">
+                                                            <select class="form-control kategori-produk-select" data-role="kategori">
                                                                 <option value="">Pilih Kategori</option>
                                                                 @foreach(($produkKategoriOptions ?? []) as $kategori)
-                                                                    <option value="{{ $kategori }}" {{ old('kategori_code.'.$i, $kategoriArr[$i] ?? '') == $kategori ? 'selected' : '' }}>{{ $kategori }}</option>
+                                                                    <option value="{{ $kategori }}" {{ old('kategori_code.'.$gIndex, $group['kategori'] ?? '') == $kategori ? 'selected' : '' }}>{{ $kategori }}</option>
                                                                 @endforeach
                                                             </select>
                                                         </div>
@@ -342,7 +426,7 @@
                                                     <div class="col-md-6">
                                                         <div class="form-group">
                                                             <label class="form-label">Nama Produk</label>
-                                                            <select class="form-control produk-select" name="id_produk[]">
+                                                            <select class="form-control produk-select" data-role="produk">
                                                                 <option value="">Pilih Produk</option>
                                                             </select>
                                                         </div>
@@ -355,10 +439,10 @@
                                                             <div class="card-body p-3">
                                                                 <div class="fw-semibold">Produsen</div>
                                                                 <div class="small text-muted mb-2">Otomatis terisi sesuai Produk yang dipilih</div>
-                                                                <div class="produsen-badges d-flex flex-wrap gap-1" data-row-index="{{ $i }}">
+                                                                <div class="produsen-badges d-flex flex-wrap gap-1" data-row-index="{{ $gIndex }}">
                                                                     <span class="text-muted small">-</span>
                                                                 </div>
-                                                                <input type="hidden" name="produsen[]" class="produsen-hidden" value="">
+                                                                <input type="hidden" class="produsen-hidden" value="">
                                                             </div>
                                                         </div>
                                                     </div>
@@ -367,10 +451,10 @@
                                                             <div class="card-body p-3">
                                                                 <div class="fw-semibold">Distributor</div>
                                                                 <div class="small text-muted mb-2">Otomatis terisi sesuai Produk yang dipilih</div>
-                                                                <div class="distributor-badges d-flex flex-wrap gap-1" data-row-index="{{ $i }}">
+                                                                <div class="distributor-badges d-flex flex-wrap gap-1" data-row-index="{{ $gIndex }}">
                                                                     <span class="text-muted small">-</span>
                                                                 </div>
-                                                                <input type="hidden" name="distributor[]" class="distributor-hidden" value="">
+                                                                <input type="hidden" class="distributor-hidden" value="">
                                                             </div>
                                                         </div>
                                                     </div>
@@ -382,15 +466,15 @@
                                                             <label class="form-label">Suhu Mobil</label>
                                                             <select class="form-control suhu-mobil-type" name="suhu_mobil_type[]">
                                                                 <option value="">Pilih Jenis Suhu Mobil</option>
-                                                                <option value="Fresh" {{ old('suhu_mobil_type.'.$i, $suhuMobilTypeArr[$i] ?? '') == 'Fresh' ? 'selected' : '' }}>Fresh</option>
-                                                                <option value="Frozen" {{ old('suhu_mobil_type.'.$i, $suhuMobilTypeArr[$i] ?? '') == 'Frozen' ? 'selected' : '' }}>Frozen</option>
+                                                                <option value="Fresh" {{ old('suhu_mobil_type.'.$gIndex, $items[0]['suhu_mobil_type'] ?? '') == 'Fresh' ? 'selected' : '' }}>Fresh</option>
+                                                                <option value="Frozen" {{ old('suhu_mobil_type.'.$gIndex, $items[0]['suhu_mobil_type'] ?? '') == 'Frozen' ? 'selected' : '' }}>Frozen</option>
                                                             </select>
                                                         </div>
                                                     </div>
                                                     <div class="col-md-6">
                                                         <div class="form-group suhu-mobil-input" style="display: none;">
                                                             <label class="form-label">Nilai Suhu Mobil (°C)</label>
-                                                            <input type="text" class="form-control suhu-mobil-val" name="suhu_mobil_value[]" value="{{ old('suhu_mobil_value.'.$i, $suhuMobilValueArr[$i] ?? '') }}" placeholder="Contoh: -18°C atau 4°C">
+                                                            <input type="text" class="form-control suhu-mobil-val" name="suhu_mobil_value[]" value="{{ old('suhu_mobil_value.'.$gIndex, $items[0]['suhu_mobil_value'] ?? '') }}" placeholder="Contoh: -18°C atau 4°C">
                                                         </div>
                                                     </div>
                                                 </div>
@@ -401,15 +485,15 @@
                                                             <label class="form-label">Suhu Produk</label>
                                                             <select class="form-control suhu-produk-type" name="suhu_produk_type[]">
                                                                 <option value="">Pilih Jenis Suhu Produk</option>
-                                                                <option value="Fresh" {{ old('suhu_produk_type.'.$i, $suhuProdukTypeArr[$i] ?? '') == 'Fresh' ? 'selected' : '' }}>Fresh</option>
-                                                                <option value="Frozen" {{ old('suhu_produk_type.'.$i, $suhuProdukTypeArr[$i] ?? '') == 'Frozen' ? 'selected' : '' }}>Frozen</option>
+                                                                <option value="Fresh" {{ old('suhu_produk_type.'.$gIndex, $items[0]['suhu_produk_type'] ?? '') == 'Fresh' ? 'selected' : '' }}>Fresh</option>
+                                                                <option value="Frozen" {{ old('suhu_produk_type.'.$gIndex, $items[0]['suhu_produk_type'] ?? '') == 'Frozen' ? 'selected' : '' }}>Frozen</option>
                                                             </select>
                                                         </div>
                                                     </div>
                                                     <div class="col-md-6">
                                                         <div class="form-group suhu-produk-input" style="display: none;">
                                                             <label class="form-label">Nilai Suhu Produk (°C)</label>
-                                                            <input type="text" class="form-control suhu-produk-val" name="suhu_produk_value[]" value="{{ old('suhu_produk_value.'.$i, $suhuProdukValueArr[$i] ?? '') }}" placeholder="Contoh: -18°C atau 4°C">
+                                                            <input type="text" class="form-control suhu-produk-val" name="suhu_produk_value[]" value="{{ old('suhu_produk_value.'.$gIndex, $items[0]['suhu_produk_value'] ?? '') }}" placeholder="Contoh: -18°C atau 4°C">
                                                         </div>
                                                     </div>
                                                 </div>
@@ -420,16 +504,16 @@
                                                             <label class="form-label">Kondisi Produk</label>
                                                             <select class="form-control kondisi-produk-select" name="kondisi_produk[]">
                                                                 <option value="">Pilih Kondisi Produk</option>
-                                                                <option value="Frozen" {{ old('kondisi_produk.'.$i, $kondisiProdukArr[$i] ?? '') == 'Frozen' ? 'selected' : '' }}>Frozen</option>
-                                                                <option value="Fresh" {{ old('kondisi_produk.'.$i, $kondisiProdukArr[$i] ?? '') == 'Fresh' ? 'selected' : '' }}>Fresh</option>
-                                                                <option value="Dry" {{ old('kondisi_produk.'.$i, $kondisiProdukArr[$i] ?? '') == 'Dry' ? 'selected' : '' }}>Dry</option>
+                                                                <option value="Frozen" {{ old('kondisi_produk.'.$gIndex, $items[0]['kondisi_produk'] ?? '') == 'Frozen' ? 'selected' : '' }}>Frozen</option>
+                                                                <option value="Fresh" {{ old('kondisi_produk.'.$gIndex, $items[0]['kondisi_produk'] ?? '') == 'Fresh' ? 'selected' : '' }}>Fresh</option>
+                                                                <option value="Dry" {{ old('kondisi_produk.'.$gIndex, $items[0]['kondisi_produk'] ?? '') == 'Dry' ? 'selected' : '' }}>Dry</option>
                                                             </select>
                                                         </div>
                                                     </div>
                                                     <div class="col-md-6">
                                                         <div class="form-group kondisi-suhu-input" style="display: none;">
                                                             <label class="form-label">Nilai Suhu Kondisi Produk (°C)</label>
-                                                            <input type="text" class="form-control kondisi-suhu-val" name="kondisi_produk_suhu_value[]" value="{{ old('kondisi_produk_suhu_value.'.$i, $kondisiProdukSuhuValueArr[$i] ?? '') }}" placeholder="Contoh: -18°C atau 4°C">
+                                                            <input type="text" class="form-control kondisi-suhu-val" name="kondisi_produk_suhu_value[]" value="{{ old('kondisi_produk_suhu_value.'.$gIndex, $items[0]['kondisi_produk_suhu_value'] ?? '') }}" placeholder="Contoh: -18°C atau 4°C">
                                                         </div>
                                                     </div>
                                                 </div>
@@ -438,175 +522,213 @@
                                                     <div class="col-md-6">
                                                         <div class="form-group">
                                                             <label class="form-label">Negara Produsen</label>
-                                                            <select class="choices form-control" name="negara_produsen[]">
+                                                            <select class="choices form-control" data-role="negara">
                                                                 <option value="">Pilih Negara</option>
                                                                 @foreach($countries as $code => $name)
-                                                                    <option value="{{ $name }}" {{ old('negara_produsen.'.$i, $negaraArr[$i] ?? '') == $name ? 'selected' : '' }}>{{ $name }}</option>
+                                                                    <option value="{{ $name }}" {{ old('negara_produsen.'.$gIndex, $group['negara'] ?? '') == $name ? 'selected' : '' }}>{{ $name }}</option>
                                                                 @endforeach
                                                             </select>
                                                         </div>
                                                     </div>
-                                                    <div class="col-md-6">
-                                                        <div class="form-group">
-                                                            <label class="form-label">Kode Produksi</label>
-                                                            <input type="text" class="form-control" name="kode_produksi[]" value="{{ old('kode_produksi.'.$i, $kodeArr[$i] ?? '') }}" placeholder="Kode Produksi">
-                                                        </div>
-                                                    </div>
                                                 </div>
 
-                                                <div class="row">
-                                                    <div class="col-md-6">
-                                                        <div class="form-group">
-                                                            <label class="form-label">Expire Date</label>
-                                                            <input type="date" class="form-control" name="expire_date[]" value="{{ old('expire_date.'.$i, $expireArr[$i] ?? '') }}">
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-md-3">
-                                                        <div class="form-group">
-                                                            <label class="form-label">Jumlah Datang</label>
-                                                            <input type="text" class="form-control" name="jumlah_datang[]" value="{{ old('jumlah_datang.'.$i, $jmlDatangArr[$i] ?? '') }}" placeholder="Jumlah Datang">
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-md-3">
-                                                        <div class="form-group">
-                                                            <label class="form-label">Jumlah Sampling</label>
-                                                            <input type="text" class="form-control" name="jumlah_sampling[]" value="{{ old('jumlah_sampling.'.$i, $jmlSamplingArr[$i] ?? '') }}" placeholder="Jumlah Sampling">
-                                                        </div>
-                                                    </div>
-                                                </div>
+                                                <div class="detail-items">
+                                                    @foreach($items as $dIndex => $it)
+                                                        @php
+                                                            $idx = $it['i'] ?? 0;
+                                                            $detailNo = $dIndex + 1;
+                                                        @endphp
+                                                        <div class="detail-item border rounded p-3 mb-3" style="background: #fff;" data-detail-index="{{ $dIndex }}" data-detail-global-index="{{ $globalDetail - 1 }}">
+                                                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                                                <strong>Detail {{ $detailNo }}</strong>
+                                                                <button type="button" class="btn btn-danger btn-sm remove-detail-btn" style="display:none;"><i class="bi bi-trash"></i> Hapus Detail</button>
+                                                            </div>
 
-                                                <div class="form-section mb-3">
-                                                    <h6 class="text-primary mb-2">Kondisi Fisik</h6>
-                                                    <div class="row">
-                                                        <div class="col-md-4">
-                                                            <div class="mb-3">
-                                                                <label class="form-label"><strong>Kemasan</strong></label>
-                                                                <div class="form-check">
-                                                                    <input class="form-check-input" type="radio" name="kondisi_kemasan_{{ $i + 1 }}" value="1" {{ (string)old('kondisi_kemasan.'.$i, $kemasanArr[$i] ?? '') === '1' ? 'checked' : '' }}>
-                                                                    <label class="form-check-label">Ya ✓</label>
+                                                            <input type="hidden" name="kategori_code[]" class="detail-kategori" value="{{ old('kategori_code.'.$idx, $group['kategori'] ?? '') }}">
+                                                            <input type="hidden" name="id_produk[]" class="detail-produk" value="{{ old('id_produk.'.$idx, $group['id_produk'] ?? '') }}">
+                                                            <input type="hidden" name="negara_produsen[]" class="detail-negara" value="{{ old('negara_produsen.'.$idx, $group['negara'] ?? '') }}">
+                                                            @php
+                                                                $produsenVal = old('produsen.'.$idx, $pemeriksaanProdukFinishGood->produsen_array[$idx] ?? '');
+                                                                $distributorVal = old('distributor.'.$idx, $pemeriksaanProdukFinishGood->distributor_array[$idx] ?? '');
+                                                                if (is_array($produsenVal)) $produsenVal = json_encode($produsenVal);
+                                                                if (is_array($distributorVal)) $distributorVal = json_encode($distributorVal);
+                                                            @endphp
+                                                            <input type="hidden" name="produsen[]" class="detail-produsen" value="{{ $produsenVal }}">
+                                                            <input type="hidden" name="distributor[]" class="detail-distributor" value="{{ $distributorVal }}">
+
+                                                            <input type="hidden" name="logo_halal[]" class="detail-logo" value="{{ old('logo_halal.'.$idx, $it['logo_halal'] ?? '') }}">
+                                                            <input type="hidden" name="dokumen_halal[]" class="detail-dokumen" value="{{ old('dokumen_halal.'.$idx, $it['dokumen_halal'] ?? '') }}">
+                                                            <input type="hidden" name="coa[]" class="detail-coa" value="{{ old('coa.'.$idx, $it['coa'] ?? '') }}">
+
+                                                            <div class="row">
+                                                                <div class="col-md-6">
+                                                                    <div class="form-group">
+                                                                        <label class="form-label">Kode Produksi</label>
+                                                                        <input type="text" class="form-control" name="kode_produksi[]" value="{{ old('kode_produksi.'.$idx, $it['kode'] ?? '') }}" placeholder="Kode Produksi">
+                                                                    </div>
                                                                 </div>
-                                                                <div class="form-check">
-                                                                    <input class="form-check-input" type="radio" name="kondisi_kemasan_{{ $i + 1 }}" value="0" {{ (string)old('kondisi_kemasan.'.$i, $kemasanArr[$i] ?? '') === '0' ? 'checked' : '' }}>
-                                                                    <label class="form-check-label">Tidak ✗</label>
+                                                                <div class="col-md-6">
+                                                                    <div class="form-group">
+                                                                        <label class="form-label">Expire Date</label>
+                                                                        <input type="date" class="form-control" name="expire_date[]" value="{{ old('expire_date.'.$idx, $it['expire'] ?? '') }}">
+                                                                    </div>
                                                                 </div>
-                                                                <input type="hidden" name="kondisi_kemasan[]" class="radio-value-kemasan-{{ $i + 1 }}" value="{{ old('kondisi_kemasan.'.$i, $kemasanArr[$i] ?? '') }}">
+                                                                <div class="col-md-3">
+                                                                    <div class="form-group">
+                                                                        <label class="form-label">Jumlah Datang</label>
+                                                                        <input type="text" class="form-control" name="jumlah_datang[]" value="{{ old('jumlah_datang.'.$idx, $it['jumlah_datang'] ?? '') }}" placeholder="Jumlah Datang">
+                                                                    </div>
+                                                                </div>
+                                                                <div class="col-md-3">
+                                                                    <div class="form-group">
+                                                                        <label class="form-label">Jumlah Sampling</label>
+                                                                        <input type="text" class="form-control" name="jumlah_sampling[]" value="{{ old('jumlah_sampling.'.$idx, $it['jumlah_sampling'] ?? '') }}" placeholder="Jumlah Sampling">
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+
+                                                            <div class="form-section mb-3">
+                                                                <h6 class="text-primary mb-2">Kondisi Fisik</h6>
+                                                                <div class="row">
+                                                                    <div class="col-md-4">
+                                                                        <div class="mb-3">
+                                                                            <label class="form-label"><strong>Kemasan</strong></label>
+                                                                            <div class="form-check">
+                                                                                <input class="form-check-input" type="radio" name="kondisi_kemasan_{{ $globalDetail }}" value="1" {{ (string)old('kondisi_kemasan.'.$idx, $it['kemasan'] ?? '') === '1' ? 'checked' : '' }}>
+                                                                                <label class="form-check-label">Ya ✓</label>
+                                                                            </div>
+                                                                            <div class="form-check">
+                                                                                <input class="form-check-input" type="radio" name="kondisi_kemasan_{{ $globalDetail }}" value="0" {{ (string)old('kondisi_kemasan.'.$idx, $it['kemasan'] ?? '') === '0' ? 'checked' : '' }}>
+                                                                                <label class="form-check-label">Tidak ✗</label>
+                                                                            </div>
+                                                                            <input type="hidden" name="kondisi_kemasan[]" class="radio-value-kemasan-{{ $globalDetail }}" value="{{ old('kondisi_kemasan.'.$idx, $it['kemasan'] ?? '') }}">
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="col-md-4">
+                                                                        <div class="mb-3">
+                                                                            <label class="form-label"><strong>Warna</strong></label>
+                                                                            <div class="form-check">
+                                                                                <input class="form-check-input" type="radio" name="kondisi_warna_{{ $globalDetail }}" value="1" {{ (string)old('kondisi_warna.'.$idx, $it['warna'] ?? '') === '1' ? 'checked' : '' }}>
+                                                                                <label class="form-check-label">Ya ✓</label>
+                                                                            </div>
+                                                                            <div class="form-check">
+                                                                                <input class="form-check-input" type="radio" name="kondisi_warna_{{ $globalDetail }}" value="0" {{ (string)old('kondisi_warna.'.$idx, $it['warna'] ?? '') === '0' ? 'checked' : '' }}>
+                                                                                <label class="form-check-label">Tidak ✗</label>
+                                                                            </div>
+                                                                            <input type="hidden" name="kondisi_warna[]" class="radio-value-warna-{{ $globalDetail }}" value="{{ old('kondisi_warna.'.$idx, $it['warna'] ?? '') }}">
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="col-md-4">
+                                                                        <div class="mb-3">
+                                                                            <label class="form-label"><strong>Aroma</strong></label>
+                                                                            <div class="form-check">
+                                                                                <input class="form-check-input" type="radio" name="kondisi_aroma_{{ $globalDetail }}" value="1" {{ (string)old('kondisi_aroma.'.$idx, $it['aroma'] ?? '') === '1' ? 'checked' : '' }}>
+                                                                                <label class="form-check-label">Ya ✓</label>
+                                                                            </div>
+                                                                            <div class="form-check">
+                                                                                <input class="form-check-input" type="radio" name="kondisi_aroma_{{ $globalDetail }}" value="0" {{ (string)old('kondisi_aroma.'.$idx, $it['aroma'] ?? '') === '0' ? 'checked' : '' }}>
+                                                                                <label class="form-check-label">Tidak ✗</label>
+                                                                            </div>
+                                                                            <input type="hidden" name="kondisi_aroma[]" class="radio-value-aroma-{{ $globalDetail }}" value="{{ old('kondisi_aroma.'.$idx, $it['aroma'] ?? '') }}">
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+
+                                                            <div class="form-section mb-3">
+                                                                <h6 class="text-primary mb-2">Hasil Pemeriksaan</h6>
+                                                                <div class="row">
+                                                                    <div class="col-md-6">
+                                                                        <div class="form-group">
+                                                                            <label class="form-label">Status</label>
+                                                                            <select class="form-control" name="status_baris[]">
+                                                                                <option value="">Pilih Status</option>
+                                                                                <option value="Hold" {{ old('status_baris.'.$idx, $it['status'] ?? '') == 'Hold' ? 'selected' : '' }}>Hold</option>
+                                                                                <option value="Release" {{ old('status_baris.'.$idx, $it['status'] ?? '') == 'Release' ? 'selected' : '' }}>Release</option>
+                                                                            </select>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="col-md-6">
+                                                                        <div class="form-group">
+                                                                            <label class="form-label">Keterangan</label>
+                                                                            <textarea class="form-control" name="keterangan[]" rows="2" placeholder="Keterangan hasil pemeriksaan">{{ old('keterangan.'.$idx, $it['keterangan'] ?? '') }}</textarea>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
                                                             </div>
                                                         </div>
-                                                        <div class="col-md-4">
-                                                            <div class="mb-3">
-                                                                <label class="form-label"><strong>Warna</strong></label>
-                                                                <div class="form-check">
-                                                                    <input class="form-check-input" type="radio" name="kondisi_warna_{{ $i + 1 }}" value="1" {{ (string)old('kondisi_warna.'.$i, $warnaArr[$i] ?? '') === '1' ? 'checked' : '' }}>
-                                                                    <label class="form-check-label">Ya ✓</label>
-                                                                </div>
-                                                                <div class="form-check">
-                                                                    <input class="form-check-input" type="radio" name="kondisi_warna_{{ $i + 1 }}" value="0" {{ (string)old('kondisi_warna.'.$i, $warnaArr[$i] ?? '') === '0' ? 'checked' : '' }}>
-                                                                    <label class="form-check-label">Tidak ✗</label>
-                                                                </div>
-                                                                <input type="hidden" name="kondisi_warna[]" class="radio-value-warna-{{ $i + 1 }}" value="{{ old('kondisi_warna.'.$i, $warnaArr[$i] ?? '') }}">
-                                                            </div>
-                                                        </div>
-                                                        <div class="col-md-4">
-                                                            <div class="mb-3">
-                                                                <label class="form-label"><strong>Aroma</strong></label>
-                                                                <div class="form-check">
-                                                                    <input class="form-check-input" type="radio" name="kondisi_aroma_{{ $i + 1 }}" value="1" {{ (string)old('kondisi_aroma.'.$i, $aromaArr[$i] ?? '') === '1' ? 'checked' : '' }}>
-                                                                    <label class="form-check-label">Ya ✓</label>
-                                                                </div>
-                                                                <div class="form-check">
-                                                                    <input class="form-check-input" type="radio" name="kondisi_aroma_{{ $i + 1 }}" value="0" {{ (string)old('kondisi_aroma.'.$i, $aromaArr[$i] ?? '') === '0' ? 'checked' : '' }}>
-                                                                    <label class="form-check-label">Tidak ✗</label>
-                                                                </div>
-                                                                <input type="hidden" name="kondisi_aroma[]" class="radio-value-aroma-{{ $i + 1 }}" value="{{ old('kondisi_aroma.'.$i, $aromaArr[$i] ?? '') }}">
-                                                            </div>
-                                                        </div>
-                                                    </div>
+                                                        @php $globalDetail++; @endphp
+                                                    @endforeach
                                                 </div>
 
                                                 <div class="form-section mb-3">
                                                     <h6 class="text-primary mb-2">Dokumen</h6>
+                                                    <input type="hidden" class="doc-master-logo" value="{{ $docLogo }}">
+                                                    <input type="hidden" class="doc-master-dokumen" value="{{ $docDokumen }}">
+                                                    <input type="hidden" class="doc-master-coa" value="{{ $docCoa }}">
                                                     <div class="row">
                                                         <div class="col-md-4">
                                                             <div class="mb-3">
                                                                 <label class="form-label"><strong>Logo Halal</strong></label>
                                                                 <div class="form-check">
-                                                                    <input class="form-check-input" type="radio" name="logo_halal_{{ $i + 1 }}" value="1" {{ (string)old('logo_halal.'.$i, $logoArr[$i] ?? '') === '1' ? 'checked' : '' }}>
+                                                                    <input class="form-check-input" type="radio" name="logo_halal_master_{{ $gIndex + 1 }}" value="1" {{ (string)$docLogo === '1' ? 'checked' : '' }}>
                                                                     <label class="form-check-label">Ya ✓</label>
                                                                 </div>
                                                                 <div class="form-check">
-                                                                    <input class="form-check-input" type="radio" name="logo_halal_{{ $i + 1 }}" value="0" {{ (string)old('logo_halal.'.$i, $logoArr[$i] ?? '') === '0' ? 'checked' : '' }}>
+                                                                    <input class="form-check-input" type="radio" name="logo_halal_master_{{ $gIndex + 1 }}" value="0" {{ (string)$docLogo === '0' ? 'checked' : '' }}>
                                                                     <label class="form-check-label">Tidak ✗</label>
                                                                 </div>
-                                                                <input type="hidden" name="logo_halal[]" class="radio-value-logo-{{ $i + 1 }}" value="{{ old('logo_halal.'.$i, $logoArr[$i] ?? '') }}">
                                                             </div>
                                                         </div>
                                                         <div class="col-md-4">
                                                             <div class="mb-3">
                                                                 <label class="form-label"><strong>Dokumen Halal</strong></label>
                                                                 <div class="form-check">
-                                                                    <input class="form-check-input" type="radio" name="dokumen_halal_{{ $i + 1 }}" value="1" {{ (string)old('dokumen_halal.'.$i, $dokArr[$i] ?? '') === '1' ? 'checked' : '' }}>
+                                                                    <input class="form-check-input" type="radio" name="dokumen_halal_master_{{ $gIndex + 1 }}" value="1" {{ (string)$docDokumen === '1' ? 'checked' : '' }}>
                                                                     <label class="form-check-label">Ya ✓</label>
                                                                 </div>
                                                                 <div class="form-check">
-                                                                    <input class="form-check-input" type="radio" name="dokumen_halal_{{ $i + 1 }}" value="0" {{ (string)old('dokumen_halal.'.$i, $dokArr[$i] ?? '') === '0' ? 'checked' : '' }}>
+                                                                    <input class="form-check-input" type="radio" name="dokumen_halal_master_{{ $gIndex + 1 }}" value="0" {{ (string)$docDokumen === '0' ? 'checked' : '' }}>
                                                                     <label class="form-check-label">Tidak ✗</label>
                                                                 </div>
-                                                                <input type="hidden" name="dokumen_halal[]" class="radio-value-dokumen-{{ $i + 1 }}" value="{{ old('dokumen_halal.'.$i, $dokArr[$i] ?? '') }}">
                                                             </div>
                                                         </div>
                                                         <div class="col-md-4">
                                                             <div class="mb-3">
                                                                 <label class="form-label"><strong>COA</strong></label>
                                                                 <div class="form-check">
-                                                                    <input class="form-check-input" type="radio" name="coa_{{ $i + 1 }}" value="1" {{ (string)old('coa.'.$i, $coaArr[$i] ?? '') === '1' ? 'checked' : '' }}>
+                                                                    <input class="form-check-input" type="radio" name="coa_master_{{ $gIndex + 1 }}" value="1" {{ (string)$docCoa === '1' ? 'checked' : '' }}>
                                                                     <label class="form-check-label">Ya ✓</label>
                                                                 </div>
                                                                 <div class="form-check">
-                                                                    <input class="form-check-input" type="radio" name="coa_{{ $i + 1 }}" value="0" {{ (string)old('coa.'.$i, $coaArr[$i] ?? '') === '0' ? 'checked' : '' }}>
+                                                                    <input class="form-check-input" type="radio" name="coa_master_{{ $gIndex + 1 }}" value="0" {{ (string)$docCoa === '0' ? 'checked' : '' }}>
                                                                     <label class="form-check-label">Tidak ✗</label>
                                                                 </div>
-                                                                <input type="hidden" name="coa[]" class="radio-value-coa-{{ $i + 1 }}" value="{{ old('coa.'.$i, $coaArr[$i] ?? '') }}">
                                                             </div>
                                                         </div>
                                                     </div>
                                                 </div>
 
-                                                <div class="form-section mb-3">
-                                                    <h6 class="text-primary mb-2">Hasil Pemeriksaan</h6>
-                                                    <div class="row">
-                                                        <div class="col-md-6">
-                                                            <div class="form-group">
-                                                                <label class="form-label">Status</label>
-                                                                <select class="form-control" name="status_baris[]">
-                                                                    <option value="">Pilih Status</option>
-                                                                    <option value="Hold" {{ old('status_baris.'.$i, $statusArr[$i] ?? '') == 'Hold' ? 'selected' : '' }}>Hold</option>
-                                                                    <option value="Release" {{ old('status_baris.'.$i, $statusArr[$i] ?? '') == 'Release' ? 'selected' : '' }}>Release</option>
-                                                                </select>
-                                                            </div>
-                                                        </div>
-                                                        <div class="col-md-6">
-                                                            <div class="form-group">
-                                                                <label class="form-label">Keterangan</label>
-                                                                <textarea class="form-control" name="keterangan[]" rows="2" placeholder="Keterangan hasil pemeriksaan">{{ old('keterangan.'.$i, $ketArr[$i] ?? '') }}</textarea>
-                                                            </div>
-                                                        </div>
+                                                <div class="row mt-2">
+                                                    <div class="col-md-12">
+                                                        <button type="button" class="btn btn-primary btn-sm add-detail-btn"><i class="bi bi-plus"></i> Tambah Detail</button>
                                                     </div>
                                                 </div>
 
                                                 <div class="row mt-3 pt-3 border-top">
                                                     <div class="col-md-12">
-                                                        <button type="button" class="btn btn-danger btn-sm remove-unified-btn"><i class="bi bi-trash"></i> Hapus Baris</button>
+                                                        <button type="button" class="btn btn-danger btn-sm remove-unified-btn"><i class="bi bi-trash"></i> Hapus Produk</button>
                                                     </div>
                                                 </div>
                                             </div>
-                                        @endfor
+                                        @endforeach
                                     </div>
 
-                                    <div class="row mt-3 pt-3 border-top">
+                                    <!-- <div class="row mt-3 pt-3 border-top">
                                         <div class="col-md-12">
-                                            <button type="button" class="btn btn-primary btn-sm add-unified-btn"><i class="bi bi-plus"></i> Tambah Baris</button>
+                                            <button type="button" class="btn btn-primary btn-sm add-unified-btn"><i class="bi bi-plus"></i> Tambah Produk</button>
                                         </div>
-                                    </div>
+                                    </div> -->
                                 </div>
 
                                 <div class="col-md-12 d-flex justify-content-end mt-3">
@@ -626,8 +748,8 @@
 <script>
 const produkByKategori = @json($produkByKategori ?? []);
 const produkMeta = @json($produkMeta ?? []);
-const oldKategoriCodes = @json(old('kategori_code', $kategoriArr ?? []));
-const oldProdukIds = @json(old('id_produk', $idProdukArr ?? []));
+const oldKategoriCodes = @json(old('kategori_code', $headerKategoriCodes ?? []));
+const oldProdukIds = @json(old('id_produk', $headerProdukIds ?? []));
 const countriesList = @json(array_values($countries ?? []));
 
 function initChoicesForContainer(containerEl) {
@@ -816,23 +938,20 @@ function setupKondisiMobilCheckAll() {
 }
 
 function setupRowRadios(rowEl) {
-    const rowIndex = Number(rowEl.dataset.rowIndex || 0) + 1;
+    const globalIndex = Number(rowEl.dataset.detailGlobalIndex || 0) + 1;
     const mappings = [
         { key: 'kondisi_kemasan', hiddenPrefix: 'kemasan' },
         { key: 'kondisi_warna', hiddenPrefix: 'warna' },
         { key: 'kondisi_aroma', hiddenPrefix: 'aroma' },
-        { key: 'logo_halal', hiddenPrefix: 'logo' },
-        { key: 'dokumen_halal', hiddenPrefix: 'dokumen' },
-        { key: 'coa', hiddenPrefix: 'coa' },
     ];
 
     mappings.forEach(({ key, hiddenPrefix }) => {
-        const radioName = `${key}_${rowIndex}`;
+        const radioName = `${key}_${globalIndex}`;
         rowEl.querySelectorAll(`input[type="radio"][name^="${key}_"]`).forEach((radio) => {
             radio.name = radioName;
         });
 
-        const hidden = rowEl.querySelector(`input[type="hidden"].radio-value-${hiddenPrefix}-${rowIndex}`)
+        const hidden = rowEl.querySelector(`input[type="hidden"].radio-value-${hiddenPrefix}-${globalIndex}`)
             || rowEl.querySelector(`input[type="hidden"][name="${key}[]"]`);
 
         rowEl.querySelectorAll(`input[type="radio"][name="${radioName}"]`).forEach((radio) => {
@@ -849,31 +968,43 @@ function setupRowRadios(rowEl) {
 }
 
 function updateRowNumbers() {
+    let globalDetail = 0;
     document.querySelectorAll('#unified-container .unified-row').forEach((row, idx) => {
         row.dataset.rowIndex = String(idx);
         const title = row.querySelector('h6');
-        if (title) title.textContent = `Baris ${idx + 1}`;
+        if (title) title.textContent = `Produk ${idx + 1}`;
 
-        row.querySelectorAll('input[type="hidden"][name="kondisi_kemasan[]"]').forEach((el) => {
-            el.className = `radio-value-kemasan-${idx + 1}`;
-        });
-        row.querySelectorAll('input[type="hidden"][name="kondisi_warna[]"]').forEach((el) => {
-            el.className = `radio-value-warna-${idx + 1}`;
-        });
-        row.querySelectorAll('input[type="hidden"][name="kondisi_aroma[]"]').forEach((el) => {
-            el.className = `radio-value-aroma-${idx + 1}`;
-        });
-        row.querySelectorAll('input[type="hidden"][name="logo_halal[]"]').forEach((el) => {
-            el.className = `radio-value-logo-${idx + 1}`;
-        });
-        row.querySelectorAll('input[type="hidden"][name="dokumen_halal[]"]').forEach((el) => {
-            el.className = `radio-value-dokumen-${idx + 1}`;
-        });
-        row.querySelectorAll('input[type="hidden"][name="coa[]"]').forEach((el) => {
-            el.className = `radio-value-coa-${idx + 1}`;
+        // Update master dokumen radio names per row to avoid cross-row interference
+        const rowNum = idx + 1;
+        row.querySelectorAll('input[type="radio"][name^="logo_halal_master_"]').forEach((el) => { el.name = `logo_halal_master_${rowNum}`; });
+        row.querySelectorAll('input[type="radio"][name^="dokumen_halal_master_"]').forEach((el) => { el.name = `dokumen_halal_master_${rowNum}`; });
+        row.querySelectorAll('input[type="radio"][name^="coa_master_"]').forEach((el) => { el.name = `coa_master_${rowNum}`; });
+
+        const detailItems = Array.from(row.querySelectorAll('.detail-items .detail-item'));
+        detailItems.forEach((detailEl, dIdx) => {
+            detailEl.dataset.detailIndex = String(dIdx);
+            detailEl.dataset.detailGlobalIndex = String(globalDetail);
+            const detailTitle = detailEl.querySelector('strong');
+            if (detailTitle) detailTitle.textContent = `Detail ${dIdx + 1}`;
+
+            detailEl.querySelectorAll('input[type="hidden"][name="kondisi_kemasan[]"]').forEach((el) => {
+                el.className = `radio-value-kemasan-${globalDetail + 1}`;
+            });
+            detailEl.querySelectorAll('input[type="hidden"][name="kondisi_warna[]"]').forEach((el) => {
+                el.className = `radio-value-warna-${globalDetail + 1}`;
+            });
+            detailEl.querySelectorAll('input[type="hidden"][name="kondisi_aroma[]"]').forEach((el) => {
+                el.className = `radio-value-aroma-${globalDetail + 1}`;
+            });
+
+            setupRowRadios(detailEl);
+            globalDetail += 1;
         });
 
-        setupRowRadios(row);
+        detailItems.forEach((detailEl) => {
+            const btn = detailEl.querySelector('.remove-detail-btn');
+            if (btn) btn.style.display = detailItems.length > 1 ? '' : 'none';
+        });
     });
 }
 
@@ -967,19 +1098,65 @@ function populateProdukOptionsForRow(rowEl) {
 function setupProdukRowListeners(rowEl) {
     const kategoriSelect = rowEl.querySelector('select.kategori-produk-select');
     const produkSelect = rowEl.querySelector('select.produk-select');
+    const negaraSelect = rowEl.querySelector('select[data-role="negara"]') || rowEl.querySelector('select[name="negara_produsen[]"]');
 
     if (kategoriSelect) {
         kategoriSelect.addEventListener('change', function() {
             delete rowEl.dataset.oldProdukId;
             if (produkSelect) produkSelect.value = '';
             populateProdukOptionsForRow(rowEl);
+            syncHeaderToDetails(rowEl);
         });
     }
     if (produkSelect) {
         produkSelect.addEventListener('change', function() {
             applyProdukMetaForRow(rowEl);
+            syncHeaderToDetails(rowEl);
         });
     }
+    if (negaraSelect) {
+        negaraSelect.addEventListener('change', function() {
+            syncHeaderToDetails(rowEl);
+        });
+    }
+}
+
+function syncHeaderToDetails(rowEl) {
+    if (!rowEl) return;
+    const kategori = rowEl.querySelector('select.kategori-produk-select')?.value || '';
+    const produk = rowEl.querySelector('select.produk-select')?.value || '';
+    const negara = rowEl.querySelector('select[data-role="negara"]')?.value || '';
+    const produsen = rowEl.querySelector('input.produsen-hidden')?.value || '';
+    const distributor = rowEl.querySelector('input.distributor-hidden')?.value || '';
+
+    rowEl.querySelectorAll('.detail-item').forEach((detailEl) => {
+        const k = detailEl.querySelector('input.detail-kategori');
+        const p = detailEl.querySelector('input.detail-produk');
+        const n = detailEl.querySelector('input.detail-negara');
+        const pr = detailEl.querySelector('input.detail-produsen');
+        const ds = detailEl.querySelector('input.detail-distributor');
+        if (k) k.value = kategori;
+        if (p) p.value = produk;
+        if (n) n.value = negara;
+        if (pr) pr.value = produsen;
+        if (ds) ds.value = distributor;
+    });
+}
+
+function syncDokumenToDetails(rowEl) {
+    if (!rowEl) return;
+    const logo = rowEl.querySelector('input.doc-master-logo')?.value ?? '';
+    const dok = rowEl.querySelector('input.doc-master-dokumen')?.value ?? '';
+    const coa = rowEl.querySelector('input.doc-master-coa')?.value ?? '';
+
+    rowEl.querySelectorAll('.detail-item').forEach((detailEl) => {
+        const l = detailEl.querySelector('input.detail-logo');
+        const d = detailEl.querySelector('input.detail-dokumen');
+        const c = detailEl.querySelector('input.detail-coa');
+        if (l) l.value = logo;
+        if (d) d.value = dok;
+        if (c) c.value = coa;
+    });
 }
 
 function initializeProdukFlow() {
@@ -999,6 +1176,9 @@ function initializeProdukFlow() {
         if (kategoriSelect && kategoriSelect.value) {
             populateProdukOptionsForRow(row);
         }
+
+        syncHeaderToDetails(row);
+        syncDokumenToDetails(row);
     });
 }
 
@@ -1096,7 +1276,7 @@ document.addEventListener('DOMContentLoaded', function() {
             container.appendChild(newRow);
 
             // Ensure Negara Produsen keeps its options in dynamic rows
-            const negaraSelect = newRow.querySelector('select[name="negara_produsen[]"]');
+            const negaraSelect = newRow.querySelector('select[data-role="negara"]') || newRow.querySelector('select[name="negara_produsen[]"]');
             if (negaraSelect) {
                 const optionCount = negaraSelect.querySelectorAll('option').length;
                 if (optionCount <= 1) {
@@ -1104,12 +1284,99 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
 
+            // Ensure new product starts with exactly one detail item
+            const detailItems = newRow.querySelectorAll('.detail-item');
+            detailItems.forEach((el, idx) => {
+                if (idx > 0) el.remove();
+            });
+            const firstDetail = newRow.querySelector('.detail-item');
+            if (firstDetail) {
+                firstDetail.querySelectorAll('input, textarea, select').forEach((el) => {
+                    if (el.type === 'radio') {
+                        el.checked = false;
+                    } else {
+                        el.value = '';
+                    }
+                });
+            }
+
+            // Reset dokumen master values
+            const docLogo = newRow.querySelector('input.doc-master-logo');
+            const docDok = newRow.querySelector('input.doc-master-dokumen');
+            const docCoa = newRow.querySelector('input.doc-master-coa');
+            if (docLogo) docLogo.value = '';
+            if (docDok) docDok.value = '';
+            if (docCoa) docCoa.value = '';
+
             initChoicesForContainer(newRow);
             updateRowNumbers();
             updateRemoveButtons();
             setupProdukRowListeners(newRow);
             setupSuhuRow(newRow);
             setupKondisiProdukSuhuRow(newRow);
+            syncHeaderToDetails(newRow);
+            syncDokumenToDetails(newRow);
+        }
+    });
+
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.add-detail-btn')) {
+            const rowEl = e.target.closest('.unified-row');
+            if (!rowEl) return;
+            const container = rowEl.querySelector('.detail-items');
+            const items = container ? container.querySelectorAll('.detail-item') : [];
+            const last = items.length ? items[items.length - 1] : null;
+            if (!container || !last) return;
+
+            const newItem = last.cloneNode(true);
+            newItem.querySelectorAll('input, textarea, select').forEach((el) => {
+                if (el.type === 'radio') {
+                    el.checked = false;
+                } else {
+                    el.value = '';
+                }
+            });
+            newItem.querySelectorAll('input[type="hidden"][name="kondisi_kemasan[]"], input[type="hidden"][name="kondisi_warna[]"], input[type="hidden"][name="kondisi_aroma[]"]').forEach((el) => {
+                el.value = '';
+            });
+
+            container.appendChild(newItem);
+            syncHeaderToDetails(rowEl);
+            syncDokumenToDetails(rowEl);
+            updateRowNumbers();
+        }
+    });
+
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.remove-detail-btn')) {
+            const rowEl = e.target.closest('.unified-row');
+            const detailEl = e.target.closest('.detail-item');
+            if (!rowEl || !detailEl) return;
+            const items = rowEl.querySelectorAll('.detail-item');
+            if (items.length > 1) {
+                detailEl.remove();
+                updateRowNumbers();
+            }
+        }
+    });
+
+    document.addEventListener('change', function(e) {
+        const rowEl = e.target.closest('.unified-row');
+        if (!rowEl) return;
+        if (e.target.matches('input[type="radio"][name^="logo_halal_master_"]')) {
+            const master = rowEl.querySelector('input.doc-master-logo');
+            if (master) master.value = e.target.value;
+            syncDokumenToDetails(rowEl);
+        }
+        if (e.target.matches('input[type="radio"][name^="dokumen_halal_master_"]')) {
+            const master = rowEl.querySelector('input.doc-master-dokumen');
+            if (master) master.value = e.target.value;
+            syncDokumenToDetails(rowEl);
+        }
+        if (e.target.matches('input[type="radio"][name^="coa_master_"]')) {
+            const master = rowEl.querySelector('input.doc-master-coa');
+            if (master) master.value = e.target.value;
+            syncDokumenToDetails(rowEl);
         }
     });
 });

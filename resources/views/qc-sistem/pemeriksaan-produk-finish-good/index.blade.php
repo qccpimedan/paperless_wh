@@ -198,11 +198,26 @@
                                                         $id = $id ? (int) $id : null;
                                                         return $id && isset($produkNamaById[$id]) ? $produkNamaById[$id] : null;
                                                     }, $idProdukArray)));
+
+                                                    $namaProdukPreview = [];
+                                                    if (count($namaProdukArray) === 1) {
+                                                        $namaProdukPreview = [$namaProdukArray[0]];
+                                                    } elseif (count($namaProdukArray) === 2) {
+                                                        $namaProdukPreview = [$namaProdukArray[0], $namaProdukArray[1]];
+                                                    } elseif (count($namaProdukArray) > 2) {
+                                                        $namaProdukPreview = [$namaProdukArray[0], $namaProdukArray[count($namaProdukArray) - 1]];
+                                                    }
                                                 @endphp
-                                                @if(count($namaProdukArray) > 0)
-                                                    @foreach($namaProdukArray as $name)
-                                                        <span class="badge bg-info">{{ $name }}</span><br>
-                                                    @endforeach
+                                                @if(count($namaProdukPreview) > 0)
+                                                    <span class="badge bg-info">{{ $namaProdukPreview[0] }}</span>
+                                                    @if(count($namaProdukArray) > 2)
+                                                        <br>
+                                                        <span class="text-muted">...</span>
+                                                    @endif
+                                                    @if(count($namaProdukPreview) === 2)
+                                                        <br>
+                                                        <span class="badge bg-info">{{ $namaProdukPreview[1] }}</span>
+                                                    @endif
                                                 @else
                                                     -
                                                 @endif
@@ -212,9 +227,18 @@
                                                     $kodeProduksiArray = is_array($p->kode_produksi_array) ? array_values(array_filter($p->kode_produksi_array, function ($v) {
                                                         return $v !== null && $v !== '';
                                                     })) : [];
+
+                                                    $kodeProduksiPreview = '';
+                                                    if (count($kodeProduksiArray) === 1) {
+                                                        $kodeProduksiPreview = $kodeProduksiArray[0];
+                                                    } elseif (count($kodeProduksiArray) === 2) {
+                                                        $kodeProduksiPreview = $kodeProduksiArray[0] . ', ' . $kodeProduksiArray[1];
+                                                    } elseif (count($kodeProduksiArray) > 2) {
+                                                        $kodeProduksiPreview = $kodeProduksiArray[0] . ' ... ' . $kodeProduksiArray[count($kodeProduksiArray) - 1];
+                                                    }
                                                 @endphp
-                                                @if(count($kodeProduksiArray) > 0)
-                                                    {{ implode(', ', $kodeProduksiArray) }}
+                                                @if($kodeProduksiPreview !== '')
+                                                    {{ $kodeProduksiPreview }}
                                                 @else
                                                     -
                                                 @endif
