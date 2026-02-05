@@ -350,10 +350,10 @@
 
                                 <!-- Dynamic Rows Section -->
                                 <div class="form-section mb-4">
-                                    <h5 class="text-primary mb-3">Detail Chemical (Baris Dinamis)</h5>
+                                    <h5 class="text-primary mb-3">Detail Chemical (Produk Dinamis)</h5>
                                     <div id="unified-container">
                                         <div class="unified-row mb-4 p-3 border rounded" style="background-color: #f8f9fa;">
-                                            <h6 class="text-primary mb-3">Baris 1</h6>
+                                            <h6 class="text-primary mb-3">Produk 1</h6>
                                             
                                             <!-- Informasi Chemical -->
                                             <div class="row">
@@ -532,6 +532,21 @@
                                                     </div>
                                                 </div>
                                             </div>
+
+                                            <div class="form-section mb-3">
+                                                <h6 class="text-primary mb-2">Upload Gambar</h6>
+                                                <div class="row">
+                                                    <div class="col-md-6">
+                                                        <div class="form-group">
+                                                            <label class="form-label">Foto Chemical (Max 1MB)</label>
+                                                            <input type="file" name="image_chemical[]" class="form-control" accept="image/*" capture="camera">
+                                                            @error('image_chemical.0')
+                                                                <div class="invalid-feedback d-block">{{ $message }}</div>
+                                                            @enderror
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
                                             
                                             <!-- Hasil Pemeriksaan -->
                                             <div class="form-section mb-3">
@@ -562,14 +577,14 @@
                                             <!-- Buttons -->
                                             <div class="row mt-3 pt-3 border-top">
                                                 <div class="col-md-12">
-                                                    <button type="button" class="btn btn-danger btn-sm remove-unified-btn"><i class="bi bi-trash"></i> Hapus Baris</button>
+                                                    <button type="button" class="btn btn-danger btn-sm remove-unified-btn"><i class="bi bi-trash"></i> Hapus Produk</button>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
                                     <div class="row mt-3 pt-3 border-top">
                                         <div class="col-md-12">
-                                            <button type="button" class="btn btn-primary btn-sm add-unified-btn"><i class="bi bi-plus"></i> Tambah Baris</button>
+                                            <button type="button" class="btn btn-success btn-sm add-unified-btn"><i class="bi bi-plus"></i> Tambah Produk</button>
                                         </div>
                                     </div>
                                 </div>
@@ -1085,6 +1100,18 @@ function addNewRow() {
                 </div>
             </div>
         </div>
+
+        <div class="form-section mb-3">
+            <h6 class="text-primary mb-2">Upload Gambar</h6>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label">Foto Chemical (Max 1MB)</label>
+                        <input type="file" name="image_chemical[]" class="form-control" accept="image/*" capture="camera">
+                    </div>
+                </div>
+            </div>
+        </div>
         
         <!-- Hasil Pemeriksaan -->
         <div class="form-section mb-3">
@@ -1336,7 +1363,7 @@ function updateRowNumbers() {
     rows.forEach((row, index) => {
         const title = row.querySelector('h6');
         if (title) {
-            title.textContent = `Baris ${index + 1}`;
+            title.textContent = `Produk ${index + 1}`;
         }
     });
 }

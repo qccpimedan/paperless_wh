@@ -49,7 +49,7 @@
                                 </div>
                             @endif
 
-                            <form action="{{ route('pemeriksaan-produk-finish-good.store') }}" method="POST">
+                            <form action="{{ route('pemeriksaan-produk-finish-good.store') }}" method="POST" enctype="multipart/form-data">
                                 @csrf
 
                                 <div class="form-section mb-4">
@@ -533,6 +533,21 @@
                                                             </div>
                                                         </div>
                                                     </div>
+
+                                                    <div class="form-section mb-3">
+                                                        <h6 class="text-primary mb-2">Upload Gambar</h6>
+                                                        <div class="row">
+                                                            <div class="col-md-6">
+                                                                <div class="form-group">
+                                                                    <label class="form-label">Foto Produk (Max 1MB)</label>
+                                                                    <input type="file" name="image_finish_good[]" class="form-control" accept="image/*" capture="camera">
+                                                                    @error('image_finish_good.0')
+                                                                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                                                                    @enderror
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </div>
 
@@ -598,7 +613,7 @@
 
                                     <div class="row mt-3 pt-3 border-top">
                                         <div class="col-md-12">
-                                            <button type="button" class="btn btn-primary btn-sm add-unified-btn"><i class="bi bi-plus"></i> Tambah Produk</button>
+                                            <button type="button" class="btn btn-success btn-sm add-unified-btn"><i class="bi bi-plus"></i> Tambah Produk</button>
                                         </div>
                                     </div>
                                 </div>
@@ -616,6 +631,22 @@
     </header>
 </div>
 
+<style>
+    .collapse-toggle-btn {
+        width: auto;
+        display: inline-flex;
+        align-items: center;
+        text-align: left;
+    }
+    .collapse-toggle-btn.full-width {
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+    }
+    .collapse-chevron { transition: transform .2s ease; }
+    .collapse-toggle-btn[aria-expanded="true"] .collapse-chevron { transform: rotate(180deg); }
+</style>
+
 @push('scripts')
 <script>
 const produkByKategori = @json($produkByKategori ?? []);
@@ -625,6 +656,225 @@ const oldProdukIds = @json(old('id_produk', []));
 const countriesList = @json(array_values($countries ?? []));
 
 let pristineRowTemplate = null;
+
+const bsCollapse = (el) => {
+    try {
+        if (!el || !window.bootstrap || !window.bootstrap.Collapse) return null;
+        return window.bootstrap.Collapse.getOrCreateInstance(el, { toggle: false });
+    } catch (e) {
+        return null;
+    }
+};
+
+const uniqueDomId = (prefix) => {
+    let id;
+    do {
+        id = `${prefix}_${Date.now()}_${Math.random().toString(16).slice(2)}`;
+    } while (document.getElementById(id));
+    return id;
+};
+
+const collapseAllProdukExcept = (activeRowEl) => {
+    const rows = Array.from(document.querySelectorAll('#unified-container .unified-row'));
+    rows.forEach((rowEl) => {
+        if (!rowEl || rowEl === activeRowEl) return;
+        const body = rowEl.querySelector(':scope > .produk-collapse.collapse');
+        if (!body) return;
+
+        const inst = bsCollapse(body);
+        if (inst) {
+            inst.hide();
+        } else {
+            body.classList.remove('show');
+        }
+
+        const btn = rowEl.querySelector('button[data-bs-toggle="collapse"]');
+        if (btn) btn.setAttribute('aria-expanded', 'false');
+    });
+};
+
+const collapseOtherDetailsInRow = (rowEl, activeDetailEl) => {
+    if (!rowEl) return;
+    const details = Array.from(rowEl.querySelectorAll('.detail-items .detail-item'));
+    details.forEach((detailEl) => {
+        if (!detailEl || detailEl === activeDetailEl) return;
+        const body = detailEl.querySelector(':scope > .detail-collapse.collapse');
+        if (!body) return;
+
+        const inst = bsCollapse(body);
+        if (inst) {
+            inst.hide();
+        } else {
+            body.classList.remove('show');
+        }
+        const btn = detailEl.querySelector('button.detail-title[data-bs-toggle="collapse"]');
+        if (btn) btn.setAttribute('aria-expanded', 'false');
+    });
+};
+
+const updateProdukLabel = (rowEl, rowIdx) => {
+    if (!rowEl) return;
+    const labelEl = rowEl.querySelector('.produk-collapse-label');
+    if (!labelEl) return;
+
+    const produkSelect = rowEl.querySelector('select.produk-select');
+    const selectedText = produkSelect && produkSelect.selectedOptions && produkSelect.selectedOptions[0]
+        ? (produkSelect.selectedOptions[0].textContent || '').trim()
+        : '';
+
+    labelEl.textContent = selectedText || `Produk ${rowIdx + 1}`;
+};
+
+const updateDetailLabel = (detailEl, dIdx) => {
+    if (!detailEl) return;
+    const labelEl = detailEl.querySelector('.detail-collapse-label');
+    if (!labelEl) return;
+
+    const kode = (detailEl.querySelector('input[name="kode_produksi[]"]')?.value || '').toString().trim();
+    labelEl.textContent = kode !== '' ? kode : `Detail ${dIdx + 1}`;
+};
+
+const ensureProdukCollapsible = (rowEl, rowIdx) => {
+    if (!rowEl) return;
+    if (!rowEl.dataset.produkCollapseId) {
+        rowEl.dataset.produkCollapseId = uniqueDomId('fg_produk');
+    }
+    const collapseId = rowEl.dataset.produkCollapseId;
+
+    const headerTitle = rowEl.querySelector(':scope > h6');
+    if (!headerTitle) return;
+
+    if (!headerTitle.querySelector('button[data-bs-toggle="collapse"]')) {
+        const existingText = (headerTitle.textContent || '').trim();
+        headerTitle.textContent = '';
+
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'btn btn-primary btn-sm d-inline-flex align-items-center gap-2 collapse-toggle-btn';
+        btn.setAttribute('data-bs-toggle', 'collapse');
+        btn.setAttribute('data-bs-target', `#${collapseId}`);
+        btn.setAttribute('aria-expanded', 'true');
+        btn.setAttribute('aria-controls', collapseId);
+
+        const span = document.createElement('span');
+        span.className = 'produk-collapse-label text-white';
+        span.textContent = existingText || `Produk ${rowIdx + 1}`;
+
+        const icon = document.createElement('i');
+        icon.className = 'bi bi-chevron-down collapse-chevron text-white';
+
+        btn.appendChild(span);
+        btn.appendChild(icon);
+        headerTitle.appendChild(btn);
+    }
+
+    let body = rowEl.querySelector(':scope > .produk-collapse.collapse');
+    if (body) {
+        body.id = collapseId;
+    } else {
+        body = document.createElement('div');
+        body.className = 'produk-collapse collapse show';
+        body.id = collapseId;
+
+        const nodesToMove = [];
+        let node = headerTitle.nextSibling;
+        while (node) {
+            const next = node.nextSibling;
+            nodesToMove.push(node);
+            node = next;
+        }
+        nodesToMove.forEach((n) => body.appendChild(n));
+        rowEl.appendChild(body);
+    }
+};
+
+const ensureDetailCollapsible = (detailEl) => {
+    if (!detailEl) return;
+    let collapseId = detailEl.dataset.detailCollapseId || '';
+
+    const hasDuplicateId = (id) => {
+        if (!id) return true;
+        const el = document.getElementById(id);
+        if (!el) return false;
+        return !detailEl.contains(el);
+    };
+
+    if (hasDuplicateId(collapseId)) {
+        collapseId = uniqueDomId('fg_detail');
+        detailEl.dataset.detailCollapseId = collapseId;
+    }
+
+    const header = detailEl.firstElementChild;
+    if (!header) return;
+
+    const titleEl = header.querySelector('strong');
+    if (titleEl && titleEl.tagName.toLowerCase() !== 'button') {
+        const existingText = (titleEl.textContent || '').trim();
+
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'btn btn-primary btn-sm fw-bold d-inline-flex align-items-center gap-2 collapse-toggle-btn detail-title';
+        btn.setAttribute('data-bs-toggle', 'collapse');
+        btn.setAttribute('data-bs-target', `#${collapseId}`);
+        btn.setAttribute('aria-expanded', 'true');
+        btn.setAttribute('aria-controls', collapseId);
+
+        const span = document.createElement('span');
+        span.className = 'detail-collapse-label';
+        span.textContent = existingText || 'Detail';
+
+        const icon = document.createElement('i');
+        icon.className = 'bi bi-chevron-down collapse-chevron text-white';
+
+        btn.appendChild(span);
+        btn.appendChild(icon);
+        titleEl.replaceWith(btn);
+    }
+
+    const existingBtn = header.querySelector('button.detail-title[data-bs-toggle="collapse"]');
+    if (existingBtn) {
+        existingBtn.setAttribute('data-bs-target', `#${collapseId}`);
+        existingBtn.setAttribute('aria-controls', collapseId);
+        if (!existingBtn.querySelector('.collapse-chevron')) {
+            const icon = document.createElement('i');
+            icon.className = 'bi bi-chevron-down collapse-chevron text-white';
+            existingBtn.appendChild(icon);
+        }
+    }
+
+    let body = detailEl.querySelector(':scope > .detail-collapse.collapse');
+    if (body) {
+        body.id = collapseId;
+    } else {
+        body = document.createElement('div');
+        body.className = 'detail-collapse collapse show';
+        body.id = collapseId;
+
+        const nodesToMove = [];
+        let node = header.nextSibling;
+        while (node) {
+            const next = node.nextSibling;
+            nodesToMove.push(node);
+            node = next;
+        }
+        nodesToMove.forEach((n) => body.appendChild(n));
+        detailEl.appendChild(body);
+    }
+};
+
+function initFinishGoodCollapses() {
+    const rows = Array.from(document.querySelectorAll('#unified-container .unified-row'));
+    rows.forEach((rowEl, rowIdx) => {
+        ensureProdukCollapsible(rowEl, rowIdx);
+        updateProdukLabel(rowEl, rowIdx);
+
+        const details = Array.from(rowEl.querySelectorAll('.detail-items .detail-item'));
+        details.forEach((detailEl, dIdx) => {
+            ensureDetailCollapsible(detailEl);
+            updateDetailLabel(detailEl, dIdx);
+        });
+    });
+}
 
 function toggleNoSegel() {
     const container = document.getElementById('no_segel_container');
@@ -892,8 +1142,13 @@ function updateRowNumbers() {
     let globalDetail = 0;
     document.querySelectorAll('#unified-container .unified-row').forEach((row, idx) => {
         row.dataset.rowIndex = String(idx);
-        const title = row.querySelector('h6');
-        if (title) title.textContent = `Produk ${idx + 1}`;
+        const produkLabel = row.querySelector('.produk-collapse-label');
+        if (produkLabel) {
+            updateProdukLabel(row, idx);
+        } else {
+            const title = row.querySelector('h6');
+            if (title) title.textContent = `Produk ${idx + 1}`;
+        }
 
         // Update master dokumen radio names per row to avoid cross-row interference
         const rowNum = idx + 1;
@@ -906,8 +1161,7 @@ function updateRowNumbers() {
         detailItems.forEach((detailEl, dIdx) => {
             detailEl.dataset.detailIndex = String(dIdx);
             detailEl.dataset.detailGlobalIndex = String(globalDetail);
-            const detailTitle = detailEl.querySelector('strong');
-            if (detailTitle) detailTitle.textContent = `Detail ${dIdx + 1}`;
+            updateDetailLabel(detailEl, dIdx);
 
             detailEl.querySelectorAll('input[type="hidden"][name="kondisi_kemasan[]"]').forEach((el) => {
                 el.className = `radio-value-kemasan-${globalDetail + 1}`;
@@ -1205,6 +1459,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     initChoicesForContainer(document);
     initializeProdukFlow();
+    initFinishGoodCollapses();
     updateRowNumbers();
     updateRemoveButtons();
 
@@ -1244,6 +1499,9 @@ document.addEventListener('DOMContentLoaded', function() {
             syncHeaderToDetails(rowEl);
             syncDokumenToDetails(rowEl);
             updateRowNumbers();
+
+            ensureDetailCollapsible(newItem);
+            collapseOtherDetailsInRow(rowEl, newItem);
         }
     });
 
@@ -1263,6 +1521,10 @@ document.addEventListener('DOMContentLoaded', function() {
     document.addEventListener('change', function(e) {
         const rowEl = e.target.closest('.unified-row');
         if (!rowEl) return;
+        if (e.target.matches('select.produk-select')) {
+            const rowIdx = Number(rowEl.dataset.rowIndex || 0);
+            updateProdukLabel(rowEl, rowIdx);
+        }
         if (e.target.matches('input[type="radio"][name^="logo_halal_master_"]')) {
             const master = rowEl.querySelector('input.doc-master-logo');
             if (master) master.value = e.target.value;
@@ -1358,10 +1620,23 @@ document.addEventListener('DOMContentLoaded', function() {
             // Force re-init Choices in the new row (more reliable than init-once flags)
             refreshChoicesForContainer(newRow);
             initializeProdukFlow();
+            initFinishGoodCollapses();
             updateRowNumbers();
             updateRemoveButtons();
             setupSuhuRow(newRow);
             setupKondisiProdukSuhuRow(newRow);
+
+            collapseAllProdukExcept(newRow);
+        }
+    });
+
+    document.addEventListener('input', function(e) {
+        if (e.target && e.target.matches('input[name="kode_produksi[]"]')) {
+            const detailEl = e.target.closest('.detail-item');
+            const rowEl = e.target.closest('.unified-row');
+            if (!detailEl || !rowEl) return;
+            const dIdx = Array.from(rowEl.querySelectorAll('.detail-items .detail-item')).indexOf(detailEl);
+            if (dIdx >= 0) updateDetailLabel(detailEl, dIdx);
         }
     });
 });

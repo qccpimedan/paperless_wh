@@ -368,6 +368,9 @@
                                     <!-- DYNAMIC ROWS CONTAINER -->
                                     <div id="unified-container">
                                         <div class="unified-row mb-4 p-3 border rounded" style="background-color: #f8f9fa;" data-row-index="0">
+                                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                                <h5 class="mb-0 bahan-title">Bahan #1</h5>
+                                            </div>
                                             <!-- Bahan Kemasan -->
                                             <div class="form-section mb-3">
                                                 <h6 class="text-primary mb-2">Bahan Kemasan</h6>
@@ -375,7 +378,7 @@
                                                     <div class="col-md-6">
                                                         <div class="form-group">
                                                             <label class="form-label">Kategori</label>
-                                                            <select class="choices form-control kategori-produk-select @error('kategori_code.0') is-invalid @enderror" name="kategori_code[]">
+                                                            <select class="form-control kategori-produk-select" data-role="kategori_code">
                                                                 <option value="">Pilih Kategori</option>
                                                                 @foreach(($produkKategoriOptions ?? []) as $kategori)
                                                                     <option value="{{ $kategori }}" {{ old('kategori_code.0') == $kategori ? 'selected' : '' }}>
@@ -383,20 +386,14 @@
                                                                     </option>
                                                                 @endforeach
                                                             </select>
-                                                            @error('kategori_code.0')
-                                                                <div class="invalid-feedback">{{ $message }}</div>
-                                                            @enderror
                                                         </div>
                                                     </div>
                                                     <div class="col-md-6">
                                                         <div class="form-group">
                                                             <label class="form-label">Produk</label>
-                                                            <select class="form-control produk-select @error('id_produk.0') is-invalid @enderror" name="id_produk[]">
+                                                            <select class="form-control produk-select" data-role="id_produk">
                                                                 <option value="">Pilih Produk</option>
                                                             </select>
-                                                            @error('id_produk.0')
-                                                                <div class="invalid-feedback">{{ $message }}</div>
-                                                            @enderror
                                                         </div>
                                                     </div>
                                                 </div>
@@ -428,7 +425,7 @@
 
                                                                 <div class="produsen-hidden-inputs">
                                                                     @foreach ($oldProdusen0 as $p)
-                                                                        <input type="hidden" name="produsen[0][]" value="{{ $p }}">
+                                                                        <input type="hidden" class="produsen-hidden-item" value="{{ $p }}">
                                                                     @endforeach
                                                                 </div>
 
@@ -460,7 +457,7 @@
 
                                                                 <div class="distributor-hidden-inputs">
                                                                     @foreach ($oldDistributor0 as $d)
-                                                                        <input type="hidden" name="distributor[0][]" value="{{ $d }}">
+                                                                        <input type="hidden" class="distributor-hidden-item" value="{{ $d }}">
                                                                     @endforeach
                                                                 </div>
 
@@ -470,150 +467,192 @@
                                                             </div>
                                                         </div>
                                                     </div>
-                                                    <div class="col-md-4">
-                                                        <div class="form-group">
-                                                            <label class="form-label">Kode Produksi</label>
-                                                            <input type="text" class="form-control @error('kode_produksi.0') is-invalid @enderror"
-                                                                name="kode_produksi[]" value="{{ old('kode_produksi.0') }}" placeholder="Kode Produksi">
-                                                            @error('kode_produksi.0')
-                                                                <div class="invalid-feedback">{{ $message }}</div>
-                                                            @enderror
-                                                        </div>
-                                                    </div>
                                                 </div>
-                                                <div class="row">
-                                                    <div class="col-md-4">
-                                                        <div class="form-group">
-                                                            <label class="form-label">Jumlah Datang (Kg/pcs/roll)</label>
-                                                            <input type="text" class="form-control @error('jumlah_datang.0') is-invalid @enderror"
-                                                                name="jumlah_datang[]" value="{{ old('jumlah_datang.0') }}" placeholder="Jumlah Datang">
-                                                            @error('jumlah_datang.0')
-                                                                <div class="invalid-feedback">{{ $message }}</div>
-                                                            @enderror
+                                            </div>
+
+                                            <div class="detail-items">
+                                                <div class="detail-item mb-3 p-3 border rounded" data-detail-index="0" style="background-color: #ffffff;">
+                                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                                        <span class="fw-bold detail-title">Detail #1</span>
+                                                        <button type="button" class="btn btn-danger btn-sm remove-detail-btn" style="display:none;"><i class="bi bi-trash"></i> Hapus Detail</button>
+                                                    </div>
+                                                    <input type="hidden" name="kategori_code[]" class="kategori-code-hidden" value="{{ old('kategori_code.0') }}">
+                                                    <input type="hidden" name="id_produk[]" class="produk-id-hidden" value="{{ old('id_produk.0') }}">
+
+                                                    <div class="produsen-hidden-inputs"></div>
+                                                    <div class="distributor-hidden-inputs"></div>
+
+                                                    <input type="hidden" name="penampakan[]" class="penampakan-hidden" value="{{ old('penampakan.0') }}">
+                                                    <input type="hidden" name="sealing[]" class="sealing-hidden" value="{{ old('sealing.0') }}">
+                                                    <input type="hidden" name="cetakan[]" class="cetakan-hidden" value="{{ old('cetakan.0') }}">
+                                                    <input type="hidden" name="logo_halal[]" class="logo-halal-hidden" value="{{ old('logo_halal.0') }}">
+                                                    <input type="hidden" name="dokumen_halal[]" class="dokumen-halal-hidden" value="{{ old('dokumen_halal.0') }}">
+                                                    <input type="hidden" name="coa[]" class="coa-hidden" value="{{ old('coa.0') }}">
+
+                                                    <div class="row">
+                                                        <div class="col-md-4">
+                                                            <div class="form-group">
+                                                                <label class="form-label">Kode Produksi</label>
+                                                                <input type="text" class="form-control @error('kode_produksi.0') is-invalid @enderror" name="kode_produksi[]" value="{{ old('kode_produksi.0') }}" placeholder="Kode Produksi">
+                                                                @error('kode_produksi.0')
+                                                                    <div class="invalid-feedback">{{ $message }}</div>
+                                                                @enderror
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-4">
+                                                            <div class="form-group">
+                                                                <label class="form-label">Jumlah Datang (Kg/pcs/roll)</label>
+                                                                <input type="text" class="form-control @error('jumlah_datang.0') is-invalid @enderror" name="jumlah_datang[]" value="{{ old('jumlah_datang.0') }}" placeholder="Jumlah Datang">
+                                                                @error('jumlah_datang.0')
+                                                                    <div class="invalid-feedback">{{ $message }}</div>
+                                                                @enderror
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-4">
+                                                            <div class="form-group">
+                                                                <label class="form-label">Jumlah Sampling (pcs/kg/roll)</label>
+                                                                <input type="text" class="form-control @error('jumlah_sampling.0') is-invalid @enderror" name="jumlah_sampling[]" value="{{ old('jumlah_sampling.0') }}" placeholder="Jumlah Sampling">
+                                                                @error('jumlah_sampling.0')
+                                                                    <div class="invalid-feedback">{{ $message }}</div>
+                                                                @enderror
+                                                            </div>
                                                         </div>
                                                     </div>
-                                                    <div class="col-md-4">
-                                                        <div class="form-group">
-                                                            <label class="form-label">Jumlah Sampling (pcs/kg/roll)</label>
-                                                            <input type="text" class="form-control @error('jumlah_sampling.0') is-invalid @enderror"
-                                                                name="jumlah_sampling[]" value="{{ old('jumlah_sampling.0') }}" placeholder="Jumlah Sampling">
-                                                            @error('jumlah_sampling.0')
-                                                                <div class="invalid-feedback">{{ $message }}</div>
-                                                            @enderror
+
+                                                    <div class="row">
+                                                        <div class="col-md-12">
+                                                            <div class="form-group">
+                                                                <label class="form-label">Spesifikasi</label>
+                                                                <textarea class="form-control @error('spesifikasi.0') is-invalid @enderror" name="spesifikasi[]" rows="2" placeholder="Spesifikasi">{{ old('spesifikasi.0') }}</textarea>
+                                                                @error('spesifikasi.0')
+                                                                    <div class="invalid-feedback">{{ $message }}</div>
+                                                                @enderror
+                                                            </div>
                                                         </div>
                                                     </div>
-                                                    <div class="col-md-4">
-                                                        <div class="form-group">
-                                                            <label class="form-label">Spesifikasi</label>
-                                                            <textarea class="form-control @error('spesifikasi.0') is-invalid @enderror"
-                                                                name="spesifikasi[]" rows="2" placeholder="Spesifikasi">{{ old('spesifikasi.0') }}</textarea>
-                                                            @error('spesifikasi.0')
-                                                                <div class="invalid-feedback">{{ $message }}</div>
-                                                            @enderror
+
+                                                    <div class="form-section mb-3 mt-3">
+                                                        <h6 class="text-primary mb-2">Kondisi Fisik</h6>
+                                                        <div class="row">
+                                                            <div class="col-md-4">
+                                                                <div class="mb-3">
+                                                                    <label class="form-label"><strong>Penampakan</strong></label>
+                                                                    <div class="form-check">
+                                                                        <input class="form-check-input" type="radio" name="penampakan_master_0" value="1" {{ old('penampakan.0') == '1' ? 'checked' : '' }}>
+                                                                        <label class="form-check-label">Ya ✓</label>
+                                                                    </div>
+                                                                    <div class="form-check">
+                                                                        <input class="form-check-input" type="radio" name="penampakan_master_0" value="0" {{ old('penampakan.0') == '0' ? 'checked' : '' }}>
+                                                                        <label class="form-check-label">Tidak ✗</label>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-md-4">
+                                                                <div class="mb-3">
+                                                                    <label class="form-label"><strong>Sealing</strong></label>
+                                                                    <div class="form-check">
+                                                                        <input class="form-check-input" type="radio" name="sealing_master_0" value="1" {{ old('sealing.0') == '1' ? 'checked' : '' }}>
+                                                                        <label class="form-check-label">Ya ✓</label>
+                                                                    </div>
+                                                                    <div class="form-check">
+                                                                        <input class="form-check-input" type="radio" name="sealing_master_0" value="0" {{ old('sealing.0') == '0' ? 'checked' : '' }}>
+                                                                        <label class="form-check-label">Tidak ✗</label>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-md-4">
+                                                                <div class="mb-3">
+                                                                    <label class="form-label"><strong>Cetakan</strong></label>
+                                                                    <div class="form-check">
+                                                                        <input class="form-check-input" type="radio" name="cetakan_master_0" value="1" {{ old('cetakan.0') == '1' ? 'checked' : '' }}>
+                                                                        <label class="form-check-label">Ya ✓</label>
+                                                                    </div>
+                                                                    <div class="form-check">
+                                                                        <input class="form-check-input" type="radio" name="cetakan_master_0" value="0" {{ old('cetakan.0') == '0' ? 'checked' : '' }}>
+                                                                        <label class="form-check-label">Tidak ✗</label>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="form-section mb-3">
+                                                        <h6 class="text-primary mb-2">Detail Tambahan</h6>
+                                                        <div class="row">
+                                                            <div class="col-md-4">
+                                                                <div class="form-group">
+                                                                    <label class="form-label">Ketebalan (Micron)</label>
+                                                                    <input type="number" step="0.01" class="form-control @error('ketebalan_micron.0') is-invalid @enderror" name="ketebalan_micron[]" value="{{ old('ketebalan_micron.0') }}" placeholder="Ketebalan">
+                                                                    @error('ketebalan_micron.0')
+                                                                        <div class="invalid-feedback">{{ $message }}</div>
+                                                                    @enderror
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-md-4">
+                                                                <div class="form-group">
+                                                                    <label class="form-label">Dimensi</label>
+                                                                    <input type="text" class="form-control @error('dimensi.0') is-invalid @enderror" name="dimensi[]" value="{{ old('dimensi.0') }}" placeholder="Dimensi">
+                                                                    @error('dimensi.0')
+                                                                        <div class="invalid-feedback">{{ $message }}</div>
+                                                                    @enderror
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-md-4">
+                                                                <div class="form-group">
+                                                                    <label class="form-label">Status</label>
+                                                                    <select class="form-control @error('status.0') is-invalid @enderror" name="status[]">
+                                                                        <option value="">Pilih Status</option>
+                                                                        <option value="Hold" {{ old('status.0') == 'Hold' ? 'selected' : '' }}>Hold</option>
+                                                                        <option value="Release" {{ old('status.0') == 'Release' ? 'selected' : '' }}>Release</option>
+                                                                    </select>
+                                                                    @error('status.0')
+                                                                        <div class="invalid-feedback">{{ $message }}</div>
+                                                                    @enderror
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-md-12">
+                                                                <div class="form-group">
+                                                                    <label class="form-label">Keterangan</label>
+                                                                    <textarea class="form-control @error('keterangan.0') is-invalid @enderror" name="keterangan[]" rows="2" placeholder="Keterangan tambahan">{{ old('keterangan.0') }}</textarea>
+                                                                    @error('keterangan.0')
+                                                                        <div class="invalid-feedback">{{ $message }}</div>
+                                                                    @enderror
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="form-section mb-3">
+                                                        <h6 class="text-primary mb-2">Upload Gambar</h6>
+                                                        <div class="row">
+                                                            <div class="col-md-6">
+                                                                <div class="form-group">
+                                                                    <label class="form-label">Gambar Kemasan (Max 1MB)</label>
+                                                                    <input type="file" name="image_kemasan[]" class="form-control image-kemasan-input" accept="image/*" capture="camera">
+                                                                    @error('image_kemasan.0')
+                                                                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                                                                    @enderror
+                                                                </div>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>
                                             </div>
 
-                                            <!-- Kondisi Fisik -->
-                                            <div class="form-section mb-3">
-                                                <h6 class="text-primary mb-2">Kondisi Fisik</h6>
-                                                <div class="row">
-                                                    <div class="col-md-4">
-                                                        <div class="mb-3">
-                                                            <label class="form-label"><strong>Penampakan</strong></label>
-                                                            <div class="form-check">
-                                                                <input class="form-check-input" type="radio" name="penampakan[]" value="1" {{ old('penampakan.0') == '1' ? 'checked' : '' }}>
-                                                                <label class="form-check-label">Ya ✓</label>
-                                                            </div>
-                                                            <div class="form-check">
-                                                                <input class="form-check-input" type="radio" name="penampakan[]" value="0" {{ old('penampakan.0') == '0' ? 'checked' : '' }}>
-                                                                <label class="form-check-label">Tidak ✗</label>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-md-4">
-                                                        <div class="mb-3">
-                                                            <label class="form-label"><strong>Sealing</strong></label>
-                                                            <div class="form-check">
-                                                                <input class="form-check-input" type="radio" name="sealing[]" value="1" {{ old('sealing.0') == '1' ? 'checked' : '' }}>
-                                                                <label class="form-check-label">Ya ✓</label>
-                                                            </div>
-                                                            <div class="form-check">
-                                                                <input class="form-check-input" type="radio" name="sealing[]" value="0" {{ old('sealing.0') == '0' ? 'checked' : '' }}>
-                                                                <label class="form-check-label">Tidak ✗</label>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-md-4">
-                                                        <div class="mb-3">
-                                                            <label class="form-label"><strong>Cetakan</strong></label>
-                                                            <div class="form-check">
-                                                                <input class="form-check-input" type="radio" name="cetakan[]" value="1" {{ old('cetakan.0') == '1' ? 'checked' : '' }}>
-                                                                <label class="form-check-label">Ya ✓</label>
-                                                            </div>
-                                                            <div class="form-check">
-                                                                <input class="form-check-input" type="radio" name="cetakan[]" value="0" {{ old('cetakan.0') == '0' ? 'checked' : '' }}>
-                                                                <label class="form-check-label">Tidak ✗</label>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <!-- Detail Tambahan -->
-                                            <div class="form-section mb-3">
-                                                <h6 class="text-primary mb-2">Detail Tambahan</h6>
-                                                <div class="row">
-                                                    <div class="col-md-4">
-                                                        <div class="form-group">
-                                                            <label class="form-label">Ketebalan (Micron)</label>
-                                                            <input type="number" step="0.01" class="form-control @error('ketebalan_micron.0') is-invalid @enderror"
-                                                                name="ketebalan_micron[]" value="{{ old('ketebalan_micron.0') }}" placeholder="Ketebalan">
-                                                            @error('ketebalan_micron.0')
-                                                                <div class="invalid-feedback">{{ $message }}</div>
-                                                            @enderror
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-md-4">
-                                                        <div class="form-group">
-                                                            <label class="form-label">Dimensi</label>
-                                                            <input type="text" class="form-control @error('dimensi.0') is-invalid @enderror"
-                                                                name="dimensi[]" value="{{ old('dimensi.0') }}" placeholder="Dimensi">
-                                                            @error('dimensi.0')
-                                                                <div class="invalid-feedback">{{ $message }}</div>
-                                                            @enderror
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-md-4">
-                                                        <div class="form-group">
-                                                            <label class="form-label">Status</label>
-                                                            <select class="form-control @error('status.0') is-invalid @enderror" name="status[]">
-                                                                <option value="">Pilih Status</option>
-                                                                <option value="Hold" {{ old('status.0') == 'Hold' ? 'selected' : '' }}>Hold</option>
-                                                                <option value="Release" {{ old('status.0') == 'Release' ? 'selected' : '' }}>Release</option>
-                                                            </select>
-                                                            @error('status.0')
-                                                                <div class="invalid-feedback">{{ $message }}</div>
-                                                            @enderror
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <!-- Dokumen -->
                                             <div class="form-section mb-3">
                                                 <h6 class="text-primary mb-2">Dokumen</h6>
+                                                <input type="hidden" class="doc-master-logo" value="{{ old('logo_halal.0') }}">
+                                                <input type="hidden" class="doc-master-dokumen" value="{{ old('dokumen_halal.0') }}">
+                                                <input type="hidden" class="doc-master-coa" value="{{ old('coa.0') }}">
                                                 <div class="row">
                                                     <div class="col-md-4">
                                                         <div class="mb-3">
                                                             <label class="form-label"><strong>Logo Halal</strong></label>
                                                             <div class="form-check">
-                                                                <input class="form-check-input" type="radio" name="logo_halal[]" value="1" {{ old('logo_halal.0') == '1' ? 'checked' : '' }}>
+                                                                <input class="form-check-input" type="radio" name="logo_halal_master_1" value="1" {{ old('logo_halal.0') == '1' ? 'checked' : '' }}>
                                                                 <label class="form-check-label">Ya ✓</label>
                                                             </div>
                                                             <div class="form-check">
-                                                                <input class="form-check-input" type="radio" name="logo_halal[]" value="0" {{ old('logo_halal.0') == '0' ? 'checked' : '' }}>
+                                                                <input class="form-check-input" type="radio" name="logo_halal_master_1" value="0" {{ old('logo_halal.0') == '0' ? 'checked' : '' }}>
                                                                 <label class="form-check-label">Tidak ✗</label>
                                                             </div>
                                                         </div>
@@ -622,11 +661,11 @@
                                                         <div class="mb-3">
                                                             <label class="form-label"><strong>Dokumen Halal</strong></label>
                                                             <div class="form-check">
-                                                                <input class="form-check-input" type="radio" name="dokumen_halal[]" value="1" {{ old('dokumen_halal.0') == '1' ? 'checked' : '' }}>
+                                                                <input class="form-check-input" type="radio" name="dokumen_halal_master_1" value="1" {{ old('dokumen_halal.0') == '1' ? 'checked' : '' }}>
                                                                 <label class="form-check-label">Ya ✓</label>
                                                             </div>
                                                             <div class="form-check">
-                                                                <input class="form-check-input" type="radio" name="dokumen_halal[]" value="0" {{ old('dokumen_halal.0') == '0' ? 'checked' : '' }}>
+                                                                <input class="form-check-input" type="radio" name="dokumen_halal_master_1" value="0" {{ old('dokumen_halal.0') == '0' ? 'checked' : '' }}>
                                                                 <label class="form-check-label">Tidak ✗</label>
                                                             </div>
                                                         </div>
@@ -635,41 +674,19 @@
                                                         <div class="mb-3">
                                                             <label class="form-label"><strong>COA</strong></label>
                                                             <div class="form-check">
-                                                                <input class="form-check-input" type="radio" name="coa[]" value="1" {{ old('coa.0') == '1' ? 'checked' : '' }}>
+                                                                <input class="form-check-input" type="radio" name="coa_master_1" value="1" {{ old('coa.0') == '1' ? 'checked' : '' }}>
                                                                 <label class="form-check-label">Ya ✓</label>
                                                             </div>
                                                             <div class="form-check">
-                                                                <input class="form-check-input" type="radio" name="coa[]" value="0" {{ old('coa.0') == '0' ? 'checked' : '' }}>
+                                                                <input class="form-check-input" type="radio" name="coa_master_1" value="0" {{ old('coa.0') == '0' ? 'checked' : '' }}>
                                                                 <label class="form-check-label">Tidak ✗</label>
                                                             </div>
                                                         </div>
                                                     </div>
                                                 </div>
-                                                <div class="row">
+                                                <div class="row mt-2">
                                                     <div class="col-md-12">
-                                                        <div class="form-group">
-                                                            <label class="form-label">Keterangan</label>
-                                                            <textarea class="form-control @error('keterangan.0') is-invalid @enderror"
-                                                                name="keterangan[]" rows="2" placeholder="Keterangan tambahan">{{ old('keterangan.0') }}</textarea>
-                                                            @error('keterangan.0')
-                                                                <div class="invalid-feedback">{{ $message }}</div>
-                                                            @enderror
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <div class="form-section mb-3">
-                                                <h6 class="text-primary mb-2">Upload Gambar</h6>
-                                                <div class="row">
-                                                    <div class="col-md-6">
-                                                        <div class="form-group">
-                                                            <label class="form-label">Gambar Kemasan (Max 1MB)</label>
-                                                            <input type="file" name="image_kemasan[]" class="form-control image-kemasan-input" accept="image/*" capture="camera">
-                                                            @error('image_kemasan.0')
-                                                                <div class="invalid-feedback d-block">{{ $message }}</div>
-                                                            @enderror
-                                                        </div>
+                                                        <button type="button" class="btn btn-primary btn-sm add-detail-btn"><i class="bi bi-plus"></i> Tambah Detail</button>
                                                     </div>
                                                 </div>
                                             </div>
@@ -677,7 +694,7 @@
                                             <!-- Unified Buttons -->
                                             <div class="row mt-3 pt-3 border-top">
                                                 <div class="col-md-12">
-                                                    <button type="button" class="btn btn-danger btn-sm remove-unified-btn" style="display: none;"><i class="bi bi-trash"></i> Hapus Baris</button>
+                                                    <button type="button" class="btn btn-danger btn-sm remove-unified-btn" style="display: none;"><i class="bi bi-trash"></i> Hapus Produk</button>
                                                 </div>
                                             </div>
                                         </div>
@@ -685,7 +702,7 @@
 
                                     <div class="row mt-3 pt-3 border-top">
                                         <div class="col-md-12">
-                                            <button type="button" class="btn btn-primary btn-sm add-unified-btn"><i class="bi bi-plus"></i> Tambah Baris</button>
+                                            <button type="button" class="btn btn-success btn-sm add-unified-btn"><i class="bi bi-plus"></i> Tambah Produk</button>
                                         </div>
                                     </div>
                                     <div class="col-md-12 d-flex justify-content-end mt-3">
@@ -698,10 +715,27 @@
                         </div>
                     </div>
                 </div>
+
             </div>
         </section>
     </div>
 </div>
+
+<style>
+    .collapse-toggle-btn {
+        width: auto;
+        display: inline-flex;
+        align-items: center;
+        text-align: left;
+    }
+    .collapse-toggle-btn.full-width {
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+    }
+    .collapse-chevron { transition: transform .2s ease; }
+    .collapse-toggle-btn[aria-expanded="true"] .collapse-chevron { transform: rotate(180deg); }
+</style>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -753,6 +787,233 @@ document.addEventListener('DOMContentLoaded', function() {
     window.produkByKategori = produkByKategori;
     window.produkMeta = produkMeta;
 
+    const bsCollapse = (el) => {
+        try {
+            if (!el || !window.bootstrap || !window.bootstrap.Collapse) return null;
+            return window.bootstrap.Collapse.getOrCreateInstance(el, { toggle: false });
+        } catch (e) {
+            return null;
+        }
+    };
+
+    const uniqueDomId = (prefix) => {
+        let id;
+        do {
+            id = `${prefix}_${Date.now()}_${Math.random().toString(16).slice(2)}`;
+        } while (document.getElementById(id));
+        return id;
+    };
+
+    const ensureProdukCollapsible = (rowEl, rowIdx) => {
+        if (!rowEl) return;
+        if (!rowEl.dataset.produkCollapseId) {
+            rowEl.dataset.produkCollapseId = `produk_c_${Date.now()}_${Math.random().toString(16).slice(2)}`;
+        }
+        const collapseId = rowEl.dataset.produkCollapseId;
+
+        const header = rowEl.firstElementChild;
+        if (!header) return;
+
+        const titleEl = header.querySelector('.bahan-title');
+        if (titleEl && !titleEl.querySelector('button[data-bs-toggle="collapse"]')) {
+            const existingText = (titleEl.textContent || '').trim();
+            titleEl.textContent = '';
+
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'btn btn-primary btn-sm d-flex align-items-center gap-2 collapse-toggle-btn full-width';
+            btn.setAttribute('data-bs-toggle', 'collapse');
+            btn.setAttribute('data-bs-target', `#${collapseId}`);
+            btn.setAttribute('aria-expanded', 'true');
+            btn.setAttribute('aria-controls', collapseId);
+
+            const span = document.createElement('span');
+            span.className = 'mb-0 bahan-title produk-collapse-label text-white';
+            span.textContent = existingText || `Bahan #${rowIdx + 1}`;
+
+            const icon = document.createElement('i');
+            icon.className = 'bi bi-chevron-down collapse-chevron text-white';
+
+            btn.appendChild(span);
+            btn.appendChild(icon);
+            titleEl.appendChild(btn);
+        }
+        const existingBtn = titleEl ? titleEl.querySelector('button[data-bs-toggle="collapse"]') : null;
+        if (existingBtn && !existingBtn.querySelector('.collapse-chevron')) {
+            const icon = document.createElement('i');
+            icon.className = 'bi bi-chevron-down collapse-chevron text-white';
+            existingBtn.appendChild(icon);
+        }
+
+        let body = rowEl.querySelector(`:scope > .produk-collapse.collapse#${collapseId}`);
+        if (!body) {
+            body = document.createElement('div');
+            body.className = 'produk-collapse collapse show';
+            body.id = collapseId;
+
+            const nodesToMove = [];
+            let node = header.nextSibling;
+            while (node) {
+                const next = node.nextSibling;
+                nodesToMove.push(node);
+                node = next;
+            }
+            nodesToMove.forEach((n) => body.appendChild(n));
+            rowEl.appendChild(body);
+        }
+    };
+
+    const ensureDetailCollapsible = (detailEl) => {
+        if (!detailEl) return;
+        let collapseId = detailEl.dataset.detailCollapseId || '';
+
+        // If this element was cloned, it may carry duplicate ids/targets.
+        // Regenerate when the id is missing OR already used elsewhere.
+        const hasDuplicateId = (id) => {
+            if (!id) return true;
+            const el = document.getElementById(id);
+            if (!el) return false;
+            // If the element with this id is not inside this detail, it's a duplicate for this detail.
+            return !detailEl.contains(el);
+        };
+
+        if (hasDuplicateId(collapseId)) {
+            collapseId = uniqueDomId('detail_c');
+            detailEl.dataset.detailCollapseId = collapseId;
+        }
+
+        const header = detailEl.firstElementChild;
+        if (!header) return;
+
+        const titleEl = header.querySelector('.detail-title');
+        if (titleEl && titleEl.tagName.toLowerCase() !== 'button') {
+            const existingText = (titleEl.textContent || '').trim();
+
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'btn btn-primary btn-sm fw-bold d-inline-flex align-items-center gap-2 collapse-toggle-btn detail-title';
+            btn.setAttribute('data-bs-toggle', 'collapse');
+            btn.setAttribute('data-bs-target', `#${collapseId}`);
+            btn.setAttribute('aria-expanded', 'true');
+            btn.setAttribute('aria-controls', collapseId);
+
+            const span = document.createElement('span');
+            span.className = 'detail-collapse-label';
+            span.textContent = existingText || 'Detail';
+
+            const icon = document.createElement('i');
+            icon.className = 'bi bi-chevron-down collapse-chevron text-white';
+
+            btn.appendChild(span);
+            btn.appendChild(icon);
+            titleEl.replaceWith(btn);
+        }
+
+        const existingBtn = header.querySelector('button.detail-title[data-bs-toggle="collapse"]');
+        if (existingBtn && !existingBtn.querySelector('.collapse-chevron')) {
+            const icon = document.createElement('i');
+            icon.className = 'bi bi-chevron-down collapse-chevron text-white';
+            existingBtn.appendChild(icon);
+        }
+
+        let body = detailEl.querySelector(':scope > .detail-collapse.collapse');
+        if (body) {
+            body.id = collapseId;
+        } else {
+            body = document.createElement('div');
+            body.className = 'detail-collapse collapse show';
+            body.id = collapseId;
+
+            const nodesToMove = [];
+            let node = header.nextSibling;
+            while (node) {
+                const next = node.nextSibling;
+                nodesToMove.push(node);
+                node = next;
+            }
+            nodesToMove.forEach((n) => body.appendChild(n));
+            detailEl.appendChild(body);
+        }
+
+        // Ensure button target points to this unique id
+        const btn = detailEl.querySelector(':scope > .d-flex button.detail-title[data-bs-toggle="collapse"], :scope > .d-flex button[data-bs-toggle="collapse"].detail-title');
+        if (btn) {
+            btn.setAttribute('data-bs-target', `#${collapseId}`);
+            btn.setAttribute('aria-controls', collapseId);
+        }
+    };
+
+    const updateProdukLabel = (rowEl, rowIdx) => {
+        if (!rowEl) return;
+        const labelEl = rowEl.querySelector('.produk-collapse-label');
+        if (!labelEl) return;
+
+        const produkSelect = rowEl.querySelector('select.produk-select');
+        const selectedText = produkSelect && produkSelect.selectedOptions && produkSelect.selectedOptions[0]
+            ? String(produkSelect.selectedOptions[0].textContent || '').trim()
+            : '';
+        labelEl.textContent = selectedText || `Bahan #${rowIdx + 1}`;
+    };
+
+    const updateDetailLabel = (detailEl, detailIdxWithinRow) => {
+        if (!detailEl) return;
+        const labelEl = detailEl.querySelector('.detail-collapse-label');
+        if (!labelEl) return;
+
+        const kodeInp = detailEl.querySelector('input[name="kode_produksi[]"]');
+        const kodeVal = kodeInp ? String(kodeInp.value || '').trim() : '';
+        labelEl.textContent = kodeVal || `Detail #${detailIdxWithinRow + 1}`;
+    };
+
+    const collapseAllProdukExcept = (activeRowEl) => {
+        document.querySelectorAll('#unified-container .unified-row').forEach((rowEl) => {
+            const body = rowEl.querySelector(':scope > .produk-collapse.collapse');
+            if (!body) return;
+            const inst = bsCollapse(body);
+            if (inst) {
+                if (rowEl === activeRowEl) inst.show();
+                else inst.hide();
+                return;
+            }
+            if (rowEl === activeRowEl) body.classList.add('show');
+            else body.classList.remove('show');
+        });
+    };
+
+    const collapseOtherDetailsInRow = (rowEl, activeDetailEl) => {
+        if (!rowEl) return;
+        rowEl.querySelectorAll('.detail-item').forEach((detailEl) => {
+            const body = detailEl.querySelector(':scope > .detail-collapse.collapse');
+            if (!body) return;
+            const inst = bsCollapse(body);
+            if (inst) {
+                if (detailEl === activeDetailEl) inst.show();
+                else inst.hide();
+                return;
+            }
+
+            // Fallback if Bootstrap Collapse is not available
+            if (detailEl === activeDetailEl) body.classList.add('show');
+            else body.classList.remove('show');
+        });
+    };
+
+    const initKemasanCollapses = () => {
+        const rows = Array.from(document.querySelectorAll('#unified-container .unified-row'));
+        rows.forEach((rowEl, rowIdx) => {
+            ensureProdukCollapsible(rowEl, rowIdx);
+            updateProdukLabel(rowEl, rowIdx);
+
+            const details = Array.from(rowEl.querySelectorAll('.detail-item'));
+            details.forEach((d, di) => {
+                ensureDetailCollapsible(d);
+                updateDetailLabel(d, di);
+            });
+        });
+    };
+
+    initKemasanCollapses();
+
     // Add unified row
     document.addEventListener('click', function(e) {
         if (e.target.closest('.add-unified-btn')) {
@@ -764,6 +1025,9 @@ document.addEventListener('DOMContentLoaded', function() {
             const timestamp = Date.now();
             const rowIndex = container.querySelectorAll('.unified-row').length;
             newRow.innerHTML = `
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="mb-0 bahan-title">Bahan #${rowIndex + 1}</h5>
+                </div>
                 <!-- Bahan Kemasan -->
                 <div class="form-section mb-3">
                     <h6 class="text-primary mb-2">Bahan Kemasan</h6>
@@ -771,7 +1035,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         <div class="col-md-6">
                             <div class="form-group">
                                 <label class="form-label">Kategori</label>
-                                <select class="choices form-control kategori-produk-select" name="kategori_code[]">
+                                <select class="choices form-control kategori-produk-select" data-role="kategori_code">
                                     <option value="">Pilih Kategori</option>
                                     @foreach(($produkKategoriOptions ?? []) as $kategori)
                                         <option value="{{ $kategori }}">{{ $kategori }}</option>
@@ -782,7 +1046,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         <div class="col-md-6">
                             <div class="form-group">
                                 <label class="form-label">Produk</label>
-                                <select class="choices form-control produk-select" name="id_produk[]">
+                                <select class="choices form-control produk-select" data-role="id_produk">
                                     <option value="">Pilih Produk</option>
                                 </select>
                             </div>
@@ -814,123 +1078,166 @@ document.addEventListener('DOMContentLoaded', function() {
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-4">
-                            <div class="form-group">
-                                <label class="form-label">Kode Produksi</label>
-                                <input type="text" class="form-control" name="kode_produksi[]" placeholder="Kode Produksi">
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-4">
-                            <div class="form-group">
-                                <label class="form-label">Jumlah Datang (Kg/pcs/roll)</label>
-                                <input type="text" class="form-control" name="jumlah_datang[]" placeholder="Jumlah Datang">
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="form-group">
-                                <label class="form-label">Jumlah Sampling (pcs/kg/roll)</label>
-                                <input type="text" class="form-control" name="jumlah_sampling[]" placeholder="Jumlah Sampling">
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="form-group">
-                                <label class="form-label">Spesifikasi</label>
-                                <textarea class="form-control" name="spesifikasi[]" rows="2" placeholder="Spesifikasi"></textarea>
-                            </div>
-                        </div>
                     </div>
                 </div>
 
-                <!-- Kondisi Fisik -->
-                <div class="form-section mb-3">
-                    <h6 class="text-primary mb-2">Kondisi Fisik</h6>
-                    <div class="row">
-                        <div class="col-md-4">
-                            <div class="mb-3">
-                                <label class="form-label"><strong>Penampakan</strong></label>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="penampakan[]" value="1">
-                                    <label class="form-check-label">Ya ✓</label>
+                <div class="detail-items">
+                    <div class="detail-item mb-3 p-3 border rounded" data-detail-index="0" style="background-color: #ffffff;">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="fw-bold detail-title">Detail #1</span>
+                            <button type="button" class="btn btn-danger btn-sm remove-detail-btn" style="display:none;"><i class="bi bi-trash"></i> Hapus Detail</button>
+                        </div>
+                        <input type="hidden" name="kategori_code[]" class="kategori-code-hidden" value="">
+                        <input type="hidden" name="id_produk[]" class="produk-id-hidden" value="">
+                        <div class="produsen-hidden-inputs"></div>
+                        <div class="distributor-hidden-inputs"></div>
+
+                        <input type="hidden" name="penampakan[]" class="penampakan-hidden" value="">
+                        <input type="hidden" name="sealing[]" class="sealing-hidden" value="">
+                        <input type="hidden" name="cetakan[]" class="cetakan-hidden" value="">
+                        <input type="hidden" name="logo_halal[]" class="logo-halal-hidden" value="">
+                        <input type="hidden" name="dokumen_halal[]" class="dokumen-halal-hidden" value="">
+                        <input type="hidden" name="coa[]" class="coa-hidden" value="">
+
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label class="form-label">Kode Produksi</label>
+                                    <input type="text" class="form-control" name="kode_produksi[]" placeholder="Kode Produksi">
                                 </div>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="penampakan[]" value="0">
-                                    <label class="form-check-label">Tidak ✗</label>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label class="form-label">Jumlah Datang (Kg/pcs/roll)</label>
+                                    <input type="text" class="form-control" name="jumlah_datang[]" placeholder="Jumlah Datang">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label class="form-label">Jumlah Sampling (pcs/kg/roll)</label>
+                                    <input type="text" class="form-control" name="jumlah_sampling[]" placeholder="Jumlah Sampling">
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-4">
-                            <div class="mb-3">
-                                <label class="form-label"><strong>Sealing</strong></label>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="sealing[]" value="1">
-                                    <label class="form-check-label">Ya ✓</label>
-                                </div>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="sealing[]" value="0">
-                                    <label class="form-check-label">Tidak ✗</label>
+
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <label class="form-label">Spesifikasi</label>
+                                    <textarea class="form-control" name="spesifikasi[]" rows="2" placeholder="Spesifikasi"></textarea>
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-4">
-                            <div class="mb-3">
-                                <label class="form-label"><strong>Cetakan</strong></label>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="cetakan[]" value="1">
-                                    <label class="form-check-label">Ya ✓</label>
+
+                        <div class="form-section mb-3 mt-3">
+                            <h6 class="text-primary mb-2">Kondisi Fisik</h6>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label class="form-label"><strong>Penampakan</strong></label>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="penampakan_master_0" value="1">
+                                            <label class="form-check-label">Ya ✓</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="penampakan_master_0" value="0">
+                                            <label class="form-check-label">Tidak ✗</label>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="cetakan[]" value="0">
-                                    <label class="form-check-label">Tidak ✗</label>
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label class="form-label"><strong>Sealing</strong></label>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="sealing_master_0" value="1">
+                                            <label class="form-check-label">Ya ✓</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="sealing_master_0" value="0">
+                                            <label class="form-check-label">Tidak ✗</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label class="form-label"><strong>Cetakan</strong></label>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="cetakan_master_0" value="1">
+                                            <label class="form-check-label">Ya ✓</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="cetakan_master_0" value="0">
+                                            <label class="form-check-label">Tidak ✗</label>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
+
+                        <div class="form-section mb-3">
+                            <h6 class="text-primary mb-2">Detail Tambahan</h6>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label class="form-label">Ketebalan (Micron)</label>
+                                        <input type="number" step="0.01" class="form-control" name="ketebalan_micron[]" placeholder="Ketebalan">
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label class="form-label">Dimensi</label>
+                                        <input type="text" class="form-control" name="dimensi[]" placeholder="Dimensi">
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label class="form-label">Status</label>
+                                        <select class="form-control" name="status[]">
+                                            <option value="">Pilih Status</option>
+                                            <option value="Hold">Hold</option>
+                                            <option value="Release">Release</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-12">
+                                    <div class="form-group">
+                                        <label class="form-label">Keterangan</label>
+                                        <textarea class="form-control" name="keterangan[]" rows="2" placeholder="Keterangan tambahan"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-section mb-3">
+                            <h6 class="text-primary mb-2">Upload Gambar</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="form-label">Gambar Kemasan (Max 1MB)</label>
+                                        <input type="file" name="image_kemasan[]" class="form-control image-kemasan-input" accept="image/*" capture="camera">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                     </div>
                 </div>
 
-                <!-- Detail Tambahan -->
-                <div class="form-section mb-3">
-                    <h6 class="text-primary mb-2">Detail Tambahan</h6>
-                    <div class="row">
-                        <div class="col-md-4">
-                            <div class="form-group">
-                                <label class="form-label">Ketebalan (Micron)</label>
-                                <input type="number" step="0.01" class="form-control" name="ketebalan_micron[]" placeholder="Ketebalan">
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="form-group">
-                                <label class="form-label">Dimensi</label>
-                                <input type="text" class="form-control" name="dimensi[]" placeholder="Dimensi">
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="form-group">
-                                <label class="form-label">Status</label>
-                                <select class="form-control" name="status[]">
-                                    <option value="">Pilih Status</option>
-                                    <option value="Hold">Hold</option>
-                                    <option value="Release">Release</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Dokumen -->
                 <div class="form-section mb-3">
                     <h6 class="text-primary mb-2">Dokumen</h6>
+                    <input type="hidden" class="doc-master-logo" value="">
+                    <input type="hidden" class="doc-master-dokumen" value="">
+                    <input type="hidden" class="doc-master-coa" value="">
                     <div class="row">
                         <div class="col-md-4">
                             <div class="mb-3">
                                 <label class="form-label"><strong>Logo Halal</strong></label>
                                 <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="logo_halal[]" value="1">
+                                    <input class="form-check-input" type="radio" name="logo_halal_master_1" value="1">
                                     <label class="form-check-label">Ya ✓</label>
                                 </div>
                                 <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="logo_halal[]" value="0">
+                                    <input class="form-check-input" type="radio" name="logo_halal_master_1" value="0">
                                     <label class="form-check-label">Tidak ✗</label>
                                 </div>
                             </div>
@@ -939,11 +1246,11 @@ document.addEventListener('DOMContentLoaded', function() {
                             <div class="mb-3">
                                 <label class="form-label"><strong>Dokumen Halal</strong></label>
                                 <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="dokumen_halal[]" value="1">
+                                    <input class="form-check-input" type="radio" name="dokumen_halal_master_1" value="1">
                                     <label class="form-check-label">Ya ✓</label>
                                 </div>
                                 <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="dokumen_halal[]" value="0">
+                                    <input class="form-check-input" type="radio" name="dokumen_halal_master_1" value="0">
                                     <label class="form-check-label">Tidak ✗</label>
                                 </div>
                             </div>
@@ -952,47 +1259,36 @@ document.addEventListener('DOMContentLoaded', function() {
                             <div class="mb-3">
                                 <label class="form-label"><strong>COA</strong></label>
                                 <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="coa[]" value="1">
+                                    <input class="form-check-input" type="radio" name="coa_master_1" value="1">
                                     <label class="form-check-label">Ya ✓</label>
                                 </div>
                                 <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="coa[]" value="0">
+                                    <input class="form-check-input" type="radio" name="coa_master_1" value="0">
                                     <label class="form-check-label">Tidak ✗</label>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <div class="row">
-                        <div class="col-md-12">
-                            <div class="form-group">
-                                <label class="form-label">Keterangan</label>
-                                <textarea class="form-control" name="keterangan[]" rows="2" placeholder="Keterangan tambahan"></textarea>
-                            </div>
-                        </div>
-                    </div>
                 </div>
 
-                <div class="form-section mb-3">
-                    <h6 class="text-primary mb-2">Upload Gambar</h6>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label class="form-label">Gambar Kemasan (Max 1MB)</label>
-                                <input type="file" name="image_kemasan[]" class="form-control image-kemasan-input" accept="image/*" capture="camera">
-                            </div>
-                        </div>
+                <div class="row mt-2">
+                    <div class="col-md-12">
+                        <button type="button" class="btn btn-primary btn-sm add-detail-btn"><i class="bi bi-plus"></i> Tambah Detail</button>
                     </div>
                 </div>
 
                 <!-- Unified Buttons -->
                 <div class="row mt-3 pt-3 border-top">
                     <div class="col-md-12">
-                        <button type="button" class="btn btn-danger btn-sm remove-unified-btn"><i class="bi bi-trash"></i> Hapus Baris</button>
+                        <button type="button" class="btn btn-danger btn-sm remove-unified-btn"><i class="bi bi-trash"></i> Hapus Produk</button>
                     </div>
                 </div>
             `;
             container.appendChild(newRow);
             newRow.dataset.rowIndex = String(rowIndex);
+
+            initKemasanCollapses();
+            collapseAllProdukExcept(newRow);
             
             // Initialize Choices.js for new selects ONLY in the new row
             const newSelects = newRow.querySelectorAll('select.choices');
@@ -1057,6 +1353,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const produkSelect = rowEl.querySelector('select.produk-select');
 
         if (!kategoriSelect || !produkSelect) return;
+
+        syncHeaderToDetails(rowEl);
 
         const kategori = kategoriSelect.value;
         const rawOptions = (produkByKategori && produkByKategori[kategori]) ? produkByKategori[kategori] : [];
@@ -1179,12 +1477,12 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         };
 
-        const renderHiddenInputs = (containerEl, namePrefix, values) => {
+        const renderHiddenInputs = (containerEl, className, values) => {
             containerEl.innerHTML = '';
             (values || []).forEach((v) => {
                 const input = document.createElement('input');
                 input.type = 'hidden';
-                input.name = `${namePrefix}[${rowIndex}][]`;
+                input.className = className;
                 input.value = String(v);
                 containerEl.appendChild(input);
             });
@@ -1192,8 +1490,210 @@ document.addEventListener('DOMContentLoaded', function() {
 
         renderBadges(produsenBadges, prodVals, 'badge bg-light-primary text-primary');
         renderBadges(distributorBadges, distVals, 'badge bg-light-info text-info');
-        renderHiddenInputs(produsenHidden, 'produsen', prodVals);
-        renderHiddenInputs(distributorHidden, 'distributor', distVals);
+        renderHiddenInputs(produsenHidden, 'produsen-hidden-item', prodVals);
+        renderHiddenInputs(distributorHidden, 'distributor-hidden-item', distVals);
+
+        syncHeaderToDetails(rowEl);
+    }
+
+    function syncHeaderToDetails(rowEl) {
+        const kategoriSelect = rowEl.querySelector('select.kategori-produk-select');
+        const produkSelect = rowEl.querySelector('select.produk-select');
+        const produsenTemplate = rowEl.querySelectorAll('.produsen-hidden-inputs .produsen-hidden-item');
+        const distributorTemplate = rowEl.querySelectorAll('.distributor-hidden-inputs .distributor-hidden-item');
+
+        const kategoriVal = kategoriSelect ? String(kategoriSelect.value || '') : '';
+        const produkVal = produkSelect ? String(produkSelect.value || '') : '';
+
+        rowEl.querySelectorAll('.detail-item').forEach((detailEl) => {
+            const kategoriHidden = detailEl.querySelector('input.kategori-code-hidden');
+            const produkHidden = detailEl.querySelector('input.produk-id-hidden');
+            if (kategoriHidden) kategoriHidden.value = kategoriVal;
+            if (produkHidden) produkHidden.value = produkVal;
+
+            const prodWrap = detailEl.querySelector('.produsen-hidden-inputs');
+            const distWrap = detailEl.querySelector('.distributor-hidden-inputs');
+
+            if (prodWrap) {
+                prodWrap.innerHTML = '';
+                produsenTemplate.forEach((t) => {
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.value = String(t.value || '');
+                    prodWrap.appendChild(input);
+                });
+            }
+
+            if (distWrap) {
+                distWrap.innerHTML = '';
+                distributorTemplate.forEach((t) => {
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.value = String(t.value || '');
+                    distWrap.appendChild(input);
+                });
+            }
+        });
+
+        updateDetailIndices();
+    }
+
+    function updateDetailIndices() {
+        const allDetails = Array.from(document.querySelectorAll('#unified-container .detail-item'));
+        allDetails.forEach((detailEl, idx) => {
+            detailEl.dataset.detailIndex = String(idx);
+
+            const setArrayName = (el, base) => {
+                if (!el) return;
+                el.name = `${base}[]`;
+            };
+
+            setArrayName(detailEl.querySelector('input[name^="kode_produksi"], input[name="kode_produksi[]"]'), 'kode_produksi');
+            setArrayName(detailEl.querySelector('input[name^="jumlah_datang"], input[name="jumlah_datang[]"]'), 'jumlah_datang');
+            setArrayName(detailEl.querySelector('input[name^="jumlah_sampling"], input[name="jumlah_sampling[]"]'), 'jumlah_sampling');
+            setArrayName(detailEl.querySelector('textarea[name^="spesifikasi"], textarea[name="spesifikasi[]"]'), 'spesifikasi');
+            setArrayName(detailEl.querySelector('input[name^="ketebalan_micron"], input[name="ketebalan_micron[]"]'), 'ketebalan_micron');
+            setArrayName(detailEl.querySelector('input[name^="dimensi"], input[name="dimensi[]"]'), 'dimensi');
+            setArrayName(detailEl.querySelector('select[name^="status"], select[name="status[]"]'), 'status');
+            setArrayName(detailEl.querySelector('textarea[name^="keterangan"], textarea[name="keterangan[]"]'), 'keterangan');
+            setArrayName(detailEl.querySelector('input[type="file"][name^="image_kemasan"], input[type="file"][name="image_kemasan[]"]'), 'image_kemasan');
+
+            const masterRadioGroups = ['penampakan', 'sealing', 'cetakan', 'logo_halal', 'dokumen_halal', 'coa'];
+            masterRadioGroups.forEach((g) => {
+                detailEl.querySelectorAll(`input[type="radio"][name^="${g}_master_"]`).forEach((r) => {
+                    r.name = `${g}_master_${idx}`;
+                });
+            });
+
+            const prodWrap = detailEl.querySelector('.produsen-hidden-inputs');
+            const distWrap = detailEl.querySelector('.distributor-hidden-inputs');
+            if (prodWrap) {
+                prodWrap.querySelectorAll('input[type="hidden"]').forEach((inp) => {
+                    inp.name = `produsen[${idx}][]`;
+                });
+            }
+            if (distWrap) {
+                distWrap.querySelectorAll('input[type="hidden"]').forEach((inp) => {
+                    inp.name = `distributor[${idx}][]`;
+                });
+            }
+        });
+
+        updateSectionLabels();
+
+        document.querySelectorAll('#unified-container .unified-row').forEach((rowEl) => {
+            const details = rowEl.querySelectorAll('.detail-item');
+            details.forEach((d) => {
+                const rm = d.querySelector('.remove-detail-btn');
+                if (rm) {
+                    rm.style.display = details.length > 1 ? '' : 'none';
+                }
+            });
+        });
+    }
+
+    document.addEventListener('click', function(e) {
+        const addBtn = e.target.closest('.add-detail-btn');
+        if (addBtn) {
+            const rowEl = addBtn.closest('.unified-row');
+            if (!rowEl) return;
+            const container = rowEl.querySelector('.detail-items');
+            const first = container ? container.querySelector('.detail-item') : null;
+            if (!container || !first) return;
+
+            const clone = first.cloneNode(true);
+            clone.querySelectorAll('input, textarea').forEach((el) => {
+                if (el.type === 'radio' || el.type === 'checkbox') {
+                    el.checked = false;
+                } else if (el.type === 'file') {
+                    el.value = '';
+                } else {
+                    el.value = '';
+                }
+            });
+            clone.querySelectorAll('select').forEach((el) => {
+                el.value = '';
+            });
+            clone.querySelectorAll('.produsen-hidden-inputs, .distributor-hidden-inputs').forEach((wrap) => {
+                wrap.innerHTML = '';
+            });
+
+            clone.querySelectorAll('input.penampakan-hidden, input.sealing-hidden, input.cetakan-hidden, input.logo-halal-hidden, input.dokumen-halal-hidden, input.coa-hidden').forEach((h) => {
+                h.value = '';
+            });
+
+            container.appendChild(clone);
+            updateSectionLabels();
+
+            ensureDetailCollapsible(clone);
+            collapseOtherDetailsInRow(rowEl, clone);
+            return;
+        }
+
+        const rmBtn = e.target.closest('.remove-detail-btn');
+        if (rmBtn) {
+            const rowEl = rmBtn.closest('.unified-row');
+            const detailEl = rmBtn.closest('.detail-item');
+            if (!rowEl || !detailEl) return;
+            const details = rowEl.querySelectorAll('.detail-item');
+            if (details.length <= 1) return;
+            detailEl.remove();
+            syncHeaderToDetails(rowEl);
+            syncDokumenToDetails(rowEl);
+            updateDetailIndices();
+        }
+    });
+
+    function updateSectionLabels() {
+        const rows = Array.from(document.querySelectorAll('#unified-container .unified-row'));
+        rows.forEach((rowEl, rowIdx) => {
+            const produkLabel = rowEl.querySelector('.produk-collapse-label');
+            if (produkLabel) {
+                updateProdukLabel(rowEl, rowIdx);
+            } else {
+                const title = rowEl.querySelector('.bahan-title');
+                if (title) {
+                    title.textContent = `Bahan #${rowIdx + 1}`;
+                }
+            }
+
+            const details = Array.from(rowEl.querySelectorAll('.detail-item'));
+            details.forEach((detailEl, detailIdx) => {
+                const detailLabel = detailEl.querySelector('.detail-collapse-label');
+                if (detailLabel) {
+                    updateDetailLabel(detailEl, detailIdx);
+                } else {
+                    const detailTitle = detailEl.querySelector('.detail-title');
+                    if (detailTitle) {
+                        detailTitle.textContent = `Detail #${detailIdx + 1}`;
+                    }
+                }
+            });
+        });
+
+        // Update master dokumen radio names per row to avoid cross-row interference
+        rows.forEach((rowEl, rowIdx) => {
+            const rowNum = rowIdx + 1;
+            rowEl.querySelectorAll('input[type="radio"][name^="logo_halal_master_"]').forEach((el) => { el.name = `logo_halal_master_${rowNum}`; });
+            rowEl.querySelectorAll('input[type="radio"][name^="dokumen_halal_master_"]').forEach((el) => { el.name = `dokumen_halal_master_${rowNum}`; });
+            rowEl.querySelectorAll('input[type="radio"][name^="coa_master_"]').forEach((el) => { el.name = `coa_master_${rowNum}`; });
+        });
+    }
+
+    function syncDokumenToDetails(rowEl) {
+        if (!rowEl) return;
+        const logo = rowEl.querySelector('input.doc-master-logo')?.value ?? '';
+        const dok = rowEl.querySelector('input.doc-master-dokumen')?.value ?? '';
+        const coa = rowEl.querySelector('input.doc-master-coa')?.value ?? '';
+
+        rowEl.querySelectorAll('.detail-item').forEach((detailEl) => {
+            const l = detailEl.querySelector('input.logo-halal-hidden');
+            const d = detailEl.querySelector('input.dokumen-halal-hidden');
+            const c = detailEl.querySelector('input.coa-hidden');
+            if (l) l.value = String(logo);
+            if (d) d.value = String(dok);
+            if (c) c.value = String(coa);
+        });
     }
 
     document.addEventListener('change', function(e) {
@@ -1209,7 +1709,88 @@ document.addEventListener('DOMContentLoaded', function() {
             const row = target.closest('.unified-row');
             if (row) {
                 applyProdukMetaForRow(row);
+                const idx = Array.from(document.querySelectorAll('#unified-container .unified-row')).indexOf(row);
+                updateProdukLabel(row, idx >= 0 ? idx : 0);
             }
+        }
+
+        if (target && target.matches('input[type="radio"][name^="logo_halal_master_"]')) {
+            const rowEl = target.closest('.unified-row');
+            if (rowEl) {
+                const master = rowEl.querySelector('input.doc-master-logo');
+                if (master) master.value = String(target.value);
+                syncDokumenToDetails(rowEl);
+            }
+        }
+        if (target && target.matches('input[type="radio"][name^="dokumen_halal_master_"]')) {
+            const rowEl = target.closest('.unified-row');
+            if (rowEl) {
+                const master = rowEl.querySelector('input.doc-master-dokumen');
+                if (master) master.value = String(target.value);
+                syncDokumenToDetails(rowEl);
+            }
+        }
+        if (target && target.matches('input[type="radio"][name^="coa_master_"]')) {
+            const rowEl = target.closest('.unified-row');
+            if (rowEl) {
+                const master = rowEl.querySelector('input.doc-master-coa');
+                if (master) master.value = String(target.value);
+                syncDokumenToDetails(rowEl);
+            }
+        }
+
+        if (target && target.matches('input[type="radio"][name^="penampakan_master_"]')) {
+            const detail = target.closest('.detail-item');
+            if (detail) {
+                const hidden = detail.querySelector('input.penampakan-hidden');
+                if (hidden) hidden.value = String(target.value);
+            }
+        }
+        if (target && target.matches('input[type="radio"][name^="sealing_master_"]')) {
+            const detail = target.closest('.detail-item');
+            if (detail) {
+                const hidden = detail.querySelector('input.sealing-hidden');
+                if (hidden) hidden.value = String(target.value);
+            }
+        }
+        if (target && target.matches('input[type="radio"][name^="cetakan_master_"]')) {
+            const detail = target.closest('.detail-item');
+            if (detail) {
+                const hidden = detail.querySelector('input.cetakan-hidden');
+                if (hidden) hidden.value = String(target.value);
+            }
+        }
+        if (target && target.matches('input[type="radio"][name^="logo_halal_master_"]')) {
+            const detail = target.closest('.detail-item');
+            if (detail) {
+                const hidden = detail.querySelector('input.logo-halal-hidden');
+                if (hidden) hidden.value = String(target.value);
+            }
+        }
+        if (target && target.matches('input[type="radio"][name^="dokumen_halal_master_"]')) {
+            const detail = target.closest('.detail-item');
+            if (detail) {
+                const hidden = detail.querySelector('input.dokumen-halal-hidden');
+                if (hidden) hidden.value = String(target.value);
+            }
+        }
+        if (target && target.matches('input[type="radio"][name^="coa_master_"]')) {
+            const detail = target.closest('.detail-item');
+            if (detail) {
+                const hidden = detail.querySelector('input.coa-hidden');
+                if (hidden) hidden.value = String(target.value);
+            }
+        }
+    });
+
+    document.addEventListener('input', function(e) {
+        const target = e.target;
+        if (target && target.matches('input[name="kode_produksi[]"]')) {
+            const detailEl = target.closest('.detail-item');
+            const rowEl = target.closest('.unified-row');
+            if (!detailEl || !rowEl) return;
+            const idx = Array.from(rowEl.querySelectorAll('.detail-item')).indexOf(detailEl);
+            updateDetailLabel(detailEl, idx >= 0 ? idx : 0);
         }
     });
 
@@ -1250,7 +1831,11 @@ document.addEventListener('DOMContentLoaded', function() {
         } else if (produkSelect && produkSelect.value) {
             applyProdukMetaForRow(row);
         }
+
+        syncDokumenToDetails(row);
     });
+
+    updateDetailIndices();
 
     // Remove unified row
     document.addEventListener('click', function(e) {
@@ -1276,10 +1861,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 removeBtn.style.display = 'none';
             }
         });
+
+        updateSectionLabels();
     }
     
     // Initialize on page load
     updateRemoveButtons();
+    updateSectionLabels();
 
     const MAX_SIZE = 1024 * 1024;
 

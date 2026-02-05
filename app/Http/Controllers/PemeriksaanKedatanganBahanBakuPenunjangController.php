@@ -340,6 +340,8 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
             'keterangan' => 'nullable|array',
             'keterangan.*' => 'nullable|string',
             'file_coa.*' => 'nullable|mimes:pdf|max:5120',
+            'image_bahan_baku' => 'nullable|array',
+            'image_bahan_baku.*' => 'nullable|image|max:1024',
         ]);
 
         // Process kondisi mobil dan fisik dengan logic yang benar
@@ -465,12 +467,26 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
             }
         }
         $data['file_coa_array'] = json_encode(array_values($fileCoaPaths));
+
+        $imagePaths = [];
+        $uploadedImages = (array) $request->file('image_bahan_baku', []);
+        $rowCountImages = max(count($request->input('id_bahan', [])), count($uploadedImages));
+        for ($i = 0; $i < $rowCountImages; $i++) {
+            $uploadedFile = $uploadedImages[$i] ?? null;
+            if ($uploadedFile) {
+                $imagePaths[$i] = $uploadedFile->storePublicly('pemeriksaan-bahan-baku-penunjang/images', 'public');
+            } else {
+                $imagePaths[$i] = null;
+            }
+        }
+        $data['image_bahan_baku_array'] = json_encode(array_values($imagePaths));
         
         // Hapus field-field kondisi_fisik yang dikirim dari form agar tidak conflict
         unset($data['kondisi_fisik_kemasan']);
         unset($data['kondisi_fisik_warna']);
         unset($data['kondisi_fisik_benda_asing']);
         unset($data['kondisi_fisik_aroma']);
+        unset($data['image_bahan_baku']);
 
         // Process array fields dari form dan simpan ke kolom database yang benar
         foreach ($arrayFieldMapping as $formField => $dbColumn) {
@@ -716,6 +732,8 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
             'keterangan' => 'nullable|array',
             'keterangan.*' => 'nullable|string',
             'file_coa.*' => 'nullable|mimes:pdf|max:5120',
+            'image_bahan_baku' => 'nullable|array',
+            'image_bahan_baku.*' => 'nullable|image|max:1024',
         ]);
 
         // Process kondisi mobil dan fisik dengan logic yang benar
@@ -851,12 +869,34 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
             }
         }
         $data['file_coa_array'] = json_encode(array_values($newFileCoa));
+
+        $existingImages = json_decode($pemeriksaanBahanBaku->image_bahan_baku_array ?? '[]', true);
+        if (!is_array($existingImages)) {
+            $existingImages = [];
+        }
+
+        $newImages = [];
+        $uploadedImages = (array) $request->file('image_bahan_baku', []);
+        $rowCountImages = max(
+            count($request->input('id_bahan', [])),
+            count($uploadedImages)
+        );
+        for ($i = 0; $i < $rowCountImages; $i++) {
+            $uploadedFile = $uploadedImages[$i] ?? null;
+            if ($uploadedFile) {
+                $newImages[$i] = $uploadedFile->storePublicly('pemeriksaan-bahan-baku-penunjang/images', 'public');
+            } else {
+                $newImages[$i] = $existingImages[$i] ?? null;
+            }
+        }
+        $data['image_bahan_baku_array'] = json_encode(array_values($newImages));
         
         // Hapus field-field kondisi_fisik yang dikirim dari form agar tidak conflict
         unset($data['kondisi_fisik_kemasan']);
         unset($data['kondisi_fisik_warna']);
         unset($data['kondisi_fisik_benda_asing']);
         unset($data['kondisi_fisik_aroma']);
+        unset($data['image_bahan_baku']);
 
         // Process array fields dari form dan simpan ke kolom database yang benar
         foreach ($arrayFieldMapping as $formField => $dbColumn) {
@@ -1040,6 +1080,7 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
             'dokumen_halal' => 'nullable|in:0,1',
             'coa' => 'nullable|in:0,1',
             'file_coa' => 'nullable|mimes:pdf|max:5120',
+            'image_bahan_baku' => 'nullable|image|max:1024',
         ]);
 
         $appendJsonArray = function (?string $raw, $value): array {
@@ -1102,6 +1143,17 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
             $fileCoaArr[] = null;
         }
 
+        $imageArr = json_decode($pemeriksaanBahanBaku->image_bahan_baku_array ?? '[]', true);
+        if (!is_array($imageArr)) {
+            $imageArr = [];
+        }
+        $uploadedImage = $request->file('image_bahan_baku');
+        if ($uploadedImage) {
+            $imageArr[] = $uploadedImage->storePublicly('pemeriksaan-bahan-baku-penunjang/images', 'public');
+        } else {
+            $imageArr[] = null;
+        }
+
         $statusBarisArr = $appendJsonArray($pemeriksaanBahanBaku->status_baris_array, $request->input('status_baris'));
         $statusOverall = in_array('Hold', $statusBarisArr, true) ? 'Hold' : 'Release';
 
@@ -1128,6 +1180,7 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
             'dokumen_halal_array' => json_encode($dokumenHalalArr),
             'coa_array' => json_encode($coaArr),
             'file_coa_array' => json_encode($fileCoaArr),
+            'image_bahan_baku_array' => json_encode($imageArr),
             'status_baris_array' => json_encode($statusBarisArr),
             'status' => $statusOverall,
         ];

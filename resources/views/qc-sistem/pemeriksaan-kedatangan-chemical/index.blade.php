@@ -201,11 +201,26 @@
                                                             }
                                                         }
                                                     }
+
+                                                    $chemicalPreview = [];
+                                                    if (count($chemicalNames) === 1) {
+                                                        $chemicalPreview = [$chemicalNames[0]];
+                                                    } elseif (count($chemicalNames) === 2) {
+                                                        $chemicalPreview = [$chemicalNames[0], $chemicalNames[1]];
+                                                    } elseif (count($chemicalNames) > 2) {
+                                                        $chemicalPreview = [$chemicalNames[0], $chemicalNames[count($chemicalNames) - 1]];
+                                                    }
                                                 @endphp
-                                                @if(count($chemicalNames) > 0)
-                                                    @foreach($chemicalNames as $name)
-                                                        <span class="badge bg-info">{{ $name }}</span><br>
-                                                    @endforeach
+                                                @if(count($chemicalPreview) > 0)
+                                                    <span class="badge bg-info">{{ $chemicalPreview[0] }}</span>
+                                                    @if(count($chemicalNames) > 2)
+                                                        <br>
+                                                        <span class="text-muted">...</span>
+                                                    @endif
+                                                    @if(count($chemicalPreview) === 2)
+                                                        <br>
+                                                        <span class="badge bg-info">{{ $chemicalPreview[1] }}</span>
+                                                    @endif
                                                 @else
                                                     <span class="text-muted">-</span>
                                                 @endif
@@ -237,10 +252,27 @@
                                                         }
                                                     }
                                                     $kodeProduksiArr = array_values(array_unique($kodeProduksiArr));
+
+                                                    $kodeProduksiPreview = [];
+                                                    if (count($kodeProduksiArr) === 1) {
+                                                        $kodeProduksiPreview = [$kodeProduksiArr[0]];
+                                                    } elseif (count($kodeProduksiArr) === 2) {
+                                                        $kodeProduksiPreview = [$kodeProduksiArr[0], $kodeProduksiArr[1]];
+                                                    } elseif (count($kodeProduksiArr) > 2) {
+                                                        $kodeProduksiPreview = [$kodeProduksiArr[0], $kodeProduksiArr[count($kodeProduksiArr) - 1]];
+                                                    }
                                                 @endphp
 
-                                                @if(count($kodeProduksiArr) > 0)
-                                                    {{ implode(', ', $kodeProduksiArr) }}
+                                                @if(count($kodeProduksiPreview) > 0)
+                                                    {{ $kodeProduksiPreview[0] }}
+                                                    @if(count($kodeProduksiArr) > 2)
+                                                        <br>
+                                                        <span class="text-muted">...</span>
+                                                    @endif
+                                                    @if(count($kodeProduksiPreview) === 2)
+                                                        <br>
+                                                        {{ $kodeProduksiPreview[1] }}
+                                                    @endif
                                                 @else
                                                     -
                                                 @endif

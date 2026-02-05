@@ -11,7 +11,7 @@
         <div class="page-title">
             <div class="row">
                 <div class="col-12 col-md-6 order-md-1 order-last">
-                    <h3>Tambah Baris Pemeriksaan Kemasan</h3>
+                    <h3>Tambah Batch Pemeriksaan Kemasan</h3>
                     <p class="text-subtitle text-muted">Tambahkan baris pemeriksaan pada data yang sudah ada</p>
                 </div>
                 <div class="col-12 col-md-6 order-md-2 order-first">
@@ -19,7 +19,7 @@
                         <ol class="breadcrumb">
                             <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
                             <li class="breadcrumb-item"><a href="{{ route('pemeriksaan-kedatangan-kemasan.index') }}">Pemeriksaan Kedatangan Kemasan</a></li>
-                            <li class="breadcrumb-item active" aria-current="page">Tambah Baris</li>
+                            <li class="breadcrumb-item active" aria-current="page">Tambah Batch</li>
                         </ol>
                     </nav>
                 </div>
@@ -31,7 +31,7 @@
                 <div class="col-md-12 col-12">
                     <div class="card">
                         <div class="card-header">
-                            <h4 class="card-title">Form Tambah Baris</h4>
+                            <h4 class="card-title">Form Tambah Batch</h4>
                         </div>
                         <div class="card-content">
                             <div class="card-body">
@@ -351,7 +351,7 @@
 
                                     <div class="col-md-12 d-flex justify-content-end mt-3">
                                         <a href="{{ route('pemeriksaan-kedatangan-kemasan.index') }}" class="btn btn-light-secondary me-1 mb-1">Kembali</a>
-                                        <button type="submit" class="btn btn-primary me-1 mb-1">Simpan Baris</button>
+                                        <button type="submit" class="btn btn-primary me-1 mb-1">Simpan Batch</button>
                                     </div>
                                 </form>
                             </div>
