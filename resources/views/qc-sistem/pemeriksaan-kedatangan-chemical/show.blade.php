@@ -223,6 +223,22 @@
                                             </div>
                                         </div>
                                     @endif
+
+                                    @php
+                                        $imgPath = $detail['image_chemical'] ?? null;
+                                    @endphp
+                                    @if($imgPath)
+                                        <div class="row mt-3">
+                                            <div class="col-12">
+                                                <h6 class="text-primary small mb-2">Foto Chemical</h6>
+                                                <div class="p-2 bg-white rounded">
+                                                    <a href="{{ asset('storage/' . $imgPath) }}" target="_blank">
+                                                        <img src="{{ asset('storage/' . $imgPath) }}" alt="Foto Chemical" style="max-width: 260px; height: auto; border: 1px solid #ddd; padding: 4px;">
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endif
                                     
                                     @if(isset($detail['keterangan']) && $detail['keterangan'])
                                         <div class="row mt-3">

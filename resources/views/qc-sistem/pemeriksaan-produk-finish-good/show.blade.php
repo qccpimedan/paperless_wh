@@ -132,6 +132,7 @@
                         $coaArr = is_array($pemeriksaanProdukFinishGood->coa_array) ? $pemeriksaanProdukFinishGood->coa_array : [];
                         $statusArr = is_array($pemeriksaanProdukFinishGood->status_array) ? $pemeriksaanProdukFinishGood->status_array : [];
                         $ketArr = is_array($pemeriksaanProdukFinishGood->keterangan_array) ? $pemeriksaanProdukFinishGood->keterangan_array : [];
+                        $imgArr = is_array($pemeriksaanProdukFinishGood->image_finish_good_array) ? $pemeriksaanProdukFinishGood->image_finish_good_array : [];
                         $rowCount = max(count($idProdukArr), count($kategoriArr), count($kodeArr));
 
                         $fmtTemp = function ($v) {
@@ -348,6 +349,20 @@
                                                     <div class="mt-2">
                                                         <strong>Keterangan:</strong>
                                                         <p class="mt-1 p-2 bg-light rounded small mb-0">{{ $keterangan }}</p>
+                                                    </div>
+                                                @endif
+
+                                                @php
+                                                    $imgPath = $imgArr[$it['i'] ?? 0] ?? null;
+                                                @endphp
+                                                @if($imgPath)
+                                                    <div class="mt-3">
+                                                        <strong>Foto Produk:</strong>
+                                                        <div class="p-2 bg-white rounded">
+                                                            <a href="{{ asset('storage/' . $imgPath) }}" target="_blank">
+                                                                <img src="{{ asset('storage/' . $imgPath) }}" alt="Foto Produk" style="max-width: 260px; height: auto; border: 1px solid #ddd; padding: 4px;">
+                                                            </a>
+                                                        </div>
                                                     </div>
                                                 @endif
                                             </div>

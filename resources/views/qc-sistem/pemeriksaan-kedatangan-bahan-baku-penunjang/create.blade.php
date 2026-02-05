@@ -52,7 +52,6 @@
 
                             <form action="{{ route('pemeriksaan-bahan-baku.store') }}" method="POST" enctype="multipart/form-data">
                                 @csrf
-                                
                                 <!-- Informasi Dasar -->
                                 <div class="form-section mb-4">
                                     <h5 class="text-primary mb-3">Informasi Dasar</h5>
@@ -377,7 +376,7 @@
                                     <h5 class="text-primary mb-3">Detail Produk (Baris Dinamis)</h5>
                                     <div id="unified-container">
                                         <div class="unified-row mb-4 p-3 border rounded" style="background-color: #f8f9fa;" data-row-index="0">
-                                            <h6 class="text-primary mb-3">Baris 1</h6>
+                                            <h6 class="text-primary mb-3">Produk 1</h6>
                                             
                                             <!-- Informasi Produk -->
                                             <div class="row">
@@ -422,7 +421,7 @@
                                                                 @forelse ($oldDistributor0 as $d)
                                                                     <span class="badge bg-light-info text-info">{{ $d }}</span>
                                                                 @empty
-                                                                    <span class="text-muted small">-</span>
+                                                                    <span class="text-muted small">Data Ini Kosong Tolong Isi Data Masternya Dahaulu</span>
                                                                 @endforelse
                                                             </div>
                                                             <div class="distributor-hidden-inputs">
@@ -447,7 +446,7 @@
                                                                 @forelse ($oldProdusen0 as $p)
                                                                     <span class="badge bg-light-primary text-primary">{{ $p }}</span>
                                                                 @empty
-                                                                    <span class="text-muted small">-</span>
+                                                                    <span class="text-muted small">Data Ini Kosong Tolong Isi Data Masternya Dahaulu</span>
                                                                 @endforelse
                                                             </div>
                                                             <div class="produsen-hidden-inputs">
@@ -473,45 +472,6 @@
                                                     </div>
                                                 </div>
                                             </div>
-                                            <div class="row">
-                                                <div class="col-md-6">
-                                                    <div class="form-group">
-                                                        <label class="form-label">Kode Produksi</label>
-                                                        <input type="text" class="form-control" name="kode_produksi[]" placeholder="Kode Produksi">
-                                                    </div>
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <div class="form-group">
-                                                        <label class="form-label">Expire Date</label>
-                                                        <input type="date" class="form-control" name="expire_date[]">
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            
-                                            <div class="row">
-                                                <div class="col-md-6">
-                                                    <div class="form-group">
-                                                        <label class="form-label">Jumlah Datang (kg)</label>
-                                                        <input type="text" class="form-control" name="jumlah_datang[]" placeholder="Jumlah Datang">
-                                                    </div>
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <div class="form-group">
-                                                        <label class="form-label">Jumlah Sampling</label>
-                                                        <input type="text" class="form-control" name="jumlah_sampling[]" placeholder="Jumlah Sampling">
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            
-                                            <div class="row">
-                                                <div class="col-md-12">
-                                                    <div class="form-group">
-                                                        <label class="form-label">Spesifikasi</label>
-                                                        <textarea class="form-control" name="spesifikasi[]" rows="2" placeholder="Spesifikasi"></textarea>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            
                                             <!-- SUHU PRODUK -->
                                             <div class="row">
                                                 <div class="col-md-6">
@@ -575,70 +535,178 @@
                                                     </div>
                                                 </div>
                                             </div>
-                                            
-                                            <!-- Kondisi Fisik -->
-                                            <div class="form-section mb-3">
-                                                <h6 class="text-primary mb-2">Kondisi Fisik</h6>
-                                                <div class="row">
-                                                    <div class="col-md-3">
-                                                        <div class="mb-3">
-                                                            <label class="form-label"><strong>Kemasan</strong></label>
-                                                            <div class="form-check">
-                                                                <input class="form-check-input" type="radio" name="kondisi_fisik_kemasan_1" id="kemasan_ya_1" value="1">
-                                                                <label class="form-check-label" for="kemasan_ya_1">Ya ✓</label>
+
+                                            <div class="detail-items">
+                                                <div class="detail-item border rounded p-3 mb-3" style="background: #fff;" data-detail-suffix="1">
+                                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                                        <strong class="detail-title">Detail 1</strong>
+                                                        <button type="button" class="btn btn-danger btn-sm remove-detail-btn" style="display:none;"><i class="bi bi-trash"></i> Hapus Detail</button>
+                                                    </div>
+                                                    <div class="row">
+                                                        <div class="col-md-6">
+                                                            <div class="form-group">
+                                                                <label class="form-label">Kode Produksi</label>
+                                                                <input type="text" class="form-control" name="kode_produksi[]" placeholder="Kode Produksi">
                                                             </div>
-                                                            <div class="form-check">
-                                                                <input class="form-check-input" type="radio" name="kondisi_fisik_kemasan_1" id="kemasan_tidak_1" value="0">
-                                                                <label class="form-check-label" for="kemasan_tidak_1">Tidak ✗</label>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <div class="form-group">
+                                                                <label class="form-label">Expire Date</label>
+                                                                <input type="date" class="form-control" name="expire_date[]">
                                                             </div>
-                                                            <input type="hidden" name="kondisi_fisik_kemasan[]" class="radio-value-kemasan-1">
                                                         </div>
                                                     </div>
-                                                    <div class="col-md-3">
-                                                        <div class="mb-3">
-                                                            <label class="form-label"><strong>Warna</strong></label>
-                                                            <div class="form-check">
-                                                                <input class="form-check-input" type="radio" name="kondisi_fisik_warna_1" id="warna_ya_1" value="1">
-                                                                <label class="form-check-label" for="warna_ya_1">Ya ✓</label>
+                                                    
+                                                    <div class="row">
+                                                        <div class="col-md-6">
+                                                            <div class="form-group">
+                                                                <label class="form-label">Jumlah Datang (kg)</label>
+                                                                <input type="text" class="form-control" name="jumlah_datang[]" placeholder="Jumlah Datang">
                                                             </div>
-                                                            <div class="form-check">
-                                                                <input class="form-check-input" type="radio" name="kondisi_fisik_warna_1" id="warna_tidak_1" value="0">
-                                                                <label class="form-check-label" for="warna_tidak_1">Tidak ✗</label>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <div class="form-group">
+                                                                <label class="form-label">Jumlah Sampling</label>
+                                                                <input type="text" class="form-control" name="jumlah_sampling[]" placeholder="Jumlah Sampling">
                                                             </div>
-                                                            <input type="hidden" name="kondisi_fisik_warna[]" class="radio-value-warna-1">
                                                         </div>
                                                     </div>
-                                                    <div class="col-md-3">
-                                                        <div class="mb-3">
-                                                            <label class="form-label"><strong>Benda Asing</strong></label>
-                                                            <div class="form-check">
-                                                                <input class="form-check-input" type="radio" name="kondisi_fisik_benda_asing_1" id="benda_ya_1" value="1">
-                                                                <label class="form-check-label" for="benda_ya_1">Ya ✓</label>
+                                                    
+                                                    <div class="row">
+                                                        <div class="col-md-12">
+                                                            <div class="form-group">
+                                                                <label class="form-label">Spesifikasi</label>
+                                                                <textarea class="form-control" name="spesifikasi[]" rows="2" placeholder="Spesifikasi"></textarea>
                                                             </div>
-                                                            <div class="form-check">
-                                                                <input class="form-check-input" type="radio" name="kondisi_fisik_benda_asing_1" id="benda_tidak_1" value="0">
-                                                                <label class="form-check-label" for="benda_tidak_1">Tidak ✗</label>
-                                                            </div>
-                                                            <input type="hidden" name="kondisi_fisik_benda_asing[]" class="radio-value-benda-1">
                                                         </div>
                                                     </div>
-                                                    <div class="col-md-3">
-                                                        <div class="mb-3">
-                                                            <label class="form-label"><strong>Aroma</strong></label>
-                                                            <div class="form-check">
-                                                                <input class="form-check-input" type="radio" name="kondisi_fisik_aroma_1" id="aroma_ya_1" value="1">
-                                                                <label class="form-check-label" for="aroma_ya_1">Ya ✓</label>
+                                                    
+                                                    <!-- Kondisi Fisik -->
+                                                    <div class="form-section mb-3">
+                                                        <h6 class="text-primary mb-2">Kondisi Fisik</h6>
+                                                        <div class="row">
+                                                            <div class="col-md-3">
+                                                                <div class="mb-3">
+                                                                    <label class="form-label"><strong>Kemasan</strong></label>
+                                                                    <div class="form-check">
+                                                                        <input class="form-check-input" type="radio" name="kondisi_fisik_kemasan_1" id="kemasan_ya_1" value="1">
+                                                                        <label class="form-check-label" for="kemasan_ya_1">Ya ✓</label>
+                                                                    </div>
+                                                                    <div class="form-check">
+                                                                        <input class="form-check-input" type="radio" name="kondisi_fisik_kemasan_1" id="kemasan_tidak_1" value="0">
+                                                                        <label class="form-check-label" for="kemasan_tidak_1">Tidak ✗</label>
+                                                                    </div>
+                                                                    <input type="hidden" name="kondisi_fisik_kemasan[]" class="radio-value-kemasan-1">
+                                                                </div>
                                                             </div>
-                                                            <div class="form-check">
-                                                                <input class="form-check-input" type="radio" name="kondisi_fisik_aroma_1" id="aroma_tidak_1" value="0">
-                                                                <label class="form-check-label" for="aroma_tidak_1">Tidak ✗</label>
+                                                            <div class="col-md-3">
+                                                                <div class="mb-3">
+                                                                    <label class="form-label"><strong>Warna</strong></label>
+                                                                    <div class="form-check">
+                                                                        <input class="form-check-input" type="radio" name="kondisi_fisik_warna_1" id="warna_ya_1" value="1">
+                                                                        <label class="form-check-label" for="warna_ya_1">Ya ✓</label>
+                                                                    </div>
+                                                                    <div class="form-check">
+                                                                        <input class="form-check-input" type="radio" name="kondisi_fisik_warna_1" id="warna_tidak_1" value="0">
+                                                                        <label class="form-check-label" for="warna_tidak_1">Tidak ✗</label>
+                                                                    </div>
+                                                                    <input type="hidden" name="kondisi_fisik_warna[]" class="radio-value-warna-1">
+                                                                </div>
                                                             </div>
-                                                            <input type="hidden" name="kondisi_fisik_aroma[]" class="radio-value-aroma-1">
+                                                            <div class="col-md-3">
+                                                                <div class="mb-3">
+                                                                    <label class="form-label"><strong>Benda Asing</strong></label>
+                                                                    <div class="form-check">
+                                                                        <input class="form-check-input" type="radio" name="kondisi_fisik_benda_asing_1" id="benda_ya_1" value="1">
+                                                                        <label class="form-check-label" for="benda_ya_1">Ya ✓</label>
+                                                                    </div>
+                                                                    <div class="form-check">
+                                                                        <input class="form-check-input" type="radio" name="kondisi_fisik_benda_asing_1" id="benda_tidak_1" value="0">
+                                                                        <label class="form-check-label" for="benda_tidak_1">Tidak ✗</label>
+                                                                    </div>
+                                                                    <input type="hidden" name="kondisi_fisik_benda_asing[]" class="radio-value-benda-1">
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-md-3">
+                                                                <div class="mb-3">
+                                                                    <label class="form-label"><strong>Aroma</strong></label>
+                                                                    <div class="form-check">
+                                                                        <input class="form-check-input" type="radio" name="kondisi_fisik_aroma_1" id="aroma_ya_1" value="1">
+                                                                        <label class="form-check-label" for="aroma_ya_1">Ya ✓</label>
+                                                                    </div>
+                                                                    <div class="form-check">
+                                                                        <input class="form-check-input" type="radio" name="kondisi_fisik_aroma_1" id="aroma_tidak_1" value="0">
+                                                                        <label class="form-check-label" for="aroma_tidak_1">Tidak ✗</label>
+                                                                    </div>
+                                                                    <input type="hidden" name="kondisi_fisik_aroma[]" class="radio-value-aroma-1">
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="form-section mb-3">
+                                                        <h6 class="text-primary mb-2">Upload COA (PDF)</h6>
+                                                        <div class="row">
+                                                            <div class="col-md-6">
+                                                                <div class="form-group">
+                                                                    <label class="form-label">File COA (PDF)</label>
+                                                                    <input type="file" name="file_coa[]" class="form-control" accept="application/pdf">
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="form-section mb-3">
+                                                        <h6 class="text-primary mb-2">Upload Gambar</h6>
+                                                        <div class="row">
+                                                            <div class="col-md-6">
+                                                                <div class="form-group">
+                                                                    <label class="form-label">Foto Bahan Baku (Max 1MB)</label>
+                                                                    <input type="file" name="image_bahan_baku[]" class="form-control image-bahan-baku-input" accept="image/*" capture="camera">
+                                                                    @error('image_bahan_baku.0')
+                                                                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                                                                    @enderror
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <!-- Hasil Pemeriksaan -->
+                                                    <div class="form-section mb-3">
+                                                        <h6 class="text-primary mb-2">Hasil Pemeriksaan</h6>
+                                                        <div class="row">
+                                                            <div class="col-md-6">
+                                                                <div class="form-group">
+                                                                    <label class="form-label">Hasil Uji FFA</label>
+                                                                    <input type="text" class="form-control" name="hasil_uji_ffa[]" placeholder="Hasil Uji FFA">
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-md-6">
+                                                                <div class="form-group">
+                                                                    <label for="status">Status <span class="text-danger">*</span></label>
+                                                                    <select id="status" class="form-control @error('status_baris') is-invalid @enderror" name="status_baris[]" required>
+                                                                        <option value="">Pilih Status</option>
+                                                                        <option value="Hold">Hold</option>
+                                                                        <option value="Release">Release</option>
+                                                                    </select>
+                                                                    @error('status_baris')
+                                                                        <div class="invalid-feedback">{{ $message }}</div>
+                                                                    @enderror
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="row">
+                                                            <div class="col-md-12">
+                                                                <div class="form-group">
+                                                                    <label class="form-label">Keterangan Hasil</label>
+                                                                    <textarea class="form-control" name="keterangan_hasil[]" rows="2" placeholder="Keterangan hasil pemeriksaan"></textarea>
+                                                                </div>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>
                                             </div>
-                                            
+
                                             <!-- Dokumen -->
                                             <div class="form-section mb-3">
                                                 <h6 class="text-primary mb-2">Dokumen</h6>
@@ -688,56 +756,16 @@
                                                 </div>
                                             </div>
 
-                                            <div class="form-section mb-3">
-                                                <h6 class="text-primary mb-2">Upload COA (PDF)</h6>
-                                                <div class="row">
-                                                    <div class="col-md-6">
-                                                        <div class="form-group">
-                                                            <label class="form-label">File COA (PDF)</label>
-                                                            <input type="file" name="file_coa[]" class="form-control" accept="application/pdf">
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            
-                                            <!-- Hasil Pemeriksaan -->
-                                            <div class="form-section mb-3">
-                                                <h6 class="text-primary mb-2">Hasil Pemeriksaan</h6>
-                                                <div class="row">
-                                                    <div class="col-md-6">
-                                                        <div class="form-group">
-                                                            <label class="form-label">Hasil Uji FFA</label>
-                                                            <input type="text" class="form-control" name="hasil_uji_ffa[]" placeholder="Hasil Uji FFA">
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-md-6">
-                                                        <div class="form-group">
-                                                            <label for="status">Status <span class="text-danger">*</span></label>
-                                                            <select id="status" class="form-control @error('status_baris') is-invalid @enderror" name="status_baris[]" required>
-                                                                <option value="">Pilih Status</option>
-                                                                <option value="Hold">Hold</option>
-                                                                <option value="Release">Release</option>
-                                                            </select>
-                                                            @error('status_baris')
-                                                                <div class="invalid-feedback">{{ $message }}</div>
-                                                            @enderror
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div class="row">
-                                                    <div class="col-md-12">
-                                                        <div class="form-group">
-                                                            <label class="form-label">Keterangan Hasil</label>
-                                                            <textarea class="form-control" name="keterangan_hasil[]" rows="2" placeholder="Keterangan hasil pemeriksaan"></textarea>
-                                                        </div>
-                                                    </div>
+                                            <div class="row mt-2">
+                                                <div class="col-md-12">
+                                                    <button type="button" class="btn btn-primary btn-sm add-detail-btn"><i class="bi bi-plus"></i> Tambah Detail</button>
                                                 </div>
                                             </div>
                                             
                                             <!-- Buttons -->
                                             <div class="row mt-3 pt-3 border-top">
                                                 <div class="col-md-12">
-                                                    <button type="button" class="btn btn-danger btn-sm remove-unified-btn"><i class="bi bi-trash"></i> Hapus Baris</button>
+                                                    <button type="button" class="btn btn-danger btn-sm remove-unified-btn"><i class="bi bi-trash"></i> Hapus Produk</button>
                                                 </div>
                                             </div>
                                         </div>
@@ -745,125 +773,12 @@
 
                                     <div class="row mt-3 pt-3 border-top">
                                         <div class="col-md-12">
-                                            <button type="button" class="btn btn-primary btn-sm add-unified-btn"><i class="bi bi-plus"></i> Tambah Baris</button>
+                                            <button type="button" class="btn btn-success btn-sm add-unified-btn"><i class="bi bi-plus"></i> Tambah Produk</button>
                                         </div>
                                     </div>
                                 </div>
 
-                                <script>
-                                // Setup conditional logic and radio listeners for first row
-                                document.addEventListener('DOMContentLoaded', function() {
-                                    
-                                    // Suhu Produk - Row 1
-                                    const suhuProdukType1 = document.getElementById('suhu_produk_type_1');
-                                    const suhuProdukInput1 = document.getElementById('suhu_produk_input_1');
-                                    
-                                    if (suhuProdukType1 && suhuProdukInput1) {
-                                        suhuProdukType1.addEventListener('change', function() {
-                                            if (this.value === 'Fresh' || this.value === 'Frozen') {
-                                                suhuProdukInput1.style.display = 'block';
-                                            } else {
-                                                suhuProdukInput1.style.display = 'none';
-                                                document.getElementById('suhu_produk_val_1').value = '';
-                                            }
-                                        });
-                                    }
-                                    
-                                    // Kondisi Produk - Row 1
-                                    const kondisiProduk1 = document.getElementById('kondisi_produk_1');
-                                    const kondisiProdukSuhu1 = document.getElementById('kondisi_produk_suhu_1');
-                                    
-                                    if (kondisiProduk1 && kondisiProdukSuhu1) {
-                                        kondisiProduk1.addEventListener('change', function() {
-                                            if (this.value === 'Fresh' || this.value === 'Frozen' || this.value === 'Dry' || this.value === 'Minyak') {
-                                                kondisiProdukSuhu1.style.display = 'block';
-                                            } else {
-                                                kondisiProdukSuhu1.style.display = 'none';
-                                                document.getElementById('kondisi_produk_suhu_val_1').value = '';
-                                            }
-                                        });
-                                    }
-                                    // Suhu Mobil - Row 1
-                                    const suhuMobilType1 = document.getElementById('suhu_mobil_type_1');
-                                    const suhuMobilInput1 = document.getElementById('suhu_mobil_input_1');
-                                    
-                                    if (suhuMobilType1 && suhuMobilInput1) {
-                                        suhuMobilType1.addEventListener('change', function() {
-                                            if (this.value === 'Fresh' || this.value === 'Frozen') {
-                                                suhuMobilInput1.style.display = 'block';
-                                            } else {
-                                                suhuMobilInput1.style.display = 'none';
-                                                document.getElementById('suhu_mobil_val_1').value = '';
-                                            }
-                                        });
-                                    }
-
-                                    
-                                    // Radio listeners for Row 1
-                                    // Kondisi Fisik - Kemasan
-                                    document.querySelectorAll('input[name="kondisi_fisik_kemasan_1"]').forEach(radio => {
-                                        radio.addEventListener('change', function() {
-                                            if (this.checked) {
-                                                document.querySelector('.radio-value-kemasan-1').value = this.value;
-                                            }
-                                        });
-                                    });
-                                    
-                                    // Kondisi Fisik - Warna
-                                    document.querySelectorAll('input[name="kondisi_fisik_warna_1"]').forEach(radio => {
-                                        radio.addEventListener('change', function() {
-                                            if (this.checked) {
-                                                document.querySelector('.radio-value-warna-1').value = this.value;
-                                            }
-                                        });
-                                    });
-                                    
-                                    // Kondisi Fisik - Benda Asing
-                                    document.querySelectorAll('input[name="kondisi_fisik_benda_asing_1"]').forEach(radio => {
-                                        radio.addEventListener('change', function() {
-                                            if (this.checked) {
-                                                document.querySelector('.radio-value-benda-1').value = this.value;
-                                            }
-                                        });
-                                    });
-                                    
-                                    // Kondisi Fisik - Aroma
-                                    document.querySelectorAll('input[name="kondisi_fisik_aroma_1"]').forEach(radio => {
-                                        radio.addEventListener('change', function() {
-                                            if (this.checked) {
-                                                document.querySelector('.radio-value-aroma-1').value = this.value;
-                                            }
-                                        });
-                                    });
-                                    
-                                    // Dokumen - Logo Halal
-                                    document.querySelectorAll('input[name="logo_halal_1"]').forEach(radio => {
-                                        radio.addEventListener('change', function() {
-                                            if (this.checked) {
-                                                document.querySelector('.radio-value-logo-1').value = this.value;
-                                            }
-                                        });
-                                    });
-                                    
-                                    // Dokumen - Dokumen Halal
-                                    document.querySelectorAll('input[name="dokumen_halal_1"]').forEach(radio => {
-                                        radio.addEventListener('change', function() {
-                                            if (this.checked) {
-                                                document.querySelector('.radio-value-dokumen-1').value = this.value;
-                                            }
-                                        });
-                                    });
-                                    
-                                    // Dokumen - COA
-                                    document.querySelectorAll('input[name="coa_1"]').forEach(radio => {
-                                        radio.addEventListener('change', function() {
-                                            if (this.checked) {
-                                                document.querySelector('.radio-value-coa-1').value = this.value;
-                                            }
-                                        });
-                                    });
-                                });
-                                </script>
+                                
                                 
                                 <div class="col-md-12 d-flex justify-content-end mt-3">
                                     <a href="{{ route('pemeriksaan-bahan-baku.index') }}" class="btn btn-light-secondary me-1 mb-1 btn-kembali-confirm">Kembali</a>
@@ -879,12 +794,232 @@
     </header>
 </div>
 
+<style>
+    .collapse-toggle-btn {
+        width: auto;
+        display: inline-flex;
+        align-items: center;
+        text-align: left;
+    }
+    .collapse-chevron { transition: transform .2s ease; }
+    .collapse-toggle-btn[aria-expanded="true"] .collapse-chevron { transform: rotate(180deg); }
+</style>
+
 @push('scripts')
 <script>
 const produkByKategori = @json($produkByKategori ?? []);
 const produkMeta = @json($produkMeta ?? []);
 const oldKategoriCodes = @json(old('kategori_code', []));
 const oldProdukIds = @json(old('id_bahan', []));
+
+const bsCollapse = (el) => {
+    try {
+        if (!el || !window.bootstrap || !window.bootstrap.Collapse) return null;
+        return window.bootstrap.Collapse.getOrCreateInstance(el, { toggle: false });
+    } catch (e) {
+        return null;
+    }
+};
+
+const uniqueDomId = (prefix) => {
+    let id;
+    do {
+        id = `${prefix}_${Date.now()}_${Math.random().toString(16).slice(2)}`;
+    } while (document.getElementById(id));
+    return id;
+};
+
+const ensureProdukCollapsible = (rowEl, rowIdx) => {
+    if (!rowEl) return;
+    if (!rowEl.dataset.produkCollapseId) {
+        rowEl.dataset.produkCollapseId = uniqueDomId('produk_bbp');
+    }
+    const collapseId = rowEl.dataset.produkCollapseId;
+
+    const headerTitle = rowEl.querySelector(':scope > h6');
+    if (!headerTitle) return;
+
+    if (!headerTitle.querySelector('button[data-bs-toggle="collapse"]')) {
+        const existingText = (headerTitle.textContent || '').trim();
+        headerTitle.textContent = '';
+
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'btn btn-primary btn-sm d-inline-flex align-items-center gap-2 collapse-toggle-btn';
+        btn.setAttribute('data-bs-toggle', 'collapse');
+        btn.setAttribute('data-bs-target', `#${collapseId}`);
+        btn.setAttribute('aria-expanded', 'true');
+        btn.setAttribute('aria-controls', collapseId);
+
+        const span = document.createElement('span');
+        span.className = 'mb-0 produk-collapse-label text-white';
+        span.textContent = existingText || `Produk ${rowIdx + 1}`;
+
+        const icon = document.createElement('i');
+        icon.className = 'bi bi-chevron-down collapse-chevron text-white';
+
+        btn.appendChild(span);
+        btn.appendChild(icon);
+        headerTitle.appendChild(btn);
+    }
+
+    let body = rowEl.querySelector(':scope > .produk-collapse.collapse');
+    if (body) {
+        body.id = collapseId;
+    } else {
+        body = document.createElement('div');
+        body.className = 'produk-collapse collapse show';
+        body.id = collapseId;
+
+        const nodesToMove = [];
+        let node = headerTitle.nextSibling;
+        while (node) {
+            const next = node.nextSibling;
+            nodesToMove.push(node);
+            node = next;
+        }
+        nodesToMove.forEach((n) => body.appendChild(n));
+        rowEl.appendChild(body);
+    }
+};
+
+const ensureDetailCollapsible = (detailEl) => {
+    if (!detailEl) return;
+    let collapseId = detailEl.dataset.detailCollapseId || '';
+
+    const hasDuplicateId = (id) => {
+        if (!id) return true;
+        const el = document.getElementById(id);
+        if (!el) return false;
+        return !detailEl.contains(el);
+    };
+
+    if (hasDuplicateId(collapseId)) {
+        collapseId = uniqueDomId('detail_bbp');
+        detailEl.dataset.detailCollapseId = collapseId;
+    }
+
+    const header = detailEl.firstElementChild;
+    if (!header) return;
+
+    const titleEl = header.querySelector('.detail-title');
+    if (titleEl && titleEl.tagName.toLowerCase() !== 'button') {
+        const existingText = (titleEl.textContent || '').trim();
+
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'btn btn-primary btn-sm fw-bold d-inline-flex align-items-center gap-2 collapse-toggle-btn detail-title';
+        btn.setAttribute('data-bs-toggle', 'collapse');
+        btn.setAttribute('data-bs-target', `#${collapseId}`);
+        btn.setAttribute('aria-expanded', 'true');
+        btn.setAttribute('aria-controls', collapseId);
+
+        const span = document.createElement('span');
+        span.className = 'detail-collapse-label';
+        span.textContent = existingText || 'Detail';
+
+        const icon = document.createElement('i');
+        icon.className = 'bi bi-chevron-down collapse-chevron text-white';
+
+        btn.appendChild(span);
+        btn.appendChild(icon);
+        titleEl.replaceWith(btn);
+    }
+
+    const existingBtn = header.querySelector('button.detail-title[data-bs-toggle="collapse"]');
+    if (existingBtn) {
+        existingBtn.setAttribute('data-bs-target', `#${collapseId}`);
+        existingBtn.setAttribute('aria-controls', collapseId);
+        if (!existingBtn.querySelector('.collapse-chevron')) {
+            const icon = document.createElement('i');
+            icon.className = 'bi bi-chevron-down collapse-chevron text-white';
+            existingBtn.appendChild(icon);
+        }
+    }
+
+    let body = detailEl.querySelector(':scope > .detail-collapse.collapse');
+    if (body) {
+        body.id = collapseId;
+    } else {
+        body = document.createElement('div');
+        body.className = 'detail-collapse collapse show';
+        body.id = collapseId;
+
+        const nodesToMove = [];
+        let node = header.nextSibling;
+        while (node) {
+            const next = node.nextSibling;
+            nodesToMove.push(node);
+            node = next;
+        }
+        nodesToMove.forEach((n) => body.appendChild(n));
+        detailEl.appendChild(body);
+    }
+};
+
+const updateProdukLabel = (rowEl, rowIdx) => {
+    if (!rowEl) return;
+    const labelEl = rowEl.querySelector('.produk-collapse-label');
+    if (!labelEl) return;
+    const produkSelect = rowEl.querySelector('select.produk-select');
+    const selectedText = produkSelect && produkSelect.selectedOptions && produkSelect.selectedOptions[0]
+        ? String(produkSelect.selectedOptions[0].textContent || '').trim()
+        : '';
+    labelEl.textContent = selectedText || `Produk ${rowIdx + 1}`;
+};
+
+const updateDetailLabel = (detailEl, idxWithinRow) => {
+    if (!detailEl) return;
+    const labelEl = detailEl.querySelector('.detail-collapse-label');
+    if (!labelEl) return;
+    const kodeInp = detailEl.querySelector('input[name="kode_produksi[]"]');
+    const kodeVal = kodeInp ? String(kodeInp.value || '').trim() : '';
+    labelEl.textContent = kodeVal || `Detail #${idxWithinRow + 1}`;
+};
+
+const collapseAllProdukExcept = (activeRowEl) => {
+    document.querySelectorAll('#unified-container .unified-row').forEach((rowEl) => {
+        const body = rowEl.querySelector(':scope > .produk-collapse.collapse');
+        if (!body) return;
+        const inst = bsCollapse(body);
+        if (inst) {
+            if (rowEl === activeRowEl) inst.show();
+            else inst.hide();
+            return;
+        }
+        if (rowEl === activeRowEl) body.classList.add('show');
+        else body.classList.remove('show');
+    });
+};
+
+const collapseOtherDetailsInRow = (rowEl, activeDetailEl) => {
+    if (!rowEl) return;
+    rowEl.querySelectorAll('.detail-item').forEach((detailEl) => {
+        const body = detailEl.querySelector(':scope > .detail-collapse.collapse');
+        if (!body) return;
+        const inst = bsCollapse(body);
+        if (inst) {
+            if (detailEl === activeDetailEl) inst.show();
+            else inst.hide();
+            return;
+        }
+        if (detailEl === activeDetailEl) body.classList.add('show');
+        else body.classList.remove('show');
+    });
+};
+
+function initBbpCollapses() {
+    const rows = Array.from(document.querySelectorAll('#unified-container .unified-row'));
+    rows.forEach((rowEl, rowIdx) => {
+        ensureProdukCollapsible(rowEl, rowIdx);
+        updateProdukLabel(rowEl, rowIdx);
+        const details = Array.from(rowEl.querySelectorAll('.detail-item'));
+        details.forEach((d, di) => {
+            ensureDetailCollapsible(d);
+            updateDetailLabel(d, di);
+        });
+    });
+}
 
 // Global variable to store select options
 let selectOptionsCache = {
@@ -904,76 +1039,65 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
-    // 1. Suhu Mobil Conditional Logic
-    const suhuMobilTypeEl = document.getElementById('suhu_mobil_type');
-    if (suhuMobilTypeEl) {
-        suhuMobilTypeEl.addEventListener('change', function() {
-            const suhuMobilType = this.value;
-            const inputField = document.getElementById('suhu_mobil_input_field');
-            
-            if (suhuMobilType === 'Fresh' || suhuMobilType === 'Frozen') {
-                inputField.style.display = 'block';
-            } else {
-                inputField.style.display = 'none';
-                document.getElementById('suhu_mobil').value = '';
-            }
-        });
-        
-        // Trigger on load if value exists
-        if (suhuMobilTypeEl.value) {
-            suhuMobilTypeEl.dispatchEvent(new Event('change'));
-        }
-    }
+    // Conditional logic (event delegation) for Suhu Produk / Suhu Mobil / Kondisi Produk
+    document.addEventListener('change', function(e) {
+        const rowEl = e.target.closest('.unified-row');
+        if (!rowEl) return;
 
-    // 2. Suhu Produk Conditional Logic
-    const suhuProdukTypeEl = document.getElementById('suhu_produk_type');
-    if (suhuProdukTypeEl) {
-        suhuProdukTypeEl.addEventListener('change', function() {
-            const suhuProdukType = this.value;
-            const inputField = document.getElementById('suhu_produk_input_field');
-            
-            if (suhuProdukType === 'Fresh' || suhuProdukType === 'Frozen') {
-                inputField.style.display = 'block';
-            } else {
-                inputField.style.display = 'none';
-                document.getElementById('suhu_produk').value = '';
+        const suhuProdukType = e.target.closest('select.suhu-produk-type');
+        if (suhuProdukType) {
+            const inputWrap = rowEl.querySelector('.suhu-produk-input');
+            const inputVal = rowEl.querySelector('input[name="suhu_produk[]"]');
+            if (inputWrap) {
+                if (suhuProdukType.value === 'Fresh' || suhuProdukType.value === 'Frozen') {
+                    inputWrap.style.display = 'block';
+                } else {
+                    inputWrap.style.display = 'none';
+                    if (inputVal) inputVal.value = '';
+                }
             }
-        });
-        
-        // Trigger on load if value exists
-        if (suhuProdukTypeEl.value) {
-            suhuProdukTypeEl.dispatchEvent(new Event('change'));
+            return;
         }
-    }
 
-    // 3. Kondisi Produk Conditional Logic
-    const kondisiProdukEl = document.getElementById('kondisi_produk');
-    if (kondisiProdukEl) {
-        kondisiProdukEl.addEventListener('change', function() {
-            const kondisiProduk = this.value;
-            
-            const kondisiProdukSuhuField = document.getElementById('kondisi_produk_suhu_field');
-            if (kondisiProdukSuhuField) {
-                kondisiProdukSuhuField.style.display = 'none';
+        const suhuMobilType = e.target.closest('select.suhu-mobil-type');
+        if (suhuMobilType) {
+            const inputWrap = rowEl.querySelector('.suhu-mobil-input');
+            const inputVal = rowEl.querySelector('input[name="suhu_mobil[]"]');
+            if (inputWrap) {
+                if (suhuMobilType.value === 'Fresh' || suhuMobilType.value === 'Frozen') {
+                    inputWrap.style.display = 'block';
+                } else {
+                    inputWrap.style.display = 'none';
+                    if (inputVal) inputVal.value = '';
+                }
             }
-            
-            const kondisiProdukSuhu = document.getElementById('kondisi_produk_suhu');
-            if (kondisiProdukSuhu) {
-                kondisiProdukSuhu.value = '';
-            }
-            
-            if (kondisiProduk === 'Fresh' || kondisiProduk === 'Frozen' || kondisiProduk === 'Dry') {
-                if (kondisiProdukSuhuField) kondisiProdukSuhuField.style.display = 'block';
-            } else if (kondisiProduk === 'Minyak') {
-                if (kondisiProdukSuhuField) kondisiProdukSuhuField.style.display = 'block';
-            }
-        });
-        
-        // Trigger on load if value exists
-        if (kondisiProdukEl.value) {
-            kondisiProdukEl.dispatchEvent(new Event('change'));
+            return;
         }
-    }
+
+        const kondisiProduk = e.target.closest('select.kondisi-produk');
+        if (kondisiProduk) {
+            const inputWrap = rowEl.querySelector('.kondisi-produk-suhu');
+            const inputVal = rowEl.querySelector('input[name="kondisi_produk_suhu[]"]');
+            if (inputWrap) {
+                if (kondisiProduk.value === 'Fresh' || kondisiProduk.value === 'Frozen' || kondisiProduk.value === 'Dry' || kondisiProduk.value === 'Minyak') {
+                    inputWrap.style.display = 'block';
+                } else {
+                    inputWrap.style.display = 'none';
+                    if (inputVal) inputVal.value = '';
+                }
+            }
+        }
+    });
+
+    // Trigger once on load for existing rows
+    document.querySelectorAll('#unified-container .unified-row').forEach((rowEl) => {
+        const sp = rowEl.querySelector('select.suhu-produk-type');
+        if (sp) sp.dispatchEvent(new Event('change', { bubbles: true }));
+        const sm = rowEl.querySelector('select.suhu-mobil-type');
+        if (sm) sm.dispatchEvent(new Event('change', { bubbles: true }));
+        const kp = rowEl.querySelector('select.kondisi-produk');
+        if (kp) kp.dispatchEvent(new Event('change', { bubbles: true }));
+    });
 
     // Initialize Choices.js for all select elements
     try {
@@ -1006,7 +1130,274 @@ document.addEventListener('DOMContentLoaded', function() {
     } catch(err) {
         console.error('Error initializing produk flow:', err);
     }
+
+    try {
+        initializeDetailFlow();
+    } catch(err) {
+        console.error('Error initializing detail flow:', err);
+    }
+
+    try {
+        initBbpCollapses();
+    } catch(err) {
+        console.error('Error initializing collapse:', err);
+    }
+
+    document.addEventListener('input', function(e) {
+        const target = e.target;
+        if (target && target.matches('input[name="kode_produksi[]"]')) {
+            const detailEl = target.closest('.detail-item');
+            const rowEl = target.closest('.unified-row');
+            if (!detailEl || !rowEl) return;
+            const idx = Array.from(rowEl.querySelectorAll('.detail-item')).indexOf(detailEl);
+            updateDetailLabel(detailEl, idx >= 0 ? idx : 0);
+        }
+    });
+
+    // Flatten header-per-produk fields into per-detail indices so multiple detail items are persisted
+    try {
+        const formEl = document.querySelector('form[action*="pemeriksaan-bahan-baku"]');
+        if (formEl && !formEl.__bbpFlattenBound) {
+            formEl.__bbpFlattenBound = true;
+            formEl.addEventListener('submit', function() {
+                // remove previous generated container
+                const existing = formEl.querySelector('#__bbp_flatten_container');
+                if (existing) existing.remove();
+
+                const gen = document.createElement('div');
+                gen.id = '__bbp_flatten_container';
+                gen.style.display = 'none';
+                formEl.appendChild(gen);
+
+                let globalIdx = 0;
+
+                const rows = Array.from(document.querySelectorAll('#unified-container .unified-row'));
+                rows.forEach((rowEl) => {
+                    const headerIdBahan = rowEl.querySelector('select.produk-select, select[name="id_bahan[]"]');
+                    const headerNegara = rowEl.querySelector('select[name="negara_produsen[]"]');
+                    const headerSuhuProdukType = rowEl.querySelector('select.suhu-produk-type');
+                    const headerSuhuProduk = rowEl.querySelector('input[name="suhu_produk[]"]');
+                    const headerSuhuMobilType = rowEl.querySelector('select.suhu-mobil-type');
+                    const headerSuhuMobil = rowEl.querySelector('input[name="suhu_mobil[]"]');
+                    const headerKondisiProduk = rowEl.querySelector('select.kondisi-produk');
+                    const headerKondisiProdukSuhu = rowEl.querySelector('input[name="kondisi_produk_suhu[]"]');
+
+                    const produsenVals = Array.from(rowEl.querySelectorAll('.produsen-hidden-inputs input[type="hidden"]')).map(i => i.value);
+                    const distributorVals = Array.from(rowEl.querySelectorAll('.distributor-hidden-inputs input[type="hidden"]')).map(i => i.value);
+
+                    const headerLogoHalal = rowEl.querySelector('input[name="logo_halal[]"]');
+                    const headerDokumenHalal = rowEl.querySelector('input[name="dokumen_halal[]"]');
+                    const headerCoa = rowEl.querySelector('input[name="coa[]"]');
+
+                    const header = {
+                        id_bahan: headerIdBahan ? String(headerIdBahan.value || '') : '',
+                        negara_produsen: headerNegara ? String(headerNegara.value || '') : '',
+                        suhu_produk_type: headerSuhuProdukType ? String(headerSuhuProdukType.value || '') : '',
+                        suhu_produk: headerSuhuProduk ? String(headerSuhuProduk.value || '') : '',
+                        suhu_mobil_type: headerSuhuMobilType ? String(headerSuhuMobilType.value || '') : '',
+                        suhu_mobil: headerSuhuMobil ? String(headerSuhuMobil.value || '') : '',
+                        kondisi_produk: headerKondisiProduk ? String(headerKondisiProduk.value || '') : '',
+                        kondisi_produk_suhu: headerKondisiProdukSuhu ? String(headerKondisiProdukSuhu.value || '') : '',
+                        logo_halal: headerLogoHalal ? String(headerLogoHalal.value || '') : '',
+                        dokumen_halal: headerDokumenHalal ? String(headerDokumenHalal.value || '') : '',
+                        coa: headerCoa ? String(headerCoa.value || '') : '',
+                    };
+
+                    const details = Array.from(rowEl.querySelectorAll('.detail-item'));
+                    if (!details.length) {
+                        // still create 1 index so backend arrays align
+                        details.push(null);
+                    }
+
+                    details.forEach(() => {
+                        const appendHidden = (name, value) => {
+                            const input = document.createElement('input');
+                            input.type = 'hidden';
+                            input.name = name;
+                            input.value = value;
+                            gen.appendChild(input);
+                        };
+
+                        appendHidden('id_bahan[]', header.id_bahan);
+                        appendHidden('negara_produsen[]', header.negara_produsen);
+                        appendHidden('suhu_produk_type[]', header.suhu_produk_type);
+                        appendHidden('suhu_produk[]', header.suhu_produk);
+                        appendHidden('suhu_mobil_type[]', header.suhu_mobil_type);
+                        appendHidden('suhu_mobil[]', header.suhu_mobil);
+                        appendHidden('kondisi_produk[]', header.kondisi_produk);
+                        appendHidden('kondisi_produk_suhu[]', header.kondisi_produk_suhu);
+                        appendHidden('logo_halal[]', header.logo_halal);
+                        appendHidden('dokumen_halal[]', header.dokumen_halal);
+                        appendHidden('coa[]', header.coa);
+
+                        (produsenVals || []).forEach((v) => {
+                            const input = document.createElement('input');
+                            input.type = 'hidden';
+                            input.name = `produsen[${globalIdx}][]`;
+                            input.value = String(v);
+                            gen.appendChild(input);
+                        });
+
+                        (distributorVals || []).forEach((v) => {
+                            const input = document.createElement('input');
+                            input.type = 'hidden';
+                            input.name = `distributor[${globalIdx}][]`;
+                            input.value = String(v);
+                            gen.appendChild(input);
+                        });
+
+                        globalIdx++;
+                    });
+
+                    // Disable original header inputs so they won't submit duplicates/misaligned arrays
+                    [
+                        headerIdBahan,
+                        headerNegara,
+                        headerSuhuProdukType,
+                        headerSuhuProduk,
+                        headerSuhuMobilType,
+                        headerSuhuMobil,
+                        headerKondisiProduk,
+                        headerKondisiProdukSuhu,
+                        headerLogoHalal,
+                        headerDokumenHalal,
+                        headerCoa,
+                    ].forEach((el) => {
+                        if (el) el.disabled = true;
+                    });
+
+                    rowEl.querySelectorAll('.produsen-hidden-inputs input[type="hidden"], .distributor-hidden-inputs input[type="hidden"]').forEach((el) => {
+                        el.disabled = true;
+                    });
+                });
+            });
+        }
+    } catch (err) {
+        console.error('Error flattening BBP form on submit:', err);
+    }
 });
+
+function initializeDetailFlow() {
+    document.querySelectorAll('#unified-container .unified-row').forEach((rowEl) => {
+        reindexDetails(rowEl);
+    });
+
+    document.addEventListener('click', function(e) {
+        const addBtn = e.target.closest('.add-detail-btn');
+        if (addBtn) {
+            const rowEl = addBtn.closest('.unified-row');
+            if (!rowEl) return;
+            addDetail(rowEl);
+            return;
+        }
+
+        const removeBtn = e.target.closest('.remove-detail-btn');
+        if (removeBtn) {
+            const rowEl = removeBtn.closest('.unified-row');
+            const detailEl = removeBtn.closest('.detail-item');
+            if (!rowEl || !detailEl) return;
+            detailEl.remove();
+            reindexDetails(rowEl);
+        }
+    });
+
+    document.addEventListener('change', function(e) {
+        const radio = e.target.closest('.detail-item input[type="radio"]');
+        if (!radio) return;
+        const detailEl = radio.closest('.detail-item');
+        if (!detailEl) return;
+
+        const name = radio.getAttribute('name') || '';
+        const map = {
+            kondisi_fisik_kemasan: 'kondisi_fisik_kemasan[]',
+            kondisi_fisik_warna: 'kondisi_fisik_warna[]',
+            kondisi_fisik_benda_asing: 'kondisi_fisik_benda_asing[]',
+            kondisi_fisik_aroma: 'kondisi_fisik_aroma[]',
+        };
+        const base = name.replace(/_\d+$/, '');
+        const hiddenName = map[base];
+        if (!hiddenName) return;
+        const hidden = detailEl.querySelector(`input[type="hidden"][name="${hiddenName}"]`);
+        if (hidden) hidden.value = radio.value;
+    });
+}
+
+function addDetail(rowEl) {
+    const container = rowEl.querySelector('.detail-items');
+    const template = container ? container.querySelector('.detail-item') : null;
+    if (!container || !template) return;
+
+    const clone = template.cloneNode(true);
+    resetDetailInputs(clone);
+    container.appendChild(clone);
+    reindexDetails(rowEl);
+
+    try {
+        ensureDetailCollapsible(clone);
+        collapseOtherDetailsInRow(rowEl, clone);
+    } catch (e) {
+    }
+}
+
+function resetDetailInputs(detailEl) {
+    detailEl.querySelectorAll('input[type="text"], input[type="date"], textarea').forEach((el) => {
+        el.value = '';
+    });
+    detailEl.querySelectorAll('input[type="radio"]').forEach((el) => {
+        el.checked = false;
+    });
+    detailEl.querySelectorAll('input[type="hidden"]').forEach((el) => {
+        if ((el.getAttribute('name') || '').endsWith('[]')) el.value = '';
+    });
+    detailEl.querySelectorAll('input[type="file"]').forEach((el) => {
+        el.value = '';
+    });
+}
+
+function reindexDetails(rowEl) {
+    const details = Array.from(rowEl.querySelectorAll('.detail-item'));
+    details.forEach((detailEl, idx) => {
+        const suffix = String(idx + 1);
+        detailEl.dataset.detailSuffix = suffix;
+
+        const label = detailEl.querySelector('.detail-collapse-label');
+        if (label) {
+            updateDetailLabel(detailEl, idx);
+        } else {
+            const title = detailEl.querySelector('.detail-title');
+            if (title) {
+                title.textContent = `Detail ${suffix}`;
+            }
+        }
+
+        detailEl.querySelectorAll('input[type="radio"]').forEach((radio) => {
+            if (!radio.name) return;
+            const baseName = radio.name.replace(/_\d+$/, '');
+            radio.name = `${baseName}_${suffix}`;
+
+            if (radio.id) {
+                const baseId = radio.id.replace(/_\d+$/, '');
+                radio.id = `${baseId}_${suffix}`;
+            }
+        });
+
+        detailEl.querySelectorAll('label[for]').forEach((label) => {
+            const currentFor = label.getAttribute('for');
+            if (!currentFor) return;
+            const baseFor = currentFor.replace(/_\d+$/, '');
+            label.setAttribute('for', `${baseFor}_${suffix}`);
+        });
+
+        detailEl.querySelectorAll('.radio-value-kemasan-1, .radio-value-warna-1, .radio-value-benda-1, .radio-value-aroma-1').forEach((el) => {
+            el.className = el.className.replace(/-\d+$/, `-${suffix}`);
+        });
+
+        const removeBtn = detailEl.querySelector('.remove-detail-btn');
+        if (removeBtn) {
+            removeBtn.style.display = (details.length > 1) ? 'inline-block' : 'none';
+        }
+    });
+}
 
 function initializeProdukFlow() {
     document.querySelectorAll('#unified-container .unified-row').forEach((row, idx) => {
@@ -1055,9 +1446,13 @@ function setupProdukRowListeners(rowEl) {
     if (produkSelect) {
         produkSelect.addEventListener('change', function() {
             applyProdukMetaForRow(rowEl);
+            const idx = Array.from(document.querySelectorAll('#unified-container .unified-row')).indexOf(rowEl);
+            updateProdukLabel(rowEl, idx >= 0 ? idx : 0);
         });
         produkSelect.addEventListener('addItem', function() {
             applyProdukMetaForRow(rowEl);
+            const idx = Array.from(document.querySelectorAll('#unified-container .unified-row')).indexOf(rowEl);
+            updateProdukLabel(rowEl, idx >= 0 ? idx : 0);
         });
     }
 }
@@ -1282,7 +1677,7 @@ function addNewRow() {
     
     // Set the HTML content - TEMPLATE LENGKAP DENGAN SUHU & KONDISI
     newRow.innerHTML = `
-        <h6 class="text-primary mb-3">Baris ${rowCount}</h6>
+        <h6 class="text-primary mb-3">Produk ${rowCount}</h6>
         
         <!-- Informasi Produk -->
         <div class="row">
@@ -1343,21 +1738,28 @@ function addNewRow() {
                 </div>
             </div>
         </div>
-        
-        <div class="row">
-            <div class="col-md-6">
-                <div class="form-group">
-                    <label class="form-label">Kode Produksi</label>
-                    <input type="text" class="form-control" name="kode_produksi[]" placeholder="Kode Produksi">
+
+        <div class="detail-items">
+            <div class="detail-item border rounded p-3 mb-3" style="background: #fff;" data-detail-suffix="1">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <strong class="detail-title">Detail 1</strong>
+                    <button type="button" class="btn btn-danger btn-sm remove-detail-btn" style="display:none;"><i class="bi bi-trash"></i> Hapus Detail</button>
                 </div>
-            </div>
-            <div class="col-md-6">
-                <div class="form-group">
-                    <label class="form-label">Expire Date</label>
-                    <input type="date" class="form-control" name="expire_date[]">
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">Kode Produksi</label>
+                            <input type="text" class="form-control" name="kode_produksi[]" placeholder="Kode Produksi">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">Expire Date</label>
+                            <input type="date" class="form-control" name="expire_date[]">
+                        </div>
+                    </div>
                 </div>
-            </div>
-        </div>
         
         <div class="row">
             <div class="col-md-6">
@@ -1570,6 +1972,18 @@ function addNewRow() {
                 </div>
             </div>
         </div>
+
+        <div class="form-section mb-3">
+            <h6 class="text-primary mb-2">Upload Gambar</h6>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label">Foto Bahan Baku (Max 1MB)</label>
+                        <input type="file" name="image_bahan_baku[]" class="form-control image-bahan-baku-input" accept="image/*" capture="camera">
+                    </div>
+                </div>
+            </div>
+        </div>
         
         <!-- Hasil Pemeriksaan -->
         <div class="form-section mb-3">
@@ -1604,16 +2018,31 @@ function addNewRow() {
                 </div>
             </div>
         </div>
+
+            </div>
+        </div>
+
+        <div class="row mt-2">
+            <div class="col-md-12">
+                <button type="button" class="btn btn-primary btn-sm add-detail-btn"><i class="bi bi-plus"></i> Tambah Detail</button>
+            </div>
+        </div>
         
         <!-- Buttons -->
         <div class="row mt-3 pt-3 border-top">
             <div class="col-md-12">
-                <button type="button" class="btn btn-danger btn-sm remove-unified-btn"><i class="bi bi-trash"></i> Hapus Baris</button>
+                <button type="button" class="btn btn-danger btn-sm remove-unified-btn"><i class="bi bi-trash"></i> Hapus Produk</button>
             </div>
         </div>
     `;
     
     container.appendChild(newRow);
+
+    try {
+        initBbpCollapses();
+        collapseAllProdukExcept(newRow);
+    } catch (e) {
+    }
 
     // Initialize produk meta badges for new row
     try {
@@ -1847,7 +2276,7 @@ function updateRowNumbers() {
     rows.forEach((row, index) => {
         const title = row.querySelector('h6');
         if (title) {
-            title.textContent = `Baris ${index + 1}`;
+            title.textContent = `Produk ${index + 1}`;
         }
     });
 }

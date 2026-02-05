@@ -11,7 +11,7 @@
         <div class="page-title">
             <div class="row">
                 <div class="col-12 col-md-6 order-md-1 order-last">
-                    <h3>Tambah Baris - Pemeriksaan Bahan Baku Penunjang</h3>
+                    <h3>Tambah Batch - Pemeriksaan Bahan Baku Penunjang</h3>
                     <p class="text-subtitle text-muted">Tambahkan 1 baris detail produk ke data yang sudah ada</p>
                 </div>
                 <div class="col-12 col-md-6 order-md-2 order-first">
@@ -19,7 +19,7 @@
                         <ol class="breadcrumb">
                             <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
                             <li class="breadcrumb-item"><a href="{{ route('pemeriksaan-bahan-baku.index') }}">Pemeriksaan Bahan Baku Penunjang</a></li>
-                            <li class="breadcrumb-item active" aria-current="page">Tambah Baris</li>
+                            <li class="breadcrumb-item active" aria-current="page">Tambah Batch</li>
                         </ol>
                     </nav>
                 </div>
@@ -327,6 +327,21 @@
                         </div>
 
                         <div class="form-section mb-3">
+                            <h6 class="text-primary mb-2">Upload Gambar</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3">
+                                        <label class="form-label">Foto Bahan Baku (Max 1MB)</label>
+                                        <input type="file" name="image_bahan_baku" class="form-control" accept="image/*" capture="camera">
+                                        @error('image_bahan_baku')
+                                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-section mb-3">
                             <h6 class="text-primary mb-2">Dokumen</h6>
                             <div class="row">
                                 <div class="col-md-4">
@@ -388,7 +403,7 @@
 
                         <div class="d-flex justify-content-end gap-2">
                             <a href="{{ route('pemeriksaan-bahan-baku.index') }}" class="btn btn-light-secondary">Kembali</a>
-                            <button type="submit" class="btn btn-primary">Simpan Baris</button>
+                            <button type="submit" class="btn btn-primary">Simpan Batch</button>
                         </div>
 
                     </form>

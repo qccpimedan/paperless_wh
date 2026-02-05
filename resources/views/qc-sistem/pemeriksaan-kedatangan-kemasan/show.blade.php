@@ -130,81 +130,87 @@
                         $coas = json_decode($pemeriksaanKedatanganKemasan->coa_array ?? '[]', true) ?? [];
                         $keterangans = json_decode($pemeriksaanKedatanganKemasan->keterangan_array ?? '[]', true) ?? [];
                         $image_kemasans = json_decode($pemeriksaanKedatanganKemasan->image_kemasan_array ?? '[]', true) ?? [];
-                        $rowCount = max(count($id_bahans), count($produsens), count($distributors));
+
+                        $groupedDetailIdx = [];
+                        foreach ((array) $id_bahans as $i => $pid) {
+                            $pid = $pid === null ? '' : (string) $pid;
+                            if ($pid === '') continue;
+                            if (!isset($groupedDetailIdx[$pid])) $groupedDetailIdx[$pid] = [];
+                            $groupedDetailIdx[$pid][] = $i;
+                        }
                     @endphp
 
-                    @forelse($id_bahans as $index => $id_bahan)
+                    @forelse($groupedDetailIdx as $produkId => $detailIdxList)
+                        @php
+                            $firstIdx = $detailIdxList[0] ?? null;
+                            $prodVal = $firstIdx !== null ? ($produsens[$firstIdx] ?? null) : null;
+                            if (is_array($prodVal)) {
+                                $prodText = implode(', ', array_values(array_filter($prodVal, fn ($v) => $v !== null && $v !== '')));
+                            } else {
+                                $prodText = trim((string) $prodVal);
+                            }
+
+                            $distVal = $firstIdx !== null ? ($distributors[$firstIdx] ?? null) : null;
+                            if (is_array($distVal)) {
+                                $distText = implode(', ', array_values(array_filter($distVal, fn ($v) => $v !== null && $v !== '')));
+                            } else {
+                                $distText = trim((string) $distVal);
+                            }
+                        @endphp
+
                         <div class="card mb-3" style="border-left: 4px solid #435ebe;">
                             <div class="card-header bg-light">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <h6 class="mb-0">Baris {{ $index + 1 }}</h6>
-                                    @if(isset($statuses[$index]))
-                                        @if($statuses[$index] === 'Release')
-                                            <span class="badge bg-success">Release</span>
-                                        @elseif($statuses[$index] === 'Hold')
-                                            <span class="badge bg-warning">Hold</span>
-                                        @else
-                                            <span class="badge bg-secondary">{{ $statuses[$index] ?? '-' }}</span>
-                                        @endif
-                                    @endif
-                                </div>
+                                <h6 class="mb-0">Bahan: {{ $produkNamaById[$produkId] ?? '-' }}</h6>
                             </div>
                             <div class="card-body">
-                                <!-- Bahan Kemasan -->
                                 <div class="row">
                                     <div class="col-md-6">
                                         <table class="table table-borderless table-sm">
                                             <tr>
-                                                <td width="40%"><strong>Bahan:</strong></td>
-                                                <td>
-                                                    <span class="badge bg-info">{{ $produkNamaById[$id_bahan] ?? '-' }}</span>
-                                                </td>
+                                                <td width="40%"><strong>Produsen:</strong></td>
+                                                <td>{{ $prodText !== '' ? $prodText : '-' }}</td>
                                             </tr>
                                             <tr>
-                                                <td><strong>Produsen:</strong></td>
-                                                <td>
-                                                    @php
-                                                        $prodVal = $produsens[$index] ?? null;
-                                                        if (is_array($prodVal)) {
-                                                            $prodText = implode(', ', array_values(array_filter($prodVal, fn ($v) => $v !== null && $v !== '')));
-                                                        } else {
-                                                            $prodText = trim((string) $prodVal);
-                                                        }
-                                                    @endphp
-                                                    {{ $prodText !== '' ? $prodText : '-' }}
-                                                </td>
+                                                <td width="40%"><strong>Distributor:</strong></td>
+                                                <td>{{ $distText !== '' ? $distText : '-' }}</td>
                                             </tr>
-                                            <tr>
-                                                <td><strong>Distributor:</strong></td>
-                                                <td>
-                                                    @php
-                                                        $distVal = $distributors[$index] ?? null;
-                                                        if (is_array($distVal)) {
-                                                            $distText = implode(', ', array_values(array_filter($distVal, fn ($v) => $v !== null && $v !== '')));
-                                                        } else {
-                                                            $distText = trim((string) $distVal);
-                                                        }
-                                                    @endphp
-                                                    {{ $distText !== '' ? $distText : '-' }}
-                                                </td>
-                                            </tr>
-                                        </table>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <table class="table table-borderless table-sm">
-                                            <tr><td width="40%"><strong>Kode Produksi:</strong></td><td>{{ $kode_produksis[$index] ?? '-' }}</td></tr>
-                                            <tr><td><strong>Jumlah Datang:</strong></td><td>{{ $jumlah_datangs[$index] ?? '-' }}</td></tr>
-                                            <tr><td><strong>Jumlah Sampling:</strong></td><td>{{ $jumlah_samplings[$index] ?? '-' }}</td></tr>
-                                            <tr><td><strong>Spesifikasi:</strong></td><td>{{ $spesifikasis[$index] ?? '-' }}</td></tr>
                                         </table>
                                     </div>
                                 </div>
 
-                                <!-- Kondisi Fisik & Dokumentasi Per Baris -->
-                                <div class="row mt-3">
-                                    <div class="col-12">
-                                        <h6 class="text-primary small mb-2">Kondisi Fisik & Dokumentasi</h6>
+                                @foreach($detailIdxList as $detailNo => $index)
+                                    <div class="border rounded p-3 mb-3" style="background: #fff;">
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <span class="fw-bold">Detail #{{ $detailNo + 1 }}</span>
+                                            @if(isset($statuses[$index]))
+                                                @if($statuses[$index] === 'Release')
+                                                    <span class="badge bg-success">Release</span>
+                                                @elseif($statuses[$index] === 'Hold')
+                                                    <span class="badge bg-warning">Hold</span>
+                                                @else
+                                                    <span class="badge bg-secondary">{{ $statuses[$index] ?? '-' }}</span>
+                                                @endif
+                                            @endif
+                                        </div>
+
                                         <div class="row">
+                                            <div class="col-md-6">
+                                                <table class="table table-borderless table-sm">
+                                                    <tr><td width="40%"><strong>Kode Produksi:</strong></td><td>{{ $kode_produksis[$index] ?? '-' }}</td></tr>
+                                                    <tr><td><strong>Jumlah Datang:</strong></td><td>{{ $jumlah_datangs[$index] ?? '-' }}</td></tr>
+                                                    <tr><td><strong>Jumlah Sampling:</strong></td><td>{{ $jumlah_samplings[$index] ?? '-' }}</td></tr>
+                                                </table>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <table class="table table-borderless table-sm">
+                                                    <tr><td width="40%"><strong>Spesifikasi:</strong></td><td>{{ $spesifikasis[$index] ?? '-' }}</td></tr>
+                                                    <tr><td><strong>Ketebalan (Micron):</strong></td><td>{{ $ketebalan_microns[$index] ?? '-' }}</td></tr>
+                                                    <tr><td><strong>Dimensi:</strong></td><td>{{ $dimensis[$index] ?? '-' }}</td></tr>
+                                                </table>
+                                            </div>
+                                        </div>
+
+                                        <div class="row mt-2">
                                             <div class="col-md-6">
                                                 <strong class="small d-block mb-2">Kondisi Fisik:</strong>
                                                 <div class="d-flex align-items-center small mb-1">
@@ -260,46 +266,31 @@
                                                 </div>
                                             </div>
                                         </div>
-                                    </div>
-                                </div>
 
-                                <!-- Detail Tambahan -->
-                                <div class="row mt-3">
-                                    <div class="col-12">
-                                        <h6 class="text-primary small mb-2">Detail Tambahan</h6>
-                                        <div class="row">
-                                            <div class="col-md-6">
-                                                <table class="table table-borderless table-sm mb-0">
-                                                    <tr><td width="40%"><strong>Ketebalan (Micron):</strong></td><td>{{ $ketebalan_microns[$index] ?? '-' }}</td></tr>
-                                                    <tr><td><strong>Dimensi:</strong></td><td>{{ $dimensis[$index] ?? '-' }}</td></tr>
-                                                </table>
+                                        @if($keterangans[$index] ?? null)
+                                            <div class="row mt-2">
+                                                <div class="col-12">
+                                                    <strong>Keterangan:</strong>
+                                                    <p class="mt-1 p-2 bg-light rounded small">{{ $keterangans[$index] }}</p>
+                                                </div>
                                             </div>
-                                        </div>
-                                    </div>
-                                </div>
+                                        @endif
 
-                                @if($keterangans[$index] ?? null)
-                                    <div class="row mt-3">
-                                        <div class="col-12">
-                                            <strong>Keterangan:</strong>
-                                            <p class="mt-1 p-2 bg-light rounded small">{{ $keterangans[$index] }}</p>
-                                        </div>
-                                    </div>
-                                @endif
-
-                                @php
-                                    $imgPath = $image_kemasans[$index] ?? null;
-                                @endphp
-                                @if($imgPath)
-                                    <div class="row mt-3">
-                                        <div class="col-12">
-                                            <h6 class="text-primary small mb-2">Gambar Kemasan</h6>
-                                            <div class="p-2 bg-white rounded">
-                                                <img src="{{ asset('storage/' . $imgPath) }}" alt="Gambar Kemasan" style="max-width: 260px; height: auto; border: 1px solid #ddd; padding: 4px;">
+                                        @php
+                                            $imgPath = $image_kemasans[$index] ?? null;
+                                        @endphp
+                                        @if($imgPath)
+                                            <div class="row mt-2">
+                                                <div class="col-12">
+                                                    <h6 class="text-primary small mb-2">Gambar Kemasan</h6>
+                                                    <div class="p-2 bg-white rounded">
+                                                        <img src="{{ asset('storage/' . $imgPath) }}" alt="Gambar Kemasan" style="max-width: 260px; height: auto; border: 1px solid #ddd; padding: 4px;">
+                                                    </div>
+                                                </div>
                                             </div>
-                                        </div>
+                                        @endif
                                     </div>
-                                @endif
+                                @endforeach
                             </div>
                         </div>
                     @empty

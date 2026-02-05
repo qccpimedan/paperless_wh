@@ -225,6 +225,8 @@ class PemeriksaanProdukFinishGoodController extends Controller
             'status_baris.*' => 'nullable|in:Release,Hold',
             'keterangan' => 'nullable|array',
             'keterangan.*' => 'nullable|string',
+            'image_finish_good' => 'nullable|array',
+            'image_finish_good.*' => 'nullable|image|max:1024',
         ]);
 
         $idProdukArr = $request->input('id_produk', []);
@@ -248,6 +250,13 @@ class PemeriksaanProdukFinishGoodController extends Controller
         $coaArr = $request->input('coa', []);
         $statusArr = $request->input('status_baris', []);
         $ketArr = $request->input('keterangan', []);
+
+        $uploadedImages = (array) $request->file('image_finish_good', []);
+        $imagePaths = [];
+        foreach ($idProdukArr as $idx => $pid) {
+            $file = $uploadedImages[$idx] ?? null;
+            $imagePaths[$idx] = $file ? $file->storePublicly('pemeriksaan-produk-finish-good/images', 'public') : null;
+        }
 
         $produkIds = array_values(array_filter($idProdukArr, fn ($v) => $v !== null && $v !== ''));
 
@@ -326,6 +335,7 @@ class PemeriksaanProdukFinishGoodController extends Controller
             'coa_array' => $coaArr,
             'status_array' => $statusArr,
             'keterangan_array' => $ketArr,
+            'image_finish_good_array' => $imagePaths,
         ]);
 
         return redirect()->route('pemeriksaan-produk-finish-good.show', $pemeriksaan->uuid)
@@ -487,6 +497,8 @@ class PemeriksaanProdukFinishGoodController extends Controller
             'status_baris.*' => 'nullable|in:Release,Hold',
             'keterangan' => 'nullable|array',
             'keterangan.*' => 'nullable|string',
+            'image_finish_good' => 'nullable|array',
+            'image_finish_good.*' => 'nullable|image|max:1024',
         ]);
 
         $idProdukArr = $request->input('id_produk', []);
@@ -510,6 +522,18 @@ class PemeriksaanProdukFinishGoodController extends Controller
         $coaArr = $request->input('coa', []);
         $statusArr = $request->input('status_baris', []);
         $ketArr = $request->input('keterangan', []);
+
+        $uploadedImages = (array) $request->file('image_finish_good', []);
+        $existingImages = $pemeriksaanProdukFinishGood->image_finish_good_array;
+        $existingImages = is_array($existingImages) ? $existingImages : [];
+        $imagePaths = [];
+        foreach ($idProdukArr as $idx => $pid) {
+            $file = $uploadedImages[$idx] ?? null;
+            $prev = $existingImages[$idx] ?? null;
+            $imagePaths[$idx] = $file
+                ? $file->storePublicly('pemeriksaan-produk-finish-good/images', 'public')
+                : $prev;
+        }
 
         $produkIds = array_values(array_filter($idProdukArr, fn ($v) => $v !== null && $v !== ''));
 
@@ -587,6 +611,7 @@ class PemeriksaanProdukFinishGoodController extends Controller
             'coa_array' => $coaArr,
             'status_array' => $statusArr,
             'keterangan_array' => $ketArr,
+            'image_finish_good_array' => $imagePaths,
         ]);
 
         return redirect()->route('pemeriksaan-produk-finish-good.index')

@@ -50,7 +50,7 @@
                                 </div>
                             @endif
 
-                            <form action="{{ route('pemeriksaan-chemical.update', $pemeriksaanChemical->uuid) }}" method="POST">
+                            <form action="{{ route('pemeriksaan-chemical.update', $pemeriksaanChemical->uuid) }}" method="POST" enctype="multipart/form-data">
                                 @csrf
                                 @method('PUT')
                                 
@@ -541,6 +541,26 @@
                                                             <label class="form-check-label">Tidak ✗</label>
                                                         </div>
                                                         <input type="hidden" name="coa[]" value="{{ ($detail['coa'] ?? false) ? '1' : '0' }}" class="radio-value-coa-{{ $i }}">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="form-section mb-3">
+                                            <h6 class="text-primary mb-2">Upload Gambar</h6>
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    @php
+                                                        $imgPath = $detail['image_chemical'] ?? null;
+                                                    @endphp
+                                                    @if($imgPath)
+                                                        <div class="mb-2">
+                                                            <a href="{{ asset('storage/' . $imgPath) }}" target="_blank" class="btn btn-sm btn-info">Lihat Foto</a>
+                                                        </div>
+                                                    @endif
+                                                    <div class="form-group">
+                                                        <label class="form-label">Ganti Foto Chemical (Max 1MB)</label>
+                                                        <input type="file" name="image_chemical[]" class="form-control" accept="image/*" capture="camera">
                                                     </div>
                                                 </div>
                                             </div>

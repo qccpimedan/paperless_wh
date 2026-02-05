@@ -14,7 +14,7 @@
         <div class="page-title">
             <div class="row">
                 <div class="col-12 col-md-6 order-md-1 order-last">
-                    <h3>Tambah Baris - Pemeriksaan Kedatangan Chemical</h3>
+                    <h3>Tambah Batch - Pemeriksaan Kedatangan Chemical</h3>
                     <p class="text-subtitle text-muted">Tambahkan 1 baris chemical ke data yang sudah ada</p>
                 </div>
                 <div class="col-12 col-md-6 order-md-2 order-first">
@@ -22,7 +22,7 @@
                         <ol class="breadcrumb">
                             <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
                             <li class="breadcrumb-item"><a href="{{ route('pemeriksaan-chemical.index') }}">Pemeriksaan Kedatangan Chemical</a></li>
-                            <li class="breadcrumb-item active" aria-current="page">Tambah Baris</li>
+                            <li class="breadcrumb-item active" aria-current="page">Tambah Batch</li>
                         </ol>
                     </nav>
                 </div>
@@ -42,18 +42,33 @@
         <section class="section">
             <div class="card">
                 <div class="card-body">
-                    <form action="{{ route('pemeriksaan-chemical.store-baris', $pemeriksaanChemical->uuid) }}" method="POST">
+                    <form action="{{ route('pemeriksaan-chemical.store-baris', $pemeriksaanChemical->uuid) }}" method="POST" enctype="multipart/form-data">
                         @csrf
 
                         <div class="row">
                             <div class="col-md-4">
                                 <div class="form-group mb-3">
-                                    <label class="form-label">Status Baris <span class="text-danger">*</span></label>
+                                    <label class="form-label">Status <span class="text-danger">*</span></label>
                                     <select class="form-select" name="status_baris" required>
                                         <option value="">Pilih Status</option>
                                         <option value="Release" {{ old('status_baris') == 'Release' ? 'selected' : '' }}>Release</option>
                                         <option value="Hold" {{ old('status_baris') == 'Hold' ? 'selected' : '' }}>Hold</option>
                                     </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-section mb-3">
+                            <h6 class="text-primary mb-2">Upload Gambar</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3">
+                                        <label class="form-label">Foto Chemical (Max 1MB)</label>
+                                        <input type="file" name="image_chemical" class="form-control" accept="image/*" capture="camera">
+                                        @error('image_chemical')
+                                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                                        @enderror
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -240,7 +255,7 @@
 
                         <div class="d-flex justify-content-end gap-2">
                             <a href="{{ route('pemeriksaan-chemical.index') }}" class="btn btn-light-secondary">Kembali</a>
-                            <button type="submit" class="btn btn-primary">Simpan Baris</button>
+                            <button type="submit" class="btn btn-primary">Simpan Batch</button>
                         </div>
 
                     </form>

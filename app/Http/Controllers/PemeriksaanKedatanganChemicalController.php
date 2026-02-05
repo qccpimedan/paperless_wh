@@ -353,6 +353,8 @@ class PemeriksaanKedatanganChemicalController extends Controller
             'status_baris' => 'required|array',
             'status_baris.*' => 'required|in:Release,Hold',
             'keterangan' => 'nullable|array',
+            'image_chemical' => 'nullable|array',
+            'image_chemical.*' => 'nullable|image|max:1024',
         ]);
 
         // Process kondisi mobil (11 items)
@@ -373,8 +375,11 @@ class PemeriksaanKedatanganChemicalController extends Controller
         // Process detail chemicals dari dynamic rows
         $detailChemicals = [];
         $idChemicals = $request->input('id_chemical', []);
+        $uploadedImages = (array) $request->file('image_chemical', []);
         
         foreach ($idChemicals as $index => $idChemical) {
+            $uploadedImage = $uploadedImages[$index] ?? null;
+            $imagePath = $uploadedImage ? $uploadedImage->storePublicly('pemeriksaan-chemical/images', 'public') : null;
             $detailChemicals[] = [
                 'id_chemical' => $idChemical,
                 'kondisi_chemical' => $request->input('kondisi_chemical.' . $index),
@@ -385,6 +390,7 @@ class PemeriksaanKedatanganChemicalController extends Controller
                 'expire_date' => $request->input('expire_date.' . $index),
                 'jumlah_datang' => $request->input('jumlah_datang.' . $index),
                 'jumlah_sampling' => $request->input('jumlah_sampling.' . $index),
+                'image_chemical' => $imagePath,
                 'kondisi_fisik' => [
                     'kemasan' => $request->input('kondisi_fisik_kemasan.' . $index) === '1',
                     'warna' => $request->input('kondisi_fisik_warna.' . $index) === '1',
@@ -858,6 +864,7 @@ class PemeriksaanKedatanganChemicalController extends Controller
             'persyaratan_dokumen_halal' => 'nullable|in:0,1',
             'coa' => 'nullable|in:0,1',
             'keterangan' => 'nullable|string|max:500',
+            'image_chemical' => 'nullable|image|max:1024',
         ]);
 
         $detailChemicals = $pemeriksaanChemical->detail_chemicals ?? [];
@@ -875,6 +882,9 @@ class PemeriksaanKedatanganChemicalController extends Controller
             'expire_date' => $request->input('expire_date'),
             'jumlah_datang' => $request->input('jumlah_datang'),
             'jumlah_sampling' => $request->input('jumlah_sampling'),
+            'image_chemical' => ($request->file('image_chemical'))
+                ? $request->file('image_chemical')->storePublicly('pemeriksaan-chemical/images', 'public')
+                : null,
             'kondisi_fisik' => [
                 'kemasan' => $request->input('kondisi_fisik_kemasan') === '1',
                 'warna' => $request->input('kondisi_fisik_warna') === '1',
@@ -1043,6 +1053,8 @@ class PemeriksaanKedatanganChemicalController extends Controller
             'status_baris' => 'required|array',
             'status_baris.*' => 'required|in:Release,Hold',
             'keterangan' => 'nullable|array',
+            'image_chemical' => 'nullable|array',
+            'image_chemical.*' => 'nullable|image|max:1024',
         ]);
 
         // Process kondisi mobil (11 items)
@@ -1063,8 +1075,18 @@ class PemeriksaanKedatanganChemicalController extends Controller
         // Process detail chemicals dari dynamic rows
         $detailChemicals = [];
         $idChemicals = $request->input('id_chemical', []);
+        $uploadedImages = (array) $request->file('image_chemical', []);
+        $existingDetails = $pemeriksaanChemical->detail_chemicals;
+        if (!is_array($existingDetails)) {
+            $existingDetails = [];
+        }
         
         foreach ($idChemicals as $index => $idChemical) {
+            $uploadedImage = $uploadedImages[$index] ?? null;
+            $existingImage = $existingDetails[$index]['image_chemical'] ?? null;
+            $imagePath = $uploadedImage
+                ? $uploadedImage->storePublicly('pemeriksaan-chemical/images', 'public')
+                : $existingImage;
             $detailChemicals[] = [
                 'id_chemical' => $idChemical,
                 'kondisi_chemical' => $request->input('kondisi_chemical.' . $index),
@@ -1075,6 +1097,7 @@ class PemeriksaanKedatanganChemicalController extends Controller
                 'expire_date' => $request->input('expire_date.' . $index),
                 'jumlah_datang' => $request->input('jumlah_datang.' . $index),
                 'jumlah_sampling' => $request->input('jumlah_sampling.' . $index),
+                'image_chemical' => $imagePath,
                 'kondisi_fisik' => [
                     'kemasan' => $request->input('kondisi_fisik_kemasan.' . $index) === '1',
                     'warna' => $request->input('kondisi_fisik_warna.' . $index) === '1',
