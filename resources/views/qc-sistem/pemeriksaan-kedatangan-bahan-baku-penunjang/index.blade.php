@@ -240,7 +240,6 @@
                                                     <span class="text-muted">-</span>
                                                 @endif
                                             </td>
-
                                             <td>
                                                 @php
                                                     $kodeProduksiArray = json_decode($pemeriksaan->kode_produksi_array ?? '[]', true);

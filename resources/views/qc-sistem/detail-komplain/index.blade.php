@@ -90,11 +90,29 @@
                                         </td>
                                         <td><strong>{{ $komplain->nama_supplier }}</strong></td>
                                         <!-- <td>{{ $komplain->no_po }}</td> -->
-                                        <td>{{ $komplain->nama_produk }}</td>
                                         <td>
-                                            @if($komplain->dokumentasi)
-                                                <a href="{{ asset('storage/' . $komplain->dokumentasi) }}" 
-                                                   target="_blank" class="btn btn-sm btn-info">
+                                            @php
+                                                $idProdukArr = is_array($komplain->id_produk_array ?? null) ? $komplain->id_produk_array : [];
+                                                $idProdukArr = array_values(array_filter($idProdukArr, fn ($v) => $v !== null && $v !== ''));
+                                                $namaProdukArr = is_array($komplain->nama_produk_array ?? null) ? $komplain->nama_produk_array : [];
+                                                $namaProdukArr = array_values(array_filter($namaProdukArr, fn ($v) => $v !== null && $v !== ''));
+                                                $firstProduk = $komplain->nama_produk;
+                                                $baseCount = !empty($idProdukArr) ? count($idProdukArr) : count($namaProdukArr);
+                                                $extraCount = max($baseCount - 1, 0);
+                                            @endphp
+                                            {{ $firstProduk ?? '-' }}
+                                            @if($extraCount > 0)
+                                                <span class="badge bg-secondary">+{{ $extraCount }} item</span>
+                                            @endif
+                                        </td>
+                                        <td>
+                                            @php
+                                                $dokArr = is_array($komplain->dokumentasi_array ?? null) ? $komplain->dokumentasi_array : [];
+                                                $dokArr = array_values(array_filter($dokArr, fn ($v) => $v !== null && $v !== ''));
+                                                $firstDok = $dokArr[0] ?? $komplain->dokumentasi;
+                                            @endphp
+                                            @if($firstDok)
+                                                <a href="{{ asset('storage/' . $firstDok) }}" target="_blank" class="btn btn-sm btn-info">
                                                     <i class="bi bi-eye"></i> Lihat
                                                 </a>
                                             @else

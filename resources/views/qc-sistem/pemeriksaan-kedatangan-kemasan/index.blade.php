@@ -197,28 +197,57 @@
                                                     $namaBahanArray = array_values(array_filter(array_map(function ($id) use ($produkNamaById) {
                                                         return $produkNamaById[$id] ?? null;
                                                     }, $idBahanArray)));
+
+                                                    $namaBahanPreview = [];
+                                                    if (count($namaBahanArray) === 1) {
+                                                        $namaBahanPreview = [$namaBahanArray[0]];
+                                                    } elseif (count($namaBahanArray) === 2) {
+                                                        $namaBahanPreview = [$namaBahanArray[0], $namaBahanArray[1]];
+                                                    } elseif (count($namaBahanArray) > 2) {
+                                                        $namaBahanPreview = [$namaBahanArray[0], $namaBahanArray[count($namaBahanArray) - 1]];
+                                                    }
                                                 @endphp
-                                                @if(count($namaBahanArray) > 0)
-                                                    @foreach($namaBahanArray as $name)
-                                                        <span class="badge bg-info">{{ $name }}</span><br>
-                                                    @endforeach
+                                                @if(count($namaBahanPreview) > 0)
+                                                    <span class="badge bg-info">{{ $namaBahanPreview[0] }}</span>
+                                                    @if(count($namaBahanArray) > 2)
+                                                        <br>
+                                                        <span class="text-muted">...</span>
+                                                    @endif
+                                                    @if(count($namaBahanPreview) === 2)
+                                                        <br>
+                                                        <span class="badge bg-info">{{ $namaBahanPreview[1] }}</span>
+                                                    @endif
                                                 @else
                                                     -
                                                 @endif
                                             @endif
                                         </td>
-                                        <!-- <td>
-                                            {{ $pemeriksaan->produsen ?? '-' }}
-                                        </td> -->
-                                            <td>
+                                        <td>
                                             @php
                                                 $kodeProduksiArray = json_decode($pemeriksaan->kode_produksi_array ?? '[]', true);
                                                 $kodeProduksiArray = is_array($kodeProduksiArray) ? array_values(array_filter($kodeProduksiArray, function ($v) {
                                                     return $v !== null && $v !== '';
                                                 })) : [];
+
+                                                $kodeProduksiPreview = [];
+                                                if (count($kodeProduksiArray) === 1) {
+                                                    $kodeProduksiPreview = [$kodeProduksiArray[0]];
+                                                } elseif (count($kodeProduksiArray) === 2) {
+                                                    $kodeProduksiPreview = [$kodeProduksiArray[0], $kodeProduksiArray[1]];
+                                                } elseif (count($kodeProduksiArray) > 2) {
+                                                    $kodeProduksiPreview = [$kodeProduksiArray[0], $kodeProduksiArray[count($kodeProduksiArray) - 1]];
+                                                }
                                             @endphp
-                                            @if(count($kodeProduksiArray) > 0)
-                                                {{ implode(', ', $kodeProduksiArray) }}
+                                            @if(count($kodeProduksiPreview) > 0)
+                                                {{ $kodeProduksiPreview[0] }}
+                                                @if(count($kodeProduksiArray) > 2)
+                                                    <br>
+                                                    <span class="text-muted">...</span>
+                                                @endif
+                                                @if(count($kodeProduksiPreview) === 2)
+                                                    <br>
+                                                    {{ $kodeProduksiPreview[1] }}
+                                                @endif
                                             @else
                                                 {{ $pemeriksaan->kode_produksi ?? '-' }}
                                             @endif

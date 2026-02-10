@@ -328,268 +328,295 @@
                                 <!-- Static Rows Section (Edit Mode) -->
                                 <div class="form-section mb-4">
                                     <h5 class="text-primary mb-3">Detail Chemicals</h5>
-                                    <p class="text-muted small">Catatan: Untuk menambah atau menghapus baris chemical, silakan buat data baru.</p>
                                     
                                     @php
                                         $detailChemicals = $pemeriksaanChemical->detail_chemicals ?? [];
                                         $rowCount = max(count($detailChemicals), 1);
-                                    @endphp
-                                    
-                                    @for($i = 0; $i < $rowCount; $i++)
-                                    @php
-                                        $detail = $detailChemicals[$i] ?? [];
-                                    @endphp
-                                    <div class="unified-row mb-4 p-3 border rounded" style="background-color: #f8f9fa;">
-                                        <h6 class="text-primary mb-3">Chemical {{ $i + 1 }}</h6>
-                                        
-                                        <!-- Informasi Chemical -->
-                                        <div class="row">
-                                            <div class="col-md-6">
-                                                <div class="form-group">
-                                                    <label class="form-label">Kategori</label>
-                                                    @php
-                                                        $existingChemicalId = $detail['id_chemical'] ?? null;
-                                                        $mappedKategori = $existingChemicalId ? ($produkByChemicalId[$existingChemicalId]['kategori_code'] ?? null) : null;
-                                                        $mappedProdukId = $existingChemicalId ? ($produkByChemicalId[$existingChemicalId]['id_produk'] ?? null) : null;
-                                                    @endphp
-                                                    <select class="choices form-control kategori-produk-select" name="kategori_code[]" data-row-index="{{ $i }}" data-desired-produk="{{ old('id_produk.' . $i, $mappedProdukId) }}">
-                                                        <option value="">Pilih Kategori</option>
-                                                        @foreach(($produkKategoriOptions ?? []) as $kategori)
-                                                            <option value="{{ $kategori }}" {{ old('kategori_code.' . $i, $mappedKategori) == $kategori ? 'selected' : '' }}>{{ $kategori }}</option>
-                                                        @endforeach
-                                                    </select>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <div class="form-group">
-                                                    <label class="form-label">Produk</label>
-                                                    <select class="form-control produk-select" name="id_produk[]" data-row-index="{{ $i }}">
-                                                        <option value="">Pilih Produk</option>
-                                                    </select>
-                                                    <input type="hidden" name="id_chemical[]" class="id-chemical-hidden" value="{{ old('id_chemical.' . $i, $detail['id_chemical'] ?? '') }}" required>
-                                                </div>
-                                            </div>
-                                        </div>
 
-                                        <div class="row">
-                                            <div class="col-md-6">
-                                                <div class="form-group">
-                                                    <label class="form-label">Kondisi Chemical</label>
-                                                    <select class="form-control" name="kondisi_chemical[]">
-                                                        <option value="">Pilih Kondisi</option>
-                                                        <option value="Cair" {{ ($detail['kondisi_chemical'] ?? '') == 'Cair' ? 'selected' : '' }}>Cair</option>
-                                                        <option value="Serbuk" {{ ($detail['kondisi_chemical'] ?? '') == 'Serbuk' ? 'selected' : '' }}>Serbuk</option>
-                                                    </select>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        
-                                        <!-- Detail Pemeriksaan -->
-                                        <div class="row">
-                                            <div class="col-md-6">
-                                                <div class="card border-0 shadow-sm mb-2">
-                                                    <div class="card-body p-3">
-                                                        <div class="fw-semibold">Produsen</div>
-                                                        <div class="small text-muted mb-2">Otomatis terisi sesuai Produk yang dipilih</div>
-                                                        <div class="produsen-badges d-flex flex-wrap gap-1">
-                                                            @php
-                                                                $prodNames = $mappedProdukId ? ($produkMeta[$mappedProdukId]['produsen_names'] ?? []) : [];
-                                                                $prodNames = is_array($prodNames) ? array_values(array_filter($prodNames, fn ($v) => $v !== null && $v !== '')) : [];
-                                                            @endphp
-                                                            @if(!empty($prodNames))
-                                                                @foreach($prodNames as $name)
-                                                                    <span class="badge bg-primary">{{ $name }}</span>
-                                                                @endforeach
-                                                            @else
-                                                                <span class="text-muted small">-</span>
-                                                            @endif
-                                                        </div>
-                                                        <input type="hidden" name="id_produsen[]" class="id-produsen-hidden" value="{{ old('id_produsen.' . $i, $detail['id_produsen'] ?? '') }}">
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <div class="card border-0 shadow-sm mb-2">
-                                                    <div class="card-body p-3">
-                                                        <div class="fw-semibold">Distributor</div>
-                                                        <div class="small text-muted mb-2">Otomatis terisi sesuai Produk yang dipilih</div>
-                                                        <div class="distributor-badges d-flex flex-wrap gap-1">
-                                                            @php
-                                                                $distNames = $mappedProdukId ? ($produkMeta[$mappedProdukId]['distributor_names'] ?? []) : [];
-                                                                $distNames = is_array($distNames) ? array_values(array_filter($distNames, fn ($v) => $v !== null && $v !== '')) : [];
-                                                            @endphp
-                                                            @if(!empty($distNames))
-                                                                @foreach($distNames as $name)
-                                                                    <span class="badge bg-primary">{{ $name }}</span>
-                                                                @endforeach
-                                                            @else
-                                                                <span class="text-muted small">-</span>
-                                                            @endif
-                                                        </div>
-                                                        <input type="hidden" name="id_distributor[]" class="id-distributor-hidden" value="{{ old('id_distributor.' . $i, $detail['id_distributor'] ?? '') }}">
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        
-                                        <div class="row">
-                                            <div class="col-md-6">
-                                                <div class="form-group">
-                                                    <label class="form-label">Negara Produsen</label>
-                                                    <select class="choices form-control" name="negara_produsen[]">
-                                                        <option value="">Pilih Negara</option>
-                                                        @foreach($countries as $code => $name)
-                                                            <option value="{{ $name }}" {{ ($detail['negara_produsen'] ?? '') == $name ? 'selected' : '' }}>{{ $name }}</option>
-                                                        @endforeach
-                                                    </select>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <div class="form-group">
-                                                    <label class="form-label">Kode Produksi</label>
-                                                    <input type="text" class="form-control" name="kode_produksi[]" value="{{ $detail['kode_produksi'] ?? '' }}" placeholder="Kode Produksi">
-                                                </div>
-                                            </div>
-                                        </div>
-                                        
-                                        <div class="row">
-                                            <div class="col-md-6">
-                                                <div class="form-group">
-                                                    <label class="form-label">Expire Date</label>
-                                                    <input type="date" class="form-control" name="expire_date[]" value="{{ $detail['expire_date'] ?? '' }}">
-                                                </div>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <div class="form-group">
-                                                    <label class="form-label">Jumlah Datang (kg/liter/pail)</label>
-                                                    <input type="text" class="form-control" name="jumlah_datang[]" value="{{ $detail['jumlah_datang'] ?? '' }}" placeholder="Jumlah Datang (kg/liter/pail)">
-                                                </div>
-                                            </div>
-                                        </div>
-                                        
-                                        <div class="row">
-                                            <div class="col-md-6">
-                                                <div class="form-group">
-                                                    <label class="form-label">Jumlah Sampling</label>
-                                                    <input type="text" class="form-control" name="jumlah_sampling[]" value="{{ $detail['jumlah_sampling'] ?? '' }}" placeholder="Jumlah Sampling">
-                                                </div>
-                                            </div>
-                                        </div>
-                                        
-                                        <!-- Kondisi Fisik -->
-                                        <div class="form-section mb-3">
-                                            <h6 class="text-primary mb-2">Kondisi Fisik</h6>
-                                            <div class="row">
-                                                <div class="col-md-6">
-                                                    <div class="mb-3">
-                                                        <label class="form-label"><strong>Kemasan</strong></label>
-                                                        <div class="form-check">
-                                                            <input class="form-check-input" type="radio" name="kondisi_fisik_kemasan_{{ $i }}" value="1" {{ (($detail['kondisi_fisik']['kemasan'] ?? false) == true) ? 'checked' : '' }}>
-                                                            <label class="form-check-label">Ya ✓</label>
-                                                        </div>
-                                                        <div class="form-check">
-                                                            <input class="form-check-input" type="radio" name="kondisi_fisik_kemasan_{{ $i }}" value="0" {{ (($detail['kondisi_fisik']['kemasan'] ?? false) == false) ? 'checked' : '' }}>
-                                                            <label class="form-check-label">Tidak ✗</label>
-                                                        </div>
-                                                        <input type="hidden" name="kondisi_fisik_kemasan[]" value="{{ ($detail['kondisi_fisik']['kemasan'] ?? false) ? '1' : '0' }}" class="radio-value-kemasan-{{ $i }}">
-                                                    </div>
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <div class="mb-3">
-                                                        <label class="form-label"><strong>Warna</strong></label>
-                                                        <div class="form-check">
-                                                            <input class="form-check-input" type="radio" name="kondisi_fisik_warna_{{ $i }}" value="1" {{ (($detail['kondisi_fisik']['warna'] ?? false) == true) ? 'checked' : '' }}>
-                                                            <label class="form-check-label">Ya ✓</label>
-                                                        </div>
-                                                        <div class="form-check">
-                                                            <input class="form-check-input" type="radio" name="kondisi_fisik_warna_{{ $i }}" value="0" {{ (($detail['kondisi_fisik']['warna'] ?? false) == false) ? 'checked' : '' }}>
-                                                            <label class="form-check-label">Tidak ✗</label>
-                                                        </div>
-                                                        <input type="hidden" name="kondisi_fisik_warna[]" value="{{ ($detail['kondisi_fisik']['warna'] ?? false) ? '1' : '0' }}" class="radio-value-warna-{{ $i }}">
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        
-                                        <!-- Dokumen -->
-                                        <div class="form-section mb-3">
-                                            <h6 class="text-primary mb-2">Dokumen & Sertifikasi</h6>
-                                            <div class="row">
-                                                <div class="col-md-6">
-                                                    <div class="mb-3">
-                                                        <label class="form-label"><strong>Halal (berlaku)</strong></label>
-                                                        <div class="form-check">
-                                                            <input class="form-check-input" type="radio" name="persyaratan_dokumen_halal_{{ $i }}" value="1" {{ (($detail['persyaratan_dokumen_halal'] ?? false) == true) ? 'checked' : '' }}>
-                                                            <label class="form-check-label">Ya ✓</label>
-                                                        </div>
-                                                        <div class="form-check">
-                                                            <input class="form-check-input" type="radio" name="persyaratan_dokumen_halal_{{ $i }}" value="0" {{ (($detail['persyaratan_dokumen_halal'] ?? false) == false) ? 'checked' : '' }}>
-                                                            <label class="form-check-label">Tidak ✗</label>
-                                                        </div>
-                                                        <input type="hidden" name="persyaratan_dokumen_halal[]" value="{{ ($detail['persyaratan_dokumen_halal'] ?? false) ? '1' : '0' }}" class="radio-value-halal-{{ $i }}">
-                                                    </div>
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <div class="mb-3">
-                                                        <label class="form-label"><strong>COA</strong></label>
-                                                        <div class="form-check">
-                                                            <input class="form-check-input" type="radio" name="coa_{{ $i }}" value="1" {{ (($detail['coa'] ?? false) == true) ? 'checked' : '' }}>
-                                                            <label class="form-check-label">Ya ✓</label>
-                                                        </div>
-                                                        <div class="form-check">
-                                                            <input class="form-check-input" type="radio" name="coa_{{ $i }}" value="0" {{ (($detail['coa'] ?? false) == false) ? 'checked' : '' }}>
-                                                            <label class="form-check-label">Tidak ✗</label>
-                                                        </div>
-                                                        <input type="hidden" name="coa[]" value="{{ ($detail['coa'] ?? false) ? '1' : '0' }}" class="radio-value-coa-{{ $i }}">
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
+                                        $groupedDetailIdx = [];
+                                        for ($i = 0; $i < $rowCount; $i++) {
+                                            $detail = $detailChemicals[$i] ?? [];
+                                            $existingChemicalId = $detail['id_chemical'] ?? null;
+                                            $mappedProdukId = $existingChemicalId ? ($produkByChemicalId[$existingChemicalId]['id_produk'] ?? null) : null;
+                                            $key = $mappedProdukId ? (string) $mappedProdukId : ('unknown-' . $i);
+                                            if (!isset($groupedDetailIdx[$key])) $groupedDetailIdx[$key] = [];
+                                            $groupedDetailIdx[$key][] = $i;
+                                        }
+                                    @endphp
 
-                                        <div class="form-section mb-3">
-                                            <h6 class="text-primary mb-2">Upload Gambar</h6>
-                                            <div class="row">
-                                                <div class="col-md-6">
-                                                    @php
-                                                        $imgPath = $detail['image_chemical'] ?? null;
-                                                    @endphp
-                                                    @if($imgPath)
-                                                        <div class="mb-2">
-                                                            <a href="{{ asset('storage/' . $imgPath) }}" target="_blank" class="btn btn-sm btn-info">Lihat Foto</a>
-                                                        </div>
-                                                    @endif
-                                                    <div class="form-group">
-                                                        <label class="form-label">Ganti Foto Chemical (Max 1MB)</label>
-                                                        <input type="file" name="image_chemical[]" class="form-control" accept="image/*" capture="camera">
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        
-                                        <!-- Hasil Pemeriksaan -->
-                                        <div class="form-section mb-3">
-                                            <h6 class="text-primary mb-2">Hasil Pemeriksaan</h6>
+                                    @php $produkNo = 0; @endphp
+                                    @foreach($groupedDetailIdx as $produkKey => $detailIdxList)
+                                        @php
+                                            $produkNo++;
+                                            $firstIdx = $detailIdxList[0] ?? 0;
+                                            $firstDetail = $detailChemicals[$firstIdx] ?? [];
+                                            $existingChemicalId = $firstDetail['id_chemical'] ?? null;
+                                            $mappedKategori = $existingChemicalId ? ($produkByChemicalId[$existingChemicalId]['kategori_code'] ?? null) : null;
+                                            $mappedProdukId = $existingChemicalId ? ($produkByChemicalId[$existingChemicalId]['id_produk'] ?? null) : null;
+                                        @endphp
+
+                                        <div class="unified-row mb-4 p-3 border rounded" style="background-color: #f8f9fa;">
+                                            <h6 class="text-primary mb-3">Produk {{ $produkNo }}</h6>
+
+                                            <!-- Informasi Chemical (Header Produk) -->
                                             <div class="row">
                                                 <div class="col-md-6">
                                                     <div class="form-group">
-                                                        <label for="status">Status <span class="text-danger">*</span></label>
-                                                        <select class="form-control" name="status_baris[]" required>
-                                                            <option value="">Pilih Status</option>
-                                                            <option value="Hold" {{ ($detail['status'] ?? '') == 'Hold' ? 'selected' : '' }}>Hold</option>
-                                                            <option value="Release" {{ ($detail['status'] ?? '') == 'Release' ? 'selected' : '' }}>Release</option>
+                                                        <label class="form-label">Kategori</label>
+                                                        <select class="choices form-control kategori-produk-select" name="kategori_code[]" data-desired-produk="{{ old('id_produk.' . $firstIdx, $mappedProdukId) }}">
+                                                            <option value="">Pilih Kategori</option>
+                                                            @foreach(($produkKategoriOptions ?? []) as $kategori)
+                                                                <option value="{{ $kategori }}" {{ old('kategori_code.' . $firstIdx, $mappedKategori) == $kategori ? 'selected' : '' }}>{{ $kategori }}</option>
+                                                            @endforeach
                                                         </select>
                                                     </div>
                                                 </div>
                                                 <div class="col-md-6">
                                                     <div class="form-group">
-                                                        <label class="form-label">Keterangan</label>
-                                                        <textarea class="form-control" name="keterangan[]" rows="3" placeholder="Keterangan">{{ $detail['keterangan'] ?? '' }}</textarea>
+                                                        <label class="form-label">Produk</label>
+                                                        <select class="form-control produk-select" name="id_produk[]">
+                                                            <option value="">Pilih Produk</option>
+                                                        </select>
+                                                        <input type="hidden" name="id_chemical[]" class="id-chemical-hidden" value="{{ old('id_chemical.' . $firstIdx, $firstDetail['id_chemical'] ?? '') }}" required>
                                                     </div>
                                                 </div>
                                             </div>
+
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <div class="form-group">
+                                                        <label class="form-label">Kondisi Chemical</label>
+                                                        <select class="form-control" name="kondisi_chemical[]">
+                                                            <option value="">Pilih Kondisi</option>
+                                                            <option value="Cair" {{ ($firstDetail['kondisi_chemical'] ?? '') == 'Cair' ? 'selected' : '' }}>Cair</option>
+                                                            <option value="Serbuk" {{ ($firstDetail['kondisi_chemical'] ?? '') == 'Serbuk' ? 'selected' : '' }}>Serbuk</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Produsen/Distributor (Header Produk) -->
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <div class="card border-0 shadow-sm mb-2">
+                                                        <div class="card-body p-3">
+                                                            <div class="fw-semibold">Produsen</div>
+                                                            <div class="small text-muted mb-2">Otomatis terisi sesuai Produk yang dipilih</div>
+                                                            <div class="produsen-badges d-flex flex-wrap gap-1">
+                                                                @php
+                                                                    $prodNames = $mappedProdukId ? ($produkMeta[$mappedProdukId]['produsen_names'] ?? []) : [];
+                                                                    $prodNames = is_array($prodNames) ? array_values(array_filter($prodNames, fn ($v) => $v !== null && $v !== '')) : [];
+                                                                @endphp
+                                                                @if(!empty($prodNames))
+                                                                    @foreach($prodNames as $name)
+                                                                        <span class="badge bg-primary">{{ $name }}</span>
+                                                                    @endforeach
+                                                                @else
+                                                                    <span class="text-muted small">-</span>
+                                                                @endif
+                                                            </div>
+                                                            <input type="hidden" name="id_produsen[]" class="id-produsen-hidden" value="{{ old('id_produsen.' . $firstIdx, $firstDetail['id_produsen'] ?? '') }}">
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="card border-0 shadow-sm mb-2">
+                                                        <div class="card-body p-3">
+                                                            <div class="fw-semibold">Distributor</div>
+                                                            <div class="small text-muted mb-2">Otomatis terisi sesuai Produk yang dipilih</div>
+                                                            <div class="distributor-badges d-flex flex-wrap gap-1">
+                                                                @php
+                                                                    $distNames = $mappedProdukId ? ($produkMeta[$mappedProdukId]['distributor_names'] ?? []) : [];
+                                                                    $distNames = is_array($distNames) ? array_values(array_filter($distNames, fn ($v) => $v !== null && $v !== '')) : [];
+                                                                @endphp
+                                                                @if(!empty($distNames))
+                                                                    @foreach($distNames as $name)
+                                                                        <span class="badge bg-primary">{{ $name }}</span>
+                                                                    @endforeach
+                                                                @else
+                                                                    <span class="text-muted small">-</span>
+                                                                @endif
+                                                            </div>
+                                                            <input type="hidden" name="id_distributor[]" class="id-distributor-hidden" value="{{ old('id_distributor.' . $firstIdx, $firstDetail['id_distributor'] ?? '') }}">
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="detail-items">
+                                                @foreach($detailIdxList as $dNo => $idx)
+                                                    @php $detail = $detailChemicals[$idx] ?? []; @endphp
+                                                    <div class="detail-item border rounded p-3 mb-3" style="background: #fff;" data-detail-index="{{ $dNo }}" data-detail-global-index="{{ $idx }}">
+                                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                                            <strong>Detail {{ $dNo + 1 }}</strong>
+                                                            <button type="button" class="btn btn-danger btn-sm remove-detail-btn" style="display:none;"><i class="bi bi-trash"></i> Hapus Detail</button>
+                                                        </div>
+
+                                                        <div class="row">
+                                                            <div class="col-md-6">
+                                                                <div class="form-group">
+                                                                    <label class="form-label">Negara Produsen</label>
+                                                                    <select class="choices form-control" name="negara_produsen[]">
+                                                                        <option value="">Pilih Negara</option>
+                                                                        @foreach($countries as $code => $name)
+                                                                            <option value="{{ $name }}" {{ ($detail['negara_produsen'] ?? '') == $name ? 'selected' : '' }}>{{ $name }}</option>
+                                                                        @endforeach
+                                                                    </select>
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-md-6">
+                                                                <div class="form-group">
+                                                                    <label class="form-label">Kode Produksi</label>
+                                                                    <input type="text" class="form-control" name="kode_produksi[]" value="{{ $detail['kode_produksi'] ?? '' }}" placeholder="Kode Produksi">
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="row">
+                                                            <div class="col-md-6">
+                                                                <div class="form-group">
+                                                                    <label class="form-label">Expire Date</label>
+                                                                    <input type="date" class="form-control" name="expire_date[]" value="{{ $detail['expire_date'] ?? '' }}">
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-md-6">
+                                                                <div class="form-group">
+                                                                    <label class="form-label">Jumlah Datang (kg/liter/pail)</label>
+                                                                    <input type="text" class="form-control" name="jumlah_datang[]" value="{{ $detail['jumlah_datang'] ?? '' }}" placeholder="Jumlah Datang (kg/liter/pail)">
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="row">
+                                                            <div class="col-md-6">
+                                                                <div class="form-group">
+                                                                    <label class="form-label">Jumlah Sampling</label>
+                                                                    <input type="text" class="form-control" name="jumlah_sampling[]" value="{{ $detail['jumlah_sampling'] ?? '' }}" placeholder="Jumlah Sampling">
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        <!-- Kondisi Fisik -->
+                                                        <div class="form-section mb-3">
+                                                            <h6 class="text-primary mb-2">Kondisi Fisik</h6>
+                                                            <div class="row">
+                                                                <div class="col-md-6">
+                                                                    <div class="mb-3">
+                                                                        <label class="form-label"><strong>Kemasan</strong></label>
+                                                                        <div class="form-check">
+                                                                            <input class="form-check-input" type="radio" name="kondisi_fisik_kemasan_1" value="1" {{ (($detail['kondisi_fisik']['kemasan'] ?? false) == true) ? 'checked' : '' }}>
+                                                                            <label class="form-check-label">Ya ✓</label>
+                                                                        </div>
+                                                                        <div class="form-check">
+                                                                            <input class="form-check-input" type="radio" name="kondisi_fisik_kemasan_1" value="0" {{ (($detail['kondisi_fisik']['kemasan'] ?? false) == false) ? 'checked' : '' }}>
+                                                                            <label class="form-check-label">Tidak ✗</label>
+                                                                        </div>
+                                                                        <input type="hidden" name="kondisi_fisik_kemasan[]" value="{{ ($detail['kondisi_fisik']['kemasan'] ?? false) ? '1' : '0' }}" class="radio-value-kemasan-1">
+                                                                    </div>
+                                                                </div>
+                                                                <div class="col-md-6">
+                                                                    <div class="mb-3">
+                                                                        <label class="form-label"><strong>Warna</strong></label>
+                                                                        <div class="form-check">
+                                                                            <input class="form-check-input" type="radio" name="kondisi_fisik_warna_1" value="1" {{ (($detail['kondisi_fisik']['warna'] ?? false) == true) ? 'checked' : '' }}>
+                                                                            <label class="form-check-label">Ya ✓</label>
+                                                                        </div>
+                                                                        <div class="form-check">
+                                                                            <input class="form-check-input" type="radio" name="kondisi_fisik_warna_1" value="0" {{ (($detail['kondisi_fisik']['warna'] ?? false) == false) ? 'checked' : '' }}>
+                                                                            <label class="form-check-label">Tidak ✗</label>
+                                                                        </div>
+                                                                        <input type="hidden" name="kondisi_fisik_warna[]" value="{{ ($detail['kondisi_fisik']['warna'] ?? false) ? '1' : '0' }}" class="radio-value-warna-1">
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        <!-- Dokumen -->
+                                                        <div class="form-section mb-3">
+                                                            <h6 class="text-primary mb-2">Dokumen & Sertifikasi</h6>
+                                                            <div class="row">
+                                                                <div class="col-md-6">
+                                                                    <div class="mb-3">
+                                                                        <label class="form-label"><strong>Halal (berlaku)</strong></label>
+                                                                        <div class="form-check">
+                                                                            <input class="form-check-input" type="radio" name="persyaratan_dokumen_halal_1" value="1" {{ (($detail['persyaratan_dokumen_halal'] ?? false) == true) ? 'checked' : '' }}>
+                                                                            <label class="form-check-label">Ya ✓</label>
+                                                                        </div>
+                                                                        <div class="form-check">
+                                                                            <input class="form-check-input" type="radio" name="persyaratan_dokumen_halal_1" value="0" {{ (($detail['persyaratan_dokumen_halal'] ?? false) == false) ? 'checked' : '' }}>
+                                                                            <label class="form-check-label">Tidak ✗</label>
+                                                                        </div>
+                                                                        <input type="hidden" name="persyaratan_dokumen_halal[]" value="{{ ($detail['persyaratan_dokumen_halal'] ?? false) ? '1' : '0' }}" class="radio-value-halal-1">
+                                                                    </div>
+                                                                </div>
+                                                                <div class="col-md-6">
+                                                                    <div class="mb-3">
+                                                                        <label class="form-label"><strong>COA</strong></label>
+                                                                        <div class="form-check">
+                                                                            <input class="form-check-input" type="radio" name="coa_1" value="1" {{ (($detail['coa'] ?? false) == true) ? 'checked' : '' }}>
+                                                                            <label class="form-check-label">Ya ✓</label>
+                                                                        </div>
+                                                                        <div class="form-check">
+                                                                            <input class="form-check-input" type="radio" name="coa_1" value="0" {{ (($detail['coa'] ?? false) == false) ? 'checked' : '' }}>
+                                                                            <label class="form-check-label">Tidak ✗</label>
+                                                                        </div>
+                                                                        <input type="hidden" name="coa[]" value="{{ ($detail['coa'] ?? false) ? '1' : '0' }}" class="radio-value-coa-1">
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="form-section mb-3">
+                                                            <h6 class="text-primary mb-2">Upload Gambar</h6>
+                                                            <div class="row">
+                                                                <div class="col-md-6">
+                                                                    @php $imgPath = $detail['image_chemical'] ?? null; @endphp
+                                                                    @if($imgPath)
+                                                                        <div class="mb-2">
+                                                                            <a href="{{ asset('storage/' . $imgPath) }}" target="_blank" class="btn btn-sm btn-info">Lihat Foto</a>
+                                                                        </div>
+                                                                    @endif
+                                                                    <div class="form-group">
+                                                                        <label class="form-label">Ganti Foto Chemical (Max 1MB)</label>
+                                                                        <input type="file" name="image_chemical[]" class="form-control" accept="image/*" capture="camera">
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        <!-- Hasil Pemeriksaan -->
+                                                        <div class="form-section mb-3">
+                                                            <h6 class="text-primary mb-2">Hasil Pemeriksaan</h6>
+                                                            <div class="row">
+                                                                <div class="col-md-6">
+                                                                    <div class="form-group">
+                                                                        <label for="status">Status <span class="text-danger">*</span></label>
+                                                                        <select class="form-control" name="status_baris[]" required>
+                                                                            <option value="">Pilih Status</option>
+                                                                            <option value="Hold" {{ ($detail['status'] ?? '') == 'Hold' ? 'selected' : '' }}>Hold</option>
+                                                                            <option value="Release" {{ ($detail['status'] ?? '') == 'Release' ? 'selected' : '' }}>Release</option>
+                                                                        </select>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="col-md-6">
+                                                                    <div class="form-group">
+                                                                        <label class="form-label">Keterangan</label>
+                                                                        <textarea class="form-control" name="keterangan[]" rows="3" placeholder="Keterangan">{{ $detail['keterangan'] ?? '' }}</textarea>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                @endforeach
+                                            </div>
+
+                                            <div class="row mt-2">
+                                                <div class="col-md-12">
+                                                    <button type="button" class="btn btn-primary btn-sm add-detail-btn"><i class="bi bi-plus"></i> Tambah Detail</button>
+                                                </div>
+                                            </div>
                                         </div>
-                                    </div>
-                                    @endfor
+                                    @endforeach
                                 </div>
 
                                 <!-- Submit Buttons -->
@@ -767,43 +794,174 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    @for($i = 0; $i < $rowCount; $i++)
-    // Kondisi Fisik - Kemasan
-    document.querySelectorAll('input[name="kondisi_fisik_kemasan_{{ $i }}"]').forEach(radio => {
-        radio.addEventListener('change', function() {
-            if (this.checked) {
-                document.querySelector('.radio-value-kemasan-{{ $i }}').value = this.value;
+    function setupRowRadios(detailEl) {
+        const globalIndex = Number(detailEl.dataset.detailGlobalIndex || 0) + 1;
+        const mappings = [
+            { key: 'kondisi_fisik_kemasan', hiddenPrefix: 'kemasan' },
+            { key: 'kondisi_fisik_warna', hiddenPrefix: 'warna' },
+            { key: 'persyaratan_dokumen_halal', hiddenPrefix: 'halal' },
+            { key: 'coa', hiddenPrefix: 'coa' },
+        ];
+
+        mappings.forEach(({ key, hiddenPrefix }) => {
+            const radioName = `${key}_${globalIndex}`;
+            detailEl.querySelectorAll(`input[type="radio"][name^="${key}_"]`).forEach((radio, idx) => {
+                radio.name = radioName;
+                const uniqueRadioId = `${key}_${globalIndex}_${idx}`;
+                radio.id = uniqueRadioId;
+                const formCheck = radio.closest('.form-check');
+                const lbl = formCheck ? formCheck.querySelector('label.form-check-label') : null;
+                if (lbl) lbl.setAttribute('for', uniqueRadioId);
+            });
+
+            const hidden = detailEl.querySelector(`input[type="hidden"].radio-value-${hiddenPrefix}-${globalIndex}`)
+                || detailEl.querySelector(`input[type="hidden"][name="${key}[]"]`);
+
+            detailEl.querySelectorAll(`input[type="radio"][name="${radioName}"]`).forEach((radio) => {
+                radio.addEventListener('change', function () {
+                    if (hidden) hidden.value = this.value;
+                });
+            });
+
+            const checked = detailEl.querySelector(`input[type="radio"][name="${radioName}"]:checked`);
+            if (checked && hidden && (hidden.value === '' || hidden.value === null)) {
+                hidden.value = checked.value;
             }
         });
+    }
+
+    function updateDetailButtons() {
+        document.querySelectorAll('#main .unified-row').forEach((row) => {
+            const detailItems = Array.from(row.querySelectorAll('.detail-items .detail-item'));
+            detailItems.forEach((detailEl) => {
+                const btn = detailEl.querySelector('.remove-detail-btn');
+                if (btn) btn.style.display = detailItems.length > 1 ? '' : 'none';
+            });
+        });
+    }
+
+    function updateRowNumbers() {
+        const rows = document.querySelectorAll('#main .unified-row');
+        let globalDetail = 0;
+        rows.forEach((row, index) => {
+            const title = row.querySelector('h6');
+            if (title) title.textContent = `Produk ${index + 1}`;
+
+            const detailItems = Array.from(row.querySelectorAll('.detail-items .detail-item'));
+            detailItems.forEach((detailEl, dIdx) => {
+                detailEl.dataset.detailIndex = String(dIdx);
+                detailEl.dataset.detailGlobalIndex = String(globalDetail);
+                const t = detailEl.querySelector('strong');
+                if (t) t.textContent = `Detail ${dIdx + 1}`;
+
+                detailEl.querySelectorAll('input[type="hidden"][name="kondisi_fisik_kemasan[]"]').forEach((el) => {
+                    el.className = `radio-value-kemasan-${globalDetail + 1}`;
+                });
+                detailEl.querySelectorAll('input[type="hidden"][name="kondisi_fisik_warna[]"]').forEach((el) => {
+                    el.className = `radio-value-warna-${globalDetail + 1}`;
+                });
+                detailEl.querySelectorAll('input[type="hidden"][name="persyaratan_dokumen_halal[]"]').forEach((el) => {
+                    el.className = `radio-value-halal-${globalDetail + 1}`;
+                });
+                detailEl.querySelectorAll('input[type="hidden"][name="coa[]"]').forEach((el) => {
+                    el.className = `radio-value-coa-${globalDetail + 1}`;
+                });
+
+                setupRowRadios(detailEl);
+                globalDetail += 1;
+            });
+        });
+    }
+
+    // Init indices/radio
+    updateRowNumbers();
+    updateDetailButtons();
+
+    // Add detail
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.add-detail-btn')) {
+            const rowEl = e.target.closest('.unified-row');
+            if (!rowEl) return;
+            const container = rowEl.querySelector('.detail-items');
+            if (!container) return;
+            const items = container.querySelectorAll('.detail-item');
+            const last = items.length ? items[items.length - 1] : null;
+            if (!last) return;
+
+            const newItem = last.cloneNode(true);
+            newItem.querySelectorAll('input, textarea, select').forEach((el) => {
+                if (el.type === 'file') {
+                    el.value = '';
+                } else if (el.type === 'radio') {
+                    el.checked = false;
+                } else {
+                    el.value = '';
+                }
+            });
+            newItem.querySelectorAll('input[type="hidden"][name="kondisi_fisik_kemasan[]"], input[type="hidden"][name="kondisi_fisik_warna[]"], input[type="hidden"][name="persyaratan_dokumen_halal[]"], input[type="hidden"][name="coa[]"]').forEach((el) => {
+                el.value = '';
+            });
+
+            container.appendChild(newItem);
+            updateRowNumbers();
+            updateDetailButtons();
+        }
     });
-    
-    // Kondisi Fisik - Warna
-    document.querySelectorAll('input[name="kondisi_fisik_warna_{{ $i }}"]').forEach(radio => {
-        radio.addEventListener('change', function() {
-            if (this.checked) {
-                document.querySelector('.radio-value-warna-{{ $i }}').value = this.value;
+
+    // Remove detail
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.remove-detail-btn')) {
+            const rowEl = e.target.closest('.unified-row');
+            const detailEl = e.target.closest('.detail-item');
+            if (!rowEl || !detailEl) return;
+            const items = rowEl.querySelectorAll('.detail-items .detail-item');
+            if (items.length > 1) {
+                detailEl.remove();
+                updateRowNumbers();
+                updateDetailButtons();
+            }
+        }
+    });
+
+    // Sync header fields into extra details so arrays remain aligned
+    document.addEventListener('submit', function(e) {
+        const form = e.target;
+        if (!form || form.tagName.toLowerCase() !== 'form') return;
+        if (!form.closest('#main')) return;
+
+        form.querySelectorAll('input.__synced_header_value').forEach((el) => el.remove());
+
+        const rows = Array.from(form.querySelectorAll('#main .unified-row'));
+        rows.forEach((rowEl) => {
+            const details = Array.from(rowEl.querySelectorAll('.detail-items .detail-item'));
+            if (details.length <= 1) return;
+
+            const getVal = (sel) => {
+                const el = rowEl.querySelector(sel);
+                return el ? (el.value || '') : '';
+            };
+
+            const headerValues = {
+                kategori_code: getVal('select[name="kategori_code[]"]'),
+                id_produk: getVal('select[name="id_produk[]"]'),
+                kondisi_chemical: getVal('select[name="kondisi_chemical[]"]'),
+                id_chemical: getVal('input[name="id_chemical[]"]'),
+                id_produsen: getVal('input[name="id_produsen[]"]'),
+                id_distributor: getVal('input[name="id_distributor[]"]'),
+            };
+
+            for (let i = 1; i < details.length; i += 1) {
+                Object.entries(headerValues).forEach(([key, value]) => {
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = `${key}[]`;
+                    input.value = value;
+                    input.className = '__synced_header_value';
+                    form.appendChild(input);
+                });
             }
         });
-    });
-    
-    // Dokumen - Halal
-    document.querySelectorAll('input[name="persyaratan_dokumen_halal_{{ $i }}"]').forEach(radio => {
-        radio.addEventListener('change', function() {
-            if (this.checked) {
-                document.querySelector('.radio-value-halal-{{ $i }}').value = this.value;
-            }
-        });
-    });
-    
-    // Dokumen - COA
-    document.querySelectorAll('input[name="coa_{{ $i }}"]').forEach(radio => {
-        radio.addEventListener('change', function() {
-            if (this.checked) {
-                document.querySelector('.radio-value-coa-{{ $i }}').value = this.value;
-            }
-        });
-    });
-    @endfor
+    }, true);
 });
 </script>
 @endsection

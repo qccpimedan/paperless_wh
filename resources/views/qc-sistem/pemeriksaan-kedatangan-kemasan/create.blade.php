@@ -1627,6 +1627,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
             ensureDetailCollapsible(clone);
             collapseOtherDetailsInRow(rowEl, clone);
+
+            syncHeaderToDetails(rowEl);
+            syncDokumenToDetails(rowEl);
+            updateDetailIndices();
             return;
         }
 
