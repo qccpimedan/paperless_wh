@@ -67,8 +67,27 @@ class DetailKomplainController extends Controller
             });
         }
         $produks = $query->latest()->get();
-        
-        return view('qc-sistem.detail-komplain.create', compact('produks', 'shifts'));
+
+        $produkKategoriOptions = $produks->pluck('kategori_code')
+            ->filter(function ($v) {
+                return $v !== null && $v !== '';
+            })
+            ->unique()
+            ->values();
+
+        $produkByKategori = $produks
+            ->groupBy('kategori_code')
+            ->map(function ($items) {
+                return $items->map(function ($p) {
+                    return [
+                        'id' => $p->id,
+                        'nama' => $p->nama_produk,
+                        'kategori_code' => $p->kategori_code,
+                    ];
+                })->values();
+            });
+
+        return view('qc-sistem.detail-komplain.create', compact('produks', 'shifts', 'produkKategoriOptions', 'produkByKategori'));
     }
 
     public function store(Request $request)
@@ -78,39 +97,129 @@ class DetailKomplainController extends Controller
             'tanggal_kedatangan' => 'required|date',
             'id_shift' => 'required|exists:shifts,id',  // Added shift validation
             'no_po' => 'required|string|max:100',
-            'nama_produk' => 'required|string|max:255',
-            'kode_produksi' => 'required|string|max:100',
-            'expired_date' => 'required|date',
-            'jumlah_datang' => 'required|string|max:100',
-            'jumlah_di_tolak' => 'required|string|max:100',
-            'dokumentasi' => 'nullable|image|max:1024',
-            'keterangan' => 'nullable|string',
-            'di_buat_oleh' => 'nullable|string|max:255',
-            'setujui_oleh' => 'nullable|string|max:255',
+            'kategori_code' => 'nullable|array',
+            'kategori_code.*' => 'nullable|string|max:255',
+            'id_produk' => 'required|array|min:1',
+            'id_produk.*' => 'required|exists:produks,id',
+            'kode_produksi' => 'required|array|min:1',
+            'kode_produksi.*' => 'required|string|max:100',
+            'expired_date' => 'required|array|min:1',
+            'expired_date.*' => 'required|date',
+            'jumlah_datang' => 'required|array|min:1',
+            'jumlah_datang.*' => 'required|string|max:100',
+            'jumlah_di_tolak' => 'required|array|min:1',
+            'jumlah_di_tolak.*' => 'required|string|max:100',
+            'dokumentasi' => 'nullable|array',
+            'dokumentasi.*' => 'nullable|image|max:1024',
+            'keterangan' => 'nullable|array',
+            'keterangan.*' => 'nullable|string',
+            'di_buat_oleh' => 'nullable|array',
+            'di_buat_oleh.*' => 'nullable|string|max:255',
+            'setujui_oleh' => 'nullable|array',
+            'setujui_oleh.*' => 'nullable|string|max:255',
         ]);
 
-        // Upload dokumentasi jika ada
-        $dokumentasiPath = null;
-        if ($request->hasFile('dokumentasi')) {
-            $file = $request->file('dokumentasi');
-            $dokumentasiPath = $file->storePublicly('komplain/dokumentasi', 'public');
+        $idProdukArr = array_values((array) $request->input('id_produk', []));
+        $kategoriCodeArr = array_values((array) $request->input('kategori_code', []));
+        $kodeProduksiArr = (array) $request->input('kode_produksi', []);
+        $expiredDateArr = (array) $request->input('expired_date', []);
+        $jumlahDatangArr = (array) $request->input('jumlah_datang', []);
+        $jumlahDitolakArr = (array) $request->input('jumlah_di_tolak', []);
+        $keteranganArr = (array) $request->input('keterangan', []);
+        $dibuatArr = (array) $request->input('di_buat_oleh', []);
+        $setujuiArr = (array) $request->input('setujui_oleh', []);
+
+        $produkMetaById = Produk::whereIn('id', $idProdukArr)
+            ->get(['id', 'nama_produk', 'kategori_code'])
+            ->keyBy('id');
+
+        $produkNamaById = $produkMetaById
+            ->mapWithKeys(function ($p) {
+                return [(string) $p->id => $p->nama_produk];
+            })
+            ->toArray();
+
+        $produkKategoriById = $produkMetaById
+            ->mapWithKeys(function ($p) {
+                return [(string) $p->id => $p->kategori_code];
+            })
+            ->toArray();
+        $namaProdukArr = array_map(function ($id) use ($produkNamaById) {
+            $key = (string) $id;
+            return $produkNamaById[$key] ?? null;
+        }, $idProdukArr);
+
+        // Fill kategori from user input; if missing/empty then derive from produk master
+        $kategoriCodeArr = array_map(function ($idx) use ($kategoriCodeArr, $idProdukArr, $produkKategoriById) {
+            $val = $kategoriCodeArr[$idx] ?? null;
+            $val = is_string($val) ? trim($val) : $val;
+            if ($val !== null && $val !== '') return $val;
+
+            $id = $idProdukArr[$idx] ?? null;
+            $key = $id !== null ? (string) $id : '';
+            $derived = $key !== '' ? ($produkKategoriById[$key] ?? null) : null;
+            return $derived;
+        }, array_keys($idProdukArr));
+
+        $dokumentasiPaths = [];
+        $fileArr = (array) $request->file('dokumentasi', []);
+        $rowCount = max(
+            count($idProdukArr),
+            count($kodeProduksiArr),
+            count($expiredDateArr),
+            count($jumlahDatangArr),
+            count($jumlahDitolakArr),
+            count($fileArr)
+        );
+        for ($i = 0; $i < $rowCount; $i++) {
+            $file = $fileArr[$i] ?? null;
+            if ($file) {
+                $dokumentasiPaths[$i] = $file->storePublicly('komplain/dokumentasi', 'public');
+            } else {
+                $dokumentasiPaths[$i] = null;
+            }
         }
 
-        // Simpan ke database
+        $firstNamaProduk = $namaProdukArr[0] ?? null;
+        $firstKodeProduksi = $kodeProduksiArr[0] ?? null;
+        $firstExpiredDate = $expiredDateArr[0] ?? null;
+        $firstJumlahDatang = $jumlahDatangArr[0] ?? null;
+        $firstJumlahDitolak = $jumlahDitolakArr[0] ?? null;
+        $firstDokumentasi = $dokumentasiPaths[0] ?? null;
+        $firstKeterangan = $keteranganArr[0] ?? null;
+        $firstDibuat = $dibuatArr[0] ?? null;
+        $firstSetujui = $setujuiArr[0] ?? null;
+
         DetailKomplain::create([
             'nama_supplier' => $request->nama_supplier,
             'tanggal_kedatangan' => $request->tanggal_kedatangan,
             'id_shift' => $request->id_shift,
             'no_po' => $request->no_po,
-            'nama_produk' => $request->nama_produk,
-            'kode_produksi' => $request->kode_produksi,
-            'expired_date' => $request->expired_date,
-            'jumlah_datang' => $request->jumlah_datang,
-            'jumlah_di_tolak' => $request->jumlah_di_tolak,
-            'dokumentasi' => $dokumentasiPath,
-            'keterangan' => $request->keterangan,
-            'di_buat_oleh' => $request->di_buat_oleh,
-            'setujui_oleh' => $request->setujui_oleh,
+
+            // legacy scalar fields (keep compatibility with existing index/show)
+            'nama_produk' => $firstNamaProduk,
+            'kode_produksi' => $firstKodeProduksi,
+            'expired_date' => $firstExpiredDate,
+            'jumlah_datang' => $firstJumlahDatang,
+            'jumlah_di_tolak' => $firstJumlahDitolak,
+            'dokumentasi' => $firstDokumentasi,
+            'keterangan' => $firstKeterangan,
+            'di_buat_oleh' => $firstDibuat,
+            'setujui_oleh' => $firstSetujui,
+
+            // array/json fields (kemasan concept)
+            'id_produk_array' => array_values($idProdukArr),
+            'kategori_code_array' => array_values($kategoriCodeArr),
+            'nama_produk_array' => array_values($namaProdukArr),
+            'kode_produksi_array' => array_values($kodeProduksiArr),
+            'expired_date_array' => array_values($expiredDateArr),
+            'jumlah_datang_array' => array_values($jumlahDatangArr),
+            'jumlah_di_tolak_array' => array_values($jumlahDitolakArr),
+            'dokumentasi_array' => array_values($dokumentasiPaths),
+            'keterangan_array' => array_values($keteranganArr),
+            'di_buat_oleh_array' => array_values($dibuatArr),
+            'setujui_oleh_array' => array_values($setujuiArr),
+
             'id_user' => Auth::id(),
         ]);
 
@@ -120,27 +229,54 @@ class DetailKomplainController extends Controller
 
     public function show(DetailKomplain $detailKomplain)
     {
-        return view('qc-sistem.detail-komplain.show', compact('detailKomplain'));
+        $idProdukArr = is_array($detailKomplain->id_produk_array ?? null) ? $detailKomplain->id_produk_array : [];
+        $idProdukArr = array_values(array_filter($idProdukArr, function ($v) {
+            return $v !== null && $v !== '';
+        }));
+
+        $produkNamaById = !empty($idProdukArr)
+            ? Produk::whereIn('id', $idProdukArr)->pluck('nama_produk', 'id')->toArray()
+            : [];
+
+        return view('qc-sistem.detail-komplain.show', compact('detailKomplain', 'produkNamaById'));
     }
 
     public function edit(DetailKomplain $detailKomplain)
     {
         $user = Auth::user();
-        // SuperAdmin bisa edit semua, Admin hanya sesuai plant
         if ($user->role->role !== 'SuperAdmin' && $user->id_plant !== $detailKomplain->user->id_plant) {
             abort(403, 'Unauthorized');
         }
-        
-        // Filter produk berdasarkan plant
+
         $query = Produk::query();
         if ($user->role->role !== 'SuperAdmin') {
-            // Admin dan role lain hanya lihat produk sesuai plant
             $query->whereHas('user', function ($q) use ($user) {
                 $q->where('id_plant', $user->id_plant);
             });
         }
+
         $produks = $query->latest()->get();
-        return view('qc-sistem.detail-komplain.edit', compact('detailKomplain', 'produks'));
+
+        $produkKategoriOptions = $produks
+            ->pluck('kategori_code')
+            ->filter()
+            ->unique()
+            ->sort()
+            ->values();
+
+        $produkByKategori = $produks
+            ->groupBy('kategori_code')
+            ->map(function ($items) {
+                return $items->map(function ($p) {
+                    return [
+                        'id' => $p->id,
+                        'nama' => $p->nama_produk,
+                        'kategori_code' => $p->kategori_code,
+                    ];
+                })->values();
+            });
+
+        return view('qc-sistem.detail-komplain.edit', compact('detailKomplain', 'produks', 'produkKategoriOptions', 'produkByKategori'));
     }
 
     public function update(Request $request, DetailKomplain $detailKomplain)
@@ -149,41 +285,141 @@ class DetailKomplainController extends Controller
             'nama_supplier' => 'required|string|max:255',
             'tanggal_kedatangan' => 'required|date',
             'no_po' => 'required|string|max:100',
-            'nama_produk' => 'required|string|max:255',
-            'kode_produksi' => 'required|string|max:100',
-            'expired_date' => 'required|date',
-            'jumlah_datang' => 'required|string|max:100',
-            'jumlah_di_tolak' => 'required|string|max:100',
-            'dokumentasi' => 'nullable|image|max:1024',
-            'keterangan' => 'nullable|string',
-            'di_buat_oleh' => 'nullable|string|max:255',
-            'setujui_oleh' => 'nullable|string|max:255',
+            'kategori_code' => 'nullable|array',
+            'kategori_code.*' => 'nullable|string|max:255',
+            'id_produk' => 'required|array|min:1',
+            'id_produk.*' => 'required|exists:produks,id',
+            'kode_produksi' => 'required|array|min:1',
+            'kode_produksi.*' => 'required|string|max:100',
+            'expired_date' => 'required|array|min:1',
+            'expired_date.*' => 'required|date',
+            'jumlah_datang' => 'required|array|min:1',
+            'jumlah_datang.*' => 'required|string|max:100',
+            'jumlah_di_tolak' => 'required|array|min:1',
+            'jumlah_di_tolak.*' => 'required|string|max:100',
+            'dokumentasi_existing' => 'nullable|array',
+            'dokumentasi_existing.*' => 'nullable|string',
+            'dokumentasi' => 'nullable|array',
+            'dokumentasi.*' => 'nullable|image|max:1024',
+            'keterangan' => 'nullable|array',
+            'keterangan.*' => 'nullable|string',
+            'di_buat_oleh' => 'nullable|array',
+            'di_buat_oleh.*' => 'nullable|string|max:255',
+            'setujui_oleh' => 'nullable|array',
+            'setujui_oleh.*' => 'nullable|string|max:255',
         ]);
 
-        // Update dokumentasi jika ada file baru
-        $dokumentasiPath = $detailKomplain->dokumentasi;
-        if ($request->hasFile('dokumentasi')) {
-            if ($detailKomplain->dokumentasi) {
-                Storage::disk('public')->delete($detailKomplain->dokumentasi);
+        $idProdukArr = array_values((array) $request->input('id_produk', []));
+        $kategoriCodeArr = array_values((array) $request->input('kategori_code', []));
+        $kodeProduksiArr = (array) $request->input('kode_produksi', []);
+        $expiredDateArr = (array) $request->input('expired_date', []);
+        $jumlahDatangArr = (array) $request->input('jumlah_datang', []);
+        $jumlahDitolakArr = (array) $request->input('jumlah_di_tolak', []);
+        $keteranganArr = (array) $request->input('keterangan', []);
+        $dibuatArr = (array) $request->input('di_buat_oleh', []);
+        $setujuiArr = (array) $request->input('setujui_oleh', []);
+
+        $produkMetaById = Produk::whereIn('id', $idProdukArr)
+            ->get(['id', 'nama_produk', 'kategori_code'])
+            ->keyBy('id');
+
+        $produkNamaById = $produkMetaById
+            ->mapWithKeys(function ($p) {
+                return [(string) $p->id => $p->nama_produk];
+            })
+            ->toArray();
+
+        $produkKategoriById = $produkMetaById
+            ->mapWithKeys(function ($p) {
+                return [(string) $p->id => $p->kategori_code];
+            })
+            ->toArray();
+
+        $namaProdukArr = array_map(function ($id) use ($produkNamaById) {
+            $key = (string) $id;
+            return $produkNamaById[$key] ?? null;
+        }, $idProdukArr);
+
+        // Fill kategori from user input; if missing/empty then derive from produk master
+        $kategoriCodeArr = array_map(function ($idx) use ($kategoriCodeArr, $idProdukArr, $produkKategoriById) {
+            $val = $kategoriCodeArr[$idx] ?? null;
+            $val = is_string($val) ? trim($val) : $val;
+            if ($val !== null && $val !== '') return $val;
+
+            $id = $idProdukArr[$idx] ?? null;
+            $key = $id !== null ? (string) $id : '';
+            $derived = $key !== '' ? ($produkKategoriById[$key] ?? null) : null;
+            return $derived;
+        }, array_keys($idProdukArr));
+
+        $existingDokArr = (array) $request->input('dokumentasi_existing', []);
+        $uploadedFiles = (array) $request->file('dokumentasi', []);
+
+        $rowCount = max(
+            count($idProdukArr),
+            count($kodeProduksiArr),
+            count($expiredDateArr),
+            count($jumlahDatangArr),
+            count($jumlahDitolakArr),
+            count($existingDokArr),
+            count($uploadedFiles)
+        );
+
+        $dokumentasiPaths = [];
+        $currentStored = is_array($detailKomplain->dokumentasi_array ?? null) ? $detailKomplain->dokumentasi_array : [];
+
+        for ($i = 0; $i < $rowCount; $i++) {
+            $oldPath = $existingDokArr[$i] ?? ($currentStored[$i] ?? null);
+            $file = $uploadedFiles[$i] ?? null;
+
+            if ($file) {
+                $newPath = $file->storePublicly('komplain/dokumentasi', 'public');
+                $dokumentasiPaths[$i] = $newPath;
+
+                if ($oldPath) {
+                    Storage::disk('public')->delete($oldPath);
+                }
+            } else {
+                $dokumentasiPaths[$i] = $oldPath;
             }
-            $file = $request->file('dokumentasi');
-            $dokumentasiPath = $file->storePublicly('komplain/dokumentasi', 'public');
         }
 
-        // Update data
+        $firstNamaProduk = $namaProdukArr[0] ?? null;
+        $firstKodeProduksi = $kodeProduksiArr[0] ?? null;
+        $firstExpiredDate = $expiredDateArr[0] ?? null;
+        $firstJumlahDatang = $jumlahDatangArr[0] ?? null;
+        $firstJumlahDitolak = $jumlahDitolakArr[0] ?? null;
+        $firstDokumentasi = $dokumentasiPaths[0] ?? null;
+        $firstKeterangan = $keteranganArr[0] ?? null;
+        $firstDibuat = $dibuatArr[0] ?? null;
+        $firstSetujui = $setujuiArr[0] ?? null;
+
         $detailKomplain->update([
             'nama_supplier' => $request->nama_supplier,
             'tanggal_kedatangan' => $request->tanggal_kedatangan,
             'no_po' => $request->no_po,
-            'nama_produk' => $request->nama_produk,
-            'kode_produksi' => $request->kode_produksi,
-            'expired_date' => $request->expired_date,
-            'jumlah_datang' => $request->jumlah_datang,
-            'jumlah_di_tolak' => $request->jumlah_di_tolak,
-            'dokumentasi' => $dokumentasiPath,
-            'keterangan' => $request->keterangan,
-            'di_buat_oleh' => $request->di_buat_oleh,
-            'setujui_oleh' => $request->setujui_oleh,
+
+            'nama_produk' => $firstNamaProduk,
+            'kode_produksi' => $firstKodeProduksi,
+            'expired_date' => $firstExpiredDate,
+            'jumlah_datang' => $firstJumlahDatang,
+            'jumlah_di_tolak' => $firstJumlahDitolak,
+            'dokumentasi' => $firstDokumentasi,
+            'keterangan' => $firstKeterangan,
+            'di_buat_oleh' => $firstDibuat,
+            'setujui_oleh' => $firstSetujui,
+
+            'id_produk_array' => array_values($idProdukArr),
+            'kategori_code_array' => array_values($kategoriCodeArr),
+            'nama_produk_array' => array_values($namaProdukArr),
+            'kode_produksi_array' => array_values($kodeProduksiArr),
+            'expired_date_array' => array_values($expiredDateArr),
+            'jumlah_datang_array' => array_values($jumlahDatangArr),
+            'jumlah_di_tolak_array' => array_values($jumlahDitolakArr),
+            'dokumentasi_array' => array_values($dokumentasiPaths),
+            'keterangan_array' => array_values($keteranganArr),
+            'di_buat_oleh_array' => array_values($dibuatArr),
+            'setujui_oleh_array' => array_values($setujuiArr),
         ]);
 
         return redirect()->route('detail-komplain.index')

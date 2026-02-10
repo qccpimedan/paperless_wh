@@ -415,165 +415,179 @@
                                                             </div>
                                                             <input type="hidden" name="id_distributor[]" class="id-distributor-hidden" value="{{ old('id_distributor.0') }}">
                                                         </div>
-                                                    </div>
+                                                    </div>   
                                                 </div>   
                                             </div>
-                                            
-                                            <div class="row">
-                                                <div class="col-md-6">
-                                                    <div class="form-group">
-                                                        <label class="form-label">Negara Produsen</label>
-                                                        <select class="choices form-control" name="negara_produsen[]">
-                                                            <option value="">Pilih Negara</option>
-                                                            @foreach($countries as $code => $name)
-                                                                <option value="{{ $name }}">{{ $name }}</option>
-                                                            @endforeach
-                                                        </select>
+
+                                            <div class="detail-items">
+                                                <div class="detail-item border rounded p-3 mb-3" style="background: #fff;" data-detail-index="0" data-detail-global-index="0">
+                                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                                        <strong>Detail 1</strong>
+                                                        <button type="button" class="btn btn-danger btn-sm remove-detail-btn" style="display:none;"><i class="bi bi-trash"></i> Hapus Detail</button>
                                                     </div>
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <div class="form-group">
-                                                        <label class="form-label">Kode Produksi</label>
-                                                        <input type="text" class="form-control" name="kode_produksi[]" placeholder="Kode Produksi">
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            
-                                            <div class="row">
-                                                <div class="col-md-6">
-                                                    <div class="form-group">
-                                                        <label class="form-label">Expire Date</label>
-                                                        <input type="date" class="form-control" name="expire_date[]">
-                                                    </div>
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <div class="form-group">
-                                                        <label class="form-label">Jumlah Datang (kg/liter/pail)</label>
-                                                        <input type="text" class="form-control" name="jumlah_datang[]" placeholder="Jumlah Datang (kg/liter/pail)">
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            
-                                            <div class="row">
-                                                <div class="col-md-6">
-                                                    <div class="form-group">
-                                                        <label class="form-label">Jumlah Sampling</label>
-                                                        <input type="text" class="form-control" name="jumlah_sampling[]" placeholder="Jumlah Sampling">
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            
-                                            <!-- Kondisi Fisik -->
-                                            <div class="form-section mb-3">
-                                                <h6 class="text-primary mb-2">Kondisi Fisik</h6>
-                                                <div class="row">
-                                                    <div class="col-md-6">
-                                                        <div class="mb-3">
-                                                            <label class="form-label"><strong>Kemasan</strong></label>
-                                                            <div class="form-check">
-                                                                <input class="form-check-input" type="radio" name="kondisi_fisik_kemasan_1" id="kemasan_ya_1" value="1">
-                                                                <label class="form-check-label" for="kemasan_ya_1">Ya ✓</label>
+
+                                                    <div class="row">
+                                                        <div class="col-md-6">
+                                                            <div class="form-group">
+                                                                <label class="form-label">Negara Produsen</label>
+                                                                <select class="choices form-control" name="negara_produsen[]">
+                                                                    <option value="">Pilih Negara</option>
+                                                                    @foreach($countries as $code => $name)
+                                                                        <option value="{{ $name }}">{{ $name }}</option>
+                                                                    @endforeach
+                                                                </select>
                                                             </div>
-                                                            <div class="form-check">
-                                                                <input class="form-check-input" type="radio" name="kondisi_fisik_kemasan_1" id="kemasan_tidak_1" value="0">
-                                                                <label class="form-check-label" for="kemasan_tidak_1">Tidak ✗</label>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <div class="form-group">
+                                                                <label class="form-label">Kode Produksi</label>
+                                                                <input type="text" class="form-control" name="kode_produksi[]" placeholder="Kode Produksi">
                                                             </div>
-                                                            <input type="hidden" name="kondisi_fisik_kemasan[]" class="radio-value-kemasan-1">
                                                         </div>
                                                     </div>
-                                                    <div class="col-md-6">
-                                                        <div class="mb-3">
-                                                            <label class="form-label"><strong>Warna</strong></label>
-                                                            <div class="form-check">
-                                                                <input class="form-check-input" type="radio" name="kondisi_fisik_warna_1" id="warna_ya_1" value="1">
-                                                                <label class="form-check-label" for="warna_ya_1">Ya ✓</label>
+
+                                                    <div class="row">
+                                                        <div class="col-md-6">
+                                                            <div class="form-group">
+                                                                <label class="form-label">Expire Date</label>
+                                                                <input type="date" class="form-control" name="expire_date[]">
                                                             </div>
-                                                            <div class="form-check">
-                                                                <input class="form-check-input" type="radio" name="kondisi_fisik_warna_1" id="warna_tidak_1" value="0">
-                                                                <label class="form-check-label" for="warna_tidak_1">Tidak ✗</label>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <div class="form-group">
+                                                                <label class="form-label">Jumlah Datang (kg/liter/pail)</label>
+                                                                <input type="text" class="form-control" name="jumlah_datang[]" placeholder="Jumlah Datang (kg/liter/pail)">
                                                             </div>
-                                                            <input type="hidden" name="kondisi_fisik_warna[]" class="radio-value-warna-1">
                                                         </div>
                                                     </div>
-                                                </div>
-                                            </div>
-                                            
-                                            <!-- Dokumen -->
-                                            <div class="form-section mb-3">
-                                                <h6 class="text-primary mb-2">Dokumen & Sertifikasi</h6>
-                                                <div class="row">
-                                                    <div class="col-md-6">
-                                                        <div class="mb-3">
-                                                            <label class="form-label"><strong>Halal (berlaku)</strong></label>
-                                                            <div class="form-check">
-                                                                <input class="form-check-input" type="radio" name="persyaratan_dokumen_halal_1" id="halal_ya_1" value="1">
-                                                                <label class="form-check-label" for="halal_ya_1">Ya ✓</label>
+
+                                                    <div class="row">
+                                                        <div class="col-md-6">
+                                                            <div class="form-group">
+                                                                <label class="form-label">Jumlah Sampling</label>
+                                                                <input type="text" class="form-control" name="jumlah_sampling[]" placeholder="Jumlah Sampling">
                                                             </div>
-                                                            <div class="form-check">
-                                                                <input class="form-check-input" type="radio" name="persyaratan_dokumen_halal_1" id="halal_tidak_1" value="0">
-                                                                <label class="form-check-label" for="halal_tidak_1">Tidak ✗</label>
-                                                            </div>
-                                                            <input type="hidden" name="persyaratan_dokumen_halal[]" class="radio-value-halal-1">
                                                         </div>
                                                     </div>
-                                                    <div class="col-md-6">
-                                                        <div class="mb-3">
-                                                            <label class="form-label"><strong>COA</strong></label>
-                                                            <div class="form-check">
-                                                                <input class="form-check-input" type="radio" name="coa_1" id="coa_ya_1" value="1">
-                                                                <label class="form-check-label" for="coa_ya_1">Ya ✓</label>
+
+                                                    <!-- Kondisi Fisik -->
+                                                    <div class="form-section mb-3">
+                                                        <h6 class="text-primary mb-2">Kondisi Fisik</h6>
+                                                        <div class="row">
+                                                            <div class="col-md-6">
+                                                                <div class="mb-3">
+                                                                    <label class="form-label"><strong>Kemasan</strong></label>
+                                                                    <div class="form-check">
+                                                                        <input class="form-check-input" type="radio" name="kondisi_fisik_kemasan_1" id="kemasan_ya_1" value="1">
+                                                                        <label class="form-check-label" for="kemasan_ya_1">Ya ✓</label>
+                                                                    </div>
+                                                                    <div class="form-check">
+                                                                        <input class="form-check-input" type="radio" name="kondisi_fisik_kemasan_1" id="kemasan_tidak_1" value="0">
+                                                                        <label class="form-check-label" for="kemasan_tidak_1">Tidak ✗</label>
+                                                                    </div>
+                                                                    <input type="hidden" name="kondisi_fisik_kemasan[]" class="radio-value-kemasan-1">
+                                                                </div>
                                                             </div>
-                                                            <div class="form-check">
-                                                                <input class="form-check-input" type="radio" name="coa_1" id="coa_tidak_1" value="0">
-                                                                <label class="form-check-label" for="coa_tidak_1">Tidak ✗</label>
+                                                            <div class="col-md-6">
+                                                                <div class="mb-3">
+                                                                    <label class="form-label"><strong>Warna</strong></label>
+                                                                    <div class="form-check">
+                                                                        <input class="form-check-input" type="radio" name="kondisi_fisik_warna_1" id="warna_ya_1" value="1">
+                                                                        <label class="form-check-label" for="warna_ya_1">Ya ✓</label>
+                                                                    </div>
+                                                                    <div class="form-check">
+                                                                        <input class="form-check-input" type="radio" name="kondisi_fisik_warna_1" id="warna_tidak_1" value="0">
+                                                                        <label class="form-check-label" for="warna_tidak_1">Tidak ✗</label>
+                                                                    </div>
+                                                                    <input type="hidden" name="kondisi_fisik_warna[]" class="radio-value-warna-1">
+                                                                </div>
                                                             </div>
-                                                            <input type="hidden" name="coa[]" class="radio-value-coa-1">
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="form-section mb-3">
+                                                        <h6 class="text-primary mb-2">Upload Gambar</h6>
+                                                        <div class="row">
+                                                            <div class="col-md-6">
+                                                                <div class="form-group">
+                                                                    <label class="form-label">Foto Chemical (Max 1MB)</label>
+                                                                    <input type="file" name="image_chemical[]" class="form-control" accept="image/*" capture="camera">
+                                                                    @error('image_chemical.0')
+                                                                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                                                                    @enderror
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Hasil Pemeriksaan -->
+                                                    <div class="form-section mb-3">
+                                                        <h6 class="text-primary mb-2">Hasil Pemeriksaan</h6>
+                                                        <div class="row">
+                                                            <div class="col-md-6">
+                                                                <div class="form-group">
+                                                                    <label for="status">Status <span class="text-danger">*</span></label>
+                                                                    <select id="status" class="form-control @error('status_baris') is-invalid @enderror" name="status_baris[]" required>
+                                                                        <option value="">Pilih Status</option>
+                                                                        <option value="Hold">Hold</option>
+                                                                        <option value="Release">Release</option>
+                                                                    </select>
+                                                                    @error('status_baris')
+                                                                        <div class="invalid-feedback">{{ $message }}</div>
+                                                                    @enderror
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-md-6">
+                                                                <div class="form-group">
+                                                                    <label class="form-label">Keterangan</label>
+                                                                    <textarea class="form-control" name="keterangan[]" rows="3" placeholder="Keterangan"></textarea>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Dokumen -->
+                                                    <div class="form-section mb-3">
+                                                        <h6 class="text-primary mb-2">Dokumen & Sertifikasi</h6>
+                                                        <div class="row">
+                                                            <div class="col-md-6">
+                                                                <div class="mb-3">
+                                                                    <label class="form-label"><strong>Halal (berlaku)</strong></label>
+                                                                    <div class="form-check">
+                                                                        <input class="form-check-input" type="radio" name="persyaratan_dokumen_halal_1" id="halal_ya_1" value="1">
+                                                                        <label class="form-check-label" for="halal_ya_1">Ya ✓</label>
+                                                                    </div>
+                                                                    <div class="form-check">
+                                                                        <input class="form-check-input" type="radio" name="persyaratan_dokumen_halal_1" id="halal_tidak_1" value="0">
+                                                                        <label class="form-check-label" for="halal_tidak_1">Tidak ✗</label>
+                                                                    </div>
+                                                                    <input type="hidden" name="persyaratan_dokumen_halal[]" class="radio-value-halal-1">
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-md-6">
+                                                                <div class="mb-3">
+                                                                    <label class="form-label"><strong>COA</strong></label>
+                                                                    <div class="form-check">
+                                                                        <input class="form-check-input" type="radio" name="coa_1" id="coa_ya_1" value="1">
+                                                                        <label class="form-check-label" for="coa_ya_1">Ya ✓</label>
+                                                                    </div>
+                                                                    <div class="form-check">
+                                                                        <input class="form-check-input" type="radio" name="coa_1" id="coa_tidak_1" value="0">
+                                                                        <label class="form-check-label" for="coa_tidak_1">Tidak ✗</label>
+                                                                    </div>
+                                                                    <input type="hidden" name="coa[]" class="radio-value-coa-1">
+                                                                </div>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>
                                             </div>
 
-                                            <div class="form-section mb-3">
-                                                <h6 class="text-primary mb-2">Upload Gambar</h6>
-                                                <div class="row">
-                                                    <div class="col-md-6">
-                                                        <div class="form-group">
-                                                            <label class="form-label">Foto Chemical (Max 1MB)</label>
-                                                            <input type="file" name="image_chemical[]" class="form-control" accept="image/*" capture="camera">
-                                                            @error('image_chemical.0')
-                                                                <div class="invalid-feedback d-block">{{ $message }}</div>
-                                                            @enderror
-                                                        </div>
-                                                    </div>
+                                            <div class="row mt-2">
+                                                <div class="col-md-12">
+                                                    <button type="button" class="btn btn-primary btn-sm add-detail-btn"><i class="bi bi-plus"></i> Tambah Detail</button>
                                                 </div>
                                             </div>
-                                            
-                                            <!-- Hasil Pemeriksaan -->
-                                            <div class="form-section mb-3">
-                                                <h6 class="text-primary mb-2">Hasil Pemeriksaan</h6>
-                                                <div class="row">
-                                                    <div class="col-md-6">
-                                                        <div class="form-group">
-                                                            <label for="status">Status <span class="text-danger">*</span></label>
-                                                            <select id="status" class="form-control @error('status_baris') is-invalid @enderror" name="status_baris[]" required>
-                                                                <option value="">Pilih Status</option>
-                                                                <option value="Hold">Hold</option>
-                                                                <option value="Release">Release</option>
-                                                            </select>
-                                                            @error('status_baris')
-                                                                <div class="invalid-feedback">{{ $message }}</div>
-                                                            @enderror
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-md-6">
-                                                        <div class="form-group">
-                                                            <label class="form-label">Keterangan</label>
-                                                            <textarea class="form-control" name="keterangan[]" rows="3" placeholder="Keterangan"></textarea>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            
                                             <!-- Buttons -->
                                             <div class="row mt-3 pt-3 border-top">
                                                 <div class="col-md-12">
@@ -661,8 +675,8 @@ document.addEventListener('DOMContentLoaded', function() {
         console.error('Error setting up dynamic form listeners:', err);
     }
     
-    // Setup radio listeners for first row
-    setupRadioListenersForRow1();
+    updateRowNumbers();
+    updateDetailButtons();
 
     function populateProdukOptionsForRow(rowEl) {
         const kategoriSelect = rowEl.querySelector('select.kategori-produk-select');
@@ -826,6 +840,89 @@ function setupDynamicFormListeners() {
             }
         }
     });
+
+    // Add detail within row
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.add-detail-btn')) {
+            const rowEl = e.target.closest('.unified-row');
+            if (!rowEl) return;
+            const container = rowEl.querySelector('.detail-items');
+            if (!container) return;
+            const items = container.querySelectorAll('.detail-item');
+            const last = items.length ? items[items.length - 1] : null;
+            if (!last) return;
+
+            const newItem = last.cloneNode(true);
+            newItem.querySelectorAll('input, textarea, select').forEach((el) => {
+                if (el.type === 'file') {
+                    el.value = '';
+                } else if (el.type === 'radio') {
+                    el.checked = false;
+                } else {
+                    el.value = '';
+                }
+            });
+            newItem.querySelectorAll('input[type="hidden"][name="kondisi_fisik_kemasan[]"], input[type="hidden"][name="kondisi_fisik_warna[]"], input[type="hidden"][name="persyaratan_dokumen_halal[]"], input[type="hidden"][name="coa[]"]').forEach((el) => {
+                el.value = '';
+            });
+
+            container.appendChild(newItem);
+            updateRowNumbers();
+            updateDetailButtons();
+            initializeAllChoices();
+        }
+    });
+
+    // Remove detail within row
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.remove-detail-btn')) {
+            const rowEl = e.target.closest('.unified-row');
+            const detailEl = e.target.closest('.detail-item');
+            if (!rowEl || !detailEl) return;
+            const items = rowEl.querySelectorAll('.detail-items .detail-item');
+            if (items.length > 1) {
+                detailEl.remove();
+                updateRowNumbers();
+                updateDetailButtons();
+            }
+        }
+    });
+}
+
+function setupRowRadios(detailEl) {
+    const globalIndex = Number(detailEl.dataset.detailGlobalIndex || 0) + 1;
+    const mappings = [
+        { key: 'kondisi_fisik_kemasan', hiddenPrefix: 'kemasan' },
+        { key: 'kondisi_fisik_warna', hiddenPrefix: 'warna' },
+        { key: 'persyaratan_dokumen_halal', hiddenPrefix: 'halal' },
+        { key: 'coa', hiddenPrefix: 'coa' },
+    ];
+
+    mappings.forEach(({ key, hiddenPrefix }) => {
+        const radioName = `${key}_${globalIndex}`;
+        detailEl.querySelectorAll(`input[type="radio"][name^="${key}_"]`).forEach((radio, idx) => {
+            radio.name = radioName;
+            const uniqueRadioId = `${key}_${globalIndex}_${idx}`;
+            radio.id = uniqueRadioId;
+            const formCheck = radio.closest('.form-check');
+            const lbl = formCheck ? formCheck.querySelector('label.form-check-label') : null;
+            if (lbl) lbl.setAttribute('for', uniqueRadioId);
+        });
+
+        const hidden = detailEl.querySelector(`input[type="hidden"].radio-value-${hiddenPrefix}-${globalIndex}`)
+            || detailEl.querySelector(`input[type="hidden"][name="${key}[]"]`);
+
+        detailEl.querySelectorAll(`input[type="radio"][name="${radioName}"]`).forEach((radio) => {
+            radio.addEventListener('change', function () {
+                if (hidden) hidden.value = this.value;
+            });
+        });
+
+        const checked = detailEl.querySelector(`input[type="radio"][name="${radioName}"]:checked`);
+        if (checked && hidden && (hidden.value === '' || hidden.value === null)) {
+            hidden.value = checked.value;
+        }
+    });
 }
 
 // Initialize Choices.js for select elements
@@ -915,15 +1012,12 @@ function addNewRow() {
     newRow.className = 'unified-row mb-4 p-3 border rounded';
     newRow.style.backgroundColor = '#f8f9fa';
     
-    // Generate unique ID for radio buttons in this row
-    const uniqueId = Date.now();
-    
     // Debug: Check if cache has data
     console.log('Cache data:', selectOptionsCache);
     
     // Set the HTML content - TEMPLATE LENGKAP
     newRow.innerHTML = `
-        <h6 class="text-primary mb-3">Baris ${rowCount}</h6>
+        <h6 class="text-primary mb-3">Produk ${rowCount}</h6>
         
         <!-- Informasi Chemical -->
         <div class="row">
@@ -1021,154 +1115,184 @@ function addNewRow() {
                 </div>
             </div>
         </div>
-        
-        <div class="row">
-            <div class="col-md-6">
-                <div class="form-group">
-                    <label class="form-label">Jumlah Sampling</label>
-                    <input type="text" class="form-control" name="jumlah_sampling[]" placeholder="Jumlah Sampling">
+
+        <div class="detail-items">
+            <div class="detail-item border rounded p-3 mb-3" style="background: #fff;" data-detail-index="0" data-detail-global-index="0">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <strong>Detail 1</strong>
+                    <button type="button" class="btn btn-danger btn-sm remove-detail-btn" style="display:none;"><i class="bi bi-trash"></i> Hapus Detail</button>
                 </div>
-            </div>
-        </div>
-        
-        <!-- Kondisi Fisik -->
-        <div class="form-section mb-3">
-            <h6 class="text-primary mb-2">Kondisi Fisik</h6>
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="mb-3">
-                        <label class="form-label"><strong>Kemasan</strong></label>
-                        <div class="form-check">
-                            <input class="form-check-input" type="radio" name="kondisi_fisik_kemasan_${uniqueId}" value="1">
-                            <label class="form-check-label">Ya ✓</label>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">Negara Produsen</label>
+                            <select class="choices form-control" name="negara_produsen[]">
+                                <option value="">Pilih Negara</option>
+                                @foreach($countries as $code => $name)
+                                    <option value="{{ $name }}">{{ $name }}</option>
+                                @endforeach
+                            </select>
                         </div>
-                        <div class="form-check">
-                            <input class="form-check-input" type="radio" name="kondisi_fisik_kemasan_${uniqueId}" value="0">
-                            <label class="form-check-label">Tidak ✗</label>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">Kode Produksi</label>
+                            <input type="text" class="form-control" name="kode_produksi[]" placeholder="Kode Produksi">
                         </div>
-                        <input type="hidden" name="kondisi_fisik_kemasan[]" class="radio-value-kemasan-${uniqueId}">
                     </div>
                 </div>
-                <div class="col-md-6">
-                    <div class="mb-3">
-                        <label class="form-label"><strong>Warna</strong></label>
-                        <div class="form-check">
-                            <input class="form-check-input" type="radio" name="kondisi_fisik_warna_${uniqueId}" value="1">
-                            <label class="form-check-label">Ya ✓</label>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">Expire Date</label>
+                            <input type="date" class="form-control" name="expire_date[]">
                         </div>
-                        <div class="form-check">
-                            <input class="form-check-input" type="radio" name="kondisi_fisik_warna_${uniqueId}" value="0">
-                            <label class="form-check-label">Tidak ✗</label>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">Jumlah Datang (kg/liter/pail)</label>
+                            <input type="text" class="form-control" name="jumlah_datang[]" placeholder="Jumlah Datang (kg/liter/pail)">
                         </div>
-                        <input type="hidden" name="kondisi_fisik_warna[]" class="radio-value-warna-${uniqueId}">
                     </div>
                 </div>
-            </div>
-        </div>
-        
-        <!-- Dokumen -->
-        <div class="form-section mb-3">
-            <h6 class="text-primary mb-2">Dokumen & Sertifikasi</h6>
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="mb-3">
-                        <label class="form-label"><strong>Halal (berlaku)</strong></label>
-                        <div class="form-check">
-                            <input class="form-check-input" type="radio" name="persyaratan_dokumen_halal_${uniqueId}" value="1">
-                            <label class="form-check-label">Ya ✓</label>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">Jumlah Sampling</label>
+                            <input type="text" class="form-control" name="jumlah_sampling[]" placeholder="Jumlah Sampling">
                         </div>
-                        <div class="form-check">
-                            <input class="form-check-input" type="radio" name="persyaratan_dokumen_halal_${uniqueId}" value="0">
-                            <label class="form-check-label">Tidak ✗</label>
-                        </div>
-                        <input type="hidden" name="persyaratan_dokumen_halal[]" class="radio-value-halal-${uniqueId}">
                     </div>
                 </div>
-                <div class="col-md-6">
-                    <div class="mb-3">
-                        <label class="form-label"><strong>COA</strong></label>
-                        <div class="form-check">
-                            <input class="form-check-input" type="radio" name="coa_${uniqueId}" value="1">
-                            <label class="form-check-label">Ya ✓</label>
+
+                <!-- Kondisi Fisik -->
+                <div class="form-section mb-3">
+                    <h6 class="text-primary mb-2">Kondisi Fisik</h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label"><strong>Kemasan</strong></label>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="kondisi_fisik_kemasan_1" value="1">
+                                    <label class="form-check-label">Ya ✓</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="kondisi_fisik_kemasan_1" value="0">
+                                    <label class="form-check-label">Tidak ✗</label>
+                                </div>
+                                <input type="hidden" name="kondisi_fisik_kemasan[]" class="radio-value-kemasan-1">
+                            </div>
                         </div>
-                        <div class="form-check">
-                            <input class="form-check-input" type="radio" name="coa_${uniqueId}" value="0">
-                            <label class="form-check-label">Tidak ✗</label>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label"><strong>Warna</strong></label>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="kondisi_fisik_warna_1" value="1">
+                                    <label class="form-check-label">Ya ✓</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="kondisi_fisik_warna_1" value="0">
+                                    <label class="form-check-label">Tidak ✗</label>
+                                </div>
+                                <input type="hidden" name="kondisi_fisik_warna[]" class="radio-value-warna-1">
+                            </div>
                         </div>
-                        <input type="hidden" name="coa[]" class="radio-value-coa-${uniqueId}">
+                    </div>
+                </div>
+
+                <div class="form-section mb-3">
+                    <h6 class="text-primary mb-2">Upload Gambar</h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label">Foto Chemical (Max 1MB)</label>
+                                <input type="file" name="image_chemical[]" class="form-control" accept="image/*" capture="camera">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Hasil Pemeriksaan -->
+                <div class="form-section mb-3">
+                    <h6 class="text-primary mb-2">Hasil Pemeriksaan</h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="status">Status <span class="text-danger">*</span></label>
+                                <select class="form-control" name="status_baris[]" required>
+                                    <option value="">Pilih Status</option>
+                                    <option value="Hold">Hold</option>
+                                    <option value="Release">Release</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label">Keterangan</label>
+                                <textarea class="form-control" name="keterangan[]" rows="3" placeholder="Keterangan"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dokumen -->
+                <div class="form-section mb-3">
+                    <h6 class="text-primary mb-2">Dokumen & Sertifikasi</h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label"><strong>Halal (berlaku)</strong></label>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="persyaratan_dokumen_halal_1" value="1">
+                                    <label class="form-check-label">Ya ✓</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="persyaratan_dokumen_halal_1" value="0">
+                                    <label class="form-check-label">Tidak ✗</label>
+                                </div>
+                                <input type="hidden" name="persyaratan_dokumen_halal[]" class="radio-value-halal-1">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label"><strong>COA</strong></label>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="coa_1" value="1">
+                                    <label class="form-check-label">Ya ✓</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="coa_1" value="0">
+                                    <label class="form-check-label">Tidak ✗</label>
+                                </div>
+                                <input type="hidden" name="coa[]" class="radio-value-coa-1">
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="form-section mb-3">
-            <h6 class="text-primary mb-2">Upload Gambar</h6>
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="form-group">
-                        <label class="form-label">Foto Chemical (Max 1MB)</label>
-                        <input type="file" name="image_chemical[]" class="form-control" accept="image/*" capture="camera">
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Hasil Pemeriksaan -->
-        <div class="form-section mb-3">
-            <h6 class="text-primary mb-2">Hasil Pemeriksaan</h6>
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="form-group">
-                        <label for="status">Status <span class="text-danger">*</span></label>
-                        <select class="form-control" name="status_baris[]" required>
-                            <option value="">Pilih Status</option>
-                            <option value="Hold">Hold</option>
-                            <option value="Release">Release</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="form-group">
-                        <label class="form-label">Keterangan</label>
-                        <textarea class="form-control" name="keterangan[]" rows="3" placeholder="Keterangan"></textarea>
-                    </div>
-                </div>
+        <div class="row mt-2">
+            <div class="col-md-12">
+                <button type="button" class="btn btn-primary btn-sm add-detail-btn"><i class="bi bi-plus"></i> Tambah Detail</button>
             </div>
         </div>
         
         <!-- Buttons -->
         <div class="row mt-3 pt-3 border-top">
             <div class="col-md-12">
-                <button type="button" class="btn btn-danger btn-sm remove-unified-btn"><i class="bi bi-trash"></i> Hapus Baris</button>
+                <button type="button" class="btn btn-danger btn-sm remove-unified-btn"><i class="bi bi-trash"></i> Hapus Produk</button>
             </div>
         </div>
     `;
     
     container.appendChild(newRow);
-    
-    // Setup radio button listeners for the new row
-    setupRadioListeners(newRow, uniqueId);
-    
-    // Initialize Choices.js ONLY for selects in the new row
-    const newSelects = newRow.querySelectorAll('select.choices');
-    
-    newSelects.forEach(select => {
-        try {
-            new Choices(select, {
-                searchEnabled: true,
-                removeItemButton: true,
-                placeholder: true,
-                placeholderValue: 'Pilih opsi',
-                noResultsText: 'Tidak ada hasil',
-                noChoicesText: 'Tidak ada pilihan',
-                searchPlaceholderValue: 'Cari...',
-                itemSelectText: 'Tekan untuk memilih'
-            });
-            select.dataset.choicesInitialized = 'true';
-        } catch(err) {
-            console.error('Error initializing new select:', err);
-        }
-    });
+
+    initializeAllChoices();
+    updateRowNumbers();
+    updateDetailButtons();
     
     const kategoriSelect = newRow.querySelector('select.kategori-produk-select');
     if (kategoriSelect && kategoriSelect.value) {
@@ -1360,13 +1484,90 @@ function getDistributorOptions() {
 // Update row numbers
 function updateRowNumbers() {
     const rows = document.querySelectorAll('#unified-container .unified-row');
+    let globalDetail = 0;
     rows.forEach((row, index) => {
         const title = row.querySelector('h6');
         if (title) {
             title.textContent = `Produk ${index + 1}`;
         }
+
+        const detailItems = Array.from(row.querySelectorAll('.detail-items .detail-item'));
+        detailItems.forEach((detailEl, dIdx) => {
+            detailEl.dataset.detailIndex = String(dIdx);
+            detailEl.dataset.detailGlobalIndex = String(globalDetail);
+            const t = detailEl.querySelector('strong');
+            if (t) t.textContent = `Detail ${dIdx + 1}`;
+
+            detailEl.querySelectorAll('input[type="hidden"][name="kondisi_fisik_kemasan[]"]').forEach((el) => {
+                el.className = `radio-value-kemasan-${globalDetail + 1}`;
+            });
+            detailEl.querySelectorAll('input[type="hidden"][name="kondisi_fisik_warna[]"]').forEach((el) => {
+                el.className = `radio-value-warna-${globalDetail + 1}`;
+            });
+            detailEl.querySelectorAll('input[type="hidden"][name="persyaratan_dokumen_halal[]"]').forEach((el) => {
+                el.className = `radio-value-halal-${globalDetail + 1}`;
+            });
+            detailEl.querySelectorAll('input[type="hidden"][name="coa[]"]').forEach((el) => {
+                el.className = `radio-value-coa-${globalDetail + 1}`;
+            });
+
+            setupRowRadios(detailEl);
+            globalDetail += 1;
+        });
     });
 }
+
+function updateDetailButtons() {
+    document.querySelectorAll('#unified-container .unified-row').forEach((row) => {
+        const detailItems = Array.from(row.querySelectorAll('.detail-items .detail-item'));
+        detailItems.forEach((detailEl) => {
+            const btn = detailEl.querySelector('.remove-detail-btn');
+            if (btn) btn.style.display = detailItems.length > 1 ? '' : 'none';
+        });
+    });
+}
+
+// Sync header fields into extra details so arrays remain aligned (like kemasan/BBP)
+document.addEventListener('submit', function(e) {
+    const form = e.target;
+    if (!form || form.tagName.toLowerCase() !== 'form') return;
+    if (!form.closest('#main')) return;
+
+    // Remove previously injected hidden inputs (if any)
+    form.querySelectorAll('input.__synced_header_value').forEach((el) => el.remove());
+
+    const rows = Array.from(form.querySelectorAll('#unified-container .unified-row'));
+    rows.forEach((rowEl) => {
+        const details = Array.from(rowEl.querySelectorAll('.detail-items .detail-item'));
+        if (details.length <= 1) return;
+
+        const getVal = (sel) => {
+            const el = rowEl.querySelector(sel);
+            return el ? (el.value || '') : '';
+        };
+
+        const headerValues = {
+            kategori_code: getVal('select[name="kategori_code[]"]'),
+            id_produk: getVal('select[name="id_produk[]"]'),
+            kondisi_chemical: getVal('select[name="kondisi_chemical[]"]'),
+            id_chemical: getVal('input[name="id_chemical[]"]'),
+            id_produsen: getVal('input[name="id_produsen[]"]'),
+            id_distributor: getVal('input[name="id_distributor[]"]'),
+        };
+
+        // For each extra detail after the first, inject hidden values for header-based arrays
+        for (let i = 1; i < details.length; i += 1) {
+            Object.entries(headerValues).forEach(([key, value]) => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = `${key}[]`;
+                input.value = value;
+                input.className = '__synced_header_value';
+                form.appendChild(input);
+            });
+        }
+    });
+}, true);
 
 // Update remove buttons visibility
 function updateRemoveButtons() {

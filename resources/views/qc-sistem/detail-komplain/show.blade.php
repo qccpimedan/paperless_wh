@@ -78,78 +78,155 @@
                             <h5 class="card-title">Informasi Produk</h5>
                         </div>
                         <div class="card-body">
-                            <div class="row mb-3">
-                                <div class="col-md-6">
-                                    <label class="form-label fw-bold">Nama Produk</label>
-                                    <p class="text-muted">{{ $detailKomplain->nama_produk }}</p>
+                            @php
+                                $idProdukArr = is_array($detailKomplain->id_produk_array ?? null) ? $detailKomplain->id_produk_array : [];
+                                $kategoriArr = is_array($detailKomplain->kategori_code_array ?? null) ? $detailKomplain->kategori_code_array : [];
+                                $namaProdukArr = is_array($detailKomplain->nama_produk_array ?? null) ? $detailKomplain->nama_produk_array : [];
+                                $kodeProduksiArr = is_array($detailKomplain->kode_produksi_array ?? null) ? $detailKomplain->kode_produksi_array : [];
+                                $expiredDateArr = is_array($detailKomplain->expired_date_array ?? null) ? $detailKomplain->expired_date_array : [];
+                                $jumlahDatangArr = is_array($detailKomplain->jumlah_datang_array ?? null) ? $detailKomplain->jumlah_datang_array : [];
+                                $jumlahDitolakArr = is_array($detailKomplain->jumlah_di_tolak_array ?? null) ? $detailKomplain->jumlah_di_tolak_array : [];
+                                $dokumentasiArr = is_array($detailKomplain->dokumentasi_array ?? null) ? $detailKomplain->dokumentasi_array : [];
+                                $keteranganArr = is_array($detailKomplain->keterangan_array ?? null) ? $detailKomplain->keterangan_array : [];
+                                $dibuatArr = is_array($detailKomplain->di_buat_oleh_array ?? null) ? $detailKomplain->di_buat_oleh_array : [];
+                                $setujuiArr = is_array($detailKomplain->setujui_oleh_array ?? null) ? $detailKomplain->setujui_oleh_array : [];
+
+                                $rowCount = max(
+                                    count($idProdukArr),
+                                    count($kategoriArr),
+                                    count($namaProdukArr),
+                                    count($kodeProduksiArr),
+                                    count($expiredDateArr),
+                                    count($jumlahDatangArr),
+                                    count($jumlahDitolakArr),
+                                    count($dokumentasiArr),
+                                    count($keteranganArr),
+                                    count($dibuatArr),
+                                    count($setujuiArr)
+                                );
+
+                                if ($rowCount < 1) {
+                                    $rowCount = 1;
+                                }
+                            @endphp
+
+                            @for($i = 0; $i < $rowCount; $i++)
+                                @php
+                                    $produkId = $idProdukArr[$i] ?? null;
+                                    $namaProduk = null;
+                                    if ($produkId !== null && isset($produkNamaById) && is_array($produkNamaById)) {
+                                        $namaProduk = $produkNamaById[(string) $produkId] ?? null;
+                                    }
+                                    if ($namaProduk === null) {
+                                        $namaProduk = $namaProdukArr[$i] ?? $detailKomplain->nama_produk;
+                                    }
+                                    $kodeProduksi = $kodeProduksiArr[$i] ?? $detailKomplain->kode_produksi;
+                                    $expiredRaw = $expiredDateArr[$i] ?? ($detailKomplain->expired_date ? $detailKomplain->expired_date->format('Y-m-d') : null);
+                                    $expiredDateText = '-';
+                                    if ($expiredRaw) {
+                                        try {
+                                            $expiredDateText = \Carbon\Carbon::parse($expiredRaw)->format('d-m-Y');
+                                        } catch (\Exception $e) {
+                                            $expiredDateText = (string) $expiredRaw;
+                                        }
+                                    }
+                                    $jumlahDatang = $jumlahDatangArr[$i] ?? $detailKomplain->jumlah_datang;
+                                    $jumlahDitolak = $jumlahDitolakArr[$i] ?? $detailKomplain->jumlah_di_tolak;
+                                    $dokumentasi = $dokumentasiArr[$i] ?? $detailKomplain->dokumentasi;
+                                    $keterangan = $keteranganArr[$i] ?? $detailKomplain->keterangan;
+                                    $dibuat = $dibuatArr[$i] ?? $detailKomplain->di_buat_oleh;
+                                    $setujui = $setujuiArr[$i] ?? $detailKomplain->setujui_oleh;
+                                    $kategori = $kategoriArr[$i] ?? null;
+                                @endphp
+
+                                <div class="border rounded p-3 mb-3" style="background: #fff;">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <span class="fw-bold">Produk #{{ $i + 1 }}</span>
+                                    </div>
+
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-bold">Kategori</label>
+                                            <p class="text-muted">{{ $kategori !== null && $kategori !== '' ? $kategori : '-' }}</p>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-bold">Nama Produk</label>
+                                            <p class="text-muted">{{ $namaProduk ?? '-' }}</p>
+                                        </div>
+                                    </div>
+
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-bold">Kode Produksi</label>
+                                            <p class="text-muted">{{ $kodeProduksi ?? '-' }}</p>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-bold">Expired Date</label>
+                                            <p class="text-muted">{{ $expiredDateText }}</p>
+                                        </div>
+                                    </div>
+
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-bold">Jumlah Datang (Kg/Bal/Zak)</label>
+                                            <p class="text-muted">{{ $jumlahDatang ?? '-' }}</p>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-bold">Jumlah Di Tolak (Kg/Bal/Zak)</label>
+                                            <p class="text-muted">{{ $jumlahDitolak ?? '-' }}</p>
+                                        </div>
+                                    </div>
+
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-bold">Dokumentasi Komplain</label>
+                                            @if($dokumentasi)
+                                                <div class="mb-2">
+                                                    <img src="{{ asset('storage/' . $dokumentasi) }}" alt="Dokumentasi Komplain" style="max-width: 260px; height: auto; border: 1px solid #ddd; padding: 4px; background: #fff;">
+                                                </div>
+                                                <div>
+                                                    <a href="{{ asset('storage/' . $dokumentasi) }}" target="_blank" class="btn btn-sm btn-info">
+                                                        <i class="bi bi-eye"></i> Lihat
+                                                    </a>
+                                                </div>
+                                            @else
+                                                <p class="text-muted">-</p>
+                                            @endif
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-bold">Keterangan</label>
+                                            <p class="text-muted">{{ $keterangan !== null && $keterangan !== '' ? $keterangan : '-' }}</p>
+                                        </div>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-bold">Di Buat Oleh</label>
+                                            <p class="text-muted">{{ $dibuat !== null && $dibuat !== '' ? $dibuat : '-' }}</p>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-bold">Setujui Oleh</label>
+                                            <p class="text-muted">{{ $setujui !== null && $setujui !== '' ? $setujui : '-' }}</p>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="col-md-6">
-                                    <label class="form-label fw-bold">Kode Produksi</label>
-                                    <p class="text-muted">{{ $detailKomplain->kode_produksi }}</p>
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <label class="form-label fw-bold">Expired Date</label>
-                                    <p class="text-muted">{{ $detailKomplain->expired_date->format('d-m-Y') }}</p>
-                                </div>
-                                <!-- <div class="col-md-6">
-                                    <label class="form-label fw-bold">Dibuat Pada</label>
-                                    <p class="text-muted">{{ $detailKomplain->created_at->format('d M Y H:i:s')  }}</p>
-                                </div> -->
-                            </div>
+                            @endfor
                         </div>
                     </div>
 
-                    <!-- SECTION 3: JUMLAH BARANG -->
+                    <!-- SECTION 3: DOKUMENTASI (UPLOAD SUPPLIER) -->
                     <div class="card mb-3">
                         <div class="card-header">
-                            <h5 class="card-title">Jumlah Barang</h5>
+                            <h5 class="card-title">Dokumentasi (Supplier)</h5>
                         </div>
                         <div class="card-body">
                             <div class="row mb-3">
-                                <div class="col-md-6">
-                                    <label class="form-label fw-bold">Jumlah Datang (Kg/Bal/Zak)</label>
-                                    <p class="text-muted">{{ $detailKomplain->jumlah_datang }}</p>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label fw-bold">Jumlah Di Tolak (Kg/Bal/Zak)</label>
-                                    <p class="text-muted">{{ $detailKomplain->jumlah_di_tolak }}</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- SECTION 4: DOKUMENTASI -->
-                    <div class="card mb-3">
-                        <div class="card-header">
-                            <h5 class="card-title">Dokumentasi</h5>
-                        </div>
-                        <div class="card-body">
-                            <div class="row mb-3">
-                                <div class="col-md-6">
-                                    <label class="form-label fw-bold">Dokumentasi Komplain</label>
-                                    @if($detailKomplain->dokumentasi)
-                                        <div class="mb-2">
-                                            <img src="{{ asset('storage/' . $detailKomplain->dokumentasi) }}" alt="Dokumentasi Komplain" style="max-width: 260px; height: auto; border: 1px solid #ddd; padding: 4px; background: #fff;">
-                                        </div>
-                                        <div>
-                                            <a href="{{ asset('storage/' . $detailKomplain->dokumentasi) }}" 
-                                               target="_blank" class="btn btn-sm btn-info">
-                                                <i class="bi bi-eye"></i> Lihat
-                                            </a>
-                                        </div>
-                                    @else
-                                        <p class="text-muted">-</p>
-                                    @endif
-                                </div>
                                 <div class="col-md-6">
                                     <label class="form-label fw-bold">Upload Supplier</label>
                                     @if($detailKomplain->upload_suplier)
                                         <div>
-                                            <a href="{{ asset('storage/' . $detailKomplain->upload_suplier) }}" 
-                                               target="_blank" class="btn btn-sm btn-success">
-                                                <i class="bi bi-eye"></i> LIhat
+                                            <a href="{{ asset('storage/' . $detailKomplain->upload_suplier) }}" target="_blank" class="btn btn-sm btn-success">
+                                                <i class="bi bi-eye"></i> Lihat
                                             </a>
                                         </div>
                                     @else
@@ -203,7 +280,13 @@
                         <div class="card-body">
                             <div class="mb-3">
                                 <label class="form-label fw-bold">Dokumentasi</label>
-                                @if($detailKomplain->dokumentasi)
+                                @php
+                                    $dokArr = is_array($detailKomplain->dokumentasi_array ?? null) ? $detailKomplain->dokumentasi_array : [];
+                                    $hasDok = !empty($detailKomplain->dokumentasi) || collect($dokArr)->filter(function ($v) {
+                                        return $v !== null && $v !== '';
+                                    })->isNotEmpty();
+                                @endphp
+                                @if($hasDok)
                                     <span class="badge bg-success">✓ Ada</span>
                                 @else
                                     <span class="badge bg-warning">✗ Belum Diupload</span>

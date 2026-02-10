@@ -327,7 +327,6 @@
                                             <div class="produk-group mb-4 p-3 border rounded" style="background-color: #ffffff;" data-group-index="0">
                                                 <div class="d-flex justify-content-between align-items-center mb-2">
                                                     <h6 class="text-secondary mb-0">Produk #1</h6>
-                                                    <button type="button" class="btn btn-sm btn-outline-danger remove-produk-group" style="display:none;">Hapus Produk</button>
                                                 </div>
 
                                                 <div class="row">
@@ -361,7 +360,10 @@
                                                 <h6 class="text-secondary mt-3">Detail Produk</h6>
                                                 <div class="produk-container">
                                                     <div class="produk-row mb-4 p-3 border rounded" style="background-color: #f8f9fa;">
-                                                        <h6 class="text-secondary mb-3">Detail #1</h6>
+                                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                                            <h6 class="text-secondary mb-0">Detail #1</h6>
+                                                            <button type="button" class="btn btn-danger btn-sm remove-detail" style="display: none;"><i class="bi bi-trash"></i> Hapus Detail</button>
+                                                        </div>
                                                         <input type="hidden" class="produk-id-hidden" name="produk_data[0][id_produk]" value="{{ old('id_produk') }}">
                                                         <div class="row">
                                                             <div class="col-md-3">
@@ -401,18 +403,19 @@
                                                                 <textarea class="form-control" name="produk_data[0][keterangan]" rows="2" placeholder="Keterangan tambahan untuk detail ini">{{ old('produk_data.0.keterangan') }}</textarea>
                                                             </div>
                                                         </div>
-                                                        <div class="row mt-3">
-                                                            <div class="col-md-12">
-                                                                <button type="button" class="btn btn-sm btn-danger remove-detail" style="display: none;">Hapus Detail</button>
-                                                            </div>
-                                                        </div>
                                                     </div>
                                                 </div>
-                                                <button type="button" class="btn btn-sm btn-primary mt-2 add-detail">+ Tambah Detail</button>
+                                                <button type="button" class="btn btn-primary btn-sm mt-2 add-detail"><i class="bi bi-plus"></i> Tambah Detail</button>
+
+                                                <div class="row mt-3 pt-3 border-top">
+                                                    <div class="col-md-12">
+                                                        <button type="button" class="btn btn-danger btn-sm remove-produk-group" style="display:none;"><i class="bi bi-trash"></i> Hapus Produk</button>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
 
-                                        <button type="button" class="btn btn-sm btn-success mt-2" id="add-produk-group">+ Tambah Produk</button>
+                                        <button type="button" class="btn btn-success btn-sm mt-2" id="add-produk-group"><i class="bi bi-plus"></i> Tambah Produk</button>
 
                                         <div class="col-md-12 d-flex justify-content-end mt-3">
                                             <button type="submit" class="btn btn-primary me-1 mb-1">Simpan Loading Produk</button>
@@ -521,6 +524,253 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const choicesInstances = new WeakMap();
 
+    const bsCollapse = (el) => {
+        try {
+            if (!el || !window.bootstrap || !window.bootstrap.Collapse) return null;
+            return window.bootstrap.Collapse.getOrCreateInstance(el, { toggle: false });
+        } catch (e) {
+            return null;
+        }
+    };
+
+    const updateProdukLabel = (groupEl, groupIdx) => {
+        if (!groupEl) return;
+        const labelEl = groupEl.querySelector('.produk-collapse-label');
+        if (!labelEl) return;
+
+        const produkSelect = groupEl.querySelector('select.produk-select');
+        const selectedText = produkSelect && produkSelect.selectedOptions && produkSelect.selectedOptions[0]
+            ? String(produkSelect.selectedOptions[0].textContent || '').trim()
+            : '';
+
+        labelEl.textContent = selectedText || `Produk #${(groupIdx ?? 0) + 1}`;
+    };
+
+    const updateDetailLabel = (rowEl, detailIdxWithinGroup) => {
+        if (!rowEl) return;
+        const labelEl = rowEl.querySelector('.detail-collapse-label');
+        if (!labelEl) return;
+
+        const kodeInput = rowEl.querySelector('input[name^="produk_data"][name$="[kode_produksi]"]');
+        const kodeVal = kodeInput ? String(kodeInput.value || '').trim() : '';
+        labelEl.textContent = kodeVal || `Detail #${(detailIdxWithinGroup ?? 0) + 1}`;
+    };
+
+    const collapseAllProdukExcept = (activeGroupEl) => {
+        const groups = Array.from(document.querySelectorAll('#produk-groups .produk-group'));
+        groups.forEach((g) => {
+            if (!g || g === activeGroupEl) return;
+            const body = g.querySelector(':scope > .produk-collapse.collapse');
+            if (!body) return;
+            const inst = bsCollapse(body);
+            if (inst) {
+                inst.hide();
+            } else {
+                body.classList.remove('show');
+                const icon = g.querySelector('.collapse-chevron');
+                if (icon) icon.classList.add('rotated');
+            }
+        });
+    };
+
+    const collapseOtherDetailsInGroup = (groupEl, activeRowEl) => {
+        if (!groupEl) return;
+        const rows = Array.from(groupEl.querySelectorAll('.produk-container .produk-row'));
+        rows.forEach((row) => {
+            if (!row || row === activeRowEl) return;
+            const body = row.querySelector(':scope > .detail-collapse.collapse');
+            if (!body) return;
+            const inst = bsCollapse(body);
+            if (inst) {
+                inst.hide();
+            } else {
+                body.classList.remove('show');
+                const icon = row.querySelector('.detail-chevron');
+                if (icon) icon.classList.add('rotated');
+            }
+        });
+    };
+
+    const ensureDetailCollapsible = (rowEl) => {
+        if (!rowEl) return;
+        if (!rowEl.dataset.detailCollapseId) {
+            rowEl.dataset.detailCollapseId = `detail_lp_${Date.now()}_${Math.random().toString(16).slice(2)}`;
+        }
+        const collapseId = rowEl.dataset.detailCollapseId;
+
+        const header = rowEl.querySelector(':scope > .d-flex');
+        if (!header) return;
+
+        const titleEl = header.querySelector('h6');
+        if (titleEl && !titleEl.querySelector('.detail-toggle-btn')) {
+            const existingText = (titleEl.textContent || '').trim();
+            titleEl.textContent = '';
+
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'btn btn-primary btn-sm d-flex align-items-center gap-2 detail-toggle-btn';
+
+            const span = document.createElement('span');
+            span.className = 'detail-collapse-label';
+            span.textContent = existingText || 'Detail';
+
+            const icon = document.createElement('i');
+            icon.className = 'bi bi-chevron-down detail-chevron';
+
+            btn.appendChild(span);
+            btn.appendChild(icon);
+            titleEl.appendChild(btn);
+        }
+
+        const groupEl = rowEl.closest('.produk-group');
+        const idxInGroup = groupEl ? Array.from(groupEl.querySelectorAll('.produk-container .produk-row')).indexOf(rowEl) : 0;
+        updateDetailLabel(rowEl, idxInGroup >= 0 ? idxInGroup : 0);
+
+        let body = rowEl.querySelector(`:scope > .detail-collapse.collapse#${collapseId}`);
+        if (!body) {
+            body = document.createElement('div');
+            body.className = 'detail-collapse collapse show';
+            body.id = collapseId;
+
+            const nodesToMove = [];
+            let node = header.nextSibling;
+            while (node) {
+                const next = node.nextSibling;
+                nodesToMove.push(node);
+                node = next;
+            }
+            nodesToMove.forEach((n) => body.appendChild(n));
+            rowEl.appendChild(body);
+        }
+
+        const icon = header.querySelector('.detail-chevron');
+        const inst = bsCollapse(body);
+        if (inst && icon && !body.dataset.collapseEventsBound) {
+            body.dataset.collapseEventsBound = '1';
+            body.addEventListener('shown.bs.collapse', function() {
+                icon.classList.remove('rotated');
+            });
+            body.addEventListener('hidden.bs.collapse', function() {
+                icon.classList.add('rotated');
+            });
+        }
+
+        const toggleBtn = header.querySelector('.detail-toggle-btn');
+        if (toggleBtn && !toggleBtn.dataset.toggleBound) {
+            toggleBtn.dataset.toggleBound = '1';
+            toggleBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                const groupEl = rowEl.closest('.produk-group');
+                if (groupEl) collapseOtherDetailsInGroup(groupEl, rowEl);
+
+                const nowShown = body.classList.contains('show');
+                const collapseInst = bsCollapse(body);
+                if (collapseInst) {
+                    if (nowShown) collapseInst.hide();
+                    else collapseInst.show();
+                } else {
+                    if (nowShown) {
+                        body.classList.remove('show');
+                        if (icon) icon.classList.add('rotated');
+                    } else {
+                        body.classList.add('show');
+                        if (icon) icon.classList.remove('rotated');
+                    }
+                }
+            });
+        }
+    };
+
+    const ensureProdukCollapsible = (groupEl, groupIdx) => {
+        if (!groupEl) return;
+        if (!groupEl.dataset.produkCollapseId) {
+            groupEl.dataset.produkCollapseId = `produk_lp_${Date.now()}_${Math.random().toString(16).slice(2)}`;
+        }
+        const collapseId = groupEl.dataset.produkCollapseId;
+
+        const header = groupEl.querySelector(':scope > .d-flex');
+        if (!header) return;
+
+        const titleEl = header.querySelector('h6');
+        if (titleEl && !titleEl.querySelector('button[data-bs-toggle="collapse"]')) {
+            const existingText = (titleEl.textContent || '').trim();
+            titleEl.textContent = '';
+
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'btn btn-primary btn-sm d-flex align-items-center justify-content-between collapse-toggle-btn w-100';
+            btn.setAttribute('aria-expanded', 'true');
+            btn.setAttribute('aria-controls', collapseId);
+
+            const span = document.createElement('span');
+            span.className = 'produk-collapse-label';
+            span.textContent = existingText || `Produk #${(groupIdx ?? 0) + 1}`;
+
+            const icon = document.createElement('i');
+            icon.className = 'bi bi-chevron-down collapse-chevron';
+
+            btn.appendChild(span);
+            btn.appendChild(icon);
+            titleEl.appendChild(btn);
+        }
+
+        updateProdukLabel(groupEl, groupIdx);
+
+        let body = groupEl.querySelector(`:scope > .produk-collapse.collapse#${collapseId}`);
+        if (!body) {
+            body = document.createElement('div');
+            body.className = 'produk-collapse collapse show';
+            body.id = collapseId;
+
+            const nodesToMove = [];
+            let node = header.nextSibling;
+            while (node) {
+                const next = node.nextSibling;
+                nodesToMove.push(node);
+                node = next;
+            }
+            nodesToMove.forEach((n) => body.appendChild(n));
+            groupEl.appendChild(body);
+        }
+
+        const icon = header.querySelector('.collapse-chevron');
+        const inst = bsCollapse(body);
+        if (inst && icon && !body.dataset.collapseEventsBound) {
+            body.dataset.collapseEventsBound = '1';
+            body.addEventListener('shown.bs.collapse', function() {
+                icon.classList.remove('rotated');
+            });
+            body.addEventListener('hidden.bs.collapse', function() {
+                icon.classList.add('rotated');
+            });
+        }
+
+        const toggleBtn = header.querySelector('.collapse-toggle-btn');
+        if (toggleBtn && !toggleBtn.dataset.toggleBound) {
+            toggleBtn.dataset.toggleBound = '1';
+            toggleBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+
+                collapseAllProdukExcept(groupEl);
+
+                const nowShown = body.classList.contains('show');
+                const collapseInst = bsCollapse(body);
+                if (collapseInst) {
+                    if (nowShown) collapseInst.hide();
+                    else collapseInst.show();
+                } else {
+                    if (nowShown) {
+                        body.classList.remove('show');
+                        if (icon) icon.classList.add('rotated');
+                    } else {
+                        body.classList.add('show');
+                        if (icon) icon.classList.remove('rotated');
+                    }
+                }
+            });
+        }
+    };
+
     const rebuildProdukChoices = function(produkSelect, choiceItems, desiredValue) {
         if (!produkSelect) return;
 
@@ -598,8 +848,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const groups = Array.from(document.querySelectorAll('#produk-groups .produk-group'));
         groups.forEach((g, i) => {
             g.setAttribute('data-group-index', String(i));
-            const title = g.querySelector('h6.text-secondary');
-            if (title) title.textContent = `Produk #${i + 1}`;
+            updateProdukLabel(g, i);
             const removeBtn = g.querySelector('.remove-produk-group');
             if (removeBtn) {
                 removeBtn.style.display = groups.length > 1 ? 'inline-block' : 'none';
@@ -622,8 +871,7 @@ document.addEventListener('DOMContentLoaded', function() {
         groups.forEach((groupEl) => {
             const rows = Array.from(groupEl.querySelectorAll('.produk-container .produk-row'));
             rows.forEach((row, idxInGroup) => {
-                const t = row.querySelector('h6');
-                if (t) t.textContent = `Detail #${idxInGroup + 1}`;
+                updateDetailLabel(row, idxInGroup);
 
                 row.querySelectorAll('input, textarea').forEach((el) => {
                     const name = el.getAttribute('name');
@@ -650,6 +898,25 @@ document.addEventListener('DOMContentLoaded', function() {
         const kategoriSelect = groupEl.querySelector('select.kategori-produk-select');
         const produkSelect = groupEl.querySelector('select.produk-select');
 
+        groupEl.querySelectorAll('.produk-container .produk-row').forEach((row) => ensureDetailCollapsible(row));
+
+        groupEl.querySelectorAll('.produk-container .produk-row').forEach((row, idx) => {
+            const kodeInput = row.querySelector('input[name^="produk_data"][name$="[kode_produksi]"]');
+            if (kodeInput && !kodeInput.dataset.labelBound) {
+                kodeInput.dataset.labelBound = '1';
+                kodeInput.addEventListener('input', function() {
+                    const group = row.closest('.produk-group');
+                    const di = group ? Array.from(group.querySelectorAll('.produk-container .produk-row')).indexOf(row) : idx;
+                    updateDetailLabel(row, di >= 0 ? di : idx);
+                });
+                kodeInput.addEventListener('change', function() {
+                    const group = row.closest('.produk-group');
+                    const di = group ? Array.from(group.querySelectorAll('.produk-container .produk-row')).indexOf(row) : idx;
+                    updateDetailLabel(row, di >= 0 ? di : idx);
+                });
+            }
+        });
+
         if (kategoriSelect) {
             kategoriSelect.addEventListener('change', function() {
                 if (produkSelect) {
@@ -657,12 +924,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
                 populateProdukOptions(groupEl, kategoriSelect.value);
                 syncGroupHiddenProdukIds(groupEl);
+                const idx = parseInt(groupEl.getAttribute('data-group-index') || '0', 10) || 0;
+                updateProdukLabel(groupEl, idx);
             });
         }
 
         if (produkSelect) {
             produkSelect.addEventListener('change', function() {
                 syncGroupHiddenProdukIds(groupEl);
+                const idx = parseInt(groupEl.getAttribute('data-group-index') || '0', 10) || 0;
+                updateProdukLabel(groupEl, idx);
             });
         }
 
@@ -677,7 +948,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 newRow.style.backgroundColor = '#f8f9fa';
                 const tempIndex = 0;
                 newRow.innerHTML = `
-                    <h6 class="text-secondary mb-3">Detail</h6>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h6 class="text-secondary mb-0">Detail</h6>
+                        <button type="button" class="btn btn-danger btn-sm remove-detail"><i class="bi bi-trash"></i> Hapus Detail</button>
+                    </div>
                     <input type="hidden" class="produk-id-hidden" name="produk_data[${tempIndex}][id_produk]" value="">
                     <div class="row">
                         <div class="col-md-3">
@@ -717,13 +991,23 @@ document.addEventListener('DOMContentLoaded', function() {
                             <textarea class="form-control" name="produk_data[${tempIndex}][keterangan]" rows="2" placeholder="Keterangan tambahan"></textarea>
                         </div>
                     </div>
-                    <div class="row mt-3">
-                        <div class="col-md-12">
-                            <button type="button" class="btn btn-sm btn-danger remove-detail">Hapus Detail</button>
-                        </div>
-                    </div>
                 `;
                 container.appendChild(newRow);
+                ensureDetailCollapsible(newRow);
+                collapseOtherDetailsInGroup(groupEl, newRow);
+                const idxInGroup = Array.from(container.querySelectorAll('.produk-row')).indexOf(newRow);
+
+                const kodeInput = newRow.querySelector('input[name^="produk_data"][name$="[kode_produksi]"]');
+                if (kodeInput) {
+                    kodeInput.addEventListener('input', function() {
+                        const di = Array.from(container.querySelectorAll('.produk-row')).indexOf(newRow);
+                        updateDetailLabel(newRow, di >= 0 ? di : idxInGroup);
+                    });
+                    kodeInput.addEventListener('change', function() {
+                        const di = Array.from(container.querySelectorAll('.produk-row')).indexOf(newRow);
+                        updateDetailLabel(newRow, di >= 0 ? di : idxInGroup);
+                    });
+                }
                 reindexAllDetails();
             });
         }
@@ -752,8 +1036,17 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Init produk options on load
-    document.querySelectorAll('#produk-groups .produk-group').forEach((g) => bindGroupEvents(g));
+    document.querySelectorAll('#produk-groups .produk-group').forEach((g, idx) => {
+        ensureProdukCollapsible(g, idx);
+        bindGroupEvents(g);
+    });
     updateGroupTitles();
+
+    // Match kemasan behavior: keep only the first produk expanded initially
+    const firstGroup = document.querySelector('#produk-groups .produk-group');
+    if (firstGroup) {
+        collapseAllProdukExcept(firstGroup);
+    }
 
     document.getElementById('add-produk-group')?.addEventListener('click', function() {
         const groupsWrapper = document.getElementById('produk-groups');
@@ -767,7 +1060,6 @@ document.addEventListener('DOMContentLoaded', function() {
         newGroup.innerHTML = `
             <div class="d-flex justify-content-between align-items-center mb-2">
                 <h6 class="text-secondary mb-0">Produk</h6>
-                <button type="button" class="btn btn-sm btn-outline-danger remove-produk-group">Hapus Produk</button>
             </div>
             <div class="row">
                 <div class="col-md-6">
@@ -791,7 +1083,10 @@ document.addEventListener('DOMContentLoaded', function() {
             <h6 class="text-secondary mt-3">Detail Produk</h6>
             <div class="produk-container">
                 <div class="produk-row mb-4 p-3 border rounded" style="background-color: #f8f9fa;">
-                    <h6 class="text-secondary mb-3">Detail #1</h6>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h6 class="text-secondary mb-0">Detail #1</h6>
+                        <button type="button" class="btn btn-danger btn-sm remove-detail" style="display:none;"><i class="bi bi-trash"></i> Hapus Detail</button>
+                    </div>
                     <input type="hidden" class="produk-id-hidden" name="produk_data[0][id_produk]" value="">
                     <div class="row">
                         <div class="col-md-3">
@@ -831,20 +1126,40 @@ document.addEventListener('DOMContentLoaded', function() {
                             <textarea class="form-control" name="produk_data[0][keterangan]" rows="2" placeholder="Keterangan tambahan"></textarea>
                         </div>
                     </div>
-                    <div class="row mt-3">
-                        <div class="col-md-12">
-                            <button type="button" class="btn btn-sm btn-danger remove-detail" style="display:none;">Hapus Detail</button>
-                        </div>
-                    </div>
                 </div>
             </div>
-            <button type="button" class="btn btn-sm btn-primary mt-2 add-detail">+ Tambah Detail</button>
+            <button type="button" class="btn btn-primary btn-sm mt-2 add-detail"><i class="bi bi-plus"></i> Tambah Detail</button>
+
+            <div class="row mt-3 pt-3 border-top">
+                <div class="col-md-12">
+                    <button type="button" class="btn btn-danger btn-sm remove-produk-group"><i class="bi bi-trash"></i> Hapus Produk</button>
+                </div>
+            </div>
         `;
 
         groupsWrapper.appendChild(newGroup);
+        ensureProdukCollapsible(newGroup, document.querySelectorAll('#produk-groups .produk-group').length - 1);
         updateGroupTitles();
         bindGroupEvents(newGroup);
+
+        // Match kemasan behavior: open the newly added produk and collapse others
+        const body = newGroup.querySelector(':scope > .produk-collapse.collapse');
+        if (body) {
+            const inst = bsCollapse(body);
+            if (inst) inst.show();
+            else body.classList.add('show');
+        }
+        collapseAllProdukExcept(newGroup);
     });
 });
 </script>
+
+<style>
+    .collapse-toggle-btn { text-align: left; }
+    .collapse-chevron { transition: transform .2s ease; }
+    .collapse-chevron.rotated { transform: rotate(180deg); }
+
+    .detail-chevron { transition: transform .2s ease; }
+    .detail-chevron.rotated { transform: rotate(180deg); }
+</style>
 @endsection

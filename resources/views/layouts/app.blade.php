@@ -307,16 +307,29 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Initialize Choices.js for all select with class 'choices'
-    const choicesElements = document.querySelectorAll('.choices');
-    choicesElements.forEach(function(element) {
-        new Choices(element, {
-            searchEnabled: true,
-            searchPlaceholderValue: 'Cari...',
-            itemSelectText: 'Tekan untuk memilih',
-            noResultsText: 'Tidak ada hasil ditemukan',
-            noChoicesText: 'Tidak ada pilihan tersedia',
+    if (!(window.disableGlobalChoicesInit === true)) {
+        const choicesElements = document.querySelectorAll('.choices');
+        choicesElements.forEach(function(element) {
+            if (element && element.dataset && element.dataset.choicesInitialized === 'true') {
+                return;
+            }
+            if (element && element._choices) {
+                if (element.dataset) element.dataset.choicesInitialized = 'true';
+                return;
+            }
+            try {
+                element._choices = new Choices(element, {
+                    searchEnabled: true,
+                    searchPlaceholderValue: 'Cari...',
+                    itemSelectText: 'Tekan untuk memilih',
+                    noResultsText: 'Tidak ada hasil ditemukan',
+                    noChoicesText: 'Tidak ada pilihan tersedia',
+                });
+                if (element.dataset) element.dataset.choicesInitialized = 'true';
+            } catch (e) {
+            }
         });
-    });
+    }
 
     if (window.jQuery && window.jQuery.fn && typeof window.jQuery.fn.select2 === 'function') {
         window.jQuery('.select2-multiple').select2({

@@ -171,52 +171,6 @@
             <td>{{ $detailKomplain->no_po }}</td>
         </tr>
         <tr>
-            <td style="font-weight: bold;">Nama Produk</td>
-            <td>{{ $detailKomplain->nama_produk }}</td>
-        </tr>
-        <tr>
-            <td style="font-weight: bold;">Kode Produksi</td>
-            <td>{{ $detailKomplain->kode_produksi }}</td>
-        </tr>
-        <tr>
-            <td style="font-weight: bold;">Expired Date</td>
-            <td>{{ $detailKomplain->expired_date->format('d m Y') }}</td>
-        </tr>
-        <tr>
-            <td style="font-weight: bold;">Jumlah Datang (Kg/Bal/Zak)</td>
-            <td>{{ $detailKomplain->jumlah_datang }}</td>
-        </tr>
-        <tr>
-            <td style="font-weight: bold;">Jumlah Di Tolak (Kg/Bal/Zak)</td>
-            <td>{{ $detailKomplain->jumlah_di_tolak }}</td>
-        </tr>
-        <tr>
-            <td style="font-weight: bold;">Uraian Komplain</td>
-            <td>{{ $detailKomplain->keterangan ?? '-' }}</td>
-        </tr>
-        <tr>
-            <td style="font-weight: bold;">Dokumentasi (Lampiran)</td>
-            <td>
-                @php
-                    $dokumentasiFullPath = null;
-                    if ($detailKomplain->dokumentasi) {
-                        $dokumentasiFullPath = public_path('storage/' . $detailKomplain->dokumentasi);
-                    }
-                @endphp
-                @if($dokumentasiFullPath && file_exists($dokumentasiFullPath))
-                    <div class="image-container">
-                        <img src="{{ $dokumentasiFullPath }}" alt="Dokumentasi">
-                    </div>
-                @else
-                    <span>-</span>
-                @endif
-            </td>
-        </tr>
-        <tr>
-            <td style="font-weight: bold;">Keterangan</td>
-            <td>{{ $detailKomplain->keterangan ?? '-' }}</td>
-        </tr>
-        <tr>
             <td style="font-weight: bold;">Di Buat Oleh</td>
             <td>{{ $detailKomplain->di_buat_oleh ?? '-' }}</td>
         </tr>
@@ -224,6 +178,98 @@
             <td style="font-weight: bold;">Di Setujui Oleh</td>
             <td>{{ $detailKomplain->setujui_oleh ?? '-' }}</td>
         </tr>
+    </table>
+
+    @php
+        $idProdukArr = is_array($detailKomplain->id_produk_array ?? null) ? $detailKomplain->id_produk_array : [];
+        $kategoriArr = is_array($detailKomplain->kategori_code_array ?? null) ? $detailKomplain->kategori_code_array : [];
+        $namaProdukArr = is_array($detailKomplain->nama_produk_array ?? null) ? $detailKomplain->nama_produk_array : [];
+        $kodeProduksiArr = is_array($detailKomplain->kode_produksi_array ?? null) ? $detailKomplain->kode_produksi_array : [];
+        $expiredDateArr = is_array($detailKomplain->expired_date_array ?? null) ? $detailKomplain->expired_date_array : [];
+        $jumlahDatangArr = is_array($detailKomplain->jumlah_datang_array ?? null) ? $detailKomplain->jumlah_datang_array : [];
+        $jumlahDitolakArr = is_array($detailKomplain->jumlah_di_tolak_array ?? null) ? $detailKomplain->jumlah_di_tolak_array : [];
+        $dokumentasiArr = is_array($detailKomplain->dokumentasi_array ?? null) ? $detailKomplain->dokumentasi_array : [];
+        $keteranganArr = is_array($detailKomplain->keterangan_array ?? null) ? $detailKomplain->keterangan_array : [];
+
+        $rowCount = max(
+            count($idProdukArr),
+            count($kategoriArr),
+            count($namaProdukArr),
+            count($kodeProduksiArr),
+            count($expiredDateArr),
+            count($jumlahDatangArr),
+            count($jumlahDitolakArr),
+            count($dokumentasiArr),
+            count($keteranganArr)
+        );
+        if ($rowCount < 1) {
+            $rowCount = 1;
+        }
+    @endphp
+
+    <div class="section-title">INFORMASI PRODUK</div>
+    <table>
+        <tr>
+            <th style="width: 4%; text-align: center;">No</th>
+            <th style="width: 13%;">Kategori</th>
+            <th style="width: 20%;">Nama Produk</th>
+            <th style="width: 13%;">Kode Produksi</th>
+            <th style="width: 12%;">Expired</th>
+            <th style="width: 12%;">Jml Datang (Kg/Bal/Zak)</th>
+            <th style="width: 12%;">Jml Tolak (Kg/Bal/Zak)</th>
+            <th style="width: 14%;">Uraian / Ket</th>
+        </tr>
+        @for($i = 0; $i < $rowCount; $i++)
+            @php
+                $namaProduk = $namaProdukArr[$i] ?? $detailKomplain->nama_produk;
+                $kategori = $kategoriArr[$i] ?? null;
+                $kodeProduksi = $kodeProduksiArr[$i] ?? $detailKomplain->kode_produksi;
+                $expiredRaw = $expiredDateArr[$i] ?? ($detailKomplain->expired_date ? $detailKomplain->expired_date->format('Y-m-d') : null);
+                $expiredText = '-';
+                if ($expiredRaw) {
+                    try {
+                        $expiredText = \Carbon\Carbon::parse($expiredRaw)->format('d-m-Y');
+                    } catch (\Exception $e) {
+                        $expiredText = (string) $expiredRaw;
+                    }
+                }
+                $jumlahDatang = $jumlahDatangArr[$i] ?? $detailKomplain->jumlah_datang;
+                $jumlahDitolak = $jumlahDitolakArr[$i] ?? $detailKomplain->jumlah_di_tolak;
+                $keterangan = $keteranganArr[$i] ?? $detailKomplain->keterangan;
+            @endphp
+            <tr>
+                <td style="text-align: center;">{{ $i + 1 }}</td>
+                <td>{{ $kategori !== null && $kategori !== '' ? $kategori : '-' }}</td>
+                <td>{{ $namaProduk ?? '-' }}</td>
+                <td>{{ $kodeProduksi ?? '-' }}</td>
+                <td>{{ $expiredText }}</td>
+                <td>{{ $jumlahDatang ?? '-' }}</td>
+                <td>{{ $jumlahDitolak ?? '-' }}</td>
+                <td>{{ $keterangan !== null && $keterangan !== '' ? $keterangan : '-' }}</td>
+            </tr>
+            @php
+                $dokPath = $dokumentasiArr[$i] ?? null;
+                if (($dokPath === null || $dokPath === '') && $i === 0) {
+                    $dokPath = $detailKomplain->dokumentasi;
+                }
+                $dokFullPath = null;
+                if ($dokPath) {
+                    $dokFullPath = public_path('storage/' . $dokPath);
+                }
+            @endphp
+            <tr>
+                <td style="text-align: center; font-weight: bold;">Lamp.</td>
+                <td colspan="7">
+                    @if($dokFullPath && file_exists($dokFullPath))
+                        <div class="image-container">
+                            <img src="{{ $dokFullPath }}" alt="Dokumentasi">
+                        </div>
+                    @else
+                        <span>-</span>
+                    @endif
+                </td>
+            </tr>
+        @endfor
     </table>
 
     <!-- SUPPLIER SECTION -->
