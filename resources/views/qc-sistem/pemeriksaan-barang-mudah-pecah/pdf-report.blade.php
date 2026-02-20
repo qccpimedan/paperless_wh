@@ -352,7 +352,7 @@
                     <div class="signature-name">{{ $qcName ?: '-' }}</div>
                 </td>
                 <td class="signature-cell">
-                    <div class="signature-header-item">Disetujui Oleh (Produksi)</div>
+                    <div class="signature-header-item">Disetujui Oleh (Tim Warehouse)</div>
                     <div class="signature-space"></div>
                     <div class="signature-name">{{ $produksiName ?: '-' }}</div>
                 </td>

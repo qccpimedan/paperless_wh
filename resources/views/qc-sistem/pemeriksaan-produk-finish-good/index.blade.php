@@ -4,7 +4,18 @@
 
 @section('container')
 @php
-    $shifts = \App\Models\Shift::all();
+    $user = \Illuminate\Support\Facades\Auth::user();
+    if ($user && $user->role && strtolower($user->role->role) === 'superadmin') {
+        $shifts = \App\Models\Shift::all();
+    } else {
+        $shifts = \App\Models\Shift::query()
+            ->when($user && $user->id_plant, function ($q) use ($user) {
+                $q->whereHas('user', function ($qu) use ($user) {
+                    $qu->where('id_plant', $user->id_plant);
+                });
+            })
+            ->get();
+    }
 @endphp
 <div id="main">
     <header class="mb-3">

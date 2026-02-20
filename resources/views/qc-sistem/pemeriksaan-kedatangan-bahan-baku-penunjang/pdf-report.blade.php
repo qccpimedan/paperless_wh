@@ -549,7 +549,6 @@
                                         $jumlah_datangs = json_decode($pemeriksaan->jumlah_datang_array ?? '[]', true) ?? [];
                                         $jumlah_samplings = json_decode($pemeriksaan->jumlah_sampling_array ?? '[]', true) ?? [];
                                         $spesifikasis = json_decode($pemeriksaan->spesifikasi_array ?? '[]', true) ?? [];
-
                                         $id_bahan = $id_bahans[$rowIndex] ?? null;
                                         $produsen_val = $produsens_arr[$rowIndex] ?? null;
                                         $negara_produsen_val = $negara_produsens_arr[$rowIndex] ?? null;
@@ -752,22 +751,25 @@
                         <span class="not-ok-text">X</span> : Parameter Tidak Sesuai
                     </div>
                     
+                    @php
+                        $firstRecord = $pemeriksaans->first();
+                    @endphp
                     <table class="signature-table">
                         <tr>
                             <td class="signature-cell">
                                 <div class="signature-header-item">Dibuat Oleh:</div>
                                 <div class="signature-space"></div>
-                                <div class="signature-name">{{ $qcUser ?? 'QC' }}</div>
+                                <div class="signature-name">{{ $firstRecord && $firstRecord->qcVerifier ? $firstRecord->qcVerifier->name : '-' }}</div>
                             </td>
                             <td class="signature-cell">
                                 <div class="signature-header-item">Diperiksa Oleh:</div>
                                 <div class="signature-space"></div>
-                                <div class="signature-name">{{ $produksiUser ?? 'Produksi' }}</div>
+                                <div class="signature-name">{{ $firstRecord && $firstRecord->produksiVerifier ? $firstRecord->produksiVerifier->name : '-' }}</div>
                             </td>
                             <td class="signature-cell">
                                 <div class="signature-header-item">Diketahui Oleh:</div>
                                 <div class="signature-space"></div>
-                                <div class="signature-name">{{ $spvQcUser ?? 'SPV QC' }}</div>
+                                <div class="signature-name">{{ $firstRecord && $firstRecord->spvVerifier ? $firstRecord->spvVerifier->name : '-' }}</div>
                             </td>
                         </tr>
                     </table>

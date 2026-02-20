@@ -640,22 +640,25 @@
                         <span class="not-ok-text">X</span> : Parameter Tidak Sesuai
                     </div>
                     
+                    @php
+                        $firstRecord = $pemeriksaans->first();
+                    @endphp
                     <table class="signature-table">
                         <tr>
                             <td class="signature-cell">
                                 <div class="signature-header-item">Dibuat Oleh:</div>
                                 <div class="signature-space"></div>
-                                <div class="signature-name">{{ $qcUser ?? 'QC' }}</div>
+                                <div class="signature-name">{{ $firstRecord && $firstRecord->qcVerifier ? $firstRecord->qcVerifier->name : '-' }}</div>
                             </td>
                             <td class="signature-cell">
                                 <div class="signature-header-item">Diperiksa Oleh:</div>
                                 <div class="signature-space"></div>
-                                <div class="signature-name">{{ $produksiUser ?? 'Produksi' }}</div>
+                                <div class="signature-name">{{ $firstRecord && $firstRecord->produksiVerifier ? $firstRecord->produksiVerifier->name : '-' }}</div>
                             </td>
                             <td class="signature-cell">
                                 <div class="signature-header-item">Diketahui Oleh:</div>
                                 <div class="signature-space"></div>
-                                <div class="signature-name">{{ $spvQcUser ?? 'SPV QC' }}</div>
+                                <div class="signature-name">{{ $firstRecord && $firstRecord->spvVerifier ? $firstRecord->spvVerifier->name : '-' }}</div>
                             </td>
                         </tr>
                     </table>
