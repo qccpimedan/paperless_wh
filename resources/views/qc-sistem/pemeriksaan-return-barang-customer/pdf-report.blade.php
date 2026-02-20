@@ -467,7 +467,7 @@
                                 <div class="signature-name">{{ $firstRecord->qcVerifier->name ?? '-' }}</div>
                             </td>
                             <td class="signature-cell">
-                                <div class="signature-header-item">Disetujui Oleh (Produksi)</div>
+                                <div class="signature-header-item">Disetujui Oleh (Tim Warehouse)</div>
                                 <div class="signature-space" style="border-bottom: 2px solid #1a1a1a;"></div>
                                 <div class="signature-name">{{ $firstRecord->produksiVerifier->name ?? '-' }}</div>
                             </td>
