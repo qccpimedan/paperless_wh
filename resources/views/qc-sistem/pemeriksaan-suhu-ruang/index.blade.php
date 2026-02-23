@@ -52,7 +52,7 @@
                     <h5 class="card-title mb-0">Daftar Food Prosesing</h5>
                     @can('create_pemeriksaan_suhu_ruang')
                         <a href="{{ route('pemeriksaan-suhu-ruang.create') }}" class="btn btn-primary">
-                            <i class="bi bi-plus-circle"></i> Buat Pemeriksaan
+                            <i class="bi bi-plus-circle"></i> Buat Pemeriksaan Baru
                         </a>
                     @endcan
                 </div>
@@ -163,7 +163,6 @@
                                     <th>Shift</th>
                                     <th>Plant</th>
                                     <th>Produk</th>
-                                    <th>Area</th>
                                     <th>Verifikasi</th>
                                     <th>Catatan Verifikasi</th>
                                     <th>Aksi</th>
@@ -191,9 +190,6 @@
                                             @else
                                                 <span class="text-muted">-</span>
                                             @endif
-                                        </td>
-                                        <td>
-                                            <strong>{{ $pemeriksaan->area->nama_area ?? '-' }}</strong>
                                         </td>
                                         <td>
                                             @php

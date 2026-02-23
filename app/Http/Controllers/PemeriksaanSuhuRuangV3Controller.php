@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\PemeriksaanSuhuRuangV3;
 use App\Models\PemeriksaanSuhuRuangV3History;
 use App\Models\Shift;
-use App\Models\InputArea;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -17,7 +16,7 @@ class PemeriksaanSuhuRuangV3Controller extends Controller
 
         $search = trim((string) $request->input('search', ''));
         
-        $query = PemeriksaanSuhuRuangV3::with(['user.role', 'user.plant', 'shift', 'area']);
+        $query = PemeriksaanSuhuRuangV3::with(['user.role', 'user.plant', 'shift']);
 
         if (!($user->role && strtolower($user->role->role) === 'superadmin')) {
             $query->whereHas('user', function ($q) use ($user) {
@@ -32,9 +31,6 @@ class PemeriksaanSuhuRuangV3Controller extends Controller
                     ->orWhere('status_verifikasi', 'like', '%' . $search . '%')
                     ->orWhereHas('shift', function ($qs) use ($search) {
                         $qs->where('shift', 'like', '%' . $search . '%');
-                    })
-                    ->orWhereHas('area', function ($qa) use ($search) {
-                        $qa->where('nama_area', 'like', '%' . $search . '%');
                     });
             });
         }
@@ -54,20 +50,13 @@ class PemeriksaanSuhuRuangV3Controller extends Controller
             }
         })->get();
         
-        $areas = InputArea::whereHas('user', function($query) use ($user) {
-            if ($user->role && strtolower($user->role->role) !== 'superadmin') {
-                $query->where('id_plant', $user->id_plant);
-            }
-        })->get();
-        
-        return view('qc-sistem.pemeriksaan-suhu-ruang-v3.create', compact('shifts', 'areas'));
+        return view('qc-sistem.pemeriksaan-suhu-ruang-v3.create', compact('shifts'));
     }
 
     public function store(Request $request)
     {
         $request->validate([
             'id_shift' => 'required|exists:shifts,id',
-            'id_area' => 'required|exists:input_areas,id',
             'tanggal' => 'required|date',
             'pukul' => 'required|date_format:H:i',
             'suhu_premix_*_setting' => 'nullable|string',
@@ -101,7 +90,6 @@ class PemeriksaanSuhuRuangV3Controller extends Controller
         $data = [
             'id_user' => Auth::id(),
             'id_shift' => $request->id_shift,
-            'id_area' => $request->id_area,
             'tanggal' => $request->tanggal,
             'pukul' => $request->pukul,
             'keterangan' => $request->keterangan,
@@ -151,7 +139,7 @@ class PemeriksaanSuhuRuangV3Controller extends Controller
     public function show(PemeriksaanSuhuRuangV3 $pemeriksaanSuhuRuangV3)
     {
         $this->checkPlantAccess($pemeriksaanSuhuRuangV3);
-        $pemeriksaanSuhuRuangV3->load(['user', 'shift', 'area']);
+        $pemeriksaanSuhuRuangV3->load(['user', 'shift']);
         
         return view('qc-sistem.pemeriksaan-suhu-ruang-v3.show', compact('pemeriksaanSuhuRuangV3'));
     }
@@ -159,7 +147,7 @@ class PemeriksaanSuhuRuangV3Controller extends Controller
     public function edit(PemeriksaanSuhuRuangV3 $pemeriksaanSuhuRuangV3)
     {
         $this->checkPlantAccess($pemeriksaanSuhuRuangV3);
-        $pemeriksaanSuhuRuangV3->load(['shift', 'area']);
+        $pemeriksaanSuhuRuangV3->load(['shift']);
         
         $user = Auth::user();
         
@@ -168,13 +156,7 @@ class PemeriksaanSuhuRuangV3Controller extends Controller
                 $query->where('id_plant', $user->id_plant);
             }
         })->get();
-        
-        $areas = InputArea::whereHas('user', function($query) use ($user) {
-            if ($user->role && strtolower($user->role->role) !== 'superadmin') {
-                $query->where('id_plant', $user->id_plant);
-            }
-        })->get();
-        
+
         // Check if edit per 2 jam is allowed
         $canEdit = false;
         $nextEditTime = now();
@@ -194,7 +176,7 @@ class PemeriksaanSuhuRuangV3Controller extends Controller
             }
         }
         
-        return view('qc-sistem.pemeriksaan-suhu-ruang-v3.edit', compact('pemeriksaanSuhuRuangV3', 'shifts', 'areas', 'canEdit', 'nextEditTime'));
+        return view('qc-sistem.pemeriksaan-suhu-ruang-v3.edit', compact('pemeriksaanSuhuRuangV3', 'shifts', 'canEdit', 'nextEditTime'));
     }
 
     public function update(Request $request, PemeriksaanSuhuRuangV3 $pemeriksaanSuhuRuangV3)
@@ -203,7 +185,6 @@ class PemeriksaanSuhuRuangV3Controller extends Controller
 
         $request->validate([
             'id_shift' => 'required|exists:shifts,id',
-            'id_area' => 'required|exists:input_areas,id',
             'tanggal' => 'required|date',
             'pukul' => 'nullable',
             'suhu_premix_*_setting' => 'nullable|string',
@@ -236,7 +217,6 @@ class PemeriksaanSuhuRuangV3Controller extends Controller
 
         $data = [
             'id_shift' => $request->id_shift,
-            'id_area' => $request->id_area,
             'tanggal' => $request->tanggal,
             'pukul' => $request->pukul,
             'keterangan' => $request->keterangan,

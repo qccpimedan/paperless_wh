@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -92,35 +91,13 @@ class User extends Authenticatable
         return $this->belongsTo(Plant::class, 'id_plant');
     }
 
-    /**
-     * Serialize timestamps to Indonesia timezone (Asia/Jakarta)
-     */
-    protected function serializeDate($date)
+    public function getTimezoneAttribute(): string
     {
-        return $date->setTimezone('Asia/Jakarta')->format('Y-m-d H:i:s');
-    }
-
-    /**
-     * Get created_at in Indonesia timezone
-     */
-    public function getCreatedAtAttribute($value)
-    {
-        if ($value) {
-            return Carbon::createFromFormat('Y-m-d H:i:s', $value, 'UTC')
-                ->setTimezone('Asia/Jakarta');
+        $plant = $this->plant;
+        if ($plant) {
+            return (string) ($plant->timezone ?? 'Asia/Jakarta');
         }
-        return $value;
-    }
 
-    /**
-     * Get updated_at in Indonesia timezone
-     */
-    public function getUpdatedAtAttribute($value)
-    {
-        if ($value) {
-            return Carbon::createFromFormat('Y-m-d H:i:s', $value, 'UTC')
-                ->setTimezone('Asia/Jakarta');
-        }
-        return $value;
+        return 'Asia/Jakarta';
     }
 }

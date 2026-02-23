@@ -67,7 +67,6 @@
             @php
                 $plantName = $p->user && $p->user->plant ? ($p->user->plant->plant ?? '-') : '-';
                 $shiftName = $p->shift ? ($p->shift->shift ?? '-') : '-';
-                $areaName = $p->area ? ($p->area->nama_area ?? '-') : '-';
 
                 $jamPukul = null;
                 if (!empty($p->pukul)) {
@@ -222,8 +221,8 @@
                     <tr>
                         <td class="subheader-label">Plant</td>
                         <td>{{ $plantName }}</td>
-                        <td class="subheader-label">Area</td>
-                        <td>{{ $areaName }}</td>
+                        <td class="subheader-label">&nbsp;</td>
+                        <td>&nbsp;</td>
                     </tr>
                     <tr>
                         <td class="subheader-label">Pukul</td>

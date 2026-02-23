@@ -64,16 +64,6 @@
                                                 </select>
                                                 @error('id_shift')<div class="invalid-feedback">{{ $message }}</div>@enderror
                                             </div>
-                                            <div class="col-md-6 mt-3">
-                                                <label for="id_area">Area <span class="text-danger">*</span></label>
-                                                <select id="id_area" class="form-control @error('id_area') is-invalid @enderror" name="id_area" required>
-                                                    <option value="">-- Pilih Area --</option>
-                                                    @foreach($areas as $area)
-                                                        <option value="{{ $area->id }}" {{ old('id_area') == $area->id ? 'selected' : '' }}>{{ $area->nama_area }}</option>
-                                                    @endforeach
-                                                </select>
-                                                @error('id_area')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                                            </div>
 
                                             @php
                                                 $suhuFields = [
@@ -98,7 +88,7 @@
                                                             <div class="col-md-3">
                                                                 <div class="form-check">
                                                                     <input class="form-check-input {{ $fieldKey }}-checkbox" type="checkbox" id="{{ $fieldKey }}_{{ $i }}_check" data-unit="{{ $i }}">
-                                                                    <label class="form-check-label" for="{{ $fieldKey }}_{{ $i }}_check">Unit {{ $i }}</label>
+                                                                    <label class="form-check-label" for="{{ $fieldKey }}_{{ $i }}_check">{{ $fieldLabel }} {{ $i }}</label>
                                                                 </div>
                                                             </div>
                                                         @endfor
@@ -108,11 +98,13 @@
                                                     <div class="col-md-12 mt-3 p-3 border rounded bg-light {{ $fieldKey }}-unit" id="{{ $fieldKey }}_{{ $i }}_form" style="display: none;">
                                                         <div class="row">
                                                             <div class="col-md-12">
-                                                                <label class="form-label"><strong>Unit {{ $i }}</strong></label>
+                                                                <label class="form-label"><strong>{{ $fieldLabel }} {{ $i }}</strong></label>
                                                             </div>
                                                             <div class="col-md-4">
                                                                 <label for="{{ $fieldKey }}_{{ $i }}_setting">Setting (°C)</label>
-                                                                <input type="text" id="{{ $fieldKey }}_{{ $i }}_setting" class="form-control form-control-sm" name="{{ $fieldKey }}_{{ $i }}_setting" placeholder="Masukkan nilai" value="{{ old($fieldKey . '_' . $i . '_setting') }}">
+                                                                <select id="{{ $fieldKey }}_{{ $i }}_setting" class="form-select form-select-sm" name="{{ $fieldKey }}_{{ $i }}_setting">
+                                                                    <option value="">-- Pilih atau Isi Manual --</option>
+                                                                </select>
                                                             </div>
                                                             <div class="col-md-4">
                                                                 <label for="{{ $fieldKey }}_{{ $i }}_display">Display (°C)</label>

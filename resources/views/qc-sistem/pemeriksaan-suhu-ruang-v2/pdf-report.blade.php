@@ -70,7 +70,6 @@
                 $shiftName = $p->shift ? ($p->shift->shift ?? '-') : '-';
                 $produkName = $p->produk ? ($p->produk->nama_produk ?? '-') : '-';
                 $kategori = $p->produk ? ($p->produk->kategori_code ?? null) : null;
-                $areaName = $p->area ? ($p->area->nama_area ?? '-') : '-';
 
                 $cold = is_array($p->suhu_cold_storage) ? $p->suhu_cold_storage : (json_decode($p->suhu_cold_storage ?? '[]', true) ?: []);
                 $anteroom = is_array($p->suhu_anteroom_loading) ? $p->suhu_anteroom_loading : (json_decode($p->suhu_anteroom_loading ?? '[]', true) ?: []);

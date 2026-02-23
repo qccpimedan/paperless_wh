@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
@@ -133,28 +132,5 @@ class PemeriksaanProdukFinishGood extends Model
     public function spvVerifier()
     {
         return $this->belongsTo(User::class, 'verified_by_spv');
-    }
-
-    protected function serializeDate($date)
-    {
-        return $date->setTimezone('Asia/Jakarta')->format('Y-m-d H:i:s');
-    }
-
-    public function getCreatedAtAttribute($value)
-    {
-        if ($value) {
-            return Carbon::createFromFormat('Y-m-d H:i:s', $value, 'UTC')
-                ->setTimezone('Asia/Jakarta');
-        }
-        return $value;
-    }
-
-    public function getUpdatedAtAttribute($value)
-    {
-        if ($value) {
-            return Carbon::createFromFormat('Y-m-d H:i:s', $value, 'UTC')
-                ->setTimezone('Asia/Jakarta');
-        }
-        return $value;
     }
 }

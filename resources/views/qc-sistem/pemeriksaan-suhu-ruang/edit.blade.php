@@ -92,11 +92,6 @@
                                             </div>
 
                                             <div class="col-md-6 mt-3">
-                                                <label for="area">Area</label>
-                                                <input type="text" id="area" class="form-control" value="{{ $pemeriksaanSuhuRuang->area->nama_area ?? '-' }}" disabled>
-                                            </div>
-
-                                            <div class="col-md-6 mt-3">
                                                 <label for="produk">Produk</label>
                                                 <input type="text" id="produk" class="form-control" value="{{ $pemeriksaanSuhuRuang->produk->nama_produk ?? '-' }}" disabled>
                                             </div>
@@ -143,7 +138,7 @@
                                                             <div class="form-check">
                                                                 <input class="form-check-input cold-storage-checkbox" type="checkbox" id="cold_storage_{{ $i }}_check" data-unit="{{ $i }}" {{ isset($coldStorageByUnit[$i]) ? 'checked' : '' }}>
                                                                 <label class="form-check-label" for="cold_storage_{{ $i }}_check">
-                                                                    Unit {{ $i }}
+                                                                    CS {{ $i }}
                                                                 </label>
                                                             </div>
                                                         </div>
@@ -155,7 +150,7 @@
                                                 <div class="col-md-12 mt-3 p-3 border rounded bg-light cold-storage-unit" id="cold_storage_{{ $i }}_form" style="display: {{ isset($coldStorageByUnit[$i]) ? 'block' : 'none' }};">
                                                     <div class="row">
                                                         <div class="col-md-12">
-                                                            <label class="form-label"><strong>Unit {{ $i }}</strong></label>
+                                                            <label class="form-label"><strong>CS {{ $i }}</strong></label>
                                                         </div>
                                                         <div class="col-md-4">
                                                             <label for="cold_storage_{{ $i }}_setting">Setting (°C)</label>
@@ -219,7 +214,7 @@
                                                             <div class="form-check">
                                                                 <input class="form-check-input anteroom-loading-checkbox" type="checkbox" id="anteroom_loading_{{ $i }}_check" data-unit="{{ $i }}" {{ isset($anteroomLoadingByUnit[$i]) ? 'checked' : '' }}>
                                                                 <label class="form-check-label" for="anteroom_loading_{{ $i }}_check">
-                                                                    Unit {{ $i }}
+                                                                    Anteroom Loading {{ $i }}
                                                                 </label>
                                                             </div>
                                                         </div>
@@ -231,7 +226,7 @@
                                                 <div class="col-md-12 mt-3 p-3 border rounded bg-light anteroom-loading-unit" id="anteroom_loading_{{ $i }}_form" style="display: {{ isset($anteroomLoadingByUnit[$i]) ? 'block' : 'none' }};">
                                                     <div class="row">
                                                         <div class="col-md-12">
-                                                            <label class="form-label"><strong>Unit {{ $i }}</strong></label>
+                                                            <label class="form-label"><strong>Anteroom Loading {{ $i }}</strong></label>
                                                         </div>
                                                         <div class="col-md-4">
                                                             <label for="anteroom_loading_{{ $i }}_setting">Setting (°C)</label>

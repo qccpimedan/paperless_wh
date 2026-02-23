@@ -33,8 +33,7 @@
                         <h5 class="card-title mb-0">History Perubahan Data</h5>
                         <small class="text-muted">
                             Tanggal: {{ $pemeriksaanSuhuRuang->tanggal->format('d/m/Y') }} | 
-                            Produk: {{ $pemeriksaanSuhuRuang->produk->nama_produk ?? '-' }} | 
-                            Area: {{ $pemeriksaanSuhuRuang->area->nama_area ?? '-' }}
+                            Produk: {{ $pemeriksaanSuhuRuang->produk->nama_produk ?? '-' }}
                         </small>
                     </div>
                     <a href="{{ route('pemeriksaan-suhu-ruang.show', $pemeriksaanSuhuRuang->uuid) }}" class="btn btn-secondary">
@@ -180,6 +179,12 @@
                                                                         $oldItem = $oldArray[$itemKey] ?? [];
                                                                         $newItem = $newArray[$itemKey] ?? [];
                                                                         $unitNumber = (int)$itemKey + 1; // Convert 0-based index to 1-based unit number
+                                                                        $unitLabelPrefix = 'Unit';
+                                                                        if ($key === 'cold_storage') {
+                                                                            $unitLabelPrefix = 'CS';
+                                                                        } elseif ($key === 'anteroom_loading') {
+                                                                            $unitLabelPrefix = 'Anteroom Loading';
+                                                                        }
                                                                     @endphp
                                                                     @if(is_array($oldItem) || is_array($newItem))
                                                                         @foreach(['setting', 'display', 'actual'] as $param)
@@ -188,7 +193,7 @@
                                                                                 $newVal = $newItem[$param] ?? null;
                                                                             @endphp
                                                                             <tr>
-                                                                                <td><strong>{{ ucfirst(str_replace('_', ' ', $key)) }}</strong> Unit {{ $unitNumber }}</td>
+                                                                                <td><strong>{{ ucfirst(str_replace('_', ' ', $key)) }}</strong> {{ $unitLabelPrefix }} {{ $unitNumber }}</td>
                                                                                 <td>{{ ucfirst($param) }}</td>
                                                                                 <td style="background-color: #ffe5e5;">{{ $oldVal ?? '-' }}</td>
                                                                                 <td style="background-color: #e5ffe5;">{{ $newVal ?? '-' }}</td>
