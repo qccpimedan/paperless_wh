@@ -33,7 +33,6 @@
                         <h5 class="card-title mb-0">History Perubahan Data</h5>
                         <small class="text-muted">
                             Tanggal: {{ $pemeriksaanSuhuRuangV3->tanggal->format('d/m/Y') }} | 
-                            Area: {{ $pemeriksaanSuhuRuangV3->area->nama_area }} | 
                             Shift: {{ $pemeriksaanSuhuRuangV3->shift->shift }}
                         </small>
                     </div>
@@ -163,7 +162,7 @@
                                                                         $newVal = $newItem[$param] ?? null;
                                                                     @endphp
                                                                     <tr>
-                                                                        <td><strong>{{ $label }}</strong> {{ $unitNumber }}</td>
+                                                                        <td><strong>{{ $label }} {{ $unitNumber }}</strong></td>
                                                                         <td>{{ ucfirst($param) }}</td>
                                                                         <td style="background-color: #ffe5e5;">{{ $oldVal ?? '-' }}</td>
                                                                         <td style="background-color: #e5ffe5;">{{ $newVal ?? '-' }}</td>

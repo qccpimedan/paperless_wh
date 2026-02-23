@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
@@ -13,7 +12,8 @@ class Plant extends Model
 
     protected $fillable = [
         'uuid',
-        'plant'
+        'plant',
+        'timezone'
     ];
 
     protected $hidden = [
@@ -42,35 +42,8 @@ class Plant extends Model
         return 'uuid';
     }
 
-    /**
-     * Serialize timestamps to Indonesia timezone (Asia/Jakarta)
-     */
-    protected function serializeDate($date)
+    public function getTimezoneAttribute($value): string
     {
-        return $date->setTimezone('Asia/Jakarta')->format('Y-m-d H:i:s');
-    }
-
-    /**
-     * Get created_at in Indonesia timezone
-     */
-    public function getCreatedAtAttribute($value)
-    {
-        if ($value) {
-            return Carbon::createFromFormat('Y-m-d H:i:s', $value, 'UTC')
-                ->setTimezone('Asia/Jakarta');
-        }
-        return $value;
-    }
-
-    /**
-     * Get updated_at in Indonesia timezone
-     */
-    public function getUpdatedAtAttribute($value)
-    {
-        if ($value) {
-            return Carbon::createFromFormat('Y-m-d H:i:s', $value, 'UTC')
-                ->setTimezone('Asia/Jakarta');
-        }
-        return $value;
+        return $value ?: 'Asia/Jakarta';
     }
 }

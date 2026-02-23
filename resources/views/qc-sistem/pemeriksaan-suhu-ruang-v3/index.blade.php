@@ -52,7 +52,7 @@
                     <h5 class="card-title mb-0">Daftar Gudang Dry</h5>
                     @can('create_pemeriksaan_suhu_ruang_v3')
                         <a href="{{ route('pemeriksaan-suhu-ruang-v3.create') }}" class="btn btn-primary">
-                            <i class="bi bi-plus-circle"></i> Buat Pemeriksaan
+                            <i class="bi bi-plus-circle"></i> Buat Pemeriksaan Baru
                         </a>
                     @endcan
                 </div>
@@ -163,7 +163,6 @@
                                     <th>Pukul</th>
                                     <th>Shift</th>
                                     <th>Plant</th>
-                                    <th>Area</th>
                                     <th>Verifikasi</th>
                                     <th>Catatan Verifikasi</th>
                                     <th>Aksi</th>
@@ -186,9 +185,6 @@
                                             @else
                                                 <span class="badge bg-secondary">No Plant</span>
                                             @endif
-                                        </td>
-                                        <td>
-                                            <strong>{{ $pemeriksaan->area->nama_area }}</strong>
                                         </td>
                                         <td>
                                             @php

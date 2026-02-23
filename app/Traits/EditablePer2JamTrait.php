@@ -114,10 +114,14 @@ trait EditablePer2JamTrait
         $records = $this->getEditableRecordsWithin10Min($modelClass);
         
         return $records->map(function($record) {
+            $areaName = 'N/A';
+            if (method_exists($record, 'area')) {
+                $areaName = $record->area->nama_area ?? 'N/A';
+            }
             return [
                 'uuid' => $record->uuid,
                 'tanggal' => $record->tanggal->format('Y-m-d'),
-                'area' => $record->area->nama_area ?? 'N/A',
+                'area' => $areaName,
                 'shift' => $record->shift->shift ?? 'N/A',
                 'updated_at' => $record->updated_at->format('Y-m-d H:i'),
                 'next_edit_time' => $this->getNextEditTime($record)->format('Y-m-d H:i'),

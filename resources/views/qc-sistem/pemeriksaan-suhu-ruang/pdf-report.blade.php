@@ -69,7 +69,6 @@
                 $shiftName = $p->shift ? ($p->shift->shift ?? '-') : '-';
                 $produkName = $p->produk ? ($p->produk->nama_produk ?? '-') : '-';
                 $kategori = $p->produk ? ($p->produk->kategori_code ?? null) : null;
-                $areaName = $p->area ? ($p->area->nama_area ?? '-') : '-';
 
                 $suhu = is_array($p->suhu_data) ? $p->suhu_data : (json_decode($p->suhu_data ?? '[]', true) ?: []);
                 $hasAny = false;
@@ -203,17 +202,16 @@
                     <tr>
                         <td class="subheader-label">Plant</td>
                         <td>{{ $plantName }}</td>
-                        <td class="subheader-label">Area</td>
-                        <td>{{ $areaName }}</td>
+                        <td class="subheader-label">&nbsp;</td>
+                        <td>&nbsp;</td>
                     </tr>
                     <tr>
                         <td class="subheader-label">Produk</td>
                         <td>
                             @if($kategori)
-                                <span>{{ $kategori }} - {{ $produkName }}</span>
-                            @else
-                                <span>{{ $produkName }}</span>
+                                <span style="font-weight: 700;">{{ $kategori }}</span> -
                             @endif
+                            {{ $produkName }}
                         </td>
                         <td class="subheader-label">Pukul</td>
                         <td>{{ $jamPukul ?? '-' }}</td>

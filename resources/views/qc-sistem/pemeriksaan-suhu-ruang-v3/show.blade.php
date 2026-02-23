@@ -59,13 +59,6 @@
 
                                     <div class="col-md-6">
                                         <div class="mb-3">
-                                            <label class="form-label"><strong>Area</strong></label>
-                                            <p class="form-control-plaintext">{{ $pemeriksaanSuhuRuangV3->area->nama_area ?? '-' }}</p>
-                                        </div>
-                                    </div>
-
-                                    <div class="col-md-6">
-                                        <div class="mb-3">
                                             <label class="form-label"><strong>User</strong></label>
                                             <p class="form-control-plaintext">{{ $pemeriksaanSuhuRuangV3->user->name ?? '-' }}</p>
                                         </div>
@@ -102,7 +95,7 @@
                                                 <div class="col-md-12 mt-3 p-3 border rounded bg-light">
                                                     <div class="row">
                                                         <div class="col-md-12">
-                                                            <label class="form-label"><strong>{{ ucfirst(str_replace('_', ' ', $unit)) }}</strong></label>
+                                                            <label class="form-label"><strong>{{ $fieldLabel }} {{ str_replace('unit_', '', (string) $unit) }}</strong></label>
                                                         </div>
                                                         <div class="col-md-4">
                                                             <label class="form-label">Setting (°C)</label>

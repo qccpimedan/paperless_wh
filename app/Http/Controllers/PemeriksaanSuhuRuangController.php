@@ -6,7 +6,6 @@ use App\Models\PemeriksaanSuhuRuang;
 use App\Models\PemeriksaanSuhuRuangHistory;
 use App\Models\Shift;
 use App\Models\Produk;
-use App\Models\InputArea;
 use App\Traits\EditablePer2JamTrait;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -25,7 +24,7 @@ class PemeriksaanSuhuRuangController extends Controller
 
         $search = trim((string) $request->input('search', ''));
         
-        $query = PemeriksaanSuhuRuang::with(['user.role', 'user.plant', 'shift', 'produk', 'area']);
+        $query = PemeriksaanSuhuRuang::with(['user.role', 'user.plant', 'shift', 'produk']);
 
         if (!($user->role && strtolower($user->role->role) === 'superadmin')) {
             $query->whereHas('user', function ($q) use ($user) {
@@ -44,9 +43,6 @@ class PemeriksaanSuhuRuangController extends Controller
                     ->orWhereHas('produk', function ($qp) use ($search) {
                         $qp->where('nama_produk', 'like', '%' . $search . '%')
                             ->orWhere('kategori_code', 'like', '%' . $search . '%');
-                    })
-                    ->orWhereHas('area', function ($qa) use ($search) {
-                        $qa->where('nama_area', 'like', '%' . $search . '%');
                     });
             });
         }
@@ -67,11 +63,6 @@ class PemeriksaanSuhuRuangController extends Controller
             }
         })->get();
         $produks = Produk::whereHas('user', function($query) use ($user) {
-            if ($user->role && strtolower($user->role->role) !== 'superadmin') {
-                $query->where('id_plant', $user->id_plant);
-            }
-        })->get();
-        $areas = InputArea::whereHas('user', function($query) use ($user) {
             if ($user->role && strtolower($user->role->role) !== 'superadmin') {
                 $query->where('id_plant', $user->id_plant);
             }
@@ -103,7 +94,6 @@ class PemeriksaanSuhuRuangController extends Controller
         return view('qc-sistem.pemeriksaan-suhu-ruang.create', compact(
             'shifts',
             'produks',
-            'areas',
             'produkKategoriOptions',
             'produkByKategori',
             'produkKategoriById'
@@ -115,7 +105,6 @@ class PemeriksaanSuhuRuangController extends Controller
         $request->validate([
             'id_shift' => 'required|exists:shifts,id',
             'id_produk' => 'required|exists:produks,id',
-            'id_area' => 'required|exists:input_areas,id',
             'tanggal' => 'required|date',
             'suhu_produk' => 'nullable|string',
             'pukul' => 'nullable|date_format:H:i',
@@ -127,7 +116,6 @@ class PemeriksaanSuhuRuangController extends Controller
             'id_user' => Auth::id(),
             'id_shift' => $request->id_shift,
             'id_produk' => $request->id_produk,
-            'id_area' => $request->id_area,
             'tanggal' => $request->tanggal,
             'suhu_produk' => $request->suhu_produk,
             'pukul' => $request->pukul,
@@ -142,7 +130,7 @@ class PemeriksaanSuhuRuangController extends Controller
     public function show(PemeriksaanSuhuRuang $pemeriksaanSuhuRuang)
     {
         $this->checkPlantAccess($pemeriksaanSuhuRuang);
-        $pemeriksaanSuhuRuang->load(['user', 'shift', 'produk', 'area']);
+        $pemeriksaanSuhuRuang->load(['user', 'shift', 'produk']);
         
         return view('qc-sistem.pemeriksaan-suhu-ruang.show', compact('pemeriksaanSuhuRuang'));
     }
@@ -150,7 +138,7 @@ class PemeriksaanSuhuRuangController extends Controller
     public function edit(PemeriksaanSuhuRuang $pemeriksaanSuhuRuang)
     {
         $this->checkPlantAccess($pemeriksaanSuhuRuang);
-        $pemeriksaanSuhuRuang->load(['shift', 'produk', 'area']);
+        $pemeriksaanSuhuRuang->load(['shift', 'produk']);
         
         $user = Auth::user();
         
@@ -169,11 +157,6 @@ class PemeriksaanSuhuRuangController extends Controller
             }
         })->get();
         $produks = Produk::whereHas('user', function($query) use ($user) {
-            if ($user->role && strtolower($user->role->role) !== 'superadmin') {
-                $query->where('id_plant', $user->id_plant);
-            }
-        })->get();
-        $areas = InputArea::whereHas('user', function($query) use ($user) {
             if ($user->role && strtolower($user->role->role) !== 'superadmin') {
                 $query->where('id_plant', $user->id_plant);
             }
@@ -206,7 +189,6 @@ class PemeriksaanSuhuRuangController extends Controller
             'pemeriksaanSuhuRuang',
             'shifts',
             'produks',
-            'areas',
             'canEdit',
             'nextEditTime',
             'hoursDiff',
@@ -351,7 +333,7 @@ class PemeriksaanSuhuRuangController extends Controller
     public function history(PemeriksaanSuhuRuang $pemeriksaanSuhuRuang)
     {
         $this->checkPlantAccess($pemeriksaanSuhuRuang);
-        $pemeriksaanSuhuRuang->load(['user', 'shift', 'produk', 'area']);
+        $pemeriksaanSuhuRuang->load(['user', 'shift', 'produk']);
         $histories = $pemeriksaanSuhuRuang->histories()->with('user')->latest()->get();
         
         return view('qc-sistem.pemeriksaan-suhu-ruang.history', compact('pemeriksaanSuhuRuang', 'histories'));
@@ -403,10 +385,14 @@ class PemeriksaanSuhuRuangController extends Controller
         $recordsV2Data = $recordsV2Query->get();
         
         $recordsV2 = $recordsV2Data->map(function($record) {
+            $areaName = 'N/A';
+            if (method_exists($record, 'area')) {
+                $areaName = $record->area->nama_area ?? 'N/A';
+            }
             return [
                 'uuid' => $record->uuid,
                 'tanggal' => $record->tanggal->format('Y-m-d'),
-                'area' => $record->area->nama_area ?? 'N/A',
+                'area' => $areaName,
                 'shift' => $record->shift->shift ?? 'N/A',
                 'updated_at' => $record->updated_at->format('Y-m-d H:i'),
                 'next_edit_time' => $record->updated_at->copy()->addHours(2)->format('Y-m-d H:i'),
@@ -582,7 +568,6 @@ class PemeriksaanSuhuRuangController extends Controller
             'user.plant',
             'produk',
             'shift',
-            'area',
             'histories',
             'verifiedByQc.role',
             'verifiedByProduksi.role',

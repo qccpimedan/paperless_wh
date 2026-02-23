@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
@@ -86,21 +85,5 @@ class GoldenSampleReport extends Model
     public function spvVerifier()
     {
         return $this->belongsTo(User::class, 'verified_by_spv');
-    }
-
-    public function getCreatedAtAttribute($value)
-    {
-        if ($value) {
-            return Carbon::parse($value)->setTimezone('Asia/Jakarta');
-        }
-        return $value;
-    }
-
-    public function getUpdatedAtAttribute($value)
-    {
-        if ($value) {
-            return Carbon::parse($value)->setTimezone('Asia/Jakarta');
-        }
-        return $value;
     }
 }

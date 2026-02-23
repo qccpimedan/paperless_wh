@@ -52,13 +52,6 @@
 
                                     <div class="col-md-6">
                                         <div class="mb-3">
-                                            <label class="form-label"><strong>Area</strong></label>
-                                            <p class="form-control-plaintext">{{ $pemeriksaanSuhuRuangV2->area->nama_area ?? '-' }}</p>
-                                        </div>
-                                    </div>
-
-                                    <div class="col-md-6">
-                                        <div class="mb-3">
                                             <label class="form-label"><strong>Produk</strong></label>
                                             <p class="form-control-plaintext">
                                                 @if($pemeriksaanSuhuRuangV2->produk)
@@ -89,7 +82,7 @@
                                             <div class="col-md-12 mt-3 p-3 border rounded bg-light">
                                                 <div class="row">
                                                     <div class="col-md-12">
-                                                        <label class="form-label"><strong>Unit {{ $unit }}</strong></label>
+                                                        <label class="form-label"><strong>CS {{ $unit }}</strong></label>
                                                     </div>
                                                     <div class="col-md-4">
                                                         <label class="form-label">Setting (°C)</label>
@@ -144,7 +137,7 @@
                                             <div class="col-md-12 mt-3 p-3 border rounded bg-light">
                                                 <div class="row">
                                                     <div class="col-md-12">
-                                                        <label class="form-label"><strong>Unit {{ $unit }}</strong></label>
+                                                        <label class="form-label"><strong>Anteroom Loading {{ $unit }}</strong></label>
                                                     </div>
                                                     <div class="col-md-4">
                                                         <label class="form-label">Setting (°C)</label>

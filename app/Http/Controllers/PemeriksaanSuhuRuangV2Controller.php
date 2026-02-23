@@ -6,7 +6,6 @@ use App\Models\PemeriksaanSuhuRuangV2;
 use App\Models\PemeriksaanSuhuRuangV2History;
 use App\Models\Shift;
 use App\Models\Produk;
-use App\Models\InputArea;
 use App\Traits\EditablePer2JamTrait;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -26,7 +25,7 @@ class PemeriksaanSuhuRuangV2Controller extends Controller
 
         $search = trim((string) $request->input('search', ''));
         
-        $query = PemeriksaanSuhuRuangV2::with(['user.role', 'user.plant', 'shift', 'produk', 'area']);
+        $query = PemeriksaanSuhuRuangV2::with(['user.role', 'user.plant', 'shift', 'produk']);
 
         if (!($user->role && strtolower($user->role->role) === 'superadmin')) {
             $query->whereHas('user', function ($q) use ($user) {
@@ -44,9 +43,6 @@ class PemeriksaanSuhuRuangV2Controller extends Controller
                     ->orWhereHas('produk', function ($qp) use ($search) {
                         $qp->where('nama_produk', 'like', '%' . $search . '%')
                             ->orWhere('kategori_code', 'like', '%' . $search . '%');
-                    })
-                    ->orWhereHas('area', function ($qa) use ($search) {
-                        $qa->where('nama_area', 'like', '%' . $search . '%');
                     });
             });
         }
@@ -69,12 +65,6 @@ class PemeriksaanSuhuRuangV2Controller extends Controller
         $produks = Produk::query()
             ->orderBy('nama_produk')
             ->get();
-        
-        $areas = InputArea::whereHas('user', function($query) use ($user) {
-            if ($user->role && strtolower($user->role->role) !== 'superadmin') {
-                $query->where('id_plant', $user->id_plant);
-            }
-        })->get();
 
         $produkKategoriOptions = $produks
             ->pluck('kategori_code')
@@ -102,7 +92,6 @@ class PemeriksaanSuhuRuangV2Controller extends Controller
         return view('qc-sistem.pemeriksaan-suhu-ruang-v2.create', compact(
             'shifts',
             'produks',
-            'areas',
             'produkKategoriOptions',
             'produkByKategori',
             'produkKategoriById'
@@ -114,7 +103,6 @@ class PemeriksaanSuhuRuangV2Controller extends Controller
         $request->validate([
             'id_shift' => 'required|exists:shifts,id',
             'id_produk' => 'required|exists:produks,id',
-            'id_area' => 'required|exists:input_areas,id',
             'tanggal' => 'required|date',
         ]);
 
@@ -124,7 +112,6 @@ class PemeriksaanSuhuRuangV2Controller extends Controller
             'id_user' => Auth::id(),
             'id_shift' => $request->id_shift,
             'id_produk' => $request->id_produk,
-            'id_area' => $request->id_area,
             'tanggal' => $request->tanggal,
             'suhu_cold_storage' => $suhuData['suhu_cold_storage'] ?? null,
             'suhu_anteroom_loading' => $suhuData['suhu_anteroom_loading'] ?? null,
@@ -143,7 +130,7 @@ class PemeriksaanSuhuRuangV2Controller extends Controller
     public function show(PemeriksaanSuhuRuangV2 $pemeriksaanSuhuRuangV2)
     {
         $this->checkPlantAccess($pemeriksaanSuhuRuangV2);
-        $pemeriksaanSuhuRuangV2->load(['user', 'shift', 'produk', 'area']);
+        $pemeriksaanSuhuRuangV2->load(['user', 'shift', 'produk']);
         
         return view('qc-sistem.pemeriksaan-suhu-ruang-v2.show', compact('pemeriksaanSuhuRuangV2'));
     }
@@ -151,7 +138,7 @@ class PemeriksaanSuhuRuangV2Controller extends Controller
     public function edit(PemeriksaanSuhuRuangV2 $pemeriksaanSuhuRuangV2)
     {
         $this->checkPlantAccess($pemeriksaanSuhuRuangV2);
-        $pemeriksaanSuhuRuangV2->load(['shift', 'produk', 'area']);
+        $pemeriksaanSuhuRuangV2->load(['shift', 'produk']);
         
         $user = Auth::user();
         
@@ -172,12 +159,6 @@ class PemeriksaanSuhuRuangV2Controller extends Controller
         $produks = Produk::query()
             ->orderBy('nama_produk')
             ->get();
-        
-        $areas = InputArea::whereHas('user', function($query) use ($user) {
-            if ($user->role && strtolower($user->role->role) !== 'superadmin') {
-                $query->where('id_plant', $user->id_plant);
-            }
-        })->get();
 
         $produkKategoriOptions = $produks
             ->pluck('kategori_code')
@@ -206,7 +187,6 @@ class PemeriksaanSuhuRuangV2Controller extends Controller
             'pemeriksaanSuhuRuangV2',
             'shifts',
             'produks',
-            'areas',
             'canEdit',
             'nextEditTime',
             'hoursDiff',
@@ -270,7 +250,7 @@ class PemeriksaanSuhuRuangV2Controller extends Controller
     public function history(PemeriksaanSuhuRuangV2 $pemeriksaanSuhuRuangV2)
     {
         $this->checkPlantAccess($pemeriksaanSuhuRuangV2);
-        $pemeriksaanSuhuRuangV2->load(['user', 'shift', 'produk', 'area']);
+        $pemeriksaanSuhuRuangV2->load(['user', 'shift', 'produk']);
         $histories = $pemeriksaanSuhuRuangV2->histories()->with('user')->latest()->get();
         
         return view('qc-sistem.pemeriksaan-suhu-ruang-v2.history', compact('pemeriksaanSuhuRuangV2', 'histories'));

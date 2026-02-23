@@ -52,7 +52,7 @@
                     <h5 class="card-title mb-0">Daftar CS Meet</h5>
                     @can('create_pemeriksaan_suhu_ruang_v2')
                         <a href="{{ route('pemeriksaan-suhu-ruang-v2.create') }}" class="btn btn-primary">
-                            <i class="bi bi-plus-circle"></i> Buat Pemeriksaan
+                            <i class="bi bi-plus-circle"></i> Buat Pemeriksaan Baru
                         </a>
                     @endcan
                 </div>
@@ -95,7 +95,7 @@
 
                     <form action="{{ route('pemeriksaan-suhu-ruang-v2.index') }}" method="GET" class="row g-3 mb-3">
                         <div class="col-md-9">
-                            <input type="text" name="search" class="form-control" placeholder="Cari tanggal/pukul/status/shift/produk/area..." value="{{ request('search') }}">
+                            <input type="text" name="search" class="form-control" placeholder="Cari tanggal/pukul/status/shift/produk..." value="{{ request('search') }}">
                         </div>
                         <div class="col-md-3 d-flex align-items-end">
                             <button type="submit" class="btn btn-primary w-100">Cari</button>
@@ -163,7 +163,6 @@
                                     <th>Shift</th>
                                     <th>Plant</th>
                                     <th>Produk</th>
-                                    <th>Area</th>
                                     <th>Verifikasi</th>
                                     <th>Catatan Verifikasi</th>
                                     <th>Aksi</th>
@@ -191,9 +190,6 @@
                                             @else
                                                 <span class="text-muted">-</span>
                                             @endif
-                                        </td>
-                                        <td>
-                                            <strong>{{ $pemeriksaan->area->nama_area ?? '-' }}</strong>
                                         </td>
                                         <td>
                                             @php
