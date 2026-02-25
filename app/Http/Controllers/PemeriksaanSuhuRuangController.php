@@ -385,14 +385,10 @@ class PemeriksaanSuhuRuangController extends Controller
         $recordsV2Data = $recordsV2Query->get();
         
         $recordsV2 = $recordsV2Data->map(function($record) {
-            $areaName = 'N/A';
-            if (method_exists($record, 'area')) {
-                $areaName = $record->area->nama_area ?? 'N/A';
-            }
             return [
                 'uuid' => $record->uuid,
                 'tanggal' => $record->tanggal->format('Y-m-d'),
-                'area' => $areaName,
+                'area' => 'N/A',
                 'shift' => $record->shift->shift ?? 'N/A',
                 'updated_at' => $record->updated_at->format('Y-m-d H:i'),
                 'next_edit_time' => $record->updated_at->copy()->addHours(2)->format('Y-m-d H:i'),
