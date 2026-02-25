@@ -507,7 +507,6 @@ class PemeriksaanSuhuRuangV2Controller extends Controller
             'user.plant',
             'produk',
             'shift',
-            'area',
             'verifiedBy.role'
         ])->with([
             'qcVerifier' => function ($q) {

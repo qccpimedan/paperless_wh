@@ -280,7 +280,7 @@ class PemeriksaanSuhuRuangV3Controller extends Controller
     public function history(PemeriksaanSuhuRuangV3 $pemeriksaanSuhuRuangV3)
     {
         $this->checkPlantAccess($pemeriksaanSuhuRuangV3);
-        $pemeriksaanSuhuRuangV3->load(['user', 'shift', 'area']);
+        $pemeriksaanSuhuRuangV3->load(['user', 'shift']);
         
         return view('qc-sistem.pemeriksaan-suhu-ruang-v3.history', compact('pemeriksaanSuhuRuangV3'));
     }
@@ -461,7 +461,6 @@ class PemeriksaanSuhuRuangV3Controller extends Controller
             'user.role',
             'user.plant',
             'shift',
-            'area',
             'histories',
             'verifiedByQc.role',
             'verifiedByProduksi.role',
