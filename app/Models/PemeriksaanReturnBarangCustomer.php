@@ -5,10 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
+use App\Traits\HasPlantTimezoneTimestamps;
 
 class PemeriksaanReturnBarangCustomer extends Model
 {
-    use HasFactory;
+    use HasFactory, HasPlantTimezoneTimestamps;
 
     protected $table = 'pemeriksaan_return_barang_customers';
 
