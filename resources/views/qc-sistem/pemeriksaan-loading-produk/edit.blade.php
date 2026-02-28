@@ -286,7 +286,7 @@
                                                         <div class="col-md-6">
                                                             <div class="form-group">
                                                                 <label>Kategori <span class="text-danger">*</span></label>
-                                                                <select class="choices form-select kategori-produk-select" {{ $groupIndex === 0 ? 'name=kategori_code required' : '' }}>
+                                                                <select class="choices form-select kategori-produk-select" {{ $groupIndex === 0 ? 'name=kategori_code required' : '' }} data-kategori="{{ $groupKategori }}">
                                                                     <option value="">-- Pilih Kategori --</option>
                                                                     @foreach(($produkKategoriOptions ?? []) as $kategori)
                                                                         <option value="{{ $kategori }}" {{ $groupKategori == $kategori ? 'selected' : '' }}>{{ $kategori }}</option>
@@ -517,6 +517,15 @@ document.addEventListener('DOMContentLoaded', function() {
         });
 
         rebuildProdukChoices(produkSelect, choiceItems, selectedFromAttr);
+
+        // Setelah rebuild selesai, sync hidden inputs.
+        // Gunakan setTimeout agar Choices.js selesai set nilai ke native select
+        const parentGroup = produkSelect.closest('.produk-group');
+        if (parentGroup) {
+            setTimeout(function() {
+                syncGroupHiddenProdukIds(parentGroup);
+            }, 50);
+        }
     };
 
     function updateGroupTitles() {
@@ -534,9 +543,34 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function syncGroupHiddenProdukIds(groupEl) {
         const produkSelect = groupEl ? groupEl.querySelector('select.produk-select') : null;
-        const idProduk = produkSelect ? (produkSelect.value || '') : '';
+        let idProduk = produkSelect ? (produkSelect.value || '') : '';
+
+        // Jika native select value kosong, coba ambil dari Choices.js instance
+        if (!idProduk && produkSelect) {
+            const choicesInst = choicesInstances.get(produkSelect);
+            if (choicesInst && typeof choicesInst.getValue === 'function') {
+                try {
+                    const chosen = choicesInst.getValue(true);
+                    if (chosen) idProduk = String(chosen);
+                } catch(e) {}
+            }
+        }
+
+        // Hanya update hidden input jika kita punya nilai,
+        // ATAU jika hidden input sudah kosong dari awal
         groupEl.querySelectorAll('.produk-id-hidden').forEach((el) => {
-            el.value = idProduk;
+            if (idProduk) {
+                el.value = idProduk;
+            }
+            // Jika idProduk kosong DAN hidden input sudah punya nilai (dari PHP),
+            // biarkan nilai yang ada — jangan ditimpa dengan kosong
+        });
+    }
+
+    // Paksa kosongkan hidden inputs id_produk (dipakai saat user memilih kategori baru)
+    function clearGroupHiddenProdukIds(groupEl) {
+        groupEl.querySelectorAll('.produk-id-hidden').forEach((el) => {
+            el.value = '';
         });
     }
 
@@ -580,8 +614,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (produkSelect) {
                     produkSelect.setAttribute('data-selected', '');
                 }
+                // Eksplisit kosongkan hidden inputs karena produk akan berganti
+                clearGroupHiddenProdukIds(groupEl);
                 populateProdukOptions(groupEl, kategoriSelect.value);
-                syncGroupHiddenProdukIds(groupEl);
             });
         }
 
@@ -671,7 +706,20 @@ document.addEventListener('DOMContentLoaded', function() {
         });
 
         if (kategoriSelect) {
-            populateProdukOptions(groupEl, kategoriSelect.value);
+            // Gunakan setTimeout agar global Choices.js dari layout sudah selesai init
+            // sebelum kita populate pilihan produk berdasarkan kategori
+            setTimeout(function() {
+                // Prioritas: data-kategori (di-set dari PHP), lalu nilai native select
+                const initialKategori = kategoriSelect.getAttribute('data-kategori') || kategoriSelect.value || '';
+                if (initialKategori) {
+                    // Jika Choices.js sudah mengambil alih select ini,
+                    // pastikan nilai terpilih sudah benar via Choices internal
+                    if (kategoriSelect._choices && typeof kategoriSelect._choices.setChoiceByValue === 'function') {
+                        try { kategoriSelect._choices.setChoiceByValue(initialKategori); } catch(e){}
+                    }
+                    populateProdukOptions(groupEl, initialKategori);
+                }
+            }, 0);
         }
         reindexAllDetails();
     }
