@@ -410,7 +410,11 @@ class PemeriksaanLoadingProdukController extends Controller
             })
             ->all();
 
-        $produkKategoriById = $produks
+        // Ambil dari SEMUA produk (tanpa filter plant) agar id_produk
+        // yang sudah tersimpan di produk_data selalu bisa ditemukan kategorinya
+        $produkKategoriById = Produk::query()
+            ->select(['id', 'kategori_code'])
+            ->get()
             ->pluck('kategori_code', 'id')
             ->all();
 

@@ -221,15 +221,40 @@
                                             @endif
                                         </td> -->
                                         <td>
-                                            @if($pemeriksaan->produk_data && count($pemeriksaan->produk_data) > 0)
-                                                @php
-                                                    $firstProduk = $pemeriksaan->produk_data[0];
-                                                    $produkName = \App\Models\Produk::find($firstProduk['id_produk'])?->nama_produk ?? 'Produk tidak ditemukan';
-                                                    $totalProduk = count($pemeriksaan->produk_data);
-                                                @endphp
-                                                {{ $produkName }} <span class="badge bg-info">{{ $totalProduk }}</span>
+                                            @php
+                                                $produkDataRows = $pemeriksaan->produk_data ?? [];
+                                                $produkNames = [];
+                                                foreach($produkDataRows as $pRow) {
+                                                    if(isset($pRow['id_produk'])) {
+                                                        $produkObj = \App\Models\Produk::find($pRow['id_produk']);
+                                                        if($produkObj) {
+                                                            $produkNames[] = $produkObj->nama_produk;
+                                                        }
+                                                    }
+                                                }
+                                                $produkNames = array_values(array_unique($produkNames));
+
+                                                $produkPreview = [];
+                                                if (count($produkNames) === 1) {
+                                                    $produkPreview = [$produkNames[0]];
+                                                } elseif (count($produkNames) === 2) {
+                                                    $produkPreview = [$produkNames[0], $produkNames[1]];
+                                                } elseif (count($produkNames) > 2) {
+                                                    $produkPreview = [$produkNames[0], $produkNames[count($produkNames) - 1]];
+                                                }
+                                            @endphp
+                                            @if(count($produkPreview) > 0)
+                                                <span class="badge bg-info">{{ $produkPreview[0] }}</span>
+                                                @if(count($produkNames) > 2)
+                                                    <br>
+                                                    <span class="text-muted">...</span>
+                                                @endif
+                                                @if(count($produkPreview) === 2)
+                                                    <br>
+                                                    <span class="badge bg-info">{{ $produkPreview[1] }}</span>
+                                                @endif
                                             @else
-                                                -
+                                                <span class="text-muted">-</span>
                                             @endif
                                         </td>
 
@@ -247,10 +272,27 @@
                                                     }
                                                 }
                                                 $kodeProduksiArr = array_values(array_unique($kodeProduksiArr));
+
+                                                $kodeProduksiPreview = [];
+                                                if (count($kodeProduksiArr) === 1) {
+                                                    $kodeProduksiPreview = [$kodeProduksiArr[0]];
+                                                } elseif (count($kodeProduksiArr) === 2) {
+                                                    $kodeProduksiPreview = [$kodeProduksiArr[0], $kodeProduksiArr[1]];
+                                                } elseif (count($kodeProduksiArr) > 2) {
+                                                    $kodeProduksiPreview = [$kodeProduksiArr[0], $kodeProduksiArr[count($kodeProduksiArr) - 1]];
+                                                }
                                             @endphp
 
-                                            @if(count($kodeProduksiArr) > 0)
-                                                {{ implode(', ', $kodeProduksiArr) }}
+                                            @if(count($kodeProduksiPreview) > 0)
+                                                {{ $kodeProduksiPreview[0] }}
+                                                @if(count($kodeProduksiArr) > 2)
+                                                    <br>
+                                                    <span class="text-muted">...</span>
+                                                @endif
+                                                @if(count($kodeProduksiPreview) === 2)
+                                                    <br>
+                                                    {{ $kodeProduksiPreview[1] }}
+                                                @endif
                                             @else
                                                 -
                                             @endif
