@@ -28,6 +28,8 @@ class PemeriksaanLoadingKendaraan extends Model
         'jam_selesai',
         'suhu_precooling',
         'keterangan',
+        'segel_gembok',
+        'no_segel',
         'status_verifikasi',
         'verified_by',
         'verified_by_qc',
@@ -40,6 +42,7 @@ class PemeriksaanLoadingKendaraan extends Model
     protected $casts = [
         'kondisi_kebersihan_mobil' => 'json',
         'kondisi_mobil' => 'json',
+        'segel_gembok' => 'boolean',
         'tanggal' => 'date',
     ];
 

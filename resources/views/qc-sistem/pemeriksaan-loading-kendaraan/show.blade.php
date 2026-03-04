@@ -145,6 +145,41 @@
                 <div class="col-md-12">
                     <div class="card">
                         <div class="card-header">
+                            <h4 class="card-title">Segel & Informasi Kendaraan</h4>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label class="form-label"><strong>Segel/Gembok</strong></label>
+                                        <p class="text-muted">
+                                            @if($pemeriksaanLoadingKendaraan->segel_gembok === null)
+                                                <span class="badge bg-secondary">-</span>
+                                            @elseif($pemeriksaanLoadingKendaraan->segel_gembok)
+                                                <span class="badge bg-primary">Segel</span>
+                                            @else
+                                                <span class="badge bg-warning text-dark">Gembok</span>
+                                            @endif
+                                        </p>
+                                    </div>
+                                </div>
+                                @if($pemeriksaanLoadingKendaraan->segel_gembok)
+                                    <div class="col-md-4">
+                                        <div class="mb-3">
+                                            <label class="form-label"><strong>No. Segel</strong></label>
+                                            <p class="text-muted">{{ $pemeriksaanLoadingKendaraan->no_segel ?? '-' }}</p>
+                                        </div>
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Kondisi Kebersihan Mobil -->
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-header">
                             <h4 class="card-title">Kondisi Kebersihan Mobil</h4>
                         </div>
                         <div class="card-body">

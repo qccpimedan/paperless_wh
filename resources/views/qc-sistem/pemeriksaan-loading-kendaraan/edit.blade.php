@@ -319,6 +319,55 @@
                                                 @enderror
                                             </div>
 
+                                            <!-- Segel / Gembok -->
+                                            @php
+                                                // segel_gembok disimpan sebagai boolean: true=segel, false=gembok
+                                                $segelGembokValue = old('segel_gembok',
+                                                    $pemeriksaanLoadingKendaraan->segel_gembok === true ? 'segel' :
+                                                    ($pemeriksaanLoadingKendaraan->segel_gembok === false && $pemeriksaanLoadingKendaraan->getOriginal('segel_gembok') !== null ? 'gembok' : null)
+                                                );
+                                            @endphp
+                                            <div class="col-md-12 mt-2">
+                                                <h5 class="text-primary mb-3 mt-2">Segel & Informasi Kendaraan</h5>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="form-group">
+                                                    <label><strong>Segel/Gembok</strong></label>
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" type="radio" id="segel_option" name="segel_gembok" value="segel" {{ $segelGembokValue == 'segel' ? 'checked' : '' }}>
+                                                        <label class="form-check-label" for="segel_option">Segel</label>
+                                                    </div>
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" type="radio" id="gembok_option" name="segel_gembok" value="gembok" {{ $segelGembokValue == 'gembok' ? 'checked' : '' }}>
+                                                        <label class="form-check-label" for="gembok_option">Gembok</label>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6" id="no_segel_container" style="display: {{ $segelGembokValue == 'segel' ? 'block' : 'none' }};">
+                                                <div class="form-group">
+                                                    <label for="no_segel">No. Segel</label>
+                                                    <input type="text" id="no_segel" class="form-control @error('no_segel') is-invalid @enderror"
+                                                        name="no_segel" value="{{ old('no_segel', $pemeriksaanLoadingKendaraan->no_segel) }}" placeholder="Nomor Segel">
+                                                    @error('no_segel')
+                                                        <div class="invalid-feedback">{{ $message }}</div>
+                                                    @enderror
+                                                </div>
+                                            </div>
+
+                                            <script>
+                                                document.querySelectorAll('input[name="segel_gembok"]').forEach(function(radio) {
+                                                    radio.addEventListener('change', function() {
+                                                        const container = document.getElementById('no_segel_container');
+                                                        if (this.value === 'segel') {
+                                                            container.style.display = 'block';
+                                                        } else {
+                                                            container.style.display = 'none';
+                                                            document.getElementById('no_segel').value = '';
+                                                        }
+                                                    });
+                                                });
+                                            </script>
+
                                             <!-- Keterangan -->
                                             <div class="col-md-12">
                                                 <label for="keterangan">Keterangan</label>

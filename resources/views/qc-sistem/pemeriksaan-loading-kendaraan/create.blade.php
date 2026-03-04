@@ -203,13 +203,11 @@
                                             <!-- Ekspedisi -->
                                             <div class="col-md-6">
                                                 <label for="id_ekspedisi">Ekspedisi <span class="text-danger">*</span></label>
-                                                <select id="id_ekspedisi" class="choices form-select @error('id_ekspedisi') is-invalid @enderror"
+                                                <select id="id_ekspedisi" class="form-select @error('id_ekspedisi') is-invalid @enderror"
                                                     name="id_ekspedisi" required>
                                                     <option value="">-- Pilih Ekspedisi --</option>
                                                     @foreach($ekspedisis as $ekspedisi)
-                                                        <option value="{{ $ekspedisi->id }}" {{ old('id_ekspedisi') == $ekspedisi->id ? 'selected' : '' }}>
-                                                            {{ $ekspedisi->nama_ekspedisi }}
-                                                        </option>
+                                                        <option value="{{ $ekspedisi->id }}" {{ old('id_ekspedisi') == $ekspedisi->id ? 'selected' : '' }}>{{ $ekspedisi->nama_ekspedisi }}</option>
                                                     @endforeach
                                                 </select>
                                                 @error('id_ekspedisi')
@@ -220,12 +218,10 @@
                                             <!-- Kendaraan -->
                                             <div class="col-md-6">
                                                 <label for="id_kendaraan">Jenis & No Kendaraan</label>
-                                                    <select id="id_kendaraan" class="choices form-select @error('id_kendaraan') is-invalid @enderror" name="id_kendaraan">
+                                                    <select id="id_kendaraan" class="form-select @error('id_kendaraan') is-invalid @enderror" name="id_kendaraan">
                                                         <option value="">-- Pilih Kendaraan --</option>
                                                         @foreach($kendaraans as $kendaraan)
-                                                            <option value="{{ $kendaraan->id }}" {{ old('id_kendaraan') == $kendaraan->id ? 'selected' : '' }}>
-                                                                {{ $kendaraan->jenis_kendaraan }} - {{ $kendaraan->no_kendaraan }}
-                                                            </option>
+                                                            <option value="{{ $kendaraan->id }}" {{ old('id_kendaraan') == $kendaraan->id ? 'selected' : '' }}>{{ $kendaraan->jenis_kendaraan }} - {{ $kendaraan->no_kendaraan }}</option>
                                                         @endforeach
                                                         <option value="other" {{ old('id_kendaraan') == 'other' ? 'selected' : '' }}>-- Lainnya (Input Manual) --</option>
                                                     </select>
@@ -237,13 +233,11 @@
                                             <!-- Tujuan Pengiriman -->
                                             <div class="col-md-6">
                                                 <label for="id_tujuan_pengiriman">Tujuan Pengiriman <span class="text-danger">*</span></label>
-                                                <select id="id_tujuan_pengiriman" class="choices form-select @error('id_tujuan_pengiriman') is-invalid @enderror"
+                                                <select id="id_tujuan_pengiriman" class="form-select @error('id_tujuan_pengiriman') is-invalid @enderror"
                                                     name="id_tujuan_pengiriman" required>
                                                     <option value="">-- Pilih Tujuan --</option>
                                                     @foreach($tujuanPengirimens as $tujuan)
-                                                        <option value="{{ $tujuan->id }}" {{ old('id_tujuan_pengiriman') == $tujuan->id ? 'selected' : '' }}>
-                                                            {{ $tujuan->nama_tujuan }}
-                                                        </option>
+                                                        <option value="{{ $tujuan->id }}" {{ old('id_tujuan_pengiriman') == $tujuan->id ? 'selected' : '' }}>{{ $tujuan->nama_tujuan }}</option>
                                                     @endforeach
                                                 </select>
                                                 @error('id_tujuan_pengiriman')
@@ -269,13 +263,11 @@
                                             <!-- Std Precooling -->
                                             <div class="col-md-6">
                                                 <label for="id_std_precooling">Std Precooling <span class="text-danger">*</span></label>
-                                                <select id="id_std_precooling" class="choices form-select @error('id_std_precooling') is-invalid @enderror"
+                                                <select id="id_std_precooling" class="form-select @error('id_std_precooling') is-invalid @enderror"
                                                     name="id_std_precooling" required>
                                                     <option value="">-- Pilih Std Precooling --</option>
                                                     @foreach($stdPrecoolings as $std)
-                                                        <option value="{{ $std->id }}" {{ old('id_std_precooling') == $std->id ? 'selected' : '' }}>
-                                                            {{ $std->nama_std_precooling }}
-                                                        </option>
+                                                        <option value="{{ $std->id }}" {{ old('id_std_precooling') == $std->id ? 'selected' : '' }}>{{ $std->nama_std_precooling }}</option>
                                                     @endforeach
                                                 </select>
                                                 @error('id_std_precooling')
@@ -314,6 +306,48 @@
                                             </div>
                                             <br>
                                             
+                                            <!-- Segel / Gembok -->
+                                            <div class="col-md-12 mt-2">
+                                                <h5 class="text-primary mb-3 mt-2">Segel & Informasi Kendaraan</h5>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="form-group">
+                                                    <label><strong>Segel/Gembok</strong></label>
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" type="radio" id="segel_option" name="segel_gembok" value="segel" {{ old('segel_gembok') == 'segel' ? 'checked' : '' }}>
+                                                        <label class="form-check-label" for="segel_option">Segel</label>
+                                                    </div>
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" type="radio" id="gembok_option" name="segel_gembok" value="gembok" {{ old('segel_gembok') == 'gembok' ? 'checked' : '' }}>
+                                                        <label class="form-check-label" for="gembok_option">Gembok</label>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6" id="no_segel_container" style="display: {{ old('segel_gembok') == 'segel' ? 'block' : 'none' }};">
+                                                <div class="form-group">
+                                                    <label for="no_segel">No. Segel</label>
+                                                    <input type="text" id="no_segel" class="form-control @error('no_segel') is-invalid @enderror"
+                                                        name="no_segel" value="{{ old('no_segel') }}" placeholder="Nomor Segel">
+                                                    @error('no_segel')
+                                                        <div class="invalid-feedback">{{ $message }}</div>
+                                                    @enderror
+                                                </div>
+                                            </div>
+
+                                            <script>
+                                                document.querySelectorAll('input[name="segel_gembok"]').forEach(function(radio) {
+                                                    radio.addEventListener('change', function() {
+                                                        const container = document.getElementById('no_segel_container');
+                                                        if (this.value === 'segel') {
+                                                            container.style.display = 'block';
+                                                        } else {
+                                                            container.style.display = 'none';
+                                                            document.getElementById('no_segel').value = '';
+                                                        }
+                                                    });
+                                                });
+                                            </script>
+
                                             <!-- Keterangan -->
                                             <div class="col-md-12">
                                                 <label for="keterangan">Keterangan</label>
@@ -349,6 +383,41 @@ document.addEventListener('DOMContentLoaded', function() {
             if (!ok) e.preventDefault();
         });
     });
+
+    // Helper: inisialisasi Choices.js dengan konfigurasi search yang baik
+    function initChoicesSelect(selectEl, placeholderText) {
+        if (!selectEl || typeof Choices === 'undefined') return null;
+
+        // Trim whitespace pada setiap teks option (safety net)
+        Array.from(selectEl.options).forEach(function(opt) {
+            opt.text = opt.text.trim();
+        });
+
+        return new Choices(selectEl, {
+            searchEnabled: true,
+            searchPlaceholderValue: 'Cari...',
+            searchFields: ['label', 'value'],
+            itemSelectText: '',
+            noResultsText: 'Tidak ada hasil ditemukan',
+            noChoicesText: 'Tidak ada pilihan tersedia',
+            shouldSort: false,
+            placeholder: true,
+            placeholderValue: placeholderText || 'Pilih...',
+            fuseOptions: {
+                includeScore: true,
+                threshold: 0.4,
+                distance: 1000,
+                tokenize: true,
+                matchAllTokens: false
+            }
+        });
+    }
+
+    // Inisialisasi setiap dropdown
+    initChoicesSelect(document.getElementById('id_ekspedisi'), '-- Pilih Ekspedisi --');
+    initChoicesSelect(document.getElementById('id_kendaraan'), '-- Pilih Kendaraan --');
+    initChoicesSelect(document.getElementById('id_tujuan_pengiriman'), '-- Pilih Tujuan --');
+    initChoicesSelect(document.getElementById('id_std_precooling'), '-- Pilih Std Precooling --');
 });
 </script>
 @endsection

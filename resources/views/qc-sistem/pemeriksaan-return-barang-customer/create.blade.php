@@ -85,13 +85,11 @@
                                             <!-- Ekspedisi -->
                                             <div class="col-md-6">
                                                 <label for="id_ekspedisi">Ekspedisi</label>
-                                                <select id="id_ekspedisi" class="choices form-select @error('id_ekspedisi') is-invalid @enderror"
+                                                <select id="id_ekspedisi" class="form-select @error('id_ekspedisi') is-invalid @enderror"
                                                     name="id_ekspedisi">
                                                     <option value="">-- Pilih Ekspedisi --</option>
                                                     @foreach($ekspedisis as $ekspedisi)
-                                                        <option value="{{ $ekspedisi->id }}" {{ old('id_ekspedisi') == $ekspedisi->id ? 'selected' : '' }}>
-                                                            {{ $ekspedisi->nama_ekspedisi }}
-                                                        </option>
+                                                        <option value="{{ $ekspedisi->id }}" {{ old('id_ekspedisi') == $ekspedisi->id ? 'selected' : '' }}>{{ $ekspedisi->nama_ekspedisi }}</option>
                                                     @endforeach
                                                     <option value="other" {{ old('id_ekspedisi') == 'other' ? 'selected' : '' }}>-- Lainnya (Input Manual) --</option>
                                                 </select>
@@ -156,44 +154,6 @@
                                                 <div class="produk-row mb-4 p-3 border rounded" style="background-color: #f8f9fa;" data-row-index="0" data-old-produk-id="{{ old('produk_data.0.id_produk') }}">
                                                     <h6 class="text-secondary mb-3">Produk #1</h6>
                                                     <div class="row">
-                                                        <div class="col-md-6">
-                                                            <label>Customer <span class="text-danger">*</span></label>
-                                                            <select class="choices form-select @error('produk_data.0.id_customer') is-invalid @enderror" name="produk_data[0][id_customer]" required>
-                                                                <option value="">-- Pilih Customer --</option>
-                                                                @foreach($customers as $customer)
-                                                                    <option value="{{ $customer->id }}" {{ old('produk_data.0.id_customer') == $customer->id ? 'selected' : '' }}>
-                                                                        {{ $customer->nama_cust }}
-                                                                    </option>
-                                                                @endforeach
-                                                            </select>
-                                                            @error('produk_data.0.id_customer')
-                                                                <div class="invalid-feedback">{{ $message }}</div>
-                                                            @enderror
-                                                        </div>
-
-                                                        <div class="col-md-6">
-                                                            <label>Alasan Return <span class="text-danger">*</span></label>
-                                                            <input type="text" class="form-control @error('produk_data.0.alasan_return') is-invalid @enderror" name="produk_data[0][alasan_return]" value="{{ old('produk_data.0.alasan_return') }}" required>
-                                                            @error('produk_data.0.alasan_return')
-                                                                <div class="invalid-feedback">{{ $message }}</div>
-                                                            @enderror
-                                                        </div>
-
-                                                        <!-- Kondisi Produk -->
-                                                        <div class="col-md-6">
-                                                            <label>Kondisi Produk <span class="text-danger">*</span></label>
-                                                            <select class="form-select @error('produk_data.0.kondisi_produk') is-invalid @enderror"
-                                                                name="produk_data[0][kondisi_produk]" required>
-                                                                <option value="">-- Pilih Kondisi --</option>
-                                                                <option value="Frozen" {{ old('produk_data.0.kondisi_produk') == 'Frozen' ? 'selected' : '' }}>Frozen</option>
-                                                                <option value="Fresh" {{ old('produk_data.0.kondisi_produk') == 'Fresh' ? 'selected' : '' }}>Fresh</option>
-                                                                <option value="Dry" {{ old('produk_data.0.kondisi_produk') == 'Dry' ? 'selected' : '' }}>Dry</option>
-                                                            </select>
-                                                            @error('produk_data.0.kondisi_produk')
-                                                                <div class="invalid-feedback">{{ $message }}</div>
-                                                            @enderror
-                                                        </div>
-
                                                         <!-- Kategori -->
                                                         <div class="col-md-6">
                                                             <label>Kategori <span class="text-danger">*</span></label>
@@ -201,9 +161,7 @@
                                                                 name="produk_data[0][kategori_code]" required>
                                                                 <option value="">Pilih Kategori</option>
                                                                 @foreach(($produkKategoriOptions ?? []) as $kategori)
-                                                                    <option value="{{ $kategori }}" {{ old('produk_data.0.kategori_code') == $kategori ? 'selected' : '' }}>
-                                                                        {{ $kategori }}
-                                                                    </option>
+                                                                    <option value="{{ $kategori }}" {{ old('produk_data.0.kategori_code') == $kategori ? 'selected' : '' }}>{{ $kategori }}</option>
                                                                 @endforeach
                                                             </select>
                                                             @error('produk_data.0.kategori_code')
@@ -223,6 +181,21 @@
                                                             @enderror
                                                         </div>
 
+                                                        <!-- Kondisi Produk -->
+                                                        <div class="col-md-6">
+                                                            <label>Kondisi Produk <span class="text-danger">*</span></label>
+                                                            <select class="form-select @error('produk_data.0.kondisi_produk') is-invalid @enderror"
+                                                                name="produk_data[0][kondisi_produk]" required>
+                                                                <option value="">-- Pilih Kondisi --</option>
+                                                                <option value="Frozen" {{ old('produk_data.0.kondisi_produk') == 'Frozen' ? 'selected' : '' }}>Frozen</option>
+                                                                <option value="Fresh" {{ old('produk_data.0.kondisi_produk') == 'Fresh' ? 'selected' : '' }}>Fresh</option>
+                                                                <option value="Dry" {{ old('produk_data.0.kondisi_produk') == 'Dry' ? 'selected' : '' }}>Dry</option>
+                                                            </select>
+                                                            @error('produk_data.0.kondisi_produk')
+                                                                <div class="invalid-feedback">{{ $message }}</div>
+                                                            @enderror
+                                                        </div>
+
                                                         <!-- Suhu Produk -->
                                                         <div class="col-md-6">
                                                             <label>Suhu Produk</label>
@@ -232,7 +205,26 @@
                                                                 <div class="invalid-feedback">{{ $message }}</div>
                                                             @enderror
                                                         </div>
+                                                        <div class="col-md-6">
+                                                            <label>Customer <span class="text-danger">*</span></label>
+                                                            <select class="form-select @error('produk_data.0.id_customer') is-invalid @enderror" name="produk_data[0][id_customer]" required>
+                                                                <option value="">-- Pilih Customer --</option>
+                                                                @foreach($customers as $customer)
+                                                                    <option value="{{ $customer->id }}" {{ old('produk_data.0.id_customer') == $customer->id ? 'selected' : '' }}>{{ $customer->nama_cust }}</option>
+                                                                @endforeach
+                                                            </select>
+                                                            @error('produk_data.0.id_customer')
+                                                                <div class="invalid-feedback">{{ $message }}</div>
+                                                            @enderror
+                                                        </div>
 
+                                                        <div class="col-md-6">
+                                                            <label>Alasan Return <span class="text-danger">*</span></label>
+                                                            <input type="text" class="form-control @error('produk_data.0.alasan_return') is-invalid @enderror" name="produk_data[0][alasan_return]" value="{{ old('produk_data.0.alasan_return') }}" required>
+                                                            @error('produk_data.0.alasan_return')
+                                                                <div class="invalid-feedback">{{ $message }}</div>
+                                                            @enderror
+                                                        </div>
                                                         <!-- Kode Produksi -->
                                                         <div class="col-md-6">
                                                             <label>Kode Produksi <span class="text-danger">*</span></label>
@@ -373,12 +365,28 @@ document.addEventListener('DOMContentLoaded', function() {
     function initChoicesOnce(selectEl) {
         if (!selectEl) return null;
         if (selectEl.dataset && selectEl.dataset.choicesInitialized) return null;
+
+        // Trim whitespace pada option text (safety net)
+        Array.from(selectEl.options).forEach(function(opt) {
+            opt.text = opt.text.trim();
+        });
+
         const instance = new Choices(selectEl, {
             searchEnabled: true,
             searchPlaceholderValue: 'Cari...',
-            itemSelectText: 'Tekan untuk memilih',
+            searchFields: ['label', 'value'],
+            itemSelectText: '',
             noResultsText: 'Tidak ada hasil ditemukan',
             noChoicesText: 'Tidak ada pilihan tersedia',
+            shouldSort: false,
+            placeholder: true,
+            fuseOptions: {
+                includeScore: true,
+                threshold: 0.4,
+                distance: 1000,
+                tokenize: true,
+                matchAllTokens: false
+            }
         });
         if (selectEl.dataset) {
             selectEl.dataset.choicesInitialized = 'true';
@@ -386,6 +394,15 @@ document.addEventListener('DOMContentLoaded', function() {
         return instance;
     }
 
+    // Inisialisasi Choices.js manual untuk dropdown yang tidak pakai class 'choices'
+    initChoicesOnce(document.getElementById('id_ekspedisi'));
+
+    // Inisialisasi semua select customer di row produk yang ada
+    document.querySelectorAll('#produk-container select[name$="[id_customer]"]').forEach((selectEl) => {
+        initChoicesOnce(selectEl);
+    });
+
+    // Inisialisasi kategori selects (masih pakai class choices, akan diproses di bawah)
     document.querySelectorAll('select.choices').forEach((selectEl) => {
         if (selectEl.classList && selectEl.classList.contains('produk-select')) {
             return;
@@ -474,31 +491,6 @@ document.addEventListener('DOMContentLoaded', function() {
         newRow.innerHTML = `
             <h6 class="text-secondary mb-3">Produk #${produkIndex + 1}</h6>
             <div class="row">
-                <div class="col-md-6">
-                    <label>Customer <span class="text-danger">*</span></label>
-                    <select class="choices form-select" name="produk_data[${produkIndex}][id_customer]" required>
-                        <option value="">-- Pilih Customer --</option>
-                        @foreach($customers as $customer)
-                            <option value="{{ $customer->id }}">{{ $customer->nama_cust }}</option>
-                        @endforeach
-                    </select>
-                </div>
-
-                <div class="col-md-6">
-                    <label>Alasan Return <span class="text-danger">*</span></label>
-                    <input type="text" class="form-control" name="produk_data[${produkIndex}][alasan_return]" required>
-                </div>
-
-                <!-- Kondisi Produk -->
-                <div class="col-md-6">
-                    <label>Kondisi Produk <span class="text-danger">*</span></label>
-                    <select class="form-select" name="produk_data[${produkIndex}][kondisi_produk]" required>
-                        <option value="">-- Pilih Kondisi --</option>
-                        <option value="Frozen">Frozen</option>
-                        <option value="Fresh">Fresh</option>
-                        <option value="Dry">Dry</option>
-                    </select>
-                </div>
                 <!-- Kategori -->
                 <div class="col-md-6">
                     <label>Kategori <span class="text-danger">*</span></label>
@@ -518,10 +510,35 @@ document.addEventListener('DOMContentLoaded', function() {
                     </select>
                 </div>
 
+                <!-- Kondisi Produk -->
+                <div class="col-md-6">
+                    <label>Kondisi Produk <span class="text-danger">*</span></label>
+                    <select class="form-select" name="produk_data[${produkIndex}][kondisi_produk]" required>
+                        <option value="">-- Pilih Kondisi --</option>
+                        <option value="Frozen">Frozen</option>
+                        <option value="Fresh">Fresh</option>
+                        <option value="Dry">Dry</option>
+                    </select>
+                </div>
+
                 <!-- Suhu Produk -->
                 <div class="col-md-6">
                     <label>Suhu Produk</label>
                     <input type="text" class="form-control" name="produk_data[${produkIndex}][suhu_produk]" placeholder="Contoh: -18°C">
+                </div>
+                <div class="col-md-6">
+                    <label>Customer <span class="text-danger">*</span></label>
+                    <select class="choices form-select" name="produk_data[${produkIndex}][id_customer]" required>
+                        <option value="">-- Pilih Customer --</option>
+                        @foreach($customers as $customer)
+                            <option value="{{ $customer->id }}">{{ $customer->nama_cust }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div class="col-md-6">
+                    <label>Alasan Return <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" name="produk_data[${produkIndex}][alasan_return]" required>
                 </div>
 
                 <!-- Kode Produksi -->

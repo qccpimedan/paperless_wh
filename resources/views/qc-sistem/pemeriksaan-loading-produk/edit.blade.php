@@ -84,16 +84,10 @@
                                             <div class="col-md-6">
                                                 <div class="form-group">
                                                     <label for="id_tujuan_pengiriman">Customer & Tujuan Pengiriman</label>
-                                                    <select id="id_tujuan_pengiriman" class="choices form-select @error('id_tujuan_pengiriman') is-invalid @enderror" name="id_tujuan_pengiriman">
+                                                    <select id="id_tujuan_pengiriman" class="form-select @error('id_tujuan_pengiriman') is-invalid @enderror" name="id_tujuan_pengiriman">
                                                         <option value="">-- Pilih Tujuan --</option>
                                                         @foreach($tujuanPengirimans as $tujuan)
-                                                            <option value="{{ $tujuan->id }}" {{ old('id_tujuan_pengiriman', $pemeriksaanLoading->id_tujuan_pengiriman) == $tujuan->id ? 'selected' : '' }}>
-                                                                @if($tujuan->customer)
-                                                                    {{ $tujuan->customer->nama_cust }} - {{ $tujuan->nama_tujuan }}
-                                                                @else
-                                                                    {{ $tujuan->nama_tujuan }}
-                                                                @endif
-                                                            </option>
+                                                            <option value="{{ $tujuan->id }}" {{ old('id_tujuan_pengiriman', $pemeriksaanLoading->id_tujuan_pengiriman) == $tujuan->id ? 'selected' : '' }}>{{ $tujuan->customer ? $tujuan->customer->nama_cust . ' - ' . $tujuan->nama_tujuan : $tujuan->nama_tujuan }}</option>
                                                         @endforeach
                                                         <option value="other" {{ old('id_tujuan_pengiriman', $pemeriksaanLoading->nama_customer_manual ? 'other' : '') == 'other' ? 'selected' : '' }}>-- Lainnya (Input Manual) --</option>
                                                     </select>
@@ -130,12 +124,10 @@
                                             <div class="col-md-6">
                                                 <div class="form-group">
                                                     <label for="id_kendaraan">Jenis & No Kendaraan</label>
-                                                    <select id="id_kendaraan" class="choices form-select @error('id_kendaraan') is-invalid @enderror" name="id_kendaraan">
+                                                    <select id="id_kendaraan" class="form-select @error('id_kendaraan') is-invalid @enderror" name="id_kendaraan">
                                                         <option value="">-- Pilih Kendaraan --</option>
                                                         @foreach($kendaraans as $kendaraan)
-                                                            <option value="{{ $kendaraan->id }}" {{ old('id_kendaraan', $pemeriksaanLoading->id_kendaraan) == $kendaraan->id ? 'selected' : '' }}>
-                                                                {{ $kendaraan->jenis_kendaraan }} - {{ $kendaraan->no_kendaraan }}
-                                                            </option>
+                                                            <option value="{{ $kendaraan->id }}" {{ old('id_kendaraan', $pemeriksaanLoading->id_kendaraan) == $kendaraan->id ? 'selected' : '' }}>{{ $kendaraan->jenis_kendaraan }} - {{ $kendaraan->no_kendaraan }}</option>
                                                         @endforeach
                                                         <option value="other" {{ old('id_kendaraan', $pemeriksaanLoading->jenis_kendaraan_manual ? 'other' : '') == 'other' ? 'selected' : '' }}>-- Lainnya (Input Manual) --</option>
                                                     </select>
@@ -176,12 +168,10 @@
                                             <div class="col-md-6">
                                                 <div class="form-group">
                                                     <label for="id_supir">Nama Supir</label>
-                                                    <select id="id_supir" class="choices form-control @error('id_supir') is-invalid @enderror" name="id_supir">
+                                                    <select id="id_supir" class="form-control @error('id_supir') is-invalid @enderror" name="id_supir">
                                                         <option value="">Pilih Supir</option>
                                                         @foreach($supirs as $supir)
-                                                            <option value="{{ $supir->id }}" {{ old('id_supir', $pemeriksaanLoading->id_supir) == $supir->id ? 'selected' : '' }}>
-                                                                {{ $supir->nama_supir }}
-                                                            </option>
+                                                            <option value="{{ $supir->id }}" {{ old('id_supir', $pemeriksaanLoading->id_supir) == $supir->id ? 'selected' : '' }}>{{ $supir->nama_supir }}</option>
                                                         @endforeach
                                                         <option value="other" {{ old('id_supir', $pemeriksaanLoading->nama_supir_manual ? 'other' : '') == 'other' ? 'selected' : '' }}>-- Lainnya (Input Manual) --</option>
                                                     </select>
@@ -250,6 +240,113 @@
                                                 kontainerTidakBerbau.addEventListener('change', checkKondisi);
 
                                                 checkKondisi();
+                                            });
+                                        </script>
+
+                                        <!-- TEMPERATURE -->
+                                        <h5 class="text-primary mb-3 mt-4">Temperature</h5>
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="form-group">
+                                                    <label for="temperature_mobil">Temperature Mobil (°C)</label>
+                                                    <input type="text" id="temperature_mobil" class="form-control @error('temperature_mobil') is-invalid @enderror"
+                                                        name="temperature_mobil" value="{{ old('temperature_mobil', $pemeriksaanLoading->temperature_mobil) }}" placeholder="Contoh: -18">
+                                                    @error('temperature_mobil')
+                                                        <div class="invalid-feedback">{{ $message }}</div>
+                                                    @enderror
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="form-group">
+                                                    <label for="kondisi_produk">Kondisi Produk</label>
+                                                    <select id="kondisi_produk" class="form-select @error('kondisi_produk') is-invalid @enderror" name="kondisi_produk">
+                                                        <option value="">-- Pilih Kondisi --</option>
+                                                        <option value="Frozen" {{ old('kondisi_produk', $pemeriksaanLoading->kondisi_produk) == 'Frozen' ? 'selected' : '' }}>Frozen</option>
+                                                        <option value="Fresh" {{ old('kondisi_produk', $pemeriksaanLoading->kondisi_produk) == 'Fresh' ? 'selected' : '' }}>Fresh</option>
+                                                        <option value="Dry" {{ old('kondisi_produk', $pemeriksaanLoading->kondisi_produk) == 'Dry' ? 'selected' : '' }}>Dry</option>
+                                                    </select>
+                                                    @error('kondisi_produk')
+                                                        <div class="invalid-feedback">{{ $message }}</div>
+                                                    @enderror
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="row">
+                                            <div class="col-md-12">
+                                                <label>Temperature Produk (Multiple) (°C)</label>
+                                                <div id="temperature-fields">
+                                                    @php
+                                                        $tempProduk = old('temperature_produk', $pemeriksaanLoading->temperature_produk ?? []);
+                                                        if (is_string($tempProduk)) $tempProduk = json_decode($tempProduk, true) ?? [];
+                                                        if (empty($tempProduk)) $tempProduk = [''];
+                                                    @endphp
+                                                    @foreach($tempProduk as $i => $tempVal)
+                                                        <div class="row mb-2 temp-row">
+                                                            <div class="col-md-10">
+                                                                <input type="text" class="form-control" name="temperature_produk[]" value="{{ $tempVal }}" placeholder="Contoh: -18">
+                                                            </div>
+                                                            <div class="col-md-2">
+                                                                @if($i === 0)
+                                                                    <button type="button" class="btn btn-success w-100" id="add-temp"><i class="bi bi-plus"></i></button>
+                                                                @else
+                                                                    <button type="button" class="btn btn-danger w-100 remove-temp"><i class="bi bi-trash"></i></button>
+                                                                @endif
+                                                            </div>
+                                                        </div>
+                                                    @endforeach
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- SEGEL & INFORMASI PRODUK -->
+                                        @php
+                                            // segel_gembok disimpan sebagai boolean di DB:
+                                            // true = segel, false = gembok
+                                            // Konversi balik untuk keperluan tampilan
+                                            $segelGembokValue = old('segel_gembok',
+                                                $pemeriksaanLoading->segel_gembok === true  ? 'segel' :
+                                                ($pemeriksaanLoading->segel_gembok === false && $pemeriksaanLoading->getOriginal('segel_gembok') !== null ? 'gembok' : null)
+                                            );
+                                        @endphp
+                                        <h5 class="text-primary mb-3 mt-4">Segel & Informasi Produk</h5>
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="form-group">
+                                                    <label><strong>Segel/Gembok</strong></label>
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" type="radio" id="segel_option" name="segel_gembok" value="segel" {{ $segelGembokValue == 'segel' ? 'checked' : '' }}>
+                                                        <label class="form-check-label" for="segel_option">Segel</label>
+                                                    </div>
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" type="radio" id="gembok_option" name="segel_gembok" value="gembok" {{ $segelGembokValue == 'gembok' ? 'checked' : '' }}>
+                                                        <label class="form-check-label" for="gembok_option">Gembok</label>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6" id="no_segel_container" style="display: {{ $segelGembokValue == 'segel' ? 'block' : 'none' }};">
+                                                <div class="form-group">
+                                                    <label for="no_segel">No. Segel</label>
+                                                    <input type="text" id="no_segel" class="form-control @error('no_segel') is-invalid @enderror"
+                                                        name="no_segel" value="{{ old('no_segel', $pemeriksaanLoading->no_segel) }}" placeholder="Nomor Segel">
+                                                    @error('no_segel')
+                                                        <div class="invalid-feedback">{{ $message }}</div>
+                                                    @enderror
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <script>
+                                            document.querySelectorAll('input[name="segel_gembok"]').forEach(function(radio) {
+                                                radio.addEventListener('change', function() {
+                                                    const container = document.getElementById('no_segel_container');
+                                                    if (this.value === 'segel') {
+                                                        container.style.display = 'block';
+                                                    } else {
+                                                        container.style.display = 'none';
+                                                        document.getElementById('no_segel').value = '';
+                                                    }
+                                                });
                                             });
                                         </script>
 
@@ -400,47 +497,84 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Helper: inisialisasi Choices.js dengan konfigurasi search yang baik
+    function initChoicesSelect(selectEl, placeholderText) {
+        if (!selectEl || typeof Choices === 'undefined') return null;
+        Array.from(selectEl.options).forEach(function(opt) {
+            opt.text = opt.text.trim();
+        });
+        return new Choices(selectEl, {
+            searchEnabled: true,
+            searchPlaceholderValue: 'Cari...',
+            searchFields: ['label', 'value'],
+            itemSelectText: '',
+            noResultsText: 'Tidak ada hasil ditemukan',
+            noChoicesText: 'Tidak ada pilihan tersedia',
+            shouldSort: false,
+            placeholder: true,
+            placeholderValue: placeholderText || 'Pilih...',
+            fuseOptions: {
+                includeScore: true,
+                threshold: 0.4,
+                distance: 1000,
+                tokenize: true,
+                matchAllTokens: false
+            }
+        });
+    }
+
+    // Inisialisasi ketiga dropdown
+    const tujuanChoices = initChoicesSelect(document.getElementById('id_tujuan_pengiriman'), '-- Pilih Tujuan --');
+    const kendaraanChoices = initChoicesSelect(document.getElementById('id_kendaraan'), '-- Pilih Kendaraan --');
+    const supirChoices = initChoicesSelect(document.getElementById('id_supir'), 'Pilih Supir');
+
     // Toggle manual tujuan pengiriman input
     const tujuanSelect = document.getElementById('id_tujuan_pengiriman');
     const manualTujuanDiv = document.getElementById('manual_tujuan_pengiriman_input');
-    
     if (tujuanSelect && manualTujuanDiv) {
         tujuanSelect.addEventListener('change', function() {
-            if (this.value === 'other') {
-                manualTujuanDiv.style.display = 'block';
-            } else {
-                manualTujuanDiv.style.display = 'none';
-            }
+            manualTujuanDiv.style.display = this.value === 'other' ? 'block' : 'none';
         });
     }
 
     // Toggle manual kendaraan input
     const kendaraanSelect = document.getElementById('id_kendaraan');
     const manualKendaraanDiv = document.getElementById('manual_kendaraan_input');
-    
     if (kendaraanSelect && manualKendaraanDiv) {
         kendaraanSelect.addEventListener('change', function() {
-            if (this.value === 'other') {
-                manualKendaraanDiv.style.display = 'block';
-            } else {
-                manualKendaraanDiv.style.display = 'none';
-            }
+            manualKendaraanDiv.style.display = this.value === 'other' ? 'block' : 'none';
         });
     }
 
     // Toggle manual supir input
     const supirSelect = document.getElementById('id_supir');
     const manualSupirDiv = document.getElementById('manual_supir_input');
-    
     if (supirSelect && manualSupirDiv) {
         supirSelect.addEventListener('change', function() {
-            if (this.value === 'other') {
-                manualSupirDiv.style.display = 'block';
-            } else {
-                manualSupirDiv.style.display = 'none';
-            }
+            manualSupirDiv.style.display = this.value === 'other' ? 'block' : 'none';
         });
     }
+
+    // Tambah/hapus temperature field
+    document.getElementById('add-temp')?.addEventListener('click', function() {
+        const container = document.getElementById('temperature-fields');
+        const newField = document.createElement('div');
+        newField.className = 'row mb-2 temp-row';
+        newField.innerHTML = `
+            <div class="col-md-10">
+                <input type="text" class="form-control" name="temperature_produk[]" placeholder="Contoh: -18">
+            </div>
+            <div class="col-md-2">
+                <button type="button" class="btn btn-danger w-100 remove-temp"><i class="bi bi-trash"></i></button>
+            </div>
+        `;
+        container.appendChild(newField);
+    });
+    document.getElementById('temperature-fields')?.addEventListener('click', function(e) {
+        if (e.target.closest('.remove-temp')) {
+            e.target.closest('.temp-row').remove();
+        }
+    });
 
     // Produk data from backend
     const produkByKategori = @json($produkByKategori ?? []);
