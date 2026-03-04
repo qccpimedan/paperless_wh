@@ -29,8 +29,20 @@ class DetailKomplainController extends Controller
 
         if ($search !== '') {
             $query->where(function ($q) use ($search) {
-                $q->whereDate('tanggal_kedatangan', $search)
-                    ->orWhere('nama_supplier', 'like', '%' . $search . '%')
+                // Konversi format d/m/Y ke Y-m-d
+                $tanggalSearch = null;
+                if (preg_match('/^\d{2}\/\d{2}\/\d{4}$/', $search)) {
+                    $parts = explode('/', $search);
+                    $tanggalSearch = $parts[2] . '-' . $parts[1] . '-' . $parts[0];
+                } elseif (preg_match('/^\d{4}-\d{2}-\d{2}$/', $search)) {
+                    $tanggalSearch = $search;
+                }
+
+                if ($tanggalSearch) {
+                    $q->whereDate('tanggal_kedatangan', $tanggalSearch);
+                }
+
+                $q->orWhere('nama_supplier', 'like', '%' . $search . '%')
                     ->orWhere('no_po', 'like', '%' . $search . '%')
                     ->orWhere('nama_produk', 'like', '%' . $search . '%')
                     ->orWhere('kode_produksi', 'like', '%' . $search . '%')
@@ -41,6 +53,7 @@ class DetailKomplainController extends Controller
                     });
             });
         }
+
         
         $komplains = $query->latest()->paginate(25);
         return view('qc-sistem.detail-komplain.index', compact('komplains'));

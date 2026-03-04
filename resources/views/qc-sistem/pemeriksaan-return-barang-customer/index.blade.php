@@ -95,7 +95,7 @@
 
                     <form action="{{ route('return-barang.index') }}" method="GET" class="row g-3 mb-3">
                         <div class="col-md-9">
-                            <input type="text" name="search" class="form-control" placeholder="Cari tanggal/status/shift/ekspedisi/customer..." value="{{ request('search') }}">
+                            <input type="text" name="search" class="form-control" placeholder="Cari tanggal/customer/produk..." value="{{ request('search') }}">
                         </div>
                         <div class="col-md-3 d-flex align-items-end">
                             <button type="submit" class="btn btn-primary w-100">Cari</button>
