@@ -117,6 +117,8 @@ class PemeriksaanLoadingKendaraanController extends Controller
             'jam_selesai' => 'required|date_format:H:i',
             'suhu_precooling' => 'required|string|max:255',
             'keterangan' => 'nullable|string',
+            'segel_gembok' => 'nullable|in:segel,gembok',
+            'no_segel' => 'nullable|required_if:segel_gembok,segel|string|max:255',
         ]);
 
         // Prepare kondisi data
@@ -152,6 +154,8 @@ class PemeriksaanLoadingKendaraanController extends Controller
             'jam_selesai' => $request->jam_selesai,
             'suhu_precooling' => $request->suhu_precooling,
             'keterangan' => $request->keterangan,
+            'segel_gembok' => $request->input('segel_gembok') === 'segel' ? true : ($request->input('segel_gembok') === 'gembok' ? false : null),
+            'no_segel' => $request->input('segel_gembok') === 'segel' ? $request->no_segel : null,
         ]);
 
         return redirect()->route('pemeriksaan-loading-kendaraan.index')->with('success', 'Pemeriksaan loading kendaraan berhasil ditambahkan!');
@@ -223,6 +227,8 @@ class PemeriksaanLoadingKendaraanController extends Controller
             'jam_selesai' => 'nullable',
             'suhu_precooling' => 'required|string|max:255',
             'keterangan' => 'nullable|string',
+            'segel_gembok' => 'nullable|in:segel,gembok',
+            'no_segel' => 'nullable|required_if:segel_gembok,segel|string|max:255',
         ]);
 
         // Prepare kondisi data
@@ -257,6 +263,8 @@ class PemeriksaanLoadingKendaraanController extends Controller
             'jam_selesai' => $request->jam_selesai,
             'suhu_precooling' => $request->suhu_precooling,
             'keterangan' => $request->keterangan,
+            'segel_gembok' => $request->input('segel_gembok') === 'segel' ? true : ($request->input('segel_gembok') === 'gembok' ? false : null),
+            'no_segel' => $request->input('segel_gembok') === 'segel' ? $request->no_segel : null,
         ]);
 
         return redirect()->route('pemeriksaan-loading-kendaraan.index')->with('success', 'Pemeriksaan loading kendaraan berhasil diupdate!');

@@ -388,7 +388,15 @@
                             <td class="subheader-divider"></td>
                             <td>
                                 <span class="subheader-label">Segel/Gembok:</span>
-                                <span class="subheader-value">{{ $firstRecord ? ($firstRecord->segel_gembok === null ? '-' : ($firstRecord->segel_gembok ? 'Segel' : 'Gembok')) : '-' }}</span>
+                                <span class="subheader-value">
+                                    @if(!$firstRecord || $firstRecord->segel_gembok === null)
+                                        -
+                                    @elseif($firstRecord->segel_gembok)
+                                        Segel{{ $firstRecord->no_segel ? ' (No: ' . $firstRecord->no_segel . ')' : '' }}
+                                    @else
+                                        Gembok
+                                    @endif
+                                </span>
                             </td>
                         </tr>
                     </table>

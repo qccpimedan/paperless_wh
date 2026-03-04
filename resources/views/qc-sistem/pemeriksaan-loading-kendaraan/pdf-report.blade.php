@@ -335,6 +335,20 @@
                                 <span class="subheader-value">{{ $firstRecord->stdPrecooling->nama_std_precooling ?? '-' }}</span>
                             </td>
                         </tr>
+                        <tr>
+                            <td colspan="5">
+                                <span class="subheader-label">Segel/Gembok:</span>
+                                <span class="subheader-value">
+                                    @if(!$firstRecord || $firstRecord->segel_gembok === null)
+                                        -
+                                    @elseif($firstRecord->segel_gembok)
+                                        Segel{{ $firstRecord->no_segel ? ' (No: ' . $firstRecord->no_segel . ')' : '' }}
+                                    @else
+                                        Gembok
+                                    @endif
+                                </span>
+                            </td>
+                        </tr>
                     </table>
                 </div>
 
@@ -393,7 +407,19 @@
                                     <div class="field-row"><span class="field-label">Seal Tidak Utuh:</span><span class="field-value">{{ $formatBool($kondisiMobil['seal_tidak_utuh'] ?? null) }}</span></div>
                                     <div class="field-row"><span class="field-label">Terdapat Celah:</span><span class="field-value">{{ $formatBool($kondisiMobil['terdapat_celah'] ?? null) }}</span></div>
 
-                                    <div class="section-title">Keterangan</div>
+                                    <div class="section-title">Keterangan & Segel</div>
+                                    <div class="field-row">
+                                        <span class="field-label">Segel/Gembok:</span>
+                                        <span class="field-value">
+                                            @if($pemeriksaan->segel_gembok === null)
+                                                -
+                                            @elseif($pemeriksaan->segel_gembok)
+                                                Segel{{ $pemeriksaan->no_segel ? ' (No: ' . $pemeriksaan->no_segel . ')' : '' }}
+                                            @else
+                                                Gembok
+                                            @endif
+                                        </span>
+                                    </div>
                                     <div class="field-row">
                                         <span class="field-label">Ket:</span>
                                         <span class="field-value">{{ $pemeriksaan->keterangan ?? '-' }}</span>

@@ -83,16 +83,10 @@
                                             <div class="col-md-6">
                                                 <div class="form-group">
                                                     <label for="id_tujuan_pengiriman">Customer & Tujuan Pengiriman</label>
-                                                    <select id="id_tujuan_pengiriman" class="choices form-select @error('id_tujuan_pengiriman') is-invalid @enderror" name="id_tujuan_pengiriman">
+                                                    <select id="id_tujuan_pengiriman" class="form-select @error('id_tujuan_pengiriman') is-invalid @enderror" name="id_tujuan_pengiriman">
                                                         <option value="">-- Pilih Tujuan --</option>
                                                         @foreach($tujuanPengirimans as $tujuan)
-                                                            <option value="{{ $tujuan->id }}" {{ old('id_tujuan_pengiriman') == $tujuan->id ? 'selected' : '' }}>
-                                                                @if($tujuan->customer)
-                                                                    {{ $tujuan->customer->nama_cust }} - {{ $tujuan->nama_tujuan }}
-                                                                @else
-                                                                    {{ $tujuan->nama_tujuan }}
-                                                                @endif
-                                                            </option>
+                                                            <option value="{{ $tujuan->id }}" {{ old('id_tujuan_pengiriman') == $tujuan->id ? 'selected' : '' }}>{{ $tujuan->customer ? $tujuan->customer->nama_cust . ' - ' . $tujuan->nama_tujuan : $tujuan->nama_tujuan }}</option>
                                                         @endforeach
                                                         <option value="other" {{ old('id_tujuan_pengiriman') == 'other' ? 'selected' : '' }}>-- Lainnya (Input Manual) --</option>
                                                     </select>
@@ -129,12 +123,10 @@
                                             <div class="col-md-6">
                                                 <div class="form-group">
                                                     <label for="id_kendaraan">Jenis & No Kendaraan</label>
-                                                    <select id="id_kendaraan" class="choices form-select @error('id_kendaraan') is-invalid @enderror" name="id_kendaraan">
+                                                    <select id="id_kendaraan" class="form-select @error('id_kendaraan') is-invalid @enderror" name="id_kendaraan">
                                                         <option value="">-- Pilih Kendaraan --</option>
                                                         @foreach($kendaraans as $kendaraan)
-                                                            <option value="{{ $kendaraan->id }}" {{ old('id_kendaraan') == $kendaraan->id ? 'selected' : '' }}>
-                                                                {{ $kendaraan->jenis_kendaraan }} - {{ $kendaraan->no_kendaraan }}
-                                                            </option>
+                                                            <option value="{{ $kendaraan->id }}" {{ old('id_kendaraan') == $kendaraan->id ? 'selected' : '' }}>{{ $kendaraan->jenis_kendaraan }} - {{ $kendaraan->no_kendaraan }}</option>
                                                         @endforeach
                                                         <option value="other" {{ old('id_kendaraan') == 'other' ? 'selected' : '' }}>-- Lainnya (Input Manual) --</option>
                                                     </select>
@@ -169,12 +161,10 @@
                                             <div class="col-md-6">
                                                 <div class="form-group">
                                                     <label for="id_supir">Nama Supir</label>
-                                                    <select id="id_supir" class="choices form-control @error('id_supir') is-invalid @enderror" name="id_supir">
+                                                    <select id="id_supir" class="form-control @error('id_supir') is-invalid @enderror" name="id_supir">
                                                         <option value="">Pilih Supir</option>
                                                         @foreach($supirs as $supir)
-                                                            <option value="{{ $supir->id }}" {{ old('id_supir') == $supir->id ? 'selected' : '' }}>
-                                                                {{ $supir->nama_supir }}
-                                                            </option>
+                                                            <option value="{{ $supir->id }}" {{ old('id_supir') == $supir->id ? 'selected' : '' }}>{{ $supir->nama_supir }}</option>
                                                         @endforeach
                                                         <option value="other" {{ old('id_supir') == 'other' ? 'selected' : '' }}>-- Lainnya (Input Manual) --</option>
                                                     </select>
@@ -442,56 +432,110 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Kendaraan manual input handling
-    const kendaraanSelect = document.getElementById('id_kendaraan');
-    const manualInput = document.getElementById('manual_kendaraan_input');
-    
-    kendaraanSelect.addEventListener('change', function() {
-        if (this.value === 'other') {
-            manualInput.style.display = 'block';
-        } else {
-            manualInput.style.display = 'none';
-        }
-    });
-    
-    // Cek nilai awal saat halaman dimuat
-    if (kendaraanSelect.value === 'other') {
-        manualInput.style.display = 'block';
+    // Helper: inisialisasi Choices.js pada select dengan konfigurasi search yang baik
+    function initChoicesSelect(selectEl, placeholderText) {
+        if (!selectEl || typeof Choices === 'undefined') return null;
+
+        // Pastikan teks setiap option sudah bersih (trim whitespace)
+        Array.from(selectEl.options).forEach(function(opt) {
+            opt.text = opt.text.trim();
+        });
+
+        return new Choices(selectEl, {
+            searchEnabled: true,
+            searchPlaceholderValue: 'Cari...',
+            searchFields: ['label', 'value'],
+            itemSelectText: '',
+            noResultsText: 'Tidak ada hasil ditemukan',
+            noChoicesText: 'Tidak ada pilihan tersedia',
+            shouldSort: false,
+            placeholder: true,
+            placeholderValue: placeholderText || 'Pilih...',
+            fuseOptions: {
+                includeScore: true,
+                threshold: 0.4,
+                distance: 1000,
+                tokenize: true,
+                matchAllTokens: false
+            }
+        });
     }
 
-    // Tujuan pengiriman manual input handling
-    const tujuanSelect = document.getElementById('id_tujuan_pengiriman');
+    // -------- Tujuan Pengiriman --------
+    const tujuanSelectEl = document.getElementById('id_tujuan_pengiriman');
     const manualTujuanInput = document.getElementById('manual_tujuan_pengiriman_input');
 
-    if (tujuanSelect && manualTujuanInput) {
-        tujuanSelect.addEventListener('change', function() {
-            if (this.value === 'other') {
-                manualTujuanInput.style.display = 'block';
-            } else {
-                manualTujuanInput.style.display = 'none';
-            }
-        });
+    function toggleManualTujuan(value) {
+        if (!manualTujuanInput) return;
+        manualTujuanInput.style.display = (value === 'other') ? 'block' : 'none';
+    }
 
-        if (tujuanSelect.value === 'other') {
-            manualTujuanInput.style.display = 'block';
+    if (tujuanSelectEl) {
+        // Cek nilai awal
+        toggleManualTujuan(tujuanSelectEl.value);
+
+        const tujuanChoices = initChoicesSelect(tujuanSelectEl, '-- Pilih Tujuan --');
+
+        if (tujuanChoices) {
+            tujuanSelectEl.addEventListener('change', function() {
+                toggleManualTujuan(this.value);
+            });
+        } else {
+            tujuanSelectEl.addEventListener('change', function() {
+                toggleManualTujuan(this.value);
+            });
         }
     }
 
-    // Supir manual input handling
-    const supirSelect = document.getElementById('id_supir');
+    // -------- Kendaraan --------
+    const kendaraanSelectEl = document.getElementById('id_kendaraan');
+    const manualKendaraanInput = document.getElementById('manual_kendaraan_input');
+
+    function toggleManualKendaraan(value) {
+        if (!manualKendaraanInput) return;
+        manualKendaraanInput.style.display = (value === 'other') ? 'block' : 'none';
+    }
+
+    if (kendaraanSelectEl) {
+        // Cek nilai awal
+        toggleManualKendaraan(kendaraanSelectEl.value);
+
+        const kendaraanChoices = initChoicesSelect(kendaraanSelectEl, '-- Pilih Kendaraan --');
+
+        if (kendaraanChoices) {
+            kendaraanSelectEl.addEventListener('change', function() {
+                toggleManualKendaraan(this.value);
+            });
+        } else {
+            kendaraanSelectEl.addEventListener('change', function() {
+                toggleManualKendaraan(this.value);
+            });
+        }
+    }
+
+    // -------- Supir --------
+    const supirSelectEl = document.getElementById('id_supir');
     const manualSupirInput = document.getElementById('manual_supir_input');
 
-    if (supirSelect && manualSupirInput) {
-        supirSelect.addEventListener('change', function() {
-            if (this.value === 'other') {
-                manualSupirInput.style.display = 'block';
-            } else {
-                manualSupirInput.style.display = 'none';
-            }
-        });
+    function toggleManualSupir(value) {
+        if (!manualSupirInput) return;
+        manualSupirInput.style.display = (value === 'other') ? 'block' : 'none';
+    }
 
-        if (supirSelect.value === 'other') {
-            manualSupirInput.style.display = 'block';
+    if (supirSelectEl) {
+        // Cek nilai awal
+        toggleManualSupir(supirSelectEl.value);
+
+        const supirChoices = initChoicesSelect(supirSelectEl, 'Pilih Supir');
+
+        if (supirChoices) {
+            supirSelectEl.addEventListener('change', function() {
+                toggleManualSupir(this.value);
+            });
+        } else {
+            supirSelectEl.addEventListener('change', function() {
+                toggleManualSupir(this.value);
+            });
         }
     }
 
