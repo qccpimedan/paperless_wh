@@ -164,9 +164,21 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
 
         if ($search !== '') {
             $query->where(function ($q) use ($search) {
-                $q->whereDate('tanggal', $search)
-                    ->orWhere('no_po', 'like', '%' . $search . '%')
-                    ->orWhere('kode_produksi', 'like', '%' . $search . '%')
+                // Konversi format d/m/Y ke Y-m-d untuk pencarian tanggal
+                $tanggalSearch = null;
+                if (preg_match('/^\d{2}\/\d{2}\/\d{4}$/', $search)) {
+                    $parts = explode('/', $search);
+                    $tanggalSearch = $parts[2] . '-' . $parts[1] . '-' . $parts[0];
+                } elseif (preg_match('/^\d{4}-\d{2}-\d{2}$/', $search)) {
+                    $tanggalSearch = $search;
+                }
+
+                if ($tanggalSearch) {
+                    $q->whereDate('tanggal', $tanggalSearch);
+                }
+
+                $q->orWhere('no_po', 'like', '%' . $search . '%')
+                    ->orWhere('kode_produksi_array', 'like', '%' . $search . '%')
                     ->orWhere('status_verifikasi', 'like', '%' . $search . '%')
                     ->orWhere('verification_notes', 'like', '%' . $search . '%')
                     ->orWhereHas('shift', function ($qs) use ($search) {
@@ -175,6 +187,18 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
                     ->orWhereHas('bahan', function ($qb) use ($search) {
                         $qb->where('nama_bahan', 'like', '%' . $search . '%');
                     });
+
+                // Cari nama produk yang cocok → cari di id_bahan_array
+                $matchingProdukIds = Produk::where('nama_produk', 'like', '%' . $search . '%')
+                    ->pluck('id')->toArray();
+                if (!empty($matchingProdukIds)) {
+                    foreach ($matchingProdukIds as $pid) {
+                        $q->orWhere('id_bahan_array', 'like', '%"' . $pid . '"%')
+                          ->orWhere('id_bahan_array', 'like', '%,' . $pid . ',%')
+                          ->orWhere('id_bahan_array', 'like', '[' . $pid . ',%')
+                          ->orWhere('id_bahan_array', 'like', '%,' . $pid . ']');
+                    }
+                }
             });
         }
 

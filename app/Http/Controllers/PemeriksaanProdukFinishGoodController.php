@@ -36,9 +36,22 @@ class PemeriksaanProdukFinishGoodController extends Controller
                 ->all();
 
             $query->where(function ($q) use ($search, $matchingProductIds) {
-                $q->whereDate('tanggal', $search)
-                    ->orWhere('status_verifikasi', 'like', '%' . $search . '%')
+                // Konversi format d/m/Y ke Y-m-d
+                $tanggalSearch = null;
+                if (preg_match('/^\d{2}\/\d{2}\/\d{4}$/', $search)) {
+                    $parts = explode('/', $search);
+                    $tanggalSearch = $parts[2] . '-' . $parts[1] . '-' . $parts[0];
+                } elseif (preg_match('/^\d{4}-\d{2}-\d{2}$/', $search)) {
+                    $tanggalSearch = $search;
+                }
+
+                if ($tanggalSearch) {
+                    $q->whereDate('tanggal', $tanggalSearch);
+                }
+
+                $q->orWhere('status_verifikasi', 'like', '%' . $search . '%')
                     ->orWhere('verification_notes', 'like', '%' . $search . '%')
+                    ->orWhere('kode_produksi_array', 'like', '%' . $search . '%')
                     ->orWhereHas('shift', function ($qs) use ($search) {
                         $qs->where('shift', 'like', '%' . $search . '%');
                     });
@@ -58,6 +71,8 @@ class PemeriksaanProdukFinishGoodController extends Controller
 
                             $qj->orWhere('id_produk_array', 'like', '%"' . $pid . '"%');
                             $qj->orWhere('id_produk_array', 'like', '%,' . $pid . ',%');
+                            $qj->orWhere('id_produk_array', 'like', '[' . $pid . ',%');
+                            $qj->orWhere('id_produk_array', 'like', '%,' . $pid . ']');
                         }
                     });
                 }

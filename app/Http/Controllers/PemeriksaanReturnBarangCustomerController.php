@@ -42,10 +42,31 @@ class PemeriksaanReturnBarangCustomerController extends Controller
                 ->map(fn ($id) => (int) $id)
                 ->all();
 
-            $query->where(function ($q) use ($search, $matchingProductIds) {
-                $q->whereDate('tanggal', $search)
-                    ->orWhere('status_verifikasi', 'like', '%' . $search . '%')
+            // Cari id_customer yang nama_custnya cocok untuk lookup ke produk_data JSON
+            $matchingCustomerIds = Customer::query()
+                ->select('id')
+                ->where('nama_cust', 'like', '%' . $search . '%')
+                ->pluck('id')
+                ->map(fn ($id) => (int) $id)
+                ->all();
+
+            $query->where(function ($q) use ($search, $matchingProductIds, $matchingCustomerIds) {
+                // Konversi format d/m/Y ke Y-m-d
+                $tanggalSearch = null;
+                if (preg_match('/^\d{2}\/\d{2}\/\d{4}$/', $search)) {
+                    $parts = explode('/', $search);
+                    $tanggalSearch = $parts[2] . '-' . $parts[1] . '-' . $parts[0];
+                } elseif (preg_match('/^\d{4}-\d{2}-\d{2}$/', $search)) {
+                    $tanggalSearch = $search;
+                }
+
+                if ($tanggalSearch) {
+                    $q->whereDate('tanggal', $tanggalSearch);
+                }
+
+                $q->orWhere('status_verifikasi', 'like', '%' . $search . '%')
                     ->orWhere('verification_notes', 'like', '%' . $search . '%')
+                    ->orWhere('produk_data', 'like', '%' . $search . '%')
                     ->orWhereHas('shift', function ($qs) use ($search) {
                         $qs->where('shift', 'like', '%' . $search . '%');
                     })
@@ -56,6 +77,7 @@ class PemeriksaanReturnBarangCustomerController extends Controller
                         $qc->where('nama_cust', 'like', '%' . $search . '%');
                     });
 
+                // Cari produk berdasarkan nama di produk_data JSON
                 if (!empty($matchingProductIds)) {
                     $q->orWhere(function ($qj) use ($matchingProductIds) {
                         foreach ($matchingProductIds as $pid) {
@@ -63,19 +85,28 @@ class PemeriksaanReturnBarangCustomerController extends Controller
                                 "JSON_CONTAINS(CAST(produk_data AS JSON), ?, '$')",
                                 [json_encode(['id_produk' => $pid])]
                             );
-
                             $qj->orWhereRaw(
                                 "JSON_CONTAINS(CAST(produk_data AS JSON), ?, '$')",
                                 [json_encode(['id_produk' => (string) $pid])]
                             );
-
                             $qj->orWhere('produk_data', 'like', '%"id_produk":' . $pid . '%');
                             $qj->orWhere('produk_data', 'like', '%"id_produk":"' . $pid . '"%');
                         }
                     });
                 }
+
+                // Cari customer berdasarkan nama di produk_data JSON (karena tiap baris punya id_customer)
+                if (!empty($matchingCustomerIds)) {
+                    $q->orWhere(function ($qj) use ($matchingCustomerIds) {
+                        foreach ($matchingCustomerIds as $cid) {
+                            $qj->orWhere('produk_data', 'like', '%"id_customer":' . $cid . '%');
+                            $qj->orWhere('produk_data', 'like', '%"id_customer":"' . $cid . '"%');
+                        }
+                    });
+                }
             });
         }
+
 
         $pemeriksaans = $query->latest()->paginate(25);
 

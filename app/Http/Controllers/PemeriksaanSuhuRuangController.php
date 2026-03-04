@@ -34,8 +34,20 @@ class PemeriksaanSuhuRuangController extends Controller
 
         if ($search !== '') {
             $query->where(function ($q) use ($search) {
-                $q->whereDate('tanggal', $search)
-                    ->orWhere('pukul', 'like', '%' . $search . '%')
+                // Konversi format d/m/Y ke Y-m-d
+                $tanggalSearch = null;
+                if (preg_match('/^\d{2}\/\d{2}\/\d{4}$/', $search)) {
+                    $parts = explode('/', $search);
+                    $tanggalSearch = $parts[2] . '-' . $parts[1] . '-' . $parts[0];
+                } elseif (preg_match('/^\d{4}-\d{2}-\d{2}$/', $search)) {
+                    $tanggalSearch = $search;
+                }
+
+                if ($tanggalSearch) {
+                    $q->whereDate('tanggal', $tanggalSearch);
+                }
+
+                $q->orWhere('pukul', 'like', '%' . $search . '%')
                     ->orWhere('status_verifikasi', 'like', '%' . $search . '%')
                     ->orWhereHas('shift', function ($qs) use ($search) {
                         $qs->where('shift', 'like', '%' . $search . '%');
@@ -46,6 +58,7 @@ class PemeriksaanSuhuRuangController extends Controller
                     });
             });
         }
+
 
         $pemeriksaans = $query->latest()->paginate(25);
         
