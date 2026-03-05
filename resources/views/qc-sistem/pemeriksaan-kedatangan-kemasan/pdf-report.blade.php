@@ -291,9 +291,22 @@
         }
         
         .signature-space {
+            height: 60px;
+            margin: 0 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .signature-line-empty {
             border-bottom: 2px solid #1a1a1a;
             height: 40px;
-            margin: 0 10px;
+            width: 100%;
+        }
+        
+        .qr-code-img {
+            max-height: 60px;
+            max-width: 60px;
         }
         
         .signature-name {
@@ -789,19 +802,57 @@
                     @endphp
                     <table class="signature-table">
                         <tr>
+                            <!-- 1. Dibuat Oleh (QC VERIFIER) -->
                             <td class="signature-cell">
                                 <div class="signature-header-item">Dibuat Oleh:</div>
-                                <div class="signature-space"></div>
+                                <div class="signature-space">
+                                    @if($firstRecord && $firstRecord->qcVerifier)
+                                        @php
+                                            $qcQrData = "Dokumen #{$firstRecord->id} telah diverifikasi secara sistem oleh {$firstRecord->qcVerifier->name} (Tim QC)";
+                                            $qcQrCodeSvg = \SimpleSoftwareIO\QrCode\Facades\QrCode::size(55)->generate($qcQrData);
+                                            $base64QcSvg = "data:image/svg+xml;base64," . base64_encode($qcQrCodeSvg);
+                                        @endphp
+                                        <img src="{{ $base64QcSvg }}" class="qr-code-img" alt="QR Code QC">
+                                    @else
+                                        <div class="signature-line-empty"></div>
+                                    @endif
+                                </div>
                                 <div class="signature-name">{{ $firstRecord && $firstRecord->qcVerifier ? $firstRecord->qcVerifier->name : '-' }}</div>
                             </td>
+
+                            <!-- 2. Diperiksa Oleh (PRODUKSI/WAREHOUSE VERIFIER) -->
                             <td class="signature-cell">
                                 <div class="signature-header-item">Diperiksa Oleh:</div>
-                                <div class="signature-space"></div>
+                                <div class="signature-space">
+                                    @if($firstRecord && $firstRecord->produksiVerifier)
+                                        @php
+                                            $prodQrData = "Dokumen #{$firstRecord->id} telah diverifikasi secara sistem oleh {$firstRecord->produksiVerifier->name} (Tim Warehouse)";
+                                            $prodQrCodeSvg = \SimpleSoftwareIO\QrCode\Facades\QrCode::size(55)->generate($prodQrData);
+                                            $base64ProdSvg = "data:image/svg+xml;base64," . base64_encode($prodQrCodeSvg);
+                                        @endphp
+                                        <img src="{{ $base64ProdSvg }}" class="qr-code-img" alt="QR Code Warehouse">
+                                    @else
+                                        <div class="signature-line-empty"></div>
+                                    @endif
+                                </div>
                                 <div class="signature-name">{{ $firstRecord && $firstRecord->produksiVerifier ? $firstRecord->produksiVerifier->name : '-' }}</div>
                             </td>
+
+                            <!-- 3. Diketahui Oleh (SPV VERIFIER) -->
                             <td class="signature-cell">
                                 <div class="signature-header-item">Diketahui Oleh:</div>
-                                <div class="signature-space"></div>
+                                <div class="signature-space">
+                                    @if($firstRecord && $firstRecord->spvVerifier)
+                                        @php
+                                            $spvQrData = "Dokumen #{$firstRecord->id} telah diverifikasi secara sistem oleh {$firstRecord->spvVerifier->name} (Tim Supervisor QC)";
+                                            $spvQrCodeSvg = \SimpleSoftwareIO\QrCode\Facades\QrCode::size(55)->generate($spvQrData);
+                                            $base64SpvSvg = "data:image/svg+xml;base64," . base64_encode($spvQrCodeSvg);
+                                        @endphp
+                                        <img src="{{ $base64SpvSvg }}" class="qr-code-img" alt="QR Code SPV">
+                                    @else
+                                        <div class="signature-line-empty"></div>
+                                    @endif
+                                </div>
                                 <div class="signature-name">{{ $firstRecord && $firstRecord->spvVerifier ? $firstRecord->spvVerifier->name : '-' }}</div>
                             </td>
                         </tr>

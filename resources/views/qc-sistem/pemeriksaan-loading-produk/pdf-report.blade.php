@@ -274,9 +274,22 @@
         }
 
         .signature-space {
+            height: 60px;
+            margin: 0 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .signature-line-empty {
             border-bottom: 2px solid #1a1a1a;
             height: 55px;
-            margin: 0 10px;
+            width: 100%;
+        }
+        
+        .qr-code-img {
+            max-height: 55px;
+            max-width: 55px;
         }
 
         .signature-name {
@@ -510,17 +523,50 @@
                         <tr>
                             <td class="signature-cell">
                                 <div class="signature-header-item">Dibuat Oleh (QC)</div>
-                                <div class="signature-space"></div>
+                                <div class="signature-space">
+                                    @if($qcUser)
+                                        @php
+                                            $qcQrData = "Dokumen ini telah diverifikasi secara sistem oleh {$qcUser} (Tim QC)";
+                                            $qcQrCodeSvg = \SimpleSoftwareIO\QrCode\Facades\QrCode::size(55)->generate($qcQrData);
+                                            $base64QcSvg = "data:image/svg+xml;base64," . base64_encode($qcQrCodeSvg);
+                                        @endphp
+                                        <img src="{{ $base64QcSvg }}" class="qr-code-img" alt="QR Code QC">
+                                    @else
+                                        <div class="signature-line-empty"></div>
+                                    @endif
+                                </div>
                                 <div class="signature-name">{{ $qcUser ?: '-' }}</div>
                             </td>
                             <td class="signature-cell">
                                 <div class="signature-header-item">Disetujui Oleh (Tim Warehouse)</div>
-                                <div class="signature-space"></div>
+                                <div class="signature-space">
+                                    @if($produksiUser)
+                                        @php
+                                            $prodQrData = "Dokumen ini telah diverifikasi secara sistem oleh {$produksiUser} (Tim Warehouse)";
+                                            $prodQrCodeSvg = \SimpleSoftwareIO\QrCode\Facades\QrCode::size(55)->generate($prodQrData);
+                                            $base64ProdSvg = "data:image/svg+xml;base64," . base64_encode($prodQrCodeSvg);
+                                        @endphp
+                                        <img src="{{ $base64ProdSvg }}" class="qr-code-img" alt="QR Code Warehouse">
+                                    @else
+                                        <div class="signature-line-empty"></div>
+                                    @endif
+                                </div>
                                 <div class="signature-name">{{ $produksiUser ?: '-' }}</div>
                             </td>
                             <td class="signature-cell">
                                 <div class="signature-header-item">Diverifikasi Oleh (SPV QC)</div>
-                                <div class="signature-space"></div>
+                                <div class="signature-space">
+                                    @if($spvQcUser)
+                                        @php
+                                            $spvQrData = "Dokumen ini telah diverifikasi secara sistem oleh {$spvQcUser} (Tim Supervisor QC)";
+                                            $spvQrCodeSvg = \SimpleSoftwareIO\QrCode\Facades\QrCode::size(55)->generate($spvQrData);
+                                            $base64SpvSvg = "data:image/svg+xml;base64," . base64_encode($spvQrCodeSvg);
+                                        @endphp
+                                        <img src="{{ $base64SpvSvg }}" class="qr-code-img" alt="QR Code SPV">
+                                    @else
+                                        <div class="signature-line-empty"></div>
+                                    @endif
+                                </div>
                                 <div class="signature-name">{{ $spvQcUser ?: '-' }}</div>
                             </td>
                         </tr>
