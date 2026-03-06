@@ -52,9 +52,11 @@
                         <!-- <button type="button" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#importModal">
                             <i class="bi bi-file-earmark-excel"></i> Import Excel
                         </button> -->
+                        @can('create_produks')
                         <a href="{{ route('produks.create') }}" class="btn btn-primary">
                             <i class="bi bi-plus-circle"></i> Tambah Produk
                         </a>
+                        @endcan
                     </div>
                 </div>
                 <div class="card-body">
@@ -114,10 +116,13 @@
                                         </td> -->
                                         <td>
                                             <div class="btn-vertical">
+                                                @can('edit_produks')
                                                 <a href="{{ route('produks.edit', $produk->uuid) }}" 
                                                    class="btn btn-sm btn-warning" title="Edit Data">
                                                     <i class="bi bi-pencil"></i>
                                                 </a>
+                                                @endcan
+                                                <!-- @can('delete_produks') -->
                                                 <!-- <form action="{{ route('produks.destroy', $produk->uuid) }}" 
                                                       method="POST" 
                                                       style="display: inline-block;"
@@ -128,6 +133,7 @@
                                                         <i class="bi bi-trash"></i>
                                                     </button>
                                                 </form> -->
+                                                <!-- @endcan -->
                                             </div>
                                         </td>
                                     </tr>
@@ -137,9 +143,11 @@
                                             <div class="py-4">
                                                 <i class="bi bi-inbox fs-1 text-muted"></i>
                                                 <p class="text-muted mt-2 mb-3">Belum ada data produk</p>
+                                                @can('create_produks')
                                                 <a href="{{ route('produks.create') }}" class="btn btn-primary">
                                                     <i class="bi bi-plus-circle"></i> Tambah Produk Pertama
                                                 </a>
+                                                @endcan
                                             </div>
                                         </td>
                                     </tr>
