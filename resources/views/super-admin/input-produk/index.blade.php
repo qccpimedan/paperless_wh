@@ -49,9 +49,9 @@
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="card-title mb-0">Daftar Produk</h5>
                     <div class="d-flex gap-2">
-                        <button type="button" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#importModal">
+                        <!-- <button type="button" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#importModal">
                             <i class="bi bi-file-earmark-excel"></i> Import Excel
-                        </button>
+                        </button> -->
                         <a href="{{ route('produks.create') }}" class="btn btn-primary">
                             <i class="bi bi-plus-circle"></i> Tambah Produk
                         </a>

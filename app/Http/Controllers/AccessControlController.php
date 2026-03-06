@@ -48,6 +48,7 @@ class AccessControlController extends Controller
                 'detail_komplain' => 'Detail Komplain',
                 'golden_sample_retort' => 'Golden Sample Retort',
                 'plants' => 'Data Plant',
+                'produks' => 'Input Produk',
                 'users' => 'Data User',
                 'pemeriksaan_barang_mudah_pecah' => 'Pemeriksaan Barang Mudah Pecah',
                 'pemeriksaan_kebersihan_area' => 'Pemeriksaan Kebersihan Area',
