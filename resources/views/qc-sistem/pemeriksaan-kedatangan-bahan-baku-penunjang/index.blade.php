@@ -124,10 +124,9 @@
                                     const shiftName = selectedOption.getAttribute('data-shift-name');
 
                                     // Cek apakah shift mengandung "1" atau sama dengan "1" atau "Shift 1"
-                                    const isShift1 = shiftName === '1' || shiftName === 'Shift 1' || shiftName === 'shift 1';
+                                    const isShift1 = shiftName && (shiftName.toLowerCase().includes('1') || shiftName.toLowerCase().includes('pagi'));
                                     // Cek apakah shift mengandung "2" atau "3"
-                                    const isShift2or3 = shiftName === '2' || shiftName === 'Shift 2' || shiftName === 'shift 2' ||
-                                                        shiftName === '3' || shiftName === 'Shift 3' || shiftName === 'shift 3';
+                                    const isShift2or3 = shiftName && (shiftName.toLowerCase().includes('2') || shiftName.toLowerCase().includes('sore') || shiftName.toLowerCase().includes('3') || shiftName.toLowerCase().includes('malam'));
 
                                     if (isShift1) {
                                         // Shift 1: Tampilkan date range

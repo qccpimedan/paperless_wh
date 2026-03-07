@@ -10,15 +10,16 @@ use Illuminate\Support\Facades\Auth;
 use App\Imports\ProdukImport;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\ProdukTemplateExport;
+use Yajra\DataTables\Facades\DataTables;
 
 class ProdukController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $selectedKategori = request('kategori_code');
+        $selectedKategori = $request->input('kategori_code');
 
         $plantId = Auth::user()->id_plant;
 
@@ -34,7 +35,8 @@ class ProdukController extends Controller
             'CHEMICAL',
         ];
 
-        $produks = Produk::with([
+        if ($request->ajax()) {
+            $query = Produk::with([
                 'user.role',
                 'user.plant',
                 'produsens' => function ($q) use ($plantId) {
@@ -43,14 +45,68 @@ class ProdukController extends Controller
                 'distributors' => function ($q) use ($plantId) {
                     $q->wherePivot('id_plant', $plantId);
                 },
-            ])
-            ->when($selectedKategori, function ($q) use ($selectedKategori) {
-                $q->where('kategori_code', $selectedKategori);
-            })
-            ->latest()
-            ->get();
+            ]);
 
-        return view('super-admin.input-produk.index', compact('produks', 'selectedKategori', 'kategoriOptions'));
+            if ($selectedKategori) {
+                $query->where('kategori_code', $selectedKategori);
+            }
+
+            return DataTables::of($query)
+                ->addIndexColumn()
+                ->editColumn('nama_produk', function($row) {
+                    return "<strong>" . htmlspecialchars($row->nama_produk) . "</strong>";
+                })
+                ->editColumn('kategori_code', function($row) {
+                    return htmlspecialchars($row->kategori_code ?? '-');
+                })
+                ->addColumn('produsen', function($row) {
+                    return $row->produsens->count() > 0 ? htmlspecialchars($row->produsens->pluck('nama_produsen')->implode(', ')) : '-';
+                })
+                ->addColumn('distributor', function($row) {
+                    return $row->distributors->count() > 0 ? htmlspecialchars($row->distributors->pluck('nama_distributor')->implode(', ')) : '-';
+                })
+                ->addColumn('action', function($row) {
+                    $editUrl = route('produks.edit', $row->uuid);
+                    $deleteUrl = route('produks.destroy', $row->uuid);
+                    
+                    $btns = "<div class='btn-vertical'>";
+                    if (Auth::user()->can('edit_produks')) {
+                        $btns .= "<a href='{$editUrl}' class='btn btn-sm btn-warning mb-1' title='Edit Data'><i class='bi bi-pencil'></i></a> ";
+                    }
+                    if (Auth::user()->can('delete_produks')) {
+                        $csrf = csrf_token();
+                        $btns .= "<form action='{$deleteUrl}' method='POST' style='display: inline-block;' onsubmit='return confirm(\"Yakin ingin menghapus produk " . htmlspecialchars($row->nama_produk) . "?\")'>
+                                    <input type='hidden' name='_token' value='{$csrf}'>
+                                    <input type='hidden' name='_method' value='DELETE'>
+                                    <button type='submit' class='btn btn-sm btn-danger mb-1' title='Hapus Data'>
+                                        <i class='bi bi-trash'></i>
+                                    </button>
+                                  </form>";
+                    }
+                    $btns .= "</div>";
+                    return $btns;
+                })
+                ->filterColumn('nama_produk', function($query, $keyword) {
+                    $query->where('nama_produk', 'like', "%{$keyword}%");
+                })
+                ->filterColumn('kategori_code', function($query, $keyword) {
+                    $query->where('kategori_code', 'like', "%{$keyword}%");
+                })
+                ->rawColumns(['nama_produk', 'action'])
+                ->make(true);
+        }
+
+        // For initial page load (non-AJAX request)
+        return view('super-admin.input-produk.index', compact('selectedKategori', 'kategoriOptions'));
+    }
+
+    /**
+     * Display the specified resource.
+     */
+    public function show(Produk $produk)
+    {
+        $produk->load('user');
+        return view('super-admin.input-produk.show', compact('produk'));
     }
 
     /**
@@ -125,18 +181,6 @@ class ProdukController extends Controller
         return redirect()->route('produks.index')->with('success', 'Produk berhasil ditambahkan!');
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(Produk $produk)
-    {
-        $produk->load('user');
-        return view('super-admin.input-produk.show', compact('produk'));
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
     public function edit(Produk $produk)
     {
         $user = Auth::user();

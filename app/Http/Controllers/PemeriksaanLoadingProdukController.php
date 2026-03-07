@@ -403,14 +403,21 @@ class PemeriksaanLoadingProdukController extends Controller
             })->with(['user.plant'])->get();
         }
 
-        $produkKategoriOptions = $produks
+        $produkList = Produk::query()
+            ->select(['id', 'nama_produk', 'kategori_code'])
+            ->orderBy('nama_produk')
+            ->get();
+
+        $produkKategoriOptions = $produkList
+            ->whereNotNull('kategori_code')
             ->pluck('kategori_code')
             ->filter()
             ->unique()
             ->values()
             ->all();
 
-        $produkByKategori = $produks
+        $produkByKategori = $produkList
+            ->whereNotNull('kategori_code')
             ->groupBy('kategori_code')
             ->map(function ($items) {
                 return $items->map(function ($p) {
@@ -424,9 +431,8 @@ class PemeriksaanLoadingProdukController extends Controller
 
         // Ambil dari SEMUA produk (tanpa filter plant) agar id_produk
         // yang sudah tersimpan di produk_data selalu bisa ditemukan kategorinya
-        $produkKategoriById = Produk::query()
-            ->select(['id', 'kategori_code'])
-            ->get()
+        $produkKategoriById = $produkList
+            ->whereNotNull('kategori_code')
             ->pluck('kategori_code', 'id')
             ->all();
 

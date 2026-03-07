@@ -73,7 +73,7 @@
                         @endforeach
                     </div>
                     <div class="table-responsive">
-                        <table class="table table-striped text-center" id="table1">
+                        <table class="table table-striped text-center w-100" id="table-produk">
                             <thead>
                                 <tr>
                                     <th>No</th>
@@ -81,77 +81,10 @@
                                     <th>Kategori</th>
                                     <th>Produsen</th>
                                     <th>Distributor</th>
-                                    <!-- <th>Plant</th> -->
                                     <th>Aksi</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                @forelse($produks as $index => $produk)
-                                    <tr>
-                                        <td>{{ $index + 1 }}</td>
-                                        <td>
-                                            <strong>{{ $produk->nama_produk }}</strong>
-                                        </td>
-                                        <td>{{ $produk->kategori_code ?? '-' }}</td>
-                                        <td>
-                                            @if($produk->produsens && $produk->produsens->count() > 0)
-                                                {{ $produk->produsens->pluck('nama_produsen')->implode(', ') }}
-                                            @else
-                                                -
-                                            @endif
-                                        </td>
-                                        <td>
-                                            @if($produk->distributors && $produk->distributors->count() > 0)
-                                                {{ $produk->distributors->pluck('nama_distributor')->implode(', ') }}
-                                            @else
-                                                -
-                                            @endif
-                                        </td>
-                                        <!-- <td>
-                                            @if($produk->user->plant)
-                                                <span class="badge bg-info">{{ $produk->user->plant->plant }}</span>
-                                            @else
-                                                <span class="badge bg-secondary">No Plant</span>
-                                            @endif
-                                        </td> -->
-                                        <td>
-                                            <div class="btn-vertical">
-                                                @can('edit_produks')
-                                                <a href="{{ route('produks.edit', $produk->uuid) }}" 
-                                                   class="btn btn-sm btn-warning" title="Edit Data">
-                                                    <i class="bi bi-pencil"></i>
-                                                </a>
-                                                @endcan
-                                                <!-- @can('delete_produks') -->
-                                                <!-- <form action="{{ route('produks.destroy', $produk->uuid) }}" 
-                                                      method="POST" 
-                                                      style="display: inline-block;"
-                                                      onsubmit="return confirm('Yakin ingin menghapus produk {{ $produk->nama_produk }}?')">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="submit" class="btn btn-sm btn-danger" title="Hapus Data">
-                                                        <i class="bi bi-trash"></i>
-                                                    </button>
-                                                </form> -->
-                                                <!-- @endcan -->
-                                            </div>
-                                        </td>
-                                    </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="7" class="text-center">
-                                            <div class="py-4">
-                                                <i class="bi bi-inbox fs-1 text-muted"></i>
-                                                <p class="text-muted mt-2 mb-3">Belum ada data produk</p>
-                                                @can('create_produks')
-                                                <a href="{{ route('produks.create') }}" class="btn btn-primary">
-                                                    <i class="bi bi-plus-circle"></i> Tambah Produk Pertama
-                                                </a>
-                                                @endcan
-                                            </div>
-                                        </td>
-                                    </tr>
-                                @endforelse
                             </tbody>
                         </table>
                     </div>
@@ -219,4 +152,32 @@
         </div>
     </div>
 </div>
+
+@push('scripts')
+<link rel="stylesheet" href="{{ asset('dist/vendors/datatables/dataTables.bootstrap5.min.css') }}">
+<script src="{{ asset('dist/vendors/datatables/jquery.dataTables.min.js') }}"></script>
+<script src="{{ asset('dist/vendors/datatables/dataTables.bootstrap5.min.js') }}"></script>
+<script>
+$(document).ready(function() {
+    $('#table-produk').DataTable({
+        processing: true,
+        serverSide: true,
+        ajax: {
+            url: "{{ route('produks.index') }}",
+            data: function (d) {
+                d.kategori_code = "{{ request('kategori_code') }}";
+            }
+        },
+        columns: [
+            { data: 'DT_RowIndex', name: 'id', orderable: false, searchable: false },
+            { data: 'nama_produk', name: 'nama_produk' },
+            { data: 'kategori_code', name: 'kategori_code' },
+            { data: 'produsen', name: 'produsens.nama_produsen', orderable: false, searchable: false },
+            { data: 'distributor', name: 'distributors.nama_distributor', orderable: false, searchable: false },
+            { data: 'action', name: 'action', orderable: false, searchable: false }
+        ]
+    });
+});
+</script>
+@endpush
 @endsection

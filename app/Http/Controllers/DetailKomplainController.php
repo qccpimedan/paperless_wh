@@ -81,14 +81,22 @@ class DetailKomplainController extends Controller
         }
         $produks = $query->latest()->get();
 
-        $produkKategoriOptions = $produks->pluck('kategori_code')
+        $produkList = Produk::query()
+            ->select(['id', 'nama_produk', 'kategori_code'])
+            ->orderBy('nama_produk')
+            ->get();
+
+        $produkKategoriOptions = $produkList
+            ->whereNotNull('kategori_code')
+            ->pluck('kategori_code')
             ->filter(function ($v) {
                 return $v !== null && $v !== '';
             })
             ->unique()
             ->values();
 
-        $produkByKategori = $produks
+        $produkByKategori = $produkList
+            ->whereNotNull('kategori_code')
             ->groupBy('kategori_code')
             ->map(function ($items) {
                 return $items->map(function ($p) {
@@ -270,14 +278,21 @@ class DetailKomplainController extends Controller
 
         $produks = $query->latest()->get();
 
-        $produkKategoriOptions = $produks
+        $produkList = Produk::query()
+            ->select(['id', 'nama_produk', 'kategori_code'])
+            ->orderBy('nama_produk')
+            ->get();
+
+        $produkKategoriOptions = $produkList
+            ->whereNotNull('kategori_code')
             ->pluck('kategori_code')
             ->filter()
             ->unique()
             ->sort()
             ->values();
 
-        $produkByKategori = $produks
+        $produkByKategori = $produkList
+            ->whereNotNull('kategori_code')
             ->groupBy('kategori_code')
             ->map(function ($items) {
                 return $items->map(function ($p) {
