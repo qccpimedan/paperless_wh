@@ -116,9 +116,8 @@
                                 const selectedOption = shiftSelect.options[shiftSelect.selectedIndex];
                                 const shiftName = selectedOption ? selectedOption.getAttribute('data-shift-name') : null;
 
-                                const isShift1 = shiftName === '1' || shiftName === 'Shift 1' || shiftName === 'shift 1';
-                                const isShift2or3 = shiftName === '2' || shiftName === 'Shift 2' || shiftName === 'shift 2' ||
-                                    shiftName === '3' || shiftName === 'Shift 3' || shiftName === 'shift 3';
+                                const isShift1 = shiftName && (shiftName.toLowerCase().includes('1') || shiftName.toLowerCase().includes('pagi'));
+                                const isShift2or3 = shiftName && (shiftName.toLowerCase().includes('2') || shiftName.toLowerCase().includes('sore') || shiftName.toLowerCase().includes('3') || shiftName.toLowerCase().includes('malam'));
 
                                 if (isShift1) {
                                     tanggalDariWrapper.style.display = 'block';

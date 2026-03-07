@@ -348,6 +348,8 @@ function checkEditableRecords() {
         const notification = document.getElementById('edit-reminder-notification');
         const recordsList = document.getElementById('editable-records-list');
         
+        if (!notification || !recordsList) return;
+
         // Combine records dari V1 dan V2
         let allRecords = [];
         if (dataV1.records) allRecords = allRecords.concat(dataV1.records);
