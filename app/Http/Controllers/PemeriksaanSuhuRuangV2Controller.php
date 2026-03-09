@@ -75,12 +75,12 @@ class PemeriksaanSuhuRuangV2Controller extends Controller
             }
         })->get();
         
-        $produkList = Produk::query()
+        $produks = Produk::query()
             ->select(['id', 'nama_produk', 'kategori_code'])
             ->orderBy('nama_produk')
             ->get();
 
-        $produkKategoriOptions = $produkList
+        $produkKategoriOptions = $produks
             ->whereNotNull('kategori_code')
             ->pluck('kategori_code')
             ->filter()
@@ -88,7 +88,7 @@ class PemeriksaanSuhuRuangV2Controller extends Controller
             ->values()
             ->all();
 
-        $produkByKategori = $produkList
+        $produkByKategori = $produks
             ->whereNotNull('kategori_code')
             ->groupBy('kategori_code')
             ->map(function ($items) {
@@ -101,7 +101,7 @@ class PemeriksaanSuhuRuangV2Controller extends Controller
             })
             ->all();
 
-        $produkKategoriById = $produkList
+        $produkKategoriById = $produks
             ->whereNotNull('kategori_code')
             ->pluck('kategori_code', 'id')
             ->all();
@@ -173,12 +173,12 @@ class PemeriksaanSuhuRuangV2Controller extends Controller
             }
         })->get();
         
-        $produkList = Produk::query()
+        $produks = Produk::query()
             ->select(['id', 'nama_produk', 'kategori_code'])
             ->orderBy('nama_produk')
             ->get();
 
-        $produkKategoriOptions = $produkList
+        $produkKategoriOptions = $produks
             ->whereNotNull('kategori_code')
             ->pluck('kategori_code')
             ->filter()
@@ -186,7 +186,7 @@ class PemeriksaanSuhuRuangV2Controller extends Controller
             ->values()
             ->all();
 
-        $produkByKategori = $produkList
+        $produkByKategori = $produks
             ->whereNotNull('kategori_code')
             ->groupBy('kategori_code')
             ->map(function ($items) {
@@ -199,7 +199,7 @@ class PemeriksaanSuhuRuangV2Controller extends Controller
             })
             ->all();
 
-        $produkKategoriById = $produkList
+        $produkKategoriById = $produks
             ->whereNotNull('kategori_code')
             ->pluck('kategori_code', 'id')
             ->all();
