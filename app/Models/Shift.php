@@ -13,6 +13,7 @@ class Shift extends Model
     protected $fillable = [
         'uuid',
         'shift',
+        'is_date_range',
         'id_user'
     ];
 

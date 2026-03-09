@@ -577,7 +577,9 @@ class PemeriksaanSuhuRuangV2Controller extends Controller
             $shift = Shift::find($id_shift);
             $shiftName = $shift ? trim(strtolower((string) $shift->shift)) : null;
 
-            if ($shiftName === '1' || $shiftName === 'shift 1') {
+            $isShift1 = $shift && $shift->is_date_range;
+
+            if ($isShift1) {
                 if ($tanggalDari && $tanggalSampai) {
                     $query->whereBetween('tanggal', [$tanggalDari, $tanggalSampai]);
                 } elseif ($tanggalDari) {

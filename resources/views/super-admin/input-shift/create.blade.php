@@ -71,6 +71,18 @@
                                                 @enderror
                                                 <small class="text-muted">Masukan nama shift kerja</small>
                                             </div>
+
+                                            <div class="col-md-4 mt-3">
+                                                <label for="is_date_range">Gunakan Rentang Tanggal?</label>
+                                            </div>
+                                            <div class="col-md-8 form-group mt-3">
+                                                <div class="form-check">
+                                                    <input type="checkbox" id="is_date_range" class="form-check-input" name="is_date_range" value="1" {{ old('is_date_range') ? 'checked' : '' }}>
+                                                    <label class="form-check-label" for="is_date_range">
+                                                        Centang jika shift ini harus menggunakan input "Tanggal Dari" dan "Tanggal Sampai" pada laporan PDF.
+                                                    </label>
+                                                </div>
+                                            </div>
                                             
                                             <div class="col-md-12 d-flex justify-content-end mt-3">
                                                 <a href="{{ route('shifts.index') }}" class="btn btn-light-secondary me-1 mb-1">Kembali</a>
