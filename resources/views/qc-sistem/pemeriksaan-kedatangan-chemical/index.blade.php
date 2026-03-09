@@ -73,7 +73,7 @@
                                     <select name="id_shift" class="form-select" id="shiftSelect" required>
                                         <option value="">-- Pilih Shift --</option>
                                         @foreach($shifts ?? [] as $shift)
-                                            <option value="{{ $shift->id }}" data-shift-name="{{ $shift->shift }}" {{ request('id_shift') == $shift->id ? 'selected' : '' }}>
+                                            <option value="{{ $shift->id }}" data-shift-name="{{ $shift->shift }}" data-is-date-range="{{ $shift->is_date_range }}" {{ request('id_shift') == $shift->id ? 'selected' : '' }}>
                                                 {{ $shift->shift }}
                                             </option>
                                         @endforeach
@@ -91,6 +91,27 @@
                                     <label class="form-label">Tanggal</label>
                                     <input type="date" name="tanggal" class="form-control" id="tanggalSingle" value="{{ request('tanggal') }}">
                                 </div>
+
+                                                                <div class="col-md-3">
+                                    <label class="form-label">Kategori</label>
+                                    <select name="kategori_code" class="form-select kategori-produk-select" id="filterKategori">
+                                        <option value="">-- Semua Kategori --</option>
+                                        @if(isset($produkKategoriOptions))
+                                            @foreach($produkKategoriOptions as $kategori)
+                                                <option value="{{ $kategori }}" {{ request("kategori_code") == $kategori ? "selected" : "" }}>
+                                                    {{ $kategori }}
+                                                </option>
+                                            @endforeach
+                                        @endif
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Nama Produk</label>
+                                    <select name="id_produk" class="form-select produk-select" id="filterProduk" data-selected="{{ request('id_produk', '') }}">
+                                        <option value="">-- Semua Produk --</option>
+                                    </select>
+                                </div>
+
                                 <div class="col-md-3 d-flex align-items-end">
                                     <button type="submit" class="btn btn-success w-100">
                                         <i class="bi bi-file-pdf"></i> Cetak PDF
@@ -125,7 +146,7 @@
                                     const shiftName = selectedOption ? selectedOption.getAttribute('data-shift-name') : null;
 
                                     const isShift1 = shiftName && (shiftName.toLowerCase().includes('1') || shiftName.toLowerCase().includes('pagi'));
-                                    const isShift2or3 = shiftName && (shiftName.toLowerCase().includes('2') || shiftName.toLowerCase().includes('sore') || shiftName.toLowerCase().includes('3') || shiftName.toLowerCase().includes('malam'));
+                                    const isShift2or3 = shiftName && !isDateRange;
 
                                     if (isShift1) {
                                         tanggalDariWrapper.style.display = 'block';
@@ -163,6 +184,9 @@
                                 }
                             });
                         </script>
+
+                                
+
                         <div class="table-responsive">
                             <table class="table table-striped text-center" id="table1" data-disable-datatable="1" style="white-space: nowrap;">
                                 <thead>
@@ -510,4 +534,104 @@
         </div>
     </div>
 @endforeach
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const produkByKategori = @json($produkByKategori ?? []);
+    const kategoriSelect = document.querySelector('select.kategori-produk-select[name="kategori_code"]');
+    const produkSelect = document.querySelector('select.produk-select[name="id_produk"]');
+
+    let kategoriChoices = null;
+    let produkChoices = null;
+
+    const initChoicesSafe = function(selectEl) {
+        try {
+            if (!selectEl) return null;
+            if (typeof Choices === 'undefined') return null;
+            return new Choices(selectEl, {
+                searchEnabled: true,
+                searchPlaceholderValue: 'Cari...',
+                itemSelectText: 'Tekan untuk memilih',
+                noResultsText: 'Tidak ada hasil ditemukan',
+                noChoicesText: 'Tidak ada pilihan tersedia',
+                removeItemButton: true,
+                shouldSort: false,
+                placeholder: true,
+                placeholderValue: 'Pilih...'
+            });
+        } catch (e) {
+            return null;
+        }
+    };
+
+    kategoriChoices = initChoicesSafe(kategoriSelect);
+    produkChoices = initChoicesSafe(produkSelect);
+
+    const populateProdukOptions = function(kategoriCode) {
+        if (!produkSelect) return;
+
+        const selectedFromAttr = produkSelect.getAttribute('data-selected') || '';
+
+        // If no category selected, just showing empty or we can show all depending on requirements.
+        // Let's just show from selected category to closely mirror create.blade.php.
+        // If they want to search "Semua Kategori", maybe load all? 
+        // The previous logic was: if !selectedCat then add all.
+        let options = [];
+        if (!kategoriCode) {
+            // Flatten all
+            Object.values(produkByKategori).forEach(arr => {
+                options = options.concat(arr);
+            });
+        } else {
+            options = (produkByKategori && produkByKategori[kategoriCode]) ? produkByKategori[kategoriCode] : [];
+        }
+
+        if (produkChoices) {
+            const choiceItems = [{ value: '', label: '-- Semua Produk --', selected: !selectedFromAttr }].concat(
+                options.map((p) => {
+                    const v = String(p.id);
+                    return {
+                        value: v,
+                        label: String(p.nama),
+                        selected: selectedFromAttr === v,
+                    };
+                })
+            );
+
+            try {
+                produkChoices.clearChoices();
+                produkChoices.setChoices(choiceItems, 'value', 'label', true);
+            } catch (e) {
+            }
+        } else {
+            while (produkSelect.options.length > 0) {
+                produkSelect.remove(0);
+            }
+            produkSelect.add(new Option('-- Semua Produk --', ''));
+            options.forEach(function(p) {
+                produkSelect.add(new Option(p.nama, p.id));
+            });
+
+            if (selectedFromAttr) {
+                produkSelect.value = selectedFromAttr;
+            }
+        }
+    };
+
+    if (kategoriSelect) {
+        kategoriSelect.addEventListener('change', function() {
+            if (produkSelect) {
+                produkSelect.setAttribute('data-selected', '');
+            }
+            populateProdukOptions(kategoriSelect.value);
+        });
+        
+        // Initial populate (handle old inputs)
+        setTimeout(() => {
+            populateProdukOptions(kategoriSelect.value);
+        }, 100);
+    }
+});
+</script>
+
 @endsection

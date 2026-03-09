@@ -102,7 +102,29 @@ class PemeriksaanProdukFinishGoodController extends Controller
             })
             ->all();
 
-        return view('qc-sistem.pemeriksaan-produk-finish-good.index', compact('pemeriksaans', 'produkNamaById'));
+        
+        $produkKategoriOptions = \App\Models\Produk::query()
+            ->whereNotNull('kategori_code')
+            ->select('kategori_code')
+            ->distinct()
+            ->orderBy('kategori_code')
+            ->pluck('kategori_code')
+            ->values();
+
+        $produkList = \App\Models\Produk::query()
+            ->select(['id', 'nama_produk', 'kategori_code'])
+            ->orderBy('nama_produk')
+            ->get();
+
+                $produkByKategori = $produkList
+            ->groupBy('kategori_code')
+            ->map(function ($items) {
+                return $items->map(function ($p) {
+                    return ['id' => $p->id, 'nama' => $p->nama_produk];
+                })->values();
+            });
+
+return view('qc-sistem.pemeriksaan-produk-finish-good.index', compact('pemeriksaans', 'produkNamaById', 'produkKategoriOptions', 'produkList', 'produkByKategori'));
     }
 
     public function create()
@@ -788,6 +810,8 @@ class PemeriksaanProdukFinishGoodController extends Controller
         $tanggalDari = $request->input('tanggal_dari');
         $tanggalSampai = $request->input('tanggal_sampai');
         $tanggal = $request->input('tanggal');
+        $id_produk = $request->input('id_produk');
+        $kategori_code = $request->input('kategori_code');
 
         $query = PemeriksaanProdukFinishGood::with([
             'user.role',
@@ -812,6 +836,37 @@ class PemeriksaanProdukFinishGoodController extends Controller
             });
         }
 
+        
+        // Filter by produk / kategori
+        if ($id_produk) {
+            $query->where(function ($q) use ($id_produk) {
+                $q->whereRaw("JSON_CONTAINS(CAST(id_produk_array AS JSON), ?, '$')", [json_encode((int)$id_produk)])
+                  ->orWhereRaw("JSON_CONTAINS(CAST(id_produk_array AS JSON), ?, '$')", [json_encode((string)$id_produk)])
+                  ->orWhere('id_produk_array', 'like', '%"' . $id_produk . '"%')
+                  ->orWhere('id_produk_array', 'like', '%,' . $id_produk . ',%')
+                  ->orWhere('id_produk_array', 'like', '[' . $id_produk . ',%')
+                  ->orWhere('id_produk_array', 'like', '%,' . $id_produk . ']');
+            });
+        } elseif ($kategori_code) {
+            // Because JSON array only stores ID, we must find matching produk IDs first to filter by category
+            $matchedIds = \App\Models\Produk::where('kategori_code', $kategori_code)->pluck('id')->toArray();
+            if (!empty($matchedIds)) {
+                $query->where(function ($q) use ($matchedIds) {
+                    foreach ($matchedIds as $pid) {
+                        $q->orWhereRaw("JSON_CONTAINS(CAST(id_produk_array AS JSON), ?, '$')", [json_encode((int)$pid)])
+                          ->orWhereRaw("JSON_CONTAINS(CAST(id_produk_array AS JSON), ?, '$')", [json_encode((string)$pid)])
+                          ->orWhere('id_produk_array', 'like', '%"' . $pid . '"%')
+                          ->orWhere('id_produk_array', 'like', '%,' . $pid . ',%')
+                          ->orWhere('id_produk_array', 'like', '[' . $pid . ',%')
+                          ->orWhere('id_produk_array', 'like', '%,' . $pid . ']');
+                    }
+                });
+            } else {
+                // If category has no products, return no results
+                $query->whereRaw('1 = 0');
+            }
+        }
+
         if ($id_shift) {
             $query->where('id_shift', $id_shift);
         }
@@ -820,7 +875,9 @@ class PemeriksaanProdukFinishGoodController extends Controller
             $shift = Shift::find($id_shift);
             $shiftName = $shift ? trim(strtolower((string) $shift->shift)) : null;
 
-            if ($shiftName === '1' || $shiftName === 'shift 1') {
+            $isShift1 = $shift && $shift->is_date_range;
+
+            if ($isShift1) {
                 if ($tanggalDari && $tanggalSampai) {
                     $query->whereBetween('tanggal', [$tanggalDari, $tanggalSampai]);
                 } elseif ($tanggalDari) {

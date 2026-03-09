@@ -110,7 +110,29 @@ class PemeriksaanReturnBarangCustomerController extends Controller
 
         $pemeriksaans = $query->latest()->paginate(25);
 
-        return view('qc-sistem.pemeriksaan-return-barang-customer.index', compact('pemeriksaans'));
+        
+        $produkKategoriOptions = \App\Models\Produk::query()
+            ->whereNotNull('kategori_code')
+            ->select('kategori_code')
+            ->distinct()
+            ->orderBy('kategori_code')
+            ->pluck('kategori_code')
+            ->values();
+
+        $produkList = \App\Models\Produk::query()
+            ->select(['id', 'nama_produk', 'kategori_code'])
+            ->orderBy('nama_produk')
+            ->get();
+
+                $produkByKategori = $produkList
+            ->groupBy('kategori_code')
+            ->map(function ($items) {
+                return $items->map(function ($p) {
+                    return ['id' => $p->id, 'nama' => $p->nama_produk];
+                })->values();
+            });
+
+return view('qc-sistem.pemeriksaan-return-barang-customer.index', compact('pemeriksaans', 'produkKategoriOptions', 'produkList', 'produkByKategori'));
     }
 
     public function create()
@@ -637,6 +659,8 @@ class PemeriksaanReturnBarangCustomerController extends Controller
         $tanggalDari = $request->input('tanggal_dari');
         $tanggalSampai = $request->input('tanggal_sampai');
         $tanggal = $request->input('tanggal');
+        $id_produk = $request->input('id_produk');
+        $kategori_code = $request->input('kategori_code');
 
         $query = PemeriksaanReturnBarangCustomer::with([
             'user.role',
@@ -663,6 +687,21 @@ class PemeriksaanReturnBarangCustomerController extends Controller
             });
         }
 
+        
+        if ($id_produk) {
+            $query->where(function ($q) use ($id_produk) {
+                $q->whereRaw("JSON_CONTAINS(CAST(produk_data AS JSON), ?, '$')", [json_encode(['id_produk' => (int)$id_produk])])
+                  ->orWhereRaw("JSON_CONTAINS(CAST(produk_data AS JSON), ?, '$')", [json_encode(['id_produk' => (string)$id_produk])])
+                  ->orWhere('produk_data', 'like', '%"id_produk":' . $id_produk . '%')
+                  ->orWhere('produk_data', 'like', '%"id_produk":"' . $id_produk . '"%');
+            });
+        } elseif ($kategori_code) {
+             $query->where(function ($q) use ($kategori_code) {
+                $q->whereRaw("JSON_CONTAINS(CAST(produk_data AS JSON), ?, '$')", [json_encode(['kategori_code' => $kategori_code])])
+                  ->orWhere('produk_data', 'like', '%"kategori_code":"' . $kategori_code . '"%');
+            });
+        }
+
         if ($id_shift) {
             $query->where('id_shift', $id_shift);
         }
@@ -671,7 +710,9 @@ class PemeriksaanReturnBarangCustomerController extends Controller
             $shift = Shift::find($id_shift);
             $shiftName = $shift ? trim(strtolower((string) $shift->shift)) : null;
 
-            if ($shiftName === '1' || $shiftName === 'shift 1') {
+            $isShift1 = $shift && $shift->is_date_range;
+
+            if ($isShift1) {
                 if ($tanggalDari && $tanggalSampai) {
                     $query->whereBetween('tanggal', [$tanggalDari, $tanggalSampai]);
                 } elseif ($tanggalDari) {

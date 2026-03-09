@@ -48,10 +48,12 @@ class ShiftController extends Controller
     {
         $request->validate([
             'shift' => 'required|string|max:255',
+            'is_date_range' => 'nullable|boolean',
         ]);
 
         Shift::create([
             'shift' => $request->shift,
+            'is_date_range' => $request->has('is_date_range') ? true : false,
             'id_user' => Auth::id(),
         ]);
 
@@ -92,10 +94,12 @@ class ShiftController extends Controller
         
         $request->validate([
             'shift' => 'required|string|max:255',
+            'is_date_range' => 'nullable|boolean',
         ]);
 
         $shift->update([
             'shift' => $request->shift,
+            'is_date_range' => $request->has('is_date_range') ? true : false,
         ]);
 
         return redirect()->route('shifts.index')

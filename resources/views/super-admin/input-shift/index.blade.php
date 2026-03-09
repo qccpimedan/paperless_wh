@@ -47,6 +47,7 @@
                                 <tr>
                                     <th>No</th>
                                     <th>Shift</th>
+                                    <th>Format Rentang Tanggal</th>
                                     <th>Plant</th>
                                     <th>Aksi</th>
                                 </tr>
@@ -57,6 +58,13 @@
                                         <td>{{ $index + 1 }}</td>
                                         <td>
                                             <strong>{{ $shift->shift }}</strong>
+                                        </td>
+                                        <td>
+                                            @if($shift->is_date_range)
+                                                <span class="badge bg-success">Ya</span>
+                                            @else
+                                                <span class="badge bg-danger">Tidak</span>
+                                            @endif
                                         </td>
                                         <td>
                                             @if($shift->user->plant)

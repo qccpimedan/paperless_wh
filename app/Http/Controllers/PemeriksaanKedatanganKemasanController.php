@@ -94,7 +94,29 @@ class PemeriksaanKedatanganKemasanController extends Controller
             ? Produk::whereIn('id', $produkIds)->pluck('nama_produk', 'id')
             : collect();
         
-        return view('qc-sistem.pemeriksaan-kedatangan-kemasan.index', compact('pemeriksaans', 'produkNamaById'));
+        
+        $produkKategoriOptions = \App\Models\Produk::query()
+            ->whereNotNull('kategori_code')
+            ->select('kategori_code')
+            ->distinct()
+            ->orderBy('kategori_code')
+            ->pluck('kategori_code')
+            ->values();
+
+        $produkList = \App\Models\Produk::query()
+            ->select(['id', 'nama_produk', 'kategori_code'])
+            ->orderBy('nama_produk')
+            ->get();
+
+                $produkByKategori = $produkList
+            ->groupBy('kategori_code')
+            ->map(function ($items) {
+                return $items->map(function ($p) {
+                    return ['id' => $p->id, 'nama' => $p->nama_produk];
+                })->values();
+            });
+
+return view('qc-sistem.pemeriksaan-kedatangan-kemasan.index', compact('pemeriksaans', 'produkNamaById', 'produkKategoriOptions', 'produkList', 'produkByKategori'));
     }
 
     /**
@@ -1013,6 +1035,8 @@ class PemeriksaanKedatanganKemasanController extends Controller
         $tanggalDari = $request->input('tanggal_dari');
         $tanggalSampai = $request->input('tanggal_sampai');
         $tanggal = $request->input('tanggal');
+        $id_produk = $request->input('id_produk');
+        $kategori_code = $request->input('kategori_code');
 
         // Build query
         $query = PemeriksaanKedatanganKemasan::with([
@@ -1041,6 +1065,37 @@ class PemeriksaanKedatanganKemasanController extends Controller
         }
 
         // Filter by shift
+        
+        // Filter by produk / kategori
+        if ($id_produk) {
+            $query->where(function ($q) use ($id_produk) {
+                $q->whereRaw("JSON_CONTAINS(CAST(id_bahan_array AS JSON), ?, '$')", [json_encode((int)$id_produk)])
+                  ->orWhereRaw("JSON_CONTAINS(CAST(id_bahan_array AS JSON), ?, '$')", [json_encode((string)$id_produk)])
+                  ->orWhere('id_bahan_array', 'like', '%"' . $id_produk . '"%')
+                  ->orWhere('id_bahan_array', 'like', '%,' . $id_produk . ',%')
+                  ->orWhere('id_bahan_array', 'like', '[' . $id_produk . ',%')
+                  ->orWhere('id_bahan_array', 'like', '%,' . $id_produk . ']');
+            });
+        } elseif ($kategori_code) {
+            // Because JSON array only stores ID, we must find matching produk IDs first to filter by category
+            $matchedIds = \App\Models\Produk::where('kategori_code', $kategori_code)->pluck('id')->toArray();
+            if (!empty($matchedIds)) {
+                $query->where(function ($q) use ($matchedIds) {
+                    foreach ($matchedIds as $pid) {
+                        $q->orWhereRaw("JSON_CONTAINS(CAST(id_bahan_array AS JSON), ?, '$')", [json_encode((int)$pid)])
+                          ->orWhereRaw("JSON_CONTAINS(CAST(id_bahan_array AS JSON), ?, '$')", [json_encode((string)$pid)])
+                          ->orWhere('id_bahan_array', 'like', '%"' . $pid . '"%')
+                          ->orWhere('id_bahan_array', 'like', '%,' . $pid . ',%')
+                          ->orWhere('id_bahan_array', 'like', '[' . $pid . ',%')
+                          ->orWhere('id_bahan_array', 'like', '%,' . $pid . ']');
+                    }
+                });
+            } else {
+                // If category has no products, return no results
+                $query->whereRaw('1 = 0');
+            }
+        }
+
         if ($id_shift) {
             $query->where('id_shift', $id_shift);
         }
@@ -1050,7 +1105,9 @@ class PemeriksaanKedatanganKemasanController extends Controller
             $shift = Shift::find($id_shift);
             $shiftName = $shift ? trim(strtolower((string) $shift->shift)) : null;
 
-            if ($shiftName === '1' || $shiftName === 'shift 1') {
+            $isShift1 = $shift && $shift->is_date_range;
+
+            if ($isShift1) {
                 if ($tanggalDari && $tanggalSampai) {
                     $query->whereBetween('tanggal', [$tanggalDari, $tanggalSampai]);
                 } elseif ($tanggalDari) {

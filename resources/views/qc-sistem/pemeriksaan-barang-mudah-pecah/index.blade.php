@@ -67,7 +67,7 @@
                                 <select name="id_shift" class="form-select" id="shiftSelect" required>
                                     <option value="">-- Pilih Shift --</option>
                                     @foreach($shifts ?? [] as $shift)
-                                        <option value="{{ $shift->id }}" data-shift-name="{{ $shift->shift }}" {{ request('id_shift') == $shift->id ? 'selected' : '' }}>
+                                        <option value="{{ $shift->id }}" data-shift-name="{{ $shift->shift }}" data-is-date-range="{{ $shift->is_date_range }}" {{ request('id_shift') == $shift->id ? 'selected' : '' }}>
                                             {{ $shift->shift }}
                                         </option>
                                     @endforeach
@@ -115,9 +115,9 @@
                             function updateDateFields() {
                                 const selectedOption = shiftSelect.options[shiftSelect.selectedIndex];
                                 const shiftName = selectedOption.getAttribute('data-shift-name');
-
-                                const isShift1 = shiftName && (shiftName.toLowerCase().includes('1') || shiftName.toLowerCase().includes('pagi'));
-                                const isShift2or3 = shiftName && (shiftName.toLowerCase().includes('2') || shiftName.toLowerCase().includes('sore') || shiftName.toLowerCase().includes('3') || shiftName.toLowerCase().includes('malam'));
+                                    const isDateRange = selectedOption.getAttribute('data-is-date-range') == '1';
+                                    const isShift1 = isDateRange;
+                                const isShift2or3 = shiftName && !isDateRange;
 
                                 if (isShift1) {
                                     tanggalDariWrapper.style.display = 'block';
