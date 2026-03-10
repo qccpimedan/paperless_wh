@@ -1375,34 +1375,50 @@ return view('qc-sistem.pemeriksaan-kedatangan-bahan-baku-penunjang.index', compa
             });
         }
 
-        // Filter by shift
-        
-        // Filter by produk / kategori
+        // Prepare valid bahan IDs based on filter
+        $matchedBahanIds = [];
         if ($id_produk) {
-            $query->where(function ($q) use ($id_produk) {
-                $q->whereRaw("JSON_CONTAINS(CAST(id_bahan_array AS JSON), ?, '$')", [json_encode((int)$id_produk)])
-                  ->orWhereRaw("JSON_CONTAINS(CAST(id_bahan_array AS JSON), ?, '$')", [json_encode((string)$id_produk)])
-                  ->orWhere('id_bahan_array', 'like', '%"' . $id_produk . '"%')
-                  ->orWhere('id_bahan_array', 'like', '%,' . $id_produk . ',%')
-                  ->orWhere('id_bahan_array', 'like', '[' . $id_produk . ',%')
-                  ->orWhere('id_bahan_array', 'like', '%,' . $id_produk . ']');
-            });
+            $produk = \App\Models\Produk::find($id_produk);
+            if ($produk) {
+                $normName = preg_replace('/[^a-z0-9]+/i', '', strtolower(trim((string) $produk->nama_produk)));
+                $bahans = \App\Models\Bahan::select('id', 'nama_bahan')->get();
+                foreach($bahans as $b) {
+                    $bNorm = preg_replace('/[^a-z0-9]+/i', '', strtolower(trim((string) $b->nama_bahan)));
+                    if ($bNorm && $normName && (str_contains($bNorm, $normName) || str_contains($normName, $bNorm))) {
+                        $matchedBahanIds[] = $b->id;
+                    }
+                }
+            }
         } elseif ($kategori_code) {
-            // Because JSON array only stores ID, we must find matching produk IDs first to filter by category
-            $matchedIds = \App\Models\Produk::where('kategori_code', $kategori_code)->pluck('id')->toArray();
-            if (!empty($matchedIds)) {
-                $query->where(function ($q) use ($matchedIds) {
-                    foreach ($matchedIds as $pid) {
-                        $q->orWhereRaw("JSON_CONTAINS(CAST(id_bahan_array AS JSON), ?, '$')", [json_encode((int)$pid)])
-                          ->orWhereRaw("JSON_CONTAINS(CAST(id_bahan_array AS JSON), ?, '$')", [json_encode((string)$pid)])
-                          ->orWhere('id_bahan_array', 'like', '%"' . $pid . '"%')
-                          ->orWhere('id_bahan_array', 'like', '%,' . $pid . ',%')
-                          ->orWhere('id_bahan_array', 'like', '[' . $pid . ',%')
-                          ->orWhere('id_bahan_array', 'like', '%,' . $pid . ']');
+            $produks = \App\Models\Produk::where('kategori_code', $kategori_code)->get();
+            $bahans = \App\Models\Bahan::select('id', 'nama_bahan')->get();
+            foreach ($produks as $produk) {
+                $normName = preg_replace('/[^a-z0-9]+/i', '', strtolower(trim((string) $produk->nama_produk)));
+                foreach($bahans as $b) {
+                    $bNorm = preg_replace('/[^a-z0-9]+/i', '', strtolower(trim((string) $b->nama_bahan)));
+                    if ($bNorm && $normName && (str_contains($bNorm, $normName) || str_contains($normName, $bNorm))) {
+                        $matchedBahanIds[] = $b->id;
+                    }
+                }
+            }
+            $matchedBahanIds = array_unique($matchedBahanIds);
+        }
+
+        // Filter by produk / kategori based on matched Bahan IDs
+        if ($id_produk || $kategori_code) {
+            if (!empty($matchedBahanIds)) {
+                $query->where(function ($q) use ($matchedBahanIds) {
+                    foreach ($matchedBahanIds as $bid) {
+                        $q->orWhereRaw("JSON_CONTAINS(CAST(id_bahan_array AS JSON), ?, '$')", [json_encode((int)$bid)])
+                          ->orWhereRaw("JSON_CONTAINS(CAST(id_bahan_array AS JSON), ?, '$')", [json_encode((string)$bid)])
+                          ->orWhere('id_bahan_array', 'like', '%"' . $bid . '"%')
+                          ->orWhere('id_bahan_array', 'like', '%,' . $bid . ',%')
+                          ->orWhere('id_bahan_array', 'like', '[' . $bid . ',%')
+                          ->orWhere('id_bahan_array', 'like', '%,' . $bid . ']');
                     }
                 });
             } else {
-                // If category has no products, return no results
+                // If category has no products or no match, return no results
                 $query->whereRaw('1 = 0');
             }
         }
@@ -1487,7 +1503,8 @@ return view('qc-sistem.pemeriksaan-kedatangan-bahan-baku-penunjang.index', compa
             'shift' => $shift,
             'qcUser' => $qcUser,
             'produksiUser' => $produksiUser,
-            'spvQcUser' => $spvQcUser
+            'spvQcUser' => $spvQcUser,
+            'filterBahanIds' => ($id_produk || $kategori_code) ? $matchedBahanIds : null
         ]);
 
         // Generate filename berdasarkan filter

@@ -381,20 +381,29 @@
             @php
                 $columnsPerPage = 4;
 
-                $allProdukIds = [];
-
-                $pdfColumns = collect();
+                $allBahanIds = [];
                 foreach ($pemeriksaans as $p) {
                     $idBahansTmp = json_decode($p->id_bahan_array ?? '[]', true) ?? [];
-
                     if (!empty($idBahansTmp)) {
                         foreach ($idBahansTmp as $tmpId) {
                             if ($tmpId) {
-                                $allProdukIds[] = $tmpId;
+                                $allBahanIds[] = $tmpId;
                             }
                         }
                     }
+                }
 
+                $bahanMap = [];
+                if (!empty($allBahanIds)) {
+                    $bahanMap = \App\Models\Bahan::whereIn('id', array_values(array_unique($allBahanIds)))
+                        ->pluck('nama_bahan', 'id')
+                        ->toArray();
+                }
+
+                // Chunking logic per record so tables don't mix different shifts/dates
+                $recordChunks = collect();
+                foreach ($pemeriksaans as $p) {
+                    $idBahansTmp = json_decode($p->id_bahan_array ?? '[]', true) ?? [];
                     $produsensTmp = json_decode($p->produsen_array ?? '[]', true) ?? [];
                     $negaraProdusensTmp = json_decode($p->negara_produsen_array ?? '[]', true) ?? [];
                     $distributorsTmp = json_decode($p->distributor_array ?? '[]', true) ?? [];
@@ -433,25 +442,34 @@
                         count($keterangansTmp)
                     );
 
+                    $validRows = collect();
                     for ($i = 0; $i < $rowCount; $i++) {
-                        $pdfColumns->push([
+                        $id_bahan = $idBahansTmp[$i] ?? null;
+                        
+                        // Periksa array jika filterBahanIds ada
+                        if (isset($filterBahanIds) && is_array($filterBahanIds)) {
+                            // Jika array filterBahanIds tidak kosong, bahan harus ada di dalamnya
+                            if (!empty($filterBahanIds) && !in_array($id_bahan, $filterBahanIds)) {
+                                continue;
+                            }
+                        }
+
+                        $validRows->push([
                             'record' => $p,
                             'rowIndex' => $i,
                         ]);
                     }
-                }
-
-                $chunks = $pdfColumns->chunk($columnsPerPage);
-
-                $produkMap = [];
-                if (!empty($allProdukIds)) {
-                    $produkMap = \App\Models\Produk::whereIn('id', array_values(array_unique($allProdukIds)))
-                        ->pluck('nama_produk', 'id')
-                        ->toArray();
+                    
+                    if ($validRows->isNotEmpty()) {
+                        $chunks = $validRows->chunk($columnsPerPage);
+                        foreach ($chunks as $chunk) {
+                            $recordChunks->push($chunk);
+                        }
+                    }
                 }
             @endphp
             
-            @foreach($chunks as $pageIndex => $pageRecords)
+            @foreach($recordChunks as $pageIndex => $pageRecords)
                 @php
                     $firstColumn = $pageRecords->first();
                     $firstRecord = $firstColumn ? $firstColumn['record'] : null;
@@ -464,10 +482,13 @@
                                 <img src="{{ public_path('dist/images/logo/cpi-logo.png') }}" alt="Logo CPI">
                             </div>
                             <div class="header-company">
-                                <h2>PT. CHAROEN POKPHAND INDONESIA</h2>
-                                <p>FOOD DIVISION MEDAN</p>
-                                <p>MEDAN - INDONESIA</p>
-                            </div>
+                            <h2>PT. CHAROEN POKPHAND INDONESIA</h2>
+                            @php
+                                $plantName = $firstRecord && $firstRecord->user && $firstRecord->user->plant ? $firstRecord->user->plant->plant : 'MEDAN';
+                            @endphp
+                            <p>FOOD DIVISION {{ strtoupper($plantName) }}</p>
+                            <p>{{ strtoupper($plantName) }} - INDONESIA</p>
+                        </div>
                         </div>
                     </div>
                     <div class="header-right">
@@ -578,7 +599,7 @@
                                             @if($id_bahan)
                                                 <div class="field-row">
                                                     <span class="field-label">Nama:</span>
-                                                    <span class="field-value">{{ $produkMap[$id_bahan] ?? 'N/A' }}</span>
+                                                    <span class="field-value">{{ $bahanMap[$id_bahan] ?? 'N/A' }}</span>
                                                 </div>
                                             @endif
                                             @if($produsen_val)

@@ -1294,31 +1294,45 @@ return view('qc-sistem.pemeriksaan-kedatangan-chemical.index', compact('pemeriks
 
         
         // Filter by produk / kategori
-        if ($id_produk) {
-            $query->where(function ($q) use ($id_produk) {
-                $q->whereRaw("JSON_CONTAINS(CAST(id_bahan_array AS JSON), ?, '$')", [json_encode((int)$id_produk)])
-                  ->orWhereRaw("JSON_CONTAINS(CAST(id_bahan_array AS JSON), ?, '$')", [json_encode((string)$id_produk)])
-                  ->orWhere('id_bahan_array', 'like', '%"' . $id_produk . '"%')
-                  ->orWhere('id_bahan_array', 'like', '%,' . $id_produk . ',%')
-                  ->orWhere('id_bahan_array', 'like', '[' . $id_produk . ',%')
-                  ->orWhere('id_bahan_array', 'like', '%,' . $id_produk . ']');
-            });
-        } elseif ($kategori_code) {
-            // Because JSON array only stores ID, we must find matching produk IDs first to filter by category
-            $matchedIds = \App\Models\Produk::where('kategori_code', $kategori_code)->pluck('id')->toArray();
-            if (!empty($matchedIds)) {
-                $query->where(function ($q) use ($matchedIds) {
-                    foreach ($matchedIds as $pid) {
-                        $q->orWhereRaw("JSON_CONTAINS(CAST(id_bahan_array AS JSON), ?, '$')", [json_encode((int)$pid)])
-                          ->orWhereRaw("JSON_CONTAINS(CAST(id_bahan_array AS JSON), ?, '$')", [json_encode((string)$pid)])
-                          ->orWhere('id_bahan_array', 'like', '%"' . $pid . '"%')
-                          ->orWhere('id_bahan_array', 'like', '%,' . $pid . ',%')
-                          ->orWhere('id_bahan_array', 'like', '[' . $pid . ',%')
-                          ->orWhere('id_bahan_array', 'like', '%,' . $pid . ']');
-                    }
-                });
+        if ($id_produk || $kategori_code) {
+            $produkNames = [];
+            
+            if ($id_produk) {
+                $produk = \App\Models\Produk::find($id_produk);
+                if ($produk) {
+                    $produkNames[] = $produk->nama_produk;
+                }
+            } elseif ($kategori_code) {
+                $produkNames = \App\Models\Produk::where('kategori_code', $kategori_code)
+                    ->pluck('nama_produk')
+                    ->filter()
+                    ->toArray();
+            }
+
+            if (!empty($produkNames)) {
+                $matchedChemicalIds = \App\Models\Chemical::whereIn('nama_chemical', $produkNames)
+                    ->pluck('id')
+                    ->toArray();
+
+                if (!empty($matchedChemicalIds)) {
+                    $query->where(function ($q) use ($matchedChemicalIds) {
+                        foreach ($matchedChemicalIds as $cid) {
+                            $q->orWhereRaw(
+                                "JSON_CONTAINS(CAST(detail_chemicals AS JSON), ?, '$')",
+                                [json_encode(['id_chemical' => (int)$cid])]
+                            );
+                            $q->orWhereRaw(
+                                "JSON_CONTAINS(CAST(detail_chemicals AS JSON), ?, '$')",
+                                [json_encode(['id_chemical' => (string)$cid])]
+                            );
+                            $q->orWhere('detail_chemicals', 'like', '%"id_chemical":' . $cid . '%');
+                            $q->orWhere('detail_chemicals', 'like', '%"id_chemical":"' . $cid . '"%');
+                        }
+                    });
+                } else {
+                    $query->whereRaw('1 = 0');
+                }
             } else {
-                // If category has no products, return no results
                 $query->whereRaw('1 = 0');
             }
         }
