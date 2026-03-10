@@ -535,13 +535,22 @@
                                                     </div>
 
                                                     <div class="form-section mb-3">
-                                                        <h6 class="text-primary mb-2">Upload Gambar</h6>
+                                                        <h6 class="text-primary mb-2">Upload File</h6>
                                                         <div class="row">
                                                             <div class="col-md-6">
                                                                 <div class="form-group">
                                                                     <label class="form-label">Foto Produk (Max 1MB)</label>
                                                                     <input type="file" name="image_finish_good[]" class="form-control" accept="image/*" capture="camera">
                                                                     @error('image_finish_good.0')
+                                                                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                                                                    @enderror
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-md-6">
+                                                                <div class="form-group">
+                                                                    <label class="form-label">File COA (Max 2MB)</label>
+                                                                    <input type="file" name="upload_coa[]" class="form-control" accept=".pdf,.png,.jpeg,.jpg">
+                                                                    @error('upload_coa.0')
                                                                         <div class="invalid-feedback d-block">{{ $message }}</div>
                                                                     @enderror
                                                                 </div>

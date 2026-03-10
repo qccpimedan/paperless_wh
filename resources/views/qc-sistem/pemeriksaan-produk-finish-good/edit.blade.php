@@ -658,7 +658,7 @@
                                                             </div>
 
                                                             <div class="form-section mb-3">
-                                                                <h6 class="text-primary mb-2">Upload Gambar</h6>
+                                                                <h6 class="text-primary mb-2">Upload File</h6>
                                                                 <div class="row">
                                                                     <div class="col-md-6">
                                                                         @php
@@ -673,6 +673,21 @@
                                                                         <div class="form-group">
                                                                             <label class="form-label">Ganti Foto Produk (Max 1MB)</label>
                                                                             <input type="file" name="image_finish_good[]" class="form-control" accept="image/*" capture="camera">
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="col-md-6">
+                                                                        @php
+                                                                            $coaFileArr = is_array($pemeriksaanProdukFinishGood->upload_coa_array) ? $pemeriksaanProdukFinishGood->upload_coa_array : [];
+                                                                            $coaPath = $coaFileArr[$idx] ?? null;
+                                                                        @endphp
+                                                                        @if($coaPath)
+                                                                            <div class="mb-2">
+                                                                                <a href="{{ asset('storage/' . $coaPath) }}" target="_blank" class="btn btn-sm btn-info">Lihat File COA</a>
+                                                                            </div>
+                                                                        @endif
+                                                                        <div class="form-group">
+                                                                            <label class="form-label">Ganti File COA (Max 2MB)</label>
+                                                                            <input type="file" name="upload_coa[]" class="form-control" accept=".pdf,.png,.jpeg,.jpg">
                                                                         </div>
                                                                     </div>
                                                                 </div>
