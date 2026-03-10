@@ -60,12 +60,12 @@ class PemeriksaanProdukFinishGoodController extends Controller
                     $q->orWhere(function ($qj) use ($matchingProductIds) {
                         foreach ($matchingProductIds as $pid) {
                             $qj->orWhereRaw(
-                                "JSON_CONTAINS(CAST(id_produk_array AS JSON), ?, '$')",
+                                "JSON_CONTAINS(id_produk_array, ?, '$')",
                                 [json_encode($pid)]
                             );
 
                             $qj->orWhereRaw(
-                                "JSON_CONTAINS(CAST(id_produk_array AS JSON), ?, '$')",
+                                "JSON_CONTAINS(id_produk_array, ?, '$')",
                                 [json_encode((string) $pid)]
                             );
 
@@ -840,8 +840,8 @@ return view('qc-sistem.pemeriksaan-produk-finish-good.index', compact('pemeriksa
         // Filter by produk / kategori
         if ($id_produk) {
             $query->where(function ($q) use ($id_produk) {
-                $q->whereRaw("JSON_CONTAINS(CAST(id_produk_array AS JSON), ?, '$')", [json_encode((int)$id_produk)])
-                  ->orWhereRaw("JSON_CONTAINS(CAST(id_produk_array AS JSON), ?, '$')", [json_encode((string)$id_produk)])
+                $q->whereRaw("JSON_CONTAINS(id_produk_array, ?, '$')", [json_encode((int)$id_produk)])
+                  ->orWhereRaw("JSON_CONTAINS(id_produk_array, ?, '$')", [json_encode((string)$id_produk)])
                   ->orWhere('id_produk_array', 'like', '%"' . $id_produk . '"%')
                   ->orWhere('id_produk_array', 'like', '%,' . $id_produk . ',%')
                   ->orWhere('id_produk_array', 'like', '[' . $id_produk . ',%')
@@ -853,8 +853,8 @@ return view('qc-sistem.pemeriksaan-produk-finish-good.index', compact('pemeriksa
             if (!empty($matchedIds)) {
                 $query->where(function ($q) use ($matchedIds) {
                     foreach ($matchedIds as $pid) {
-                        $q->orWhereRaw("JSON_CONTAINS(CAST(id_produk_array AS JSON), ?, '$')", [json_encode((int)$pid)])
-                          ->orWhereRaw("JSON_CONTAINS(CAST(id_produk_array AS JSON), ?, '$')", [json_encode((string)$pid)])
+                        $q->orWhereRaw("JSON_CONTAINS(id_produk_array, ?, '$')", [json_encode((int)$pid)])
+                          ->orWhereRaw("JSON_CONTAINS(id_produk_array, ?, '$')", [json_encode((string)$pid)])
                           ->orWhere('id_produk_array', 'like', '%"' . $pid . '"%')
                           ->orWhere('id_produk_array', 'like', '%,' . $pid . ',%')
                           ->orWhere('id_produk_array', 'like', '[' . $pid . ',%')

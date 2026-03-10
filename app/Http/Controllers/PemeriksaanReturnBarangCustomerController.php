@@ -82,11 +82,11 @@ class PemeriksaanReturnBarangCustomerController extends Controller
                     $q->orWhere(function ($qj) use ($matchingProductIds) {
                         foreach ($matchingProductIds as $pid) {
                             $qj->orWhereRaw(
-                                "JSON_CONTAINS(CAST(produk_data AS JSON), ?, '$')",
+                                "JSON_CONTAINS(produk_data, ?, '$')",
                                 [json_encode(['id_produk' => $pid])]
                             );
                             $qj->orWhereRaw(
-                                "JSON_CONTAINS(CAST(produk_data AS JSON), ?, '$')",
+                                "JSON_CONTAINS(produk_data, ?, '$')",
                                 [json_encode(['id_produk' => (string) $pid])]
                             );
                             $qj->orWhere('produk_data', 'like', '%"id_produk":' . $pid . '%');
@@ -690,14 +690,14 @@ return view('qc-sistem.pemeriksaan-return-barang-customer.index', compact('pemer
         
         if ($id_produk) {
             $query->where(function ($q) use ($id_produk) {
-                $q->whereRaw("JSON_CONTAINS(CAST(produk_data AS JSON), ?, '$')", [json_encode(['id_produk' => (int)$id_produk])])
-                  ->orWhereRaw("JSON_CONTAINS(CAST(produk_data AS JSON), ?, '$')", [json_encode(['id_produk' => (string)$id_produk])])
+                $q->whereRaw("JSON_CONTAINS(produk_data, ?, '$')", [json_encode(['id_produk' => (int)$id_produk])])
+                  ->orWhereRaw("JSON_CONTAINS(produk_data, ?, '$')", [json_encode(['id_produk' => (string)$id_produk])])
                   ->orWhere('produk_data', 'like', '%"id_produk":' . $id_produk . '%')
                   ->orWhere('produk_data', 'like', '%"id_produk":"' . $id_produk . '"%');
             });
         } elseif ($kategori_code) {
              $query->where(function ($q) use ($kategori_code) {
-                $q->whereRaw("JSON_CONTAINS(CAST(produk_data AS JSON), ?, '$')", [json_encode(['kategori_code' => $kategori_code])])
+                $q->whereRaw("JSON_CONTAINS(produk_data, ?, '$')", [json_encode(['kategori_code' => $kategori_code])])
                   ->orWhere('produk_data', 'like', '%"kategori_code":"' . $kategori_code . '"%');
             });
         }
