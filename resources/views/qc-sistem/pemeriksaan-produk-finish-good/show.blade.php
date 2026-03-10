@@ -133,6 +133,7 @@
                         $statusArr = is_array($pemeriksaanProdukFinishGood->status_array) ? $pemeriksaanProdukFinishGood->status_array : [];
                         $ketArr = is_array($pemeriksaanProdukFinishGood->keterangan_array) ? $pemeriksaanProdukFinishGood->keterangan_array : [];
                         $imgArr = is_array($pemeriksaanProdukFinishGood->image_finish_good_array) ? $pemeriksaanProdukFinishGood->image_finish_good_array : [];
+                        $coaFileArr = is_array($pemeriksaanProdukFinishGood->upload_coa_array) ? $pemeriksaanProdukFinishGood->upload_coa_array : [];
                         $rowCount = max(count($idProdukArr), count($kategoriArr), count($kodeArr));
 
                         $fmtTemp = function ($v) {
@@ -362,6 +363,18 @@
                                                             <a href="{{ asset('storage/' . $imgPath) }}" target="_blank">
                                                                 <img src="{{ asset('storage/' . $imgPath) }}" alt="Foto Produk" style="max-width: 260px; height: auto; border: 1px solid #ddd; padding: 4px;">
                                                             </a>
+                                                        </div>
+                                                    </div>
+                                                @endif
+
+                                                @php
+                                                    $coaPath = $coaFileArr[$it['i'] ?? 0] ?? null;
+                                                @endphp
+                                                @if($coaPath)
+                                                    <div class="mt-3">
+                                                        <strong>File COA:</strong>
+                                                        <div class="p-2 bg-white rounded">
+                                                            <a href="{{ asset('storage/' . $coaPath) }}" target="_blank" class="btn btn-sm btn-info">Lihat File COA</a>
                                                         </div>
                                                     </div>
                                                 @endif

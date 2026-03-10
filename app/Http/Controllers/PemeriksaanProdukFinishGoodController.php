@@ -264,6 +264,8 @@ return view('qc-sistem.pemeriksaan-produk-finish-good.index', compact('pemeriksa
             'keterangan.*' => 'nullable|string',
             'image_finish_good' => 'nullable|array',
             'image_finish_good.*' => 'nullable|image|max:1024',
+            'upload_coa' => 'nullable|array',
+            'upload_coa.*' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
         ]);
 
         $idProdukArr = $request->input('id_produk', []);
@@ -293,6 +295,13 @@ return view('qc-sistem.pemeriksaan-produk-finish-good.index', compact('pemeriksa
         foreach ($idProdukArr as $idx => $pid) {
             $file = $uploadedImages[$idx] ?? null;
             $imagePaths[$idx] = $file ? $file->storePublicly('pemeriksaan-produk-finish-good/images', 'public') : null;
+        }
+
+        $uploadedCoas = (array) $request->file('upload_coa', []);
+        $coaPaths = [];
+        foreach ($idProdukArr as $idx => $pid) {
+            $file = $uploadedCoas[$idx] ?? null;
+            $coaPaths[$idx] = $file ? $file->storePublicly('pemeriksaan-produk-finish-good/coas', 'public') : null;
         }
 
         $produkIds = array_values(array_filter($idProdukArr, fn ($v) => $v !== null && $v !== ''));
@@ -373,6 +382,7 @@ return view('qc-sistem.pemeriksaan-produk-finish-good.index', compact('pemeriksa
             'status_array' => $statusArr,
             'keterangan_array' => $ketArr,
             'image_finish_good_array' => $imagePaths,
+            'upload_coa_array' => $coaPaths,
         ]);
 
         return redirect()->route('pemeriksaan-produk-finish-good.show', $pemeriksaan->uuid)
@@ -536,6 +546,8 @@ return view('qc-sistem.pemeriksaan-produk-finish-good.index', compact('pemeriksa
             'keterangan.*' => 'nullable|string',
             'image_finish_good' => 'nullable|array',
             'image_finish_good.*' => 'nullable|image|max:1024',
+            'upload_coa' => 'nullable|array',
+            'upload_coa.*' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
         ]);
 
         $idProdukArr = $request->input('id_produk', []);
@@ -569,6 +581,18 @@ return view('qc-sistem.pemeriksaan-produk-finish-good.index', compact('pemeriksa
             $prev = $existingImages[$idx] ?? null;
             $imagePaths[$idx] = $file
                 ? $file->storePublicly('pemeriksaan-produk-finish-good/images', 'public')
+                : $prev;
+        }
+
+        $uploadedCoas = (array) $request->file('upload_coa', []);
+        $existingCoas = $pemeriksaanProdukFinishGood->upload_coa_array;
+        $existingCoas = is_array($existingCoas) ? $existingCoas : [];
+        $coaPaths = [];
+        foreach ($idProdukArr as $idx => $pid) {
+            $file = $uploadedCoas[$idx] ?? null;
+            $prev = $existingCoas[$idx] ?? null;
+            $coaPaths[$idx] = $file
+                ? $file->storePublicly('pemeriksaan-produk-finish-good/coas', 'public')
                 : $prev;
         }
 
@@ -649,6 +673,7 @@ return view('qc-sistem.pemeriksaan-produk-finish-good.index', compact('pemeriksa
             'status_array' => $statusArr,
             'keterangan_array' => $ketArr,
             'image_finish_good_array' => $imagePaths,
+            'upload_coa_array' => $coaPaths,
         ]);
 
         return redirect()->route('pemeriksaan-produk-finish-good.index')

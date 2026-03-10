@@ -51,6 +51,7 @@ class PemeriksaanProdukFinishGood extends Model
         'status_array',
         'keterangan_array',
         'image_finish_good_array',
+        'upload_coa_array',
         'status_verifikasi',
         'verified_by',
         'verified_at',
@@ -87,6 +88,7 @@ class PemeriksaanProdukFinishGood extends Model
         'status_array' => 'array',
         'keterangan_array' => 'array',
         'image_finish_good_array' => 'array',
+        'upload_coa_array' => 'array',
     ];
 
     protected static function boot()
