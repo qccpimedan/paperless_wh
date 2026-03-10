@@ -1069,8 +1069,8 @@ return view('qc-sistem.pemeriksaan-kedatangan-kemasan.index', compact('pemeriksa
         // Filter by produk / kategori
         if ($id_produk) {
             $query->where(function ($q) use ($id_produk) {
-                $q->whereRaw("JSON_CONTAINS(CAST(id_bahan_array AS JSON), ?, '$')", [json_encode((int)$id_produk)])
-                  ->orWhereRaw("JSON_CONTAINS(CAST(id_bahan_array AS JSON), ?, '$')", [json_encode((string)$id_produk)])
+                $q->whereRaw("JSON_CONTAINS(id_bahan_array, ?, '$')", [json_encode((int)$id_produk)])
+                  ->orWhereRaw("JSON_CONTAINS(id_bahan_array, ?, '$')", [json_encode((string)$id_produk)])
                   ->orWhere('id_bahan_array', 'like', '%"' . $id_produk . '"%')
                   ->orWhere('id_bahan_array', 'like', '%,' . $id_produk . ',%')
                   ->orWhere('id_bahan_array', 'like', '[' . $id_produk . ',%')
@@ -1082,8 +1082,8 @@ return view('qc-sistem.pemeriksaan-kedatangan-kemasan.index', compact('pemeriksa
             if (!empty($matchedIds)) {
                 $query->where(function ($q) use ($matchedIds) {
                     foreach ($matchedIds as $pid) {
-                        $q->orWhereRaw("JSON_CONTAINS(CAST(id_bahan_array AS JSON), ?, '$')", [json_encode((int)$pid)])
-                          ->orWhereRaw("JSON_CONTAINS(CAST(id_bahan_array AS JSON), ?, '$')", [json_encode((string)$pid)])
+                        $q->orWhereRaw("JSON_CONTAINS(id_bahan_array, ?, '$')", [json_encode((int)$pid)])
+                          ->orWhereRaw("JSON_CONTAINS(id_bahan_array, ?, '$')", [json_encode((string)$pid)])
                           ->orWhere('id_bahan_array', 'like', '%"' . $pid . '"%')
                           ->orWhere('id_bahan_array', 'like', '%,' . $pid . ',%')
                           ->orWhere('id_bahan_array', 'like', '[' . $pid . ',%')

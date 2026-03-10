@@ -1409,8 +1409,8 @@ return view('qc-sistem.pemeriksaan-kedatangan-bahan-baku-penunjang.index', compa
             if (!empty($matchedBahanIds)) {
                 $query->where(function ($q) use ($matchedBahanIds) {
                     foreach ($matchedBahanIds as $bid) {
-                        $q->orWhereRaw("JSON_CONTAINS(CAST(id_bahan_array AS JSON), ?, '$')", [json_encode((int)$bid)])
-                          ->orWhereRaw("JSON_CONTAINS(CAST(id_bahan_array AS JSON), ?, '$')", [json_encode((string)$bid)])
+                        $q->orWhereRaw("JSON_CONTAINS(id_bahan_array, ?, '$')", [json_encode((int)$bid)])
+                          ->orWhereRaw("JSON_CONTAINS(id_bahan_array, ?, '$')", [json_encode((string)$bid)])
                           ->orWhere('id_bahan_array', 'like', '%"' . $bid . '"%')
                           ->orWhere('id_bahan_array', 'like', '%,' . $bid . ',%')
                           ->orWhere('id_bahan_array', 'like', '[' . $bid . ',%')

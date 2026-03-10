@@ -63,12 +63,12 @@ class PemeriksaanKedatanganChemicalController extends Controller
                     $q->orWhere(function ($qj) use ($matchingChemicalIds) {
                         foreach ($matchingChemicalIds as $cid) {
                             $qj->orWhereRaw(
-                                "JSON_CONTAINS(CAST(detail_chemicals AS JSON), ?, '$')",
+                                "JSON_CONTAINS(detail_chemicals, ?, '$')",
                                 [json_encode(['id_chemical' => $cid])]
                             );
 
                             $qj->orWhereRaw(
-                                "JSON_CONTAINS(CAST(detail_chemicals AS JSON), ?, '$')",
+                                "JSON_CONTAINS(detail_chemicals, ?, '$')",
                                 [json_encode(['id_chemical' => (string) $cid])]
                             );
 
@@ -1318,11 +1318,11 @@ return view('qc-sistem.pemeriksaan-kedatangan-chemical.index', compact('pemeriks
                     $query->where(function ($q) use ($matchedChemicalIds) {
                         foreach ($matchedChemicalIds as $cid) {
                             $q->orWhereRaw(
-                                "JSON_CONTAINS(CAST(detail_chemicals AS JSON), ?, '$')",
+                                "JSON_CONTAINS(detail_chemicals, ?, '$')",
                                 [json_encode(['id_chemical' => (int)$cid])]
                             );
                             $q->orWhereRaw(
-                                "JSON_CONTAINS(CAST(detail_chemicals AS JSON), ?, '$')",
+                                "JSON_CONTAINS(detail_chemicals, ?, '$')",
                                 [json_encode(['id_chemical' => (string)$cid])]
                             );
                             $q->orWhere('detail_chemicals', 'like', '%"id_chemical":' . $cid . '%');
