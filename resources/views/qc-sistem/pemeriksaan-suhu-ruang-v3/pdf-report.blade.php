@@ -5,24 +5,13 @@
     <title>Pemeriksaan Suhu Ruang V3</title>
     @php
         $firstRecord = $pemeriksaans->first();
+        $plantName = $firstRecord && $firstRecord->user && $firstRecord->user->plant ? $firstRecord->user->plant->plant : 'MEDAN';
     @endphp
     <style>
-        @page { 
-            margin: 45mm 12mm 15mm 12mm; 
-        }
+        @page { size: A4; margin: 12mm; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 9px; line-height: 1.4; color: #1a1a1a; }
-        .header { 
-            position: fixed;
-            top: -33mm;
-            left: 0;
-            right: 0;
-            height: 30mm;
-            display: table; 
-            width: 100%; 
-            border-bottom: 3px solid #c41e3a; 
-            padding-bottom: 10px; 
-        }
+        .header { display: table; width: 100%; margin-bottom: 12px; border-bottom: 3px solid #c41e3a; padding-bottom: 10px; }
         .header-left { display: table-cell; width: 60%; vertical-align: middle; }
         .header-right { display: table-cell; width: 40%; vertical-align: middle; text-align: right; }
         .logo-company { display: table; width: 100%; }
@@ -60,30 +49,27 @@
 </head>
 <body>
     <div class="container">
-        <div class="header">
-            <div class="header-left">
-                <div class="logo-company">
-                    <div class="header-logo">
-                        <img src="{{ public_path('dist/images/logo/cpi-logo.png') }}" alt="Logo">
-                    </div>
-                    <div class="header-company">
-                        <h2>PT. CHAROEN POKPHAND INDONESIA</h2>
-                        @php
-                            $plantName = $firstRecord && $firstRecord->user && $firstRecord->user->plant ? $firstRecord->user->plant->plant : 'MEDAN';
-                        @endphp
-                        <p>FOOD DIVISION {{ strtoupper($plantName) }}</p>
-                        <p>{{ strtoupper($plantName) }} - INDONESIA</p>
-                    </div>
-                </div>
-            </div>
-            <div class="header-right">
-                <div class="header-title">
-                    <h1>PEMERIKSAAN SUHU RUANG GUDANG DRY</h1>
-                </div>
-            </div>
-        </div>
 
         @foreach(($pemeriksaans ?? []) as $idx => $p)
+            <div class="header">
+                <div class="header-left">
+                    <div class="logo-company">
+                        <div class="header-logo">
+                            <img src="{{ public_path('dist/images/logo/cpi-logo.png') }}" alt="Logo">
+                        </div>
+                        <div class="header-company">
+                            <h2>PT. CHAROEN POKPHAND INDONESIA</h2>
+                            <p>FOOD DIVISION {{ strtoupper($plantName) }}</p>
+                            <p>{{ strtoupper($plantName) }} - INDONESIA</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="header-right">
+                    <div class="header-title">
+                        <h1>PEMERIKSAAN SUHU RUANG GUDANG DRY</h1>
+                    </div>
+                </div>
+            </div>
             @php
                 $plantName = $p->user && $p->user->plant ? ($p->user->plant->plant ?? '-') : '-';
                 $shiftName = $p->shift ? ($p->shift->shift ?? '-') : '-';
@@ -253,38 +239,115 @@
                 </table>
             </div>
 
-            {!! $renderUnitMap('Suhu Premix', $p->suhu_premix ?? [], $defaultJam, $unitJamPremix) !!}
-            {!! $renderUnitMap('Suhu Seasoning', $p->suhu_seasoning ?? [], $defaultJam, $unitJamSeasoning) !!}
-            {!! $renderUnitMap('Suhu Dry', $p->suhu_dry ?? [], $defaultJam, $unitJamDry) !!}
-            {!! $renderUnitMap('Suhu Cassing', $p->suhu_cassing ?? [], $defaultJam, $unitJamCassing) !!}
-            {!! $renderUnitMap('Suhu Beef', $p->suhu_beef ?? [], $defaultJam, $unitJamBeef) !!}
-            {!! $renderUnitMap('Suhu Packaging', $p->suhu_packaging ?? [], $defaultJam, $unitJamPackaging) !!}
-            {!! $renderUnitMap('Suhu Ruang Chemical', $p->suhu_ruang_chemical ?? [], $defaultJam, $unitJamRuangChemical) !!}
-            {!! $renderUnitMap('Suhu Ruang Seasoning', $p->suhu_ruang_seasoning ?? [], $defaultJam, $unitJamRuangSeasoning) !!}
-
-            @if(!empty($p->keterangan) || !empty($p->tindakan_koreksi))
-                <div class="section-title">Keterangan / Tindakan Koreksi</div>
+            {{-- Timeline / History Perubahan --}}
+            @if($p->relationLoaded('histories') && $p->histories && $p->histories->count() > 0)
+                <div class="section-title">Riwayat Perubahan (Update Per Jam)</div>
                 <table class="data">
+                    <thead>
+                        <tr>
+                            <th style="width: 5%">No</th>
+                            <th style="width: 14%">Waktu</th>
+                            <th style="width: 27%">Lokasi</th>
+                            <th style="width: 27%">Sebelumnya</th>
+                            <th style="width: 27%">Sesudahnya</th>
+                        </tr>
+                    </thead>
                     <tbody>
-                        @if(!empty($p->keterangan))
-                            <tr>
-                                <td style="width: 25%"><strong>Keterangan</strong></td>
-                                <td>{{ $p->keterangan }}</td>
-                            </tr>
-                        @endif
-                        @if(!empty($p->tindakan_koreksi))
-                            <tr>
-                                <td style="width: 25%"><strong>Tindakan Koreksi</strong></td>
-                                <td>{{ $p->tindakan_koreksi }}</td>
-                            </tr>
-                        @endif
+                        @php
+                            $histNo = 1;
+                            $suhuFields = [
+                                'suhu_premix' => 'Premix',
+                                'suhu_seasoning' => 'Seasoning',
+                                'suhu_dry' => 'Dry',
+                                'suhu_cassing' => 'Cassing',
+                                'suhu_beef' => 'Beef',
+                                'suhu_packaging' => 'Packaging',
+                                'suhu_ruang_chemical' => 'Ruang Chemical',
+                                'suhu_ruang_seasoning' => 'Ruang Seasoning',
+                            ];
+
+                            $renderVal = function($val) {
+                                if ($val === null || $val === '' || $val === []) return '-';
+                                if (is_array($val)) {
+                                    $parts = [];
+                                    foreach ($val as $k => $v) {
+                                        if ($v !== null && $v !== '') {
+                                            $parts[] = $k . ': ' . $v;
+                                        }
+                                    }
+                                    return !empty($parts) ? implode('; ', $parts) : '-';
+                                }
+                                return (string) $val;
+                            };
+                        @endphp
+
+                        @foreach($p->histories->sortBy('created_at') as $history)
+                            @php
+                                $hTime = $history->created_at ? $history->created_at->format('d/m/Y H:i') : '-';
+                                $changes = [];
+
+                                // Keterangan
+                                if (($history->keterangan_lama ?? null) != ($history->keterangan_baru ?? null)) {
+                                    $changes[] = ['lokasi' => 'Keterangan', 'lama' => $history->keterangan_lama ?? '(Kosong)', 'baru' => $history->keterangan_baru ?? '(Kosong)'];
+                                }
+
+                                // Tindakan Koreksi
+                                if (($history->tindakan_koreksi_lama ?? null) != ($history->tindakan_koreksi_baru ?? null)) {
+                                    $changes[] = ['lokasi' => 'Tindakan Koreksi', 'lama' => $history->tindakan_koreksi_lama ?? '(Kosong)', 'baru' => $history->tindakan_koreksi_baru ?? '(Kosong)'];
+                                }
+
+                                // Suhu Fields
+                                foreach ($suhuFields as $field => $label) {
+                                    $oldField = $field . '_lama';
+                                    $newField = $field . '_baru';
+                                    $oldValue = $history->$oldField ?? null;
+                                    $newValue = $history->$newField ?? null;
+
+                                    if (is_string($oldValue) && !empty($oldValue)) {
+                                        $decoded = json_decode($oldValue, true);
+                                        $oldValue = (json_last_error() === JSON_ERROR_NONE) ? $decoded : null;
+                                    }
+                                    if (is_string($newValue) && !empty($newValue)) {
+                                        $decoded = json_decode($newValue, true);
+                                        $newValue = (json_last_error() === JSON_ERROR_NONE) ? $decoded : null;
+                                    }
+                                    if (is_object($oldValue)) { $oldValue = json_decode(json_encode($oldValue), true); }
+                                    if (is_object($newValue)) { $newValue = json_decode(json_encode($newValue), true); }
+
+                                    if (!is_array($oldValue) && !is_array($newValue)) continue;
+
+                                    $oldArray = is_array($oldValue) ? $oldValue : [];
+                                    $newArray = is_array($newValue) ? $newValue : [];
+
+                                    // Each key is a unit (unit_1, unit_2, etc)
+                                    $allKeys = array_unique(array_merge(array_keys($oldArray), array_keys($newArray)));
+                                    foreach ($allKeys as $key) {
+                                        $oldItem = $oldArray[$key] ?? null;
+                                        $newItem = $newArray[$key] ?? null;
+                                        if (json_encode($oldItem) === json_encode($newItem)) continue;
+
+                                        $unitDisplay = str_replace('unit_', '', (string) $key);
+                                        $unitLabel = $label . ' ' . $unitDisplay;
+
+                                        $oldStr = $renderVal($oldItem);
+                                        $newStr = $renderVal($newItem);
+                                        $changes[] = ['lokasi' => $unitLabel, 'lama' => $oldStr, 'baru' => $newStr];
+                                    }
+                                }
+                            @endphp
+
+                            @foreach($changes as $cIdx => $change)
+                                <tr>
+                                    <td style="text-align: center;">{{ $histNo++ }}</td>
+                                    <td>{{ $cIdx === 0 ? $hTime : '' }}</td>
+                                    <td>{{ $change['lokasi'] }}</td>
+                                    <td style="background: #fff3cd;">{{ $change['lama'] }}</td>
+                                    <td style="background: #d4edda;">{{ $change['baru'] }}</td>
+                                </tr>
+                            @endforeach
+                        @endforeach
                     </tbody>
                 </table>
-            @endif
-
-            @if(!$hasAny && empty($p->keterangan) && empty($p->tindakan_koreksi))
-                <div class="section-title">Data Suhu</div>
-                <div class="muted">Tidak ada data yang terisi.</div>
             @endif
 
             <div class="signature">

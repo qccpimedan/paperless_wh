@@ -3,25 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <title>Ketidaksesuaian Kedatangan Produk Dari Supplier</title>
-    <style>
     @php
         $firstRecord = $detailKomplain;
+        $plantName = 'MEDAN';
+        if ($firstRecord && $firstRecord->user && $firstRecord->user->plant) {
+            $plantName = $firstRecord->user->plant->plant;
+        }
     @endphp
     <style>
-        @page {
-            margin: 35mm 15mm 15mm 15mm;
-        }
         body {
             font-family: Arial, sans-serif;
+            margin: 20px;
             font-size: 11px;
         }
         .header {
-            position: fixed;
-            top: -25mm;
-            left: 0;
-            right: 0;
-            height: 20mm;
             width: 100%;
+            margin-bottom: 10px;
             border-bottom: 2px solid #000;
             padding-bottom: 8px;
         }

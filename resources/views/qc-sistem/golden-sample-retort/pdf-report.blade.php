@@ -3,13 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <title>Golden Sample Report</title>
-    <style>
     @php
         $firstRecord = $reports->first();
+        $plantName = $firstRecord && $firstRecord->user && $firstRecord->user->plant ? $firstRecord->user->plant->plant : 'MEDAN';
     @endphp
     <style>
         @page {
-            margin: 45mm 12mm 15mm 12mm;
+            size: A4;
+            margin: 12mm;
         }
 
         * {
@@ -27,13 +28,9 @@
         }
 
         .header {
-            position: fixed;
-            top: -33mm;
-            left: 0;
-            right: 0;
-            height: 30mm;
             display: table;
             width: 100%;
+            margin-bottom: 12px;
             border-bottom: 2px solid #1a1a1a;
             padding-bottom: 8px;
         }
