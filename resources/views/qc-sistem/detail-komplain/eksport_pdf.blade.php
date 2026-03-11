@@ -4,14 +4,24 @@
     <meta charset="UTF-8">
     <title>Ketidaksesuaian Kedatangan Produk Dari Supplier</title>
     <style>
+    @php
+        $firstRecord = $detailKomplain;
+    @endphp
+    <style>
+        @page {
+            margin: 35mm 15mm 15mm 15mm;
+        }
         body {
             font-family: Arial, sans-serif;
-            margin: 20px;
             font-size: 11px;
         }
         .header {
+            position: fixed;
+            top: -25mm;
+            left: 0;
+            right: 0;
+            height: 20mm;
             width: 100%;
-            margin-bottom: 10px;
             border-bottom: 2px solid #000;
             padding-bottom: 8px;
         }
@@ -133,8 +143,11 @@
                 </div>
                 <div class="header-company">
                     <h2>PT. CHAROEN POKPHAND INDONESIA</h2>
-                    <p>FOOD DIVISION MEDAN</p>
-                    <p>MEDAN - INDONESIA</p>
+                    @php
+                        $plantName = $firstRecord && $firstRecord->user && $firstRecord->user->plant ? $firstRecord->user->plant->plant : 'MEDAN';
+                    @endphp
+                    <p>FOOD DIVISION {{ strtoupper($plantName) }}</p>
+                    <p>{{ strtoupper($plantName) }} - INDONESIA</p>
                 </div>
             </div>
         </div>

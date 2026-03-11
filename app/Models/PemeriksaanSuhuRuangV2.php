@@ -18,6 +18,8 @@ class PemeriksaanSuhuRuangV2 extends Model
         'id_shift',
         'id_produk',
         'tanggal',
+        'suhu_produk',
+        'pukul',
         'suhu_cold_storage',
         'suhu_anteroom_loading',
         'suhu_pre_loading',

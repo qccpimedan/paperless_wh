@@ -49,7 +49,19 @@
                                             <p class="form-control-plaintext"><span class="badge bg-info">{{ $pemeriksaanSuhuRuangV2->shift->shift ?? '-' }}</span></p>
                                         </div>
                                     </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label"><strong>Pukul</strong></label>
+                                            <p class="form-control-plaintext">{{ $pemeriksaanSuhuRuangV2->pukul ?? '-' }}</p>
+                                        </div>
+                                    </div>
 
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label"><strong>Suhu Produk</strong></label>
+                                            <p class="form-control-plaintext"><span class="badge bg-secondary">{{ $pemeriksaanSuhuRuangV2->suhu_produk ?? '-' }}</span></p>
+                                        </div>
+                                    </div>
                                     <div class="col-md-6">
                                         <div class="mb-3">
                                             <label class="form-label"><strong>Produk</strong></label>
