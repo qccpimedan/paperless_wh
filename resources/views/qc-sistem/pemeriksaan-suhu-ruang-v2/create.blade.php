@@ -75,6 +75,24 @@
                                             </div>
 
                                             <div class="col-md-6 mt-3">
+                                                <label for="pukul">Pukul <span class="text-danger">*</span></label>
+                                                <input type="time" id="pukul" class="form-control @error('pukul') is-invalid @enderror"
+                                                    name="pukul" value="{{ old('pukul', date('H:i')) }}" required>
+                                                @error('pukul')
+                                                    <div class="invalid-feedback">{{ $message }}</div>
+                                                @enderror
+                                            </div>
+
+                                            <div class="col-md-6 mt-3">
+                                                <label for="suhu_produk">Suhu Produk <span class="text-danger">*</span></label>
+                                                <input type="text" id="suhu_produk" class="form-control @error('suhu_produk') is-invalid @enderror"
+                                                    name="suhu_produk" value="{{ old('suhu_produk') }}" placeholder="Contoh: -18°C" required>
+                                                @error('suhu_produk')
+                                                    <div class="invalid-feedback">{{ $message }}</div>
+                                                @enderror
+                                            </div>
+
+                                            <div class="col-md-6 mt-3">
                                                 @php
                                                     $selectedProdukId = old('id_produk', '');
                                                     $selectedKategori = old('kategori_code', '');
@@ -95,8 +113,10 @@
                                                 @error('kategori_code')
                                                     <div class="invalid-feedback">{{ $message }}</div>
                                                 @enderror
+                                            </div>
 
-                                                <label for="id_produk" class="mt-2">Produk <span class="text-danger">*</span></label>
+                                            <div class="col-md-6 mt-3">
+                                                <label for="id_produk">Produk <span class="text-danger">*</span></label>
                                                 <select id="id_produk" class="form-control produk-select @error('id_produk') is-invalid @enderror"
                                                     name="id_produk" data-selected="{{ old('id_produk', '') }}" required>
                                                     <option value="">-- Pilih Produk --</option>

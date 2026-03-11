@@ -739,6 +739,7 @@
                                                             </div>
                                                         </div>
                                                     </div>
+                                                    @endforeach
                                                 </div>
 
                                                 <div class="row mt-2">

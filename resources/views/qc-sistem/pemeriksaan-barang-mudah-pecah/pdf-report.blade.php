@@ -4,9 +4,12 @@
     <meta charset="UTF-8">
     <title>Pemeriksaan Barang Mudah Pecah</title>
     <style>
+    @php
+        $firstRecord = $pemeriksaans->first();
+    @endphp
+    <style>
         @page {
-            size: A4;
-            margin: 12mm;
+            margin: 45mm 12mm 15mm 12mm;
         }
 
         * {
@@ -29,12 +32,15 @@
         }
 
         .header {
+            position: fixed;
+            top: -33mm;
+            left: 0;
+            right: 0;
+            height: 30mm;
             display: table;
             width: 100%;
-            margin-bottom: 15px;
             border-bottom: 3px solid #c41e3a;
             padding-bottom: 12px;
-            page-break-inside: avoid;
         }
 
         .header-left {
@@ -247,8 +253,8 @@
                 </div>
                 <div class="header-company">
                     <h2>PT. CHAROEN POKPHAND INDONESIA</h2>
-                    <p>FOOD DIVISION MEDAN</p>
-                    <p>MEDAN - INDONESIA</p>
+                    <p>FOOD DIVISION {{ strtoupper(auth()->user()->plant->plant ?? 'MEDAN') }}</p>
+                    <p>{{ strtoupper(auth()->user()->plant->plant ?? 'MEDAN') }} - INDONESIA</p>
                 </div>
             </div>
         </div>

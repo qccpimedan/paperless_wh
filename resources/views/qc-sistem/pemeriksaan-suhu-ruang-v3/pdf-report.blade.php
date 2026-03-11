@@ -3,11 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <title>Pemeriksaan Suhu Ruang V3</title>
+    @php
+        $firstRecord = $pemeriksaans->first();
+    @endphp
     <style>
-        @page { size: A4; margin: 12mm; }
+        @page { 
+            margin: 45mm 12mm 15mm 12mm; 
+        }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 9px; line-height: 1.4; color: #1a1a1a; }
-        .header { display: table; width: 100%; margin-bottom: 12px; border-bottom: 3px solid #c41e3a; padding-bottom: 10px; }
+        .header { 
+            position: fixed;
+            top: -33mm;
+            left: 0;
+            right: 0;
+            height: 30mm;
+            display: table; 
+            width: 100%; 
+            border-bottom: 3px solid #c41e3a; 
+            padding-bottom: 10px; 
+        }
         .header-left { display: table-cell; width: 60%; vertical-align: middle; }
         .header-right { display: table-cell; width: 40%; vertical-align: middle; text-align: right; }
         .logo-company { display: table; width: 100%; }
@@ -53,8 +68,11 @@
                     </div>
                     <div class="header-company">
                         <h2>PT. CHAROEN POKPHAND INDONESIA</h2>
-                        <p>FOOD DIVISION MEDAN</p>
-                        <p>MEDAN - INDONESIA</p>
+                        @php
+                            $plantName = $firstRecord && $firstRecord->user && $firstRecord->user->plant ? $firstRecord->user->plant->plant : 'MEDAN';
+                        @endphp
+                        <p>FOOD DIVISION {{ strtoupper($plantName) }}</p>
+                        <p>{{ strtoupper($plantName) }} - INDONESIA</p>
                     </div>
                 </div>
             </div>

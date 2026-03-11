@@ -4,9 +4,12 @@
     <meta charset="UTF-8">
     <title>Pemeriksaan Kebersihan Area</title>
     <style>
+    @php
+        $firstRecord = $pemeriksaans->first();
+    @endphp
+    <style>
         @page {
-            size: A4;
-            margin: 12mm;
+            margin: 45mm 12mm 15mm 12mm;
         }
 
         * {
@@ -24,9 +27,13 @@
         }
 
         .header {
+            position: fixed;
+            top: -33mm;
+            left: 0;
+            right: 0;
+            height: 30mm;
             display: table;
             width: 100%;
-            margin-bottom: 12px;
             border-bottom: 2px solid #1a1a1a;
             padding-bottom: 8px;
         }
@@ -252,8 +259,11 @@
                 </div>
                 <div class="header-company">
                     <h2>PT. CHAROEN POKPHAND INDONESIA</h2>
-                    <p>FOOD DIVISION MEDAN</p>
-                    <p>MEDAN - INDONESIA</p>
+                    @php
+                        $plantName = $firstRecord && $firstRecord->user && $firstRecord->user->plant ? $firstRecord->user->plant->plant : 'MEDAN';
+                    @endphp
+                    <p>FOOD DIVISION {{ strtoupper($plantName) }}</p>
+                    <p>{{ strtoupper($plantName) }} - INDONESIA</p>
                 </div>
             </div>
         </div>

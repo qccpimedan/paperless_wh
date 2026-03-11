@@ -3,10 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <title>Pemeriksaan Kedatangan Bahan Kimia</title>
+    @php
+        $firstRecord = $pemeriksaans->first();
+    @endphp
     <style>
         @page {
-            size: A4;
-            margin: 12mm;
+            margin: 45mm 12mm 15mm 12mm;
         }
         
         * {
@@ -30,12 +32,15 @@
         
         /* HEADER */
         .header {
+            position: fixed;
+            top: -33mm;
+            left: 0;
+            right: 0;
+            height: 30mm;
             display: table;
             width: 100%;
-            margin-bottom: 15px;
             border-bottom: 3px solid #c41e3a;
             padding-bottom: 12px;
-            page-break-inside: avoid;
         }
         
         .header-left {
@@ -413,31 +418,34 @@
                 }
             @endphp
             
+            <div class="header">
+                <div class="header-left">
+                    <div class="logo-company">
+                        <div class="header-logo">
+                            <img src="{{ public_path('dist/images/logo/cpi-logo.png') }}" alt="Logo CPI">
+                        </div>
+                        <div class="header-company">
+                            <h2>PT. CHAROEN POKPHAND INDONESIA</h2>
+                            @php
+                                $headPlant = $firstRecord && $firstRecord->user && $firstRecord->user->plant ? $firstRecord->user->plant->plant : 'MEDAN';
+                            @endphp
+                            <p>FOOD DIVISION {{ strtoupper($headPlant) }}</p>
+                            <p>{{ strtoupper($headPlant) }} - INDONESIA</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="header-right">
+                    <div class="header-title">
+                        <h1>PEMERIKSAAN CHEMICAL</h1>
+                    </div>
+                </div>
+            </div>
+
             @foreach($chunks as $pageIndex => $pageRecords)
                 @php
                     $firstColumn = $pageRecords->first();
                     $firstRecord = $firstColumn ? $firstColumn['record'] : null;
                 @endphp
-                {{-- HEADER (Setiap halaman) --}}
-                <div class="header">
-                    <div class="header-left">
-                        <div class="logo-company">
-                            <div class="header-logo">
-                                <img src="{{ public_path('dist/images/logo/cpi-logo.png') }}" alt="Logo CPI">
-                            </div>
-                            <div class="header-company">
-                                <h2>PT. CHAROEN POKPHAND INDONESIA</h2>
-                                <p>FOOD DIVISION MEDAN</p>
-                                <p>MEDAN - INDONESIA</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="header-right">
-                        <div class="header-title">
-                            <h1>PEMERIKSAAN CHEMICAL</h1>
-                        </div>
-                    </div>
-                </div>
 
                 {{-- SUBHEADER (Setiap halaman) --}}
                 <div class="subheader">
