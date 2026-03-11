@@ -452,11 +452,6 @@
                 </table>
             @endif
 
-            @if(!$hasAny && empty($p->keterangan) && empty($p->tindakan_koreksi))
-                <div class="section-title">Data Suhu</div>
-                <div class="muted">Tidak ada data yang terisi.</div>
-            @endif
-
             <div class="signature">
                 <table class="signature-table">
                     <tr>
