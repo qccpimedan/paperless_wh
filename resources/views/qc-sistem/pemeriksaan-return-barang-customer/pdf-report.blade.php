@@ -3,13 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <title>Pemeriksaan Return Barang Customer</title>
-    <style>
     @php
         $firstRecord = $pemeriksaans->first();
+        $plantName = $firstRecord && $firstRecord->user && $firstRecord->user->plant ? $firstRecord->user->plant->plant : 'MEDAN';
     @endphp
     <style>
         @page {
-            margin: 45mm 12mm 15mm 12mm;
+            size: A4;
+            margin: 12mm;
         }
 
         * {
@@ -32,15 +33,12 @@
         }
 
         .header {
-            position: fixed;
-            top: -33mm;
-            left: 0;
-            right: 0;
-            height: 30mm;
             display: table;
             width: 100%;
+            margin-bottom: 15px;
             border-bottom: 3px solid #c41e3a;
             padding-bottom: 12px;
+            page-break-inside: avoid;
         }
 
         .header-left {

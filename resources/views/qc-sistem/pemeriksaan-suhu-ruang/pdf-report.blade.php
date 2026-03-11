@@ -5,24 +5,13 @@
     <title>Pemeriksaan Suhu Ruang</title>
     @php
         $firstRecord = $pemeriksaans->first();
+        $plantName = $firstRecord && $firstRecord->user && $firstRecord->user->plant ? $firstRecord->user->plant->plant : 'MEDAN';
     @endphp
     <style>
-        @page { 
-            margin: 45mm 12mm 15mm 12mm; 
-        }
+        @page { size: A4; margin: 12mm; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 9px; line-height: 1.4; color: #1a1a1a; }
-        .header { 
-            position: fixed;
-            top: -33mm;
-            left: 0;
-            right: 0;
-            height: 30mm;
-            display: table; 
-            width: 100%; 
-            border-bottom: 3px solid #c41e3a; 
-            padding-bottom: 10px; 
-        }
+        .header { display: table; width: 100%; margin-bottom: 12px; border-bottom: 3px solid #c41e3a; padding-bottom: 10px; }
         .header-left { display: table-cell; width: 60%; vertical-align: middle; }
         .header-right { display: table-cell; width: 40%; vertical-align: middle; text-align: right; }
         .logo-company { display: table; width: 100%; }
@@ -60,30 +49,27 @@
 </head>
 <body>
     <div class="container">
-        <div class="header">
-            <div class="header-left">
-                <div class="logo-company">
-                    <div class="header-logo">
-                        <img src="{{ public_path('dist/images/logo/cpi-logo.png') }}" alt="Logo">
-                    </div>
-                    <div class="header-company">
-                        <h2>PT. CHAROEN POKPHAND INDONESIA</h2>
-                        @php
-                            $plantName = $firstRecord && $firstRecord->user && $firstRecord->user->plant ? $firstRecord->user->plant->plant : 'MEDAN';
-                        @endphp
-                        <p>FOOD DIVISION {{ strtoupper($plantName) }}</p>
-                        <p>{{ strtoupper($plantName) }} - INDONESIA</p>
-                    </div>
-                </div>
-            </div>
-            <div class="header-right">
-                <div class="header-title">
-                    <h1>PEMERIKSAAN SUHU RUANG FOOD PROCESSING</h1>
-                </div>
-            </div>
-        </div>
 
         @foreach(($pemeriksaans ?? []) as $idx => $p)
+            <div class="header">
+                <div class="header-left">
+                    <div class="logo-company">
+                        <div class="header-logo">
+                            <img src="{{ public_path('dist/images/logo/cpi-logo.png') }}" alt="Logo">
+                        </div>
+                        <div class="header-company">
+                            <h2>PT. CHAROEN POKPHAND INDONESIA</h2>
+                            <p>FOOD DIVISION {{ strtoupper($plantName) }}</p>
+                            <p>{{ strtoupper($plantName) }} - INDONESIA</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="header-right">
+                    <div class="header-title">
+                        <h1>PEMERIKSAAN SUHU RUANG FOOD PROCESSING</h1>
+                    </div>
+                </div>
+            </div>
             @php
                 $plantName = $p->user && $p->user->plant ? ($p->user->plant->plant ?? '-') : '-';
                 $shiftName = $p->shift ? ($p->shift->shift ?? '-') : '-';
@@ -245,146 +231,114 @@
                 </table>
             </div>
 
-            @php
-                $renderUnitArray = function ($title, $rows, $defaultJam = null, $unitJamMap = []) use (&$hasAny) {
-                    $norm = [];
-                    $hasJam = false;
-                    $hasSetting = false;
-                    $hasDisplay = false;
-                    $hasActual = false;
-
-                    if (is_array($rows)) {
-                        foreach ($rows as $item) {
-                            if (!is_array($item)) continue;
-                            $unit = $item['unit'] ?? null;
-                            if ($unit === null || $unit === '') continue;
-
-                            $setting = $item['setting'] ?? null;
-                            $display = $item['display'] ?? null;
-                            $actual = $item['actual'] ?? null;
-
-                            $isFilledTemp = !empty($setting) || !empty($display) || !empty($actual) || $setting === '0' || $display === '0' || $actual === '0';
-                            if (!$isFilledTemp) continue;
-
-                            $jam = $item['jam'] ?? null;
-                            if (($jam === null || $jam === '') && is_array($unitJamMap) && array_key_exists((string) $unit, $unitJamMap)) {
-                                $jam = $unitJamMap[(string) $unit];
-                            }
-                            if (($jam === null || $jam === '') && ($defaultJam !== null && $defaultJam !== '')) {
-                                $jam = $defaultJam;
-                            }
-
-                            $hasJam = $hasJam || ($jam !== null && $jam !== '');
-                            $hasSetting = $hasSetting || ($setting !== null && $setting !== '');
-                            $hasDisplay = $hasDisplay || ($display !== null && $display !== '');
-                            $hasActual = $hasActual || ($actual !== null && $actual !== '');
-
-                            $norm[] = [
-                                'unit' => $unit,
-                                'jam' => $jam,
-                                'setting' => $setting,
-                                'display' => $display,
-                                'actual' => $actual,
-                            ];
-                        }
-                    }
-
-                    if (count($norm) === 0) return '';
-                    $hasAny = true;
-
-                    ob_start();
-                    echo '<div class="section-title">' . e($title) . '</div>';
-                    echo '<table class="data">';
-                    echo '<thead><tr>';
-                    echo '<th style="width: 14%">Unit</th>';
-                    if ($hasJam) { echo '<th style="width: 16%">Jam</th>'; }
-                    if ($hasSetting) { echo '<th>Setting</th>'; }
-                    if ($hasDisplay) { echo '<th>Display</th>'; }
-                    if ($hasActual) { echo '<th>Actual</th>'; }
-                    echo '</tr></thead>';
-                    echo '<tbody>';
-                    foreach ($norm as $r) {
-                        echo '<tr>';
-                        echo '<td>' . e((string) $r['unit']) . '</td>';
-                        if ($hasJam) { echo '<td>' . e((string) ($r['jam'] ?? '')) . '</td>'; }
-                        if ($hasSetting) { echo '<td>' . e((string) ($r['setting'] ?? '')) . '</td>'; }
-                        if ($hasDisplay) { echo '<td>' . e((string) ($r['display'] ?? '')) . '</td>'; }
-                        if ($hasActual) { echo '<td>' . e((string) ($r['actual'] ?? '')) . '</td>'; }
-                        echo '</tr>';
-                    }
-                    echo '</tbody></table>';
-                    return ob_get_clean();
-                };
-
-                $renderCols = function ($title, $data, $defaultJam = null) use (&$hasAny) {
-                    if (!is_array($data)) return '';
-                    $setting = $data['setting'] ?? null;
-                    $display = $data['display'] ?? null;
-                    $actual = $data['actual'] ?? null;
-
-                    $isFilledTemp = !empty($setting) || !empty($display) || !empty($actual) || $setting === '0' || $display === '0' || $actual === '0';
-                    if (!$isFilledTemp) return '';
-
-                    $jam = $data['jam'] ?? null;
-                    if (($jam === null || $jam === '') && ($defaultJam !== null && $defaultJam !== '')) {
-                        $jam = $defaultJam;
-                    }
-
-                    $hasAny = true;
-                    $hasJam = ($jam !== null && $jam !== '');
-                    $hasSetting = ($setting !== null && $setting !== '');
-                    $hasDisplay = ($display !== null && $display !== '');
-                    $hasActual = ($actual !== null && $actual !== '');
-
-                    ob_start();
-                    echo '<div class="section-title">' . e($title) . '</div>';
-                    echo '<table class="data">';
-                    echo '<thead><tr>';
-                    if ($hasJam) { echo '<th style="width: 16%">Jam</th>'; }
-                    if ($hasSetting) { echo '<th>Setting</th>'; }
-                    if ($hasDisplay) { echo '<th>Display</th>'; }
-                    if ($hasActual) { echo '<th>Actual</th>'; }
-                    echo '</tr></thead>';
-                    echo '<tbody><tr>';
-                    if ($hasJam) { echo '<td>' . e((string) ($jam ?? '')) . '</td>'; }
-                    if ($hasSetting) { echo '<td>' . e((string) ($setting ?? '')) . '</td>'; }
-                    if ($hasDisplay) { echo '<td>' . e((string) ($display ?? '')) . '</td>'; }
-                    if ($hasActual) { echo '<td>' . e((string) ($actual ?? '')) . '</td>'; }
-                    echo '</tr></tbody></table>';
-                    return ob_get_clean();
-                };
-            @endphp
-
-            {!! $renderUnitArray('Suhu Cold Storage', $suhu['cold_storage'] ?? [], $defaultJam, $unitJamColdStorage) !!}
-            {!! $renderUnitArray('Suhu Anteroom Loading', $suhu['anteroom_loading'] ?? [], $defaultJam, $unitJamAnteroomLoading) !!}
-            {!! $renderCols('Suhu Pre Loading', $suhu['pre_loading'] ?? [], $jamPreLoading ?: $defaultJam) !!}
-            {!! $renderCols('Suhu Prestaging', $suhu['prestaging'] ?? [], $jamPrestaging ?: $defaultJam) !!}
-            {!! $renderCols('Suhu Anteroom Ekspansi Further', $suhu['anteroom_ekspansi_further'] ?? [], $jamAnteroomEkspansiFurther ?: $defaultJam) !!}
-            {!! $renderCols('Suhu Anteroom Ekspansi Sausage', $suhu['anteroom_ekspansi_sausage'] ?? [], $jamAnteroomEkspansiSausage ?: $defaultJam) !!}
-
-            @if(!empty($p->keterangan) || !empty($p->tindakan_koreksi))
-                <div class="section-title">Keterangan / Tindakan Koreksi</div>
+            {{-- Timeline / History Perubahan --}}
+            @if($p->relationLoaded('histories') && $p->histories && $p->histories->count() > 0)
+                <div class="section-title">Riwayat Perubahan (Update Per Jam)</div>
                 <table class="data">
+                    <thead>
+                        <tr>
+                            <th style="width: 5%">No</th>
+                            <th style="width: 14%">Waktu</th>
+                            <th style="width: 27%">Lokasi</th>
+                            <th style="width: 27%">Sebelumnya</th>
+                            <th style="width: 27%">Sesudahnya</th>
+                        </tr>
+                    </thead>
                     <tbody>
-                        @if(!empty($p->keterangan))
-                            <tr>
-                                <td style="width: 25%"><strong>Keterangan</strong></td>
-                                <td>{{ $p->keterangan }}</td>
-                            </tr>
-                        @endif
-                        @if(!empty($p->tindakan_koreksi))
-                            <tr>
-                                <td style="width: 25%"><strong>Tindakan Koreksi</strong></td>
-                                <td>{{ $p->tindakan_koreksi }}</td>
-                            </tr>
-                        @endif
+                        @php
+                            $histNo = 1;
+                            $sectionLabels = [
+                                'cold_storage' => 'Cold Storage',
+                                'anteroom_loading' => 'Anteroom Loading',
+                                'pre_loading' => 'Pre Loading',
+                                'prestaging' => 'Prestaging',
+                                'anteroom_ekspansi_further' => 'Anteroom Ekspansi Further',
+                                'anteroom_ekspansi_sausage' => 'Anteroom Ekspansi Sausage',
+                            ];
+
+                            $renderVal = function($val) {
+                                if ($val === null || $val === '' || $val === []) return '-';
+                                if (is_array($val)) {
+                                    $parts = [];
+                                    foreach ($val as $k => $v) {
+                                        if ($v !== null && $v !== '' && $k !== 'unit' && $k !== 'jam') {
+                                            $parts[] = $k . ': ' . $v;
+                                        }
+                                    }
+                                    return !empty($parts) ? implode('; ', $parts) : '-';
+                                }
+                                return (string) $val;
+                            };
+
+                            $findUnitRowFn = function ($rows, $unit) {
+                                if (!is_array($rows)) return null;
+                                foreach ($rows as $r) {
+                                    if (!is_array($r)) continue;
+                                    if ((string) ($r['unit'] ?? '') === (string) $unit) return $r;
+                                }
+                                return null;
+                            };
+                        @endphp
+
+                        @foreach($p->histories->sortBy('created_at') as $history)
+                            @php
+                                $hTime = $history->created_at ? $history->created_at->format('d/m/Y H:i') : '-';
+                                $changes = [];
+
+                                $lama = is_array($history->suhu_data_lama) ? $history->suhu_data_lama : (json_decode($history->suhu_data_lama ?? '[]', true) ?: []);
+                                $baru = is_array($history->suhu_data_baru) ? $history->suhu_data_baru : (json_decode($history->suhu_data_baru ?? '[]', true) ?: []);
+
+                                // Keterangan
+                                if (($history->keterangan_lama ?? null) != ($history->keterangan_baru ?? null)) {
+                                    $changes[] = ['lokasi' => 'Keterangan', 'lama' => $history->keterangan_lama ?? '(Kosong)', 'baru' => $history->keterangan_baru ?? '(Kosong)'];
+                                }
+
+                                // Tindakan Koreksi
+                                if (($history->tindakan_koreksi_lama ?? null) != ($history->tindakan_koreksi_baru ?? null)) {
+                                    $changes[] = ['lokasi' => 'Tindakan Koreksi', 'lama' => $history->tindakan_koreksi_lama ?? '(Kosong)', 'baru' => $history->tindakan_koreksi_baru ?? '(Kosong)'];
+                                }
+
+                                // Suhu sections
+                                foreach ($sectionLabels as $secKey => $secLabel) {
+                                    $oldSection = $lama[$secKey] ?? [];
+                                    $newSection = $baru[$secKey] ?? [];
+
+                                    // Multi-unit (array of rows with 'unit' key)
+                                    if (in_array($secKey, ['cold_storage', 'anteroom_loading'])) {
+                                        $allUnits = [];
+                                        foreach ((array) $oldSection as $r) { if (is_array($r) && isset($r['unit'])) $allUnits[] = (string) $r['unit']; }
+                                        foreach ((array) $newSection as $r) { if (is_array($r) && isset($r['unit'])) $allUnits[] = (string) $r['unit']; }
+                                        $allUnits = array_unique($allUnits);
+
+                                        foreach ($allUnits as $u) {
+                                            $oldItem = $findUnitRowFn($oldSection, $u);
+                                            $newItem = $findUnitRowFn($newSection, $u);
+                                            if (json_encode($oldItem) === json_encode($newItem)) continue;
+
+                                            $unitLabel = $secLabel . ' ' . $u;
+                                            $changes[] = ['lokasi' => $unitLabel, 'lama' => $renderVal($oldItem), 'baru' => $renderVal($newItem)];
+                                        }
+                                    } else {
+                                        // Single section
+                                        if (json_encode($oldSection) !== json_encode($newSection)) {
+                                            $changes[] = ['lokasi' => $secLabel, 'lama' => $renderVal($oldSection), 'baru' => $renderVal($newSection)];
+                                        }
+                                    }
+                                }
+                            @endphp
+
+                            @foreach($changes as $cIdx => $change)
+                                <tr>
+                                    <td style="text-align: center;">{{ $histNo++ }}</td>
+                                    <td>{{ $cIdx === 0 ? $hTime : '' }}</td>
+                                    <td>{{ $change['lokasi'] }}</td>
+                                    <td style="background: #fff3cd;">{{ $change['lama'] }}</td>
+                                    <td style="background: #d4edda;">{{ $change['baru'] }}</td>
+                                </tr>
+                            @endforeach
+                        @endforeach
                     </tbody>
                 </table>
-            @endif
-
-            @if(!$hasAny && empty($p->keterangan) && empty($p->tindakan_koreksi))
-                <div class="section-title">Data Suhu</div>
-                <div class="muted">Tidak ada data yang terisi.</div>
             @endif
 
             <div class="signature">
