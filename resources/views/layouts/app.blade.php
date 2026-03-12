@@ -338,11 +338,26 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 });
+// Fetch helper to send proper headers so Laravel knows it's an AJAX request (prevents redirect to API on session expire)
+function fetchApi(url) {
+    return fetch(url, {
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'Accept': 'application/json'
+        }
+    }).then(r => {
+        if (!r.ok) throw new Error('Network response was not ok');
+        return r.json();
+    }).catch(err => {
+        return { records: [] }; // Return empty array on error/timeout
+    });
+}
+
 // Auto-check untuk notifikasi edit per 2 jam dengan list UUID dari V1 dan V2
 function checkEditableRecords() {
     Promise.all([
-        fetch('{{ route("api.editable-records") }}').then(r => r.json()),
-        fetch('{{ route("api.editable-records-v2") }}').then(r => r.json())
+        fetchApi('{{ route("api.editable-records") }}'),
+        fetchApi('{{ route("api.editable-records-v2") }}')
     ])
     .then(([dataV1, dataV2]) => {
         const notification = document.getElementById('edit-reminder-notification');
@@ -401,8 +416,8 @@ document.addEventListener('DOMContentLoaded', function() {
 // Update notification bell dengan data dari API V1 dan V2
 function updateNotificationBell() {
     Promise.all([
-        fetch('{{ route("api.editable-records") }}').then(r => r.json()),
-        fetch('{{ route("api.editable-records-v2") }}').then(r => r.json())
+        fetchApi('{{ route("api.editable-records") }}'),
+        fetchApi('{{ route("api.editable-records-v2") }}')
     ])
     .then(([dataV1, dataV2]) => {
         // Combine records dari V1 dan V2
