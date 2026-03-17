@@ -49,11 +49,11 @@
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="card-title mb-0">Daftar Produk</h5>
                     <div class="d-flex gap-2">
-                        <!-- <button type="button" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#importModal">
-                            <i class="bi bi-file-earmark-excel"></i> Import Excel
-                        </button> -->
                         @can('create_produks')
-                        <a href="{{ route('produks.create') }}" class="btn btn-primary">
+                        <button type="button" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#importModal">
+                            <i class="bi bi-file-earmark-excel"></i> Import Excel
+                        </button>
+                        <a href="{{ route('produks.create') }}" class="btn btn-sm btn-primary">
                             <i class="bi bi-plus-circle"></i> Tambah Produk
                         </a>
                         @endcan
@@ -94,6 +94,7 @@
     </div>
 </div>
 
+@can('create_produks')
 <!-- Modal Import Excel -->
 <div class="modal fade" id="importModal" tabindex="-1" aria-labelledby="importModalLabel" aria-hidden="true">
     <div class="modal-dialog">
@@ -152,6 +153,7 @@
         </div>
     </div>
 </div>
+@endcan
 
 @push('scripts')
 <link rel="stylesheet" href="{{ asset('dist/vendors/datatables/dataTables.bootstrap5.min.css') }}">
