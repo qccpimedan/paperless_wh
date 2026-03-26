@@ -203,13 +203,118 @@
             }
             
             .notification-meta {
-                font-size: 0.8rem;
+                font-size: 0.85rem;
             }
             
             .notification-btn {
                 padding: 0.4rem 0.8rem;
                 font-size: 0.8rem;
             }
+        }
+
+        /* ===== Switch Plant Styles (Manager Only) ===== */
+        .switch-plant-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.4rem 0.9rem;
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: #fff;
+            background: linear-gradient(135deg, #6f42c1 0%, #5a289e 100%);
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            box-shadow: 0 2px 8px rgba(111, 66, 193, 0.35);
+            text-decoration: none;
+            white-space: nowrap;
+        }
+        .switch-plant-btn:hover {
+            background: linear-gradient(135deg, #5a289e 0%, #491f87 100%);
+            box-shadow: 0 4px 14px rgba(111, 66, 193, 0.5);
+            transform: translateY(-1px);
+            color: #fff;
+        }
+        .switch-plant-btn .active-plant-label {
+            max-width: 120px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .switch-plant-dropdown {
+            min-width: 280px;
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+            padding: 0.5rem 0;
+            overflow: hidden;
+        }
+        .switch-plant-dropdown .dropdown-header {
+            background: linear-gradient(135deg, #6f42c1 0%, #5a289e 100%);
+            color: #fff;
+            font-size: 0.78rem;
+            font-weight: 700;
+            padding: 0.6rem 1rem;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+        .switch-plant-item {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            font-size: 0.88rem;
+            font-weight: 500;
+            color: #333;
+            transition: background 0.2s;
+            border: none;
+            background: none;
+            width: 100%;
+            text-align: left;
+        }
+        .switch-plant-item:hover {
+            background: rgba(111, 66, 193, 0.09);
+            color: #6f42c1;
+        }
+        .switch-plant-item.current {
+            background: rgba(111, 66, 193, 0.12);
+            color: #6f42c1;
+            font-weight: 700;
+        }
+        .switch-plant-item .plant-icon {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #6f42c1 0%, #a78bfa 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 0.75rem;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+        .switch-plant-item.current .plant-icon {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        }
+        .switch-plant-reset-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            font-size: 0.82rem;
+            color: #868e96;
+            border: none;
+            background: none;
+            width: 100%;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .switch-plant-reset-btn:hover {
+            color: #dc3545;
+            background: rgba(220, 53, 69, 0.07);
         }
     </style>
 </head>
@@ -232,6 +337,72 @@
 
                 <!-- Right Side Items -->
                 <div class="d-flex align-items-center gap-3">
+
+                    @php
+                        $authUser = auth()->user();
+                        $isManager = $authUser && $authUser->isManager();
+                        $effectivePlant = $authUser ? $authUser->getEffectivePlant() : null;
+                        $originalPlant = $authUser ? $authUser->plant : null;
+                        // ✅ Hanya tampilkan plant yang diizinkan oleh Superadmin
+                        $allPlants = $isManager
+                            ? $authUser->allowedPlants()->orderBy('plant')->get()
+                            : collect();
+                    @endphp
+
+                    {{-- ===== SWITCH PLANT (Manager Only) ===== --}}
+                    @if($isManager)
+                    <div class="dropdown" id="switchPlantDropdown">
+                        <button class="switch-plant-btn dropdown-toggle" type="button"
+                                data-bs-toggle="dropdown" aria-expanded="false"
+                                title="Klik untuk ganti plant aktif">
+                            <i class="bi bi-building"></i>
+                            <span class="active-plant-label">
+                                {{ $effectivePlant?->plant ?? 'Pilih Plant' }}
+                            </span>
+                            @if($authUser->active_plant_id && $authUser->active_plant_id !== $authUser->id_plant)
+                                <span class="badge bg-warning text-dark" style="font-size:0.65rem; padding:0.2rem 0.45rem; border-radius:10px;">Switched</span>
+                            @endif
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end switch-plant-dropdown" aria-labelledby="switchPlantDropdown">
+                            <li><h6 class="dropdown-header"><i class="bi bi-building me-1"></i>Switch Plant</h6></li>
+                            @forelse($allPlants as $plant)
+                            <li>
+                                <form method="POST" action="{{ route('manager.switch-plant') }}">
+                                    @csrf
+                                    <input type="hidden" name="plant_id" value="{{ $plant->id }}">
+                                    <button type="submit" class="switch-plant-item {{ $effectivePlant?->id === $plant->id ? 'current' : '' }}">
+                                        <span class="plant-icon">{{ strtoupper(substr($plant->plant, 0, 1)) }}</span>
+                                        <span>{{ $plant->plant }}</span>
+                                        @if($effectivePlant?->id === $plant->id)
+                                            <i class="bi bi-check-circle-fill ms-auto text-success"></i>
+                                        @endif
+                                    </button>
+                                </form>
+                            </li>
+                            @empty
+                            <li>
+                                <div class="px-3 py-2 text-center">
+                                    <i class="bi bi-exclamation-circle text-warning d-block mb-1" style="font-size:1.3rem;"></i>
+                                    <span style="font-size:0.8rem; color:#6c757d;">Belum ada plant yang<br>di-assign oleh SuperAdmin</span>
+                                </div>
+                            </li>
+                            @endforelse
+                            @if($authUser->active_plant_id)
+                            <li><hr class="dropdown-divider my-1"></li>
+                            <li>
+                                <form method="POST" action="{{ route('manager.reset-plant') }}">
+                                    @csrf
+                                    <button type="submit" class="switch-plant-reset-btn">
+                                        <i class="bi bi-arrow-counterclockwise"></i>
+                                        Kembali ke Plant Asal ({{ $originalPlant?->plant ?? '-' }})
+                                    </button>
+                                </form>
+                            </li>
+                            @endif
+                        </ul>
+                    </div>
+                    @endif
+
                     <!-- Notifications -->
                         <div class="position-relative">
                             <button class="btn btn-link position-relative" id="notification-bell" style="color: #333; font-size: 1.5rem; border: none; padding: 0;">

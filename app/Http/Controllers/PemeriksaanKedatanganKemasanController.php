@@ -21,16 +21,18 @@ class PemeriksaanKedatanganKemasanController extends Controller
     public function index(Request $request)
     {
         $user = Auth::user();
+        $effectivePlantId = $this->getActivePlantId($user);
 
         $search = trim((string) $request->input('search', ''));
 
         $query = PemeriksaanKedatanganKemasan::with(['user.role', 'user.plant', 'bahan', 'shift']);
 
         if (!($user->role && strtolower($user->role->role) === 'superadmin')) {
-            $query->whereHas('user', function ($q) use ($user) {
-                $q->where('id_plant', $user->id_plant);
+            $query->whereHas('user', function ($q) use ($effectivePlantId) {
+                $q->where('id_plant', $effectivePlantId);
             });
         }
+
 
         if ($search !== '') {
             $query->where(function ($q) use ($search) {
