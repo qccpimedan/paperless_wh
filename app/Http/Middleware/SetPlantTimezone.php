@@ -13,8 +13,11 @@ class SetPlantTimezone
     {
         $tz = 'Asia/Jakarta';
 
-        if (Auth::check() && Auth::user()->plant) {
-            $tz = Auth::user()->plant->timezone ?? 'Asia/Jakarta';
+        if (Auth::check()) {
+            $plant = Auth::user()->getEffectivePlant();
+            if ($plant) {
+                $tz = $plant->timezone ?? 'Asia/Jakarta';
+            }
         }
 
         // timezone hanya untuk DISPLAY

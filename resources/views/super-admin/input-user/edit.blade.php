@@ -108,7 +108,8 @@
                                                     <select id="id_role" class="form-control @error('id_role') is-invalid @enderror" name="id_role" required>
                                                         <option value="">Pilih Role</option>
                                                         @foreach($roles as $role)
-                                                            <option value="{{ $role->id }}" 
+                                                            <option value="{{ $role->id }}"
+                                                                data-role-slug="{{ strtolower($role->role) }}"
                                                                 {{ (old('id_role', $user->id_role) == $role->id) ? 'selected' : '' }}>
                                                                 {{ $role->role }}
                                                             </option>
@@ -121,7 +122,7 @@
                                             </div>
                                             
                                             <div class="col-md-6">
-                                                <label for="id_plant">Plant <span class="text-danger">*</span></label>
+                                                <label for="id_plant">Plant (Plant Utama/Asal) <span class="text-danger">*</span></label>
                                                 <div class="form-group">
                                                     <select id="id_plant" class="form-control @error('id_plant') is-invalid @enderror" name="id_plant" required>
                                                         <option value="">Pilih Plant</option>
@@ -137,11 +138,10 @@
                                                     @enderror
                                                 </div>
                                             </div>
-                                            
-                                            <div class="col-md-12 d-flex justify-content-end">
+
+                                            <div class="col-md-12 d-flex justify-content-end mt-2">
                                                 <a href="{{ route('users.index') }}" class="btn btn-light-secondary me-1 mb-1">Kembali</a>
                                                 <button type="submit" class="btn btn-primary me-1 mb-1">Update</button>
-                                                <button type="button" class="btn btn-light-secondary me-1 mb-1">Reset</button>
                                             </div>
                                         </div>
                                     </div>

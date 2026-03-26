@@ -37,6 +37,7 @@ use App\Http\Controllers\DetailKomplainController;
 use App\Http\Controllers\GoldenSampleReportController;
 use App\Http\Controllers\PemeriksaanBarangMudahPecahController;
 use App\Http\Controllers\BahanKemasanController;
+use App\Http\Controllers\ManagerController;
 use Illuminate\Support\Facades\Auth;
 
 // Redirect root to login
@@ -102,6 +103,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('access-control', [AccessControlController::class, 'index'])->name('access-control.index');
     Route::put('access-control/{roleId}', [AccessControlController::class, 'update'])->name('access-control.update');
     Route::get('access-control/{roleId}/permissions', [AccessControlController::class, 'getPermissions'])->name('access-control.permissions');
+
+    // Manager - Switch Plant Routes
+    Route::post('manager/switch-plant', [ManagerController::class, 'switchPlant'])->name('manager.switch-plant');
+    Route::post('manager/reset-plant', [ManagerController::class, 'resetPlant'])->name('manager.reset-plant');
     
     // Data Master Routes (Super Admin)
     Route::prefix('super-admin')->group(function () {
@@ -119,6 +124,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::resource('plants', PlantController::class);
         // User Management Routes
         Route::resource('users', UserController::class);
+        // Manager: Assign Plant Access (halaman terpisah)
+        Route::get('users/{user}/assign-plants', [UserController::class, 'assignPlants'])->name('users.assign-plants');
+        Route::post('users/{user}/assign-plants', [UserController::class, 'saveAssignPlants'])->name('users.save-assign-plants');
+
         // Barang Management Routes
         Route::resource('barangs', BarangController::class);
         Route::post('barangs/import', [BarangController::class, 'import'])->name('barangs.import');

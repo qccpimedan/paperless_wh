@@ -315,6 +315,7 @@ public function syncPlant(Request $request)
             'QC Inspector' => 3,
             'admin' => 4,
             'produksi' => 5,
+            'manager' => 13,
         ];
 
         return $roleMapping[$roleName] ?? null; // default to petugas_isi if no match

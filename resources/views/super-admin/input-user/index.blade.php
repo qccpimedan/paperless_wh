@@ -44,7 +44,7 @@
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
-                        <table class="table table-striped text-center" id="table1">
+                        <table class="table table-striped text-center" id="table1" style="white-space:nowrap;">
                             <thead>
                                 <tr>
                                     <th>No</th>
@@ -69,7 +69,16 @@
                                         <td>{{ $user->email }}</td>
                                         <td>
                                             @if($user->role)
-                                                <span class="badge bg-success">{{ $user->role->role }}</span>
+                                                @php $roleSlug = strtolower($user->role->role); @endphp
+                                                @if($roleSlug === 'manager')
+                                                    <span class="badge" style="background: linear-gradient(135deg, #6f42c1, #5a289e); color:#fff;">
+                                                        <i class="bi bi-building me-1"></i>{{ $user->role->role }}
+                                                    </span>
+                                                @elseif($roleSlug === 'superadmin')
+                                                    <span class="badge bg-danger">{{ $user->role->role }}</span>
+                                                @else
+                                                    <span class="badge bg-success">{{ $user->role->role }}</span>
+                                                @endif
                                             @else
                                                 <span class="badge bg-secondary">No Role</span>
                                             @endif
@@ -85,10 +94,24 @@
                                             <div class="btn-vertical">
                                                 @can('edit_users')
                                                     <a href="{{ route('users.edit', $user->uuid) }}" 
-                                                       class="btn btn-sm btn-warning">
-                                                        <i class="bi bi-pencil" title="Edit Data"></i>
+                                                       class="btn btn-sm btn-warning"
+                                                       title="Edit User">
+                                                        <i class="bi bi-pencil"></i>
                                                     </a>
                                                 @endcan
+
+                                                {{-- Tombol Assign Plant: hanya untuk role Manager --}}
+                                                @if($user->role && strtolower($user->role->role) === 'manager')
+                                                @can('edit_users')
+                                                    <a href="{{ route('users.assign-plants', $user->uuid) }}"
+                                                       class="btn btn-sm"
+                                                       title="Assign Plant Akses"
+                                                       style="background: linear-gradient(135deg, #6f42c1, #5a289e); color:#fff; border:none;">
+                                                        <i class="bi bi-building"></i>
+                                                    </a>
+                                                @endcan
+                                                @endif
+
                                                 @can('delete_users')
                                                     <form action="{{ route('users.destroy', $user->uuid) }}" 
                                                           method="POST" 
@@ -96,8 +119,8 @@
                                                           onsubmit="return confirm('Yakin ingin menghapus user ini?')">
                                                         @csrf
                                                         @method('DELETE')
-                                                        <button type="submit" class="btn btn-sm btn-danger">
-                                                            <i class="bi bi-trash" title="Hapus Data"></i>
+                                                        <button type="submit" class="btn btn-sm btn-danger" title="Hapus User">
+                                                            <i class="bi bi-trash"></i>
                                                         </button>
                                                     </form>
                                                 @endcan

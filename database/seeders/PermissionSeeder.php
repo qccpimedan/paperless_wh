@@ -39,25 +39,31 @@ class PermissionSeeder extends Seeder
         }
 
         // Get or create roles (using 'role' column from existing table)
-        $superAdminRole = Role::firstOrCreate(
-            ['role' => 'super_admin'],
-            ['uuid' => \Illuminate\Support\Str::uuid(), 'name' => 'super_admin', 'guard_name' => 'web']
-        );
-        $adminRole = Role::firstOrCreate(
-            ['role' => 'admin'],
-            ['uuid' => \Illuminate\Support\Str::uuid(), 'name' => 'admin', 'guard_name' => 'web']
-        );
-        $spvQcRole = Role::firstOrCreate(
-            ['role' => 'spv_qc'],
-            ['uuid' => \Illuminate\Support\Str::uuid(), 'name' => 'spv_qc', 'guard_name' => 'web']
-        );
-        $qcRole = Role::firstOrCreate(
-            ['role' => 'qc'],
-            ['uuid' => \Illuminate\Support\Str::uuid(), 'name' => 'qc', 'guard_name' => 'web']
-        );
-        $produksiRole = Role::firstOrCreate(
-            ['role' => 'produksi'],
-            ['uuid' => \Illuminate\Support\Str::uuid(), 'name' => 'produksi', 'guard_name' => 'web']
+        // $superAdminRole = Role::firstOrCreate(
+        //     ['role' => 'super_admin'],
+        //     ['uuid' => \Illuminate\Support\Str::uuid(), 'name' => 'super_admin', 'guard_name' => 'web']
+        // );
+        // $adminRole = Role::firstOrCreate(
+        //     ['role' => 'admin'],
+        //     ['uuid' => \Illuminate\Support\Str::uuid(), 'name' => 'admin', 'guard_name' => 'web']
+        // );
+        // $spvQcRole = Role::firstOrCreate(
+        //     ['role' => 'spv_qc'],
+        //     ['uuid' => \Illuminate\Support\Str::uuid(), 'name' => 'spv_qc', 'guard_name' => 'web']
+        // );
+        // $qcRole = Role::firstOrCreate(
+        //     ['role' => 'qc'],
+        //     ['uuid' => \Illuminate\Support\Str::uuid(), 'name' => 'qc', 'guard_name' => 'web']
+        // );
+        // $produksiRole = Role::firstOrCreate(
+        //     ['role' => 'produksi'],
+        //     ['uuid' => \Illuminate\Support\Str::uuid(), 'name' => 'produksi', 'guard_name' => 'web']
+        // );
+
+        // ✅ NEW: Role Manager - dapat melihat semua data & switch plant
+        $managerRole = Role::firstOrCreate(
+            ['role' => 'manager'],
+            ['uuid' => \Illuminate\Support\Str::uuid(), 'name' => 'manager', 'guard_name' => 'web']
         );
 
         // Assign all permissions to SuperAdmin
@@ -88,5 +94,12 @@ class PermissionSeeder extends Seeder
             $produksiPermissions[] = "view_{$module}";
         }
         $produksiRole->syncPermissions($produksiPermissions);
+
+        // ✅ Assign permissions to Manager (view only - semua modul, dapat switch plant)
+        $managerPermissions = [];
+        foreach ($modules as $module) {
+            $managerPermissions[] = "view_{$module}";
+        }
+        $managerRole->syncPermissions($managerPermissions);
     }
 }

@@ -41,7 +41,25 @@
 
                 @php
                 $userRole = auth()->user()->role ? strtolower(auth()->user()->role->role) : null;
+                $isManagerUser = auth()->user() && auth()->user()->isManager();
+                $activePlantInfo = ($isManagerUser) ? auth()->user()->getEffectivePlant() : null;
                 @endphp
+                
+                {{-- Plant Info for Manager --}}
+                @if($isManagerUser)
+                <li class="sidebar-item" style="pointer-events: none; margin-bottom: 0.25rem;">
+                    <div class="sidebar-link" style="background: linear-gradient(135deg, rgba(111,66,193,0.15) 0%, rgba(111,66,193,0.08) 100%); border-left: 3px solid #6f42c1; cursor: default; border-radius: 8px; margin: 0 6px;">
+                        <i class="bi bi-building" style="color: #6f42c1;"></i>
+                        <div style="display:flex; flex-direction:column; line-height:1.2;">
+                            <span style="font-size:0.7rem; color:#6f42c1; font-weight:600; text-transform:uppercase; letter-spacing:0.05em;">Plant Aktif</span>
+                            <span style="font-size:0.85rem; font-weight:700; color:#2c3e50;">{{ $activePlantInfo?->plant ?? auth()->user()->plant?->plant ?? '-' }}</span>
+                        </div>
+                        @if(auth()->user()->active_plant_id && auth()->user()->active_plant_id !== auth()->user()->id_plant)
+                            <span class="badge" style="font-size:0.6rem; background:#6f42c1; color:#fff; border-radius:10px; margin-left:auto;">Switched</span>
+                        @endif
+                    </div>
+                </li>
+                @endif
                 
                 {{-- Access Control - Only for Superadmin --}}
                 @if($userRole === 'superadmin')
@@ -145,8 +163,8 @@
 
                 <li class="sidebar-title">Forms QC SISTEM</li>
 
-                {{-- Forms QC - For Superadmin, Admin, SPV QC, QC Inspector, Produksi --}}
-                @if($userRole === 'superadmin' || $userRole === 'admin' || $userRole === 'spv qc' || $userRole === 'qc inspector' || $userRole === 'produksi')
+                {{-- Forms QC - For Superadmin, Admin, SPV QC, QC Inspector, Produksi, Manager --}}
+                @if($userRole === 'superadmin' || $userRole === 'admin' || $userRole === 'spv qc' || $userRole === 'qc inspector' || $userRole === 'produksi' || $isManagerUser)
                 {{-- Pemeriksaan Kedatangan --}}
                 <li class="sidebar-item has-sub {{ request()->routeIs('pemeriksaan-kedatangan-kemasan.*') || 
                 request()->routeIs('pemeriksaan-bahan-baku.*') || request()->routeIs('pemeriksaan-chemical.*') || 
