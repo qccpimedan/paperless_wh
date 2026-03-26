@@ -25,7 +25,7 @@ class DistributorController extends Controller
             // Admin dan role lain hanya melihat data sesuai plant mereka
             $distributors = Distributor::with(['user.role', 'user.plant'])
                 ->whereHas('user', function($query) use ($user) {
-                    $query->where('id_plant', $user->id_plant);
+                    $query->where('id_plant', $user->getEffectivePlantId());
                 })
                 ->latest()
                 ->get();
@@ -165,7 +165,7 @@ class DistributorController extends Controller
         }
         
         // Admin dan role lain hanya dapat akses data dari plant mereka
-        if ($distributor->user->id_plant !== $user->id_plant) {
+        if ($distributor->user->id_plant !== $user->getEffectivePlantId()) {
             abort(403, 'Unauthorized action.');
         }
     }

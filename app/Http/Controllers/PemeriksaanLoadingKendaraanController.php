@@ -32,7 +32,7 @@ class PemeriksaanLoadingKendaraanController extends Controller
 
         if (!($user->role && strtolower($user->role->role) === 'superadmin')) {
             $query->whereHas('user', function ($q) use ($user) {
-                $q->where('id_plant', $user->id_plant);
+                $q->where('id_plant', $user->getEffectivePlantId());
             });
         }
 
@@ -89,23 +89,23 @@ class PemeriksaanLoadingKendaraanController extends Controller
         } else {
             // Filter berdasarkan plant user yang login
             $ekspedisis = Ekspedisi::whereHas('user', function ($query) use ($user) {
-                $query->where('id_plant', $user->id_plant);
+                $query->where('id_plant', $user->getEffectivePlantId());
             })->with(['user.plant'])->get();
 
             $kendaraans = JenisKendaraan::whereHas('user', function ($query) use ($user) {
-                $query->where('id_plant', $user->id_plant);
+                $query->where('id_plant', $user->getEffectivePlantId());
             })->with(['user.plant'])->get();
 
             $tujuanPengirimens = TujuanPengiriman::whereHas('user', function ($query) use ($user) {
-                $query->where('id_plant', $user->id_plant);
+                $query->where('id_plant', $user->getEffectivePlantId());
             })->with(['user.plant'])->get();
 
             $stdPrecoolings = StdPrecooling::whereHas('user', function ($query) use ($user) {
-                $query->where('id_plant', $user->id_plant);
+                $query->where('id_plant', $user->getEffectivePlantId());
             })->with(['user.plant'])->get();
 
             $shifts = Shift::whereHas('user', function ($query) use ($user) {
-                $query->where('id_plant', $user->id_plant);
+                $query->where('id_plant', $user->getEffectivePlantId());
             })->with(['user.plant'])->get();
         }
 
@@ -197,23 +197,23 @@ class PemeriksaanLoadingKendaraanController extends Controller
         } else {
             // Filter berdasarkan plant user yang login
             $ekspedisis = Ekspedisi::whereHas('user', function ($query) use ($user) {
-                $query->where('id_plant', $user->id_plant);
+                $query->where('id_plant', $user->getEffectivePlantId());
             })->with(['user.plant'])->get();
 
             $kendaraans = JenisKendaraan::whereHas('user', function ($query) use ($user) {
-                $query->where('id_plant', $user->id_plant);
+                $query->where('id_plant', $user->getEffectivePlantId());
             })->with(['user.plant'])->get();
 
             $tujuanPengirimens = TujuanPengiriman::whereHas('user', function ($query) use ($user) {
-                $query->where('id_plant', $user->id_plant);
+                $query->where('id_plant', $user->getEffectivePlantId());
             })->with(['user.plant'])->get();
 
             $stdPrecoolings = StdPrecooling::whereHas('user', function ($query) use ($user) {
-                $query->where('id_plant', $user->id_plant);
+                $query->where('id_plant', $user->getEffectivePlantId());
             })->with(['user.plant'])->get();
 
             $shifts = Shift::whereHas('user', function ($query) use ($user) {
-                $query->where('id_plant', $user->id_plant);
+                $query->where('id_plant', $user->getEffectivePlantId());
             })->with(['user.plant'])->get();
         }
         return view('qc-sistem.pemeriksaan-loading-kendaraan.edit', compact(
@@ -301,7 +301,7 @@ class PemeriksaanLoadingKendaraanController extends Controller
         }
 
         // Admin dan role lain hanya dapat akses data dari plant mereka
-        if ($pemeriksaanLoadingKendaraan->user->id_plant !== $user->id_plant) {
+        if ($pemeriksaanLoadingKendaraan->user->id_plant !== $user->getEffectivePlantId()) {
             abort(403, 'Anda tidak memiliki akses ke data ini.');
         }
     }
@@ -431,7 +431,7 @@ class PemeriksaanLoadingKendaraanController extends Controller
 
         if ($user->role && strtolower($user->role->role) !== 'superadmin') {
             $query->whereHas('user', function ($q) use ($user) {
-                $q->where('id_plant', $user->id_plant);
+                $q->where('id_plant', $user->getEffectivePlantId());
             });
         }
 

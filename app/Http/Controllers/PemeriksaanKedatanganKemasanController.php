@@ -131,7 +131,7 @@ return view('qc-sistem.pemeriksaan-kedatangan-kemasan.index', compact('pemeriksa
         // Debug: Log user info
         \Log::info('User creating pemeriksaan:', [
             'user_id' => $user->id,
-            'id_plant' => $user->id_plant,
+            'id_plant' => $user->getEffectivePlantId(),
             'role' => $user->role ? $user->role->role : 'no role'
         ]);
         
@@ -142,22 +142,22 @@ return view('qc-sistem.pemeriksaan-kedatangan-kemasan.index', compact('pemeriksa
             $produsens = Produsen::with('user.plant')->get();
             $distributors = Distributor::with('user.plant')->get();
         } else {
-            if ($user->id_plant) {
+            if ($user->getEffectivePlantId()) {
                 // Filter berdasarkan plant
                 $bahanKemasans = BahanKemasan::whereHas('user', function($query) use ($user) {
-                    $query->where('id_plant', $user->id_plant);
+                    $query->where('id_plant', $user->getEffectivePlantId());
                 })->with(['user.plant', 'distributor', 'produsen'])->get();
                 
                 $shifts = Shift::whereHas('user', function($query) use ($user) {
-                    $query->where('id_plant', $user->id_plant);
+                    $query->where('id_plant', $user->getEffectivePlantId());
                 })->with('user.plant')->get();
                 
                 $produsens = Produsen::whereHas('user', function($query) use ($user) {
-                    $query->where('id_plant', $user->id_plant);
+                    $query->where('id_plant', $user->getEffectivePlantId());
                 })->with('user.plant')->get();
                 
                 $distributors = Distributor::whereHas('user', function($query) use ($user) {
-                    $query->where('id_plant', $user->id_plant);
+                    $query->where('id_plant', $user->getEffectivePlantId());
                 })->with('user.plant')->get();
             } else {
                 // Fallback: User has no plant, get all
@@ -211,7 +211,7 @@ return view('qc-sistem.pemeriksaan-kedatangan-kemasan.index', compact('pemeriksa
                 ];
             });
 
-        $plantId = $user->id_plant;
+        $plantId = $user->getEffectivePlantId();
 
         $produkKategoriOptions = Produk::query()
             ->whereNotNull('kategori_code')
@@ -442,22 +442,22 @@ return view('qc-sistem.pemeriksaan-kedatangan-kemasan.index', compact('pemeriksa
         $produsens = Produsen::with('user.plant')->get();
         $distributors = Distributor::with('user.plant')->get();
     } else {
-        if ($user->id_plant) {
+        if ($user->getEffectivePlantId()) {
             // Filter berdasarkan plant
             $bahanKemasans = BahanKemasan::whereHas('user', function($query) use ($user) {
-                $query->where('id_plant', $user->id_plant);
+                $query->where('id_plant', $user->getEffectivePlantId());
             })->with(['user.plant', 'distributor', 'produsen'])->get();
             
             $shifts = Shift::whereHas('user', function($query) use ($user) {
-                $query->where('id_plant', $user->id_plant);
+                $query->where('id_plant', $user->getEffectivePlantId());
             })->with('user.plant')->get();
             
             $produsens = Produsen::whereHas('user', function($query) use ($user) {
-                $query->where('id_plant', $user->id_plant);
+                $query->where('id_plant', $user->getEffectivePlantId());
             })->with('user.plant')->get();
             
             $distributors = Distributor::whereHas('user', function($query) use ($user) {
-                $query->where('id_plant', $user->id_plant);
+                $query->where('id_plant', $user->getEffectivePlantId());
             })->with('user.plant')->get();
         } else {
             // Fallback: User has no plant, get all
@@ -494,7 +494,7 @@ return view('qc-sistem.pemeriksaan-kedatangan-kemasan.index', compact('pemeriksa
         $distributors = $distributors->concat($referencedDistributors)->unique('id')->values();
     }
 
-    $plantId = $user->id_plant;
+    $plantId = $user->getEffectivePlantId();
 
     $produkKategoriOptions = Produk::query()
         ->whereNotNull('kategori_code')
@@ -715,21 +715,21 @@ return view('qc-sistem.pemeriksaan-kedatangan-kemasan.index', compact('pemeriksa
             $produsens = Produsen::with('user.plant')->get();
             $distributors = Distributor::with('user.plant')->get();
         } else {
-            if ($user->id_plant) {
+            if ($user->getEffectivePlantId()) {
                 $bahanKemasans = BahanKemasan::whereHas('user', function($query) use ($user) {
-                    $query->where('id_plant', $user->id_plant);
+                    $query->where('id_plant', $user->getEffectivePlantId());
                 })->with(['user.plant', 'distributor', 'produsen'])->get();
 
                 $shifts = Shift::whereHas('user', function($query) use ($user) {
-                    $query->where('id_plant', $user->id_plant);
+                    $query->where('id_plant', $user->getEffectivePlantId());
                 })->with('user.plant')->get();
 
                 $produsens = Produsen::whereHas('user', function($query) use ($user) {
-                    $query->where('id_plant', $user->id_plant);
+                    $query->where('id_plant', $user->getEffectivePlantId());
                 })->with('user.plant')->get();
 
                 $distributors = Distributor::whereHas('user', function($query) use ($user) {
-                    $query->where('id_plant', $user->id_plant);
+                    $query->where('id_plant', $user->getEffectivePlantId());
                 })->with('user.plant')->get();
             } else {
                 $bahanKemasans = BahanKemasan::with(['distributor', 'produsen'])->get();
@@ -752,7 +752,7 @@ return view('qc-sistem.pemeriksaan-kedatangan-kemasan.index', compact('pemeriksa
             $distributors = Distributor::all();
         }
 
-        $plantId = $user->id_plant;
+        $plantId = $user->getEffectivePlantId();
 
         $produkKategoriOptions = Produk::query()
             ->whereNotNull('kategori_code')
@@ -948,7 +948,7 @@ return view('qc-sistem.pemeriksaan-kedatangan-kemasan.index', compact('pemeriksa
         }
         
         // Admin dan role lain hanya dapat akses data dari plant mereka
-        if ($pemeriksaan->user->id_plant !== $user->id_plant) {
+        if ($pemeriksaan->user->id_plant !== $user->getEffectivePlantId()) {
             abort(403, 'Anda tidak memiliki akses ke data ini.');
         }
     }
@@ -1062,7 +1062,7 @@ return view('qc-sistem.pemeriksaan-kedatangan-kemasan.index', compact('pemeriksa
         // Filter by plant access
         if ($user->role && strtolower($user->role->role) !== 'superadmin') {
             $query->whereHas('user', function($q) use ($user) {
-                $q->where('id_plant', $user->id_plant);
+                $q->where('id_plant', $user->getEffectivePlantId());
             });
         }
 

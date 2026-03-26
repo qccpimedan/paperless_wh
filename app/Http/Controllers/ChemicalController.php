@@ -24,7 +24,7 @@ class ChemicalController extends Controller
             // Admin dan role lain hanya melihat data sesuai plant mereka
             $chemicals = Chemical::with(['user.role', 'user.plant', 'distributor', 'produsen'])
                 ->whereHas('user', function($query) use ($user) {
-                    $query->where('id_plant', $user->id_plant);
+                    $query->where('id_plant', $user->getEffectivePlantId());
                 })
                 ->latest()
                 ->get();
@@ -46,14 +46,14 @@ class ChemicalController extends Controller
         } else {
             $distributors = Distributor::with(['user.plant'])
                 ->whereHas('user', function($query) use ($user) {
-                    $query->where('id_plant', $user->id_plant);
+                    $query->where('id_plant', $user->getEffectivePlantId());
                 })
                 ->latest()
                 ->get();
 
             $produsens = Produsen::with(['user.plant'])
                 ->whereHas('user', function($query) use ($user) {
-                    $query->where('id_plant', $user->id_plant);
+                    $query->where('id_plant', $user->getEffectivePlantId());
                 })
                 ->latest()
                 ->get();
@@ -135,14 +135,14 @@ class ChemicalController extends Controller
         } else {
             $distributors = Distributor::with(['user.plant'])
                 ->whereHas('user', function($query) use ($user) {
-                    $query->where('id_plant', $user->id_plant);
+                    $query->where('id_plant', $user->getEffectivePlantId());
                 })
                 ->latest()
                 ->get();
 
             $produsens = Produsen::with(['user.plant'])
                 ->whereHas('user', function($query) use ($user) {
-                    $query->where('id_plant', $user->id_plant);
+                    $query->where('id_plant', $user->getEffectivePlantId());
                 })
                 ->latest()
                 ->get();
@@ -199,7 +199,7 @@ class ChemicalController extends Controller
         }
         
         // Admin dan role lain hanya dapat akses data dari plant mereka
-        if ($chemical->user->id_plant !== $user->id_plant) {
+        if ($chemical->user->id_plant !== $user->getEffectivePlantId()) {
             abort(403, 'Unauthorized action.');
         }
     }

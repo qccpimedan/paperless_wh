@@ -23,7 +23,7 @@ class PemeriksaanProdukFinishGoodController extends Controller
 
         if (!($user->role && strtolower($user->role->role) === 'superadmin')) {
             $query->whereHas('user', function ($q) use ($user) {
-                $q->where('id_plant', $user->id_plant);
+                $q->where('id_plant', $user->getEffectivePlantId());
             });
         }
 
@@ -130,7 +130,7 @@ return view('qc-sistem.pemeriksaan-produk-finish-good.index', compact('pemeriksa
     public function create()
     {
         $user = Auth::user();
-        $plantId = $user->id_plant;
+        $plantId = $user->getEffectivePlantId();
 
         $countries = Countries::getList('en', 'php');
 
@@ -138,7 +138,7 @@ return view('qc-sistem.pemeriksaan-produk-finish-good.index', compact('pemeriksa
             $shifts = Shift::with(['user.plant'])->get();
         } else {
             $shifts = Shift::whereHas('user', function ($q) use ($user) {
-                $q->where('id_plant', $user->id_plant);
+                $q->where('id_plant', $user->getEffectivePlantId());
             })->with(['user.plant'])->get();
         }
 
@@ -310,7 +310,7 @@ return view('qc-sistem.pemeriksaan-produk-finish-good.index', compact('pemeriksa
         $distributorByProduk = [];
         if (!empty($produkIds)) {
             $user = Auth::user();
-            $plantId = $user->id_plant;
+            $plantId = $user->getEffectivePlantId();
             $produkRows = Produk::with([
                     'produsens' => function ($q) use ($plantId) {
                         if ($plantId) {
@@ -411,7 +411,7 @@ return view('qc-sistem.pemeriksaan-produk-finish-good.index', compact('pemeriksa
     public function edit(PemeriksaanProdukFinishGood $pemeriksaanProdukFinishGood)
     {
         $user = Auth::user();
-        $plantId = $user->id_plant;
+        $plantId = $user->getEffectivePlantId();
 
         $countries = Countries::getList('en', 'php');
 
@@ -419,7 +419,7 @@ return view('qc-sistem.pemeriksaan-produk-finish-good.index', compact('pemeriksa
             $shifts = Shift::with(['user.plant'])->get();
         } else {
             $shifts = Shift::whereHas('user', function ($q) use ($user) {
-                $q->where('id_plant', $user->id_plant);
+                $q->where('id_plant', $user->getEffectivePlantId());
             })->with(['user.plant'])->get();
         }
 
@@ -602,7 +602,7 @@ return view('qc-sistem.pemeriksaan-produk-finish-good.index', compact('pemeriksa
         $distributorByProduk = [];
         if (!empty($produkIds)) {
             $user = Auth::user();
-            $plantId = $user->id_plant;
+            $plantId = $user->getEffectivePlantId();
             $produkRows = Produk::with([
                     'produsens' => function ($q) use ($plantId) {
                         if ($plantId) {
@@ -698,7 +698,7 @@ return view('qc-sistem.pemeriksaan-produk-finish-good.index', compact('pemeriksa
             return;
         }
 
-        if ($pemeriksaan->user && $pemeriksaan->user->id_plant !== $user->id_plant) {
+        if ($pemeriksaan->user && $pemeriksaan->user->id_plant !== $user->getEffectivePlantId()) {
             abort(403, 'Anda tidak memiliki akses ke data ini.');
         }
     }
@@ -857,7 +857,7 @@ return view('qc-sistem.pemeriksaan-produk-finish-good.index', compact('pemeriksa
 
         if ($user->role && strtolower($user->role->role) !== 'superadmin') {
             $query->whereHas('user', function ($q) use ($user) {
-                $q->where('id_plant', $user->id_plant);
+                $q->where('id_plant', $user->getEffectivePlantId());
             });
         }
 

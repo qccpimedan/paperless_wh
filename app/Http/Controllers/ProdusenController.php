@@ -25,7 +25,7 @@ class ProdusenController extends Controller
             // Admin dan role lain hanya melihat data sesuai plant mereka
             $produsens = Produsen::with(['user.role', 'user.plant'])
                 ->whereHas('user', function($query) use ($user) {
-                    $query->where('id_plant', $user->id_plant);
+                    $query->where('id_plant', $user->getEffectivePlantId());
                 })
                 ->latest()
                 ->get();
@@ -164,7 +164,7 @@ class ProdusenController extends Controller
         }
         
         // Admin dan role lain hanya dapat akses data dari plant mereka
-        if ($produsen->user->id_plant !== $user->id_plant) {
+        if ($produsen->user->id_plant !== $user->getEffectivePlantId()) {
             abort(403, 'Unauthorized action.');
         }
     }

@@ -23,7 +23,7 @@ class TujuanPengirimanController extends Controller
             // Admin dan role lain hanya melihat data sesuai plant mereka
             $tujuanPengirimans = TujuanPengiriman::with(['user.role', 'user.plant', 'customer'])
                 ->whereHas('user', function($query) use ($user) {
-                    $query->where('id_plant', $user->id_plant);
+                    $query->where('id_plant', $user->getEffectivePlantId());
                 })
                 ->latest()
                 ->get();
@@ -44,7 +44,7 @@ class TujuanPengirimanController extends Controller
         } else {
             $customers = Customer::with(['user.plant'])
                 ->whereHas('user', function($query) use ($user) {
-                    $query->where('id_plant', $user->id_plant);
+                    $query->where('id_plant', $user->getEffectivePlantId());
                 })
                 ->latest()
                 ->get();
@@ -121,7 +121,7 @@ class TujuanPengirimanController extends Controller
         } else {
             $customers = Customer::with(['user.plant'])
                 ->whereHas('user', function($query) use ($user) {
-                    $query->where('id_plant', $user->id_plant);
+                    $query->where('id_plant', $user->getEffectivePlantId());
                 })
                 ->latest()
                 ->get();
@@ -176,7 +176,7 @@ class TujuanPengirimanController extends Controller
         }
         
         // Admin dan role lain hanya dapat akses data dari plant mereka
-        if ($tujuanPengiriman->user->id_plant !== $user->id_plant) {
+        if ($tujuanPengiriman->user->id_plant !== $user->getEffectivePlantId()) {
             abort(403, 'Anda tidak memiliki akses ke data ini.');
         }
     }

@@ -122,14 +122,14 @@ class ProdukController extends Controller
         } else {
             $distributors = Distributor::with(['user.plant'])
                 ->whereHas('user', function ($query) use ($user) {
-                    $query->where('id_plant', $user->id_plant);
+                    $query->where('id_plant', $user->getEffectivePlantId());
                 })
                 ->latest()
                 ->get();
 
             $produsens = Produsen::with(['user.plant'])
                 ->whereHas('user', function ($query) use ($user) {
-                    $query->where('id_plant', $user->id_plant);
+                    $query->where('id_plant', $user->getEffectivePlantId());
                 })
                 ->latest()
                 ->get();
@@ -191,20 +191,20 @@ class ProdukController extends Controller
         } else {
             $distributors = Distributor::with(['user.plant'])
                 ->whereHas('user', function ($query) use ($user) {
-                    $query->where('id_plant', $user->id_plant);
+                    $query->where('id_plant', $user->getEffectivePlantId());
                 })
                 ->latest()
                 ->get();
 
             $produsens = Produsen::with(['user.plant'])
                 ->whereHas('user', function ($query) use ($user) {
-                    $query->where('id_plant', $user->id_plant);
+                    $query->where('id_plant', $user->getEffectivePlantId());
                 })
                 ->latest()
                 ->get();
         }
 
-        $plantId = $user->id_plant;
+        $plantId = $user->getEffectivePlantId();
         $selectedProdusenIds = $produk->produsens()->wherePivot('id_plant', $plantId)->pluck('produsens.id')->toArray();
         $selectedDistributorIds = $produk->distributors()->wherePivot('id_plant', $plantId)->pluck('distributors.id')->toArray();
 

@@ -25,7 +25,7 @@ class BarangController extends Controller
             // Admin dan role lain hanya melihat data sesuai plant mereka
             $barangs = Barang::with(['user.role', 'user.plant'])
                 ->whereHas('user', function($query) use ($user) {
-                    $query->where('id_plant', $user->id_plant);
+                    $query->where('id_plant', $user->getEffectivePlantId());
                 })
                 ->latest()
                 ->get();
@@ -169,7 +169,7 @@ class BarangController extends Controller
         }
         
         // Admin dan role lain hanya dapat akses data dari plant mereka
-        if ($barang->user->id_plant !== $user->id_plant) {
+        if ($barang->user->id_plant !== $user->getEffectivePlantId()) {
             abort(403, 'Anda tidak memiliki akses ke data ini.');
         }
     }
