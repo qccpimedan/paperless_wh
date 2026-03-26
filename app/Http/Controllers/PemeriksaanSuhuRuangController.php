@@ -28,7 +28,7 @@ class PemeriksaanSuhuRuangController extends Controller
 
         if (!($user->role && strtolower($user->role->role) === 'superadmin')) {
             $query->whereHas('user', function ($q) use ($user) {
-                $q->where('id_plant', $user->id_plant);
+                $q->where('id_plant', $user->getEffectivePlantId());
             });
         }
 
@@ -72,12 +72,12 @@ class PemeriksaanSuhuRuangController extends Controller
         // Filter berdasarkan plant user yang login
         $shifts = Shift::whereHas('user', function($query) use ($user) {
             if ($user->role && strtolower($user->role->role) !== 'superadmin') {
-                $query->where('id_plant', $user->id_plant);
+                $query->where('id_plant', $user->getEffectivePlantId());
             }
         })->get();
         $produks = Produk::whereHas('user', function($query) use ($user) {
             if ($user->role && strtolower($user->role->role) !== 'superadmin') {
-                $query->where('id_plant', $user->id_plant);
+                $query->where('id_plant', $user->getEffectivePlantId());
             }
         })->get();
 
@@ -174,12 +174,12 @@ class PemeriksaanSuhuRuangController extends Controller
         // Filter berdasarkan plant user yang login
         $shifts = Shift::whereHas('user', function($query) use ($user) {
             if ($user->role && strtolower($user->role->role) !== 'superadmin') {
-                $query->where('id_plant', $user->id_plant);
+                $query->where('id_plant', $user->getEffectivePlantId());
             }
         })->get();
         $produks = Produk::whereHas('user', function($query) use ($user) {
             if ($user->role && strtolower($user->role->role) !== 'superadmin') {
-                $query->where('id_plant', $user->id_plant);
+                $query->where('id_plant', $user->getEffectivePlantId());
             }
         })->get();
 
@@ -376,7 +376,7 @@ class PemeriksaanSuhuRuangController extends Controller
             return;
         }
         
-        if ($pemeriksaanSuhuRuang->user->id_plant !== $user->id_plant) {
+        if ($pemeriksaanSuhuRuang->user->id_plant !== $user->getEffectivePlantId()) {
             abort(403, 'Anda tidak memiliki akses ke data ini.');
         }
     }
@@ -407,7 +407,7 @@ class PemeriksaanSuhuRuangController extends Controller
         // Filter berdasarkan plant jika bukan superadmin
         if ($user->role && strtolower($user->role->role) !== 'superadmin') {
             $recordsV2Query->whereHas('user', function($q) use ($user) {
-                $q->where('id_plant', $user->id_plant);
+                $q->where('id_plant', $user->getEffectivePlantId());
             });
         }
         
@@ -441,7 +441,7 @@ class PemeriksaanSuhuRuangController extends Controller
         $user = Auth::user();
         
         // Check plant access
-        if ($pemeriksaanSuhuRuang->user->id_plant !== $user->id_plant && !($user->role && strtolower($user->role->role) === 'superadmin')) {
+        if ($pemeriksaanSuhuRuang->user->id_plant !== $user->getEffectivePlantId() && !($user->role && strtolower($user->role->role) === 'superadmin')) {
             abort(403, 'Anda tidak memiliki akses ke data ini.');
         }
         
@@ -468,7 +468,7 @@ class PemeriksaanSuhuRuangController extends Controller
         $user = Auth::user();
         
         // Check plant access
-        if ($pemeriksaanSuhuRuang->user->id_plant !== $user->id_plant && !($user->role && strtolower($user->role->role) === 'superadmin')) {
+        if ($pemeriksaanSuhuRuang->user->id_plant !== $user->getEffectivePlantId() && !($user->role && strtolower($user->role->role) === 'superadmin')) {
             abort(403, 'Anda tidak memiliki akses ke data ini.');
         }
         
@@ -500,7 +500,7 @@ class PemeriksaanSuhuRuangController extends Controller
         $user = Auth::user();
         
         // Check plant access
-        if ($pemeriksaanSuhuRuang->user->id_plant !== $user->id_plant && !($user->role && strtolower($user->role->role) === 'superadmin')) {
+        if ($pemeriksaanSuhuRuang->user->id_plant !== $user->getEffectivePlantId() && !($user->role && strtolower($user->role->role) === 'superadmin')) {
             abort(403, 'Anda tidak memiliki akses ke data ini.');
         }
         
@@ -528,7 +528,7 @@ class PemeriksaanSuhuRuangController extends Controller
         $user = Auth::user();
         
         // Check plant access
-        if ($pemeriksaanSuhuRuang->user->id_plant !== $user->id_plant && !($user->role && strtolower($user->role->role) === 'superadmin')) {
+        if ($pemeriksaanSuhuRuang->user->id_plant !== $user->getEffectivePlantId() && !($user->role && strtolower($user->role->role) === 'superadmin')) {
             abort(403, 'Anda tidak memiliki akses ke data ini.');
         }
         
@@ -560,7 +560,7 @@ class PemeriksaanSuhuRuangController extends Controller
         $user = Auth::user();
         
         // Check plant access
-        if ($pemeriksaanSuhuRuang->user->id_plant !== $user->id_plant && !($user->role && strtolower($user->role->role) === 'superadmin')) {
+        if ($pemeriksaanSuhuRuang->user->id_plant !== $user->getEffectivePlantId() && !($user->role && strtolower($user->role->role) === 'superadmin')) {
             abort(403, 'Anda tidak memiliki akses ke data ini.');
         }
         
@@ -601,7 +601,7 @@ class PemeriksaanSuhuRuangController extends Controller
 
         if ($user->role && strtolower($user->role->role) !== 'superadmin') {
             $query->whereHas('user', function ($q) use ($user) {
-                $q->where('id_plant', $user->id_plant);
+                $q->where('id_plant', $user->getEffectivePlantId());
             });
         }
 

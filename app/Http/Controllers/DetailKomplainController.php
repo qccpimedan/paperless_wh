@@ -23,7 +23,7 @@ class DetailKomplainController extends Controller
         if (!($user->role && strtolower($user->role->role) === 'superadmin')) {
             // Admin dan role lain hanya lihat data sesuai plant
             $query->whereHas('user', function ($q) use ($user) {
-                $q->where('id_plant', $user->id_plant);
+                $q->where('id_plant', $user->getEffectivePlantId());
             });
         }
 
@@ -67,7 +67,7 @@ class DetailKomplainController extends Controller
         $shifts = Shift::query();
         if ($user->role->role !== 'SuperAdmin') {
             $shifts->whereHas('user', function($q) use ($user) {
-                $q->where('id_plant', $user->id_plant);
+                $q->where('id_plant', $user->getEffectivePlantId());
             });
         }
         $shifts = $shifts->get();
@@ -76,7 +76,7 @@ class DetailKomplainController extends Controller
         $query = Produk::query();
         if ($user->role->role !== 'SuperAdmin') {
             $query->whereHas('user', function ($q) use ($user) {
-                $q->where('id_plant', $user->id_plant);
+                $q->where('id_plant', $user->getEffectivePlantId());
             });
         }
         $produks = $query->latest()->get();
@@ -265,14 +265,14 @@ class DetailKomplainController extends Controller
     public function edit(DetailKomplain $detailKomplain)
     {
         $user = Auth::user();
-        if ($user->role->role !== 'SuperAdmin' && $user->id_plant !== $detailKomplain->user->id_plant) {
+        if ($user->role->role !== 'SuperAdmin' && $user->getEffectivePlantId() !== $detailKomplain->user->id_plant) {
             abort(403, 'Unauthorized');
         }
 
         $query = Produk::query();
         if ($user->role->role !== 'SuperAdmin') {
             $query->whereHas('user', function ($q) use ($user) {
-                $q->where('id_plant', $user->id_plant);
+                $q->where('id_plant', $user->getEffectivePlantId());
             });
         }
 
@@ -480,7 +480,7 @@ class DetailKomplainController extends Controller
     {
         $user = Auth::user();
         // SuperAdmin bisa hapus semua, Admin hanya sesuai plant
-        if ($user->role->role !== 'SuperAdmin' && $user->id_plant !== $detailKomplain->user->id_plant) {
+        if ($user->role->role !== 'SuperAdmin' && $user->getEffectivePlantId() !== $detailKomplain->user->id_plant) {
             abort(403, 'Unauthorized');
         }
         
@@ -504,7 +504,7 @@ class DetailKomplainController extends Controller
     {
         $user = Auth::user();
         // SuperAdmin bisa export semua, Admin hanya sesuai plant
-        if ($user->role->role !== 'SuperAdmin' && $user->id_plant !== $detailKomplain->user->id_plant) {
+        if ($user->role->role !== 'SuperAdmin' && $user->getEffectivePlantId() !== $detailKomplain->user->id_plant) {
             abort(403, 'Unauthorized');
         }
 

@@ -26,7 +26,7 @@ class GoldenSampleReportController extends Controller
 
         if (!($user->role && strtolower($user->role->role) === 'superadmin')) {
             $query->whereHas('user', function ($q) use ($user) {
-                $q->where('id_plant', $user->id_plant);
+                $q->where('id_plant', $user->getEffectivePlantId());
             });
         }
 
@@ -75,7 +75,7 @@ class GoldenSampleReportController extends Controller
         // Get plants untuk dropdown
         $query = Plant::query();
         if ($user->role && strtolower($user->role->role) !== 'superadmin') {
-            $query->where('id', $user->id_plant);
+            $query->where('id', $user->getEffectivePlantId());
         }
         $plants = $query->get();
         
@@ -83,7 +83,7 @@ class GoldenSampleReportController extends Controller
         $deskripsiQuery = InputDeskripsi::query();
         if ($user->role && strtolower($user->role->role) !== 'superadmin') {
             $deskripsiQuery->whereHas('user', function($q) use ($user) {
-                $q->where('id_plant', $user->id_plant);
+                $q->where('id_plant', $user->getEffectivePlantId());
             });
         }
         $deskripsis = $deskripsiQuery->latest()->get();
@@ -93,7 +93,7 @@ class GoldenSampleReportController extends Controller
             $shifts = Shift::with(['user.plant'])->get();
         } else {
             $shifts = Shift::whereHas('user', function ($query) use ($user) {
-                $query->where('id_plant', $user->id_plant);
+                $query->where('id_plant', $user->getEffectivePlantId());
             })->with(['user.plant'])->get();
         }
         
@@ -166,7 +166,7 @@ class GoldenSampleReportController extends Controller
         // Get plants untuk dropdown
         $query = Plant::query();
         if ($user->role && strtolower($user->role->role) !== 'superadmin') {
-            $query->where('id', $user->id_plant);
+            $query->where('id', $user->getEffectivePlantId());
         }
         $plants = $query->get();
         
@@ -174,7 +174,7 @@ class GoldenSampleReportController extends Controller
         $deskripsiQuery = InputDeskripsi::query();
         if ($user->role && strtolower($user->role->role) !== 'superadmin') {
             $deskripsiQuery->whereHas('user', function($q) use ($user) {
-                $q->where('id_plant', $user->id_plant);
+                $q->where('id_plant', $user->getEffectivePlantId());
             });
         }
         $deskripsis = $deskripsiQuery->latest()->get();
@@ -249,7 +249,7 @@ class GoldenSampleReportController extends Controller
         }
         
         // Admin dan role lain hanya dapat akses data dari plant mereka
-        if ($goldenSampleReport->user->id_plant !== $user->id_plant) {
+        if ($goldenSampleReport->user->id_plant !== $user->getEffectivePlantId()) {
             abort(403, 'Anda tidak memiliki akses ke data ini.');
         }
     }
@@ -268,7 +268,7 @@ class GoldenSampleReportController extends Controller
             // Jika "other", tampilkan semua deskripsi sesuai user
             if ($user->role && strtolower($user->role->role) !== 'superadmin') {
                 $query->whereHas('user', function($q) use ($user) {
-                    $q->where('id_plant', $user->id_plant);
+                    $q->where('id_plant', $user->getEffectivePlantId());
                 });
             }
         }
@@ -424,7 +424,7 @@ class GoldenSampleReportController extends Controller
 
         if ($user->role && strtolower($user->role->role) !== 'superadmin') {
             $query->whereHas('user', function ($q) use ($user) {
-                $q->where('id_plant', $user->id_plant);
+                $q->where('id_plant', $user->getEffectivePlantId());
             });
         }
 

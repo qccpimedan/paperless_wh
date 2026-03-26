@@ -30,7 +30,7 @@ class PemeriksaanReturnBarangCustomerController extends Controller
 
         if (!($user->role && strtolower($user->role->role) === 'superadmin')) {
             $query->whereHas('user', function ($q) use ($user) {
-                $q->where('id_plant', $user->id_plant);
+                $q->where('id_plant', $user->getEffectivePlantId());
             });
         }
 
@@ -150,19 +150,19 @@ return view('qc-sistem.pemeriksaan-return-barang-customer.index', compact('pemer
         } else {
             // Filter berdasarkan plant user yang login
             $shifts = Shift::whereHas('user', function ($query) use ($user) {
-                $query->where('id_plant', $user->id_plant);
+                $query->where('id_plant', $user->getEffectivePlantId());
             })->with(['user.plant'])->get();
 
             $ekspedisis = Ekspedisi::whereHas('user', function ($query) use ($user) {
-                $query->where('id_plant', $user->id_plant);
+                $query->where('id_plant', $user->getEffectivePlantId());
             })->with(['user.plant'])->get();
 
             $customers = Customer::whereHas('user', function ($query) use ($user) {
-                $query->where('id_plant', $user->id_plant);
+                $query->where('id_plant', $user->getEffectivePlantId());
             })->with(['user.plant'])->get();
 
             $produks = Produk::whereHas('user', function ($query) use ($user) {
-                $query->where('id_plant', $user->id_plant);
+                $query->where('id_plant', $user->getEffectivePlantId());
             })->with(['user.plant'])->get();
         }
 
@@ -178,7 +178,7 @@ return view('qc-sistem.pemeriksaan-return-barang-customer.index', compact('pemer
             $produkKategoriOptions = Produk::query()
                 ->whereNotNull('kategori_code')
                 ->whereHas('user', function ($q) use ($user) {
-                    $q->where('id_plant', $user->id_plant);
+                    $q->where('id_plant', $user->getEffectivePlantId());
                 })
                 ->select('kategori_code')
                 ->distinct()
@@ -193,7 +193,7 @@ return view('qc-sistem.pemeriksaan-return-barang-customer.index', compact('pemer
 
         if (!$isSuperAdmin) {
             $produkList->whereHas('user', function ($q) use ($user) {
-                $q->where('id_plant', $user->id_plant);
+                $q->where('id_plant', $user->getEffectivePlantId());
             });
         }
 
@@ -353,19 +353,19 @@ return view('qc-sistem.pemeriksaan-return-barang-customer.index', compact('pemer
         } else {
             // Filter berdasarkan plant user yang login
             $shifts = Shift::whereHas('user', function ($query) use ($user) {
-                $query->where('id_plant', $user->id_plant);
+                $query->where('id_plant', $user->getEffectivePlantId());
             })->with(['user.plant'])->get();
 
             $ekspedisis = Ekspedisi::whereHas('user', function ($query) use ($user) {
-                $query->where('id_plant', $user->id_plant);
+                $query->where('id_plant', $user->getEffectivePlantId());
             })->with(['user.plant'])->get();
 
             $customers = Customer::whereHas('user', function ($query) use ($user) {
-                $query->where('id_plant', $user->id_plant);
+                $query->where('id_plant', $user->getEffectivePlantId());
             })->with(['user.plant'])->get();
 
             $produks = Produk::whereHas('user', function ($query) use ($user) {
-                $query->where('id_plant', $user->id_plant);
+                $query->where('id_plant', $user->getEffectivePlantId());
             })->with(['user.plant'])->get();
         }
         $produkKategoriOptions = Produk::query()
@@ -380,7 +380,7 @@ return view('qc-sistem.pemeriksaan-return-barang-customer.index', compact('pemer
             $produkKategoriOptions = Produk::query()
                 ->whereNotNull('kategori_code')
                 ->whereHas('user', function ($q) use ($user) {
-                    $q->where('id_plant', $user->id_plant);
+                    $q->where('id_plant', $user->getEffectivePlantId());
                 })
                 ->select('kategori_code')
                 ->distinct()
@@ -395,7 +395,7 @@ return view('qc-sistem.pemeriksaan-return-barang-customer.index', compact('pemer
 
         if (!$isSuperAdmin) {
             $produkList->whereHas('user', function ($q) use ($user) {
-                $q->where('id_plant', $user->id_plant);
+                $q->where('id_plant', $user->getEffectivePlantId());
             });
         }
 
@@ -537,7 +537,7 @@ return view('qc-sistem.pemeriksaan-return-barang-customer.index', compact('pemer
         }
 
         // Cek apakah data milik plant user
-        if ($pemeriksaanReturnBarangCustomer->user->id_plant !== $user->id_plant) {
+        if ($pemeriksaanReturnBarangCustomer->user->id_plant !== $user->getEffectivePlantId()) {
             abort(403, 'Unauthorized access');
         }
     }
@@ -683,7 +683,7 @@ return view('qc-sistem.pemeriksaan-return-barang-customer.index', compact('pemer
 
         if ($user->role && strtolower($user->role->role) !== 'superadmin') {
             $query->whereHas('user', function ($q) use ($user) {
-                $q->where('id_plant', $user->id_plant);
+                $q->where('id_plant', $user->getEffectivePlantId());
             });
         }
 

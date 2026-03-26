@@ -20,7 +20,7 @@ class PemeriksaanSuhuRuangV3Controller extends Controller
 
         if (!($user->role && strtolower($user->role->role) === 'superadmin')) {
             $query->whereHas('user', function ($q) use ($user) {
-                $q->where('id_plant', $user->id_plant);
+                $q->where('id_plant', $user->getEffectivePlantId());
             });
         }
 
@@ -59,7 +59,7 @@ class PemeriksaanSuhuRuangV3Controller extends Controller
         
         $shifts = Shift::whereHas('user', function($query) use ($user) {
             if ($user->role && strtolower($user->role->role) !== 'superadmin') {
-                $query->where('id_plant', $user->id_plant);
+                $query->where('id_plant', $user->getEffectivePlantId());
             }
         })->get();
         
@@ -166,7 +166,7 @@ class PemeriksaanSuhuRuangV3Controller extends Controller
         
         $shifts = Shift::whereHas('user', function($query) use ($user) {
             if ($user->role && strtolower($user->role->role) !== 'superadmin') {
-                $query->where('id_plant', $user->id_plant);
+                $query->where('id_plant', $user->getEffectivePlantId());
             }
         })->get();
 
@@ -329,7 +329,7 @@ class PemeriksaanSuhuRuangV3Controller extends Controller
     {
         $user = Auth::user();
         if ($user->role && strtolower($user->role->role) !== 'superadmin') {
-            if ($pemeriksaan->user->id_plant !== $user->id_plant) {
+            if ($pemeriksaan->user->id_plant !== $user->getEffectivePlantId()) {
                 abort(403, 'Unauthorized');
             }
         }
@@ -482,7 +482,7 @@ class PemeriksaanSuhuRuangV3Controller extends Controller
 
         if ($user->role && strtolower($user->role->role) !== 'superadmin') {
             $query->whereHas('user', function ($q) use ($user) {
-                $q->where('id_plant', $user->id_plant);
+                $q->where('id_plant', $user->getEffectivePlantId());
             });
         }
 

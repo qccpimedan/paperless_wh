@@ -146,6 +146,17 @@ class User extends Authenticatable
     }
 
     /**
+     * Get the effective plant ID (numeric)
+     */
+    public function getEffectivePlantId(): ?int
+    {
+        if ($this->isManager() && $this->active_plant_id) {
+            return (int) $this->active_plant_id;
+        }
+        return (int) $this->id_plant;
+    }
+
+    /**
      * Get timezone from effective plant
      */
     public function getTimezoneAttribute(): string

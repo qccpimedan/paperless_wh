@@ -35,7 +35,7 @@ class PemeriksaanLoadingProdukController extends Controller
 
         if (!($user->role && strtolower($user->role->role) === 'superadmin')) {
             $query->whereHas('user', function ($q) use ($user) {
-                $q->where('id_plant', $user->id_plant);
+                $q->where('id_plant', $user->getEffectivePlantId());
             });
         }
 
@@ -142,23 +142,23 @@ return view('qc-sistem.pemeriksaan-loading-produk.index', compact('pemeriksaans'
         } else {
             // Filter berdasarkan plant user yang login
             $shifts = Shift::whereHas('user', function ($query) use ($user) {
-                $query->where('id_plant', $user->id_plant);
+                $query->where('id_plant', $user->getEffectivePlantId());
             })->with(['user.plant'])->get();
             
             $tujuanPengirimans = TujuanPengiriman::whereHas('user', function ($query) use ($user) {
-                $query->where('id_plant', $user->id_plant);
+                $query->where('id_plant', $user->getEffectivePlantId());
             })->with(['user.plant', 'customer'])->get();
             
             $kendaraans = JenisKendaraan::whereHas('user', function ($query) use ($user) {
-                $query->where('id_plant', $user->id_plant);
+                $query->where('id_plant', $user->getEffectivePlantId());
             })->with(['user.plant'])->get();
             
             $supirs = Supir::whereHas('user', function ($query) use ($user) {
-                $query->where('id_plant', $user->id_plant);
+                $query->where('id_plant', $user->getEffectivePlantId());
             })->with(['user.plant'])->get();
             
             $produks = Produk::whereHas('user', function ($query) use ($user) {
-                $query->where('id_plant', $user->id_plant);
+                $query->where('id_plant', $user->getEffectivePlantId());
             })->with(['user.plant'])->get();
         }
 
@@ -405,23 +405,23 @@ return view('qc-sistem.pemeriksaan-loading-produk.index', compact('pemeriksaans'
         } else {
             // Filter berdasarkan plant user yang login
             $shifts = Shift::whereHas('user', function ($query) use ($user) {
-                $query->where('id_plant', $user->id_plant);
+                $query->where('id_plant', $user->getEffectivePlantId());
             })->with(['user.plant'])->get();
             
             $tujuanPengirimans = TujuanPengiriman::whereHas('user', function ($query) use ($user) {
-                $query->where('id_plant', $user->id_plant);
+                $query->where('id_plant', $user->getEffectivePlantId());
             })->with(['user.plant', 'customer'])->get();
             
             $kendaraans = JenisKendaraan::whereHas('user', function ($query) use ($user) {
-                $query->where('id_plant', $user->id_plant);
+                $query->where('id_plant', $user->getEffectivePlantId());
             })->with(['user.plant'])->get();
             
             $supirs = Supir::whereHas('user', function ($query) use ($user) {
-                $query->where('id_plant', $user->id_plant);
+                $query->where('id_plant', $user->getEffectivePlantId());
             })->with(['user.plant'])->get();
             
             $produks = Produk::whereHas('user', function ($query) use ($user) {
-                $query->where('id_plant', $user->id_plant);
+                $query->where('id_plant', $user->getEffectivePlantId());
             })->with(['user.plant'])->get();
         }
 
@@ -624,7 +624,7 @@ return view('qc-sistem.pemeriksaan-loading-produk.index', compact('pemeriksaans'
         }
 
         $pemeriksaan->loadMissing('user');
-        if ($pemeriksaan->user && $pemeriksaan->user->id_plant !== $user->id_plant) {
+        if ($pemeriksaan->user && $pemeriksaan->user->id_plant !== $user->getEffectivePlantId()) {
             abort(403, 'Anda tidak memiliki akses ke data ini.');
         }
     }
@@ -766,7 +766,7 @@ return view('qc-sistem.pemeriksaan-loading-produk.index', compact('pemeriksaans'
 
         if ($user->role && strtolower($user->role->role) !== 'superadmin') {
             $query->whereHas('user', function ($q) use ($user) {
-                $q->where('id_plant', $user->id_plant);
+                $q->where('id_plant', $user->getEffectivePlantId());
             });
         }
 

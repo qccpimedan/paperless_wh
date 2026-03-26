@@ -36,7 +36,7 @@ class PemeriksaanBarangMudahPecahController extends Controller
             if ($role !== 'superadmin') {
                 // Admin dan role lain: lihat data dari plant mereka saja
                 $query->whereHas('user', function($q) use ($user) {
-                    $q->where('id_plant', $user->id_plant);
+                    $q->where('id_plant', $user->getEffectivePlantId());
                 });
             }
         }
@@ -93,7 +93,7 @@ class PemeriksaanBarangMudahPecahController extends Controller
         $shiftQuery = Shift::query();
         if ($user->role && strtolower($user->role->role) !== 'superadmin') {
             $shiftQuery->whereHas('user', function($q) use ($user) {
-                $q->where('id_plant', $user->id_plant);
+                $q->where('id_plant', $user->getEffectivePlantId());
             });
         }
         $shifts = $shiftQuery->get();
@@ -102,7 +102,7 @@ class PemeriksaanBarangMudahPecahController extends Controller
         $areaQuery = InputArea::query();
         if ($user->role && strtolower($user->role->role) !== 'superadmin') {
             $areaQuery->whereHas('user', function($q) use ($user) {
-                $q->where('id_plant', $user->id_plant);
+                $q->where('id_plant', $user->getEffectivePlantId());
             });
         }
         $areas = $areaQuery->get();
@@ -111,7 +111,7 @@ class PemeriksaanBarangMudahPecahController extends Controller
         $barangQuery = Barang::query();
         if ($user->role && strtolower($user->role->role) !== 'superadmin') {
             $barangQuery->whereHas('user', function($q) use ($user) {
-                $q->where('id_plant', $user->id_plant);
+                $q->where('id_plant', $user->getEffectivePlantId());
             });
         }
         $barangs = $barangQuery->get();
@@ -251,7 +251,7 @@ class PemeriksaanBarangMudahPecahController extends Controller
         $shiftQuery = Shift::query();
         if ($user->role && strtolower($user->role->role) !== 'superadmin') {
             $shiftQuery->whereHas('user', function($q) use ($user) {
-                $q->where('id_plant', $user->id_plant);
+                $q->where('id_plant', $user->getEffectivePlantId());
             });
         }
         $shifts = $shiftQuery->get();
@@ -259,7 +259,7 @@ class PemeriksaanBarangMudahPecahController extends Controller
         $areaQuery = InputArea::query();
         if ($user->role && strtolower($user->role->role) !== 'superadmin') {
             $areaQuery->whereHas('user', function($q) use ($user) {
-                $q->where('id_plant', $user->id_plant);
+                $q->where('id_plant', $user->getEffectivePlantId());
             });
         }
         $areas = $areaQuery->get();
@@ -268,7 +268,7 @@ class PemeriksaanBarangMudahPecahController extends Controller
         $barangQuery = Barang::query();
         if ($user->role && strtolower($user->role->role) !== 'superadmin') {
             $barangQuery->whereHas('user', function($q) use ($user) {
-                $q->where('id_plant', $user->id_plant);
+                $q->where('id_plant', $user->getEffectivePlantId());
             });
         }
         $barangs = $barangQuery->get();
@@ -398,7 +398,7 @@ class PemeriksaanBarangMudahPecahController extends Controller
         }
         
         // Admin dan role lain hanya dapat akses data dari plant mereka
-        if ($pemeriksaan->user->id_plant !== $user->id_plant) {
+        if ($pemeriksaan->user->id_plant !== $user->getEffectivePlantId()) {
             abort(403, 'Anda tidak memiliki akses ke data ini.');
         }
     }
@@ -602,7 +602,7 @@ class PemeriksaanBarangMudahPecahController extends Controller
 
         if ($user->role && strtolower($user->role->role) !== 'superadmin') {
             $query->whereHas('user', function ($q) use ($user) {
-                $q->where('id_plant', $user->id_plant);
+                $q->where('id_plant', $user->getEffectivePlantId());
             });
         }
 

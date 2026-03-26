@@ -39,7 +39,7 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
             });
 
         $user = Auth::user();
-        $plantId = $user->id_plant;
+        $plantId = $user->getEffectivePlantId();
 
         $bahanRows = Bahan::query()
             ->select(['id', 'nama_bahan'])
@@ -152,13 +152,15 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
 
         $query = PemeriksaanKedatanganBahanBakuPenunjang::with(['user.role', 'user.plant', 'bahan', 'shift']);
         
-        // SuperAdmin dapat melihat semua data
+        // SuperAdmin dapat melihat semua data, tapi jika ingin filter sesuai plant aktif (jika ada):
         if ($user->role && strtolower($user->role->role) === 'superadmin') {
-            // no additional scope
+            // Jika superadmin ingin melihat semua, biarkan. 
+            // Tapi biasanya superadmin juga terikat ke id_plant default jika tidak ada active_plant_id.
         } else {
-            // Admin dan role lain hanya melihat data sesuai plant mereka
-            $query->whereHas('user', function ($q) use ($user) {
-                $q->where('id_plant', $user->id_plant); // ✅ GUNAKAN id_plant
+            // Manager dan role lain hanya melihat data sesuai plant efektif mereka (hasil switch)
+            $effectivePlantId = $user->getEffectivePlantId();
+            $query->whereHas('user', function ($q) use ($effectivePlantId) {
+                $q->where('id_plant', $effectivePlantId);
             });
         }
 
@@ -232,19 +234,19 @@ return view('qc-sistem.pemeriksaan-kedatangan-bahan-baku-penunjang.index', compa
     public function create()
     {
         $user = Auth::user();
-        $plantId = $user->id_plant;
+        $plantId = $user->getEffectivePlantId();
         $produkKategoriOptions = collect();
         $produkByKategori = collect();
         $produkMeta = collect();
         $produkKategoriById = collect();
         
-        // SuperAdmin dapat melihat semua data
+        // Filter data berdasarkan plant aktif (hasil switch)
         if ($user->role && strtolower($user->role->role) === 'superadmin') {
             $shifts = Shift::with(['user.plant'])->get();
             $countries = Countries::getList('en', 'php');
         } else {
-            $shifts = Shift::whereHas('user', function ($query) use ($user) {
-                $query->where('id_plant', $user->id_plant); // ✅ GUNAKAN id_plant
+            $shifts = Shift::whereHas('user', function ($query) use ($plantId) {
+                $query->where('id_plant', $plantId);
             })->with(['user.plant'])->get();
             
             $countries = Countries::getList('en', 'php');
@@ -313,7 +315,8 @@ return view('qc-sistem.pemeriksaan-kedatangan-bahan-baku-penunjang.index', compa
         $user = Auth::user();
         
         if (!($user->role && strtolower($user->role->role) === 'superadmin')) {
-            if ($pemeriksaan->user->id_plant !== $user->id_plant) { // ✅ GUNAKAN id_plant
+            $effectivePlantId = $user->getEffectivePlantId();
+            if ($pemeriksaan->user->id_plant !== $effectivePlantId) {
                 abort(403, 'Unauthorized access to different plant data.');
             }
         }
@@ -613,7 +616,7 @@ return view('qc-sistem.pemeriksaan-kedatangan-bahan-baku-penunjang.index', compa
         $this->checkPlantAccess($pemeriksaanBahanBaku);
         
         $user = Auth::user();
-        $plantId = $user->id_plant;
+        $plantId = $user->getEffectivePlantId();
         $produkKategoriOptions = collect();
         $produkByKategori = collect();
         $produkMeta = collect();
@@ -623,8 +626,8 @@ return view('qc-sistem.pemeriksaan-kedatangan-bahan-baku-penunjang.index', compa
             $shifts = Shift::with(['user.plant'])->get();
             $countries = Countries::getList('en', 'php');
         } else {
-            $shifts = Shift::whereHas('user', function ($query) use ($user) {
-                $query->where('id_plant', $user->id_plant); // ✅ GUNAKAN id_plant
+            $shifts = Shift::whereHas('user', function ($query) use ($plantId) {
+                $query->where('id_plant', $plantId);
             })->with(['user.plant'])->get();
             
             $countries = Countries::getList('en', 'php');
@@ -1000,7 +1003,7 @@ return view('qc-sistem.pemeriksaan-kedatangan-bahan-baku-penunjang.index', compa
         $this->checkPlantAccess($pemeriksaanBahanBaku);
 
         $user = Auth::user();
-        $plantId = $user->id_plant;
+        $plantId = $user->getEffectivePlantId();
         $produkKategoriOptions = collect();
         $produkByKategori = collect();
         $produkMeta = collect();
@@ -1371,7 +1374,7 @@ return view('qc-sistem.pemeriksaan-kedatangan-bahan-baku-penunjang.index', compa
         // Filter by plant access
         if ($user->role && strtolower($user->role->role) !== 'superadmin') {
             $query->whereHas('user', function($q) use ($user) {
-                $q->where('id_plant', $user->id_plant);
+                $q->where('id_plant', $user->getEffectivePlantId());
             });
         }
 

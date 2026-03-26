@@ -26,7 +26,7 @@ class PemeriksaanKedatanganChemicalController extends Controller
 
         if (!($user->role && strtolower($user->role->role) === 'superadmin')) {
             $query->whereHas('user', function ($q) use ($user) {
-                $q->where('id_plant', $user->id_plant);
+                $q->where('id_plant', $user->getEffectivePlantId());
             });
         }
 
@@ -119,25 +119,25 @@ return view('qc-sistem.pemeriksaan-kedatangan-chemical.index', compact('pemeriks
             $countries = Countries::getList('en', 'php');
         } else {
             $shifts = Shift::whereHas('user', function ($query) use ($user) {
-                $query->where('id_plant', $user->id_plant);
+                $query->where('id_plant', $user->getEffectivePlantId());
             })->with(['user.plant'])->get();
             
             $chemicals = Chemical::whereHas('user', function ($query) use ($user) {
-                $query->where('id_plant', $user->id_plant);
+                $query->where('id_plant', $user->getEffectivePlantId());
             })->with(['user.plant'])->get();
             
             $produsens = Produsen::whereHas('user', function ($query) use ($user) {
-                $query->where('id_plant', $user->id_plant);
+                $query->where('id_plant', $user->getEffectivePlantId());
             })->with(['user.plant'])->get();
             
             $distributors = Distributor::whereHas('user', function ($query) use ($user) {
-                $query->where('id_plant', $user->id_plant);
+                $query->where('id_plant', $user->getEffectivePlantId());
             })->with(['user.plant'])->get();
             
             $countries = Countries::getList('en', 'php');
         }
 
-        $plantId = $user->id_plant;
+        $plantId = $user->getEffectivePlantId();
 
         $produkKategoriOptions = Produk::query()
             ->select('kategori_code')
@@ -240,7 +240,7 @@ return view('qc-sistem.pemeriksaan-kedatangan-chemical.index', compact('pemeriks
         $user = Auth::user();
         
         if (!($user->role && strtolower($user->role->role) === 'superadmin')) {
-            if ($pemeriksaan->user->id_plant !== $user->id_plant) {
+            if ($pemeriksaan->user->id_plant !== $user->getEffectivePlantId()) {
                 abort(403, 'Unauthorized access to different plant data.');
             }
         }
@@ -277,7 +277,7 @@ return view('qc-sistem.pemeriksaan-kedatangan-chemical.index', compact('pemeriks
                 $chemicalRows = Chemical::query()
                     ->select(['id', 'nama_chemical'])
                     ->whereHas('user', function ($q) use ($user) {
-                        $q->where('id_plant', $user->id_plant);
+                        $q->where('id_plant', $user->getEffectivePlantId());
                     })
                     ->get();
             }
@@ -465,7 +465,7 @@ return view('qc-sistem.pemeriksaan-kedatangan-chemical.index', compact('pemeriks
         $pemeriksaanChemical->load(['user.plant', 'shift']);
 
         $user = Auth::user();
-        $plantId = $user->id_plant;
+        $plantId = $user->getEffectivePlantId();
 
         $produkList = Produk::query()
             ->select(['id', 'nama_produk', 'kategori_code'])
@@ -531,25 +531,25 @@ return view('qc-sistem.pemeriksaan-kedatangan-chemical.index', compact('pemeriks
             $distributors = Distributor::with(['user.plant'])->get();
         } else {
             $shifts = Shift::whereHas('user', function ($query) use ($user) {
-                $query->where('id_plant', $user->id_plant);
+                $query->where('id_plant', $user->getEffectivePlantId());
             })->with(['user.plant'])->get();
             
             $chemicals = Chemical::whereHas('user', function ($query) use ($user) {
-                $query->where('id_plant', $user->id_plant);
+                $query->where('id_plant', $user->getEffectivePlantId());
             })->with(['user.plant'])->get();
             
             $produsens = Produsen::whereHas('user', function ($query) use ($user) {
-                $query->where('id_plant', $user->id_plant);
+                $query->where('id_plant', $user->getEffectivePlantId());
             })->with(['user.plant'])->get();
             
             $distributors = Distributor::whereHas('user', function ($query) use ($user) {
-                $query->where('id_plant', $user->id_plant);
+                $query->where('id_plant', $user->getEffectivePlantId());
             })->with(['user.plant'])->get();
         }
         
         $countries = Countries::getList('en', 'php');
 
-        $plantId = $user->id_plant;
+        $plantId = $user->getEffectivePlantId();
 
         $produkKategoriOptions = Produk::query()
             ->select('kategori_code')
@@ -676,21 +676,21 @@ return view('qc-sistem.pemeriksaan-kedatangan-chemical.index', compact('pemeriks
             $distributors = Distributor::with(['user.plant'])->get();
         } else {
             $chemicals = Chemical::whereHas('user', function ($query) use ($user) {
-                $query->where('id_plant', $user->id_plant);
+                $query->where('id_plant', $user->getEffectivePlantId());
             })->with(['user.plant'])->get();
 
             $produsens = Produsen::whereHas('user', function ($query) use ($user) {
-                $query->where('id_plant', $user->id_plant);
+                $query->where('id_plant', $user->getEffectivePlantId());
             })->with(['user.plant'])->get();
 
             $distributors = Distributor::whereHas('user', function ($query) use ($user) {
-                $query->where('id_plant', $user->id_plant);
+                $query->where('id_plant', $user->getEffectivePlantId());
             })->with(['user.plant'])->get();
         }
 
         $countries = Countries::getList('en', 'php');
 
-        $plantId = $user->id_plant;
+        $plantId = $user->getEffectivePlantId();
 
         $produkKategoriOptions = Produk::query()
             ->select('kategori_code')
@@ -816,7 +816,7 @@ return view('qc-sistem.pemeriksaan-kedatangan-chemical.index', compact('pemeriks
                     $chemicalRows = Chemical::query()
                         ->select(['id', 'nama_chemical'])
                         ->whereHas('user', function ($q) use ($user) {
-                            $q->where('id_plant', $user->id_plant);
+                            $q->where('id_plant', $user->getEffectivePlantId());
                         })
                         ->get();
                 }
@@ -973,7 +973,7 @@ return view('qc-sistem.pemeriksaan-kedatangan-chemical.index', compact('pemeriks
                 $chemicalRows = Chemical::query()
                     ->select(['id', 'nama_chemical'])
                     ->whereHas('user', function ($q) use ($user) {
-                        $q->where('id_plant', $user->id_plant);
+                        $q->where('id_plant', $user->getEffectivePlantId());
                     })
                     ->get();
             }
@@ -1288,7 +1288,7 @@ return view('qc-sistem.pemeriksaan-kedatangan-chemical.index', compact('pemeriks
 
         if ($user->role && strtolower($user->role->role) !== 'superadmin') {
             $query->whereHas('user', function($q) use ($user) {
-                $q->where('id_plant', $user->id_plant);
+                $q->where('id_plant', $user->getEffectivePlantId());
             });
         }
 
