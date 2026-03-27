@@ -714,6 +714,9 @@ document.addEventListener('DOMContentLoaded', function() {
         if (typeof window.Choices !== 'undefined') {
             try {
                 const instance = new Choices(produkSelect, {
+                    searchResultLimit: 100,
+                    searchFuzziness: 0.000001,
+                    fuseOptions: { ignoreLocation: true, threshold: 0.2, matchAllTokens: false },
                     searchEnabled: true,
                     searchPlaceholderValue: 'Cari...',
                     itemSelectText: 'Tekan untuk memilih',
@@ -942,7 +945,10 @@ function initializeAllChoices() {
         
         try {
             const choicesInstance = new Choices(select, {
-                searchEnabled: true,
+                searchResultLimit: 100,
+                    searchFuzziness: 0.000001,
+                    fuseOptions: { ignoreLocation: true, threshold: 0.2, matchAllTokens: false },
+                    searchEnabled: true,
                 removeItemButton: true,
                 placeholder: true,
                 placeholderValue: 'Pilih opsi',

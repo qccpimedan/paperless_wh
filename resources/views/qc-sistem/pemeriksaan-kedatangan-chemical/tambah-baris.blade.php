@@ -277,7 +277,10 @@
             if (typeof window.Choices !== 'undefined') {
                 document.querySelectorAll('.choices').forEach(function (element) {
                     new Choices(element, {
-                        searchEnabled: true,
+                        searchResultLimit: 100,
+                    searchFuzziness: 0.000001,
+                    fuseOptions: { ignoreLocation: true, threshold: 0.2, matchAllTokens: false },
+                    searchEnabled: true,
                         itemSelectText: '',
                         shouldSort: false,
                     });
@@ -298,6 +301,9 @@
             }
             try {
                 const instance = new Choices(selectEl, {
+                    searchResultLimit: 100,
+                    searchFuzziness: 0.000001,
+                    fuseOptions: { ignoreLocation: true, threshold: 0.2, matchAllTokens: false },
                     searchEnabled: true,
                     searchPlaceholderValue: 'Cari...',
                     itemSelectText: 'Tekan untuk memilih',

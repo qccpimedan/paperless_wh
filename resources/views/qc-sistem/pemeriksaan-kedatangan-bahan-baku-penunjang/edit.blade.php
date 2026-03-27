@@ -1085,7 +1085,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
         try {
             produkSelect.choicesInstance = new Choices(produkSelect, {
-                searchEnabled: true,
+                searchResultLimit: 100,
+                    searchFuzziness: 0.000001,
+                    fuseOptions: { ignoreLocation: true, threshold: 0.2, matchAllTokens: false },
+                    searchEnabled: true,
                 removeItemButton: true,
                 placeholder: true,
                 placeholderValue: 'Pilih opsi',
@@ -1215,6 +1218,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
             try {
                 new Choices(select, {
+                    searchResultLimit: 100,
+                    searchFuzziness: 0.000001,
+                    fuseOptions: { ignoreLocation: true, threshold: 0.2, matchAllTokens: false },
                     searchEnabled: true,
                     removeItemButton: true,
                     placeholder: true,
