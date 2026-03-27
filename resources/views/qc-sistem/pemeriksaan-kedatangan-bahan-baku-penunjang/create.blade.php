@@ -1499,7 +1499,10 @@ function populateProdukOptionsForRow(rowEl) {
 
         try {
             const instance = new Choices(produkSelect, {
-                searchEnabled: true,
+                searchResultLimit: 100,
+                    searchFuzziness: 0.000001,
+                    fuseOptions: { ignoreLocation: true, threshold: 0.2, matchAllTokens: false },
+                    searchEnabled: true,
                 searchPlaceholderValue: 'Cari...',
                 itemSelectText: 'Tekan untuk memilih',
                 noResultsText: 'Tidak ada hasil ditemukan',
@@ -1639,7 +1642,10 @@ function initializeAllChoices() {
         
         try {
             new Choices(select, {
-                searchEnabled: true,
+                searchResultLimit: 100,
+                    searchFuzziness: 0.000001,
+                    fuseOptions: { ignoreLocation: true, threshold: 0.2, matchAllTokens: false },
+                    searchEnabled: true,
                 removeItemButton: true,
                 placeholder: true,
                 placeholderValue: 'Pilih opsi',
@@ -2069,7 +2075,10 @@ function addNewRow() {
     newSelects.forEach(select => {
         try {
             new Choices(select, {
-                searchEnabled: true,
+                searchResultLimit: 100,
+                    searchFuzziness: 0.000001,
+                    fuseOptions: { ignoreLocation: true, threshold: 0.2, matchAllTokens: false },
+                    searchEnabled: true,
                 removeItemButton: true,
                 placeholder: true,
                 placeholderValue: 'Pilih opsi',
