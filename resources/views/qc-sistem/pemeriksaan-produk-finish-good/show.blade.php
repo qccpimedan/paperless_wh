@@ -151,6 +151,22 @@
                             }
                         };
 
+                        $normalizeList = function ($val) {
+                            if ($val === null || $val === '') return null;
+                            if (is_array($val)) {
+                                $arr = array_values(array_filter($val, fn ($v) => $v !== null && $v !== ''));
+                                return count($arr) ? implode(', ', $arr) : null;
+                            }
+                            if (is_string($val)) {
+                                $decoded = json_decode($val, true);
+                                if (is_array($decoded)) {
+                                    $arr = array_values(array_filter($decoded, fn ($v) => $v !== null && $v !== ''));
+                                    return count($arr) ? implode(', ', $arr) : null;
+                                }
+                            }
+                            return (string) $val;
+                        };
+
                         // Group by Produk (Model A) but data is stored flat in *_array.
                         // Key includes kategori + negara to avoid mixing different headers.
                         $grouped = [];
@@ -212,8 +228,8 @@
                                     $namaProduk = $pid && isset($produkNamaById[$pid]) ? $produkNamaById[$pid] : '-';
                                     $kategori = $group['kategori'] ?? null;
                                     $negara = $group['negara'] ?? null;
-                                    $produsen = $group['produsen'] ?? null;
-                                    $distributor = $group['distributor'] ?? null;
+                                    $produsen = $normalizeList($group['produsen'] ?? null);
+                                    $distributor = $normalizeList($group['distributor'] ?? null);
                                     $logoHalal = $group['logo_halal'] ?? null;
                                     $dokumenHalal = $group['dokumen_halal'] ?? null;
                                     $coa = $group['coa'] ?? null;
