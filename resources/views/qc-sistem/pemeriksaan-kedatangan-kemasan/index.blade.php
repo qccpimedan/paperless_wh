@@ -333,10 +333,10 @@
                                             </td>
                                             <td>
                                                 <div class="btn-vertical" role="group">
-                                                        <a href="{{ route('pemeriksaan-kedatangan-kemasan.tambah-baris', $pemeriksaan->uuid) }}"
+                                                        <!-- <a href="{{ route('pemeriksaan-kedatangan-kemasan.tambah-baris', $pemeriksaan->uuid) }}"
                                                         class="btn btn-sm btn-success" title="Tambah Baris">
                                                             <i class="bi bi-plus-circle"></i>
-                                                        </a>
+                                                        </a> -->
                                                     @can('view_pemeriksaan_kedatangan_kemasan')
                                                         <a href="{{ route('pemeriksaan-kedatangan-kemasan.show', $pemeriksaan->uuid) }}" 
                                                         class="btn btn-sm btn-info" title="Lihat Detail">
