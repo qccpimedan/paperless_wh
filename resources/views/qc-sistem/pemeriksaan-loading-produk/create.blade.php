@@ -375,7 +375,7 @@
                                                         </div>
                                                         <div class="row mt-3">
                                                             <div class="col-md-3">
-                                                                <label>Berat per Karung</label>
+                                                                <label>Berat per Karung atau Box</label>
                                                                 <input type="text" class="form-control" name="produk_data[0][berat_perkarung]" value="{{ old('produk_data.0.berat_perkarung') }}" placeholder="Contoh: 25 Kg">
                                                             </div>
                                                         </div>
@@ -1023,7 +1023,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     </div>
                     <div class="row mt-3">
                         <div class="col-md-3">
-                            <label>Berat per Karung</label>
+                            <label>Berat per Karung atau Box</label>
                             <input type="text" class="form-control" name="produk_data[${tempIndex}][berat_perkarung]" placeholder="Contoh: 25 Kg">
                         </div>
                     </div>
@@ -1158,7 +1158,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     </div>
                     <div class="row mt-3">
                         <div class="col-md-3">
-                            <label>Berat per Karung</label>
+                            <label>Berat per Karung atau Box</label>
                             <input type="text" class="form-control" name="produk_data[0][berat_perkarung]" placeholder="Contoh: 25 Kg">
                         </div>
                     </div>

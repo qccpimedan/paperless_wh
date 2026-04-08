@@ -23,7 +23,7 @@ class PemeriksaanKebersihanAreaController extends Controller
 
         $search = trim((string) $request->input('search', ''));
 
-        $query = PemeriksaanKebersihanArea::with(['user.role', 'user.plant', 'shift', 'area', 'masterForm']);
+        $query = PemeriksaanKebersihanArea::with(['user.role', 'user.plant', 'shift']);
 
         if (!($user->role && strtolower($user->role->role) === 'superadmin')) {
             $query->whereHas('user', function ($q) use ($user) {
@@ -51,12 +51,7 @@ class PemeriksaanKebersihanAreaController extends Controller
                     ->orWhereHas('shift', function ($qs) use ($search) {
                         $qs->where('shift', 'like', '%' . $search . '%');
                     })
-                    ->orWhereHas('area', function ($qa) use ($search) {
-                        $qa->where('nama_area', 'like', '%' . $search . '%');
-                    })
-                    ->orWhereHas('masterForm', function ($qm) use ($search) {
-                        $qm->where('nama_form', 'like', '%' . $search . '%');
-                    });
+                    ->orWhere('area_data', 'like', '%' . $search . '%'); // Search directly in json blob
             });
         }
 
@@ -100,60 +95,69 @@ class PemeriksaanKebersihanAreaController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'id_master_form' => 'required|exists:input_master_forms,id',
-            'id_area' => 'required|exists:input_areas,id',
             'id_shift' => 'required|exists:shifts,id',
             'tanggal' => 'required|date',
-            'jam_sebelum_proses' => ['nullable', 'regex:/^\d{2}:\d{2}(:\d{2})?$/'],
-            'jam_saat_proses' => ['nullable', 'regex:/^\d{2}:\d{2}(:\d{2})?$/'],
-            'verifikasi_hasil' => 'nullable|boolean',
+            'items' => 'required|array|min:1',
         ]);
 
-        $jamSebelum = $request->jam_sebelum_proses ? substr((string) $request->jam_sebelum_proses, 0, 5) : null;
-        $jamSaat = $request->jam_saat_proses ? substr((string) $request->jam_saat_proses, 0, 5) : null;
+        $areaData = [];
 
-        // Create pemeriksaan
-        $pemeriksaan = PemeriksaanKebersihanArea::create([
-            'id_user' => Auth::id(),
-            'id_shift' => $request->id_shift,
-            'id_area' => $request->id_area,
-            'id_master_form' => $request->id_master_form,
-            'tanggal' => $request->tanggal,
-            'jam_sebelum_proses' => $jamSebelum,
-            'jam_saat_proses' => $jamSaat,
-            'verifikasi_hasil' => $request->has('verifikasi_hasil') ? (bool) $request->input('verifikasi_hasil') : null,
-        ]);
+        foreach ($request->items as $item) {
+            $jamSebelum = !empty($item['jam_sebelum_proses']) ? substr((string) $item['jam_sebelum_proses'], 0, 5) : null;
+            $jamSaat = !empty($item['jam_saat_proses']) ? substr((string) $item['jam_saat_proses'], 0, 5) : null;
 
-        // Create details for each field
-        $masterForm = InputMasterForm::find($request->id_master_form);
-        foreach ($masterForm->fields as $field) {
-            $statusSebelumKey = 'field_status_sebelum_' . $field->id;
-            $statusSaatKey = 'field_status_saat_' . $field->id;
-            $verifikasiKey = 'field_verifikasi_' . $field->id;
-            $keteranganKey = 'field_keterangan_' . $field->id;
-            $tindakanKey = 'field_tindakan_' . $field->id;
+            $areaRecord = [
+                'id_area' => $item['id_area'] ?? null,
+                'id_master_form' => $item['id_master_form'] ?? null,
+                'jam_sebelum_proses' => $jamSebelum,
+                'jam_saat_proses' => $jamSaat,
+                'fields' => []
+            ];
 
-            $statusSebelum = $request->has($statusSebelumKey) ? (int) $request->input($statusSebelumKey) : null;
-            $statusSaat = $request->has($statusSaatKey) ? (int) $request->input($statusSaatKey) : null;
+            // Extract details for each field
+            if (!empty($item['id_master_form'])) {
+                $masterForm = InputMasterForm::find($item['id_master_form']);
+                if ($masterForm && $masterForm->fields) {
+                    foreach ($masterForm->fields as $field) {
+                        $statusSebelumKey = 'field_status_sebelum_' . $field->id;
+                        $statusSaatKey = 'field_status_saat_' . $field->id;
+                        $verifikasiKey = 'field_verifikasi_' . $field->id;
+                        $keteranganKey = 'field_keterangan_' . $field->id;
+                        $tindakanKey = 'field_tindakan_' . $field->id;
 
-            $legacyStatus = null;
-            if ($statusSebelum !== null && $statusSaat !== null) {
-                $legacyStatus = ($statusSebelum === 1 && $statusSaat === 1) ? 1 : 0;
+                        $statusSebelum = isset($item[$statusSebelumKey]) ? (int) $item[$statusSebelumKey] : null;
+                        $statusSaat = isset($item[$statusSaatKey]) ? (int) $item[$statusSaatKey] : null;
+
+                        $legacyStatus = null;
+                        if ($statusSebelum !== null && $statusSaat !== null) {
+                            $legacyStatus = ($statusSebelum === 1 && $statusSaat === 1) ? 1 : 0;
+                        }
+
+                        $verifikasiHasil = isset($item[$verifikasiKey]) ? (int) $item[$verifikasiKey] : null;
+                        
+                        $areaRecord['fields'][] = [
+                            'id_master_form_field' => $field->id,
+                            'status' => $legacyStatus,
+                            'status_sebelum_proses' => $statusSebelum,
+                            'status_saat_proses' => $statusSaat,
+                            'verifikasi_hasil' => $verifikasiHasil,
+                            'keterangan' => $item[$keteranganKey] ?? null,
+                            'tindakan_koreksi' => $item[$tindakanKey] ?? null,
+                        ];
+                    }
+                }
             }
 
-            $verifikasiHasil = $request->has($verifikasiKey) ? (int) $request->input($verifikasiKey) : null;
-            
-            PemeriksaanKebersihanAreaDetail::create([
-                'id_pemeriksaan' => $pemeriksaan->id,
-                'id_master_form_field' => $field->id,
-                'status' => $legacyStatus,
-                'status_sebelum_proses' => $statusSebelum,
-                'status_saat_proses' => $statusSaat,
-                'verifikasi_hasil' => $verifikasiHasil,
-                'keterangan' => $request->input($keteranganKey),
-                'tindakan_koreksi' => $request->input($tindakanKey),
-            ]);
+            $areaData[] = $areaRecord;
         }
+
+        // Create pemeriksaan single header
+        PemeriksaanKebersihanArea::create([
+            'id_user' => Auth::id(),
+            'id_shift' => $request->id_shift,
+            'tanggal' => $request->tanggal,
+            'area_data' => $areaData,
+        ]);
 
         return redirect()->route('pemeriksaan-kebersihan-area.index')->with('success', 'Pemeriksaan berhasil dibuat!');
     }
@@ -164,9 +168,12 @@ class PemeriksaanKebersihanAreaController extends Controller
     public function show(PemeriksaanKebersihanArea $pemeriksaanKebersihanArea)
     {
         $this->checkPlantAccess($pemeriksaanKebersihanArea);
-        $pemeriksaanKebersihanArea->load(['details.field', 'masterForm', 'shift', 'area', 'user']);
+        $pemeriksaanKebersihanArea->load(['shift', 'user']);
         
-        return view('qc-sistem.pemeriksaan-kebersihan-area.show', compact('pemeriksaanKebersihanArea'));
+        $areas = InputArea::all();
+        $masterForms = InputMasterForm::with('fields')->get();
+
+        return view('qc-sistem.pemeriksaan-kebersihan-area.show', compact('pemeriksaanKebersihanArea', 'areas', 'masterForms'));
     }
 
     /**
@@ -174,10 +181,29 @@ class PemeriksaanKebersihanAreaController extends Controller
      */
     public function edit(PemeriksaanKebersihanArea $pemeriksaanKebersihanArea)
     {
+        $user = Auth::user();
         $this->checkPlantAccess($pemeriksaanKebersihanArea);
-        $pemeriksaanKebersihanArea->load(['details.field', 'masterForm', 'shift', 'area']);
+        $pemeriksaanKebersihanArea->load(['shift']);
+
+        if ($user->role && strtolower($user->role->role) === 'superadmin') {
+            $masterForms = InputMasterForm::with('fields')->get();
+            $areas = InputArea::all();
+            $shifts = Shift::all();
+        } else {
+            $masterForms = InputMasterForm::with('fields')->whereHas('user', function ($query) use ($user) {
+                $query->where('id_plant', $user->getEffectivePlantId());
+            })->get();
+
+            $areas = InputArea::whereHas('user', function ($query) use ($user) {
+                $query->where('id_plant', $user->getEffectivePlantId());
+            })->get();
+
+            $shifts = Shift::whereHas('user', function ($query) use ($user) {
+                $query->where('id_plant', $user->getEffectivePlantId());
+            })->get();
+        }
         
-        return view('qc-sistem.pemeriksaan-kebersihan-area.edit', compact('pemeriksaanKebersihanArea'));
+        return view('qc-sistem.pemeriksaan-kebersihan-area.edit', compact('pemeriksaanKebersihanArea', 'masterForms', 'areas', 'shifts'));
     }
 
     /**
@@ -188,48 +214,67 @@ class PemeriksaanKebersihanAreaController extends Controller
         $this->checkPlantAccess($pemeriksaanKebersihanArea);
         
         $request->validate([
+            'id_shift' => 'required|exists:shifts,id',
             'tanggal' => 'required|date',
-            'jam_sebelum_proses' => ['nullable', 'regex:/^\d{2}:\d{2}(:\d{2})?$/'],
-            'jam_saat_proses' => ['nullable', 'regex:/^\d{2}:\d{2}(:\d{2})?$/'],
+            'items' => 'required|array|min:1',
         ]);
 
-        $jamSebelum = $request->jam_sebelum_proses ? substr((string) $request->jam_sebelum_proses, 0, 5) : null;
-        $jamSaat = $request->jam_saat_proses ? substr((string) $request->jam_saat_proses, 0, 5) : null;
+        $areaData = [];
+
+        foreach ($request->items as $item) {
+            $jamSebelum = !empty($item['jam_sebelum_proses']) ? substr((string) $item['jam_sebelum_proses'], 0, 5) : null;
+            $jamSaat = !empty($item['jam_saat_proses']) ? substr((string) $item['jam_saat_proses'], 0, 5) : null;
+
+            $areaRecord = [
+                'id_area' => $item['id_area'] ?? null,
+                'id_master_form' => $item['id_master_form'] ?? null,
+                'jam_sebelum_proses' => $jamSebelum,
+                'jam_saat_proses' => $jamSaat,
+                'fields' => []
+            ];
+
+            if (!empty($item['id_master_form'])) {
+                $masterForm = InputMasterForm::find($item['id_master_form']);
+                if ($masterForm && $masterForm->fields) {
+                    foreach ($masterForm->fields as $field) {
+                        $statusSebelumKey = 'field_status_sebelum_' . $field->id;
+                        $statusSaatKey = 'field_status_saat_' . $field->id;
+                        $verifikasiKey = 'field_verifikasi_' . $field->id;
+                        $keteranganKey = 'field_keterangan_' . $field->id;
+                        $tindakanKey = 'field_tindakan_' . $field->id;
+
+                        $statusSebelum = isset($item[$statusSebelumKey]) ? (int) $item[$statusSebelumKey] : null;
+                        $statusSaat = isset($item[$statusSaatKey]) ? (int) $item[$statusSaatKey] : null;
+
+                        $legacyStatus = null;
+                        if ($statusSebelum !== null && $statusSaat !== null) {
+                            $legacyStatus = ($statusSebelum === 1 && $statusSaat === 1) ? 1 : 0;
+                        }
+
+                        $verifikasiHasil = isset($item[$verifikasiKey]) ? (int) $item[$verifikasiKey] : null;
+                        
+                        $areaRecord['fields'][] = [
+                            'id_master_form_field' => $field->id,
+                            'status' => $legacyStatus,
+                            'status_sebelum_proses' => $statusSebelum,
+                            'status_saat_proses' => $statusSaat,
+                            'verifikasi_hasil' => $verifikasiHasil,
+                            'keterangan' => $item[$keteranganKey] ?? null,
+                            'tindakan_koreksi' => $item[$tindakanKey] ?? null,
+                        ];
+                    }
+                }
+            }
+
+            $areaData[] = $areaRecord;
+        }
 
         // Update pemeriksaan
         $pemeriksaanKebersihanArea->update([
+            'id_shift' => $request->id_shift,
             'tanggal' => $request->tanggal,
-            'jam_sebelum_proses' => $jamSebelum,
-            'jam_saat_proses' => $jamSaat,
+            'area_data' => $areaData,
         ]);
-
-        // Update details
-        foreach ($pemeriksaanKebersihanArea->details as $detail) {
-            $statusSebelumKey = 'status_sebelum_' . $detail->id;
-            $statusSaatKey = 'status_saat_' . $detail->id;
-            $verifikasiKey = 'verifikasi_' . $detail->id;
-            $keteranganKey = 'keterangan_' . $detail->id;
-            $tindakanKey = 'tindakan_koreksi_' . $detail->id;
-
-            $statusSebelum = $request->has($statusSebelumKey) ? (int) $request->input($statusSebelumKey) : null;
-            $statusSaat = $request->has($statusSaatKey) ? (int) $request->input($statusSaatKey) : null;
-
-            $legacyStatus = null;
-            if ($statusSebelum !== null && $statusSaat !== null) {
-                $legacyStatus = ($statusSebelum === 1 && $statusSaat === 1) ? 1 : 0;
-            }
-
-            $verifikasiHasil = $request->has($verifikasiKey) ? (int) $request->input($verifikasiKey) : null;
-
-            $detail->update([
-                'status' => $legacyStatus,
-                'status_sebelum_proses' => $statusSebelum,
-                'status_saat_proses' => $statusSaat,
-                'verifikasi_hasil' => $verifikasiHasil,
-                'keterangan' => $request->input($keteranganKey),
-                'tindakan_koreksi' => $request->input($tindakanKey),
-            ]);
-        }
 
         return redirect()->route('pemeriksaan-kebersihan-area.index')->with('success', 'Pemeriksaan berhasil diupdate!');
     }
@@ -391,34 +436,27 @@ class PemeriksaanKebersihanAreaController extends Controller
     }
 
     /**
-     * Export data to PDF based on filters
+     * Export data to PDF. Supports single record or multiple based on filters.
      */
-    public function exportPDF(Request $request)
+    public function exportPDF(Request $request, $uuid = null)
     {
         $user = Auth::user();
 
-        $id_shift = $request->input('id_shift');
-        $tanggalDari = $request->input('tanggal_dari');
-        $tanggalSampai = $request->input('tanggal_sampai');
-        $tanggal = $request->input('tanggal');
+        if ($uuid) {
+            // Penarikan data per data (single record)
+            $query = PemeriksaanKebersihanArea::where('uuid', $uuid);
+        } else {
+            // Penarikan data berdasarkan filter (batch/search)
+            $query = PemeriksaanKebersihanArea::query();
+        }
 
-        $query = PemeriksaanKebersihanArea::with([
+        $query->with([
             'user.role',
             'user.plant',
             'shift',
-            'area.locations',
-            'masterForm',
-            'details.field',
-        ])->with([
-            'qcVerifier' => function ($q) {
-                $q->select('id', 'name');
-            },
-            'produksiVerifier' => function ($q) {
-                $q->select('id', 'name');
-            },
-            'spvVerifier' => function ($q) {
-                $q->select('id', 'name');
-            },
+            'qcVerifier',
+            'produksiVerifier',
+            'spvVerifier',
         ]);
 
         if ($user->role && strtolower($user->role->role) !== 'superadmin') {
@@ -427,81 +465,54 @@ class PemeriksaanKebersihanAreaController extends Controller
             });
         }
 
-        if ($id_shift) {
-            $query->where('id_shift', $id_shift);
-        }
+        if (!$uuid) {
+            $id_shift = $request->input('id_shift');
+            $tanggalDari = $request->input('tanggal_dari');
+            $tanggalSampai = $request->input('tanggal_sampai');
+            $tanggal = $request->input('tanggal');
 
-        if ($id_shift) {
-            $shift = Shift::find($id_shift);
-            $shiftName = $shift ? trim(strtolower((string) $shift->shift)) : null;
-
-            $isShift1 = $shift && $shift->is_date_range;
-
-            if ($isShift1) {
-                if ($tanggalDari && $tanggalSampai) {
-                    $query->whereBetween('tanggal', [$tanggalDari, $tanggalSampai]);
-                } elseif ($tanggalDari) {
-                    $query->whereDate('tanggal', '>=', $tanggalDari);
-                } elseif ($tanggalSampai) {
-                    $query->whereDate('tanggal', '<=', $tanggalSampai);
+            if ($id_shift) {
+                $query->where('id_shift', $id_shift);
+                $shift = Shift::find($id_shift);
+                
+                if ($shift && $shift->is_date_range) {
+                    if ($tanggalDari && $tanggalSampai) {
+                        $query->whereBetween('tanggal', [$tanggalDari, $tanggalSampai]);
+                    } elseif ($tanggalDari) {
+                        $query->whereDate('tanggal', '>=', $tanggalDari);
+                    } elseif ($tanggalSampai) {
+                        $query->whereDate('tanggal', '<=', $tanggalSampai);
+                    }
+                } else {
+                    if ($tanggal) {
+                        $query->whereDate('tanggal', $tanggal);
+                    }
                 }
             } else {
                 if ($tanggal) {
                     $query->whereDate('tanggal', $tanggal);
                 }
             }
-        } else {
-            if ($tanggal) {
-                $query->whereDate('tanggal', $tanggal);
-            }
         }
 
         $pemeriksaans = $query->latest()->get();
 
-        $shift = $id_shift ? Shift::find($id_shift) : null;
-
-        $qcUser = null;
-        $produksiUser = null;
-        $spvQcUser = null;
-
-        $allQcIds = $pemeriksaans->pluck('verified_by_qc')->filter()->unique();
-        $allProduksiIds = $pemeriksaans->pluck('verified_by_produksi')->filter()->unique();
-        $allSpvIds = $pemeriksaans->pluck('verified_by_spv')->filter()->unique();
-
-        if ($allQcIds->count() > 0) {
-            $qcUserData = User::with('role')->whereIn('id', $allQcIds->toArray())->first();
-            if ($qcUserData) {
-                $qcUser = $qcUserData->name;
-            }
+        if ($pemeriksaans->isEmpty()) {
+            return redirect()->back()->with('error', 'Data tidak ditemukan untuk di-export.');
         }
 
-        if ($allProduksiIds->count() > 0) {
-            $produksiUserData = User::with('role')->whereIn('id', $allProduksiIds->toArray())->first();
-            if ($produksiUserData) {
-                $produksiUser = $produksiUserData->name;
-            }
-        }
-
-        if ($allSpvIds->count() > 0) {
-            $spvUserData = User::with('role')->whereIn('id', $allSpvIds->toArray())->first();
-            if ($spvUserData) {
-                $spvQcUser = $spvUserData->name;
-            }
-        }
+        $firstP = $pemeriksaans->first();
+        $shift = $firstP ? $firstP->shift : null;
 
         $pdf = PDF::loadView('qc-sistem.pemeriksaan-kebersihan-area.pdf-report', [
             'pemeriksaans' => $pemeriksaans,
-            'tanggal' => $tanggal,
-            'tanggal_dari' => $tanggalDari,
-            'tanggal_sampai' => $tanggalSampai,
+            'tanggal' => $uuid ? $firstP->tanggal->format('Y-m-d') : ($request->input('tanggal') ?? null),
+            'tanggal_dari' => $uuid ? null : ($request->input('tanggal_dari') ?? null),
+            'tanggal_sampai' => $uuid ? null : ($request->input('tanggal_sampai') ?? null),
             'shift' => $shift,
-            'qcUser' => $qcUser,
-            'produksiUser' => $produksiUser,
-            'spvQcUser' => $spvQcUser,
         ]);
 
-        $filenameDate = $tanggal ?? $tanggalDari ?? date('Y-m-d');
-        $filename = 'laporan-pemeriksaan-kebersihan-area-' . $filenameDate . '.pdf';
+        $filename = 'laporan-kebersihan-area-' . ($uuid ? $firstP->uuid : date('Ymd-His')) . '.pdf';
         return $pdf->download($filename);
     }
 }

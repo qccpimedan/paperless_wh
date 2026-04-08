@@ -49,7 +49,8 @@
                                     @csrf
                                     @method('PUT')
                                     <div class="form-body">
-                                        <div class="row">
+                                        <!-- Global Fields -->
+                                        <div class="row mb-4 p-3 bg-light rounded">
                                             <div class="col-md-6">
                                                 <label for="tanggal">Tanggal <span class="text-danger">*</span></label>
                                                 <input type="date" id="tanggal" class="form-control @error('tanggal') is-invalid @enderror"
@@ -60,117 +61,200 @@
                                             </div>
 
                                             <div class="col-md-6">
-                                                <label for="shift">Shift</label>
-                                                <input type="text" id="shift" class="form-control" value="{{ $pemeriksaanKebersihanArea->shift->shift }}" disabled>
-                                            </div>
-
-                                            <div class="col-md-6 mt-3">
-                                                <label for="area">Area</label>
-                                                <input type="text" id="area" class="form-control" value="{{ $pemeriksaanKebersihanArea->area->nama_area }}" disabled>
-                                            </div>
-
-                                            <div class="col-md-6 mt-3">
-                                                <label for="master_form">Master Form</label>
-                                                <input type="text" id="master_form" class="form-control" value="{{ $pemeriksaanKebersihanArea->masterForm->nama_form }}" disabled>
-                                            </div>
-
-                                            <div class="col-md-6 mt-3">
-                                                <label for="jam_sebelum_proses">Jam Sebelum Proses</label>
-                                                <input type="time" id="jam_sebelum_proses" class="form-control @error('jam_sebelum_proses') is-invalid @enderror"
-                                                    name="jam_sebelum_proses" value="{{ old('jam_sebelum_proses', $pemeriksaanKebersihanArea->jam_sebelum_proses ? substr((string) $pemeriksaanKebersihanArea->jam_sebelum_proses, 0, 5) : '') }}">
-                                                @error('jam_sebelum_proses')
+                                                <label for="id_shift">Shift <span class="text-danger">*</span></label>
+                                                <select id="id_shift" class="form-control" name="id_shift" required>
+                                                    @foreach($shifts as $shift)
+                                                        <option value="{{ $shift->id }}" {{ old('id_shift', $pemeriksaanKebersihanArea->id_shift) == $shift->id ? 'selected' : '' }}>
+                                                            {{ $shift->shift }}
+                                                        </option>
+                                                    @endforeach
+                                                </select>
+                                                @error('id_shift')
                                                     <div class="invalid-feedback">{{ $message }}</div>
                                                 @enderror
                                             </div>
+                                        </div>
 
-                                            <div class="col-md-6 mt-3">
-                                                <label for="jam_saat_proses">Jam Saat Proses</label>
-                                                <input type="time" id="jam_saat_proses" class="form-control @error('jam_saat_proses') is-invalid @enderror"
-                                                    name="jam_saat_proses" value="{{ old('jam_saat_proses', $pemeriksaanKebersihanArea->jam_saat_proses ? substr((string) $pemeriksaanKebersihanArea->jam_saat_proses, 0, 5) : '') }}">
-                                                @error('jam_saat_proses')
-                                                    <div class="invalid-feedback">{{ $message }}</div>
-                                                @enderror
-                                            </div>
-                                            
-                                            <div class="col-md-12 mt-4">
-                                                <h5 class="mb-3"><strong>Hasil Pemeriksaan</strong></h5>
-                                            </div>
+                                        <!-- Repeater Container -->
+                                        <div id="repeater-container">
+                                            @php
+                                                $areaData = is_string($pemeriksaanKebersihanArea->area_data) ? json_decode($pemeriksaanKebersihanArea->area_data, true) : $pemeriksaanKebersihanArea->area_data;
+                                                $areaData = $areaData ?? [];
+                                            @endphp
 
-                                            @foreach($pemeriksaanKebersihanArea->details as $detail)
-                                                <div class="col-md-12 mt-3 p-3 border rounded bg-light">
+                                            @forelse($areaData as $index => $item)
+                                                @php
+                                                    // Ambil fields dari JSON ini dan siapkan lookup
+                                                    $itemFields = collect($item['fields'] ?? []);
+                                                @endphp
+                                                <div class="repeater-item border p-4 mb-4 rounded position-relative shadow-sm bg-white" data-index="{{ $index }}">
+                                                    <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 m-2 btn-remove-item" style="display: {{ count($areaData) > 1 ? 'block' : 'none' }};">
+                                                        <i class="bi bi-trash"></i> Hapus Area
+                                                    </button>
                                                     <div class="row">
-                                                        <div class="col-md-12">
-                                                            <label class="form-label"><strong>{{ $loop->iteration }}. {{ $detail->field->field_name }}</strong></label>
-                                                        </div>
-
-                                                        <div class="col-md-6 mt-2">
-                                                            <label class="form-label">Form Verifikasi</label>
-                                                            <select class="form-control form-control-sm" name="verifikasi_{{ $detail->id }}" required>
-                                                                <option value="">-- Pilih --</option>
-                                                                <option value="1" {{ old('verifikasi_' . $detail->id, $detail->verifikasi_hasil) === true || old('verifikasi_' . $detail->id, $detail->verifikasi_hasil) === 1 || old('verifikasi_' . $detail->id, $detail->verifikasi_hasil) === '1' ? 'selected' : '' }}>OK</option>
-                                                                <option value="0" {{ old('verifikasi_' . $detail->id, $detail->verifikasi_hasil) === false || old('verifikasi_' . $detail->id, $detail->verifikasi_hasil) === 0 || old('verifikasi_' . $detail->id, $detail->verifikasi_hasil) === '0' ? 'selected' : '' }}>Tidak OK</option>
+                                                        <div class="col-md-6 mt-3">
+                                                            <label>Area <span class="text-danger">*</span></label>
+                                                            <select class="form-select area-select" name="items[{{ $index }}][id_area]" required>
+                                                                <option value="">-- Pilih Area --</option>
+                                                                @foreach($areas as $area)
+                                                                    <option value="{{ $area->id }}" {{ ($item['id_area'] ?? '') == $area->id ? 'selected' : '' }}>{{ $area->nama_area }}</option>
+                                                                @endforeach
                                                             </select>
                                                         </div>
 
-                                                        <div class="col-md-6 mt-2">
-                                                            <label class="form-label">Sebelum Proses</label>
-                                                            <div class="d-flex gap-3">
-                                                                <div class="form-check">
-                                                                    <input class="form-check-input" type="radio" name="status_sebelum_{{ $detail->id }}" 
-                                                                        id="status_sebelum_ok_{{ $detail->id }}" value="1"
-                                                                        {{ old('status_sebelum_' . $detail->id, $detail->status_sebelum_proses) == 1 ? 'checked' : '' }}>
-                                                                    <label class="form-check-label" for="status_sebelum_ok_{{ $detail->id }}">✓ Ok</label>
-                                                                </div>
-                                                                <div class="form-check">
-                                                                    <input class="form-check-input" type="radio" name="status_sebelum_{{ $detail->id }}" 
-                                                                        id="status_sebelum_no_{{ $detail->id }}" value="0"
-                                                                        {{ old('status_sebelum_' . $detail->id, $detail->status_sebelum_proses) == 0 ? 'checked' : '' }}>
-                                                                    <label class="form-check-label" for="status_sebelum_no_{{ $detail->id }}">✗ Tidak Ok</label>
-                                                                </div>
-                                                            </div>
+                                                        <div class="col-md-6 mt-3">
+                                                            <label>Master Form <span class="text-danger">*</span></label>
+                                                            <select class="form-select master-form-select" name="items[{{ $index }}][id_master_form]" required>
+                                                                <option value="">-- Pilih Master Form --</option>
+                                                                @foreach($masterForms as $form)
+                                                                    <option value="{{ $form->id }}" {{ ($item['id_master_form'] ?? '') == $form->id ? 'selected' : '' }}>{{ $form->nama_form }}</option>
+                                                                @endforeach
+                                                            </select>
                                                         </div>
 
-                                                        <div class="col-md-6 mt-2">
-                                                            <label class="form-label">Saat Proses</label>
-                                                            <div class="d-flex gap-3">
-                                                                <div class="form-check">
-                                                                    <input class="form-check-input" type="radio" name="status_saat_{{ $detail->id }}" 
-                                                                        id="status_saat_ok_{{ $detail->id }}" value="1"
-                                                                        {{ old('status_saat_' . $detail->id, $detail->status_saat_proses) == 1 ? 'checked' : '' }}>
-                                                                    <label class="form-check-label" for="status_saat_ok_{{ $detail->id }}">✓ Ok</label>
-                                                                </div>
-                                                                <div class="form-check">
-                                                                    <input class="form-check-input" type="radio" name="status_saat_{{ $detail->id }}" 
-                                                                        id="status_saat_no_{{ $detail->id }}" value="0"
-                                                                        {{ old('status_saat_' . $detail->id, $detail->status_saat_proses) == 0 ? 'checked' : '' }}>
-                                                                    <label class="form-check-label" for="status_saat_no_{{ $detail->id }}">✗ Tidak Ok</label>
-                                                                </div>
-                                                            </div>
+                                                        <div class="col-md-6 mt-3">
+                                                            <label>Jam Sebelum Proses</label>
+                                                            <input type="time" class="form-control" name="items[{{ $index }}][jam_sebelum_proses]" value="{{ old('items.'.$index.'.jam_sebelum_proses', $item['jam_sebelum_proses'] ?? '') }}">
                                                         </div>
 
-                                                        <div class="col-md-6 mt-2">
-                                                            <label for="keterangan_{{ $detail->id }}" class="form-label">Keterangan</label>
-                                                            <textarea id="keterangan_{{ $detail->id }}" 
-                                                                class="form-control form-control-sm"
-                                                                name="keterangan_{{ $detail->id }}"
-                                                                placeholder="Keterangan" rows="3">{{ old('keterangan_' . $detail->id, $detail->keterangan) }}</textarea>
+                                                        <div class="col-md-6 mt-3">
+                                                            <label>Jam Saat Proses</label>
+                                                            <input type="time" class="form-control" name="items[{{ $index }}][jam_saat_proses]" value="{{ old('items.'.$index.'.jam_saat_proses', $item['jam_saat_proses'] ?? '') }}">
                                                         </div>
+                                                    </div>
 
-                                                        <div class="col-md-6 mt-2">
-                                                            <label for="tindakan_{{ $detail->id }}" class="form-label">Tindakan Koreksi</label>
-                                                            <textarea id="tindakan_{{ $detail->id }}" 
-                                                                class="form-control form-control-sm"
-                                                                name="tindakan_koreksi_{{ $detail->id }}"
-                                                                placeholder="Tindakan Koreksi" rows="3">{{ old('tindakan_koreksi_' . $detail->id, $detail->tindakan_koreksi) }}</textarea>
+                                                    <!-- Container untuk Render Aspek/Fields per Form -->
+                                                    <div class="form-fields-container mt-4" style="display: block;">
+                                                        <h5 class="mb-3 text-primary"><strong><i class="bi bi-list-check"></i> Aspek Yang Dinilai</strong></h5>
+                                                        <div class="editable-fields">
+                                                            @php
+                                                                $selectedForm = $masterForms->firstWhere('id', $item['id_master_form'] ?? null);
+                                                                $fields = $selectedForm ? $selectedForm->fields : [];
+                                                            @endphp
+                                                            @foreach($fields as $fIdx => $field)
+                                                                @php
+                                                                    $fieldData = $itemFields->firstWhere('id_master_form_field', $field->id) ?? [];
+                                                                @endphp
+                                                                <div class="mb-3 p-3 border rounded bg-light">
+                                                                    <div class="row">
+                                                                        <div class="col-md-12">
+                                                                            <label class="form-label text-dark"><strong>{{ $fIdx + 1 }}. {{ $field->field_name }}</strong></label>
+                                                                        </div>
+                                                                        <div class="col-md-6 mt-2">
+                                                                            <label class="form-label text-muted small mb-1">Sebelum Proses</label>
+                                                                            <div class="d-flex gap-3">
+                                                                                <div class="form-check">
+                                                                                    <input class="form-check-input" type="radio" 
+                                                                                        name="items[{{ $index }}][field_status_sebelum_{{ $field->id }}]" 
+                                                                                        id="field_{{ $index }}_sebelum_ok_{{ $field->id }}" value="1" {{ ($fieldData['status_sebelum_proses'] ?? '') === 1 ? 'checked' : '' }} required>
+                                                                                    <label class="form-check-label" for="field_{{ $index }}_sebelum_ok_{{ $field->id }}">✓ Ok</label>
+                                                                                </div>
+                                                                                <div class="form-check">
+                                                                                    <input class="form-check-input" type="radio" 
+                                                                                        name="items[{{ $index }}][field_status_sebelum_{{ $field->id }}]" 
+                                                                                        id="field_{{ $index }}_sebelum_no_{{ $field->id }}" value="0" {{ ($fieldData['status_sebelum_proses'] ?? '') === 0 ? 'checked' : '' }} required>
+                                                                                    <label class="form-check-label" for="field_{{ $index }}_sebelum_no_{{ $field->id }}">✗ Tidak Ok</label>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                        <div class="col-md-6 mt-2">
+                                                                            <label class="form-label text-muted small mb-1">Saat Proses</label>
+                                                                            <div class="d-flex gap-3">
+                                                                                <div class="form-check">
+                                                                                    <input class="form-check-input" type="radio" 
+                                                                                        name="items[{{ $index }}][field_status_saat_{{ $field->id }}]" 
+                                                                                        id="field_{{ $index }}_saat_ok_{{ $field->id }}" value="1" {{ ($fieldData['status_saat_proses'] ?? '') === 1 ? 'checked' : '' }}>
+                                                                                    <label class="form-check-label" for="field_{{ $index }}_saat_ok_{{ $field->id }}">✓ Ok</label>
+                                                                                </div>
+                                                                                <div class="form-check">
+                                                                                    <input class="form-check-input" type="radio" 
+                                                                                        name="items[{{ $index }}][field_status_saat_{{ $field->id }}]" 
+                                                                                        id="field_{{ $index }}_saat_no_{{ $field->id }}" value="0" {{ ($fieldData['status_saat_proses'] ?? '') === 0 ? 'checked' : '' }}>
+                                                                                    <label class="form-check-label" for="field_{{ $index }}_saat_no_{{ $field->id }}">✗ Tidak Ok</label>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                        <div class="col-md-6 mt-3">
+                                                                            <label class="form-label text-muted small">Keterangan</label>
+                                                                            <textarea class="form-control form-control-sm" name="items[{{ $index }}][field_keterangan_{{ $field->id }}]" placeholder="Keterangan..." rows="2">{{ $fieldData['keterangan'] ?? '' }}</textarea>
+                                                                        </div>
+                                                                        <div class="col-md-6 mt-3">
+                                                                            <label class="form-label text-muted small">Tindakan Koreksi</label>
+                                                                            <textarea class="form-control form-control-sm" name="items[{{ $index }}][field_tindakan_{{ $field->id }}]" placeholder="Tindakan koreksi jika tidak Ok..." rows="2">{{ $fieldData['tindakan_koreksi'] ?? '' }}</textarea>
+                                                                        </div>
+                                                                        <div class="col-md-6 mt-3">
+                                                                            <label class="form-label text-muted small">Verifikasi <span class="text-danger">*</span></label>
+                                                                            <select class="form-select form-select-sm" name="items[{{ $index }}][field_verifikasi_{{ $field->id }}]" required>
+                                                                                <option value="">-- Pilih Status --</option>
+                                                                                <option value="1" {{ ($fieldData['verifikasi_hasil'] ?? '') === 1 ? 'selected' : '' }}>OK</option>
+                                                                                <option value="0" {{ ($fieldData['verifikasi_hasil'] ?? '') === 0 ? 'selected' : '' }}>Tidak OK</option>
+                                                                            </select>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            @endforeach
                                                         </div>
                                                     </div>
                                                 </div>
-                                            @endforeach
-                                            
-                                            <div class="col-md-12 d-flex justify-content-end mt-4">
-                                                <a href="{{ route('pemeriksaan-kebersihan-area.index') }}" class="btn btn-light-secondary me-1 mb-1">Kembali</a>
-                                                <button type="submit" class="btn btn-primary me-1 mb-1">Update Pemeriksaan</button>
+                                            @empty
+                                                <!-- Jika Kosong (Backup Mode) -->
+                                                <div class="repeater-item border p-4 mb-4 rounded position-relative shadow-sm bg-white" data-index="0">
+                                                    <!-- ... sama spt create default jika kosong ... -->
+                                                    <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 m-2 btn-remove-item" style="display: none;">
+                                                        <i class="bi bi-trash"></i> Hapus Area
+                                                    </button>
+                                                    <div class="row">
+                                                        <div class="col-md-6 mt-3">
+                                                            <label>Area <span class="text-danger">*</span></label>
+                                                            <select class="form-select area-select" name="items[0][id_area]" required>
+                                                                <option value="">-- Pilih Area --</option>
+                                                                @foreach($areas as $area)
+                                                                    <option value="{{ $area->id }}">{{ $area->nama_area }}</option>
+                                                                @endforeach
+                                                            </select>
+                                                        </div>
+
+                                                        <div class="col-md-6 mt-3">
+                                                            <label>Master Form <span class="text-danger">*</span></label>
+                                                            <select class="form-select master-form-select" name="items[0][id_master_form]" required>
+                                                                <option value="">-- Pilih Master Form --</option>
+                                                                @foreach($masterForms as $form)
+                                                                    <option value="{{ $form->id }}">{{ $form->nama_form }}</option>
+                                                                @endforeach
+                                                            </select>
+                                                        </div>
+
+                                                        <div class="col-md-6 mt-3">
+                                                            <label>Jam Sebelum Proses</label>
+                                                            <input type="time" class="form-control" name="items[0][jam_sebelum_proses]">
+                                                        </div>
+
+                                                        <div class="col-md-6 mt-3">
+                                                            <label>Jam Saat Proses</label>
+                                                            <input type="time" class="form-control" name="items[0][jam_saat_proses]">
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="form-fields-container mt-4" style="display: none;">
+                                                        <h5 class="mb-3 text-primary"><strong><i class="bi bi-list-check"></i> Aspek Yang Dinilai</strong></h5>
+                                                        <div class="editable-fields"></div>
+                                                    </div>
+                                                </div>
+                                            @endforelse
+                                        </div>
+
+                                        <!-- Tombol Tambah Form -->
+                                        <div class="row mb-4">
+                                            <div class="col-12">
+                                                <button type="button" class="btn btn-primary btn-sm" id="btn-add-item" style="border-style: dashed; border-width: 2px;">
+                                                    Tambah Area
+                                                </button>
                                             </div>
+                                        </div>
+
+                                        <div class="col-md-12 d-flex justify-content-end mt-3 border-top pt-3">
+                                            <button type="submit" class="btn btn-primary me-2">Update Pemeriksaan</button>
+                                            <a href="{{ route('pemeriksaan-kebersihan-area.index') }}" class="btn btn-light-secondary btn-kembali-confirm">Kembali</a>
                                         </div>
                                     </div>
                                 </form>
@@ -182,4 +266,180 @@
         </section>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Konfirmasi Kembali
+    document.querySelectorAll('.btn-kembali-confirm').forEach((el) => {
+        el.addEventListener('click', function(e) {
+            const ok = confirm('Data belum disimpan. Yakin ingin kembali ke halaman index?');
+            if (!ok) e.preventDefault();
+        });
+    });
+
+    // Data Master Forms & Fields
+    const masterFormsData = {
+        @foreach($masterForms as $form)
+            {{ $form->id }}: {
+                nama: `{!! addslashes($form->nama_form) !!}`,
+                fields: [
+                    @foreach($form->fields as $field)
+                        { id: {{ $field->id }}, nama: `{!! addslashes($field->field_name) !!}` },
+                    @endforeach
+                ]
+            },
+        @endforeach
+    };
+
+    @php
+        $areaDataJson = is_string($pemeriksaanKebersihanArea->area_data) ? json_decode($pemeriksaanKebersihanArea->area_data, true) : $pemeriksaanKebersihanArea->area_data;
+        $startIndex = is_array($areaDataJson) && count($areaDataJson) > 0 ? max(array_keys($areaDataJson)) + 1 : 1;
+    @endphp
+    let itemIndex = {{ $startIndex }}; // Mulai dari index terakhir laporan
+    
+    // Logic untuk menambahkan Repeater Item
+    document.getElementById('btn-add-item').addEventListener('click', function() {
+        const container = document.getElementById('repeater-container');
+        const defaultItem = container.querySelector('.repeater-item'); // Selalu clone dari yang pertama
+        const newItem = defaultItem.cloneNode(true);
+        
+        // Update index
+        newItem.setAttribute('data-index', itemIndex);
+        
+        // Bersihkan area input, atur ulang name array
+        newItem.querySelectorAll('input, select, textarea').forEach(el => {
+            if (el.name) {
+                // Ubah items[0][id_area] -> items[1][id_area]
+                el.name = el.name.replace(/items\[\d+\]/, `items[${itemIndex}]`);
+            }
+            if (el.type === 'radio' || el.type === 'checkbox') {
+                el.checked = false;
+            } else if (el.type !== 'button') {
+                el.value = '';
+            }
+        });
+        
+        // Hapus child fields dan tutup container spesifik dari row yg dikloning
+        const editableFields = newItem.querySelector('.editable-fields');
+        editableFields.innerHTML = '';
+        newItem.querySelector('.form-fields-container').style.display = 'none';
+
+        container.appendChild(newItem);
+        itemIndex++;
+        updateRemoveButtons();
+    });
+
+    // Logic Hapus Item Menggunakan Event Delegation
+    document.getElementById('repeater-container').addEventListener('click', function(e) {
+        if (e.target.closest('.btn-remove-item')) {
+            const itemToRemove = e.target.closest('.repeater-item');
+            if (document.querySelectorAll('.repeater-item').length > 1) {
+                itemToRemove.remove();
+                updateRemoveButtons();
+            }
+        }
+    });
+
+    // Fungsi mengatur kapan tombol hapus boleh muncul (minimal sisa 1)
+    function updateRemoveButtons() {
+        const items = document.querySelectorAll('.repeater-item');
+        items.forEach(item => {
+            const btn = item.querySelector('.btn-remove-item');
+            btn.style.display = items.length === 1 ? 'none' : 'block';
+        });
+    }
+
+    // Logic Men-generate Form Fields Jika Pilih Master Form (Event Delegation)
+    document.getElementById('repeater-container').addEventListener('change', function(e) {
+        if (e.target.classList.contains('master-form-select')) {
+            const select = e.target;
+            const formId = select.value;
+            const parentItem = select.closest('.repeater-item');
+            const currentIndex = parentItem.getAttribute('data-index');
+            
+            const fieldsContainer = parentItem.querySelector('.form-fields-container');
+            const editableFields = parentItem.querySelector('.editable-fields');
+
+            if (formId && masterFormsData[formId]) {
+                const formData = masterFormsData[formId];
+                const fields = formData.fields;
+
+                let html = '';
+                if (fields.length > 0) {
+                    fields.forEach((field, fIdx) => {
+                        html += `
+                            <div class="mb-3 p-3 border rounded bg-light">
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <label class="form-label text-dark"><strong>${fIdx + 1}. ${field.nama}</strong></label>
+                                    </div>
+                                    <div class="col-md-6 mt-2">
+                                        <label class="form-label text-muted small mb-1">Sebelum Proses</label>
+                                        <div class="d-flex gap-3">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" 
+                                                    name="items[${currentIndex}][field_status_sebelum_${field.id}]" 
+                                                    id="field_${currentIndex}_sebelum_ok_${field.id}" value="1" required>
+                                                <label class="form-check-label" for="field_${currentIndex}_sebelum_ok_${field.id}">✓ Ok</label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" 
+                                                    name="items[${currentIndex}][field_status_sebelum_${field.id}]" 
+                                                    id="field_${currentIndex}_sebelum_no_${field.id}" value="0" required>
+                                                <label class="form-check-label" for="field_${currentIndex}_sebelum_no_${field.id}">✗ Tidak Ok</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 mt-2">
+                                        <label class="form-label text-muted small mb-1">Saat Proses</label>
+                                        <div class="d-flex gap-3">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" 
+                                                    name="items[${currentIndex}][field_status_saat_${field.id}]" 
+                                                    id="field_${currentIndex}_saat_ok_${field.id}" value="1">
+                                                <label class="form-check-label" for="field_${currentIndex}_saat_ok_${field.id}">✓ Ok</label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" 
+                                                    name="items[${currentIndex}][field_status_saat_${field.id}]" 
+                                                    id="field_${currentIndex}_saat_no_${field.id}" value="0">
+                                                <label class="form-check-label" for="field_${currentIndex}_saat_no_${field.id}">✗ Tidak Ok</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 mt-3">
+                                        <label class="form-label text-muted small">Keterangan</label>
+                                        <textarea class="form-control form-control-sm" name="items[${currentIndex}][field_keterangan_${field.id}]" placeholder="Keterangan..." rows="2"></textarea>
+                                    </div>
+                                    <div class="col-md-6 mt-3">
+                                        <label class="form-label text-muted small">Tindakan Koreksi</label>
+                                        <textarea class="form-control form-control-sm" name="items[${currentIndex}][field_tindakan_${field.id}]" placeholder="Tindakan koreksi jika tidak Ok..." rows="2"></textarea>
+                                    </div>
+                                    <div class="col-md-6 mt-3">
+                                        <label class="form-label text-muted small">Verifikasi <span class="text-danger">*</span></label>
+                                        <select class="form-select form-select-sm" name="items[${currentIndex}][field_verifikasi_${field.id}]" required>
+                                            <option value="">-- Pilih Status --</option>
+                                            <option value="1">OK</option>
+                                            <option value="0">Tidak OK</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                } else {
+                    html = '<p class="text-danger"><i class="bi bi-exclamation-triangle"></i> Form ini belum memiliki item pemeriksaan, silakan atur di Master Form.</p>';
+                }
+
+                editableFields.innerHTML = html;
+                fieldsContainer.style.display = 'block';
+            } else {
+                fieldsContainer.style.display = 'none';
+                editableFields.innerHTML = '';
+            }
+        }
+    });
+});
+</script>
+
 @endsection
