@@ -15,11 +15,8 @@ class PemeriksaanKebersihanArea extends Model
         'uuid',
         'id_user',
         'id_shift',
-        'id_area',
-        'id_master_form',
         'tanggal',
-        'jam_sebelum_proses',
-        'jam_saat_proses',
+        'area_data',
         'verifikasi_hasil',
         'status_verifikasi',
         'verified_by',
@@ -33,6 +30,7 @@ class PemeriksaanKebersihanArea extends Model
     protected $casts = [
         'tanggal' => 'date',
         'verifikasi_hasil' => 'boolean',
+        'area_data' => 'array',
     ];
 
     protected static function boot()
@@ -59,21 +57,6 @@ class PemeriksaanKebersihanArea extends Model
     public function shift()
     {
         return $this->belongsTo(Shift::class, 'id_shift');
-    }
-
-    public function area()
-    {
-        return $this->belongsTo(InputArea::class, 'id_area');
-    }
-
-    public function masterForm()
-    {
-        return $this->belongsTo(InputMasterForm::class, 'id_master_form');
-    }
-
-    public function details()
-    {
-        return $this->hasMany(PemeriksaanKebersihanAreaDetail::class, 'id_pemeriksaan');
     }
 
     public function verifiedBy()

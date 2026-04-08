@@ -162,8 +162,7 @@
                                     <th>Tanggal</th>
                                     <th>Shift</th>
                                     <th>Plant</th>
-                                    <th>Area</th>
-                                    <th>Master Form</th>
+                                    <th>Pemeriksaan Area</th>
                                     <th>Verifikasi</th>
                                     <th>Catatan Verifikasi</th>
                                     <th>Aksi</th>
@@ -185,10 +184,7 @@
                                             @endif
                                         </td>
                                         <td>
-                                            <strong>{{ $pemeriksaan->area->nama_area }}</strong>
-                                        </td>
-                                        <td>
-                                            <strong>{{ $pemeriksaan->masterForm->nama_form }}</strong>
+                                            <strong>{{ count($pemeriksaan->area_data ?? []) }} Area Diperiksa</strong>
                                         </td>
                                         <td>
                                             @php
@@ -256,6 +252,10 @@
                                                         <i class="bi bi-pencil"></i>
                                                     </a>
                                                 @endcan
+                                                <a href="{{ route('pemeriksaan-kebersihan-area.export-pdf', $pemeriksaan->uuid) }}" 
+                                                   class="btn btn-sm btn-success" title="Cetak PDF">
+                                                    <i class="bi bi-file-earmark-medical-fill"></i>
+                                                </a>
                                                 @can('delete_pemeriksaan_kebersihan_area')
                                                     <form action="{{ route('pemeriksaan-kebersihan-area.destroy', $pemeriksaan->uuid) }}" 
                                                           method="POST" 

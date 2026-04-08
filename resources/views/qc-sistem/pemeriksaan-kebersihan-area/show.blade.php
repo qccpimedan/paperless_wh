@@ -58,104 +58,115 @@
                                         </div>
                                     </div>
 
-                                    <div class="col-md-6">
-                                        <div class="mb-3">
-                                            <label class="form-label"><strong>Area</strong></label>
-                                            <p class="form-control-plaintext">{{ $pemeriksaanKebersihanArea->area->nama_area }}</p>
-                                        </div>
-                                    </div>
-
-                                    <div class="col-md-6">
-                                        <div class="mb-3">
-                                            <label class="form-label"><strong>Master Form</strong></label>
-                                            <p class="form-control-plaintext">{{ $pemeriksaanKebersihanArea->masterForm->nama_form }}</p>
-                                        </div>
-                                    </div>
-
-                                    <div class="col-md-6">
-                                        <div class="mb-3">
-                                            <label class="form-label"><strong>Jam Sebelum Proses</strong></label>
-                                            <p class="form-control-plaintext">{{ $pemeriksaanKebersihanArea->jam_sebelum_proses ?? '-' }}</p>
-                                        </div>
-                                    </div>
-
-                                    <div class="col-md-6">
-                                        <div class="mb-3">
-                                            <label class="form-label"><strong>Jam Saat Proses</strong></label>
-                                            <p class="form-control-plaintext">{{ $pemeriksaanKebersihanArea->jam_saat_proses ?? '-' }}</p>
-                                        </div>
-                                    </div>
                                 </div>
 
-                                <!-- Hasil Pemeriksaan -->
-                                <div class="row mt-4">
-                                    <div class="col-md-12">
-                                        <h5 class="mb-3"><strong>Hasil Pemeriksaan</strong></h5>
-                                    </div>
+                                @php
+                                    $areaData = is_string($pemeriksaanKebersihanArea->area_data) ? json_decode($pemeriksaanKebersihanArea->area_data, true) : $pemeriksaanKebersihanArea->area_data;
+                                    $areaData = $areaData ?? [];
+                                @endphp
 
-                                    @foreach($pemeriksaanKebersihanArea->details as $detail)
-                                        <div class="col-md-12 mt-3 p-3 border rounded bg-light">
-                                            <div class="row">
-                                                <div class="col-md-12">
-                                                    <label class="form-label"><strong>{{ $loop->iteration }}. {{ $detail->field->field_name }}</strong></label>
-                                                </div>
-
-                                                <div class="col-md-4">
-                                                    <div class="mb-2">
-                                                        <label class="form-label"><strong>Form Verifikasi</strong></label>
-                                                        @if($detail->verifikasi_hasil === true)
-                                                            <p><span class="badge bg-success">✓ OK</span></p>
-                                                        @elseif($detail->verifikasi_hasil === false)
-                                                            <p><span class="badge bg-danger">✗ Tidak OK</span></p>
-                                                        @else
-                                                            <p><span class="badge bg-secondary">Belum Diisi</span></p>
-                                                        @endif
-                                                    </div>
-                                                </div>
-
-                                                <div class="col-md-4">
-                                                    <div class="mb-2">
-                                                        <label class="form-label"><strong>Sebelum Proses</strong></label>
-                                                        @if($detail->status_sebelum_proses === true)
-                                                            <p><span class="badge bg-success">✓ OK</span></p>
-                                                        @elseif($detail->status_sebelum_proses === false)
-                                                            <p><span class="badge bg-danger">✗ Tidak OK</span></p>
-                                                        @else
-                                                            <p><span class="badge bg-secondary">Belum Diisi</span></p>
-                                                        @endif
-                                                    </div>
-                                                </div>
-
-                                                <div class="col-md-4">
-                                                    <div class="mb-2">
-                                                        <label class="form-label"><strong>Saat Proses</strong></label>
-                                                        @if($detail->status_saat_proses === true)
-                                                            <p><span class="badge bg-success">✓ OK</span></p>
-                                                        @elseif($detail->status_saat_proses === false)
-                                                            <p><span class="badge bg-danger">✗ Tidak OK</span></p>
-                                                        @else
-                                                            <p><span class="badge bg-secondary">Belum Diisi</span></p>
-                                                        @endif
-                                                    </div>
-                                                </div>
-
+                                @forelse($areaData as $index => $item)
+                                    @php
+                                        $selectedArea = $areas->firstWhere('id', $item['id_area'] ?? null);
+                                        $selectedForm = $masterForms->firstWhere('id', $item['id_master_form'] ?? null);
+                                    @endphp
+                                    <div class="card mt-4 shadow-sm border border-primary">
+                                        <div class="card-header bg-primary text-white pb-2 pt-3">
+                                            <h5 class="card-title text-white mb-0">Area: {{ $selectedArea ? $selectedArea->nama_area : '-' }}</h5>
+                                            <p class="mb-0 text-white-50"><small>Master Form: {{ $selectedForm ? $selectedForm->nama_form : '-' }}</small></p>
+                                        </div>
+                                        <div class="card-body pt-3">
+                                            <div class="row mb-3">
                                                 <div class="col-md-6">
-                                                    <div class="mb-2">
-                                                        <label class="form-label"><strong>Keterangan</strong></label>
-                                                        <p class="form-control-plaintext">{{ $detail->keterangan ?? '-' }}</p>
-                                                    </div>
+                                                    <label class="form-label text-muted small mb-0">Jam Sebelum Proses</label>
+                                                    <p class="form-control-plaintext fw-bold">{{ $item['jam_sebelum_proses'] ?? '-' }}</p>
                                                 </div>
-
                                                 <div class="col-md-6">
-                                                    <div class="mb-2">
-                                                        <label class="form-label"><strong>Tindakan Koreksi</strong></label>
-                                                        <p class="form-control-plaintext">{{ $detail->tindakan_koreksi ?? '-' }}</p>
-                                                    </div>
+                                                    <label class="form-label text-muted small mb-0">Jam Saat Proses</label>
+                                                    <p class="form-control-plaintext fw-bold">{{ $item['jam_saat_proses'] ?? '-' }}</p>
                                                 </div>
                                             </div>
+
+                                            <h6 class="mb-3 border-bottom pb-2"><strong>Aspek Yang Dinilai</strong></h6>
+                                            @php
+                                                $fields = $selectedForm ? $selectedForm->fields : [];
+                                                $itemFields = collect($item['fields'] ?? []);
+                                            @endphp
+
+                                            @foreach($fields as $fIdx => $field)
+                                                @php
+                                                    $detail = $itemFields->firstWhere('id_master_form_field', $field->id);
+                                                @endphp
+                                                <div class="mb-3 p-3 border rounded bg-light">
+                                                    <div class="row">
+                                                        <div class="col-md-12 mb-2">
+                                                            <label class="form-label"><strong>{{ $fIdx + 1 }}. {{ $field->field_name }}</strong></label>
+                                                        </div>
+
+                                                        <div class="col-md-4">
+                                                            <div class="mb-2">
+                                                                <label class="form-label text-muted small mb-0">Status Verifikasi</label>
+                                                                @if(isset($detail['verifikasi_hasil']) && $detail['verifikasi_hasil'] === 1)
+                                                                    <p class="mb-0"><span class="badge bg-success">✓ OK</span></p>
+                                                                @elseif(isset($detail['verifikasi_hasil']) && $detail['verifikasi_hasil'] === 0)
+                                                                    <p class="mb-0"><span class="badge bg-danger">✗ Tidak OK</span></p>
+                                                                @else
+                                                                    <p class="mb-0"><span class="badge bg-secondary">Belum Diisi</span></p>
+                                                                @endif
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="col-md-4">
+                                                            <div class="mb-2">
+                                                                <label class="form-label text-muted small mb-0">Sebelum Proses</label>
+                                                                @if(isset($detail['status_sebelum_proses']) && $detail['status_sebelum_proses'] === 1)
+                                                                    <p class="mb-0"><span class="badge bg-success">✓ OK</span></p>
+                                                                @elseif(isset($detail['status_sebelum_proses']) && $detail['status_sebelum_proses'] === 0)
+                                                                    <p class="mb-0"><span class="badge bg-danger">✗ Tidak OK</span></p>
+                                                                @else
+                                                                    <p class="mb-0"><span class="badge bg-secondary">-</span></p>
+                                                                @endif
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="col-md-4">
+                                                            <div class="mb-2">
+                                                                <label class="form-label text-muted small mb-0">Saat Proses</label>
+                                                                @if(isset($detail['status_saat_proses']) && $detail['status_saat_proses'] === 1)
+                                                                    <p class="mb-0"><span class="badge bg-success">✓ OK</span></p>
+                                                                @elseif(isset($detail['status_saat_proses']) && $detail['status_saat_proses'] === 0)
+                                                                    <p class="mb-0"><span class="badge bg-danger">✗ Tidak OK</span></p>
+                                                                @else
+                                                                    <p class="mb-0"><span class="badge bg-secondary">-</span></p>
+                                                                @endif
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="col-md-6 mt-2">
+                                                            <div class="mb-2">
+                                                                <label class="form-label text-muted small mb-0">Keterangan</label>
+                                                                <p class="form-control-plaintext form-control-sm">{{ $detail['keterangan'] ?? '-' }}</p>
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="col-md-6 mt-2">
+                                                            <div class="mb-2">
+                                                                <label class="form-label text-muted small mb-0">Tindakan Koreksi</label>
+                                                                <p class="form-control-plaintext form-control-sm">{{ $detail['tindakan_koreksi'] ?? '-' }}</p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            @endforeach
                                         </div>
-                                    @endforeach
-                                </div>
+                                    </div>
+                                @empty
+                                    <div class="alert alert-warning mt-4">Belum ada data area.</div>
+                                @endforelse
+
+                                <div class="col-md-12 d-flex justify-content-end mt-4">
+
+
 
                                 <div class="col-md-12 d-flex justify-content-end mt-4">
                                     <a href="{{ route('pemeriksaan-kebersihan-area.index') }}" class="btn btn-light-secondary me-1 mb-1">Kembali</a>

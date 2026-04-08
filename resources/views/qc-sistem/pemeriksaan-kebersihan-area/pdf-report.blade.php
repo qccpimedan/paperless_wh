@@ -291,80 +291,92 @@
                     @endif
                 </td>
                 <td class="subheader-divider"></td>
-                <td class="subheader-label">Area</td>
-                <td>{{ $firstPemeriksaan && $firstPemeriksaan->area ? $firstPemeriksaan->area->nama_area : '-' }}</td>
+                <td class="subheader-label">Total Pemeriksaan</td>
+                <td>{{ count($pemeriksaans) }} Dokumen</td>
             </tr>
         </table>
     </div>
 
     <table class="report">
         <tbody>
-            @forelse($pemeriksaans as $i => $p)
+            @foreach($pemeriksaans as $p)
                 @php
-                    $details = $p->details ?? collect();
+                    $areaData = is_string($p->area_data) ? json_decode($p->area_data, true) : $p->area_data;
+                    $areaData = $areaData ?? [];
                 @endphp
-                <tr>
-                    <td colspan="4">
-                        <table class="report" style="border: none;">
-                            <thead>
-                                <tr>
-                                    <th style="width: 4%;">#</th>
-                                    <th style="width: 32%;">Aspek Yang Dinilai</th>
-                                    <th style="width: 10%;">Sebelum Proses</th>
-                                    <th style="width: 10%;">Saat Proses</th>
-                                    <th style="width: 10%;">Verifikasi</th>
-                                    <th style="width: 17%;">Keterangan</th>
-                                    <th style="width: 17%;">Tindakan Koreksi</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach($details as $dIndex => $d)
+
+                @foreach($areaData as $item)
+                    @php
+                        $selectedArea = \App\Models\InputArea::find($item['id_area'] ?? null);
+                        $selectedForm = \App\Models\InputMasterForm::find($item['id_master_form'] ?? null);
+                        $fields = $selectedForm ? $selectedForm->fields : [];
+                        $itemFields = collect($item['fields'] ?? []);
+                    @endphp
+                    <tr>
+                        <td colspan="4" style="padding: 10px 0;">
+                            <div style="background: #f8f9fa; padding: 8px; font-weight: bold; border-left: 4px solid #8b1428; margin-bottom: 5px; border-bottom: 1px solid #dee2e6;">
+                                Area: {{ $selectedArea ? $selectedArea->nama_area : '-' }} &nbsp;|&nbsp; 
+                                Form: {{ $selectedForm ? $selectedForm->nama_form : '-' }} &nbsp;|&nbsp;
+                                Jam: {{ $item['jam_sebelum_proses'] ?? '-' }} / {{ $item['jam_saat_proses'] ?? '-' }}
+                            </div>
+                            <table class="report" style="width: 100%;">
+                                <thead>
                                     <tr>
-                                        <td style="text-align:center;">{{ $dIndex + 1 }}</td>
-                                        <td>{{ $d->field ? $d->field->field_name : '-' }}</td>
-                                        <td>
-                                            @if($d->status_sebelum_proses === true)
-                                                <span class="badge-ok">OK</span>
-                                            @elseif($d->status_sebelum_proses === false)
-                                                <span class="badge-no">Tidak OK</span>
-                                            @else
-                                                <span class="muted">-</span>
-                                            @endif
-                                        </td>
-                                        <td>
-                                            @if($d->status_saat_proses === true)
-                                                <span class="badge-ok">OK</span>
-                                            @elseif($d->status_saat_proses === false)
-                                                <span class="badge-no">Tidak OK</span>
-                                            @else
-                                                <span class="muted">-</span>
-                                            @endif
-                                        </td>
-                                        <td>
-                                            @if($d->verifikasi_hasil === true)
-                                                <span class="badge-ok">OK</span>
-                                            @elseif($d->verifikasi_hasil === false)
-                                                <span class="badge-no">Tidak OK</span>
-                                            @else
-                                                <span class="muted">-</span>
-                                            @endif
-                                        </td>
-                                        <td>{{ $d->keterangan ?? '-' }}</td>
-                                        <td>{{ $d->tindakan_koreksi ?? '-' }}</td>
+                                        <th style="width: 4%;">#</th>
+                                        <th style="width: 32%;">Aspek Yang Dinilai</th>
+                                        <th style="width: 10%;">Sebelum</th>
+                                        <th style="width: 10%;">Sesudah</th>
+                                        <th style="width: 10%;">Verifikasi</th>
+                                        <th style="width: 17%;">Keterangan</th>
+                                        <th style="width: 17%;">Tindakan</th>
                                     </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </td>
-                </tr>
-            @empty
-                <tr>
-                    <td colspan="4" style="text-align:center;" class="muted">Tidak ada data</td>
-                </tr>
-            @endforelse
+                                </thead>
+                                <tbody>
+                                    @forelse($fields as $fIdx => $field)
+                                        @php
+                                            $d = $itemFields->firstWhere('id_master_form_field', $field->id);
+                                        @endphp
+                                        <tr>
+                                            <td style="text-align:center;">{{ $fIdx + 1 }}</td>
+                                            <td>{{ $field->field_name }}</td>
+                                            <td style="text-align:center;">
+                                                @if(isset($d['status_sebelum_proses']))
+                                                    <span class="{{ $d['status_sebelum_proses'] == 1 ? 'badge-ok' : 'badge-no' }}">
+                                                        {{ $d['status_sebelum_proses'] == 1 ? 'OK' : 'NO' }}
+                                                    </span>
+                                                @else - @endif
+                                            </td>
+                                            <td style="text-align:center;">
+                                                @if(isset($d['status_saat_proses']))
+                                                    <span class="{{ $d['status_saat_proses'] == 1 ? 'badge-ok' : 'badge-no' }}">
+                                                        {{ $d['status_saat_proses'] == 1 ? 'OK' : 'NO' }}
+                                                    </span>
+                                                @else - @endif
+                                            </td>
+                                            <td style="text-align:center;">
+                                                @if(isset($d['verifikasi_hasil']))
+                                                    <span class="{{ $d['verifikasi_hasil'] == 1 ? 'badge-ok' : 'badge-no' }}">
+                                                        {{ $d['verifikasi_hasil'] == 1 ? 'OK' : 'NO' }}
+                                                    </span>
+                                                @else - @endif
+                                            </td>
+                                            <td>{{ $d['keterangan'] ?? '-' }}</td>
+                                            <td>{{ $d['tindakan_koreksi'] ?? '-' }}</td>
+                                        </tr>
+                                    @empty
+                                        <tr><td colspan="7" style="text-align:center;">Tidak ada aspek penilaian</td></tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </td>
+                    </tr>
+                @endforeach
+            @endforeach
         </tbody>
     </table>
-
+    <div style="text-align: right; padding-right: 10px; font-style: italic; font-size: 9px; color: #666; margin-top: 5px;">
+        QW 02/00
+    </div>
     <div class="signature-section">
         @php
             $firstRecord = $pemeriksaans->first();
@@ -421,10 +433,6 @@
                 </td>
             </tr>
         </table>
-    </div>
-
-    <div style="text-align: right; padding-right: 10px; font-style: italic; font-size: 9px; color: #666; margin-top: 5px;">
-        QW 02/00
     </div>
 </body>
 </html>
