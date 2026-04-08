@@ -295,7 +295,7 @@
                                                             <td>{{ $produk['jumlah_sampling'] ?? '-' }}</td>
                                                         </tr>
                                                         <tr>
-                                                            <td><strong>Berat per Karung:</strong></td>
+                                                            <td><strong>Berat per Karung & Box:</strong></td>
                                                             <td>{{ $produk['berat_perkarung'] ?? '-' }}</td>
                                                         </tr>
                                                         <tr>

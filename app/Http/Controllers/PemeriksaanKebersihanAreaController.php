@@ -100,59 +100,61 @@ class PemeriksaanKebersihanAreaController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'id_master_form' => 'required|exists:input_master_forms,id',
-            'id_area' => 'required|exists:input_areas,id',
             'id_shift' => 'required|exists:shifts,id',
             'tanggal' => 'required|date',
-            'jam_sebelum_proses' => ['nullable', 'regex:/^\d{2}:\d{2}(:\d{2})?$/'],
-            'jam_saat_proses' => ['nullable', 'regex:/^\d{2}:\d{2}(:\d{2})?$/'],
-            'verifikasi_hasil' => 'nullable|boolean',
+            'items' => 'required|array|min:1',
+            'items.*.id_master_form' => 'required|exists:input_master_forms,id',
+            'items.*.id_area' => 'required|exists:input_areas,id',
         ]);
 
-        $jamSebelum = $request->jam_sebelum_proses ? substr((string) $request->jam_sebelum_proses, 0, 5) : null;
-        $jamSaat = $request->jam_saat_proses ? substr((string) $request->jam_saat_proses, 0, 5) : null;
+        foreach ($request->items as $item) {
+            $jamSebelum = !empty($item['jam_sebelum_proses']) ? substr((string) $item['jam_sebelum_proses'], 0, 5) : null;
+            $jamSaat = !empty($item['jam_saat_proses']) ? substr((string) $item['jam_saat_proses'], 0, 5) : null;
 
-        // Create pemeriksaan
-        $pemeriksaan = PemeriksaanKebersihanArea::create([
-            'id_user' => Auth::id(),
-            'id_shift' => $request->id_shift,
-            'id_area' => $request->id_area,
-            'id_master_form' => $request->id_master_form,
-            'tanggal' => $request->tanggal,
-            'jam_sebelum_proses' => $jamSebelum,
-            'jam_saat_proses' => $jamSaat,
-            'verifikasi_hasil' => $request->has('verifikasi_hasil') ? (bool) $request->input('verifikasi_hasil') : null,
-        ]);
-
-        // Create details for each field
-        $masterForm = InputMasterForm::find($request->id_master_form);
-        foreach ($masterForm->fields as $field) {
-            $statusSebelumKey = 'field_status_sebelum_' . $field->id;
-            $statusSaatKey = 'field_status_saat_' . $field->id;
-            $verifikasiKey = 'field_verifikasi_' . $field->id;
-            $keteranganKey = 'field_keterangan_' . $field->id;
-            $tindakanKey = 'field_tindakan_' . $field->id;
-
-            $statusSebelum = $request->has($statusSebelumKey) ? (int) $request->input($statusSebelumKey) : null;
-            $statusSaat = $request->has($statusSaatKey) ? (int) $request->input($statusSaatKey) : null;
-
-            $legacyStatus = null;
-            if ($statusSebelum !== null && $statusSaat !== null) {
-                $legacyStatus = ($statusSebelum === 1 && $statusSaat === 1) ? 1 : 0;
-            }
-
-            $verifikasiHasil = $request->has($verifikasiKey) ? (int) $request->input($verifikasiKey) : null;
-            
-            PemeriksaanKebersihanAreaDetail::create([
-                'id_pemeriksaan' => $pemeriksaan->id,
-                'id_master_form_field' => $field->id,
-                'status' => $legacyStatus,
-                'status_sebelum_proses' => $statusSebelum,
-                'status_saat_proses' => $statusSaat,
-                'verifikasi_hasil' => $verifikasiHasil,
-                'keterangan' => $request->input($keteranganKey),
-                'tindakan_koreksi' => $request->input($tindakanKey),
+            // Create pemeriksaan
+            $pemeriksaan = PemeriksaanKebersihanArea::create([
+                'id_user' => Auth::id(),
+                'id_shift' => $request->id_shift,
+                'id_area' => $item['id_area'],
+                'id_master_form' => $item['id_master_form'],
+                'tanggal' => $request->tanggal,
+                'jam_sebelum_proses' => $jamSebelum,
+                'jam_saat_proses' => $jamSaat,
+                'verifikasi_hasil' => isset($item['verifikasi_hasil']) ? (bool) $item['verifikasi_hasil'] : null,
             ]);
+
+            // Create details for each field
+            $masterForm = InputMasterForm::find($item['id_master_form']);
+            if ($masterForm && $masterForm->fields) {
+                foreach ($masterForm->fields as $field) {
+                    $statusSebelumKey = 'field_status_sebelum_' . $field->id;
+                    $statusSaatKey = 'field_status_saat_' . $field->id;
+                    $verifikasiKey = 'field_verifikasi_' . $field->id;
+                    $keteranganKey = 'field_keterangan_' . $field->id;
+                    $tindakanKey = 'field_tindakan_' . $field->id;
+
+                    $statusSebelum = isset($item[$statusSebelumKey]) ? (int) $item[$statusSebelumKey] : null;
+                    $statusSaat = isset($item[$statusSaatKey]) ? (int) $item[$statusSaatKey] : null;
+
+                    $legacyStatus = null;
+                    if ($statusSebelum !== null && $statusSaat !== null) {
+                        $legacyStatus = ($statusSebelum === 1 && $statusSaat === 1) ? 1 : 0;
+                    }
+
+                    $verifikasiHasil = isset($item[$verifikasiKey]) ? (int) $item[$verifikasiKey] : null;
+                    
+                    PemeriksaanKebersihanAreaDetail::create([
+                        'id_pemeriksaan' => $pemeriksaan->id,
+                        'id_master_form_field' => $field->id,
+                        'status' => $legacyStatus,
+                        'status_sebelum_proses' => $statusSebelum,
+                        'status_saat_proses' => $statusSaat,
+                        'verifikasi_hasil' => $verifikasiHasil,
+                        'keterangan' => $item[$keteranganKey] ?? null,
+                        'tindakan_koreksi' => $item[$tindakanKey] ?? null,
+                    ]);
+                }
+            }
         }
 
         return redirect()->route('pemeriksaan-kebersihan-area.index')->with('success', 'Pemeriksaan berhasil dibuat!');
