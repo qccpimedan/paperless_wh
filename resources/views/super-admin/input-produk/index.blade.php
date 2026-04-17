@@ -43,7 +43,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
         @endif
-
+<!-- done -->
         <section class="section">
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
@@ -156,9 +156,6 @@
 @endcan
 
 @push('scripts')
-<link rel="stylesheet" href="{{ asset('dist/vendors/datatables/dataTables.bootstrap5.min.css') }}">
-<script src="{{ asset('dist/vendors/datatables/jquery.dataTables.min.js') }}"></script>
-<script src="{{ asset('dist/vendors/datatables/dataTables.bootstrap5.min.js') }}"></script>
 <script>
 $(document).ready(function() {
     $('#table-produk').DataTable({
