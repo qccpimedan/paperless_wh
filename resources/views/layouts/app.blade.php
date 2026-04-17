@@ -16,7 +16,9 @@
     <link rel="stylesheet" href="{{asset('dist/vendors/simple-datatables/style.css')}}">
     <!-- Choices.js CSS -->
     <link rel="stylesheet" href="{{ asset('dist/vendors/choices.js/choices.css') }}">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css">
+    <link rel="stylesheet" href="{{asset('dist/vendors/select2/css/select2.min.css')}}">
+    <!-- DataTables Bootstrap5 CSS -->
+    <link rel="stylesheet" href="{{asset('dist/vendors/datatables/dataTables.bootstrap5.min.css')}}">
     <link rel="icon" href="{{asset('dist/images/logo/logo5.png')}}" type="image/x-icon">
     <!-- select negara -->
     <link rel="stylesheet" href="{{asset('dist/vendors/choices.js/choices.min.css')}}">
@@ -465,12 +467,15 @@
     <script src="{{asset('dist/vendors/choices.js/choices.min.js')}}"></script>
     <!-- script negara -->
     <script src="{{ asset('dist/vendors/choices.js/choices.js') }}"></script>
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script src="{{asset('dist/vendors/jquery/jquery-3.7.1.min.js')}}"></script>
+    <script src="{{asset('dist/vendors/select2/js/select2.min.js')}}"></script>
+    <!-- DataTables JS -->
+    <script src="{{asset('dist/vendors/datatables/jquery.dataTables.min.js')}}"></script>
+    <script src="{{asset('dist/vendors/datatables/dataTables.bootstrap5.min.js')}}"></script>
 
     
 <script>
-    // Initialize DataTable for any table with id="table1"
+// Initialize DataTable for any table with id="table1"
 document.addEventListener('DOMContentLoaded', function() {
     let table1 = document.querySelector('#table1');
     if (table1 && !(window.disableSimpleDatatables === true) && table1.getAttribute('data-disable-datatable') !== '1') {
