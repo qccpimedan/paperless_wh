@@ -774,25 +774,20 @@ return view('qc-sistem.pemeriksaan-loading-produk.index', compact('pemeriksaans'
         // Filter by produk / kategori
         if ($id_produk) {
             $query->where(function ($q) use ($id_produk) {
-                $q->whereRaw("JSON_CONTAINS(id_produk_array, ?, '$')", [json_encode((int)$id_produk)])
-                  ->orWhereRaw("JSON_CONTAINS(id_produk_array, ?, '$')", [json_encode((string)$id_produk)])
-                  ->orWhere('id_produk_array', 'like', '%"' . $id_produk . '"%')
-                  ->orWhere('id_produk_array', 'like', '%,' . $id_produk . ',%')
-                  ->orWhere('id_produk_array', 'like', '[' . $id_produk . ',%')
-                  ->orWhere('id_produk_array', 'like', '%,' . $id_produk . ']');
+                $q->whereRaw("JSON_CONTAINS(produk_data, ?, '$')", [json_encode(['id_produk' => (int)$id_produk])])
+                  ->orWhereRaw("JSON_CONTAINS(produk_data, ?, '$')", [json_encode(['id_produk' => (string)$id_produk])])
+                  ->orWhere('produk_data', 'like', '%"id_produk":' . $id_produk . '%')
+                  ->orWhere('produk_data', 'like', '%"id_produk":"' . $id_produk . '"%');
             });
         } elseif ($kategori_code) {
-            // Because JSON array only stores ID, we must find matching produk IDs first to filter by category
             $matchedIds = \App\Models\Produk::where('kategori_code', $kategori_code)->pluck('id')->toArray();
             if (!empty($matchedIds)) {
                 $query->where(function ($q) use ($matchedIds) {
                     foreach ($matchedIds as $pid) {
-                        $q->orWhereRaw("JSON_CONTAINS(id_produk_array, ?, '$')", [json_encode((int)$pid)])
-                          ->orWhereRaw("JSON_CONTAINS(id_produk_array, ?, '$')", [json_encode((string)$pid)])
-                          ->orWhere('id_produk_array', 'like', '%"' . $pid . '"%')
-                          ->orWhere('id_produk_array', 'like', '%,' . $pid . ',%')
-                          ->orWhere('id_produk_array', 'like', '[' . $pid . ',%')
-                          ->orWhere('id_produk_array', 'like', '%,' . $pid . ']');
+                        $q->orWhereRaw("JSON_CONTAINS(produk_data, ?, '$')", [json_encode(['id_produk' => (int)$pid])])
+                          ->orWhereRaw("JSON_CONTAINS(produk_data, ?, '$')", [json_encode(['id_produk' => (string)$pid])])
+                          ->orWhere('produk_data', 'like', '%"id_produk":' . $pid . '%')
+                          ->orWhere('produk_data', 'like', '%"id_produk":"' . $pid . '"%');
                     }
                 });
             } else {
