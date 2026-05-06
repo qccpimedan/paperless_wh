@@ -57,7 +57,7 @@
                     @endcan
                 </div>
                 <div class="card-body">
-                    <div class="row mb-4 p-3 bg-light rounded">
+                    <!-- <div class="row mb-4 p-3 bg-light rounded">
                         <div class="col-md-12 mb-3">
                             <h6 class="mb-3"><i class="bi bi-funnel"></i> Filter & Cetak PDF</h6>
                         </div>
@@ -91,7 +91,7 @@
                                 </button>
                             </div>
                         </form>
-                    </div>
+                    </div> -->
 
                     <form action="{{ route('pemeriksaan-suhu-ruang-v3.index') }}" method="GET" class="row g-3 mb-3">
                         <div class="col-md-9">
@@ -261,6 +261,10 @@
                                                         <i class="bi bi-clock-history"></i>
                                                     </a>
                                                 @endcan
+                                                <a href="{{ route('pemeriksaan-suhu-ruang-v3.print-pdf', $pemeriksaan->uuid) }}" 
+                                                    class="btn btn-sm btn-danger" title="Cetak PDF" target="_blank">
+                                                        <i class="bi bi-file-earmark-text"></i>
+                                                </a>
                                                 @can('delete_pemeriksaan_suhu_ruang_v3')
                                                     <form action="{{ route('pemeriksaan-suhu-ruang-v3.destroy', $pemeriksaan->uuid) }}" 
                                                         method="POST" 

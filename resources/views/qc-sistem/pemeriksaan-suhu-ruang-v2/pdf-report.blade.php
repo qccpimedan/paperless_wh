@@ -294,65 +294,124 @@
                     }
                 }
             @endphp
+            
+            {!! $renderUnitTable('Cold Storage', $cold, $defaultJam, $unitJamCold) !!}
+            {!! $renderUnitTable('Anteroom Loading', $anteroom, $defaultJam, $unitJamAnteroom) !!}
+            {!! $render3Col('Pre Loading', $pre, $defaultJam) !!}
+            {!! $render3Col('Prestaging', $prestaging, $defaultJam) !!}
+            {!! $render3Col('Anteroom Ekspansi ABF', $abf, $defaultJam) !!}
+            {!! $render3Col('Chillroom RM', $rm, $defaultJam) !!}
+            {!! $render3Col('Chillroom Domestik', $dom, $defaultJam) !!}
 
-            {{-- Timeline / History Perubahan --}}
-            @if($p->relationLoaded('histories') && $p->histories && $p->histories->count() > 0)
-                <div class="section-title">Riwayat Perubahan (Update Per Jam)</div>
-                <table class="data">
-                    <thead>
-                        <tr>
-                            <th style="width: 5%">No</th>
-                            <th style="width: 14%">Waktu</th>
-                            <th style="width: 27%">Lokasi</th>
-                            <th style="width: 27%">Sebelumnya</th>
-                            <th style="width: 27%">Sesudahnya</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @php
-                            $histNo = 1;
-                            $suhuFields = [
-                                'suhu_cold_storage' => 'Cold Storage',
-                                'suhu_anteroom_loading' => 'Anteroom Loading',
-                                'suhu_pre_loading' => 'Pre Loading',
-                                'suhu_prestaging' => 'Prestaging',
-                                'suhu_anteroom_ekspansi_abf' => 'Anteroom Ekspansi ABF',
-                                'suhu_chillroom_rm' => 'Chillroom RM',
-                                'suhu_chillroom_domestik' => 'Chillroom Domestik',
-                            ];
+            {{-- Data & Riwayat Pemeriksaan Table --}}
+            <div class="section-title">Data & Riwayat Pemeriksaan</div>
+            <table class="data">
+                <thead>
+                    <tr>
+                        <th style="width: 5%">No</th>
+                        <th style="width: 14%">Waktu</th>
+                        <th style="width: 21%">Lokasi</th>
+                        <th style="width: 30%">Sebelumnya</th>
+                        <th style="width: 30%">Sesudahnya</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @php
+                        $histNo = 1;
+                        $suhuFieldsConfig = [
+                            'suhu_cold_storage' => 'Cold Storage',
+                            'suhu_anteroom_loading' => 'Anteroom Loading',
+                            'suhu_pre_loading' => 'Pre Loading',
+                            'suhu_prestaging' => 'Prestaging',
+                            'suhu_anteroom_ekspansi_abf' => 'Anteroom Ekspansi ABF',
+                            'suhu_chillroom_rm' => 'Chillroom RM',
+                            'suhu_chillroom_domestik' => 'Chillroom Domestik',
+                        ];
 
-                            $renderVal = function($val) {
-                                if ($val === null || $val === '' || $val === []) return '-';
-                                if (is_array($val)) {
-                                    $parts = [];
-                                    foreach ($val as $k => $v) {
-                                        if ($v !== null && $v !== '') {
-                                            $parts[] = $k . ': ' . $v;
-                                        }
-                                    }
-                                    return !empty($parts) ? implode('; ', $parts) : '-';
+                        $renderVal = function($val) {
+                            if ($val === null || $val === '' || $val === []) return '-';
+                            if (is_array($val)) {
+                                $parts = [];
+                                if (isset($val['setting'])) $parts[] = 'setting: ' . $val['setting'];
+                                if (isset($val['display'])) $parts[] = 'display: ' . $val['display'];
+                                if (isset($val['actual'])) $parts[] = 'actual: ' . $val['actual'];
+                                return !empty($parts) ? implode('; ', $parts) : '-';
+                            }
+                            return (string) $val;
+                        };
+
+                        $firstHistory = $p->histories->sortBy('created_at')->first();
+                        $initialTime = $p->created_at->format('d/m/Y H:i');
+
+                        $getInitialVal = function($field) use ($firstHistory, $p) {
+                            $oldField = $field . '_lama';
+                            if ($firstHistory) {
+                                $val = $firstHistory->$oldField;
+                                if (is_string($val) && !empty($val)) {
+                                    $decoded = json_decode($val, true);
+                                    return (json_last_error() === JSON_ERROR_NONE) ? $decoded : $val;
                                 }
-                                return (string) $val;
-                            };
-                        @endphp
+                                return $val;
+                            }
+                            return $p->$field;
+                        };
+                    @endphp
 
+                    {{-- 1. Tampilkan Data Input Pertama (Initial State) --}}
+                    <tr>
+                        <td colspan="5" style="background: #f8f9fa; font-weight: bold; font-size: 9px; color: #555; text-align: center; border-bottom: 1px solid #dee2e6;">
+                            --- INPUT DATA PERTAMA ---
+                        </td>
+                    </tr>
+                    @foreach($suhuFieldsConfig as $field => $label)
+                        @php $secData = $getInitialVal($field); @endphp
+                        @if(!empty($secData))
+                            @if(in_array($field, ['suhu_cold_storage', 'suhu_anteroom_loading']))
+                                @foreach($secData as $uKey => $item)
+                                    <tr>
+                                        <td style="text-align: center;">{{ $histNo++ }}</td>
+                                        <td>{{ $initialTime }}</td>
+                                        <td>{{ $label }} {{ $uKey }}</td>
+                                        <td style="background: #fff3cd; text-align: center;">-</td>
+                                        <td style="background: #d4edda;">{{ $renderVal($item) }}</td>
+                                    </tr>
+                                @endforeach
+                            @else
+                                <tr>
+                                    <td style="text-align: center;">{{ $histNo++ }}</td>
+                                    <td>{{ $initialTime }}</td>
+                                    <td>{{ $label }}</td>
+                                    <td style="background: #fff3cd; text-align: center;">-</td>
+                                    <td style="background: #d4edda;">{{ $renderVal($secData) }}</td>
+                                </tr>
+                            @endif
+                        @endif
+                    @endforeach
+
+                    {{-- 2. Tampilkan Riwayat Perubahan (History) --}}
+                    @if($p->relationLoaded('histories') && $p->histories && $p->histories->count() > 0)
+                        <tr>
+                            <td colspan="5" style="background: #f8f9fa; font-weight: bold; font-size: 9px; color: #c41e3a; text-align: center; border-top: 2px solid #dee2e6; border-bottom: 1px solid #dee2e6;">
+                                --- RIWAYAT PERUBAHAN / UPDATE ---
+                            </td>
+                        </tr>
                         @foreach($p->histories->sortBy('created_at') as $history)
                             @php
                                 $hTime = $history->created_at ? $history->created_at->format('d/m/Y H:i') : '-';
                                 $changes = [];
 
-                                // Suhu Produk
-                                if (($history->suhu_produk_lama ?? null) != ($history->suhu_produk_baru ?? null)) {
-                                    $changes[] = ['lokasi' => 'Suhu Produk', 'param' => '-', 'lama' => $history->suhu_produk_lama ?? '(Kosong)', 'baru' => $history->suhu_produk_baru ?? '(Kosong)'];
+                                // Keterangan
+                                if (($history->keterangan_lama ?? null) != ($history->keterangan_baru ?? null)) {
+                                    $changes[] = ['lokasi' => 'Keterangan', 'lama' => $history->keterangan_lama ?? '(Kosong)', 'baru' => $history->keterangan_baru ?? '(Kosong)'];
                                 }
 
-                                // Pukul
-                                if (($history->pukul_lama ?? null) != ($history->pukul_baru ?? null)) {
-                                    $changes[] = ['lokasi' => 'Pukul', 'param' => '-', 'lama' => $history->pukul_lama ?? '(Kosong)', 'baru' => $history->pukul_baru ?? '(Kosong)'];
+                                // Tindakan Koreksi
+                                if (($history->tindakan_koreksi_lama ?? null) != ($history->tindakan_koreksi_baru ?? null)) {
+                                    $changes[] = ['lokasi' => 'Tindakan Koreksi', 'lama' => $history->tindakan_koreksi_lama ?? '(Kosong)', 'baru' => $history->tindakan_koreksi_baru ?? '(Kosong)'];
                                 }
 
                                 // Suhu Fields
-                                foreach ($suhuFields as $field => $label) {
+                                foreach ($suhuFieldsConfig as $field => $label) {
                                     $oldField = $field . '_lama';
                                     $newField = $field . '_baru';
                                     $oldValue = $history->$oldField ?? null;
@@ -366,53 +425,27 @@
                                         $decoded = json_decode($newValue, true);
                                         $newValue = (json_last_error() === JSON_ERROR_NONE) ? $decoded : null;
                                     }
+                                    
                                     if (is_object($oldValue)) { $oldValue = json_decode(json_encode($oldValue), true); }
                                     if (is_object($newValue)) { $newValue = json_decode(json_encode($newValue), true); }
-
-                                    if (!is_array($oldValue) && !is_array($newValue)) continue;
 
                                     $oldArray = is_array($oldValue) ? $oldValue : [];
                                     $newArray = is_array($newValue) ? $newValue : [];
 
-                                    // Detect simple object vs array of objects
-                                    $isSimpleObject = false;
-                                    $checkArray = !empty($oldArray) ? $oldArray : $newArray;
-                                    if (!empty($checkArray)) {
-                                        $firstKey = array_key_first($checkArray);
-                                        if (in_array($firstKey, ['setting', 'display', 'actual'])) {
-                                            $isSimpleObject = true;
-                                        } else {
-                                            $isSimpleObject = !is_array($checkArray[$firstKey] ?? null);
-                                        }
-                                    }
+                                    if (empty($oldArray) && empty($newArray)) continue;
 
-                                    if ($isSimpleObject) {
-                                        // Single section (Pre Loading, Prestaging, etc) - one row combined
-                                        $oldStr = $renderVal($oldArray);
-                                        $newStr = $renderVal($newArray);
-                                        if (json_encode($oldArray) !== json_encode($newArray)) {
-                                            $changes[] = ['lokasi' => $label, 'param' => '-', 'lama' => $oldStr, 'baru' => $newStr];
-                                        }
-                                    } else {
-                                        // Multi-unit (Cold Storage, Anteroom Loading) - one row per unit combined
-                                        $allKeys = array_unique(array_merge(array_keys($oldArray), array_keys($newArray)));
-                                        foreach ($allKeys as $key) {
-                                            $oldItem = $oldArray[$key] ?? null;
-                                            $newItem = $newArray[$key] ?? null;
+                                    if (in_array($field, ['suhu_cold_storage', 'suhu_anteroom_loading'])) {
+                                        $allUnits = array_unique(array_merge(array_keys($oldArray), array_keys($newArray)));
+                                        foreach ($allUnits as $uKey) {
+                                            $oldItem = $oldArray[$uKey] ?? null;
+                                            $newItem = $newArray[$uKey] ?? null;
                                             if (json_encode($oldItem) === json_encode($newItem)) continue;
 
-                                            $unitNumber = (int)$key + 1;
-                                            if ($label === 'Cold Storage') {
-                                                $unitLabel = 'Cold Storage CS ' . $unitNumber;
-                                            } elseif ($label === 'Anteroom Loading') {
-                                                $unitLabel = 'Anteroom Loading ' . $unitNumber;
-                                            } else {
-                                                $unitLabel = $label . ' ' . $unitNumber;
-                                            }
-
-                                            $oldStr = $renderVal($oldItem);
-                                            $newStr = $renderVal($newItem);
-                                            $changes[] = ['lokasi' => $unitLabel, 'param' => '-', 'lama' => $oldStr, 'baru' => $newStr];
+                                            $changes[] = ['lokasi' => $label . ' ' . $uKey, 'lama' => $renderVal($oldItem), 'baru' => $renderVal($newItem)];
+                                        }
+                                    } else {
+                                        if (json_encode($oldArray) !== json_encode($newArray)) {
+                                            $changes[] = ['lokasi' => $label, 'lama' => $renderVal($oldArray), 'baru' => $renderVal($newArray)];
                                         }
                                     }
                                 }
@@ -428,9 +461,9 @@
                                 </tr>
                             @endforeach
                         @endforeach
-                    </tbody>
-                </table>
-            @endif
+                    @endif
+                </tbody>
+            </table>
 
             @if(!empty($p->keterangan) || !empty($p->tindakan_koreksi))
                 <div class="section-title">Keterangan / Tindakan Koreksi</div>
