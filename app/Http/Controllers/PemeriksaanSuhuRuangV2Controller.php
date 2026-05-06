@@ -523,6 +523,35 @@ class PemeriksaanSuhuRuangV2Controller extends Controller
         return redirect()->back()->with('error', 'Pemeriksaan ditolak oleh SPV QC. Silakan perbaiki dan kirim ulang.');
     }
 
+    public function printPDF(PemeriksaanSuhuRuangV2 $pemeriksaanSuhuRuangV2)
+    {
+        $this->checkPlantAccess($pemeriksaanSuhuRuangV2);
+        
+        $pemeriksaanSuhuRuangV2->load([
+            'user.role',
+            'user.plant',
+            'produk',
+            'shift',
+            'verifiedBy.role',
+            'qcVerifier',
+            'produksiVerifier',
+            'spvVerifier',
+            'histories'
+        ]);
+
+        $pdf = \PDF::loadView('qc-sistem.pemeriksaan-suhu-ruang-v2.pdf-report', [
+            'pemeriksaans' => collect([$pemeriksaanSuhuRuangV2]),
+            'tanggal' => $pemeriksaanSuhuRuangV2->tanggal->format('Y-m-d'),
+            'shift' => $pemeriksaanSuhuRuangV2->shift,
+            'qcUser' => $pemeriksaanSuhuRuangV2->qcVerifier->name ?? null,
+            'produksiUser' => $pemeriksaanSuhuRuangV2->produksiVerifier->name ?? null,
+            'spvQcUser' => $pemeriksaanSuhuRuangV2->spvVerifier->name ?? null,
+        ]);
+
+        $filename = 'pemeriksaan-suhu-ruang-v2-' . $pemeriksaanSuhuRuangV2->uuid . '.pdf';
+        return $pdf->stream($filename);
+    }
+
     public function exportPDF(Request $request)
     {
         $user = Auth::user();

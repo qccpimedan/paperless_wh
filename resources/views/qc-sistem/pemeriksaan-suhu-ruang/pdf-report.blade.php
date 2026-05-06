@@ -230,56 +230,181 @@
                     </tr>
                 </table>
             </div>
-
-            {{-- Timeline / History Perubahan --}}
-            @if($p->relationLoaded('histories') && $p->histories && $p->histories->count() > 0)
-                <div class="section-title">Riwayat Perubahan (Update Per Jam)</div>
+            
+            {{-- Data Pemeriksaan Terkini --}}
+            <!-- @if(!empty($suhu['cold_storage'] ?? []))
+                <div class="section-title">Cold Storage</div>
                 <table class="data">
                     <thead>
                         <tr>
-                            <th style="width: 5%">No</th>
-                            <th style="width: 14%">Waktu</th>
-                            <th style="width: 27%">Lokasi</th>
-                            <th style="width: 27%">Sebelumnya</th>
-                            <th style="width: 27%">Sesudahnya</th>
+                            <th style="width: 25%">Unit</th>
+                            <th>Setting (°C)</th>
+                            <th>Display (°C)</th>
+                            <th>Actual (°C)</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @php
-                            $histNo = 1;
-                            $sectionLabels = [
-                                'cold_storage' => 'Cold Storage',
-                                'anteroom_loading' => 'Anteroom Loading',
-                                'pre_loading' => 'Pre Loading',
-                                'prestaging' => 'Prestaging',
-                                'anteroom_ekspansi_further' => 'Anteroom Ekspansi Further',
-                                'anteroom_ekspansi_sausage' => 'Anteroom Ekspansi Sausage',
-                            ];
+                        @foreach($suhu['cold_storage'] as $item)
+                            <tr>
+                                <td>CS {{ $item['unit'] }}</td>
+                                <td>{{ $item['setting'] ?? '-' }}</td>
+                                <td>{{ $item['display'] ?? '-' }}</td>
+                                <td>{{ $item['actual'] ?? '-' }}</td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            @endif
 
-                            $renderVal = function($val) {
-                                if ($val === null || $val === '' || $val === []) return '-';
-                                if (is_array($val)) {
-                                    $parts = [];
-                                    foreach ($val as $k => $v) {
-                                        if ($v !== null && $v !== '' && $k !== 'unit' && $k !== 'jam') {
-                                            $parts[] = $k . ': ' . $v;
-                                        }
-                                    }
-                                    return !empty($parts) ? implode('; ', $parts) : '-';
-                                }
-                                return (string) $val;
-                            };
+            @if(!empty($suhu['anteroom_loading'] ?? []))
+                <div class="section-title">Anteroom Loading</div>
+                <table class="data">
+                    <thead>
+                        <tr>
+                            <th style="width: 25%">Unit</th>
+                            <th>Setting (°C)</th>
+                            <th>Display (°C)</th>
+                            <th>Actual (°C)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($suhu['anteroom_loading'] as $item)
+                            <tr>
+                                <td>Anteroom Loading {{ $item['unit'] }}</td>
+                                <td>{{ $item['setting'] ?? '-' }}</td>
+                                <td>{{ $item['display'] ?? '-' }}</td>
+                                <td>{{ $item['actual'] ?? '-' }}</td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            @endif
 
-                            $findUnitRowFn = function ($rows, $unit) {
-                                if (!is_array($rows)) return null;
-                                foreach ($rows as $r) {
-                                    if (!is_array($r)) continue;
-                                    if ((string) ($r['unit'] ?? '') === (string) $unit) return $r;
-                                }
-                                return null;
-                            };
-                        @endphp
+            @php
+                $singleAreas = [
+                    'pre_loading' => 'Pre Loading',
+                    'prestaging' => 'Prestaging',
+                    'anteroom_ekspansi_further' => 'Anteroom Ekspansi Further',
+                    'anteroom_ekspansi_sausage' => 'Anteroom Ekspansi Sausage',
+                ];
+            @endphp
 
+            @foreach($singleAreas as $key => $label)
+                @if(!empty($suhu[$key] ?? []))
+                    <div class="section-title">{{ $label }}</div>
+                    <table class="data">
+                        <thead>
+                            <tr>
+                                <th>Setting (°C)</th>
+                                <th>Display (°C)</th>
+                                @if(isset($suhu[$key]['actual']))
+                                    <th>Actual (°C)</th>
+                                @endif
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>{{ $suhu[$key]['setting'] ?? '-' }}</td>
+                                <td>{{ $suhu[$key]['display'] ?? '-' }}</td>
+                                @if(isset($suhu[$key]['actual']))
+                                    <td>{{ $suhu[$key]['actual'] ?? '-' }}</td>
+                                @endif
+                            </tr>
+                        </tbody>
+                    </table>
+                @endif
+            @endforeach -->
+
+            {{-- Data & Riwayat Pemeriksaan Table --}}
+            <div class="section-title">Data & Riwayat Pemeriksaan</div>
+            <table class="data">
+                <thead>
+                    <tr>
+                        <th style="width: 5%">No</th>
+                        <th style="width: 14%">Waktu</th>
+                        <th style="width: 21%">Lokasi</th>
+                        <th style="width: 30%">Sebelumnya</th>
+                        <th style="width: 30%">Sesudahnya</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @php
+                        $histNo = 1;
+                        $sectionLabels = [
+                            'cold_storage' => 'Cold Storage',
+                            'anteroom_loading' => 'Anteroom Loading',
+                            'pre_loading' => 'Pre Loading',
+                            'prestaging' => 'Prestaging',
+                            'anteroom_ekspansi_further' => 'Anteroom Ekspansi Further',
+                            'anteroom_ekspansi_sausage' => 'Anteroom Ekspansi Sausage',
+                        ];
+
+                        $renderVal = function($val) {
+                            if ($val === null || $val === '' || $val === []) return '-';
+                            if (is_array($val)) {
+                                $parts = [];
+                                if (isset($val['setting'])) $parts[] = 'setting: ' . $val['setting'];
+                                if (isset($val['display'])) $parts[] = 'display: ' . $val['display'];
+                                if (isset($val['actual'])) $parts[] = 'actual: ' . $val['actual'];
+                                return !empty($parts) ? implode('; ', $parts) : '-';
+                            }
+                            return (string) $val;
+                        };
+
+                        $findUnitRowFn = function ($rows, $unit) {
+                            if (!is_array($rows)) return null;
+                            foreach ($rows as $r) {
+                                if (!is_array($r)) continue;
+                                if ((string) ($r['unit'] ?? '') === (string) $unit) return $r;
+                            }
+                            return null;
+                        };
+
+                        $firstHistory = $p->histories->sortBy('created_at')->first();
+                        $initialData = $firstHistory ? 
+                            (is_array($firstHistory->suhu_data_lama) ? $firstHistory->suhu_data_lama : (json_decode($firstHistory->suhu_data_lama ?? '[]', true) ?: [])) : 
+                            $suhu;
+                        $initialTime = $p->created_at->format('d/m/Y H:i');
+                    @endphp
+
+                    {{-- 1. Tampilkan Data Input Pertama (Initial State) --}}
+                    <tr>
+                        <td colspan="5" style="background: #f8f9fa; font-weight: bold; font-size: 9px; color: #555; text-align: center; border-bottom: 1px solid #dee2e6;">
+                            --- INPUT DATA PERTAMA ---
+                        </td>
+                    </tr>
+                    @foreach($sectionLabels as $secKey => $secLabel)
+                        @php $secData = $initialData[$secKey] ?? []; @endphp
+                        @if(!empty($secData))
+                            @if(in_array($secKey, ['cold_storage', 'anteroom_loading']))
+                                @foreach($secData as $item)
+                                    <tr>
+                                        <td style="text-align: center;">{{ $histNo++ }}</td>
+                                        <td>{{ $initialTime }}</td>
+                                        <td>{{ $secLabel }} {{ $item['unit'] ?? '' }}</td>
+                                        <td style="background: #fff3cd; text-align: center;">-</td>
+                                        <td style="background: #d4edda;">{{ $renderVal($item) }}</td>
+                                    </tr>
+                                @endforeach
+                            @else
+                                <tr>
+                                    <td style="text-align: center;">{{ $histNo++ }}</td>
+                                    <td>{{ $initialTime }}</td>
+                                    <td>{{ $secLabel }}</td>
+                                    <td style="background: #fff3cd; text-align: center;">-</td>
+                                    <td style="background: #d4edda;">{{ $renderVal($secData) }}</td>
+                                </tr>
+                            @endif
+                        @endif
+                    @endforeach
+
+                    {{-- 2. Tampilkan Riwayat Perubahan (History) --}}
+                    @if($p->relationLoaded('histories') && $p->histories && $p->histories->count() > 0)
+                        <tr>
+                            <td colspan="5" style="background: #f8f9fa; font-weight: bold; font-size: 9px; color: #c41e3a; text-align: center; border-top: 2px solid #dee2e6; border-bottom: 1px solid #dee2e6;">
+                                --- RIWAYAT PERUBAHAN / UPDATE ---
+                            </td>
+                        </tr>
                         @foreach($p->histories->sortBy('created_at') as $history)
                             @php
                                 $hTime = $history->created_at ? $history->created_at->format('d/m/Y H:i') : '-';
@@ -303,7 +428,6 @@
                                     $oldSection = $lama[$secKey] ?? [];
                                     $newSection = $baru[$secKey] ?? [];
 
-                                    // Multi-unit (array of rows with 'unit' key)
                                     if (in_array($secKey, ['cold_storage', 'anteroom_loading'])) {
                                         $allUnits = [];
                                         foreach ((array) $oldSection as $r) { if (is_array($r) && isset($r['unit'])) $allUnits[] = (string) $r['unit']; }
@@ -315,11 +439,9 @@
                                             $newItem = $findUnitRowFn($newSection, $u);
                                             if (json_encode($oldItem) === json_encode($newItem)) continue;
 
-                                            $unitLabel = $secLabel . ' ' . $u;
-                                            $changes[] = ['lokasi' => $unitLabel, 'lama' => $renderVal($oldItem), 'baru' => $renderVal($newItem)];
+                                            $changes[] = ['lokasi' => $secLabel . ' ' . $u, 'lama' => $renderVal($oldItem), 'baru' => $renderVal($newItem)];
                                         }
                                     } else {
-                                        // Single section
                                         if (json_encode($oldSection) !== json_encode($newSection)) {
                                             $changes[] = ['lokasi' => $secLabel, 'lama' => $renderVal($oldSection), 'baru' => $renderVal($newSection)];
                                         }
@@ -337,6 +459,26 @@
                                 </tr>
                             @endforeach
                         @endforeach
+                    @endif
+                </tbody>
+            </table>
+
+            @if(!empty($p->keterangan) || !empty($p->tindakan_koreksi))
+                <div class="section-title">Catatan</div>
+                <table class="data">
+                    <tbody>
+                        @if(!empty($p->keterangan))
+                            <tr>
+                                <td style="width: 25%"><strong>Keterangan</strong></td>
+                                <td>{{ $p->keterangan }}</td>
+                            </tr>
+                        @endif
+                        @if(!empty($p->tindakan_koreksi))
+                            <tr>
+                                <td style="width: 25%"><strong>Tindakan Koreksi</strong></td>
+                                <td>{{ $p->tindakan_koreksi }}</td>
+                            </tr>
+                        @endif
                     </tbody>
                 </table>
             @endif

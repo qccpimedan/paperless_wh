@@ -530,4 +530,29 @@ class PemeriksaanSuhuRuangV3Controller extends Controller
         $filename = 'laporan-pemeriksaan-suhu-ruang-v3-' . $filenameDate . '.pdf';
         return $pdf->download($filename);
     }
+
+    public function printPDF(PemeriksaanSuhuRuangV3 $pemeriksaanSuhuRuangV3)
+    {
+        $this->checkPlantAccess($pemeriksaanSuhuRuangV3);
+        
+        $pemeriksaanSuhuRuangV3->load([
+            'user.role', 
+            'user.plant', 
+            'shift', 
+            'histories',
+            'verifiedByQc.role',
+            'verifiedByProduksi.role',
+            'verifiedBySpv.role'
+        ]);
+
+        $pemeriksaans = collect([$pemeriksaanSuhuRuangV3]);
+
+        $pdf = \PDF::loadView('qc-sistem.pemeriksaan-suhu-ruang-v3.pdf-report', [
+            'pemeriksaans' => $pemeriksaans,
+            'tanggal' => $pemeriksaanSuhuRuangV3->tanggal,
+            'shift' => $pemeriksaanSuhuRuangV3->shift,
+        ]);
+
+        return $pdf->stream('pemeriksaan-suhu-ruang-v3-' . $pemeriksaanSuhuRuangV3->uuid . '.pdf');
+    }
 }

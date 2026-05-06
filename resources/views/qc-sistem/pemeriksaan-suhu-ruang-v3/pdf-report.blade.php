@@ -239,48 +239,89 @@
                 </table>
             </div>
 
-            {{-- Timeline / History Perubahan --}}
-            @if($p->relationLoaded('histories') && $p->histories && $p->histories->count() > 0)
-                <div class="section-title">Riwayat Perubahan (Update Per Jam)</div>
-                <table class="data">
-                    <thead>
-                        <tr>
-                            <th style="width: 5%">No</th>
-                            <th style="width: 14%">Waktu</th>
-                            <th style="width: 27%">Lokasi</th>
-                            <th style="width: 27%">Sebelumnya</th>
-                            <th style="width: 27%">Sesudahnya</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @php
-                            $histNo = 1;
-                            $suhuFields = [
-                                'suhu_premix' => 'Premix',
-                                'suhu_seasoning' => 'Seasoning',
-                                'suhu_dry' => 'Dry',
-                                'suhu_cassing' => 'Cassing',
-                                'suhu_beef' => 'Beef',
-                                'suhu_packaging' => 'Packaging',
-                                'suhu_ruang_chemical' => 'Ruang Chemical',
-                                'suhu_ruang_seasoning' => 'Ruang Seasoning',
-                            ];
+            {{-- Data & Riwayat Pemeriksaan Table --}}
+            <div class="section-title">Data & Riwayat Pemeriksaan</div>
+            <table class="data">
+                <thead>
+                    <tr>
+                        <th style="width: 5%">No</th>
+                        <th style="width: 14%">Waktu</th>
+                        <th style="width: 21%">Lokasi</th>
+                        <th style="width: 30%">Sebelumnya</th>
+                        <th style="width: 30%">Sesudahnya</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @php
+                        $histNo = 1;
+                        $suhuFieldsConfig = [
+                            'suhu_premix' => 'Premix',
+                            'suhu_seasoning' => 'Seasoning',
+                            'suhu_dry' => 'Dry',
+                            'suhu_cassing' => 'Cassing',
+                            'suhu_beef' => 'Beef',
+                            'suhu_packaging' => 'Packaging',
+                            'suhu_ruang_chemical' => 'Ruang Chemical',
+                            'suhu_ruang_seasoning' => 'Ruang Seasoning',
+                        ];
 
-                            $renderVal = function($val) {
-                                if ($val === null || $val === '' || $val === []) return '-';
-                                if (is_array($val)) {
-                                    $parts = [];
-                                    foreach ($val as $k => $v) {
-                                        if ($v !== null && $v !== '') {
-                                            $parts[] = $k . ': ' . $v;
-                                        }
-                                    }
-                                    return !empty($parts) ? implode('; ', $parts) : '-';
+                        $renderVal = function($val) {
+                            if ($val === null || $val === '' || $val === []) return '-';
+                            if (is_array($val)) {
+                                $parts = [];
+                                if (isset($val['setting'])) $parts[] = 'setting: ' . $val['setting'];
+                                if (isset($val['display'])) $parts[] = 'display: ' . $val['display'];
+                                if (isset($val['actual'])) $parts[] = 'actual: ' . $val['actual'];
+                                return !empty($parts) ? implode('; ', $parts) : '-';
+                            }
+                            return (string) $val;
+                        };
+
+                        $firstHistory = $p->histories->sortBy('created_at')->first();
+                        $initialTime = $p->created_at->format('d/m/Y H:i');
+
+                        $getInitialVal = function($field) use ($firstHistory, $p) {
+                            $oldField = $field . '_lama';
+                            if ($firstHistory) {
+                                $val = $firstHistory->$oldField;
+                                if (is_string($val) && !empty($val)) {
+                                    $decoded = json_decode($val, true);
+                                    return (json_last_error() === JSON_ERROR_NONE) ? $decoded : $val;
                                 }
-                                return (string) $val;
-                            };
-                        @endphp
+                                return $val;
+                            }
+                            return $p->$field;
+                        };
+                    @endphp
 
+                    {{-- 1. Tampilkan Data Input Pertama (Initial State) --}}
+                    <tr>
+                        <td colspan="5" style="background: #f8f9fa; font-weight: bold; font-size: 9px; color: #555; text-align: center; border-bottom: 1px solid #dee2e6;">
+                            --- INPUT DATA PERTAMA ---
+                        </td>
+                    </tr>
+                    @foreach($suhuFieldsConfig as $field => $label)
+                        @php $secData = $getInitialVal($field); @endphp
+                        @if(!empty($secData))
+                            @foreach($secData as $uKey => $item)
+                                <tr>
+                                    <td style="text-align: center;">{{ $histNo++ }}</td>
+                                    <td>{{ $initialTime }}</td>
+                                    <td>{{ $label }} {{ str_replace('unit_', '', (string) $uKey) }}</td>
+                                    <td style="background: #fff3cd; text-align: center;">-</td>
+                                    <td style="background: #d4edda;">{{ $renderVal($item) }}</td>
+                                </tr>
+                            @endforeach
+                        @endif
+                    @endforeach
+
+                    {{-- 2. Tampilkan Riwayat Perubahan (History) --}}
+                    @if($p->relationLoaded('histories') && $p->histories && $p->histories->count() > 0)
+                        <tr>
+                            <td colspan="5" style="background: #f8f9fa; font-weight: bold; font-size: 9px; color: #c41e3a; text-align: center; border-top: 2px solid #dee2e6; border-bottom: 1px solid #dee2e6;">
+                                --- RIWAYAT PERUBAHAN / UPDATE ---
+                            </td>
+                        </tr>
                         @foreach($p->histories->sortBy('created_at') as $history)
                             @php
                                 $hTime = $history->created_at ? $history->created_at->format('d/m/Y H:i') : '-';
@@ -297,7 +338,7 @@
                                 }
 
                                 // Suhu Fields
-                                foreach ($suhuFields as $field => $label) {
+                                foreach ($suhuFieldsConfig as $field => $label) {
                                     $oldField = $field . '_lama';
                                     $newField = $field . '_baru';
                                     $oldValue = $history->$oldField ?? null;
@@ -319,7 +360,6 @@
                                     $oldArray = is_array($oldValue) ? $oldValue : [];
                                     $newArray = is_array($newValue) ? $newValue : [];
 
-                                    // Each key is a unit (unit_1, unit_2, etc)
                                     $allKeys = array_unique(array_merge(array_keys($oldArray), array_keys($newArray)));
                                     foreach ($allKeys as $key) {
                                         $oldItem = $oldArray[$key] ?? null;
@@ -327,11 +367,7 @@
                                         if (json_encode($oldItem) === json_encode($newItem)) continue;
 
                                         $unitDisplay = str_replace('unit_', '', (string) $key);
-                                        $unitLabel = $label . ' ' . $unitDisplay;
-
-                                        $oldStr = $renderVal($oldItem);
-                                        $newStr = $renderVal($newItem);
-                                        $changes[] = ['lokasi' => $unitLabel, 'lama' => $oldStr, 'baru' => $newStr];
+                                        $changes[] = ['lokasi' => $label . ' ' . $unitDisplay, 'lama' => $renderVal($oldItem), 'baru' => $renderVal($newItem)];
                                     }
                                 }
                             @endphp
@@ -346,9 +382,9 @@
                                 </tr>
                             @endforeach
                         @endforeach
-                    </tbody>
-                </table>
-            @endif
+                    @endif
+                </tbody>
+            </table>
 
             <div class="signature">
                 <table class="signature-table">
