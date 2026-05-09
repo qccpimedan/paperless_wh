@@ -347,7 +347,25 @@
                                                     </div>
                                                 </div>
 
-                                                <h6 class="text-secondary mt-3">Detail Produk</h6>
+                                                <div class="d-flex justify-content-between align-items-center mt-3 mb-2">
+                                                    <h6 class="text-secondary mb-0">Detail Produk</h6>
+                                                    <div class="btn-group">
+                                                        <button type="button" class="btn btn-outline-success btn-sm download-template-btn">
+                                                            <i class="bi bi-download"></i> Template
+                                                        </button>
+                                                        <button type="button" class="btn btn-outline-info btn-sm import-excel-btn">
+                                                            <i class="bi bi-file-earmark-excel"></i> Import
+                                                        </button>
+                                                        <input type="file" class="import-excel-input" accept=".xlsx, .xls" style="display:none;">
+                                                    </div>
+                                                </div>
+                                                <!-- Tambahkan ini tepat di bawah div d-flex yang berisi tombol Template & Import -->
+                                                <div class="alert alert-light-info color-info mt-2 mb-3 py-2 px-3" style="font-size: 0.85rem;">
+                                                    <i class="bi bi-info-circle-fill me-2"></i>
+                                                    <strong>Cara Cepat:</strong> 1. Pilih Produk > 2. Klik <strong>Template</strong> > 3. Isi Excel > 4. Klik <strong>Import</strong>. 
+                                                    <span class="text-muted">(Sistem akan mengisi baris detail secara otomatis dari file Excel Anda)</span>
+                                                </div>
+
                                                 <div class="produk-container">
                                                     <div class="produk-row mb-4 p-3 border rounded" style="background-color: #f8f9fa;">
                                                         <div class="d-flex justify-content-between align-items-center mb-2">
@@ -990,75 +1008,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const addDetailBtn = groupEl.querySelector('.add-detail');
         if (addDetailBtn) {
             addDetailBtn.addEventListener('click', function() {
-                const container = groupEl.querySelector('.produk-container');
-                if (!container) return;
-
-                const newRow = document.createElement('div');
-                newRow.className = 'produk-row mb-4 p-3 border rounded';
-                newRow.style.backgroundColor = '#f8f9fa';
-                const tempIndex = 0;
-                newRow.innerHTML = `
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <h6 class="text-secondary mb-0">Detail</h6>
-                        <button type="button" class="btn btn-danger btn-sm remove-detail"><i class="bi bi-trash"></i> Hapus Detail</button>
-                    </div>
-                    <input type="hidden" class="produk-id-hidden" name="produk_data[${tempIndex}][id_produk]" value="">
-                    <div class="row">
-                        <div class="col-md-3">
-                            <label>Kode Produksi</label>
-                            <input type="text" class="form-control" name="produk_data[${tempIndex}][kode_produksi]" placeholder="Kode Produksi">
-                        </div>
-                        <div class="col-md-3">
-                            <label>Best Before</label>
-                            <input type="date" class="form-control" name="produk_data[${tempIndex}][best_before]">
-                        </div>
-                        <div class="col-md-3">
-                            <label>Jumlah Kemasan</label>
-                            <input type="text" class="form-control" name="produk_data[${tempIndex}][jumlah_kemasan]" placeholder="Contoh: 100 Karton">
-                        </div>
-                        <div class="col-md-3">
-                            <label>Jumlah Sampling</label>
-                            <input type="text" class="form-control" name="produk_data[${tempIndex}][jumlah_sampling]" placeholder="Contoh: 10 Karton">
-                        </div>
-                    </div>
-                    <div class="row mt-3">
-                        <div class="col-md-3">
-                            <label>Berat per Karung atau Box</label>
-                            <input type="text" class="form-control" name="produk_data[${tempIndex}][berat_perkarung]" placeholder="Contoh: 25 Kg">
-                        </div>
-                    </div>
-                    <div class="row mt-3">
-                        <div class="col-md-12">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="produk_data[${tempIndex}][kondisi_kemasan]" value="1" checked>
-                                <label class="form-check-label">Kondisi Kemasan Baik</label>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row mt-3">
-                        <div class="col-md-12">
-                            <label>Keterangan</label>
-                            <textarea class="form-control" name="produk_data[${tempIndex}][keterangan]" rows="2" placeholder="Keterangan tambahan"></textarea>
-                        </div>
-                    </div>
-                `;
-                container.appendChild(newRow);
-                ensureDetailCollapsible(newRow);
-                collapseOtherDetailsInGroup(groupEl, newRow);
-                const idxInGroup = Array.from(container.querySelectorAll('.produk-row')).indexOf(newRow);
-
-                const kodeInput = newRow.querySelector('input[name^="produk_data"][name$="[kode_produksi]"]');
-                if (kodeInput) {
-                    kodeInput.addEventListener('input', function() {
-                        const di = Array.from(container.querySelectorAll('.produk-row')).indexOf(newRow);
-                        updateDetailLabel(newRow, di >= 0 ? di : idxInGroup);
-                    });
-                    kodeInput.addEventListener('change', function() {
-                        const di = Array.from(container.querySelectorAll('.produk-row')).indexOf(newRow);
-                        updateDetailLabel(newRow, di >= 0 ? di : idxInGroup);
-                    });
-                }
-                reindexAllDetails();
+                addDetailRow(groupEl);
             });
         }
 
@@ -1079,9 +1029,186 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
 
+        // -------- Download Template & Import Excel --------
+        const downloadBtn = groupEl.querySelector('.download-template-btn');
+        const importBtn = groupEl.querySelector('.import-excel-btn');
+        const importInput = groupEl.querySelector('.import-excel-input');
+
+        if (downloadBtn) {
+            downloadBtn.addEventListener('click', function() {
+                const idProduk = produkSelect ? produkSelect.value : '';
+                if (!idProduk) {
+                    alert('Silakan pilih produk terlebih dahulu sebelum mendownload template.');
+                    return;
+                }
+                
+                // Ganti URL ini dengan route yang sesuai di Laravel
+                const url = `{{ route('pemeriksaan-loading-produk.download-template') }}?id_produk=${idProduk}`;
+                window.location.href = url;
+            });
+        }
+
+        if (importBtn && importInput) {
+            importBtn.addEventListener('click', () => importInput.click());
+
+            importInput.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const data = new Uint8Array(e.target.result);
+                        const workbook = XLSX.read(data, { type: 'array', cellDates: true });
+                        const firstSheetName = workbook.SheetNames[0];
+                        const worksheet = workbook.Sheets[firstSheetName];
+                        const jsonData = XLSX.utils.sheet_to_json(worksheet);
+
+                        if (jsonData.length === 0) {
+                            alert('File Excel kosong atau format tidak sesuai.');
+                            return;
+                        }
+
+                        // Helper function to format date to YYYY-MM-DD
+                        const formatDate = (val) => {
+                            if (!val) return '';
+                            let d = new Date(val);
+                            if (isNaN(d.getTime())) return val; // Return as is if not a valid date
+                            return d.toISOString().split('T')[0];
+                        };
+
+                        // Konfirmasi import
+                        if (!confirm(`Import ${jsonData.length} baris data dari Excel?`)) {
+                            importInput.value = '';
+                            return;
+                        }
+
+                        // Kosongkan container jika hanya ada detail default yang kosong
+                        const container = groupEl.querySelector('.produk-container');
+                        const existingRows = container.querySelectorAll('.produk-row');
+                        if (existingRows.length === 1) {
+                            const firstRow = existingRows[0];
+                            const kodeVal = firstRow.querySelector('input[name$="[kode_produksi]"]').value;
+                            if (!kodeVal) firstRow.remove();
+                        }
+
+                        jsonData.forEach((row) => {
+                            addDetailRow(groupEl, {
+                                kode_produksi: row['KODE PRODUKSI'] || row['Kode Produksi'] || '',
+                                best_before: formatDate(row['BEST BEFORE'] || row['Best Before']),
+                                jumlah_kemasan: row['JUMLAH KEMASAN'] || row['Jumlah Kemasan'] || '',
+                                jumlah_sampling: row['JUMLAH SAMPLING'] || row['Jumlah Sampling'] || '',
+                                berat_perkarung: row['BERAT PER KARUNG & BOX'] || row['Berat per Karung'] || '',
+                                kondisi_kemasan: (String(row['Kondisi Kemasan Baik'] || row['Kondisi Baik'] || '').toLowerCase().trim() === 'ok' || row['kondisi_kemasan'] == '1') ? true : false,
+                                keterangan: row['Keterangan'] || row['keterangan'] || ''
+                            });
+                        });
+
+                        alert('Berhasil mengimport data dari Excel.');
+                    } catch (err) {
+                        console.error(err);
+                        alert('Terjadi kesalahan saat membaca file Excel. Pastikan format benar.');
+                    }
+                    importInput.value = '';
+                };
+                reader.readAsArrayBuffer(file);
+            });
+        }
+
         if (kategoriSelect) {
             populateProdukOptions(groupEl, kategoriSelect.value);
         }
+        reindexAllDetails();
+    }
+
+    // Helper untuk menambah baris detail (digunakan oleh tombol "Tambah Detail" dan "Import Excel")
+    function addDetailRow(groupEl, data = null) {
+        const container = groupEl.querySelector('.produk-container');
+        if (!container) return;
+
+        const newRow = document.createElement('div');
+        newRow.className = 'produk-row mb-4 p-3 border rounded';
+        newRow.style.backgroundColor = '#f8f9fa';
+        const tempIndex = 0; // Akan di-reindex nanti
+        
+        const kodeVal = data ? (data.kode_produksi || '') : '';
+        const bbVal = data ? (data.best_before || '') : '';
+        const jkVal = data ? (data.jumlah_kemasan || '') : '';
+        const jsVal = data ? (data.jumlah_sampling || '') : '';
+        const bpVal = data ? (data.berat_perkarung || '') : '';
+        const kkChecked = data ? (data.kondisi_kemasan === true ? 'checked' : '') : 'checked';
+        const ketVal = data ? (data.keterangan || '') : '';
+
+        newRow.innerHTML = `
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h6 class="text-secondary mb-0">Detail</h6>
+                <button type="button" class="btn btn-danger btn-sm remove-detail"><i class="bi bi-trash"></i> Hapus Detail</button>
+            </div>
+            <input type="hidden" class="produk-id-hidden" name="produk_data[${tempIndex}][id_produk]" value="">
+            <div class="row">
+                <div class="col-md-3">
+                    <label>Kode Produksi</label>
+                    <input type="text" class="form-control" name="produk_data[${tempIndex}][kode_produksi]" value="${kodeVal}" placeholder="Kode Produksi">
+                </div>
+                <div class="col-md-3">
+                    <label>Best Before</label>
+                    <input type="date" class="form-control" name="produk_data[${tempIndex}][best_before]" value="${bbVal}">
+                </div>
+                <div class="col-md-3">
+                    <label>Jumlah Kemasan</label>
+                    <input type="text" class="form-control" name="produk_data[${tempIndex}][jumlah_kemasan]" value="${jkVal}" placeholder="Contoh: 100 Karton">
+                </div>
+                <div class="col-md-3">
+                    <label>Jumlah Sampling</label>
+                    <input type="text" class="form-control" name="produk_data[${tempIndex}][jumlah_sampling]" value="${jsVal}" placeholder="Contoh: 10 Karton">
+                </div>
+            </div>
+            <div class="row mt-3">
+                <div class="col-md-3">
+                    <label>Berat per Karung atau Box</label>
+                    <input type="text" class="form-control" name="produk_data[${tempIndex}][berat_perkarung]" value="${bpVal}" placeholder="Contoh: 25 Kg">
+                </div>
+            </div>
+            <div class="row mt-3">
+                <div class="col-md-12">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="produk_data[${tempIndex}][kondisi_kemasan]" value="1" ${kkChecked}>
+                        <label class="form-check-label">Kondisi Kemasan Baik</label>
+                    </div>
+                </div>
+            </div>
+            <div class="row mt-3">
+                <div class="col-md-12">
+                    <label>Keterangan</label>
+                    <textarea class="form-control" name="produk_data[${tempIndex}][keterangan]" rows="2" placeholder="Keterangan tambahan">${ketVal}</textarea>
+                </div>
+            </div>
+        `;
+        
+        container.appendChild(newRow);
+        ensureDetailCollapsible(newRow);
+        
+        // Hanya collapse yang lain jika ini ditambah secara manual (bukan import)
+        if (!data) {
+            collapseOtherDetailsInGroup(groupEl, newRow);
+        } else {
+            // Jika import, biarkan tertutup (collapsed) agar tidak memenuhi layar
+            const body = newRow.querySelector('.detail-collapse');
+            if (body) {
+                const inst = bsCollapse(body);
+                if (inst) inst.hide();
+                else body.classList.remove('show');
+            }
+        }
+
+        const kodeInput = newRow.querySelector('input[name^="produk_data"][name$="[kode_produksi]"]');
+        if (kodeInput) {
+            kodeInput.addEventListener('input', function() {
+                const di = Array.from(container.querySelectorAll('.produk-row')).indexOf(newRow);
+                updateDetailLabel(newRow, di);
+            });
+        }
+        
         reindexAllDetails();
     }
 
@@ -1130,7 +1257,18 @@ document.addEventListener('DOMContentLoaded', function() {
                     </div>
                 </div>
             </div>
-            <h6 class="text-secondary mt-3">Detail Produk</h6>
+            <div class="d-flex justify-content-between align-items-center mt-3 mb-2">
+                <h6 class="text-secondary mb-0">Detail Produk</h6>
+                <div class="btn-group">
+                    <button type="button" class="btn btn-outline-success btn-sm download-template-btn">
+                        <i class="bi bi-download"></i> Template
+                    </button>
+                    <button type="button" class="btn btn-outline-info btn-sm import-excel-btn">
+                        <i class="bi bi-file-earmark-excel"></i> Import
+                    </button>
+                    <input type="file" class="import-excel-input" accept=".xlsx, .xls" style="display:none;">
+                </div>
+            </div>
             <div class="produk-container">
                 <div class="produk-row mb-4 p-3 border rounded" style="background-color: #f8f9fa;">
                     <div class="d-flex justify-content-between align-items-center mb-2">
@@ -1212,4 +1350,7 @@ document.addEventListener('DOMContentLoaded', function() {
     .detail-chevron { transition: transform .2s ease; }
     .detail-chevron.rotated { transform: rotate(180deg); }
 </style>
+
+<!-- SheetJS for Excel Parsing -->
+<script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
 @endsection

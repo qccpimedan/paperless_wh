@@ -14,6 +14,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf as PDF;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\LoadingTemplateExport;
 
 class PemeriksaanLoadingProdukController extends Controller
 {
@@ -884,5 +886,22 @@ return view('qc-sistem.pemeriksaan-loading-produk.index', compact('pemeriksaans'
         $filenameDate = $tanggal ?? $tanggalDari ?? date('Y-m-d');
         $filename = 'laporan-pemeriksaan-loading-produk-' . $filenameDate . '.pdf';
         return $pdf->download($filename);
+    }
+
+    public function downloadTemplate(Request $request)
+    {
+        $id_produk = $request->query('id_produk');
+        
+        if (!$id_produk) {
+            return back()->with('error', 'ID Produk tidak ditemukan.');
+        }
+
+        $produk = Produk::find($id_produk);
+
+        if (!$produk) {
+            return back()->with('error', 'Produk tidak ditemukan.');
+        }
+
+        return Excel::download(new LoadingTemplateExport($produk), 'Template_Loading_' . str_replace(' ', '_', $produk->nama_produk) . '.xlsx');
     }
 }
