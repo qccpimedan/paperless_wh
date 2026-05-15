@@ -164,7 +164,7 @@ $(document).ready(function() {
         ajax: {
             url: "{{ route('produks.index') }}",
             data: function (d) {
-                d.kategori_code = "{{ request('kategori_code') }}";
+                d.kategori_code = @json(request('kategori_code'));
             }
         },
         columns: [

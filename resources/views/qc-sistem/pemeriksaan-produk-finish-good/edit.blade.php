@@ -866,7 +866,7 @@ const updateProdukLabel = (rowEl, rowIdx) => {
         ? (produkSelect.selectedOptions[0].textContent || '').trim()
         : '';
 
-    labelEl.textContent = selectedText || `Produk ${rowIdx + 1}`;
+    labelEl.textContent = selectedText ? `${rowIdx + 1}. ${selectedText}` : `Produk ${rowIdx + 1}`;
 };
 
 const updateDetailLabel = (detailEl, dIdx) => {
@@ -894,7 +894,7 @@ const ensureProdukCollapsible = (rowEl, rowIdx) => {
 
         const btn = document.createElement('button');
         btn.type = 'button';
-        btn.className = 'btn btn-primary btn-sm d-flex align-items-center gap-2 collapse-toggle-btn full-width';
+        btn.className = 'btn btn-primary btn-sm d-inline-flex align-items-center gap-2 collapse-toggle-btn';
         btn.setAttribute('data-bs-toggle', 'collapse');
         btn.setAttribute('data-bs-target', `#${collapseId}`);
         btn.setAttribute('aria-expanded', 'true');

@@ -458,9 +458,9 @@
                                                 $docDokumen = $firstIdx !== null ? ($dokumen_halals[$firstIdx] ?? '') : '';
                                                 $docCoa = $firstIdx !== null ? ($coas[$firstIdx] ?? '') : '';
                                             @endphp
-                                            <div class="unified-row mb-4 p-3 border rounded" style="background-color: #f8f9fa;" data-old-produk-id="{{ $produkId }}">
+                                            <div class="unified-row mb-4 p-3 border rounded" style="background-color: #f8f9fa;" data-old-produk-id="{{ $produkId }}" data-first-index="{{ $firstIdx }}">
                                                 <div class="d-flex justify-content-between align-items-center mb-3">
-                                                    <h6 class="text-primary mb-0 bahan-title">Bahan #</h6>
+                                                    <h6 class="mb-0 bahan-title text-white">Bahan #{{ $loop->iteration }}</h6>
                                                 </div>
 
                                                 <!-- Bahan Kemasan -->
@@ -470,7 +470,7 @@
                                                         <div class="col-md-6">
                                                             <div class="form-group">
                                                                 <label class="form-label">Kategori</label>
-                                                                <select class="choices form-control kategori-produk-select" data-role="kategori_code">
+                                                                <select class="form-control kategori-produk-select" data-role="kategori_code">
                                                                     <option value="">Pilih Kategori</option>
                                                                     @foreach(($produkKategoriOptions ?? []) as $kategori)
                                                                         <option value="{{ $kategori }}" {{ $existingKategori == $kategori ? 'selected' : '' }}>{{ $kategori }}</option>
@@ -481,7 +481,7 @@
                                                         <div class="col-md-6">
                                                             <div class="form-group">
                                                                 <label class="form-label">Produk</label>
-                                                                <select class="choices form-control produk-select" data-role="id_produk">
+                                                                <select class="form-control produk-select" data-role="id_produk">
                                                                     <option value="">Pilih Produk</option>
                                                                 </select>
                                                             </div>
@@ -909,14 +909,14 @@
 
                                                     const btn = document.createElement('button');
                                                     btn.type = 'button';
-                                                    btn.className = 'btn btn-primary btn-sm d-flex align-items-center gap-2 collapse-toggle-btn full-width';
+                                                    btn.className = 'btn btn-primary btn-sm d-inline-flex align-items-center gap-2 collapse-toggle-btn';
                                                     btn.setAttribute('data-bs-toggle', 'collapse');
                                                     btn.setAttribute('data-bs-target', `#${collapseId}`);
                                                     btn.setAttribute('aria-expanded', 'true');
                                                     btn.setAttribute('aria-controls', collapseId);
 
                                                     const span = document.createElement('span');
-                                                    span.className = 'text-primary mb-0 bahan-title produk-collapse-label';
+                                                    span.className = 'text-white mb-0 bahan-title produk-collapse-label';
                                                     span.textContent = existingText || `Bahan #${rowIdx + 1}`;
 
                                                     const icon = document.createElement('i');
@@ -1029,7 +1029,7 @@
                                                 const selectedText = produkSelect && produkSelect.selectedOptions && produkSelect.selectedOptions[0]
                                                     ? String(produkSelect.selectedOptions[0].textContent || '').trim()
                                                     : '';
-                                                labelEl.textContent = selectedText || `Bahan #${rowIdx + 1}`;
+                                                labelEl.textContent = selectedText ? `${rowIdx + 1}. ${selectedText}` : `Bahan #${rowIdx + 1}`;
                                             };
 
                                             const updateDetailLabel = (detailEl, detailIdxWithinRow) => {
@@ -1206,9 +1206,9 @@
                                                 if (choicesInstances.get(selectEl)) return;
                                                 const instance = new Choices(selectEl, {
                                                     searchResultLimit: 100,
-                    searchFuzziness: 0.000001,
-                    fuseOptions: { ignoreLocation: true, threshold: 0.2, matchAllTokens: false },
-                    searchEnabled: true,
+                                                    searchFuzziness: 0.000001,
+                                                    fuseOptions: { ignoreLocation: true, threshold: 0.2, matchAllTokens: false },
+                                                    searchEnabled: true,
                                                     searchPlaceholderValue: 'Cari...',
                                                     itemSelectText: 'Tekan untuk memilih',
                                                     noResultsText: 'Tidak ada hasil ditemukan',
@@ -1228,9 +1228,9 @@
                                                 try {
                                                     selectEl.choicesInstance = new Choices(selectEl, {
                                                         searchResultLimit: 100,
-                    searchFuzziness: 0.000001,
-                    fuseOptions: { ignoreLocation: true, threshold: 0.2, matchAllTokens: false },
-                    searchEnabled: true,
+                                                        searchFuzziness: 0.000001,
+                                                        fuseOptions: { ignoreLocation: true, threshold: 0.2, matchAllTokens: false },
+                                                        searchEnabled: true,
                                                         searchPlaceholderValue: 'Cari...',
                                                         itemSelectText: 'Tekan untuk memilih',
                                                         noResultsText: 'Tidak ada hasil ditemukan',
@@ -1392,6 +1392,8 @@
                                                 row.dataset.rowIndex = String(idx);
                                                 const kategoriSelect = row.querySelector('select.kategori-produk-select');
                                                 const produkSelect = row.querySelector('select.produk-select');
+                                                const firstIdxAttr = row.getAttribute('data-first-index');
+                                                const firstIdx = firstIdxAttr !== null ? parseInt(firstIdxAttr) : idx;
 
                                                 const oldProdukId = row.getAttribute('data-old-produk-id');
                                                 if (oldProdukId && produkSelect) {
@@ -1399,14 +1401,16 @@
                                                 }
 
                                                 if (kategoriSelect) {
-                                                    const desiredKategori = (oldKategoriCodes && oldKategoriCodes[idx]) ? String(oldKategoriCodes[idx]) : '';
+                                                    const desiredKategori = (oldKategoriCodes && oldKategoriCodes[firstIdx]) ? String(oldKategoriCodes[firstIdx]) : '';
                                                     if (desiredKategori && !kategoriSelect.value) {
                                                         kategoriSelect.value = desiredKategori;
                                                     }
+                                                    // Manually initialize Choices for category
+                                                    initGenericChoices(kategoriSelect);
                                                 }
 
                                                 if (produkSelect) {
-                                                    const desiredProduk = (oldProdukIds && oldProdukIds[idx]) ? String(oldProdukIds[idx]) : '';
+                                                    const desiredProduk = (oldProdukIds && oldProdukIds[firstIdx]) ? String(oldProdukIds[firstIdx]) : '';
                                                     if (desiredProduk) {
                                                         produkSelect.dataset.desiredValue = desiredProduk;
                                                     }
@@ -1414,7 +1418,7 @@
 
                                                 if (kategoriSelect && kategoriSelect.value) {
                                                     populateProdukOptionsForRow(row);
-                                                } else if (produkSelect && produkSelect.value) {
+                                                } else if (produkSelect && (produkSelect.value || produkSelect.dataset.desiredValue)) {
                                                     applyProdukMetaForRow(row);
                                                 }
 
