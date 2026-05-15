@@ -472,7 +472,7 @@
 
                                             <div class="unified-row mb-4 p-3 border rounded" style="background-color: #f8f9fa;" data-row-index="{{ $produkNo }}">
                                                 <div class="d-flex justify-content-between align-items-center mb-3">
-                                                    <h6 class="text-primary mb-0">Produk {{ $produkNo + 1 }}</h6>
+                                                    <h6 class="mb-0 text-white">Produk {{ $produkNo + 1 }}</h6>
                                                 </div>
 
                                                 <!-- Informasi Produk (Header) -->
@@ -895,7 +895,7 @@ document.addEventListener('DOMContentLoaded', function() {
             btn.setAttribute('aria-controls', collapseId);
 
             const span = document.createElement('span');
-            span.className = 'text-primary mb-0 produk-collapse-label';
+            span.className = 'text-white mb-0 produk-collapse-label';
             span.textContent = existingText || `Produk ${rowIdx + 1}`;
 
             const icon = document.createElement('i');
@@ -1009,7 +1009,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const selectedText = produkSelect && produkSelect.selectedOptions && produkSelect.selectedOptions[0]
             ? String(produkSelect.selectedOptions[0].textContent || '').trim()
             : '';
-        labelEl.textContent = selectedText || `Produk ${rowIdx + 1}`;
+        labelEl.textContent = selectedText ? `${rowIdx + 1}. ${selectedText}` : `Produk ${rowIdx + 1}`;
     };
 
     const updateDetailLabel = (detailEl, idxWithinRow) => {

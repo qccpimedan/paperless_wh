@@ -57,13 +57,13 @@ class ProdukController extends Controller
                     return "<strong>" . htmlspecialchars($row->nama_produk) . "</strong>";
                 })
                 ->editColumn('kategori_code', function($row) {
-                    return htmlspecialchars($row->kategori_code ?? '-');
+                    return $row->kategori_code ?? '-';
                 })
                 ->addColumn('produsen', function($row) {
-                    return $row->produsens->count() > 0 ? htmlspecialchars($row->produsens->pluck('nama_produsen')->implode(', ')) : '-';
+                    return $row->produsens->count() > 0 ? $row->produsens->pluck('nama_produsen')->implode(', ') : '-';
                 })
                 ->addColumn('distributor', function($row) {
-                    return $row->distributors->count() > 0 ? htmlspecialchars($row->distributors->pluck('nama_distributor')->implode(', ')) : '-';
+                    return $row->distributors->count() > 0 ? $row->distributors->pluck('nama_distributor')->implode(', ') : '-';
                 })
                 ->addColumn('action', function($row) {
                     $editUrl = route('produks.edit', $row->uuid);
