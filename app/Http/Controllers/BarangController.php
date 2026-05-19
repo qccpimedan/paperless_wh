@@ -20,15 +20,15 @@ class BarangController extends Controller
         
         // SuperAdmin dapat melihat semua data
         if ($user->role && strtolower($user->role->role) === 'superadmin') {
-            $barangs = Barang::with(['user.role', 'user.plant'])->latest()->get();
+            $barangs = Barang::with(['user.role', 'user.plant', 'area'])->latest()->paginate(25);
         } else {
             // Admin dan role lain hanya melihat data sesuai plant mereka
-            $barangs = Barang::with(['user.role', 'user.plant'])
+            $barangs = Barang::with(['user.role', 'user.plant', 'area'])
                 ->whereHas('user', function($query) use ($user) {
                     $query->where('id_plant', $user->getEffectivePlantId());
                 })
                 ->latest()
-                ->get();
+                ->paginate(15);
         }
         
         return view('super-admin.input-barang.index', compact('barangs'));
@@ -39,7 +39,17 @@ class BarangController extends Controller
      */
     public function create()
     {
-        return view('super-admin.input-barang.create');
+        $user = Auth::user();
+        
+        $areaQuery = \App\Models\InputArea::query();
+        if ($user->role && strtolower($user->role->role) !== 'superadmin') {
+            $areaQuery->whereHas('user', function($q) use ($user) {
+                $q->where('id_plant', $user->getEffectivePlantId());
+            });
+        }
+        $areas = $areaQuery->orderBy('nama_area')->get();
+
+        return view('super-admin.input-barang.create', compact('areas'));
     }
 
     /**
@@ -48,6 +58,7 @@ class BarangController extends Controller
     public function store(Request $request)
     {
         $request->validate([
+            'id_area' => 'nullable|exists:input_areas,id',
             'nama_barang' => 'required|array|min:1',
             'nama_barang.*' => 'required|string|max:255',
             'jumlah_barang' => 'required|array|min:1',
@@ -67,6 +78,7 @@ class BarangController extends Controller
         foreach ($namaBarang as $index => $nama) {
             Barang::create([
                 'id_user' => Auth::id(),
+                'id_area' => $request->id_area,
                 'nama_barang' => trim($nama),
                 'jumlah_barang' => $request->jumlah_barang[$index] ?? 0,
             ]);
@@ -83,7 +95,7 @@ class BarangController extends Controller
         // Check access based on plant
         $this->checkPlantAccess($barang);
         
-        $barang->load('user');
+        $barang->load(['user', 'area']);
         return view('super-admin.input-barang.show', compact('barang'));
     }
 
@@ -95,7 +107,17 @@ class BarangController extends Controller
         // Check access based on plant
         $this->checkPlantAccess($barang);
         
-        return view('super-admin.input-barang.edit', compact('barang'));
+        $user = Auth::user();
+        
+        $areaQuery = \App\Models\InputArea::query();
+        if ($user->role && strtolower($user->role->role) !== 'superadmin') {
+            $areaQuery->whereHas('user', function($q) use ($user) {
+                $q->where('id_plant', $user->getEffectivePlantId());
+            });
+        }
+        $areas = $areaQuery->orderBy('nama_area')->get();
+
+        return view('super-admin.input-barang.edit', compact('barang', 'areas'));
     }
 
     /**
@@ -107,11 +129,13 @@ class BarangController extends Controller
         $this->checkPlantAccess($barang);
         
         $request->validate([
+            'id_area' => 'nullable|exists:input_areas,id',
             'nama_barang' => 'required|string|max:255',
             'jumlah_barang' => 'required|integer|min:0',
         ]);
 
         $barang->update([
+            'id_area' => $request->id_area,
             'nama_barang' => trim($request->nama_barang),
             'jumlah_barang' => $request->jumlah_barang,
         ]);

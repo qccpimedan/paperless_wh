@@ -18,6 +18,7 @@ class Barang extends Model
     protected $fillable = [
         'uuid',
         'id_user',
+        'id_area',
         'nama_barang',
         'jumlah_barang',
     ];
@@ -50,5 +51,13 @@ class Barang extends Model
     public function user()
     {
         return $this->belongsTo(User::class, 'id_user');
+    }
+
+    /**
+     * Relationship to InputArea
+     */
+    public function area()
+    {
+        return $this->belongsTo(InputArea::class, 'id_area');
     }
 }

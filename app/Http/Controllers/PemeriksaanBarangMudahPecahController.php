@@ -167,7 +167,7 @@ class PemeriksaanBarangMudahPecahController extends Controller
                 $validDetails[] = [
                     'id_barang' => $barang->id,
                     'nama_barang_manual' => null,
-                    'jumlah_barang' => $barang->jumlah_barang ?? 0,
+                    'jumlah_barang' => $detail['jumlah_barang'] ?? ($barang->jumlah_barang ?? 0),
                     'id_input_area_locations' => $detail['id_input_area_locations'] ?? null,
                     'awal' => $detail['awal'] ?? null,  // Nullable
                     'akhir' => $detail['akhir'] ?? null,  // Nullable

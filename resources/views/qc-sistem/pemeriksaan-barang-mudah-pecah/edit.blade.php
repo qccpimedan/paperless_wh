@@ -46,7 +46,7 @@
                                     </div>
                                 @endif
 
-                                <form action="{{ route('pemeriksaan-barang-mudah-pecah.update', $pemeriksaanBarangMudahPecah->uuid) }}" method="POST">
+                                <form action="{{ route('pemeriksaan-barang-mudah-pecah.update', $pemeriksaanBarangMudahPecah->uuid) }}" method="POST" novalidate>
                                     @csrf
                                     @method('PUT')
 
@@ -75,7 +75,7 @@
                                         </div>
                                     </div>
 
-                                    <!-- Area & Lokasi Area -->
+                                    <!-- Area -->
                                     <div class="row mb-3">
                                         <div class="col-md-6">
                                             <label for="id_area" class="form-label">Area <span class="text-danger">*</span></label>
@@ -93,234 +93,101 @@
                                         </div>
                                     </div>
 
-                                    <!-- Detail Barang (Dynamic Rows) -->
-                                    <div class="row mb-3">
+                                    <!-- Detail Barang (Dynamic Table Rows) -->
+                                    <div class="row mb-4">
                                         <div class="col-12">
-                                            <h5 class="mb-3">Detail Barang</h5>
-                                            <div id="barangContainer">
-                                                @forelse($pemeriksaanBarangMudahPecah->details as $index => $detail)
-                                                    <div class="barang-row card p-3 mb-3">
-                                                        <div class="row mb-2">
-                                                            <div class="col-md-12">
-                                                                <h6><strong>Barang #<span class="barang-number">{{ $index + 1 }}</span></strong></h6>
-                                                            </div>
-                                                        </div>
-                                                        <div class="row mb-3">
-                                                            <div class="col-md-12">
-                                                                <div class="form-check">
-                                                                    <input class="form-check-input input-manual-toggle" type="checkbox" id="manual_{{ $index }}" data-index="{{ $index }}" {{ $detail->nama_barang_manual ? 'checked' : '' }}>
-                                                                    <label class="form-check-label" for="manual_{{ $index }}">
-                                                                        Input Manual Barang
-                                                                    </label>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-
-                                                        <!-- Pilih dari Database -->
-                                                        <div class="row mb-3 barang-select-row" data-index="{{ $index }}" style="{{ $detail->nama_barang_manual ? 'display: none;' : '' }}">
-                                                            <div class="col-md-3">
-                                                                <label class="form-label">Barang <span class="text-danger">*</span></label>
-                                                                <select class="choices form-select barang-select" name="details[{{ $index }}][id_barang]" {{ $detail->nama_barang_manual ? '' : 'required' }}>
-                                                                    <option value="">-- Pilih Barang --</option>
-                                                                    @foreach($barangs as $barang)
-                                                                        <option value="{{ $barang->id }}" data-jumlah="{{ $barang->jumlah_barang ?? 0 }}" {{ $detail->id_barang == $barang->id ? 'selected' : '' }}>
-                                                                            {{ $barang->nama_barang }}
-                                                                        </option>
-                                                                    @endforeach
-                                                                </select>
-                                                            </div>
-                                                            <div class="col-md-2">
-                                                                <label class="form-label">Jumlah</label>
-                                                                <input type="text" class="form-control jumlah-barang" value="{{ $detail->jumlah_barang }}" readonly>
-                                                            </div>
-                                                            <div class="col-md-4">
-                                                                <label class="form-label">Lokasi Area</label>
-                                                                <select class="form-select lokasi-area-select" name="details[{{ $index }}][id_input_area_locations]">
-                                                                    <option value="">-- Pilih Lokasi Area --</option>
-                                                                    @if($detail->areaLocation)
-                                                                        <option value="{{ $detail->areaLocation->id }}" selected>
-                                                                            {{ $detail->areaLocation->lokasi_area }}
-                                                                        </option>
-                                                                    @endif
-                                                                </select>
-                                                            </div>
-                                                            <div class="col-md-3">
-                                                                <button type="button" class="btn btn-danger btn-sm mt-4 remove-barang" style="display: none;">
-                                                                    <i class="bi bi-trash"></i> Hapus
-                                                                </button>
-                                                            </div>
-                                                        </div>
-
-                                                        <!-- Input Manual -->
-                                                        <div class="row mb-3 barang-manual-row" data-index="{{ $index }}" style="{{ $detail->nama_barang_manual ? '' : 'display: none;' }}">
-                                                            <div class="col-md-3">
-                                                                <label class="form-label">Nama Barang <span class="text-danger">*</span></label>
-                                                                <input type="text" class="form-control nama-barang-manual" name="details[{{ $index }}][nama_barang_manual]" placeholder="Masukkan nama barang" value="{{ $detail->nama_barang_manual }}" {{ $detail->nama_barang_manual ? 'required' : '' }}>
-                                                            </div>
-                                                            <div class="col-md-2">
-                                                                <label class="form-label">Jumlah <span class="text-danger">*</span></label>
-                                                                <input type="number" class="form-control jumlah-manual" name="details[{{ $index }}][jumlah_manual]" placeholder="Jumlah" min="0" value="{{ $detail->nama_barang_manual ? $detail->jumlah_barang : '' }}" {{ $detail->nama_barang_manual ? 'required' : '' }}>
-                                                            </div>
-                                                            <div class="col-md-4">
-                                                                <label class="form-label">Lokasi Area</label>
-                                                                <select class="form-select lokasi-area-select-manual" name="details[{{ $index }}][id_input_area_locations]{{ !$detail->nama_barang_manual ? '_manual' : '' }}">
-                                                                    <option value="">-- Pilih Lokasi Area --</option>
-                                                                    @if($detail->areaLocation)
-                                                                        <option value="{{ $detail->areaLocation->id }}" selected>
-                                                                            {{ $detail->areaLocation->lokasi_area }}
-                                                                        </option>
-                                                                    @endif
-                                                                </select>
-                                                            </div>
-                                                            <div class="col-md-3">
-                                                                <button type="button" class="btn btn-danger btn-sm mt-4 remove-barang" style="display: none;">
-                                                                    <i class="bi bi-trash"></i> Hapus
-                                                                </button>
-                                                            </div>
-                                                        </div>
-
-                                                        <!-- Nama Karyawan (Opsional) - Hidden by default -->
-                                                        <div class="row mb-3 nama_karyawan_row" data-index="{{ $index }}" style="{{ $detail->nama_barang_manual ? '' : 'display: none;' }}">
-                                                            <div class="col-md-6">
-                                                                <label class="form-label">Nama Karyawan</label>
-                                                                <input type="text" class="form-control" name="details[{{ $index }}][nama_karyawan]" placeholder="Nama karyawan (opsional)" value="{{ $detail->nama_karyawan }}">
-                                                            </div>
-                                                        </div>
-
-                                                        <div class="row mb-3">
-                                                            <div class="col-md-3">
-                                                                <label class="form-label">Awal</label>
-                                                                <div>
-                                                                    <div class="form-check form-check-inline">
-                                                                        <input class="form-check-input" type="radio" name="details[{{ $index }}][awal]" id="awal_baik_{{ $index }}" value="baik" {{ $detail->awal === 'baik' ? 'checked' : '' }}>
-                                                                        <label class="form-check-label" for="awal_baik_{{ $index }}"> baik</label>
-                                                                    </div>
-                                                                    <div class="form-check form-check-inline">
-                                                                        <input class="form-check-input" type="radio" name="details[{{ $index }}][awal]" id="awal_tidak-baik_{{ $index }}" value="tidak-baik" {{ $detail->awal === 'tidak-baik' ? 'checked' : '' }}>
-                                                                        <label class="form-check-label" for="awal_tidak-baik_{{ $index }}"> tidak-baik</label>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                            <div class="col-md-3">
-                                                                <label class="form-label">Akhir</label>
-                                                                <div>
-                                                                    <div class="form-check form-check-inline">
-                                                                        <input class="form-check-input" type="radio" name="details[{{ $index }}][akhir]" id="akhir_baik_{{ $index }}" value="baik" {{ $detail->akhir === 'baik' ? 'checked' : '' }}>
-                                                                        <label class="form-check-label" for="akhir_baik_{{ $index }}"> baik</label>
-                                                                    </div>
-                                                                    <div class="form-check form-check-inline">
-                                                                        <input class="form-check-input" type="radio" name="details[{{ $index }}][akhir]" id="akhir_tidak-baik_{{ $index }}" value="tidak-baik" {{ $detail->akhir === 'tidak-baik' ? 'checked' : '' }}>
-                                                                        <label class="form-check-label" for="akhir_tidak-baik_{{ $index }}"> tidak-baik</label>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-
-                                                        <div class="row mb-3">
-                                                            <div class="col-md-6">
-                                                                <label class="form-label">Temuan Ketidaksesuaian</label>
-                                                                <textarea class="form-control" name="details[{{ $index }}][temuan_ketidaksesuaian]" rows="3">{{ $detail->temuan_ketidaksesuaian }}</textarea>
-                                                            </div>
-                                                            <div class="col-md-6">
-                                                                <label class="form-label">Tindakan Koreksi</label>
-                                                                <textarea class="form-control" name="details[{{ $index }}][tindakan_koreksi]" rows="3">{{ $detail->tindakan_koreksi }}</textarea>
-                                                            </div>
-                                                        </div>
+                                            <div class="card border shadow-sm">
+                                                <div class="card-header bg-light d-flex justify-content-between align-items-center py-3 border-bottom">
+                                                    <h5 class="card-title mb-0 text-primary fw-bold">
+                                                        <i class="bi bi-list-check me-2"></i>Detail Benda Mudah Pecah & Tajam
+                                                    </h5>
+                                                    <button type="button" class="btn btn-sm btn-outline-primary" id="addCustomRow">
+                                                        <i class="bi bi-plus-circle me-1"></i>Tambah Baris Kustom
+                                                    </button>
+                                                </div>
+                                                <div class="card-body p-0">
+                                                    <div class="table-responsive">
+                                                        <table class="table table-hover align-middle mb-0" id="barangTable">
+                                                            <thead class="table-primary text-center">
+                                                                <tr>
+                                                                    <th style="width: 5%">#</th>
+                                                                    <th style="width: 25%">Nama Barang</th>
+                                                                    <th style="width: 20%">Sub Area</th>
+                                                                    <th style="width: 8%">Jumlah</th>
+                                                                    <th style="width: 12%">Verifikasi Pra-Op</th>
+                                                                    <th style="width: 12%">Verifikasi Post-Op</th>
+                                                                    <th style="width: 15%">Catatan</th>
+                                                                    <th style="width: 3%">Hapus</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody id="barangTableBody">
+                                                                @php
+                                                                    $currentAreaLocations = \App\Models\InputAreaLocation::where('id_input_area', $pemeriksaanBarangMudahPecah->id_area)->get();
+                                                                @endphp
+                                                                @foreach($pemeriksaanBarangMudahPecah->details as $index => $detail)
+                                                                    @php
+                                                                        $isManual = !empty($detail->nama_barang_manual);
+                                                                    @endphp
+                                                                    <tr class="barang-row {{ $isManual ? 'bg-light-warning' : '' }}" data-index="{{ $index }}">
+                                                                        <td class="text-center text-muted fw-semibold font-monospace">
+                                                                            @if($isManual)
+                                                                                <i class="bi bi-pencil-square text-warning" title="Baris Kustom"></i>
+                                                                            @else
+                                                                                {{ $index + 1 }}
+                                                                            @endif
+                                                                        </td>
+                                                                        <td class="text-start">
+                                                                            @if($isManual)
+                                                                                <input type="text" class="form-control mb-1 fw-semibold border-warning" name="details[{{ $index }}][nama_barang_manual]" value="{{ $detail->nama_barang_manual }}" placeholder="Nama barang kustom *" required>
+                                                                            @else
+                                                                                <span class="fw-semibold text-dark">{{ $detail->barang->nama_barang ?? 'Barang tidak ditemukan' }}</span>
+                                                                                <input type="hidden" name="details[{{ $index }}][id_barang]" value="{{ $detail->id_barang }}">
+                                                                            @endif
+                                                                        </td>
+                                                                        <td>
+                                                                            <select class="form-select {{ $isManual ? 'border-warning' : 'form-select-sm' }}" name="details[{{ $index }}][id_input_area_locations]">
+                                                                                <option value="">-- Pilih Sub Area --</option>
+                                                                                @foreach($currentAreaLocations as $loc)
+                                                                                    <option value="{{ $loc->id }}" {{ $detail->id_input_area_locations == $loc->id ? 'selected' : '' }}>
+                                                                                        {{ $loc->lokasi_area }}
+                                                                                    </option>
+                                                                                @endforeach
+                                                                            </select>
+                                                                        </td>
+                                                                        <td>
+                                                                            @if($isManual)
+                                                                                <input type="number" class="form-control text-center mx-auto" name="details[{{ $index }}][jumlah_manual]" value="{{ $detail->jumlah_barang }}" style="max-width: 90px;" required min="1">
+                                                                            @else
+                                                                                <input type="number" class="form-control text-center mx-auto" name="details[{{ $index }}][jumlah_barang]" value="{{ $detail->jumlah_barang }}" style="max-width: 90px;" required min="0">
+                                                                            @endif
+                                                                        </td>
+                                                                        <td>
+                                                                            <select class="form-select text-center" name="details[{{ $index }}][awal]" required>
+                                                                                <option value="baik" {{ $detail->awal === 'baik' ? 'selected' : '' }}>OK</option>
+                                                                                <option value="tidak-baik" {{ $detail->awal === 'tidak-baik' ? 'selected' : '' }}>Not OK</option>
+                                                                            </select>
+                                                                        </td>
+                                                                        <td>
+                                                                            <select class="form-select text-center" name="details[{{ $index }}][akhir]" required>
+                                                                                <option value="baik" {{ $detail->akhir === 'baik' ? 'selected' : '' }}>OK</option>
+                                                                                <option value="tidak-baik" {{ $detail->akhir === 'tidak-baik' ? 'selected' : '' }}>Not OK</option>
+                                                                            </select>
+                                                                        </td>
+                                                                        <td>
+                                                                            <textarea class="form-control" name="details[{{ $index }}][temuan_ketidaksesuaian]" rows="1" placeholder="catatan...">{{ $detail->temuan_ketidaksesuaian }}</textarea>
+                                                                        </td>
+                                                                        <td class="text-center">
+                                                                            <button type="button" class="btn btn-sm btn-danger remove-row-btn" title="Hapus Baris">
+                                                                                <i class="bi bi-trash"></i>
+                                                                            </button>
+                                                                        </td>
+                                                                    </tr>
+                                                                @endforeach
+                                                            </tbody>
+                                                        </table>
                                                     </div>
-                                                @empty
-                                                    <div class="barang-row card p-3 mb-3">
-                                                        <div class="row mb-2">
-                                                            <div class="col-md-12">
-                                                                <h6><strong>Barang #<span class="barang-number">1</span></strong></h6>
-                                                            </div>
-                                                        </div>
-                                                        <div class="row mb-3">
-                                                            <div class="col-md-12">
-                                                                <div class="form-check">
-                                                                    <input class="form-check-input input-manual-toggle" type="checkbox" id="manual_0" data-index="0">
-                                                                    <label class="form-check-label" for="manual_0">
-                                                                        Input Manual Barang
-                                                                    </label>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-
-                                                        <!-- Pilih dari Database -->
-                                                        <div class="row mb-3 barang-select-row" data-index="0">
-                                                            <div class="col-md-3">
-                                                                <label class="form-label">Barang <span class="text-danger">*</span></label>
-                                                                <select class="choices form-select barang-select" name="details[0][id_barang]" required>
-                                                                    <option value="">-- Pilih Barang --</option>
-                                                                    @foreach($barangs as $barang)
-                                                                        <option value="{{ $barang->id }}" data-jumlah="{{ $barang->jumlah_barang ?? 0 }}">
-                                                                            {{ $barang->nama_barang }}
-                                                                        </option>
-                                                                    @endforeach
-                                                                </select>
-                                                            </div>
-                                                            <div class="col-md-2">
-                                                                <label class="form-label">Jumlah</label>
-                                                                <input type="text" class="form-control jumlah-barang" readonly>
-                                                            </div>
-                                                            <div class="col-md-4">
-                                                                <label class="form-label">Lokasi Area</label>
-                                                                <select class="form-select lokasi-area-select" name="details[0][id_input_area_locations]">
-                                                                    <option value="">-- Pilih Lokasi Area --</option>
-                                                                </select>
-                                                            </div>
-                                                            <div class="col-md-3">
-                                                                <button type="button" class="btn btn-danger btn-sm mt-4 remove-barang" style="display: none;">
-                                                                    <i class="bi bi-trash"></i> Hapus
-                                                                </button>
-                                                            </div>
-                                                        </div>
-
-                                                        <div class="row mb-3">
-                                                            <div class="col-md-3">
-                                                                <label class="form-label">Awal</label>
-                                                                <div>
-                                                                    <div class="form-check form-check-inline">
-                                                                        <input class="form-check-input" type="radio" name="details[0][awal]" id="awal_baik_0" value="baik">
-                                                                        <label class="form-check-label" for="awal_baik_0"> baik</label>
-                                                                    </div>
-                                                                    <div class="form-check form-check-inline">
-                                                                        <input class="form-check-input" type="radio" name="details[0][awal]" id="awal_tidak-baik_0" value="tidak-baik">
-                                                                        <label class="form-check-label" for="awal_tidak-baik_0"> tidak-baik</label>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                            <div class="col-md-3">
-                                                                <label class="form-label">Akhir</label>
-                                                                <div>
-                                                                    <div class="form-check form-check-inline">
-                                                                        <input class="form-check-input" type="radio" name="details[0][akhir]" id="akhir_baik_0" value="baik">
-                                                                        <label class="form-check-label" for="akhir_baik_0"> baik</label>
-                                                                    </div>
-                                                                    <div class="form-check form-check-inline">
-                                                                        <input class="form-check-input" type="radio" name="details[0][akhir]" id="akhir_tidak-baik_0" value="tidak-baik">
-                                                                        <label class="form-check-label" for="akhir_tidak-baik_0"> tidak-baik</label>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-
-                                                        <div class="row mb-3">
-                                                            <div class="col-md-6">
-                                                                <label class="form-label">Temuan Ketidaksesuaian</label>
-                                                                <textarea class="form-control" name="details[0][temuan_ketidaksesuaian]" rows="3"></textarea>
-                                                            </div>
-                                                            <div class="col-md-6">
-                                                                <label class="form-label">Tindakan Koreksi</label>
-                                                                <textarea class="form-control" name="details[0][tindakan_koreksi]" rows="3"></textarea>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                @endforelse
+                                                </div>
                                             </div>
-
-                                            <button type="button" class="btn btn-primary" id="addBarang">
-                                                <i class="bi bi-plus-circle"></i> Tambah Barang
-                                            </button>
                                         </div>
                                     </div>
 
@@ -330,8 +197,8 @@
                                             <button type="submit" class="btn btn-primary me-1 mb-1">
                                                 Update Pemeriksaan
                                             </button>
-                                            <a href="{{ route('pemeriksaan-barang-mudah-pecah.index') }}" class="btn btn-light-secondary mb-1">
-                                                Batal
+                                            <a href="{{ route('pemeriksaan-barang-mudah-pecah.index') }}" class="btn btn-light-secondary mb-1 btn-kembali-confirm">
+                                                Kembali
                                             </a>
                                         </div>
                                     </div>
@@ -347,193 +214,262 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    let barangIndex = document.querySelectorAll('.barang-row').length;
+    // Confirm back navigation
+    document.querySelectorAll('.btn-kembali-confirm').forEach((el) => {
+        el.addEventListener('click', function(e) {
+            const ok = confirm('Perubahan belum disimpan. Yakin ingin kembali?');
+            if (!ok) e.preventDefault();
+        });
+    });
+
     const idAreaSelect = document.getElementById('id_area');
+    const tableEl = document.getElementById('barangTable');
+    const tableBody = document.getElementById('barangTableBody');
+    const addCustomRowBtn = document.getElementById('addCustomRow');
     
-    // Load lokasi area
-    function loadAreaLocations() {
-        if (!idAreaSelect || !idAreaSelect.value) return;
+    const allBarangs = @json($barangs);
+    // Pre-populate cachedSubAreas with initial locations from backend
+    let cachedSubAreas = @json($currentAreaLocations);
+    let customRowIndex = 1000; // start custom rows with high index to avoid conflicts
+    let currentAreaId = idAreaSelect ? idAreaSelect.value : '';
+
+    // Function to render table (triggered only when area is changed by user)
+    function renderBarangTable(areaId, areaName, subAreas) {
+        tableBody.innerHTML = '';
         
-        fetch(`{{ url('/qc-sistem/api/area-locations') }}/${idAreaSelect.value}`)
-            .then(r => r.ok ? r.json() : Promise.reject(`HTTP ${r.status}`))
-            .then(data => {
-                document.querySelectorAll('.lokasi-area-select, .lokasi-area-select-manual').forEach(select => {
-                    const currentValue = select.value;
-                    select.innerHTML = '<option value="">-- Pilih Lokasi Area --</option>';
-                    data.forEach(location => {
-                        const option = document.createElement('option');
-                        option.value = location.id;
-                        option.textContent = location.lokasi_area;
-                        if (location.id == currentValue) option.selected = true;
-                        select.appendChild(option);
-                    });
+        // Filter barangs by selected id_area (exact database match)
+        const filteredBarangs = allBarangs.filter(barang => barang.id_area == areaId);
+        
+        if (filteredBarangs.length === 0) {
+            tableBody.innerHTML = `
+                <tr id="emptyTableAlert">
+                    <td colspan="8" class="text-center py-4 text-muted">
+                        <i class="bi bi-info-circle me-1 text-warning"></i> Tidak ada barang terdaftar untuk area "${areaName}". Anda dapat menambahkan baris kustom secara manual.
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        // Group barangs by Sub Area
+        const grouped = { 'null': [] };
+        subAreas.forEach(loc => {
+            grouped[loc.id] = [];
+        });
+
+        filteredBarangs.forEach(barang => {
+            let matchedLocId = 'null';
+            for (const loc of subAreas) {
+                if (barang.nama_barang.toLowerCase().includes(loc.lokasi_area.toLowerCase())) {
+                    matchedLocId = loc.id;
+                    break;
+                }
+            }
+            grouped[matchedLocId].push(barang);
+        });
+
+        // Render grouped table rows
+        let rowIndex = 0;
+        for (const locId in grouped) {
+            const items = grouped[locId];
+            if (items.length === 0) continue;
+
+            const locName = locId === 'null' ? 'Tanpa Sub Area' : subAreas.find(s => s.id == locId).lokasi_area;
+            
+            // Sub-area header row
+            if (locId !== 'null') {
+                const groupHeader = document.createElement('tr');
+                groupHeader.className = 'table-secondary fw-bold text-dark';
+                groupHeader.innerHTML = `<td colspan="8" class="text-start px-3 py-2"><i class="bi bi-tag-fill me-2 text-primary"></i>${locName}</td>`;
+                tableBody.appendChild(groupHeader);
+            }
+
+            // Item rows
+            items.forEach(barang => {
+                const idx = rowIndex++;
+                
+                // Generate sub area options
+                let subAreaOptions = `<option value="">-- Pilih Sub Area --</option>`;
+                subAreas.forEach(loc => {
+                    const isSelected = loc.id == locId ? 'selected' : '';
+                    subAreaOptions += `<option value="${loc.id}" ${isSelected}>${loc.lokasi_area}</option>`;
                 });
-            })
-            .catch(err => console.error('Error loading locations:', err));
+                
+                const row = document.createElement('tr');
+                row.className = 'barang-row';
+                row.setAttribute('data-index', idx);
+                row.innerHTML = `
+                    <td class="text-center text-muted fw-semibold font-monospace">${idx + 1}</td>
+                    <td class="text-start">
+                        <span class="fw-semibold text-dark">${barang.nama_barang}</span>
+                        <input type="hidden" name="details[${idx}][id_barang]" value="${barang.id}">
+                    </td>
+                    <td>
+                        <select class="form-select form-select-sm" name="details[${idx}][id_input_area_locations]">
+                            ${subAreaOptions}
+                        </select>
+                    </td>
+                    <td>
+                        <input type="number" class="form-control text-center mx-auto" name="details[${idx}][jumlah_barang]" value="${barang.jumlah_barang || 0}" style="max-width: 90px;" required min="0">
+                    </td>
+                    <td>
+                        <select class="form-select text-center" name="details[${idx}][awal]" required>
+                            <option value="baik" selected>OK</option>
+                            <option value="tidak-baik">Not OK</option>
+                        </select>
+                    </td>
+                    <td>
+                        <select class="form-select text-center" name="details[${idx}][akhir]" required>
+                            <option value="baik" selected>OK</option>
+                            <option value="tidak-baik">Not OK</option>
+                        </select>
+                    </td>
+                    <td>
+                        <textarea class="form-control" name="details[${idx}][temuan_ketidaksesuaian]" rows="1" placeholder="catatan..."></textarea>
+                    </td>
+                    <td class="text-center">
+                        <button type="button" class="btn btn-sm btn-outline-danger remove-row-btn" title="Hapus Baris">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
     }
-    
+
+    // Handle Area select change
     if (idAreaSelect) {
-        idAreaSelect.addEventListener('change', loadAreaLocations);
-        if (idAreaSelect.value) loadAreaLocations();
+        idAreaSelect.addEventListener('change', function() {
+            if (tableBody.querySelectorAll('.barang-row').length > 0) {
+                const ok = confirm('Mengubah Area akan mereset tabel detail pemeriksaan. Yakin ingin melanjutkan?');
+                if (!ok) {
+                    idAreaSelect.value = currentAreaId;
+                    return;
+                }
+            }
+
+            currentAreaId = this.value;
+            const areaId = this.value;
+            const areaName = this.options[this.selectedIndex].text.trim();
+
+            if (!areaId) {
+                tableBody.innerHTML = `
+                    <tr id="emptyTableAlert">
+                        <td colspan="8" class="text-center py-4 text-muted">
+                            <i class="bi bi-info-circle me-1 text-warning"></i> Silakan pilih Area terlebih dahulu.
+                        </td>
+                    </tr>
+                `;
+                cachedSubAreas = [];
+                return;
+            }
+
+            // Show loading placeholder
+            tableBody.innerHTML = `
+                <tr>
+                    <td colspan="8" class="text-center py-4">
+                        <div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div>
+                        Memuat data sub-area...
+                    </td>
+                </tr>
+            `;
+
+            // Fetch sub-areas
+            fetch(`{{ url('/qc-sistem/api/area-locations') }}/${areaId}`)
+                .then(r => r.ok ? r.json() : Promise.reject(`HTTP ${r.status}`))
+                .then(data => {
+                    cachedSubAreas = data;
+                    renderBarangTable(areaId, areaName, data);
+                })
+                .catch(err => {
+                    console.error('Error loading locations:', err);
+                    cachedSubAreas = [];
+                    renderBarangTable(areaId, areaName, []);
+                });
+        });
     }
-    
-    // Toggle manual - DENGAN NAME ATTRIBUTE LOGIC
-    document.addEventListener('change', function(e) {
-        if (e.target.classList.contains('input-manual-toggle')) {
-            const idx = e.target.getAttribute('data-index');
-            const selectRow = document.querySelector(`.barang-select-row[data-index="${idx}"]`);
-            const manualRow = document.querySelector(`.barang-manual-row[data-index="${idx}"]`);
-            const karyawanRow = document.querySelector(`.nama_karyawan_row[data-index="${idx}"]`);
+
+    // Add custom manually input row
+    if (addCustomRowBtn) {
+        addCustomRowBtn.addEventListener('click', function(e) {
+            e.preventDefault();
             
-            const barangSelect = selectRow.querySelector('select[name*="[id_barang]"]');
-            const lokasiDbSelect = selectRow.querySelector('.lokasi-area-select');
-            const lokasiManualSelect = manualRow.querySelector('.lokasi-area-select-manual');
-            const namaBarangManual = manualRow.querySelector('input[name*="[nama_barang_manual]"]');
-            const jumlahManual = manualRow.querySelector('input[name*="[jumlah_manual]"]');
+            // Remove empty table row if it exists
+            const emptyAlert = document.getElementById('emptyTableAlert');
+            if (emptyAlert) emptyAlert.remove();
+
+            const idx = customRowIndex++;
+            const row = document.createElement('tr');
+            row.className = 'barang-row bg-light-warning';
+            row.setAttribute('data-index', idx);
             
-            if (e.target.checked) {
-                // === MODE MANUAL ===
-                selectRow.style.display = 'none';
-                manualRow.style.display = 'flex';
-                if (karyawanRow) karyawanRow.style.display = 'flex';
+            // Generate sub area options
+            let subAreaOptions = `<option value="">-- Pilih Sub Area --</option>`;
+            cachedSubAreas.forEach(loc => {
+                subAreaOptions += `<option value="${loc.id}">${loc.lokasi_area}</option>`;
+            });
+
+            row.innerHTML = `
+                <td class="text-center text-warning fw-bold"><i class="bi bi-pencil-square" title="Baris Kustom"></i></td>
+                <td class="text-start">
+                    <input type="text" class="form-control mb-1 fw-semibold border-warning" name="details[${idx}][nama_barang_manual]" placeholder="Nama barang kustom *" required>
+                </td>
+                <td>
+                    <select class="form-select border-warning" name="details[${idx}][id_input_area_locations]">
+                        ${subAreaOptions}
+                    </select>
+                </td>
+                <td>
+                    <input type="number" class="form-control text-center mx-auto" name="details[${idx}][jumlah_manual]" value="1" style="max-width: 90px;" required min="1">
+                </td>
+                <td>
+                    <select class="form-select text-center" name="details[${idx}][awal]" required>
+                        <option value="baik" selected>OK</option>
+                        <option value="tidak-baik">Not OK</option>
+                    </select>
+                </td>
+                <td>
+                    <select class="form-select text-center" name="details[${idx}][akhir]" required>
+                        <option value="baik" selected>OK</option>
+                        <option value="tidak-baik">Not OK</option>
+                    </select>
+                </td>
+                <td>
+                    <textarea class="form-control" name="details[${idx}][temuan_ketidaksesuaian]" rows="1" placeholder="catatan..."></textarea>
+                </td>
+                <td class="text-center">
+                    <button type="button" class="btn btn-sm btn-danger remove-row-btn" title="Hapus Baris">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </td>
+            `;
+            tableBody.appendChild(row);
+        });
+    }
+
+    // Remove row event delegator
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.remove-row-btn')) {
+            e.preventDefault();
+            const row = e.target.closest('tr');
+            if (row) {
+                row.remove();
                 
-                // Disable database fields dan ubah name
-                barangSelect.value = '';
-                barangSelect.required = false;
-                if (!barangSelect.name.includes('_disabled')) {
-                    barangSelect.name = barangSelect.name.replace('[id_barang]', '[id_barang_disabled]');
-                }
-                
-                lokasiDbSelect.value = '';
-                lokasiDbSelect.required = false;
-                if (!lokasiDbSelect.name.includes('_disabled')) {
-                    lokasiDbSelect.name = lokasiDbSelect.name.replace('[id_input_area_locations]', '[id_input_area_locations_disabled]');
-                }
-                
-                // Enable manual fields dan pastikan name benar
-                namaBarangManual.required = true;
-                jumlahManual.required = true;
-                lokasiManualSelect.required = false;
-                
-                // Rename lokasi manual dari _manual ke normal
-                if (lokasiManualSelect.name.includes('_manual')) {
-                    lokasiManualSelect.name = lokasiManualSelect.name.replace('_manual', '');
-                }
-                
-            } else {
-                // === MODE DATABASE ===
-                selectRow.style.display = 'flex';
-                manualRow.style.display = 'none';
-                if (karyawanRow) karyawanRow.style.display = 'none';
-                
-                // Disable manual fields dan ubah name
-                namaBarangManual.value = '';
-                namaBarangManual.required = false;
-                jumlahManual.value = '';
-                jumlahManual.required = false;
-                
-                lokasiManualSelect.value = '';
-                lokasiManualSelect.required = false;
-                if (!lokasiManualSelect.name.includes('_manual')) {
-                    lokasiManualSelect.name = lokasiManualSelect.name.replace('[id_input_area_locations]', '[id_input_area_locations_manual]');
-                }
-                
-                // Enable database fields dan pastikan name benar
-                barangSelect.required = true;
-                if (barangSelect.name.includes('_disabled')) {
-                    barangSelect.name = barangSelect.name.replace('[id_barang_disabled]', '[id_barang]');
-                }
-                
-                lokasiDbSelect.required = true;
-                if (lokasiDbSelect.name.includes('_disabled')) {
-                    lokasiDbSelect.name = lokasiDbSelect.name.replace('[id_input_area_locations_disabled]', '[id_input_area_locations]');
+                // If table is now empty, show empty table message
+                const remainingRows = tableBody.querySelectorAll('.barang-row');
+                if (remainingRows.length === 0) {
+                    tableBody.innerHTML = `
+                        <tr id="emptyTableAlert">
+                            <td colspan="8" class="text-center py-4 text-muted">
+                                <i class="bi bi-info-circle me-1 text-warning"></i> Tidak ada baris terdaftar. Anda dapat menambahkan baris kustom secara manual.
+                            </td>
+                        </tr>
+                    `;
                 }
             }
         }
     });
-    
-    // Load barang details
-    document.addEventListener('change', function(e) {
-        if (e.target.classList.contains('barang-select') && e.target.value) {
-            const row = e.target.closest('.barang-row');
-                 
-                fetch(`{{ url('/qc-sistem/api/barang-details') }}/${e.target.value}`)
-                .then(r => r.ok ? r.json() : Promise.reject(`HTTP ${r.status}`))
-                .then(data => row.querySelector('.jumlah-barang').value = data.jumlah_barang || 0)
-                .catch(err => console.error('Error loading barang:', err));
-        }
-    });
-    
-    // Initialize Choices
-    document.querySelectorAll('select.choices:not(.choices-initialized)').forEach(select => {
-        new Choices(select, { removeItemButton: true, placeholder: true, searchEnabled: true });
-        select.classList.add('choices-initialized');
-    });
-    
-    // Add barang - dengan name _manual untuk lokasi manual
-    document.getElementById('addBarang').addEventListener('click', function(e) {
-        e.preventDefault();
-        const idx = barangIndex;
-        const html = `
-            <div class="barang-row card p-3 mb-3">
-                <div class="row mb-2"><div class="col-md-12"><h6><strong>Barang #<span class="barang-number">${idx + 1}</span></strong></h6></div></div>
-                <div class="row mb-3"><div class="col-md-12"><div class="form-check"><input class="form-check-input input-manual-toggle" type="checkbox" id="manual_${idx}" data-index="${idx}"><label class="form-check-label" for="manual_${idx}">Input Manual Barang</label></div></div></div>
-                <div class="row mb-3 barang-select-row" data-index="${idx}">
-                    <div class="col-md-3"><label class="form-label">Barang <span class="text-danger">*</span></label><select class="choices form-select barang-select" name="details[${idx}][id_barang]" required><option value="">-- Pilih Barang --</option>@foreach($barangs as $b)<option value="{{ $b->id }}">{{ $b->nama_barang }}</option>@endforeach</select></div>
-                    <div class="col-md-2"><label class="form-label">Jumlah</label><input type="text" class="form-control jumlah-barang" readonly></div>
-                    <div class="col-md-4"><label class="form-label">Lokasi Area</label><select class="form-select lokasi-area-select" name="details[${idx}][id_input_area_locations]"><option value="">-- Pilih Lokasi Area --</option></select></div>
-                    <div class="col-md-3"><button type="button" class="btn btn-danger btn-sm mt-4 remove-barang"><i class="bi bi-trash"></i> Hapus</button></div>
-                </div>
-                <div class="row mb-3 barang-manual-row" data-index="${idx}" style="display:none;">
-                    <div class="col-md-3"><label class="form-label">Nama Barang <span class="text-danger">*</span></label><input type="text" class="form-control nama-barang-manual" name="details[${idx}][nama_barang_manual]" placeholder="Masukkan nama barang"></div>
-                    <div class="col-md-2"><label class="form-label">Jumlah <span class="text-danger">*</span></label><input type="number" class="form-control" name="details[${idx}][jumlah_manual]" placeholder="Jumlah" min="0"></div>
-                    <div class="col-md-4"><label class="form-label">Lokasi Area</label><select class="form-select lokasi-area-select-manual" name="details[${idx}][id_input_area_locations_manual]"><option value="">-- Pilih Lokasi Area --</option></select></div>
-                    <div class="col-md-3"><button type="button" class="btn btn-danger btn-sm mt-4 remove-barang"><i class="bi bi-trash"></i> Hapus</button></div>
-                </div>
-                <div class="row mb-3 nama_karyawan_row" data-index="${idx}" style="display:none;"><div class="col-md-6"><label class="form-label">Nama Karyawan</label><input type="text" class="form-control" name="details[${idx}][nama_karyawan]" placeholder="Nama karyawan (opsional)"></div></div>
-                <div class="row mb-3">
-                    <div class="col-md-3"><label class="form-label">Awal</label><div><div class="form-check form-check-inline"><input class="form-check-input" type="radio" name="details[${idx}][awal]" id="awal_baik_${idx}" value="baik"><label class="form-check-label" for="awal_baik_${idx}">baik</label></div><div class="form-check form-check-inline"><input class="form-check-input" type="radio" name="details[${idx}][awal]" id="awal_tidak-baik_${idx}" value="tidak-baik"><label class="form-check-label" for="awal_tidak-baik_${idx}">tidak-baik</label></div></div></div>
-                    <div class="col-md-3"><label class="form-label">Akhir</label><div><div class="form-check form-check-inline"><input class="form-check-input" type="radio" name="details[${idx}][akhir]" id="akhir_baik_${idx}" value="baik"><label class="form-check-label" for="akhir_baik_${idx}">baik</label></div><div class="form-check form-check-inline"><input class="form-check-input" type="radio" name="details[${idx}][akhir]" id="akhir_tidak-baik_${idx}" value="tidak-baik"><label class="form-check-label" for="akhir_tidak-baik_${idx}">tidak-baik</label></div></div></div>
-                </div>
-                <div class="row mb-3"><div class="col-md-6"><label class="form-label">Temuan Ketidaksesuaian</label><textarea class="form-control" name="details[${idx}][temuan_ketidaksesuaian]" rows="3"></textarea></div><div class="col-md-6"><label class="form-label">Tindakan Koreksi</label><textarea class="form-control" name="details[${idx}][tindakan_koreksi]" rows="3"></textarea></div></div>
-            </div>
-        `;
-        
-        const div = document.createElement('div');
-        div.innerHTML = html;
-        document.getElementById('barangContainer').appendChild(div.firstElementChild);
-        
-        const newSelect = document.querySelector(`.barang-row:last-child select.choices`);
-        if (newSelect) {
-            new Choices(newSelect, { removeItemButton: true, placeholder: true, searchEnabled: true });
-            newSelect.classList.add('choices-initialized');
-        }
-        
-        loadAreaLocations();
-        barangIndex++;
-        updateUI();
-    });
-    
-    // Remove barang
-    document.addEventListener('click', function(e) {
-        if (e.target.closest('.remove-barang')) {
-            e.preventDefault();
-            e.target.closest('.barang-row').remove();
-            updateUI();
-        }
-    });
-    
-    function updateUI() {
-        const rows = document.querySelectorAll('.barang-row');
-        rows.forEach((row, i) => {
-            row.querySelector('.barang-number').textContent = i + 1;
-            row.querySelectorAll('.remove-barang').forEach(btn => {
-                btn.style.display = rows.length > 1 ? 'inline-block' : 'none';
-            });
-        });
-    }
-    
-    updateUI();
 });
 </script>
 @endsection

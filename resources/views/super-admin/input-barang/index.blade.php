@@ -45,101 +45,107 @@
         @endif
 
         <section class="section">
-            <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="card-title mb-0">Daftar Barang</h5>
+            <!-- Header Actions Card -->
+            <div class="card mb-4 shadow-sm border">
+                <div class="card-body d-flex justify-content-between align-items-center py-3">
+                    <h5 class="card-title mb-0 text-dark fw-bold">
+                        <i class="bi bi-box-seam me-2 text-primary"></i>Daftar Barang
+                    </h5>
                     <div class="d-flex gap-2">
-                        <button type="button" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#importModal">
-                            <i class="bi bi-file-earmark-excel"></i> Import Excel
+                        <button type="button" class="btn btn-success btn-sm px-3" data-bs-toggle="modal" data-bs-target="#importModal">
+                            <i class="bi bi-file-earmark-excel me-1"></i> Import Excel
                         </button>
-                        <a href="{{ route('barangs.create') }}" class="btn btn-primary">
-                            <i class="bi bi-plus-circle"></i> Tambah Barang
+                        <a href="{{ route('barangs.create') }}" class="btn btn-primary btn-sm px-3">
+                            <i class="bi bi-plus-circle me-1"></i> Tambah Barang
                         </a>
                     </div>
                 </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-striped text-center" id="table1">
-                            <thead>
-                                <tr>
-                                    <th>No</th>
-                                    <th>Nama Barang</th>
-                                    <th>Jumlah Barang</th>
-                                    <!-- <th>Dibuat Oleh</th> -->
-                                    <!-- <th>Role</th> -->
-                                    <th>Plant</th>
-                                    <!-- <th>Tanggal Dibuat</th> -->
-                                    <th>Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @forelse($barangs as $index => $barang)
+            </div>
+
+            @php
+                // Group barangs by area name
+                $groupedBarangs = $barangs->groupBy(function($barang) {
+                    return $barang->area ? $barang->area->nama_area : 'Tanpa Area';
+                });
+            @endphp
+
+            @forelse($groupedBarangs as $areaName => $items)
+                <div class="card border shadow-sm mb-4">
+                    <div class="card-header bg-light py-3 border-bottom d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0 text-primary fw-bold">
+                            <i class="bi bi-tag-fill me-2 text-primary"></i>{{ $areaName }}
+                            <span class="badge bg-light-primary text-primary ms-2 fw-semibold px-2 py-1">{{ $items->count() }} Item</span>
+                        </h6>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0 text-center">
+                                <thead class="table-light">
                                     <tr>
-                                        <td>{{ $index + 1 }}</td>
-                                        <td>
-                                            {{ $barang->nama_barang }}
-                                        </td>
-                                        <td>
-                                            <span class="badge bg-primary">{{ $barang->jumlah_barang ?? 0 }}</span>
-                                        </td>
-                                        <!-- <td>
-                                            <strong>{{ $barang->user->name }}</strong>
-                                            <br>
-                                            <small class="text-muted">{{ $barang->user->username }}</small>
-                                        </td> -->
-                                        <!-- <td>
-                                            @if($barang->user->role)
-                                                <span class="badge bg-success">{{ $barang->user->role->role }}</span>
-                                            @else
-                                                <span class="badge bg-secondary">No Role</span>
-                                            @endif
-                                        </td> -->
-                                        <td>
-                                            @if($barang->user->plant)
-                                                <span class="badge bg-info">{{ $barang->user->plant->plant }}</span>
-                                            @else
-                                                <span class="badge bg-secondary">No Plant</span>
-                                            @endif
-                                        </td>
-                                        <!-- <td>
-                                            {{ $barang->created_at->format('d/m/Y H:i') }}
-                                        </td> -->
-                                        <td>
-                                            <div class="btn-vertical">
-                                                <a href="{{ route('barangs.edit', $barang->uuid) }}" 
-                                                   class="btn btn-sm btn-warning">
-                                                    <i class="bi bi-pencil" title="Edit Data"></i>
-                                                </a>
-                                                <form action="{{ route('barangs.destroy', $barang->uuid) }}" 
-                                                      method="POST" 
-                                                      style="display: inline-block;"
-                                                      onsubmit="return confirm('Yakin ingin menghapus barang ini?')">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="submit" class="btn btn-sm btn-danger">
-                                                        <i class="bi bi-trash" title="Hapus Data"></i>
-                                                    </button>
-                                                </form>
-                                            </div>
-                                        </td>
+                                        <th style="width: 5%">No</th>
+                                        <th style="width: 50%" class="text-start">Nama Barang</th>
+                                        <th style="width: 15%">Jumlah Barang</th>
+                                        <th style="width: 15%">Plant</th>
+                                        <th style="width: 15%">Aksi</th>
                                     </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="7" class="text-center">
-                                            <div class="py-4">
-                                                <i class="bi bi-inbox fs-1 text-muted"></i>
-                                                <p class="text-muted mt-2">Belum ada data barang</p>
-                                                <a href="{{ route('barangs.create') }}" class="btn btn-primary">
-                                                    <i class="bi bi-plus-circle"></i> Tambah Barang Pertama
-                                                </a>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    @foreach($items as $index => $barang)
+                                        <tr>
+                                            <td>{{ $index + 1 }}</td>
+                                            <td class="text-start fw-semibold text-dark">
+                                                {{ $barang->nama_barang }}
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-primary px-3 py-1.5 fw-semibold">{{ $barang->jumlah_barang ?? 0 }}</span>
+                                            </td>
+                                            <td>
+                                                @if($barang->user && $barang->user->plant)
+                                                    <span class="badge bg-info px-2 py-1 fw-semibold">{{ $barang->user->plant->plant }}</span>
+                                                @else
+                                                    <span class="badge bg-secondary px-2 py-1 fw-semibold">No Plant</span>
+                                                @endif
+                                            </td>
+                                            <td>
+                                                <div class="d-flex justify-content-center gap-1">
+                                                    <a href="{{ route('barangs.edit', $barang->uuid) }}" 
+                                                       class="btn btn-sm btn-warning" title="Edit Data">
+                                                        <i class="bi bi-pencil"></i>
+                                                    </a>
+                                                    <form action="{{ route('barangs.destroy', $barang->uuid) }}" 
+                                                          method="POST" 
+                                                          style="display: inline-block;"
+                                                          onsubmit="return confirm('Yakin ingin menghapus barang ini?')">
+                                                        @csrf
+                                                        @method('DELETE')
+                                                        <button type="submit" class="btn btn-sm btn-danger" title="Hapus Data">
+                                                            <i class="bi bi-trash"></i>
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
+            @empty
+                <div class="card border shadow-sm">
+                    <div class="card-body text-center py-5">
+                        <i class="bi bi-inbox fs-1 text-muted"></i>
+                        <p class="text-muted mt-2">Belum ada data barang</p>
+                        <a href="{{ route('barangs.create') }}" class="btn btn-primary btn-sm px-4">
+                            <i class="bi bi-plus-circle me-1"></i> Tambah Barang Pertama
+                        </a>
+                    </div>
+                </div>
+            @endforelse
+
+            <!-- Pagination Links -->
+            <div class="d-flex justify-content-end mt-3">
+                {{ $barangs->appends(request()->query())->links() }}
             </div>
         </section>
     </div>
