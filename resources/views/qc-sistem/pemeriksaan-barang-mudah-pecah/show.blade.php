@@ -87,80 +87,81 @@
 
             <div class="row match-height mt-3">
                 <div class="col-md-12 col-12">
-                    <div class="card">
-                        <div class="card-header">
-                            <h4 class="card-title">Detail Barang ({{ count($pemeriksaanBarangMudahPecah->details) }} barang)</h4>
+                    <div class="card border shadow-sm">
+                        <div class="card-header bg-light py-3 border-bottom">
+                            <h4 class="card-title mb-0 text-primary fw-bold">
+                                <i class="bi bi-list-check me-2"></i>Detail Pemeriksaan ({{ count($pemeriksaanBarangMudahPecah->details) }} item terdaftar)
+                            </h4>
                         </div>
                         <div class="card-content">
-                            <div class="card-body">
-                                @forelse($pemeriksaanBarangMudahPecah->details as $index => $detail)
-                                    <div class="card mb-3 p-3" style="border-left: 4px solid #0d6efd;">
-                                        <!-- Judul Barang -->
-                                        @if($detail->nama_barang_manual)
-                                            <h6 class="mb-3"><strong>Barang #{{ $index + 1 }}: {{ $detail->nama_barang_manual }} <span class="badge bg-warning">Manual</span></strong></h6>
-                                        @else
-                                            <h6 class="mb-3"><strong>Barang #{{ $index + 1 }}: {{ $detail->barang->nama_barang }}</strong></h6>
-                                        @endif
-                                        
-                                        <div class="row mb-2">
-                                            <div class="col-md-3">
-                                                <label class="form-label"><strong>Jumlah Barang</strong></label>
-                                                <p>{{ $detail->jumlah_barang }}</p>
-                                            </div>
-                                            <div class="col-md-3">
-                                                <label class="form-label"><strong>Lokasi Area</strong></label>
-                                                <p>{{ $detail->areaLocation->lokasi_area ?? '-' }}</p>
-                                            </div>
-                                            <div class="col-md-3">
-                                                <label class="form-label"><strong>Awal</strong></label>
-                                                <p>
-                                                    @if(empty($detail->awal))
-                                                        <span class="badge bg-secondary">- belum diisi</span>
-                                                    @elseif($detail->awal === 'baik')
-                                                        <span class="badge bg-success">✓ baik</span>
-                                                    @else
-                                                        <span class="badge bg-danger">✗ tidak baik</span>
-                                                    @endif
-                                                </p>
-                                            </div>
-                                            <div class="col-md-4">
-                                                <label class="form-label"><strong>Akhir</strong></label>
-                                                <p>
-                                                    @if(empty($detail->akhir))
-                                                        <span class="badge bg-secondary">- belum diisi</span>
-                                                    @elseif($detail->akhir === 'baik')
-                                                        <span class="badge bg-success">✓ baik</span>
-                                                    @else
-                                                        <span class="badge bg-danger">✗ tidak baik</span>
-                                                    @endif
-                                                </p>
-                                            </div>
-                                        </div>
-
-                                        <!-- Nama Karyawan (jika ada) -->
-                                        @if($detail->nama_karyawan)
-                                            <div class="row mb-2">
-                                                <div class="col-md-6">
-                                                    <label class="form-label"><strong>Nama Karyawan</strong></label>
-                                                    <p>{{ $detail->nama_karyawan }}</p>
-                                                </div>
-                                            </div>
-                                        @endif
-
-                                        <div class="row mb-2">
-                                            <div class="col-md-6">
-                                                <label class="form-label"><strong>Temuan Ketidaksesuaian</strong></label>
-                                                <p>{{ $detail->temuan_ketidaksesuaian ?? '-' }}</p>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <label class="form-label"><strong>Tindakan Koreksi</strong></label>
-                                                <p>{{ $detail->tindakan_koreksi ?? '-' }}</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                @empty
-                                    <p class="text-muted">Tidak ada data barang</p>
-                                @endforelse
+                            <div class="card-body p-0">
+                                <div class="table-responsive">
+                                    <table class="table table-hover align-middle mb-0">
+                                        <thead class="table-primary text-center">
+                                            <tr>
+                                                <th style="width: 5%">#</th>
+                                                <th style="width: 20%">Nama Barang</th>
+                                                <th style="width: 20%">Sub Area</th>
+                                                <th style="width: 5%">Jumlah</th>
+                                                <th style="width: 15%">Verifikasi Pra-Op</th>
+                                                <th style="width: 15%">Verifikasi Post-Op</th>
+                                                <th style="width: 25%">Catatan</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @forelse($pemeriksaanBarangMudahPecah->details as $index => $detail)
+                                                @php
+                                                    $isManual = !empty($detail->nama_barang_manual);
+                                                @endphp
+                                                <tr>
+                                                    <td class="text-center text-muted fw-semibold font-monospace">
+                                                        @if($isManual)
+                                                            <i class="bi bi-pencil-square text-warning" title="Baris Kustom"></i>
+                                                        @else
+                                                            {{ $index + 1 }}
+                                                        @endif
+                                                    </td>
+                                                    <td class="text-start">
+                                                        @if($isManual)
+                                                            <span class="fw-semibold text-warning"><i class="bi bi-asterisk small me-1"></i>{{ $detail->nama_barang_manual }}</span>
+                                                        @else
+                                                            <span class="fw-semibold text-dark">{{ $detail->barang->nama_barang ?? 'Barang tidak ditemukan' }}</span>
+                                                        @endif
+                                                    </td>
+                                                    <td class="text-center">
+                                                        <span class="badge bg-light-secondary text-dark">{{ $detail->areaLocation->lokasi_area ?? '-' }}</span>
+                                                    </td>
+                                                    <td class="text-center fw-bold">{{ $detail->jumlah_barang }}</td>
+                                                    <td class="text-center">
+                                                        @if($detail->awal === 'baik')
+                                                            <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>OK</span>
+                                                        @elseif($detail->awal === 'tidak-baik')
+                                                            <span class="badge bg-danger"><i class="bi bi-x-circle me-1"></i>Not OK</span>
+                                                        @else
+                                                            <span class="badge bg-secondary">-</span>
+                                                        @endif
+                                                    </td>
+                                                    <td class="text-center">
+                                                        @if($detail->akhir === 'baik')
+                                                            <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>OK</span>
+                                                        @elseif($detail->akhir === 'tidak-baik')
+                                                            <span class="badge bg-danger"><i class="bi bi-x-circle me-1"></i>Not OK</span>
+                                                        @else
+                                                            <span class="badge bg-secondary">-</span>
+                                                        @endif
+                                                    </td>
+                                                    <td class="text-center">
+                                                        <span class="text-muted small">{{ $detail->temuan_ketidaksesuaian ?? '-' }}</span>
+                                                    </td>
+                                                </tr>
+                                            @empty
+                                                <tr>
+                                                    <td colspan="7" class="text-center py-4 text-muted">Tidak ada data barang</td>
+                                                </tr>
+                                            @endforelse
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
                         </div>
                     </div>

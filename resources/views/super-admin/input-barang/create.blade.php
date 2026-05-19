@@ -49,6 +49,21 @@
                                     @csrf
                                     <div class="form-body">
                                         <div class="row">
+                                            <div class="col-md-12 mb-3">
+                                                <label for="id_area" class="fw-semibold">Area <span class="text-danger">*</span></label>
+                                                <select class="form-select @error('id_area') is-invalid @enderror" name="id_area" id="id_area" required>
+                                                    <option value="">-- Pilih Area --</option>
+                                                    @foreach ($areas as $area)
+                                                        <option value="{{ $area->id }}" {{ old('id_area') == $area->id ? 'selected' : '' }}>
+                                                            {{ $area->nama_area }}
+                                                        </option>
+                                                    @endforeach
+                                                </select>
+                                                @error('id_area')
+                                                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                                                @enderror
+                                            </div>
+
                                             <div class="col-md-6">
                                                 <label for="nama_barang">Nama Barang <span class="text-danger">*</span></label>
                                                 <div id="dynamic-fields-nama">

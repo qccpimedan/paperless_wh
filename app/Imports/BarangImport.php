@@ -46,6 +46,20 @@ class BarangImport implements ToCollection, WithHeadingRow
                 }
             }
 
+            $areaName = isset($row['area']) ? trim((string) $row['area']) : '';
+            $idArea = null;
+            if ($areaName !== '') {
+                // Find area by name (case insensitive)
+                $areaObj = \App\Models\InputArea::query()
+                    ->whereRaw('LOWER(nama_area) = ?', [mb_strtolower($areaName)])
+                    ->first();
+                if ($areaObj) {
+                    $idArea = $areaObj->id;
+                } else {
+                    $this->errors[] = "Baris {$rowNumber}: Area '{$areaName}' tidak terdaftar di sistem. Barang di-import tanpa area.";
+                }
+            }
+
             $existsQuery = Barang::query()->whereRaw('LOWER(nama_barang) = ?', [mb_strtolower($nama)]);
 
             if (!$isSuperadmin && $userPlantId !== null) {
@@ -63,6 +77,7 @@ class BarangImport implements ToCollection, WithHeadingRow
 
             Barang::create([
                 'id_user' => Auth::id(),
+                'id_area' => $idArea,
                 'nama_barang' => $nama,
                 'jumlah_barang' => $jumlah,
             ]);
