@@ -424,6 +424,12 @@
                     $kondisiProdukSuhusTmp = json_decode($p->kondisi_produk_suhu ?? '[]', true) ?? [];
                     $hasilUjiFfasTmp = json_decode($p->hasil_uji_ffa_array ?? '[]', true) ?? [];
                     $keterangansTmp = json_decode($p->keterangan_array ?? '[]', true) ?? [];
+                    $logoHalalsTmp = json_decode($p->logo_halal_array ?? '[]', true) ?? [];
+                    $dokumenHalalsTmp = json_decode($p->dokumen_halal_array ?? '[]', true) ?? [];
+                    $coasTmp = json_decode($p->coa_array ?? '[]', true) ?? [];
+                    $fileCoasTmp = json_decode($p->file_coa_array ?? '[]', true) ?? [];
+                    $imageBahanBakusTmp = json_decode($p->image_bahan_baku_array ?? '[]', true) ?? [];
+                    $statusBarisesTmp = json_decode($p->status_baris_array ?? '[]', true) ?? [];
 
                     $rowCount = max(
                         1,
@@ -443,7 +449,13 @@
                         count($suhuMobilTypesTmp),
                         count($kondisiProdukSuhusTmp),
                         count($hasilUjiFfasTmp),
-                        count($keterangansTmp)
+                        count($keterangansTmp),
+                        count($logoHalalsTmp),
+                        count($dokumenHalalsTmp),
+                        count($coasTmp),
+                        count($fileCoasTmp),
+                        count($imageBahanBakusTmp),
+                        count($statusBarisesTmp)
                     );
 
                     $validRows = collect();
@@ -773,6 +785,87 @@
                                                     <span class="field-value">{{ ($kondisi_fisik_val['aroma'] ?? false) ? 'V' : 'X' }}</span>
                                                 </div>
                                             @endif
+                                        </div>
+                                    @endif
+
+                                    {{-- DOKUMENTASI (Single Row) --}}
+                                    @php
+                                        $logo_halals = json_decode($pemeriksaan->logo_halal_array ?? '[]', true) ?? [];
+                                        $dokumen_halals = json_decode($pemeriksaan->dokumen_halal_array ?? '[]', true) ?? [];
+                                        $coas = json_decode($pemeriksaan->coa_array ?? '[]', true) ?? [];
+                                        $file_coas = json_decode($pemeriksaan->file_coa_array ?? '[]', true) ?? [];
+
+                                        $logo_halal_val = $logo_halals[$rowIndex] ?? null;
+                                        $dokumen_halal_val = $dokumen_halals[$rowIndex] ?? null;
+                                        $coa_val = $coas[$rowIndex] ?? null;
+                                        $file_coa_val = $file_coas[$rowIndex] ?? null;
+                                    @endphp
+                                    @if($logo_halal_val !== null || $dokumen_halal_val !== null || $coa_val !== null || $file_coa_val)
+                                        <div class="section-title">Dokumentasi</div>
+                                        <div style="margin-top: 6px; padding-top: 6px; border-top: 1px solid #ddd; font-size: 8px;">
+                                            @if($logo_halal_val !== null)
+                                                <div class="field-row">
+                                                    <span class="field-label" style="width: 55px;">Logo Halal:</span>
+                                                    <span class="field-value">{{ $logo_halal_val ? 'Ya ✓' : 'Tidak ✗' }}</span>
+                                                </div>
+                                            @endif
+                                            @if($dokumen_halal_val !== null)
+                                                <div class="field-row">
+                                                    <span class="field-label" style="width: 55px;">Dok. Halal:</span>
+                                                    <span class="field-value">{{ $dokumen_halal_val ? 'Ya ✓' : 'Tidak ✗' }}</span>
+                                                </div>
+                                            @endif
+                                            @if($coa_val !== null)
+                                                <div class="field-row">
+                                                    <span class="field-label" style="width: 55px;">COA:</span>
+                                                    <span class="field-value">{{ $coa_val ? 'Ya ✓' : 'Tidak ✗' }}</span>
+                                                </div>
+                                            @endif
+                                            @if($file_coa_val)
+                                                <div class="field-row">
+                                                    <span class="field-label" style="width: 55px;">File COA:</span>
+                                                    <span class="field-value" style="color: #2b6cb0; font-weight: bold;">Ada (Dilampirkan)</span>
+                                                </div>
+                                            @endif
+                                        </div>
+                                    @endif
+
+                                    {{-- STATUS RELEASE (Single Row) --}}
+                                    @php
+                                        $status_barises = json_decode($pemeriksaan->status_baris_array ?? '[]', true) ?? [];
+                                        $status_baris_val = $status_barises[$rowIndex] ?? null;
+                                    @endphp
+                                    @if($status_baris_val)
+                                        <div class="section-title">Status Release</div>
+                                        <div style="margin-top: 6px; padding-top: 6px; border-top: 1px solid #ddd; font-size: 8px;">
+                                            <div class="field-row">
+                                                <span class="field-label" style="width: 55px;">Status:</span>
+                                                <span class="field-value">
+                                                    @if($status_baris_val === 'Release')
+                                                        <span style="color: #2f855a; font-weight: bold; background: #c6f6d5; padding: 1px 4px; border-radius: 2px;">RELEASE</span>
+                                                    @elseif($status_baris_val === 'Hold')
+                                                        <span style="color: #9c4221; font-weight: bold; background: #feebc8; padding: 1px 4px; border-radius: 2px;">HOLD</span>
+                                                    @else
+                                                        <span style="color: #4a5568; font-weight: bold; background: #edf2f7; padding: 1px 4px; border-radius: 2px;">{{ strtoupper($status_baris_val) }}</span>
+                                                    @endif
+                                                </span>
+                                            </div>
+                                        </div>
+                                    @endif
+
+                                    {{-- FOTO BAHAN BAKU (Single Row) --}}
+                                    @php
+                                        $image_bahan_bakus = json_decode($pemeriksaan->image_bahan_baku_array ?? '[]', true) ?? [];
+                                        $image_path_val = $image_bahan_bakus[$rowIndex] ?? null;
+                                        $imgFullPath = null;
+                                        if ($image_path_val) {
+                                            $imgFullPath = public_path('storage/' . $image_path_val);
+                                        }
+                                    @endphp
+                                    @if($imgFullPath && file_exists($imgFullPath))
+                                        <div class="section-title">Foto Bahan Baku</div>
+                                        <div style="margin-top: 6px; padding-top: 6px; border-top: 1px solid #ddd; font-size: 8px; text-align: center;">
+                                            <img src="{{ $imgFullPath }}" alt="Foto Bahan Baku" style="max-width: 150px; max-height: 120px; border: 1px solid #dee2e6; border-radius: 4px; padding: 2px;">
                                         </div>
                                     @endif
 

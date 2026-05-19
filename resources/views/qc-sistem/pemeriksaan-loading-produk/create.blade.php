@@ -85,10 +85,10 @@
                                                     <label for="id_tujuan_pengiriman">Customer & Tujuan Pengiriman</label>
                                                     <select id="id_tujuan_pengiriman" class="form-select @error('id_tujuan_pengiriman') is-invalid @enderror" name="id_tujuan_pengiriman">
                                                         <option value="">-- Pilih Tujuan --</option>
+                                                        <option value="other" {{ old('id_tujuan_pengiriman') == 'other' ? 'selected' : '' }}>-- Lainnya (Input Manual) --</option>
                                                         @foreach($tujuanPengirimans as $tujuan)
                                                             <option value="{{ $tujuan->id }}" {{ old('id_tujuan_pengiriman') == $tujuan->id ? 'selected' : '' }}>{{ $tujuan->customer ? $tujuan->customer->nama_cust . ' - ' . $tujuan->nama_tujuan : $tujuan->nama_tujuan }}</option>
                                                         @endforeach
-                                                        <option value="other" {{ old('id_tujuan_pengiriman') == 'other' ? 'selected' : '' }}>-- Lainnya (Input Manual) --</option>
                                                     </select>
                                                     @error('id_tujuan_pengiriman')
                                                         <div class="invalid-feedback">{{ $message }}</div>
@@ -125,10 +125,10 @@
                                                     <label for="id_kendaraan">Jenis & No Kendaraan</label>
                                                     <select id="id_kendaraan" class="form-select @error('id_kendaraan') is-invalid @enderror" name="id_kendaraan">
                                                         <option value="">-- Pilih Kendaraan --</option>
+                                                        <option value="other" {{ old('id_kendaraan') == 'other' ? 'selected' : '' }}>-- Lainnya (Input Manual) --</option>
                                                         @foreach($kendaraans as $kendaraan)
                                                             <option value="{{ $kendaraan->id }}" {{ old('id_kendaraan') == $kendaraan->id ? 'selected' : '' }}>{{ $kendaraan->jenis_kendaraan }} - {{ $kendaraan->no_kendaraan }}</option>
                                                         @endforeach
-                                                        <option value="other" {{ old('id_kendaraan') == 'other' ? 'selected' : '' }}>-- Lainnya (Input Manual) --</option>
                                                     </select>
                                                     @error('id_kendaraan')
                                                         <div class="invalid-feedback">{{ $message }}</div>

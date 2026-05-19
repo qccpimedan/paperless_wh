@@ -47,7 +47,7 @@
                                 <tr>
                                     <th>No</th>
                                     <th>Customer</th>
-                                    <th>Nama Tujuan</th>
+                                    <th>Tujuan Pengiriman</th>
                                     <th>Plant</th>
                                     <th>Aksi</th>
                                 </tr>

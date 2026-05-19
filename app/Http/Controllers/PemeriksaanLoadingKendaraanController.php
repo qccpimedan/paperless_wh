@@ -123,7 +123,12 @@ class PemeriksaanLoadingKendaraanController extends Controller
         $request->validate([
             'tanggal' => 'required|date',
             'id_ekspedisi' => 'required|exists:ekspedisis,id',
-            'id_kendaraan' => 'required|exists:jenis_kendaraans,id',
+            'id_kendaraan' => [
+                'required',
+                $request->input('id_kendaraan') !== 'other' ? 'exists:jenis_kendaraans,id' : '',
+            ],
+            'jenis_kendaraan_manual' => 'nullable|required_if:id_kendaraan,other|string|max:255',
+            'no_kendaraan_manual' => 'nullable|required_if:id_kendaraan,other|string|max:255',
             'id_tujuan_pengiriman' => 'required|exists:tujuan_pengirimen,id',
             'id_std_precooling' => 'required|exists:std_precoolings,id',
             'id_shift' => 'nullable|exists:shifts,id',
@@ -134,6 +139,16 @@ class PemeriksaanLoadingKendaraanController extends Controller
             'segel_gembok' => 'nullable|in:segel,gembok',
             'no_segel' => 'nullable|required_if:segel_gembok,segel|string|max:255',
         ]);
+
+        $idKendaraan = $request->id_kendaraan;
+        if ($idKendaraan === 'other') {
+            $kendaraan = JenisKendaraan::create([
+                'jenis_kendaraan' => $request->jenis_kendaraan_manual,
+                'no_kendaraan' => $request->no_kendaraan_manual,
+                'id_user' => Auth::id(),
+            ]);
+            $idKendaraan = $kendaraan->id;
+        }
 
         // Prepare kondisi data
         $kondisiKebersihanMobil = [
@@ -158,7 +173,7 @@ class PemeriksaanLoadingKendaraanController extends Controller
             'id_user' => Auth::id(),
             'tanggal' => $request->tanggal,
             'id_ekspedisi' => $request->id_ekspedisi,
-            'id_kendaraan' => $request->id_kendaraan,
+            'id_kendaraan' => $idKendaraan,
             'id_tujuan_pengiriman' => $request->id_tujuan_pengiriman,
             'id_std_precooling' => $request->id_std_precooling,
             'id_shift' => $request->id_shift,
@@ -233,7 +248,12 @@ class PemeriksaanLoadingKendaraanController extends Controller
         $request->validate([
             'tanggal' => 'required|date',
             'id_ekspedisi' => 'required|exists:ekspedisis,id',
-            'id_kendaraan' => 'required|exists:jenis_kendaraans,id',
+            'id_kendaraan' => [
+                'required',
+                $request->input('id_kendaraan') !== 'other' ? 'exists:jenis_kendaraans,id' : '',
+            ],
+            'jenis_kendaraan_manual' => 'nullable|required_if:id_kendaraan,other|string|max:255',
+            'no_kendaraan_manual' => 'nullable|required_if:id_kendaraan,other|string|max:255',
             'id_tujuan_pengiriman' => 'required|exists:tujuan_pengirimen,id',
             'id_std_precooling' => 'required|exists:std_precoolings,id',
             'id_shift' => 'nullable|exists:shifts,id',
@@ -244,6 +264,16 @@ class PemeriksaanLoadingKendaraanController extends Controller
             'segel_gembok' => 'nullable|in:segel,gembok',
             'no_segel' => 'nullable|required_if:segel_gembok,segel|string|max:255',
         ]);
+
+        $idKendaraan = $request->id_kendaraan;
+        if ($idKendaraan === 'other') {
+            $kendaraan = JenisKendaraan::create([
+                'jenis_kendaraan' => $request->jenis_kendaraan_manual,
+                'no_kendaraan' => $request->no_kendaraan_manual,
+                'id_user' => Auth::id(),
+            ]);
+            $idKendaraan = $kendaraan->id;
+        }
 
         // Prepare kondisi data
         $kondisiKebersihanMobil = [
@@ -267,7 +297,7 @@ class PemeriksaanLoadingKendaraanController extends Controller
         $pemeriksaanLoadingKendaraan->update([
             'tanggal' => $request->tanggal,
             'id_ekspedisi' => $request->id_ekspedisi,
-            'id_kendaraan' => $request->id_kendaraan,
+            'id_kendaraan' => $idKendaraan,
             'id_tujuan_pengiriman' => $request->id_tujuan_pengiriman,
             'id_std_precooling' => $request->id_std_precooling,
             'id_shift' => $request->id_shift,

@@ -803,6 +803,55 @@
                                                 @endforeach
                                             </div>
 
+                                            <!-- Dokumen -->
+                                            <div class="form-section mb-3">
+                                                <h6 class="text-primary mb-2">Dokumen</h6>
+                                                <div class="row">
+                                                    <div class="col-md-4">
+                                                        <div class="mb-3">
+                                                            <label class="form-label"><strong>Logo Halal</strong></label>
+                                                            <div class="form-check">
+                                                                <input class="form-check-input" type="radio" name="logo_halal_{{ $produkNo + 1 }}" id="logo_ya_{{ $produkNo + 1 }}" value="1" {{ ($logoHalalArray[$firstIdx] ?? null) ? 'checked' : '' }}>
+                                                                <label class="form-check-label" for="logo_ya_{{ $produkNo + 1 }}">Ya ✓</label>
+                                                            </div>
+                                                            <div class="form-check">
+                                                                <input class="form-check-input" type="radio" name="logo_halal_{{ $produkNo + 1 }}" id="logo_tidak_{{ $produkNo + 1 }}" value="0" {{ !($logoHalalArray[$firstIdx] ?? null) ? 'checked' : '' }}>
+                                                                <label class="form-check-label" for="logo_tidak_{{ $produkNo + 1 }}">Tidak ✗</label>
+                                                            </div>
+                                                            <input type="hidden" name="logo_halal[]" class="radio-value-logo-{{ $produkNo + 1 }}" value="{{ ($logoHalalArray[$firstIdx] ?? null) ? '1' : '0' }}">
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <div class="mb-3">
+                                                            <label class="form-label"><strong>Dokumen Halal</strong></label>
+                                                            <div class="form-check">
+                                                                <input class="form-check-input" type="radio" name="dokumen_halal_{{ $produkNo + 1 }}" id="dokumen_ya_{{ $produkNo + 1 }}" value="1" {{ ($dokumenHalalArray[$firstIdx] ?? null) ? 'checked' : '' }}>
+                                                                <label class="form-check-label" for="dokumen_ya_{{ $produkNo + 1 }}">Ya ✓</label>
+                                                            </div>
+                                                            <div class="form-check">
+                                                                <input class="form-check-input" type="radio" name="dokumen_halal_{{ $produkNo + 1 }}" id="dokumen_tidak_{{ $produkNo + 1 }}" value="0" {{ !($dokumenHalalArray[$firstIdx] ?? null) ? 'checked' : '' }}>
+                                                                <label class="form-check-label" for="dokumen_tidak_{{ $produkNo + 1 }}">Tidak ✗</label>
+                                                            </div>
+                                                            <input type="hidden" name="dokumen_halal[]" class="radio-value-dokumen-{{ $produkNo + 1 }}" value="{{ ($dokumenHalalArray[$firstIdx] ?? null) ? '1' : '0' }}">
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <div class="mb-3">
+                                                            <label class="form-label"><strong>COA</strong></label>
+                                                            <div class="form-check">
+                                                                <input class="form-check-input" type="radio" name="coa_{{ $produkNo + 1 }}" id="coa_ya_{{ $produkNo + 1 }}" value="1" {{ ($coaArray[$firstIdx] ?? null) ? 'checked' : '' }}>
+                                                                <label class="form-check-label" for="coa_ya_{{ $produkNo + 1 }}">Ya ✓</label>
+                                                            </div>
+                                                            <div class="form-check">
+                                                                <input class="form-check-input" type="radio" name="coa_{{ $produkNo + 1 }}" id="coa_tidak_{{ $produkNo + 1 }}" value="0" {{ !($coaArray[$firstIdx] ?? null) ? 'checked' : '' }}>
+                                                                <label class="form-check-label" for="coa_tidak_{{ $produkNo + 1 }}">Tidak ✗</label>
+                                                            </div>
+                                                            <input type="hidden" name="coa[]" class="radio-value-coa-{{ $produkNo + 1 }}" value="{{ ($coaArray[$firstIdx] ?? null) ? '1' : '0' }}">
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
                                             <div class="row mt-2">
                                                 <div class="col-md-12">
                                                     <button type="button" class="btn btn-primary btn-sm add-detail-btn"><i class="bi bi-plus"></i> Tambah Detail</button>

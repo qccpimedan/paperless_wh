@@ -65,9 +65,9 @@
                                                 @enderror
                                             </div>
                                             <div class="col-md-12">
-                                                <label for="nama_tujuan">Nama Tujuan <span class="text-danger">*</span></label>
+                                                <label for="nama_tujuan">Tujuan Pengiriman <span class="text-danger">*</span></label>
                                                 <input type="text" id="nama_tujuan" class="form-control @error('nama_tujuan') is-invalid @enderror"
-                                                    name="nama_tujuan" placeholder="Nama Tujuan" 
+                                                    name="nama_tujuan" placeholder="Tujuan Pengiriman" 
                                                     value="{{ old('nama_tujuan', $tujuanPengiriman->nama_tujuan) }}" required>
                                                 @error('nama_tujuan')
                                                     <div class="invalid-feedback">{{ $message }}</div>
