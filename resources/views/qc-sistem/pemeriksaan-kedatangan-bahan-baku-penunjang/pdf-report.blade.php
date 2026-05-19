@@ -10,7 +10,7 @@
     <style>
         @page {
             size: A4;
-            margin: 12mm;
+            margin: 8mm;
         }
         
         * {
@@ -21,8 +21,8 @@
         
         body {
             font-family: 'Segoe UI', Arial, sans-serif;
-            font-size: 9px;
-            line-height: 1.4;
+            font-size: 8.5px;
+            line-height: 1.35;
             color: #1a1a1a;
             background: #fff;
         }
@@ -36,9 +36,9 @@
         .header {
             display: table;
             width: 100%;
-            margin-bottom: 15px;
+            margin-bottom: 8px;
             border-bottom: 3px solid #c41e3a;
-            padding-bottom: 12px;
+            padding-bottom: 6px;
             page-break-inside: avoid;
         }
         
@@ -62,42 +62,42 @@
         
         .header-logo {
             display: table-cell;
-            width: 55px;
+            width: 45px;
             vertical-align: middle;
         }
         
         .header-logo img {
-            width: 50px;
-            height: 50px;
+            width: 40px;
+            height: 40px;
             object-fit: contain;
         }
         
         .header-company {
             display: table-cell;
             vertical-align: middle;
-            padding-left: 12px;
+            padding-left: 10px;
         }
         
         .header-company h2 {
-            font-size: 12px;
+            font-size: 11px;
             font-weight: bold;
             color: #c41e3a;
-            margin-bottom: 2px;
+            margin-bottom: 1px;
             letter-spacing: 0.5px;
         }
         
         .header-company p {
-            font-size: 8px;
+            font-size: 7.5px;
             color: #444;
-            margin-bottom: 1px;
+            margin-bottom: 0px;
         }
         
         .header-title h1 {
-            font-size: 13px;
+            font-size: 11px;
             font-weight: bold;
             color: #1a1a1a;
             background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-            padding: 8px 15px;
+            padding: 6px 12px;
             border-radius: 4px;
             border-left: 4px solid #c41e3a;
             display: inline-block;
@@ -108,7 +108,7 @@
             width: 100%;
             border: 1px solid #dee2e6;
             border-radius: 6px;
-            margin-bottom: 15px;
+            margin-bottom: 8px;
             background: #f8f9fa;
             page-break-inside: avoid;
             padding: 0;
@@ -120,8 +120,8 @@
         }
         
         .subheader-table td {
-            padding: 8px 12px;
-            font-size: 8px;
+            padding: 4px 8px;
+            font-size: 7.5px;
             border-bottom: 1px solid #e9ecef;
             vertical-align: top;
         }
@@ -133,7 +133,7 @@
         .subheader-label {
             font-weight: 600;
             color: #495057;
-            width: 100px;
+            width: 80px;
         }
         
         .subheader-value {
@@ -149,7 +149,7 @@
         /* DATA TABLE - 4 Column Layout */
         .page-break {
             page-break-after: avoid;
-            margin-bottom: 15px;
+            margin-bottom: 8px;
         }
         
         .page-break:last-child {
@@ -167,9 +167,9 @@
         .data-column {
             width: 25%;
             border: 1px solid #dee2e6;
-            padding: 10px;
+            padding: 6px;
             vertical-align: top;
-            font-size: 8px;
+            font-size: 7.5px;
             background: #fff;
         }
         
@@ -183,11 +183,11 @@
         
         .column-header {
             font-weight: bold;
-            font-size: 9px;
+            font-size: 8px;
             color: #8b1428;
             background: linear-gradient(135deg, #8b1428 0%, #5c0e1a 100%);
-            padding: 8px 10px;
-            margin: -10px -10px 10px -10px;
+            padding: 5px 6px;
+            margin: -6px -6px 6px -6px;
             text-align: center;
             letter-spacing: 0.5px;
             text-transform: uppercase;
@@ -195,12 +195,12 @@
         
         .section-title {
             font-weight: bold;
-            font-size: 8px;
+            font-size: 7.5px;
             color: #c41e3a;
-            border-bottom: 2px solid #c41e3a;
-            margin-top: 10px;
-            margin-bottom: 6px;
-            padding-bottom: 3px;
+            border-bottom: 1.5px solid #c41e3a;
+            margin-top: 6px;
+            margin-bottom: 4px;
+            padding-bottom: 2px;
             text-transform: uppercase;
             letter-spacing: 0.3px;
         }
@@ -214,7 +214,7 @@
         }
         
         .field-row {
-            margin-bottom: 4px;
+            margin-bottom: 2px;
             display: table;
             width: 100%;
         }
@@ -246,8 +246,8 @@
 
         /* SIGNATURE SECTION */
         .signature-section {
-            margin-top: 15px;
-            padding: 15px;
+            margin-top: 8px;
+            padding: 8px;
             border: 1px solid #dee2e6;
             border-radius: 6px;
             background: #f8f9fa;
@@ -255,14 +255,14 @@
         }
         
         .signature-note {
-            font-size: 7px;
+            font-size: 6.5px;
             color: #495057;
-            padding: 8px 12px;
+            padding: 4px 8px;
             background: #fff;
             border: 1px solid #e9ecef;
             border-radius: 4px;
-            margin-bottom: 15px;
-            line-height: 1.5;
+            margin-bottom: 8px;
+            line-height: 1.4;
         }
         
         .signature-note .ok-text {
@@ -283,41 +283,41 @@
         .signature-cell {
             width: 33.33%;
             text-align: center;
-            padding: 0 15px;
+            padding: 0 10px;
             vertical-align: top;
         }
         
         .signature-header-item {
-            font-size: 8px;
+            font-size: 7.5px;
             font-weight: 600;
             color: #495057;
-            padding-bottom: 25px;
+            padding-bottom: 15px;
         }
         
         .signature-space {
-            height: 60px;
-            margin: 0 10px;
+            height: 45px;
+            margin: 0 5px;
             display: flex;
             align-items: center;
             justify-content: center;
         }
 
         .signature-line-empty {
-            border-bottom: 2px solid #1a1a1a;
-            height: 40px;
+            border-bottom: 1.5px solid #1a1a1a;
+            height: 30px;
             width: 100%;
         }
         
         .qr-code-img {
-            max-height: 60px;
-            max-width: 60px;
+            max-height: 45px;
+            max-width: 45px;
         }
         
         .signature-name {
-            font-size: 8px;
+            font-size: 7.5px;
             font-weight: bold;
             color: #1a1a1a;
-            padding-top: 8px;
+            padding-top: 6px;
             text-transform: uppercase;
             letter-spacing: 0.3px;
         }
@@ -650,13 +650,13 @@
                                             @endif
                                             @if($jumlah_datang_val)
                                                 <div class="field-row">
-                                                    <span class="field-label">Datang:</span>
+                                                    <span class="field-label">Jumlah Datang:</span>
                                                     <span class="field-value">{{ $jumlah_datang_val }}</span>
                                                 </div>
                                             @endif
                                             @if($jumlah_sampling_val)
                                                 <div class="field-row">
-                                                    <span class="field-label">Samp:</span>
+                                                    <span class="field-label">Jumlah Sampling:</span>
                                                     <span class="field-value">{{ $jumlah_sampling_val }}</span>
                                                 </div>
                                             @endif
@@ -688,40 +688,40 @@
                                     @if($kondisi_produk_val || $suhu_produk_val !== null || $suhu_produk_type_val || $suhu_mobil_val !== null || $suhu_mobil_type_val || $kondisi_produk_suhu_val)
                                         <div class="section-title">Kondisi Suhu</div>
                                         <div style="margin-top: 6px; padding-top: 6px; border-top: 1px solid #ddd; font-size: 8px;">
-                                            @if($kondisi_produk_val)
-                                                <div class="field-row">
-                                                    <span class="field-label">Kond:</span>
-                                                    <span class="field-value">{{ $kondisi_produk_val }}</span>
-                                                </div>
-                                            @endif
                                             @if($suhu_produk_type_val)
                                                 <div class="field-row">
-                                                    <span class="field-label">T.Produk:</span>
+                                                    <span class="field-label" style="width: 95px;">Suhu Produk:</span>
                                                     <span class="field-value">{{ $suhu_produk_type_val }}</span>
                                                 </div>
                                             @endif
                                             @if($suhu_produk_val !== null && $suhu_produk_val !== '')
                                                 <div class="field-row">
-                                                    <span class="field-label">S.Prod:</span>
+                                                    <span class="field-label" style="width: 95px;">Nilai Suhu Produk:</span>
                                                     <span class="field-value">{{ $suhu_produk_val }}°C</span>
                                                 </div>
                                             @endif
                                             @if($suhu_mobil_type_val)
                                                 <div class="field-row">
-                                                    <span class="field-label">T.Mobil:</span>
+                                                    <span class="field-label" style="width: 95px;">Suhu Mobil:</span>
                                                     <span class="field-value">{{ $suhu_mobil_type_val }}</span>
                                                 </div>
                                             @endif
                                             @if($suhu_mobil_val !== null && $suhu_mobil_val !== '')
                                                 <div class="field-row">
-                                                    <span class="field-label">S.Mobil:</span>
+                                                    <span class="field-label" style="width: 95px;">Nilai Suhu Mobil:</span>
                                                     <span class="field-value">{{ $suhu_mobil_val }}°C</span>
                                                 </div>
                                             @endif
-                                            @if($kondisi_produk_suhu_val)
+                                            @if($kondisi_produk_val)
                                                 <div class="field-row">
-                                                    <span class="field-label">S.Kond:</span>
-                                                    <span class="field-value">{{ $kondisi_produk_suhu_val }}</span>
+                                                    <span class="field-label" style="width: 95px;">Kondisi Produk:</span>
+                                                    <span class="field-value">{{ $kondisi_produk_val }}</span>
+                                                </div>
+                                            @endif
+                                            @if($kondisi_produk_suhu_val !== null && $kondisi_produk_suhu_val !== '')
+                                                <div class="field-row">
+                                                    <span class="field-label" style="width: 95px;">Suhu Kondisi Produk:</span>
+                                                    <span class="field-value">{{ $kondisi_produk_suhu_val }}°C</span>
                                                 </div>
                                             @endif
                                         </div>
@@ -806,19 +806,19 @@
                                             @if($logo_halal_val !== null)
                                                 <div class="field-row">
                                                     <span class="field-label" style="width: 55px;">Logo Halal:</span>
-                                                    <span class="field-value">{{ $logo_halal_val ? 'Ya ✓' : 'Tidak ✗' }}</span>
+                                                    <span class="field-value">{{ $logo_halal_val ? 'Ya' : 'Tidak' }}</span>
                                                 </div>
                                             @endif
                                             @if($dokumen_halal_val !== null)
                                                 <div class="field-row">
                                                     <span class="field-label" style="width: 55px;">Dok. Halal:</span>
-                                                    <span class="field-value">{{ $dokumen_halal_val ? 'Ya ✓' : 'Tidak ✗' }}</span>
+                                                    <span class="field-value">{{ $dokumen_halal_val ? 'Ya' : 'Tidak' }}</span>
                                                 </div>
                                             @endif
                                             @if($coa_val !== null)
                                                 <div class="field-row">
                                                     <span class="field-label" style="width: 55px;">COA:</span>
-                                                    <span class="field-value">{{ $coa_val ? 'Ya ✓' : 'Tidak ✗' }}</span>
+                                                    <span class="field-value">{{ $coa_val ? 'Ya' : 'Tidak' }}</span>
                                                 </div>
                                             @endif
                                             @if($file_coa_val)
@@ -878,7 +878,7 @@
                 {{-- SIGNATURE (Setiap halaman) --}}
                 <div class="signature-section">
                     <div class="signature-note">
-                        <span class="ok-text">V OK</span> (Kondisi Mobil, Kemasan, Warna, Benda Asing, Aroma: Sesuai Standar, Logo Halal, Halal Berlaku, COA: Tersedia)<br>
+                        <span class="ok-text">V</span> : OK (Kondisi Mobil, Kemasan, Warna, Benda Asing, Aroma: Sesuai Standar, Logo Halal, Halal Berlaku, COA: Tersedia)<br>
                         <span class="not-ok-text">X</span> : Parameter Tidak Sesuai
                     </div>
                     
