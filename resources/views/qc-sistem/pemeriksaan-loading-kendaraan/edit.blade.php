@@ -226,9 +226,11 @@
 
                                             <!-- Kendaraan -->
                                             <div class="col-md-6">
-                                                <label for="id_kendaraan">Jenis & No Kendaraan</label>
+                                                <div class="form-group">
+                                                    <label for="id_kendaraan">Jenis & No Kendaraan</label>
                                                     <select id="id_kendaraan" class="choices form-select @error('id_kendaraan') is-invalid @enderror" name="id_kendaraan">
                                                         <option value="">-- Pilih Kendaraan --</option>
+                                                        <option value="other" {{ old('id_kendaraan') == 'other' ? 'selected' : '' }}>-- Lainnya (Input Manual) --</option>
                                                         @foreach($kendaraans as $kendaraan)
                                                             <option value="{{ $kendaraan->id }}" {{ old('id_kendaraan', $pemeriksaanLoadingKendaraan->id_kendaraan) == $kendaraan->id ? 'selected' : '' }}>
                                                                 {{ $kendaraan->jenis_kendaraan }} - {{ $kendaraan->no_kendaraan }}
@@ -238,6 +240,33 @@
                                                     @error('id_kendaraan')
                                                         <div class="invalid-feedback">{{ $message }}</div>
                                                     @enderror
+
+                                                    <!-- Input manual yang awalnya disembunyikan -->
+                                                    <div id="manual_kendaraan_input" class="mt-2" style="display: {{ old('id_kendaraan') == 'other' ? 'block' : 'none' }};">
+                                                        <div class="row">
+                                                            <div class="col-md-6">
+                                                                <div class="form-group">
+                                                                    <label for="jenis_kendaraan_manual">Jenis Kendaraan</label>
+                                                                    <input type="text" id="jenis_kendaraan_manual" class="form-control @error('jenis_kendaraan_manual') is-invalid @enderror" 
+                                                                        name="jenis_kendaraan_manual" value="{{ old('jenis_kendaraan_manual') }}" placeholder="Masukkan jenis kendaraan">
+                                                                    @error('jenis_kendaraan_manual')
+                                                                        <div class="invalid-feedback">{{ $message }}</div>
+                                                                    @enderror
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-md-6">
+                                                                <div class="form-group">
+                                                                    <label for="no_kendaraan_manual">No Kendaraan</label>
+                                                                    <input type="text" id="no_kendaraan_manual" class="form-control @error('no_kendaraan_manual') is-invalid @enderror" 
+                                                                        name="no_kendaraan_manual" value="{{ old('no_kendaraan_manual') }}" placeholder="Masukkan nomor kendaraan">
+                                                                    @error('no_kendaraan_manual')
+                                                                        <div class="invalid-feedback">{{ $message }}</div>
+                                                                    @enderror
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
                                             </div>
 
                                             <!-- Tujuan Pengiriman -->
@@ -366,6 +395,23 @@
                                                         }
                                                     });
                                                 });
+
+                                                // -------- Kendaraan & Manual Toggle --------
+                                                const kendaraanSelectEl = document.getElementById('id_kendaraan');
+                                                const manualKendaraanInput = document.getElementById('manual_kendaraan_input');
+
+                                                function toggleManualKendaraan(value) {
+                                                    if (!manualKendaraanInput) return;
+                                                    manualKendaraanInput.style.display = (value === 'other') ? 'block' : 'none';
+                                                }
+
+                                                if (kendaraanSelectEl) {
+                                                    toggleManualKendaraan(kendaraanSelectEl.value);
+
+                                                    kendaraanSelectEl.addEventListener('change', function() {
+                                                        toggleManualKendaraan(this.value);
+                                                    });
+                                                }
                                             </script>
 
                                             <!-- Keterangan -->

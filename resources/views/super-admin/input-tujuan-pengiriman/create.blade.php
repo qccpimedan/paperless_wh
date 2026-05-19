@@ -56,7 +56,7 @@
                                                 <label for="nama_tujuan">Nama Customer <span class="text-danger">*</span></label>
                                                 <div id="dynamic-fields">
                                                     <div class="input-group mb-2">
-                                                        <select name="id_customer[]" class="form-select @error('id_customer.0') is-invalid @enderror">
+                                                        <select name="id_customer[]" class="form-select @error('id_customer.0') is-invalid @enderror select2">
                                                             <option value="">-- Pilih Customer (Opsional) --</option>
                                                             @foreach($customers as $customer)
                                                                 <option value="{{ $customer->id }}" {{ old('id_customer.0') == $customer->id ? 'selected' : '' }}>
@@ -65,7 +65,7 @@
                                                             @endforeach
                                                         </select>
                                                         <input type="text" class="form-control @error('nama_tujuan.0') is-invalid @enderror"
-                                                            name="nama_tujuan[]" placeholder="Nama Tujuan" value="{{ old('nama_tujuan.0') }}" required>
+                                                            name="nama_tujuan[]" placeholder="Tujuan Pengiriman" value="{{ old('nama_tujuan.0') }}" required>
                                                         <button type="button" class="btn btn-success" id="add-field">
                                                             <i class="bi bi-plus"></i>
                                                         </button>
@@ -95,27 +95,68 @@
     </div>
 </div>
 
+<style>
+    /* Styling agar Select2 dapat berfungsi dengan baik di dalam Bootstrap Input Group */
+    .input-group > .select2-container {
+        flex: 1 1 auto;
+        width: 1% !important;
+        margin-right: -1px;
+    }
+    .input-group > .select2-container .select2-selection--single {
+        height: 38px !important;
+        border: 1px solid #ced4da !important;
+        border-radius: 0.25rem 0 0 0.25rem !important;
+        display: flex;
+        align-items: center;
+    }
+    .input-group > .select2-container .select2-selection__rendered {
+        padding-left: 12px !important;
+        color: #495057 !important;
+    }
+    .input-group > .select2-container .select2-selection__arrow {
+        height: 36px !important;
+    }
+</style>
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     let fieldIndex = 1;
+    
+    // Helper function to initialize Select2
+    function initSelect2(selector) {
+        if (window.jQuery && window.jQuery.fn && typeof window.jQuery.fn.select2 === 'function') {
+            window.jQuery(selector).select2({
+                width: 'resolve',
+                placeholder: '-- Pilih Customer (Opsional) --',
+                allowClear: true
+            });
+        }
+    }
+
+    // Initialize Select2 on the initial select element
+    initSelect2('.select2');
     
     document.getElementById('add-field').addEventListener('click', function() {
         const dynamicFields = document.getElementById('dynamic-fields');
         const newField = document.createElement('div');
         newField.className = 'input-group mb-2';
         newField.innerHTML = `
-            <select name="id_customer[]" class="form-select">
+            <select name="id_customer[]" class="form-select select2">
                 <option value="">-- Pilih Customer (Opsional) --</option>
                 @foreach($customers as $customer)
                     <option value="{{ $customer->id }}">{{ $customer->nama_cust }}</option>
                 @endforeach
             </select>
-            <input type="text" class="form-control" name="nama_tujuan[]" placeholder="Nama Tujuan" required>
+            <input type="text" class="form-control" name="nama_tujuan[]" placeholder="Tujuan Pengiriman" required>
             <button type="button" class="btn btn-danger remove-field">
                 <i class="bi bi-trash"></i>
             </button>
         `;
         dynamicFields.appendChild(newField);
+        
+        // Initialize Select2 on the newly created select element
+        initSelect2(newField.querySelector('.select2'));
+        
         fieldIndex++;
     });
     
@@ -123,9 +164,17 @@ document.addEventListener('DOMContentLoaded', function() {
         if (e.target.closest('.remove-field')) {
             const fieldCount = document.querySelectorAll('#dynamic-fields .input-group').length;
             if (fieldCount > 1) {
-                e.target.closest('.input-group').remove();
+                const group = e.target.closest('.input-group');
+                // Destroy Select2 before removing to prevent memory leaks
+                if (window.jQuery) {
+                    const select = group.querySelector('.select2');
+                    if (select && window.jQuery(select).data('select2')) {
+                        window.jQuery(select).select2('destroy');
+                    }
+                }
+                group.remove();
             } else {
-                alert('Minimal harus ada satu field nama tujuan!');
+                alert('Minimal harus ada satu field tujuan pengiriman!');
             }
         }
     });
