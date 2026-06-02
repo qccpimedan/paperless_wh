@@ -145,16 +145,22 @@
                             $firstIdx = $detailIdxList[0] ?? null;
                             $prodVal = $firstIdx !== null ? ($produsens[$firstIdx] ?? null) : null;
                             if (is_array($prodVal)) {
-                                $prodText = implode(', ', array_values(array_filter($prodVal, fn ($v) => $v !== null && $v !== '')));
+                                $prodList = array_values(array_filter($prodVal, fn ($v) => $v !== null && $v !== ''));
+                                $prodText = implode(', ', $prodList);
                             } else {
-                                $prodText = trim((string) $prodVal);
+                                $raw = trim((string) $prodVal);
+                                $prodList = $raw !== '' ? array_values(array_filter(array_map('trim', explode(',', $raw)))) : [];
+                                $prodText = $raw;
                             }
 
                             $distVal = $firstIdx !== null ? ($distributors[$firstIdx] ?? null) : null;
                             if (is_array($distVal)) {
-                                $distText = implode(', ', array_values(array_filter($distVal, fn ($v) => $v !== null && $v !== '')));
+                                $distList = array_values(array_filter($distVal, fn ($v) => $v !== null && $v !== ''));
+                                $distText = implode(', ', $distList);
                             } else {
-                                $distText = trim((string) $distVal);
+                                $raw = trim((string) $distVal);
+                                $distList = $raw !== '' ? array_values(array_filter(array_map('trim', explode(',', $raw)))) : [];
+                                $distText = $raw;
                             }
                         @endphp
 
@@ -168,11 +174,31 @@
                                         <table class="table table-borderless table-sm">
                                             <tr>
                                                 <td width="40%"><strong>Produsen:</strong></td>
-                                                <td>{{ $prodText !== '' ? $prodText : '-' }}</td>
+                                                <td>
+                                                    @if(count($prodList) > 1)
+                                                        <ol class="mb-0 ps-3">
+                                                            @foreach($prodList as $item)<li>{{ $item }}</li>@endforeach
+                                                        </ol>
+                                                    @elseif(count($prodList) === 1)
+                                                        {{ $prodList[0] }}
+                                                    @else
+                                                        -
+                                                    @endif
+                                                </td>
                                             </tr>
                                             <tr>
                                                 <td width="40%"><strong>Distributor:</strong></td>
-                                                <td>{{ $distText !== '' ? $distText : '-' }}</td>
+                                                <td>
+                                                    @if(count($distList) > 1)
+                                                        <ol class="mb-0 ps-3">
+                                                            @foreach($distList as $item)<li>{{ $item }}</li>@endforeach
+                                                        </ol>
+                                                    @elseif(count($distList) === 1)
+                                                        {{ $distList[0] }}
+                                                    @else
+                                                        -
+                                                    @endif
+                                                </td>
                                             </tr>
                                         </table>
                                     </div>

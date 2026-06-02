@@ -151,20 +151,20 @@
                             }
                         };
 
-                        $normalizeList = function ($val) {
-                            if ($val === null || $val === '') return null;
+                        $normalizeToArray = function ($val) {
+                            if ($val === null || $val === '') return [];
                             if (is_array($val)) {
-                                $arr = array_values(array_filter($val, fn ($v) => $v !== null && $v !== ''));
-                                return count($arr) ? implode(', ', $arr) : null;
+                                return array_values(array_filter($val, fn ($v) => $v !== null && $v !== ''));
                             }
                             if (is_string($val)) {
                                 $decoded = json_decode($val, true);
                                 if (is_array($decoded)) {
-                                    $arr = array_values(array_filter($decoded, fn ($v) => $v !== null && $v !== ''));
-                                    return count($arr) ? implode(', ', $arr) : null;
+                                    return array_values(array_filter($decoded, fn ($v) => $v !== null && $v !== ''));
                                 }
+                                $raw = trim($val);
+                                return $raw !== '' ? array_values(array_filter(array_map('trim', explode(',', $raw)))) : [];
                             }
-                            return (string) $val;
+                            return [];
                         };
 
                         // Group by Produk (Model A) but data is stored flat in *_array.
@@ -228,8 +228,8 @@
                                     $namaProduk = $pid && isset($produkNamaById[$pid]) ? $produkNamaById[$pid] : '-';
                                     $kategori = $group['kategori'] ?? null;
                                     $negara = $group['negara'] ?? null;
-                                    $produsen = $normalizeList($group['produsen'] ?? null);
-                                    $distributor = $normalizeList($group['distributor'] ?? null);
+                                    $produsen = $normalizeToArray($group['produsen'] ?? null);
+                                    $distributor = $normalizeToArray($group['distributor'] ?? null);
                                     $logoHalal = $group['logo_halal'] ?? null;
                                     $dokumenHalal = $group['dokumen_halal'] ?? null;
                                     $coa = $group['coa'] ?? null;
@@ -247,13 +247,31 @@
                                                         <span class="badge bg-info">{{ $kategori }}</span>
                                                     @endif
                                                     @if($negara)
-                                                        <span class="badge bg-secondary">{{ $negara }}</span>
+                                                        <span class="badge bg-secondary">Negara: {{ $negara }}</span>
                                                     @endif
-                                                    @if($produsen)
-                                                        <span class="badge bg-light text-dark border">Produsen: {{ $produsen }}</span>
+                                                    @if(count($produsen) > 0)
+                                                        <span class="badge bg-light text-dark border d-inline-block text-start p-2">
+                                                            <strong>Produsen:</strong>
+                                                            @if(count($produsen) > 1)
+                                                                <ol class="mb-0 ps-3 mt-1 text-start">
+                                                                    @foreach($produsen as $item)<li>{{ $item }}</li>@endforeach
+                                                                </ol>
+                                                            @else
+                                                                <span class="ms-1">{{ $produsen[0] }}</span>
+                                                            @endif
+                                                        </span>
                                                     @endif
-                                                    @if($distributor)
-                                                        <span class="badge bg-light text-dark border">Distributor: {{ $distributor }}</span>
+                                                    @if(count($distributor) > 0)
+                                                        <span class="badge bg-light text-dark border d-inline-block text-start p-2 mt-1">
+                                                            <strong>Distributor:</strong>
+                                                            @if(count($distributor) > 1)
+                                                                <ol class="mb-0 ps-3 mt-1 text-start">
+                                                                    @foreach($distributor as $item)<li>{{ $item }}</li>@endforeach
+                                                                </ol>
+                                                            @else
+                                                                <span class="ms-1">{{ $distributor[0] }}</span>
+                                                            @endif
+                                                        </span>
                                                     @endif
                                                 </div>
 

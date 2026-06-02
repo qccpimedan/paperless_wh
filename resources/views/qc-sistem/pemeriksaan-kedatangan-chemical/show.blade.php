@@ -130,14 +130,24 @@
                                 $mappedProdukId = $existingChemicalId ? ($produkByChemicalId[$existingChemicalId]['id_produk'] ?? null) : null;
 
                                 $prodVal = $mappedProdukId ? ($produkMeta[$mappedProdukId]['produsen_names'] ?? []) : [];
-                                $prodText = is_array($prodVal)
-                                    ? implode(', ', array_values(array_filter($prodVal, fn ($v) => $v !== null && $v !== '')))
-                                    : trim((string) $prodVal);
+                                if (is_array($prodVal)) {
+                                    $prodList = array_values(array_filter($prodVal, fn ($v) => $v !== null && $v !== ''));
+                                    $prodText = implode(', ', $prodList);
+                                } else {
+                                    $raw = trim((string) $prodVal);
+                                    $prodList = $raw !== '' ? array_values(array_filter(array_map('trim', explode(',', $raw)))) : [];
+                                    $prodText = $raw;
+                                }
 
                                 $distVal = $mappedProdukId ? ($produkMeta[$mappedProdukId]['distributor_names'] ?? []) : [];
-                                $distText = is_array($distVal)
-                                    ? implode(', ', array_values(array_filter($distVal, fn ($v) => $v !== null && $v !== '')))
-                                    : trim((string) $distVal);
+                                if (is_array($distVal)) {
+                                    $distList = array_values(array_filter($distVal, fn ($v) => $v !== null && $v !== ''));
+                                    $distText = implode(', ', $distList);
+                                } else {
+                                    $raw = trim((string) $distVal);
+                                    $distList = $raw !== '' ? array_values(array_filter(array_map('trim', explode(',', $raw)))) : [];
+                                    $distText = $raw;
+                                }
 
                                 $produkTitle = $mappedProdukId ? ($produkNamaById[(string) $mappedProdukId] ?? '-') : 'Produk (Tidak diketahui)';
                             @endphp
@@ -150,8 +160,34 @@
                                     <div class="row">
                                         <div class="col-md-6">
                                             <table class="table table-borderless table-sm">
-                                                <tr><td width="40%"><strong>Produsen:</strong></td><td>{{ $prodText !== '' ? $prodText : '-' }}</td></tr>
-                                                <tr><td><strong>Distributor:</strong></td><td>{{ $distText !== '' ? $distText : '-' }}</td></tr>
+                                                <tr>
+                                                    <td width="40%"><strong>Produsen:</strong></td>
+                                                    <td>
+                                                        @if(count($prodList) > 1)
+                                                            <ol class="mb-0 ps-3">
+                                                                @foreach($prodList as $item)<li>{{ $item }}</li>@endforeach
+                                                            </ol>
+                                                        @elseif(count($prodList) === 1)
+                                                            {{ $prodList[0] }}
+                                                        @else
+                                                            -
+                                                        @endif
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td><strong>Distributor:</strong></td>
+                                                    <td>
+                                                        @if(count($distList) > 1)
+                                                            <ol class="mb-0 ps-3">
+                                                                @foreach($distList as $item)<li>{{ $item }}</li>@endforeach
+                                                            </ol>
+                                                        @elseif(count($distList) === 1)
+                                                            {{ $distList[0] }}
+                                                        @else
+                                                            -
+                                                        @endif
+                                                    </td>
+                                                </tr>
                                             </table>
                                         </div>
                                     </div>
