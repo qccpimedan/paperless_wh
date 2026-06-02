@@ -608,6 +608,14 @@
                                         $jumlah_datang_val = $jumlah_datangs[$rowIndex] ?? null;
                                         $jumlah_sampling_val = $jumlah_samplings[$rowIndex] ?? null;
                                         $spesifikasi_val = $spesifikasis[$rowIndex] ?? null;
+                                        // Normalisasi: jika nilai masih array (data lama), ubah ke string
+                                        if (is_array($produsen_val)) { $produsen_val = implode(', ', array_filter($produsen_val)); }
+                                        if (is_array($distributor_val)) { $distributor_val = implode(', ', array_filter($distributor_val)); }
+                                        if (is_array($negara_produsen_val)) { $negara_produsen_val = implode(', ', array_filter($negara_produsen_val)); }
+                                        if (is_array($kode_produksi_val)) { $kode_produksi_val = implode(', ', array_filter($kode_produksi_val)); }
+                                        if (is_array($jumlah_datang_val)) { $jumlah_datang_val = implode(', ', array_filter($jumlah_datang_val)); }
+                                        if (is_array($jumlah_sampling_val)) { $jumlah_sampling_val = implode(', ', array_filter($jumlah_sampling_val)); }
+                                        if (is_array($spesifikasi_val)) { $spesifikasi_val = implode('; ', array_filter($spesifikasi_val)); }
                                     @endphp
                                     @if($id_bahan || $produsen_val || $negara_produsen_val || $distributor_val || $kode_produksi_val || $expire_date_val || $jumlah_datang_val || $jumlah_sampling_val || $spesifikasi_val)
                                         <div class="section-title">Bahan Baku Penunjang</div>

@@ -525,6 +525,7 @@
                                                             <option value="Frozen">Frozen</option>
                                                             <option value="Dry">Dry</option>
                                                             <option value="Minyak">Minyak</option>
+                                                            <option value="Liquid">Liquid</option>
                                                         </select>
                                                     </div>
                                                 </div>
@@ -1079,7 +1080,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const inputWrap = rowEl.querySelector('.kondisi-produk-suhu');
             const inputVal = rowEl.querySelector('input[name="kondisi_produk_suhu[]"]');
             if (inputWrap) {
-                if (kondisiProduk.value === 'Fresh' || kondisiProduk.value === 'Frozen' || kondisiProduk.value === 'Dry' || kondisiProduk.value === 'Minyak') {
+                if (kondisiProduk.value === 'Fresh' || kondisiProduk.value === 'Frozen' || kondisiProduk.value === 'Dry' || kondisiProduk.value === 'Minyak' || kondisiProduk.value === 'Liquid') {
                     inputWrap.style.display = 'block';
                 } else {
                     inputWrap.style.display = 'none';
@@ -1844,6 +1845,7 @@ function addNewRow() {
                         <option value="Frozen">Frozen</option>
                         <option value="Dry">Dry</option>
                         <option value="Minyak">Minyak</option>
+                        <option value="Liquid">Liquid</option>
                     </select>
                 </div>
             </div>
@@ -2141,7 +2143,7 @@ function setupKondisiProdukLogic(row, uniqueId) {
     if (kondisiProdukSelect && kondisiProdukSuhu) {
         kondisiProdukSelect.addEventListener('change', function() {
             const value = this.value;
-            if (value === 'Fresh' || value === 'Frozen' || value === 'Dry' || value === 'Minyak') {
+            if (value === 'Fresh' || value === 'Frozen' || value === 'Dry' || value === 'Minyak' || value === 'Liquid') {
                 kondisiProdukSuhu.style.display = 'block';
             } else {
                 kondisiProdukSuhu.style.display = 'none';
