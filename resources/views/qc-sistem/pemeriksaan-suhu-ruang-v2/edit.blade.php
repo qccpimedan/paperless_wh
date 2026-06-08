@@ -102,7 +102,7 @@
 
                                             <div class="col-md-6 mt-3">
                                                 <label for="suhu_produk">Suhu Produk <span class="text-danger">*</span></label>
-                                                <input type="text" id="suhu_produk" class="form-control @error('suhu_produk') is-invalid @enderror"
+                                                <input type="text" inputmode="text" id="suhu_produk" class="form-control @error('suhu_produk') is-invalid @enderror"
                                                     name="suhu_produk" value="{{ old('suhu_produk', $pemeriksaanSuhuRuangV2->suhu_produk) }}" placeholder="Contoh: -18°C" required>
                                                 @error('suhu_produk')
                                                     <div class="invalid-feedback">{{ $message }}</div>
@@ -162,7 +162,7 @@
                                                                 <option value="-18" {{ old('cold_storage_' . $i . '_setting', $data['setting'] ?? '') == '-18' ? 'selected' : '' }}>Std ≤ (-18)°C</option>
                                                                 <option value="manual" {{ old('cold_storage_' . $i . '_setting', $data['setting'] ?? '') && old('cold_storage_' . $i . '_setting', $data['setting'] ?? '') != '-18' ? 'selected' : '' }}>Input Manual</option>
                                                             </select>
-                                                            <input type="number" step="0.1" id="cold_storage_{{ $i }}_setting_manual" 
+                                                            <input type="text" inputmode="text" id="cold_storage_{{ $i }}_setting_manual" 
                                                                 class="form-control form-control-sm mt-2" style="display: none;"
                                                                 placeholder="Masukkan nilai"
                                                                 value="{{ old('cold_storage_' . $i . '_setting', $data['setting'] ?? '') && old('cold_storage_' . $i . '_setting', $data['setting'] ?? '') != '-18' ? old('cold_storage_' . $i . '_setting', $data['setting'] ?? '') : '' }}">
@@ -175,7 +175,7 @@
                                                                 <option value="-18" {{ old('cold_storage_' . $i . '_display', $data['display'] ?? '') == '-18' ? 'selected' : '' }}>Std ≤ (-18)°C</option>
                                                                 <option value="manual" {{ old('cold_storage_' . $i . '_display', $data['display'] ?? '') && old('cold_storage_' . $i . '_display', $data['display'] ?? '') != '-18' ? 'selected' : '' }}>Input Manual</option>
                                                             </select>
-                                                            <input type="number" step="0.1" id="cold_storage_{{ $i }}_display_manual" 
+                                                            <input type="text" inputmode="text" id="cold_storage_{{ $i }}_display_manual" 
                                                                 class="form-control form-control-sm mt-2" style="display: none;"
                                                                 placeholder="Masukkan nilai"
                                                                 value="{{ old('cold_storage_' . $i . '_display', $data['display'] ?? '') && old('cold_storage_' . $i . '_display', $data['display'] ?? '') != '-18' ? old('cold_storage_' . $i . '_display', $data['display'] ?? '') : '' }}">
@@ -188,7 +188,7 @@
                                                                 <option value="-18" {{ old('cold_storage_' . $i . '_actual', $data['actual'] ?? '') == '-18' ? 'selected' : '' }}>Std ≤ (-18)°C</option>
                                                                 <option value="manual" {{ old('cold_storage_' . $i . '_actual', $data['actual'] ?? '') && old('cold_storage_' . $i . '_actual', $data['actual'] ?? '') != '-18' ? 'selected' : '' }}>Input Manual</option>
                                                             </select>
-                                                            <input type="number" step="0.1" id="cold_storage_{{ $i }}_actual_manual" 
+                                                            <input type="text" inputmode="text" id="cold_storage_{{ $i }}_actual_manual" 
                                                                 class="form-control form-control-sm mt-2" style="display: none;"
                                                                 placeholder="Masukkan nilai"
                                                                 value="{{ old('cold_storage_' . $i . '_actual', $data['actual'] ?? '') && old('cold_storage_' . $i . '_actual', $data['actual'] ?? '') != '-18' ? old('cold_storage_' . $i . '_actual', $data['actual'] ?? '') : '' }}">
@@ -240,7 +240,7 @@
                                                                 <option value="(0±5°C)" {{ old('anteroom_loading_' . $i . '_setting', $data['setting'] ?? '') == '(0±5°C)' ? 'selected' : '' }}>Std 0 ± 5°C</option>
                                                                 <option value="manual" {{ old('anteroom_loading_' . $i . '_setting', $data['setting'] ?? '') && old('anteroom_loading_' . $i . '_setting', $data['setting'] ?? '') != '(0±5°C)' && old('anteroom_loading_' . $i . '_setting', $data['setting'] ?? '') ? 'selected' : '' }}>Input Manual</option>
                                                             </select>
-                                                            <input type="number" step="0.1" id="anteroom_loading_{{ $i }}_setting_manual" 
+                                                            <input type="text" inputmode="text" id="anteroom_loading_{{ $i }}_setting_manual" 
                                                                 class="form-control form-control-sm mt-2" style="display: none;"
                                                                 placeholder="Masukkan nilai"
                                                                 value="{{ old('anteroom_loading_' . $i . '_setting', $data['setting'] ?? '') && old('anteroom_loading_' . $i . '_setting', $data['setting'] ?? '') != '0' ? old('anteroom_loading_' . $i . '_setting', $data['setting'] ?? '') : '' }}">
@@ -253,7 +253,7 @@
                                                                 <option value="(0±5°C)" {{ old('anteroom_loading_' . $i . '_display', $data['display'] ?? '') == '(0±5°C)' ? 'selected' : '' }}>Std 0 ± 5°C</option>
                                                                 <option value="manual" {{ old('anteroom_loading_' . $i . '_display', $data['display'] ?? '') && old('anteroom_loading_' . $i . '_display', $data['display'] ?? '') != '(0±5°C)' && old('anteroom_loading_' . $i . '_display', $data['display'] ?? '') ? 'selected' : '' }}>Input Manual</option>
                                                             </select>
-                                                            <input type="number" step="0.1" id="anteroom_loading_{{ $i }}_display_manual" 
+                                                            <input type="text" inputmode="text" id="anteroom_loading_{{ $i }}_display_manual" 
                                                                 class="form-control form-control-sm mt-2" style="display: none;"
                                                                 placeholder="Masukkan nilai"
                                                                 value="{{ old('anteroom_loading_' . $i . '_display', $data['display'] ?? '') && old('anteroom_loading_' . $i . '_display', $data['display'] ?? '') != '0' ? old('anteroom_loading_' . $i . '_display', $data['display'] ?? '') : '' }}">
@@ -266,7 +266,7 @@
                                                                 <option value="(0±5°C)" {{ old('anteroom_loading_' . $i . '_actual', $data['actual'] ?? '') == '(0±5°C)' ? 'selected' : '' }}>Std 0 ± 5°C</option>
                                                                 <option value="manual" {{ old('anteroom_loading_' . $i . '_actual', $data['actual'] ?? '') && old('anteroom_loading_' . $i . '_actual', $data['actual'] ?? '') != '(0±5°C)' && old('anteroom_loading_' . $i . '_actual', $data['actual'] ?? '') ? 'selected' : '' }}>Input Manual</option>
                                                             </select>
-                                                            <input type="number" step="0.1" id="anteroom_loading_{{ $i }}_actual_manual" 
+                                                            <input type="text" inputmode="text" id="anteroom_loading_{{ $i }}_actual_manual" 
                                                                 class="form-control form-control-sm mt-2" style="display: none;"
                                                                 placeholder="Masukkan nilai"
                                                                 value="{{ old('anteroom_loading_' . $i . '_actual', $data['actual'] ?? '') && old('anteroom_loading_' . $i . '_actual', $data['actual'] ?? '') != '0' ? old('anteroom_loading_' . $i . '_actual', $data['actual'] ?? '') : '' }}">
@@ -283,7 +283,7 @@
                                                 <div class="row">
                                                     <div class="col-md-4">
                                                         <label for="pre_loading_setting">Setting (°C)</label>
-                                                        <input type="number" step="0.1" id="pre_loading_setting" 
+                                                        <input type="text" inputmode="text" id="pre_loading_setting" 
                                                             class="form-control form-control-sm"
                                                             name="pre_loading_setting"
                                                             placeholder="Setting"
@@ -291,7 +291,7 @@
                                                     </div>
                                                     <div class="col-md-4">
                                                         <label for="pre_loading_display">Display (°C)</label>
-                                                        <input type="number" step="0.1" id="pre_loading_display" 
+                                                        <input type="text" inputmode="text" id="pre_loading_display" 
                                                             class="form-control form-control-sm"
                                                             name="pre_loading_display"
                                                             placeholder="Display"
@@ -299,7 +299,7 @@
                                                     </div>
                                                     <div class="col-md-4">
                                                         <label for="pre_loading_actual">Actual (°C)</label>
-                                                        <input type="number" step="0.1" id="pre_loading_actual" 
+                                                        <input type="text" inputmode="text" id="pre_loading_actual" 
                                                             class="form-control form-control-sm"
                                                             name="pre_loading_actual"
                                                             placeholder="Actual"
@@ -316,7 +316,7 @@
                                                 <div class="row">
                                                     <div class="col-md-4">
                                                         <label for="prestaging_setting">Setting (°C)</label>
-                                                        <input type="number" step="0.1" id="prestaging_setting" 
+                                                        <input type="text" inputmode="text" id="prestaging_setting" 
                                                             class="form-control form-control-sm"
                                                             name="prestaging_setting"
                                                             placeholder="Setting"
@@ -324,7 +324,7 @@
                                                     </div>
                                                     <div class="col-md-4">
                                                         <label for="prestaging_display">Display (°C)</label>
-                                                        <input type="number" step="0.1" id="prestaging_display" 
+                                                        <input type="text" inputmode="text" id="prestaging_display" 
                                                             class="form-control form-control-sm"
                                                             name="prestaging_display"
                                                             placeholder="Display"
@@ -332,7 +332,7 @@
                                                     </div>
                                                     <div class="col-md-4">
                                                         <label for="prestaging_actual">Actual (°C)</label>
-                                                        <input type="number" step="0.1" id="prestaging_actual" 
+                                                        <input type="text" inputmode="text" id="prestaging_actual" 
                                                             class="form-control form-control-sm"
                                                             name="prestaging_actual"
                                                             placeholder="Actual"
@@ -349,7 +349,7 @@
                                                 <div class="row">
                                                     <div class="col-md-4">
                                                         <label for="anteroom_ekspansi_abf_setting">Setting (°C)</label>
-                                                        <input type="number" step="0.1" id="anteroom_ekspansi_abf_setting" 
+                                                        <input type="text" inputmode="text" id="anteroom_ekspansi_abf_setting" 
                                                             class="form-control form-control-sm"
                                                             name="anteroom_ekspansi_abf_setting"
                                                             placeholder="Setting"
@@ -357,7 +357,7 @@
                                                     </div>
                                                     <div class="col-md-4">
                                                         <label for="anteroom_ekspansi_abf_display">Display (°C)</label>
-                                                        <input type="number" step="0.1" id="anteroom_ekspansi_abf_display" 
+                                                        <input type="text" inputmode="text" id="anteroom_ekspansi_abf_display" 
                                                             class="form-control form-control-sm"
                                                             name="anteroom_ekspansi_abf_display"
                                                             placeholder="Display"
@@ -365,7 +365,7 @@
                                                     </div>
                                                     <div class="col-md-4">
                                                         <label for="anteroom_ekspansi_abf_actual">Actual (°C)</label>
-                                                        <input type="number" step="0.1" id="anteroom_ekspansi_abf_actual" 
+                                                        <input type="text" inputmode="text" id="anteroom_ekspansi_abf_actual" 
                                                             class="form-control form-control-sm"
                                                             name="anteroom_ekspansi_abf_actual"
                                                             placeholder="Actual"
@@ -387,7 +387,7 @@
                                                             <option value="(0-4°C)" {{ old('chillroom_rm_setting', $pemeriksaanSuhuRuangV2->suhu_chillroom_rm['setting'] ?? '') == '(0-4°C)' ? 'selected' : '' }}>Std 0 - 4°C</option>
                                                             <option value="manual" {{ old('chillroom_rm_setting', $pemeriksaanSuhuRuangV2->suhu_chillroom_rm['setting'] ?? '') && old('chillroom_rm_setting', $pemeriksaanSuhuRuangV2->suhu_chillroom_rm['setting'] ?? '') != '(0-4°C)' ? 'selected' : '' }}>Input Manual</option>
                                                         </select>
-                                                        <input type="number" step="0.1" id="chillroom_rm_setting_manual" 
+                                                        <input type="text" inputmode="text" id="chillroom_rm_setting_manual" 
                                                             class="form-control form-control-sm mt-2" style="display: none;"
                                                             placeholder="Masukkan nilai"
                                                             value="{{ old('chillroom_rm_setting', $pemeriksaanSuhuRuangV2->suhu_chillroom_rm['setting'] ?? '') && old('chillroom_rm_setting', $pemeriksaanSuhuRuangV2->suhu_chillroom_rm['setting'] ?? '') != '(0-4°C)' ? old('chillroom_rm_setting', $pemeriksaanSuhuRuangV2->suhu_chillroom_rm['setting'] ?? '') : '' }}">
@@ -400,7 +400,7 @@
                                                             <option value="(0-4°C)" {{ old('chillroom_rm_display', $pemeriksaanSuhuRuangV2->suhu_chillroom_rm['display'] ?? '') == '(0-4°C)' ? 'selected' : '' }}>Std 0 - 4°C</option>
                                                             <option value="manual" {{ old('chillroom_rm_display', $pemeriksaanSuhuRuangV2->suhu_chillroom_rm['display'] ?? '') && old('chillroom_rm_display', $pemeriksaanSuhuRuangV2->suhu_chillroom_rm['display'] ?? '') != '(0-4°C)' ? 'selected' : '' }}>Input Manual</option>
                                                         </select>
-                                                        <input type="number" step="0.1" id="chillroom_rm_display_manual" 
+                                                        <input type="text" inputmode="text" id="chillroom_rm_display_manual" 
                                                             class="form-control form-control-sm mt-2" style="display: none;"
                                                             placeholder="Masukkan nilai"
                                                             value="{{ old('chillroom_rm_display', $pemeriksaanSuhuRuangV2->suhu_chillroom_rm['display'] ?? '') && old('chillroom_rm_display', $pemeriksaanSuhuRuangV2->suhu_chillroom_rm['display'] ?? '') != '(0-4°C)' ? old('chillroom_rm_display', $pemeriksaanSuhuRuangV2->suhu_chillroom_rm['display'] ?? '') : '' }}">
@@ -413,7 +413,7 @@
                                                             <option value="(0-4°C)" {{ old('chillroom_rm_actual', $pemeriksaanSuhuRuangV2->suhu_chillroom_rm['actual'] ?? '') == '(0-4°C)' ? 'selected' : '' }}>Std 0 - 4°C</option>
                                                             <option value="manual" {{ old('chillroom_rm_actual', $pemeriksaanSuhuRuangV2->suhu_chillroom_rm['actual'] ?? '') && old('chillroom_rm_actual', $pemeriksaanSuhuRuangV2->suhu_chillroom_rm['actual'] ?? '') != '(0-4°C)' ? 'selected' : '' }}>Input Manual</option>
                                                         </select>
-                                                        <input type="number" step="0.1" id="chillroom_rm_actual_manual" 
+                                                        <input type="text" inputmode="text" id="chillroom_rm_actual_manual" 
                                                             class="form-control form-control-sm mt-2" style="display: none;"
                                                             placeholder="Masukkan nilai"
                                                             value="{{ old('chillroom_rm_actual', $pemeriksaanSuhuRuangV2->suhu_chillroom_rm['actual'] ?? '') && old('chillroom_rm_actual', $pemeriksaanSuhuRuangV2->suhu_chillroom_rm['actual'] ?? '') != '(0-4°C)' ? old('chillroom_rm_actual', $pemeriksaanSuhuRuangV2->suhu_chillroom_rm['actual'] ?? '') : '' }}">
@@ -435,7 +435,7 @@
                                                             <option value="(0-4°C)" {{ old('chillroom_domestik_setting', $pemeriksaanSuhuRuangV2->suhu_chillroom_domestik['setting'] ?? '') == '(0-4°C)' ? 'selected' : '' }}>Std 0 - 4°C</option>
                                                             <option value="manual" {{ old('chillroom_domestik_setting', $pemeriksaanSuhuRuangV2->suhu_chillroom_domestik['setting'] ?? '') && old('chillroom_domestik_setting', $pemeriksaanSuhuRuangV2->suhu_chillroom_domestik['setting'] ?? '') != '(0-4°C)' ? 'selected' : '' }}>Input Manual</option>
                                                         </select>
-                                                        <input type="number" step="0.1" id="chillroom_domestik_setting_manual" 
+                                                        <input type="text" inputmode="text" id="chillroom_domestik_setting_manual" 
                                                             class="form-control form-control-sm mt-2" style="display: none;"
                                                             placeholder="Masukkan nilai"
                                                             value="{{ old('chillroom_domestik_setting', $pemeriksaanSuhuRuangV2->suhu_chillroom_domestik['setting'] ?? '') && old('chillroom_domestik_setting', $pemeriksaanSuhuRuangV2->suhu_chillroom_domestik['setting'] ?? '') != '(0-4°C)' ? old('chillroom_domestik_setting', $pemeriksaanSuhuRuangV2->suhu_chillroom_domestik['setting'] ?? '') : '' }}">
@@ -448,7 +448,7 @@
                                                             <option value="(0-4°C)" {{ old('chillroom_domestik_display', $pemeriksaanSuhuRuangV2->suhu_chillroom_domestik['display'] ?? '') == '(0-4°C)' ? 'selected' : '' }}>Std 0 - 4°C</option>
                                                             <option value="manual" {{ old('chillroom_domestik_display', $pemeriksaanSuhuRuangV2->suhu_chillroom_domestik['display'] ?? '') && old('chillroom_domestik_display', $pemeriksaanSuhuRuangV2->suhu_chillroom_domestik['display'] ?? '') != '(0-4°C)' ? 'selected' : '' }}>Input Manual</option>
                                                         </select>
-                                                        <input type="number" step="0.1" id="chillroom_domestik_display_manual" 
+                                                        <input type="text" inputmode="text" id="chillroom_domestik_display_manual" 
                                                             class="form-control form-control-sm mt-2" style="display: none;"
                                                             placeholder="Masukkan nilai"
                                                             value="{{ old('chillroom_domestik_display', $pemeriksaanSuhuRuangV2->suhu_chillroom_domestik['display'] ?? '') && old('chillroom_domestik_display', $pemeriksaanSuhuRuangV2->suhu_chillroom_domestik['display'] ?? '') != '(0-4°C)' ? old('chillroom_domestik_display', $pemeriksaanSuhuRuangV2->suhu_chillroom_domestik['display'] ?? '') : '' }}">
@@ -461,7 +461,7 @@
                                                             <option value="(0-4°C)" {{ old('chillroom_domestik_actual', $pemeriksaanSuhuRuangV2->suhu_chillroom_domestik['actual'] ?? '') == '(0-4°C)' ? 'selected' : '' }}>Std 0 - 4°C</option>
                                                             <option value="manual" {{ old('chillroom_domestik_actual', $pemeriksaanSuhuRuangV2->suhu_chillroom_domestik['actual'] ?? '') && old('chillroom_domestik_actual', $pemeriksaanSuhuRuangV2->suhu_chillroom_domestik['actual'] ?? '') != '(0-4°C)' ? 'selected' : '' }}>Input Manual</option>
                                                         </select>
-                                                        <input type="number" step="0.1" id="chillroom_domestik_actual_manual" 
+                                                        <input type="text" inputmode="text" id="chillroom_domestik_actual_manual" 
                                                             class="form-control form-control-sm mt-2" style="display: none;"
                                                             placeholder="Masukkan nilai"
                                                             value="{{ old('chillroom_domestik_actual', $pemeriksaanSuhuRuangV2->suhu_chillroom_domestik['actual'] ?? '') && old('chillroom_domestik_actual', $pemeriksaanSuhuRuangV2->suhu_chillroom_domestik['actual'] ?? '') != '(0-4°C)' ? old('chillroom_domestik_actual', $pemeriksaanSuhuRuangV2->suhu_chillroom_domestik['actual'] ?? '') : '' }}">

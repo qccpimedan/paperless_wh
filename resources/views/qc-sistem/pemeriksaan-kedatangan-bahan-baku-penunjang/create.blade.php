@@ -375,8 +375,8 @@
                                 <div class="form-section mb-4">
                                     <h5 class="text-primary mb-3">Detail Produk (Baris Dinamis)</h5>
                                     <div id="unified-container">
-                                        <div class="unified-row mb-4 p-3 border rounded" style="background-color: #f8f9fa;" data-row-index="0">
-                                            <h6 class="text-primary mb-3">Produk 1</h6>
+                                        <div class="unified-row mb-4 p-3 border rounded" style="background-color: #f8f9fa; border-left: 4px solid #435ebe;" data-row-index="0">
+                                            <h5 class="text-primary mb-3">Produk 1</h5>
                                             
                                             <!-- Informasi Produk -->
                                             <div class="row">
@@ -1675,8 +1675,9 @@ function addNewRow() {
     
     // Create new row element
     const newRow = document.createElement('div');
-    newRow.className = 'unified-row mb-4 p-3 border rounded';
+    newRow.className = 'unified-row mb-4 p-3 border rounded shadow-sm';
     newRow.style.backgroundColor = '#f8f9fa';
+    newRow.style.borderLeft = '4px solid #435ebe';
     newRow.dataset.rowIndex = String(rowCount - 1);
     
     // Generate unique ID for radio buttons in this row
@@ -1684,7 +1685,7 @@ function addNewRow() {
     
     // Set the HTML content - TEMPLATE LENGKAP DENGAN SUHU & KONDISI
     newRow.innerHTML = `
-        <h6 class="text-primary mb-3">Produk ${rowCount}</h6>
+        <h5 class="text-primary mb-3">Produk ${rowCount}</h5>
         
         <!-- Informasi Produk -->
         <div class="row">
@@ -2306,6 +2307,103 @@ function updateRemoveButtons() {
         }
     });
 }
+
+/* --- IMAGE COMPRESSION LOGIC --- */
+const MAX_SIZE = 1024 * 1024; // 1MB
+
+function fileToDataURL(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
+}
+
+function loadImage(src) {
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.onerror = reject;
+        img.src = src;
+    });
+}
+
+async function compressImage(file) {
+    const dataUrl = await fileToDataURL(file);
+    const img = await loadImage(dataUrl);
+
+    const maxDimension = 1920;
+    let { width, height } = img;
+    if (width > height && width > maxDimension) {
+        height = Math.round((height * maxDimension) / width);
+        width = maxDimension;
+    } else if (height >= width && height > maxDimension) {
+        width = Math.round((width * maxDimension) / height);
+        height = maxDimension;
+    }
+
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(img, 0, 0, width, height);
+
+    let quality = 0.85;
+    let blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', quality));
+    while (blob && blob.size > MAX_SIZE && quality > 0.4) {
+        quality -= 0.1;
+        blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', quality));
+    }
+
+    const newName = (file.name || 'image').replace(/\.[^/.]+$/, '') + '.jpg';
+    return new File([blob], newName, { type: 'image/jpeg', lastModified: Date.now() });
+}
+
+async function handleImageInputChange(input) {
+    const file = input.files && input.files[0] ? input.files[0] : null;
+    if (!file) return;
+
+    if (file.size <= MAX_SIZE) return;
+
+    // Show processing feedback
+    const formGroup = input.closest('.form-group');
+    const labelEl = formGroup ? formGroup.querySelector('.form-label') : null;
+    const originalLabel = labelEl ? labelEl.innerHTML : 'Foto';
+    
+    if (labelEl) {
+        labelEl.innerHTML = originalLabel + ' <span class="badge bg-primary"><i class="bi bi-hourglass-split"></i> Mengompres...</span>';
+    }
+    input.disabled = true;
+
+    try {
+        const compressedFile = await compressImage(file);
+        const dt = new DataTransfer();
+        dt.items.add(compressedFile);
+        input.files = dt.files;
+        
+        if (labelEl) {
+            labelEl.innerHTML = originalLabel + ' <span class="badge bg-success"><i class="bi bi-check-circle"></i> Selesai (Auto-Compressed)</span>';
+        }
+    } catch (e) {
+        console.error('Compression error:', e);
+        if (labelEl) {
+            labelEl.innerHTML = originalLabel + ' <span class="badge bg-danger"><i class="bi bi-exclamation-triangle"></i> Kompresi Gagal</span>';
+        }
+    } finally {
+        input.disabled = false;
+        setTimeout(() => {
+            if (labelEl) labelEl.innerHTML = originalLabel;
+        }, 3000);
+    }
+}
+
+document.addEventListener('change', function(e) {
+    const input = e.target;
+    if (input && input.classList && input.classList.contains('image-bahan-baku-input')) {
+        handleImageInputChange(input);
+    }
+});
 
 // Initialize on page load
 updateRemoveButtons();

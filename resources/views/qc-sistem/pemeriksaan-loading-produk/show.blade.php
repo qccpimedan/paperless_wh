@@ -250,9 +250,9 @@
                         @endphp
                         <div class="row mb-4">
                             <div class="col-md-12">
-                                <h6 class="text-secondary mb-3">Detail Produk</h6>
+                                <h5 class="text-primary mb-3">Detail Produk</h5>
                                 @foreach($pemeriksaanLoading->produk_data as $index => $produk)
-                                    <div class="card mb-3 border-light">
+                                    <div class="card mb-3" style="border-left: 4px solid #435ebe;">
                                         <div class="card-body">
                                             <h6 class="card-title mb-3">Detail #{{ $index + 1 }}</h6>
                                             <div class="row">
