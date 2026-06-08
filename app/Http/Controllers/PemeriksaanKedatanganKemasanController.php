@@ -1209,31 +1209,14 @@ return view('qc-sistem.pemeriksaan-kedatangan-kemasan.index', compact('pemeriksa
             $query->whereIn('uuid', $selectedUuids);
         } else {
             // JIKA MENGGUNAKAN KONTROL RANGE TANGGAL (FALLBACK)
-            $id_shift = $request->input('id_shift');
             $tanggal_dari = $request->input('tanggal_dari');
             $tanggal_sampai = $request->input('tanggal_sampai');
-            $tanggal = $request->input('tanggal');
 
-            if (!$id_shift) {
-                return back()->with('error', 'Silakan pilih shift atau gunakan checkbox untuk memilih data.');
+            if (!$tanggal_dari || !$tanggal_sampai) {
+                return back()->with('error', 'Silakan tentukan rentang tanggal atau gunakan checkbox untuk memilih data.');
             }
 
-            // Filter Shift & Tanggal
-            $query->where('id_shift', $id_shift);
-            $shift = Shift::find($id_shift);
-            if ($shift && $shift->is_date_range) {
-                if ($tanggal_dari && $tanggal_sampai) {
-                    $query->whereBetween('tanggal', [$tanggal_dari, $tanggal_sampai]);
-                } else {
-                    return back()->with('error', 'Silakan tentukan range tanggal (Dari & Sampai).');
-                }
-            } else {
-                if ($tanggal) {
-                    $query->whereDate('tanggal', $tanggal);
-                } else {
-                    return back()->with('error', 'Silakan tentukan tanggal pemeriksaan atau gunakan checkbox.');
-                }
-            }
+            $query->whereBetween('tanggal', [$tanggal_dari, $tanggal_sampai]);
         }
         
         // Filter berdasarkan plant user

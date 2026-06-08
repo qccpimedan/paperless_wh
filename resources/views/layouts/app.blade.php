@@ -252,6 +252,34 @@
             padding: 0.5rem 0;
             overflow: hidden;
         }
+        .switch-plant-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .switch-plant-list::-webkit-scrollbar {
+            width: 5px;
+        }
+        .switch-plant-list::-webkit-scrollbar-thumb {
+            background: #c4b5fd;
+            border-radius: 10px;
+        }
+        .switch-plant-search {
+            padding: 0.5rem 0.75rem;
+            border-bottom: 1px solid #eee;
+        }
+        .switch-plant-search input {
+            width: 100%;
+            padding: 0.35rem 0.6rem;
+            font-size: 0.82rem;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .switch-plant-search input:focus {
+            border-color: #6f42c1;
+            box-shadow: 0 0 0 2px rgba(111, 66, 193, 0.15);
+        }
         .switch-plant-dropdown .dropdown-header {
             background: linear-gradient(135deg, #6f42c1 0%, #5a289e 100%);
             color: #fff;
@@ -396,8 +424,12 @@
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end switch-plant-dropdown" aria-labelledby="switchPlantDropdown">
                             <li><h6 class="dropdown-header"><i class="bi bi-building me-1"></i>Switch Plant</h6></li>
+                            <li class="switch-plant-search">
+                                <input type="text" id="searchPlantInput" placeholder="Cari plant..." autocomplete="off">
+                            </li>
+                            <div class="switch-plant-list">
                             @forelse($allPlants as $plant)
-                            <li>
+                            <li class="plant-list-item" data-plant-name="{{ strtolower($plant->plant) }}">
                                 <form method="POST" action="{{ route('manager.switch-plant') }}">
                                     @csrf
                                     <input type="hidden" name="plant_id" value="{{ $plant->id }}">
@@ -418,6 +450,7 @@
                                 </div>
                             </li>
                             @endforelse
+                            </div>
                             @if($authUser->active_plant_id)
                             <li><hr class="dropdown-divider my-1"></li>
                             <li>
@@ -703,6 +736,34 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }, true); // UseCapture: true agar dieksekusi sebelum script Mazer
     });
+});
+
+// Switch Plant Search Filter
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('searchPlantInput');
+    if (!searchInput) return;
+
+    searchInput.addEventListener('input', function() {
+        const keyword = this.value.toLowerCase().trim();
+        const items = document.querySelectorAll('.plant-list-item');
+        items.forEach(function(item) {
+            const name = item.getAttribute('data-plant-name') || '';
+            item.style.display = name.includes(keyword) ? '' : 'none';
+        });
+    });
+
+    // Prevent dropdown from closing when clicking on search input
+    searchInput.addEventListener('click', function(e) {
+        e.stopPropagation();
+    });
+
+    // Focus on search input when dropdown opens
+    const dropdownBtn = document.querySelector('#switchPlantDropdown .switch-plant-btn');
+    if (dropdownBtn) {
+        dropdownBtn.addEventListener('click', function() {
+            setTimeout(function() { searchInput.focus(); }, 150);
+        });
+    }
 });
 </script>
 @stack('scripts')

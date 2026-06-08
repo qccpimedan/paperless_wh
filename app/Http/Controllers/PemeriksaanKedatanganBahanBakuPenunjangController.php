@@ -1545,26 +1545,15 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
         if (!empty($selected_uuids)) {
             $query->whereIn('uuid', $selected_uuids);
         } else {
-            // Jika filter tidak lengkap, jangan proses apa pun untuk menghindari salah update massal
-            if (!$id_shift) {
-                return back()->with('error', 'Silakan pilih shift dan rentang tanggal untuk melakukan verifikasi massal.');
+            // JIKA MENGGUNAKAN KONTROL RANGE TANGGAL (FALLBACK)
+            $tanggal_dari = $request->input('tanggal_dari');
+            $tanggal_sampai = $request->input('tanggal_sampai');
+
+            if (!$tanggal_dari || !$tanggal_sampai) {
+                return back()->with('error', 'Silakan tentukan rentang tanggal atau gunakan checkbox untuk memilih data.');
             }
 
-            $query->where('id_shift', $id_shift);
-            $shift = \App\Models\Shift::find($id_shift);
-            if ($shift && $shift->is_date_range) {
-                if ($tanggal_dari && $tanggal_sampai) {
-                    $query->whereBetween('tanggal', [$tanggal_dari, $tanggal_sampai]);
-                } else {
-                    return back()->with('error', 'Rentang tanggal harus diisi untuk Shift 1.');
-                }
-            } else {
-                if ($tanggal) {
-                    $query->whereDate('tanggal', $tanggal);
-                } else {
-                    return back()->with('error', 'Tanggal harus diisi.');
-                }
-            }
+            $query->whereBetween('tanggal', [$tanggal_dari, $tanggal_sampai]);
         }
 
         $fromStatus = null;

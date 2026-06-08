@@ -58,11 +58,18 @@
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="card-title mb-0">Daftar Pemeriksaan Finish Good</h5>
-                    @can('create_pemeriksaan_produk_finish_good')
-                        <a href="{{ route('pemeriksaan-produk-finish-good.create') }}" class="btn btn-primary">
-                            <i class="bi bi-plus-circle"></i> Tambah Pemeriksaan
-                        </a>
-                    @endcan
+                    <div class="d-flex gap-2">
+                        @if($canVerify)
+                            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#multiApprovalModal">
+                                <i class="bi bi-patch-check"></i> Multi Approval
+                            </button>
+                        @endif
+                        @can('create_pemeriksaan_produk_finish_good')
+                            <a href="{{ route('pemeriksaan-produk-finish-good.create') }}" class="btn btn-primary">
+                                <i class="bi bi-plus-circle"></i> Tambah Pemeriksaan
+                            </a>
+                        @endcan
+                    </div>
                 </div>
                 <div class="card-body">
                     <div class="row mb-4 p-3 bg-light rounded">
@@ -106,16 +113,19 @@
                                     <option value="">-- Semua Produk --</option>
                                 </select>
                             </div>
-                            <div class="col-md-3 d-flex align-items-end gap-2">
-                                <button type="submit" class="btn btn-success flex-grow-1"><i class="bi bi-file-pdf"></i> PDF</button>
-                                @if($canVerify)
-                                    <button type="submit" class="btn btn-primary flex-grow-1" formaction="{{ route('pemeriksaan-produk-finish-good.batch-verify') }}" formmethod="POST" onclick="return confirm('Verifikasi semua data pada filter ini?')">
-                                        @csrf <i class="bi bi-patch-check"></i> Verifikasi
-                                    </button>
-                                @endif
+                            <div class="col-md-3 d-flex align-items-end">
+                                <button type="submit" class="btn btn-success w-100"><i class="bi bi-file-pdf"></i> PDF</button>
                             </div>
                         </form>
                     </div>
+                    
+                    <form action="{{ route('pemeriksaan-produk-finish-good.index') }}" method="GET" class="row g-3 mb-3">
+                        <div class="col-md-9"><input type="text" name="search" class="form-control" placeholder="Cari Produk atau Kode Produksi..." value="{{ request('search') }}"></div>
+                        <div class="col-md-3 d-flex align-items-end gap-2">
+                            <button type="submit" class="btn btn-primary btn-sm">Cari Data</button>
+                            <a href="{{ route('pemeriksaan-produk-finish-good.index') }}" class="btn btn-secondary btn-sm">Reset</a>
+                        </div>
+                    </form>
 
                     <form id="batchActionForm" action="{{ route('pemeriksaan-produk-finish-good.batch-verify') }}" method="POST">
                         @csrf
@@ -133,7 +143,7 @@
                                         <th>Plant</th>
                                         <th>Nama Produk</th>
                                         <th>Kode Produksi</th>
-                                        <th>Status Verifikasi</th>
+                                        <th>Verifikasi</th>
                                         <th>Aksi</th>
                                     </tr>
                                 </thead>
@@ -233,6 +243,41 @@
         </section>
 
         {{-- MODALS --}}
+        @if($canVerify)
+            <div class="modal fade" id="multiApprovalModal" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Multi Approval (Verifikasi Massal)</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <form action="{{ route('pemeriksaan-produk-finish-good.batch-verify') }}" method="POST">
+                            @csrf
+                            <div class="modal-body">
+                                <div class="alert alert-info">
+                                    <i class="bi bi-info-circle-fill me-2"></i> Verifikasi semua data berdasarkan rentang tanggal yang dipilih.
+                                </div>
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label">Tanggal Dari</label>
+                                        <input type="date" name="tanggal_dari" class="form-control" required>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Tanggal Sampai</label>
+                                        <input type="date" name="tanggal_sampai" class="form-control" required>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                                <button type="submit" class="btn btn-primary" onclick="return confirm('Proses verifikasi massal?')">Proses Verifikasi</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        @endif
+
         @foreach($pemeriksaans as $item)
             <div class="modal fade" id="appProduksi{{ $item->id }}" tabindex="-1" aria-hidden="true"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Approve Warehouse</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><form action="{{ route('pemeriksaan-produk-finish-good.approve-produksi', $item->uuid) }}" method="POST">@csrf<div class="modal-body"><textarea class="form-control" name="notes" placeholder="Catatan (Opsional)"></textarea></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button><button type="submit" class="btn btn-success">Approve</button></div></form></div></div></div>
             <div class="modal fade" id="rejProduksi{{ $item->id }}" tabindex="-1" aria-hidden="true"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Reject Warehouse</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><form action="{{ route('pemeriksaan-produk-finish-good.reject-produksi', $item->uuid) }}" method="POST">@csrf<div class="modal-body"><textarea class="form-control" name="notes" placeholder="Alasan penolakan" required></textarea></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button><button type="submit" class="btn btn-danger">Reject</button></div></form></div></div></div>
