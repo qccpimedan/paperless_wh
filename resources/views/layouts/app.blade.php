@@ -318,6 +318,35 @@
             color: #dc3545;
             background: rgba(220, 53, 69, 0.07);
         }
+
+        /* ===== Sidebar Active Contrast ===== */
+        .sidebar-item.active > .sidebar-link {
+            background-color: #435ebe !important;
+            margin-top: 6px;
+            margin-bottom: 6px;
+            /* box-shadow: 0 4px 10px rgba(67, 94, 190, 0.35) !important; */
+        }
+
+        .sidebar-item.active > .sidebar-link i,
+        .sidebar-item.active > .sidebar-link span {
+            color: #fff !important;
+            font-weight: 700 !important;
+        }
+
+        .submenu-item.active > a {
+            color: #435ebe !important;
+            font-weight: 800 !important;
+            background-color: rgba(67, 94, 190, 0.1) !important;
+            border-radius: 7px;
+            padding-left: 1.5rem !important;
+            transition: all 0.3s ease;
+        }
+
+        .submenu-item.active > a::before {
+            content: "➜";
+            margin-right: 8px;
+            font-size: 0.8rem;
+        }
     </style>
 </head>
 <body>
@@ -637,6 +666,43 @@ document.addEventListener('click', function(e) {
     if (!e.target.closest('#notification-bell') && !e.target.closest('#notification-dropdown')) {
         notificationDropdown.style.display = 'none';
     }
+});
+
+/**
+ * Sidebar Accordion Logic (Mazer Force Reset)
+ * Memastikan hanya satu menu utama yang terbuka dalam satu waktu
+ */
+document.addEventListener('DOMContentLoaded', function() {
+    const menuUl = document.querySelector('ul.menu[data-accordion="true"]');
+    if (!menuUl) return;
+
+    // Ambil semua link utama (Data Master, Pemeriksaan Kedatangan, dsb)
+    const topLevelLinks = menuUl.querySelectorAll('.sidebar-item.has-sub > .sidebar-link');
+
+    topLevelLinks.forEach(link => {
+        link.addEventListener('click', function(e) {
+            const currentItem = this.parentElement;
+
+            // Jika menu yang diklik sudah aktif, biarkan template Mazer menangani toggle-nya sendiri
+            // Tapi kita bersihkan SEMUA menu lain terlebih dahulu
+            const allHasSub = menuUl.querySelectorAll('.sidebar-item.has-sub');
+            
+            allHasSub.forEach(item => {
+                if (item !== currentItem) {
+                    // Hapus class active agar menu lain tertutup
+                    item.classList.remove('active');
+                    
+                    // Sembunyikan submenunya secara paksa
+                    const submenu = item.querySelector('.submenu');
+                    if (submenu) {
+                        submenu.classList.remove('active');
+                        // Gunakan !important lewat style attribute jika perlu, atau cukup display none
+                        submenu.style.display = 'none';
+                    }
+                }
+            });
+        }, true); // UseCapture: true agar dieksekusi sebelum script Mazer
+    });
 });
 </script>
 @stack('scripts')

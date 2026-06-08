@@ -110,15 +110,7 @@
                             $groupedDetailIdx[$key][] = $i;
                         }
 
-                        $produkNamaById = [];
-                        foreach ($groupedDetailIdx as $produkKey => $idxList) {
-                            if (str_starts_with((string) $produkKey, 'unknown-')) continue;
-                            $pid = (int) $produkKey;
-                            if (!isset($produkNamaById[$produkKey])) {
-                                $p = \App\Models\Produk::find($pid);
-                                $produkNamaById[$produkKey] = $p ? ($p->nama ?? '-') : '-';
-                            }
-                        }
+                        $produkNamaById = $produkNamaById ?? []; // Fallback jika tidak terkirim
                     @endphp
                     
                     @if($rowCount > 0)
@@ -149,7 +141,7 @@
                                     $distText = $raw;
                                 }
 
-                                $produkTitle = $mappedProdukId ? ($produkNamaById[(string) $mappedProdukId] ?? '-') : 'Produk (Tidak diketahui)';
+                                $produkTitle = $mappedProdukId ? ($produkNamaById[$mappedProdukId] ?? '-') : 'Produk (Tidak diketahui)';
                             @endphp
 
                             <div class="card mb-3" style="border-left: 4px solid #435ebe;">

@@ -45,7 +45,7 @@
                                     </div>
                                 @endif
 
-                                <form class="form form-horizontal" action="{{ route('golden-sample-reports.update', $goldenSampleReport->uuid) }}" method="POST">
+                                <form class="form form-horizontal" action="{{ route('golden-sample-reports.update', $goldenSampleReport->uuid) }}" method="POST" novalidate>
                                     @csrf
                                     @method('PUT')
                                     <div class="form-body">
@@ -82,23 +82,38 @@
                                         </div>
 
                                         <div class="row mb-3">
-                                            <div class="col-md-6">
+                                            <div class="col-md-3">
+                                                <label for="tanggal">Tanggal <span class="text-danger">*</span></label>
+                                                <input type="date" class="form-control @error('tanggal') is-invalid @enderror" name="tanggal" id="tanggal" value="{{ old('tanggal', $goldenSampleReport->tanggal ? \Carbon\Carbon::parse($goldenSampleReport->tanggal)->format('Y-m-d') : '') }}" required>
+                                                @error('tanggal')
+                                                    <div class="text-danger small">{{ $message }}</div>
+                                                @enderror
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label for="id_shift">Shift <span class="text-danger">*</span></label>
+                                                <select name="id_shift" id="id_shift" class="form-select @error('id_shift') is-invalid @enderror" required>
+                                                    <option value="">-- Pilih Shift --</option>
+                                                    @foreach($shifts as $shift)
+                                                        <option value="{{ $shift->id }}" {{ old('id_shift', $goldenSampleReport->id_shift) == $shift->id ? 'selected' : '' }}>{{ $shift->shift }}</option>
+                                                    @endforeach
+                                                </select>
+                                                @error('id_shift')
+                                                    <div class="text-danger small">{{ $message }}</div>
+                                                @enderror
+                                            </div>
+                                            <div class="col-md-3">
                                                 <label for="sample_type">Sample Type <span class="text-danger">*</span></label>
                                                 <input type="text" class="form-control @error('sample_type') is-invalid @enderror" name="sample_type" id="sample_type" placeholder="Contoh: Bahan Baku" value="{{ old('sample_type', $goldenSampleReport->sample_type) }}" required>
                                                 @error('sample_type')
                                                     <div class="text-danger small">{{ $message }}</div>
                                                 @enderror
                                             </div>
-                                            <div class="col-md-6">
-                                                <div class="row">
-                                                    <div class="col-md-12">
-                                                        <label for="masa_penyimpanan">Masa Penyimpanan <span class="text-danger">*</span></label>
-                                                        <input type="text" class="form-control @error('masa_penyimpanan') is-invalid @enderror" name="masa_penyimpanan" id="masa_penyimpanan" value="{{ old('masa_penyimpanan', $goldenSampleReport->masa_penyimpanan) }}" required>
-                                                        @error('masa_penyimpanan')
-                                                            <div class="text-danger small">{{ $message }}</div>
-                                                        @enderror
-                                                    </div>
-                                                </div>
+                                            <div class="col-md-3">
+                                                <label for="masa_penyimpanan">Masa Penyimpanan <span class="text-danger">*</span></label>
+                                                <input type="text" class="form-control @error('masa_penyimpanan') is-invalid @enderror" name="masa_penyimpanan" id="masa_penyimpanan" value="{{ old('masa_penyimpanan', $goldenSampleReport->masa_penyimpanan) }}" required>
+                                                @error('masa_penyimpanan')
+                                                    <div class="text-danger small">{{ $message }}</div>
+                                                @enderror
                                             </div>
                                         </div>
 
@@ -144,7 +159,7 @@
                                                     <div class="row mb-2">
                                                         <div class="col-md-6">
                                                             <label>Deskripsi <span class="text-danger">*</span>(dapat dipilih lebih dari 1)</label>
-                                                            <select class="choices form-select deskripsi-select" name="samples[{{ $index }}][id_deskripsi][]" multiple required>
+                                                            <select class="form-select deskripsi-select init-choices" name="samples[{{ $index }}][id_deskripsi][]" multiple required>
                                                                 @foreach($deskripsis as $deskripsi)
                                                                     <option value="{{ $deskripsi->uuid }}" {{ in_array($deskripsi->uuid, $sample['id_deskripsi'] ?? []) ? 'selected' : '' }}>{{ $deskripsi->nama_deskripsi }}</option>
                                                                 @endforeach
@@ -220,114 +235,113 @@
 </div>
 
 <script>
-// Handle Plant manual input
-document.getElementById('id_plant').addEventListener('change', function() {
-    const manualInput = document.getElementById('manual_plant_input');
-    if (this.value === 'other') {
-        manualInput.style.display = 'block';
-        document.getElementById('plant_manual').required = true;
-    } else {
-        manualInput.style.display = 'none';
-        document.getElementById('plant_manual').required = false;
-    }
-});
-// Check on page load
-window.addEventListener('load', function() {
-    const plantSelect = document.getElementById('id_plant');
-    if (plantSelect.value === 'other') {
-        document.getElementById('manual_plant_input').style.display = 'block';
-    }
-});
-
 document.addEventListener('DOMContentLoaded', function() {
-    let sampleIndex = {{ count($goldenSampleReport->samples) }};
+    // Handle Plant manual input
+    const plantSelect = document.getElementById('id_plant');
+    const plantManualGroup = document.getElementById('manual_plant_input');
+    const plantManualInput = document.getElementById('plant_manual');
 
-    // Add new sample
-    document.getElementById('add-sample').addEventListener('click', function() {
-        const container = document.getElementById('samples-container');
-        const firstSample = document.querySelector('.sample-item');
-        const newSample = firstSample.cloneNode(true);
-        
-        newSample.setAttribute('data-index', sampleIndex);
-        newSample.querySelector('.sample-number').textContent = sampleIndex + 1;
-        
-        // Hapus class 'choices' dan data-attributes dari Choices
-        newSample.querySelectorAll('select').forEach(select => {
-            select.classList.remove('choices');
-            select.removeAttribute('data-type');
-            select.removeAttribute('aria-hidden');
-            select.innerHTML = '';
-        });
-        
-        // Clear input values
-        newSample.querySelectorAll('input').forEach(input => {
-            input.value = '';
-        });
-        
-        // Copy options dari first sample ke new sample
-        const firstSelects = firstSample.querySelectorAll('select');
-        const newSelects = newSample.querySelectorAll('select');
-        
-        firstSelects.forEach((firstSelect, index) => {
-            if (newSelects[index]) {
-                newSelects[index].innerHTML = firstSelect.innerHTML;
-                newSelects[index].classList.add('choices');
-            }
-        });
-        
-        // Update input names
-        newSample.querySelectorAll('input, select').forEach(input => {
-            const name = input.getAttribute('name');
-            if (name) {
-                input.setAttribute('name', name.replace(/\[\d+\]/, `[${sampleIndex}]`));
-            }
-        });
-        
-        // Show remove button
-        newSample.querySelector('.remove-sample').style.display = 'inline-block';
-        
-        container.appendChild(newSample);
-        
-        // Reinisialisasi Choices SETELAH append ke DOM
-        const newChoicesSelects = newSample.querySelectorAll('select.choices');
-        newChoicesSelects.forEach(select => {
-            if (!select || select.tagName !== 'SELECT') return;
-            
-            try {
-                new Choices(select, {
-                    removeItemButton: true,
-                    placeholder: true,
-                    searchEnabled: true
-                });
-            } catch(e) {
-                console.warn('Error initializing Choices:', e);
-            }
-        });
-        
-        sampleIndex++;
-        
-        updateRemoveButtons();
-    });
-
-    // Remove sample
-    document.addEventListener('click', function(e) {
-        if (e.target.closest('.remove-sample')) {
-            e.target.closest('.sample-item').remove();
-            updateRemoveButtons();
+    function toggleManualPlant() {
+        if (plantSelect && plantSelect.value === 'other') {
+            plantManualGroup.style.display = 'block';
+            plantManualInput.required = true;
+        } else if (plantManualGroup) {
+            plantManualGroup.style.display = 'none';
+            plantManualInput.required = false;
         }
-    });
+    }
+
+    if (plantSelect) {
+        plantSelect.addEventListener('change', toggleManualPlant);
+        toggleManualPlant(); // Initial check
+    }
+
+    let sampleIndex = {{ count(old('samples', $goldenSampleReport->samples ?? [])) }};
+
+    function initChoicesManual() {
+        if (typeof Choices !== 'undefined') {
+            document.querySelectorAll('.init-choices').forEach(el => {
+                if (!el.choicesInst) {
+                    el.choicesInst = new Choices(el, {
+                        removeItemButton: true,
+                        searchEnabled: true,
+                        shouldSort: false
+                    });
+                }
+            });
+        }
+    }
+    initChoicesManual();
 
     function updateRemoveButtons() {
         const samples = document.querySelectorAll('.sample-item');
         samples.forEach((sample, index) => {
             const removeBtn = sample.querySelector('.remove-sample');
-            if (samples.length > 1) {
-                removeBtn.style.display = 'inline-block';
-            } else {
-                removeBtn.style.display = 'none';
+            if (removeBtn) {
+                removeBtn.style.display = samples.length > 1 ? 'inline-block' : 'none';
             }
+            sample.querySelector('.sample-number').textContent = index + 1;
         });
     }
+
+    // Add new sample
+    const addSampleBtn = document.getElementById('add-sample');
+    if (addSampleBtn) {
+        addSampleBtn.addEventListener('click', function() {
+            const container = document.getElementById('samples-container');
+            const items = document.querySelectorAll('.sample-item');
+            if (items.length === 0) return;
+
+            const oldItem = items[0];
+            const newSample = oldItem.cloneNode(true);
+            newSample.setAttribute('data-index', sampleIndex);
+            
+            // Re-create Select to avoid Choices.js clone issues
+            const deskripsiTd = newSample.querySelector('.deskripsi-select').parentNode;
+            const oldSelect = newSample.querySelector('.deskripsi-select');
+            
+            // If it's already wrapped in choices UI, we need to extract the raw select
+            let rawSelect = oldSelect;
+            if (oldSelect.closest('.choices')) {
+                rawSelect = oldSelect.closest('.choices').querySelector('select');
+            }
+
+            const cleanSelect = rawSelect.cloneNode(true);
+            cleanSelect.className = 'form-select deskripsi-select init-choices';
+            cleanSelect.removeAttribute('data-type');
+            cleanSelect.removeAttribute('aria-hidden');
+            cleanSelect.removeAttribute('data-choices-init');
+            cleanSelect.choicesInst = null; // Reset instance
+            cleanSelect.value = '';
+            
+            deskripsiTd.innerHTML = '<label>Deskripsi <span class="text-danger">*</span>(dapat dipilih lebih dari 1)</label>';
+            deskripsiTd.appendChild(cleanSelect);
+
+            newSample.querySelectorAll('input, select').forEach(input => {
+                const name = input.getAttribute('name');
+                if (name) {
+                    input.setAttribute('name', name.replace(/\[\d+\]/, `[${sampleIndex}]`));
+                }
+                if (input.tagName === 'INPUT') input.value = '';
+            });
+
+            container.appendChild(newSample);
+            initChoicesManual();
+            sampleIndex++;
+            updateRemoveButtons();
+        });
+    }
+
+    // Remove sample
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.remove-sample')) {
+            const items = document.querySelectorAll('.sample-item');
+            if (items.length > 1) {
+                e.target.closest('.sample-item').remove();
+                updateRemoveButtons();
+            }
+        }
+    });
 
     updateRemoveButtons();
 });

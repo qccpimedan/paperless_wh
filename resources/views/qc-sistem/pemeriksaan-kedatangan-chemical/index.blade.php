@@ -1,640 +1,295 @@
 @extends('layouts.app')
-
-@section('title', 'Pemeriksaan Kedatangan Chemical')
-
 @section('container')
+@php
+    $user = \Illuminate\Support\Facades\Auth::user();
+    if ($user && $user->role && strtolower($user->role->role) === 'superadmin') {
+        $shifts = \App\Models\Shift::all();
+    } else {
+        $shifts = \App\Models\Shift::query()
+            ->when($user && $user->id_plant, function ($q) use ($user) {
+                $q->whereHas('user', function ($qu) use ($user) {
+                    $qu->where('id_plant', $user->id_plant);
+                });
+            })
+            ->get();
+    }
+    $userRole = auth()->user()->role ? strtolower(auth()->user()->role->role) : null;
+    $canVerify = in_array($userRole, ['qc inspector', 'produksi', 'warehouse', 'spv qc', 'superadmin']);
+@endphp
 <div id="main">
     <header class="mb-3">
         <a href="#" class="burger-btn d-block d-xl-none">
             <i class="bi bi-justify fs-3"></i>
         </a>
     </header>
+
     <div class="page-heading">
         <div class="page-title">
             <div class="row">
                 <div class="col-12 col-md-6 order-md-1 order-last">
                     <h3>Pemeriksaan Kedatangan Chemical</h3>
-                    <p class="text-subtitle text-muted">Daftar data pemeriksaan kedatangan chemical</p>
+                    <p class="text-subtitle text-muted">Kelola data pemeriksaan kedatangan chemical</p>
                 </div>
                 <div class="col-12 col-md-6 order-md-2 order-first">
                     <nav aria-label="breadcrumb" class="breadcrumb-header float-start float-lg-end">
                         <ol class="breadcrumb">
                             <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
-                            <li class="breadcrumb-item active" aria-current="page">Pemeriksaan Kedatangan Chemical</li>
+                            <li class="breadcrumb-item active" aria-current="page">Chemical</li>
                         </ol>
                     </nav>
                 </div>
             </div>
         </div>
-    </div>
-    @if(session('success'))
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            {{ session('success') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    @endif
-    <div class="page-content">
-        <section class="row">
-            <div class="col-12">
-                <div class="card">
-                    <div class="card-header">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <h4 class="card-title">Data Pemeriksaan Kedatangan Chemical</h4>
-                            @can('create_pemeriksaan_kedatangan_chemical')
-                                <a href="{{ route('pemeriksaan-chemical.create') }}" class="btn btn-primary">
-                                    <i class="bi bi-plus-circle"></i> Tambah Data
-                                </a>
-                            @endcan
-                        </div>
-                    </div>
-                    <div class="card-body">
-                        @php
-                            $user = \Illuminate\Support\Facades\Auth::user();
-                            if ($user && $user->role && strtolower($user->role->role) === 'superadmin') {
-                                $shifts = \App\Models\Shift::all();
-                            } else {
-                                $shifts = \App\Models\Shift::query()
-                                    ->when($user && $user->id_plant, function ($q) use ($user) {
-                                        $q->whereHas('user', function ($qu) use ($user) {
-                                            $qu->where('id_plant', $user->id_plant);
-                                        });
-                                    })
-                                    ->get();
-                            }
-                        @endphp
-                        {{-- Filter Form untuk PDF Export --}}
-                        <div class="row mb-4 p-3 bg-light rounded">
-                            <div class="col-md-12 mb-3">
-                                <h6 class="mb-3"><i class="bi bi-funnel"></i> Filter & Cetak PDF</h6>
+
+        @if(session('success'))
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="bi bi-check-circle-fill me-2"></i> {{ session('success') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
+        @if(session('error'))
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i> {{ session('error') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
+
+        <section class="section">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">Daftar Pemeriksaan Chemical</h5>
+                    @can('create_pemeriksaan_kedatangan_chemical')
+                        <a href="{{ route('pemeriksaan-chemical.create') }}" class="btn btn-primary">
+                            <i class="bi bi-plus-circle"></i> Tambah Pemeriksaan
+                        </a>
+                    @endcan
+                </div>
+                <div class="card-body">
+                    <div class="row mb-4 p-3 bg-light rounded">
+                        <div class="col-md-12 mb-3"><h6><i class="bi bi-funnel"></i> Filter & Verifikasi Massal</h6></div>
+                        <form action="{{ route('pemeriksaan-chemical.export-pdf') }}" method="GET" class="row g-3" id="filterForm">
+                            <div class="col-md-3">
+                                <label class="form-label">Shift</label>
+                                <select name="id_shift" class="form-select" id="shiftSelect">
+                                    <option value="">-- Pilih Shift --</option>
+                                    @foreach($shifts ?? [] as $shift)
+                                        <option value="{{ $shift->id }}" data-shift-name="{{ $shift->shift }}" data-is-date-range="{{ $shift->is_date_range }}" {{ request('id_shift') == $shift->id ? 'selected' : '' }}>
+                                            {{ $shift->shift }}
+                                        </option>
+                                    @endforeach
+                                </select>
                             </div>
-                            <form action="{{ route('pemeriksaan-chemical.export-pdf') }}" method="GET" class="row g-3" id="pdfFilterForm">
-                                <div class="col-md-3">
-                                    <label class="form-label">Shift</label>
-                                    <select name="id_shift" class="form-select" id="shiftSelect" required>
-                                        <option value="">-- Pilih Shift --</option>
-                                        @foreach($shifts ?? [] as $shift)
-                                            <option value="{{ $shift->id }}" data-shift-name="{{ $shift->shift }}" data-is-date-range="{{ $shift->is_date_range }}" {{ request('id_shift') == $shift->id ? 'selected' : '' }}>
-                                                {{ $shift->shift }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                                <div class="col-md-3" id="tanggalDariWrapper">
-                                    <label class="form-label">Tanggal Dari</label>
-                                    <input type="date" name="tanggal_dari" class="form-control" id="tanggalDari" value="{{ request('tanggal_dari') }}">
-                                </div>
-                                <div class="col-md-3" id="tanggalSampaiWrapper">
-                                    <label class="form-label">Tanggal Sampai</label>
-                                    <input type="date" name="tanggal_sampai" class="form-control" id="tanggalSampai" value="{{ request('tanggal_sampai') }}">
-                                </div>
-                                <div class="col-md-3" id="tanggalSingleWrapper" style="display: none;">
-                                    <label class="form-label">Tanggal</label>
-                                    <input type="date" name="tanggal" class="form-control" id="tanggalSingle" value="{{ request('tanggal') }}">
-                                </div>
-
-                                                                <div class="col-md-3">
-                                    <label class="form-label">Kategori</label>
-                                    <select name="kategori_code" class="form-select kategori-produk-select" id="filterKategori">
-                                        <option value="">-- Semua Kategori --</option>
-                                        @if(isset($produkKategoriOptions))
-                                            @foreach($produkKategoriOptions as $kategori)
-                                                <option value="{{ $kategori }}" {{ request("kategori_code") == $kategori ? "selected" : "" }}>
-                                                    {{ $kategori }}
-                                                </option>
-                                            @endforeach
-                                        @endif
-                                    </select>
-                                </div>
-                                <div class="col-md-3">
-                                    <label class="form-label">Nama Produk</label>
-                                    <select name="id_produk" class="form-select produk-select" id="filterProduk" data-selected="{{ request('id_produk', '') }}">
-                                        <option value="">-- Semua Produk --</option>
-                                    </select>
-                                </div>
-
-                                <div class="col-md-3 d-flex align-items-end">
-                                    <button type="submit" class="btn btn-success w-100">
-                                        <i class="bi bi-file-pdf"></i> Cetak PDF
+                            <div class="col-md-3" id="tanggalDariWrapper">
+                                <label class="form-label">Tanggal Dari</label>
+                                <input type="date" name="tanggal_dari" class="form-control" value="{{ request('tanggal_dari') }}">
+                            </div>
+                            <div class="col-md-3" id="tanggalSampaiWrapper">
+                                <label class="form-label">Tanggal Sampai</label>
+                                <input type="date" name="tanggal_sampai" class="form-control" value="{{ request('tanggal_sampai') }}">
+                            </div>
+                            <div class="col-md-3" id="tanggalSingleWrapper" style="display: none;">
+                                <label class="form-label">Tanggal</label>
+                                <input type="date" name="tanggal" class="form-control" value="{{ request('tanggal') }}">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Kategori</label>
+                                <select name="kategori_code" class="form-select" id="filterKategori">
+                                    <option value="">-- Semua Kategori --</option>
+                                    @foreach($produkKategoriOptions ?? [] as $k)
+                                        <option value="{{ $k }}" {{ request('kategori_code') == $k ? 'selected' : '' }}>{{ $k }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Produk</label>
+                                <select name="id_produk" class="form-select" id="filterProduk" data-selected="{{ request('id_produk') }}">
+                                    <option value="">-- Semua Produk --</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3 d-flex align-items-end gap-2">
+                                <button type="submit" class="btn btn-success flex-grow-1"><i class="bi bi-file-pdf"></i> PDF</button>
+                                @if($canVerify)
+                                    <button type="submit" class="btn btn-primary flex-grow-1" formaction="{{ route('pemeriksaan-chemical.batch-verify') }}" formmethod="POST" onclick="return confirm('Verifikasi semua data pada filter ini?')">
+                                        @csrf <i class="bi bi-patch-check"></i> Verifikasi
                                     </button>
-                                </div>
-                            </form>
-                        </div>
-
-                        <form action="{{ route('pemeriksaan-chemical.index') }}" method="GET" class="row g-3 mb-3">
-                            <div class="col-md-9">
-                                <input type="text" name="search" class="form-control" placeholder="Cari tanggal/status/shift/catatan..." value="{{ request('search') }}">
-                            </div>
-                            <div class="col-md-3 d-flex align-items-end">
-                                <button type="submit" class="btn btn-primary w-100">Cari</button>
+                                @endif
                             </div>
                         </form>
+                    </div>
 
-                        <script>
-                            document.addEventListener('DOMContentLoaded', function() {
-                                const shiftSelect = document.getElementById('shiftSelect');
-                                const tanggalDariWrapper = document.getElementById('tanggalDariWrapper');
-                                const tanggalSampaiWrapper = document.getElementById('tanggalSampaiWrapper');
-                                const tanggalSingleWrapper = document.getElementById('tanggalSingleWrapper');
-                                const tanggalDari = document.getElementById('tanggalDari');
-                                const tanggalSampai = document.getElementById('tanggalSampai');
-                                const tanggalSingle = document.getElementById('tanggalSingle');
-
-                                function updateDateFields() {
-                                    if (!shiftSelect) return;
-
-                                    const selectedOption = shiftSelect.options[shiftSelect.selectedIndex];
-                                    const shiftName = selectedOption ? selectedOption.getAttribute('data-shift-name') : null;
-
-                                    const isShift1 = shiftName && (shiftName.toLowerCase().includes('1') || shiftName.toLowerCase().includes('pagi'));
-                                    const isShift2or3 = shiftName && !isDateRange;
-
-                                    if (isShift1) {
-                                        tanggalDariWrapper.style.display = 'block';
-                                        tanggalSampaiWrapper.style.display = 'block';
-                                        tanggalSingleWrapper.style.display = 'none';
-
-                                        tanggalDari.required = true;
-                                        tanggalSampai.required = true;
-                                        tanggalSingle.required = false;
-                                        tanggalSingle.value = '';
-                                    } else if (isShift2or3) {
-                                        tanggalDariWrapper.style.display = 'none';
-                                        tanggalSampaiWrapper.style.display = 'none';
-                                        tanggalSingleWrapper.style.display = 'block';
-
-                                        tanggalDari.required = false;
-                                        tanggalSampai.required = false;
-                                        tanggalSingle.required = true;
-                                        tanggalDari.value = '';
-                                        tanggalSampai.value = '';
-                                    } else {
-                                        tanggalDariWrapper.style.display = 'none';
-                                        tanggalSampaiWrapper.style.display = 'none';
-                                        tanggalSingleWrapper.style.display = 'none';
-
-                                        tanggalDari.required = false;
-                                        tanggalSampai.required = false;
-                                        tanggalSingle.required = false;
-                                    }
-                                }
-
-                                if (shiftSelect) {
-                                    shiftSelect.addEventListener('change', updateDateFields);
-                                    updateDateFields();
-                                }
-                            });
-                        </script>
-
-                                
-
+                    <form id="batchActionForm" action="{{ route('pemeriksaan-chemical.batch-verify') }}" method="POST">
+                        @csrf
                         <div class="table-responsive">
-                            <table class="table table-striped text-center" id="table1" data-disable-datatable="1" style="white-space: nowrap;">
+                            <table class="table table-striped text-center" style="white-space: nowrap;">
                                 <thead>
                                     <tr>
+                                        <th>
+                                            @if($canVerify) <input type="checkbox" id="selectAll" class="form-check-input">
+                                            @else <i class="bi bi-check-square"></i> @endif
+                                        </th>
                                         <th>No</th>
                                         <th>Tanggal</th>
                                         <th>Shift</th>
                                         <th>Plant</th>
                                         <th>Nama Chemical</th>
-                                        <!-- <th>Produsen</th> -->
-                                        <th>Kode Produksi</th>
-                                        <!-- <th>Status</th> -->
-                                        <th>Verifikasi</th>
-                                        <th>Catatan Verifikasi</th>
+                                        <th>Supplier/Distributor</th>
+                                        <th>Status Verifikasi</th>
                                         <th>Aksi</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @forelse($pemeriksaans as $index => $pemeriksaan)
+                                    @forelse($pemeriksaans as $index => $item)
+                                        @php
+                                            $st = $item->status_verifikasi ?? 'pending';
+                                            $canRowV = false;
+                                            if ($userRole === 'qc inspector' && ($st === 'pending' || $st === null)) $canRowV = true;
+                                            elseif (($userRole === 'produksi' || $userRole === 'warehouse') && $st === 'sent_to_produksi') $canRowV = true;
+                                            elseif (($userRole === 'spv qc' || $userRole === 'superadmin') && $st === 'approved_produksi') $canRowV = true;
+                                        @endphp
                                         <tr>
-                                            <td>{{ $pemeriksaans->firstItem() + $index }}</td>
-                                            <td>{{ $pemeriksaan->tanggal ? $pemeriksaan->tanggal->format('d/m/Y') : '-' }}</td>
                                             <td>
-                                                @if($pemeriksaan->shift)
-                                                    <span class="badge bg-warning">{{ $pemeriksaan->shift->shift }}</span>
-                                                @else
-                                                    <span class="text-muted">-</span>
-                                                @endif
+                                                @if($canRowV) <input type="checkbox" name="selected_uuids[]" value="{{ $item->uuid }}" class="form-check-input row-checkbox">
+                                                @else <i class="bi bi-dash text-muted"></i> @endif
+                                            </td>
+                                            <td>{{ ($pemeriksaans->firstItem() ?? 1) + $index }}</td>
+                                            <td><strong>{{ $item->tanggal->format('d/m/Y') }}</strong></td>
+                                            <td><span class="badge bg-primary">{{ $item->shift->shift ?? '-' }}</span></td>
+                                            <td><span class="badge bg-secondary">{{ $item->user->plant->plant ?? '-' }}</span></td>
+                                            <td>
+                                                @php
+                                                    $details = $item->detail_chemicals ?? [];
+                                                    $chemicalNames = array_map(function($d) {
+                                                        $cObj = \App\Models\Chemical::find($d['id_chemical']);
+                                                        return $cObj ? $cObj->nama_chemical : null;
+                                                    }, $details);
+                                                    $chemicalNames = array_values(array_filter($chemicalNames));
+                                                @endphp
+                                                @if(count($chemicalNames) > 0)
+                                                    <span class="badge bg-info">{{ $chemicalNames[0] }}</span>
+                                                    @if(count($chemicalNames) > 1) <br><small>+{{ count($chemicalNames)-1 }} lainnya</small> @endif
+                                                @else - @endif
                                             </td>
                                             <td>
-                                                @if($pemeriksaan->user && $pemeriksaan->user->plant)
-                                                    <span class="badge bg-primary">{{ $pemeriksaan->user->plant->plant }}</span>
-                                                @else
-                                                    <span class="text-muted">-</span>
-                                                @endif
+                                                @php
+                                                    $suppId = $firstDetail['id_distributor'] ?? null;
+                                                    $supplier = $suppId ? \App\Models\Distributor::find($suppId) : null;
+                                                @endphp
+                                                {{ $supplier ? $supplier->nama : '-' }}
                                             </td>
                                             <td>
-                                                @php
-                                                    $detailChemicals = $pemeriksaan->detail_chemicals ?? [];
-                                                    $chemicalNames = [];
-                                                    foreach($detailChemicals as $detail) {
-                                                        if(isset($detail['id_chemical'])) {
-                                                            $chemical = \App\Models\Chemical::find($detail['id_chemical']);
-                                                            if($chemical) {
-                                                                $chemicalNames[] = $chemical->nama_chemical;
-                                                            }
-                                                        }
-                                                    }
-
-                                                    $chemicalPreview = [];
-                                                    if (count($chemicalNames) === 1) {
-                                                        $chemicalPreview = [$chemicalNames[0]];
-                                                    } elseif (count($chemicalNames) === 2) {
-                                                        $chemicalPreview = [$chemicalNames[0], $chemicalNames[1]];
-                                                    } elseif (count($chemicalNames) > 2) {
-                                                        $chemicalPreview = [$chemicalNames[0], $chemicalNames[count($chemicalNames) - 1]];
-                                                    }
-                                                @endphp
-                                                @if(count($chemicalPreview) > 0)
-                                                    <span class="badge bg-info">{{ $chemicalPreview[0] }}</span>
-                                                    @if(count($chemicalNames) > 2)
-                                                        <br>
-                                                        <span class="text-muted">...</span>
-                                                    @endif
-                                                    @if(count($chemicalPreview) === 2)
-                                                        <br>
-                                                        <span class="badge bg-info">{{ $chemicalPreview[1] }}</span>
-                                                    @endif
-                                                @else
-                                                    <span class="text-muted">-</span>
-                                                @endif
-                                            </td>
-                                            <!-- <td>
-                                                @php
-                                                    $produsenNames = [];
-                                                    foreach($detailChemicals as $detail) {
-                                                        if(isset($detail['id_produsen'])) {
-                                                            $produsen = \App\Models\Produsen::find($detail['id_produsen']);
-                                                            if($produsen) {
-                                                                $produsenNames[] = $produsen->nama_produsen;
-                                                            }
-                                                        }
-                                                    }
-                                                @endphp
-                                                @if(count($produsenNames) > 0)
-                                                    {{ implode(', ', array_unique($produsenNames)) }}
-                                                @else
-                                                    <span class="text-muted">-</span>
-                                                @endif
-                                            </td> -->
-                                            <td>
-                                                @php
-                                                    $kodeProduksiArr = [];
-                                                    foreach($detailChemicals as $d) {
-                                                        if(isset($d['kode_produksi']) && $d['kode_produksi'] !== null && $d['kode_produksi'] !== '') {
-                                                            $kodeProduksiArr[] = $d['kode_produksi'];
-                                                        }
-                                                    }
-                                                    $kodeProduksiArr = array_values(array_unique($kodeProduksiArr));
-
-                                                    $kodeProduksiPreview = [];
-                                                    if (count($kodeProduksiArr) === 1) {
-                                                        $kodeProduksiPreview = [$kodeProduksiArr[0]];
-                                                    } elseif (count($kodeProduksiArr) === 2) {
-                                                        $kodeProduksiPreview = [$kodeProduksiArr[0], $kodeProduksiArr[1]];
-                                                    } elseif (count($kodeProduksiArr) > 2) {
-                                                        $kodeProduksiPreview = [$kodeProduksiArr[0], $kodeProduksiArr[count($kodeProduksiArr) - 1]];
-                                                    }
-                                                @endphp
-
-                                                @if(count($kodeProduksiPreview) > 0)
-                                                    {{ $kodeProduksiPreview[0] }}
-                                                    @if(count($kodeProduksiArr) > 2)
-                                                        <br>
-                                                        <span class="text-muted">...</span>
-                                                    @endif
-                                                    @if(count($kodeProduksiPreview) === 2)
-                                                        <br>
-                                                        {{ $kodeProduksiPreview[1] }}
-                                                    @endif
-                                                @else
-                                                    -
-                                                @endif
-                                            </td>
-                                            <!-- <td>
-                                                @php
-                                                    $statuses = [];
-                                                    foreach($detailChemicals as $detail) {
-                                                        if(isset($detail['status'])) {
-                                                            $statuses[] = $detail['status'];
-                                                        }
-                                                    }
-                                                    $uniqueStatuses = array_unique($statuses);
-                                                @endphp
-                                                @if(count($uniqueStatuses) > 0)
-                                                    @foreach($uniqueStatuses as $status)
-                                                        @if($status === 'Release')
-                                                            <span class="badge bg-success">{{ $status }}</span>
-                                                        @else
-                                                            <span class="badge bg-danger">{{ $status }}</span>
-                                                        @endif
-                                                    @endforeach
-                                                @else
-                                                    <span class="text-muted">-</span>
-                                                @endif
-                                            </td> -->
-                                            <td>
-                                                @php
-                                                    $userRole = auth()->user()->role ? strtolower(auth()->user()->role->role) : null;
-                                                    $status = $pemeriksaan->status_verifikasi ?? 'pending';
-                                                @endphp
-                                                @if($status === 'pending' || $status === null)
+                                                @if($st === 'pending' || $st === null)
                                                     @if($userRole === 'qc inspector')
-                                                        <form action="{{ route('pemeriksaan-chemical.send-to-produksi', $pemeriksaan->uuid) }}" method="POST" style="display: inline-block;">
-                                                            @csrf
-                                                            <button type="submit" class="btn btn-sm btn-primary"><i class="bi bi-send"></i> Kirim</button>
-                                                        </form>
-                                                    @else
-                                                        <span class="badge bg-secondary">Pending</span>
+                                                        <button type="submit" class="btn btn-sm btn-primary" formaction="{{ route('pemeriksaan-chemical.send-to-produksi', $item->uuid) }}"><i class="bi bi-send"></i> Kirim</button>
+                                                    @else <span class="badge bg-secondary">Pending</span> @endif
+                                                @elseif($st === 'sent_to_produksi')
+                                                    <span class="badge bg-warning text-dark">Menunggu Warehouse</span>
+                                                    @if($userRole === 'produksi' || $userRole === 'warehouse')
+                                                        <div class="mt-1">
+                                                            <button type="button" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#appProduksi{{ $item->id }}"><i class="bi bi-check-circle"></i> Verifikasi</button>
+                                                            <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#rejProduksi{{ $item->id }}"><i class="bi bi-x-circle"></i> Tolak</button>
+                                                        </div>
                                                     @endif
-                                                @elseif($status === 'sent_to_produksi')
-                                                    <span class="badge bg-warning">Menunggu Tim Warehouse</span>
-                                                    @if($userRole === 'produksi')
-                                                        <button class="btn btn-sm btn-success mt-1" data-bs-toggle="modal" data-bs-target="#approveProduksiModal{{ $pemeriksaan->id }}"><i class="bi bi-check-circle"></i> Approve</button>
-                                                        <button class="btn btn-sm btn-danger mt-1" data-bs-toggle="modal" data-bs-target="#rejectProduksiModal{{ $pemeriksaan->id }}"><i class="bi bi-x-circle"></i> Reject</button>
+                                                @elseif($st === 'approved_produksi')
+                                                    <span class="badge bg-info text-white">Disetujui Warehouse</span>
+                                                    @if($userRole === 'spv qc' || $userRole === 'superadmin')
+                                                        <div class="mt-1">
+                                                            <button type="button" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#appSPV{{ $item->id }}"><i class="bi bi-check-circle"></i> Verifikasi</button>
+                                                            <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#rejSPV{{ $item->id }}"><i class="bi bi-x-circle"></i> Tolak</button>
+                                                        </div>
                                                     @endif
-                                                @elseif($status === 'approved_produksi')
-                                                    <span class="badge bg-info">Disetujui Tim Warehouse</span>
-                                                    @if($userRole === 'spv qc')
-                                                        <button class="btn btn-sm btn-success mt-1" data-bs-toggle="modal" data-bs-target="#approveSPVModal{{ $pemeriksaan->id }}"><i class="bi bi-check-circle"></i> Verifikasi</button>
-                                                        <button class="btn btn-sm btn-danger mt-1" data-bs-toggle="modal" data-bs-target="#rejectSPVModal{{ $pemeriksaan->id }}"><i class="bi bi-x-circle"></i> Reject</button>
-                                                    @endif
-                                                @elseif($status === 'approved_spv')
-                                                    <span class="badge bg-success">Disetujui SPV QC</span>
-                                                @elseif($status === 'rejected_produksi')
-                                                    <span class="badge bg-danger">Ditolak Tim Warehouse</span>
-                                                @elseif($status === 'rejected_spv')
-                                                    <span class="badge bg-danger">Ditolak SPV QC</span>
-                                                @endif
-                                            </td>
-                                            <td>
-                                                @if($pemeriksaan->verification_notes)
-                                                    <small class="text-muted">{{ Str::limit($pemeriksaan->verification_notes, 50) }}</small>
-                                                @else
-                                                    <span class="text-muted">-</span>
-                                                @endif
+                                                @elseif($st === 'approved_spv') <span class="badge bg-success">Disetujui SPV QC</span>
+                                                @else <span class="badge bg-danger">{{ str_replace('_', ' ', $st) }}</span> @endif
                                             </td>
                                             <td>
                                                 <div class="btn-vertical">
-                                                    <!-- <a href="{{ route('pemeriksaan-chemical.tambah-baris', $pemeriksaan->uuid) }}" class="btn btn-sm btn-success" title="Tambah Baris">
-                                                        <i class="bi bi-plus-circle"></i>
-                                                    </a> -->
-                                                    @can('view_pemeriksaan_kedatangan_chemical')
-                                                        <a href="{{ route('pemeriksaan-chemical.show', $pemeriksaan->uuid) }}" class="btn btn-sm btn-info" title="Detail">
-                                                            <i class="bi bi-eye"></i>
-                                                        </a>
-                                                    @endcan
-                                                    @can('edit_pemeriksaan_kedatangan_chemical')
-                                                        <a href="{{ route('pemeriksaan-chemical.edit', $pemeriksaan->uuid) }}" class="btn btn-sm btn-warning" title="Edit">
-                                                            <i class="bi bi-pencil"></i>
-                                                        </a>
-                                                    @endcan
+                                                    @can('view_pemeriksaan_kedatangan_chemical') <a href="{{ route('pemeriksaan-chemical.show', $item->uuid) }}" class="btn btn-sm btn-info text-white"><i class="bi bi-eye"></i></a> @endcan
+                                                    @can('edit_pemeriksaan_kedatangan_chemical') <a href="{{ route('pemeriksaan-chemical.edit', $item->uuid) }}" class="btn btn-sm btn-warning text-white"><i class="bi bi-pencil"></i></a> @endcan
                                                     @can('delete_pemeriksaan_kedatangan_chemical')
-                                                        <form action="{{ route('pemeriksaan-chemical.destroy', $pemeriksaan->uuid) }}" method="POST" class="d-inline" onsubmit="return confirm('Apakah Anda yakin ingin menghapus data ini?')">
-                                                            @csrf
-                                                            @method('DELETE')
-                                                            <button type="submit" class="btn btn-sm btn-danger" title="Hapus">
-                                                                <i class="bi bi-trash"></i>
-                                                            </button>
-                                                        </form>
+                                                        <button type="button" class="btn btn-sm btn-danger" onclick="if(confirm('Yakin ingin menghapus data ini?')) document.getElementById('del-{{$item->uuid}}').submit()"><i class="bi bi-trash"></i></button>
                                                     @endcan
                                                 </div>
                                             </td>
                                         </tr>
                                     @empty
-                                        <tr>
-                                            <td colspan="12" class="text-center">Tidak ada data</td>
-                                        </tr>
+                                        <tr><td colspan="9" class="text-center py-4">Belum ada data</td></tr>
                                     @endforelse
                                 </tbody>
                             </table>
                         </div>
-
-                        <div class="d-flex justify-content-end mt-3">
-                            {{ $pemeriksaans->appends(request()->query())->links() }}
+                        <div class="d-flex justify-content-between mt-3">
+                            <div>
+                                @if($canVerify)
+                                    <button type="submit" class="btn btn-primary" id="btnBatch" disabled onclick="return confirm('Verifikasi terpilih?')">
+                                        <i class="bi bi-patch-check"></i> Verifikasi Terpilih (<span id="countSelected">0</span>)
+                                    </button>
+                                @endif
+                            </div>
+                            <div>{{ $pemeriksaans->appends(request()->query())->links() }}</div>
                         </div>
-                    </div>
+                    </form>
                 </div>
             </div>
         </section>
+
+        {{-- MODALS --}}
+        @foreach($pemeriksaans as $item)
+            <div class="modal fade" id="appProduksi{{ $item->id }}" tabindex="-1" aria-hidden="true"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Approve Warehouse</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><form action="{{ route('pemeriksaan-chemical.approve-produksi', $item->uuid) }}" method="POST">@csrf<div class="modal-body"><textarea class="form-control" name="notes" placeholder="Catatan (Opsional)"></textarea></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button><button type="submit" class="btn btn-success">Approve</button></div></form></div></div></div>
+            <div class="modal fade" id="rejProduksi{{ $item->id }}" tabindex="-1" aria-hidden="true"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Reject Warehouse</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><form action="{{ route('pemeriksaan-chemical.reject-produksi', $item->uuid) }}" method="POST">@csrf<div class="modal-body"><textarea class="form-control" name="notes" placeholder="Alasan penolakan" required></textarea></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button><button type="submit" class="btn btn-danger">Reject</button></div></form></div></div></div>
+            <div class="modal fade" id="appSPV{{ $item->id }}" tabindex="-1" aria-hidden="true"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Verifikasi SPV QC</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><form action="{{ route('pemeriksaan-chemical.approve-spv', $item->uuid) }}" method="POST">@csrf<div class="modal-body"><textarea class="form-control" name="notes" placeholder="Catatan (Opsional)"></textarea></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button><button type="submit" class="btn btn-success">Verifikasi</button></div></form></div></div></div>
+            <div class="modal fade" id="rejSPV{{ $item->id }}" tabindex="-1" aria-hidden="true"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Reject SPV QC</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><form action="{{ route('pemeriksaan-chemical.reject-spv', $item->uuid) }}" method="POST">@csrf<div class="modal-body"><textarea class="form-control" name="notes" placeholder="Alasan penolakan" required></textarea></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button><button type="submit" class="btn btn-danger">Reject</button></div></form></div></div></div>
+        @endforeach
     </div>
+
+    {{-- Forms Hapus di luar agar tidak nested --}}
+    @foreach($pemeriksaans as $item)
+        @can('delete_pemeriksaan_kedatangan_chemical')
+            <form id="del-{{$item->uuid}}" action="{{ route('pemeriksaan-chemical.destroy', $item->uuid) }}" method="POST" style="display:none;">
+                @csrf
+                @method('DELETE')
+            </form>
+        @endcan
+    @endforeach
 </div>
-
-<!-- Modal untuk Approve/Reject Produksi dan SPV QC -->
-@foreach($pemeriksaans as $pemeriksaan)
-    <!-- Modal Approve Produksi -->
-    <div class="modal fade" id="approveProduksiModal{{ $pemeriksaan->id }}" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Approve Pemeriksaan</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <form action="{{ route('pemeriksaan-chemical.approve-produksi', $pemeriksaan->uuid) }}" method="POST">
-                    @csrf
-                    <div class="modal-body">
-                        @if($pemeriksaan->verification_notes)
-                            <div class="alert alert-info mb-3"><strong>Catatan Sebelumnya:</strong><br>{{ $pemeriksaan->verification_notes }}</div>
-                        @endif
-                        <div class="mb-3">
-                            <label class="form-label">Catatan (Opsional)</label>
-                            <textarea class="form-control" name="notes" rows="3" placeholder="Masukkan catatan jika ada"></textarea>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                        <button type="submit" class="btn btn-success">Approve</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal Reject Produksi -->
-    <div class="modal fade" id="rejectProduksiModal{{ $pemeriksaan->id }}" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Reject Pemeriksaan</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <form action="{{ route('pemeriksaan-chemical.reject-produksi', $pemeriksaan->uuid) }}" method="POST">
-                    @csrf
-                    <div class="modal-body">
-                        @if($pemeriksaan->verification_notes)
-                            <div class="alert alert-info mb-3"><strong>Catatan Sebelumnya:</strong><br>{{ $pemeriksaan->verification_notes }}</div>
-                        @endif
-                        <div class="mb-3">
-                            <label class="form-label">Alasan Penolakan <span class="text-danger">*</span></label>
-                            <textarea class="form-control" name="notes" rows="3" placeholder="Masukkan alasan penolakan" required></textarea>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                        <button type="submit" class="btn btn-danger">Reject</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal Approve SPV QC -->
-    <div class="modal fade" id="approveSPVModal{{ $pemeriksaan->id }}" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Verifikasi Pemeriksaan</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <form action="{{ route('pemeriksaan-chemical.approve-spv', $pemeriksaan->uuid) }}" method="POST">
-                    @csrf
-                    <div class="modal-body">
-                        @if($pemeriksaan->verification_notes)
-                            <div class="alert alert-info mb-3"><strong>Catatan Sebelumnya:</strong><br>{{ $pemeriksaan->verification_notes }}</div>
-                        @endif
-                        <div class="mb-3">
-                            <label class="form-label">Catatan (Opsional)</label>
-                            <textarea class="form-control" name="notes" rows="3" placeholder="Masukkan catatan jika ada"></textarea>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                        <button type="submit" class="btn btn-success">Verifikasi</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal Reject SPV QC -->
-    <div class="modal fade" id="rejectSPVModal{{ $pemeriksaan->id }}" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Reject Pemeriksaan</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <form action="{{ route('pemeriksaan-chemical.reject-spv', $pemeriksaan->uuid) }}" method="POST">
-                    @csrf
-                    <div class="modal-body">
-                        @if($pemeriksaan->verification_notes)
-                            <div class="alert alert-info mb-3"><strong>Catatan Sebelumnya:</strong><br>{{ $pemeriksaan->verification_notes }}</div>
-                        @endif
-                        <div class="mb-3">
-                            <label class="form-label">Alasan Penolakan <span class="text-danger">*</span></label>
-                            <textarea class="form-control" name="notes" rows="3" placeholder="Masukkan alasan penolakan" required></textarea>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                        <button type="submit" class="btn btn-danger">Reject</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-@endforeach
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const produkByKategori = @json($produkByKategori ?? []);
-    const kategoriSelect = document.querySelector('select.kategori-produk-select[name="kategori_code"]');
-    const produkSelect = document.querySelector('select.produk-select[name="id_produk"]');
-
-    let kategoriChoices = null;
-    let produkChoices = null;
-
-    const initChoicesSafe = function(selectEl) {
-        try {
-            if (!selectEl) return null;
-            if (typeof Choices === 'undefined') return null;
-            return new Choices(selectEl, {
-                searchResultLimit: 100,
-                    searchFuzziness: 0.000001,
-                    fuseOptions: { ignoreLocation: true, threshold: 0.2, matchAllTokens: false },
-                    searchEnabled: true,
-                searchPlaceholderValue: 'Cari...',
-                itemSelectText: 'Tekan untuk memilih',
-                noResultsText: 'Tidak ada hasil ditemukan',
-                noChoicesText: 'Tidak ada pilihan tersedia',
-                removeItemButton: true,
-                shouldSort: false,
-                placeholder: true,
-                placeholderValue: 'Pilih...'
-            });
-        } catch (e) {
-            return null;
-        }
-    };
-
-    kategoriChoices = initChoicesSafe(kategoriSelect);
-    produkChoices = initChoicesSafe(produkSelect);
-
-    const populateProdukOptions = function(kategoriCode) {
-        if (!produkSelect) return;
-
-        const selectedFromAttr = produkSelect.getAttribute('data-selected') || '';
-
-        // If no category selected, just showing empty or we can show all depending on requirements.
-        // Let's just show from selected category to closely mirror create.blade.php.
-        // If they want to search "Semua Kategori", maybe load all? 
-        // The previous logic was: if !selectedCat then add all.
-        let options = [];
-        if (!kategoriCode) {
-            // Flatten all
-            Object.values(produkByKategori).forEach(arr => {
-                options = options.concat(arr);
-            });
-        } else {
-            options = (produkByKategori && produkByKategori[kategoriCode]) ? produkByKategori[kategoriCode] : [];
-        }
-
-        if (produkChoices) {
-            const choiceItems = [{ value: '', label: '-- Semua Produk --', selected: !selectedFromAttr }].concat(
-                options.map((p) => {
-                    const v = String(p.id);
-                    return {
-                        value: v,
-                        label: String(p.nama),
-                        selected: selectedFromAttr === v,
-                    };
-                })
-            );
-
-            try {
-                produkChoices.clearChoices();
-                produkChoices.setChoices(choiceItems, 'value', 'label', true);
-            } catch (e) {
+    const pByCat = @json($produkByKategori ?? []);
+    const kRel = document.getElementById('filterKategori'), pRel = document.getElementById('filterProduk');
+    
+    if (kRel && pRel) {
+        const initC = (el) => (typeof Choices !== 'undefined') ? new Choices(el, { searchEnabled: true, itemSelectText: '', removeItemButton: true }) : null;
+        const kC = initC(kRel), pC = initC(pRel);
+        const pop = (v) => {
+            const sel = pRel.getAttribute('data-selected');
+            let os = [];
+            if (!v) Object.values(pByCat).forEach(a => os = os.concat(a));
+            else os = pByCat[v] || [];
+            if (pC) {
+                pC.clearChoices();
+                pC.setChoices([{value:'', label:'-- Semua Produk --', selected:!sel}].concat(os.map(o=>({value:String(o.id), label:o.nama, selected:o.id==sel}))), 'value', 'label', true);
             }
-        } else {
-            while (produkSelect.options.length > 0) {
-                produkSelect.remove(0);
-            }
-            produkSelect.add(new Option('-- Semua Produk --', ''));
-            options.forEach(function(p) {
-                produkSelect.add(new Option(p.nama, p.id));
-            });
+        };
+        kRel.onchange = (e) => pop(e.target.value);
+        pop(kRel.value);
+    }
 
-            if (selectedFromAttr) {
-                produkSelect.value = selectedFromAttr;
-            }
-        }
-    };
+    const sAll = document.getElementById('selectAll'), rows = document.querySelectorAll('.row-checkbox'), btnB = document.getElementById('btnBatch'), cSp = document.getElementById('countSelected');
+    if (sAll) sAll.onclick = () => { rows.forEach(r => r.checked = sAll.checked); u(); };
+    rows.forEach(r => r.onclick = u);
+    function u() { const n = document.querySelectorAll('.row-checkbox:checked').length; if(btnB){ btnB.disabled = n===0; cSp.innerText = n; } }
 
-    if (kategoriSelect) {
-        kategoriSelect.addEventListener('change', function() {
-            if (produkSelect) {
-                produkSelect.setAttribute('data-selected', '');
-            }
-            populateProdukOptions(kategoriSelect.value);
-        });
-        
-        // Initial populate (handle old inputs)
-        setTimeout(() => {
-            populateProdukOptions(kategoriSelect.value);
-        }, 100);
+    const shiftS = document.getElementById('shiftSelect');
+    const tD = document.getElementById('tanggalDariWrapper'), tSm = document.getElementById('tanggalSampaiWrapper'), tSi = document.getElementById('tanggalSingleWrapper');
+    if(shiftS){
+        const upD = () => {
+            const o = shiftS.options[shiftS.selectedIndex];
+            const isR = o.getAttribute('data-is-date-range') == '1';
+            const sN = o.getAttribute('data-shift-name');
+            tD.style.display = isR ? 'block' : 'none'; tSm.style.display = isR ? 'block' : 'none';
+            tSi.style.display = (!isR && sN) ? 'block' : 'none';
+        };
+        shiftS.onchange = upD; upD();
     }
 });
 </script>
-
 @endsection

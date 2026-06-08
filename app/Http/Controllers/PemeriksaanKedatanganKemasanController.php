@@ -1192,4 +1192,101 @@ return view('qc-sistem.pemeriksaan-kedatangan-kemasan.index', compact('pemeriksa
         $filename = 'laporan-pemeriksaan-kemasan-' . $filenameDate . '.pdf';
         return $pdf->download($filename);
     }
+
+    /**
+     * Batch verify records based on date range and shift
+     */
+    public function batchVerify(Request $request)
+    {
+        $user = Auth::user();
+        $userRole = $user->role ? strtolower($user->role->role) : null;
+        $selectedUuids = $request->input('selected_uuids', []);
+
+        $query = PemeriksaanKedatanganKemasan::query();
+
+        // JIKA MENGGUNAKAN CHECKBOX (PRIORITAS UTAMA)
+        if (!empty($selectedUuids)) {
+            $query->whereIn('uuid', $selectedUuids);
+        } else {
+            // JIKA MENGGUNAKAN KONTROL RANGE TANGGAL (FALLBACK)
+            $id_shift = $request->input('id_shift');
+            $tanggal_dari = $request->input('tanggal_dari');
+            $tanggal_sampai = $request->input('tanggal_sampai');
+            $tanggal = $request->input('tanggal');
+
+            if (!$id_shift) {
+                return back()->with('error', 'Silakan pilih shift atau gunakan checkbox untuk memilih data.');
+            }
+
+            // Filter Shift & Tanggal
+            $query->where('id_shift', $id_shift);
+            $shift = Shift::find($id_shift);
+            if ($shift && $shift->is_date_range) {
+                if ($tanggal_dari && $tanggal_sampai) {
+                    $query->whereBetween('tanggal', [$tanggal_dari, $tanggal_sampai]);
+                } else {
+                    return back()->with('error', 'Silakan tentukan range tanggal (Dari & Sampai).');
+                }
+            } else {
+                if ($tanggal) {
+                    $query->whereDate('tanggal', $tanggal);
+                } else {
+                    return back()->with('error', 'Silakan tentukan tanggal pemeriksaan atau gunakan checkbox.');
+                }
+            }
+        }
+        
+        // Filter berdasarkan plant user
+        $effectivePlantId = $this->getActivePlantId($user);
+        if (!($user->role && $userRole === 'superadmin')) {
+            $query->whereHas('user', function ($q) use ($effectivePlantId) {
+                $q->where('id_plant', $effectivePlantId);
+            });
+        }
+
+        // Tentukan status asal dan status tujuan berdasarkan role
+        $fromStatus = null;
+        $updateData = [];
+
+        if ($userRole === 'qc inspector') {
+            $fromStatus = ['pending', null];
+            $updateData = [
+                'status_verifikasi' => 'sent_to_produksi',
+                'verified_by' => $user->id,
+                'verified_by_qc' => $user->id,
+                'verified_at' => now()
+            ];
+        } elseif ($userRole === 'produksi') {
+            $fromStatus = ['sent_to_produksi'];
+            $updateData = [
+                'status_verifikasi' => 'approved_produksi',
+                'verified_by' => $user->id,
+                'verified_by_produksi' => $user->id,
+                'verified_at' => now()
+            ];
+        } elseif ($userRole === 'spv qc' || $userRole === 'superadmin') {
+            $fromStatus = ['approved_produksi'];
+            $updateData = [
+                'status_verifikasi' => 'approved_spv',
+                'verified_by' => $user->id,
+                'verified_by_spv' => $user->id,
+                'verified_at' => now()
+            ];
+        }
+
+        if (!$fromStatus) {
+            return back()->with('error', 'Anda tidak memiliki akses untuk melakukan verifikasi.');
+        }
+
+        // Filter data yang sesuai status asal
+        $query->whereIn('status_verifikasi', (array) $fromStatus);
+
+        $count = $query->count();
+        if ($count > 0) {
+            $query->update($updateData);
+            return back()->with('success', "$count data pemeriksaan berhasil diverifikasi secara massal.");
+        }
+
+        return back()->with('info', 'Tidak ada data yang perlu diverifikasi pada filter tersebut.');
+    }
 }
