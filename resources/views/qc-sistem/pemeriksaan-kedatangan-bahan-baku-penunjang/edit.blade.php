@@ -470,9 +470,9 @@
                                                 $existingProdusenItems = array_values(array_filter(array_map('trim', explode(',', (string) $existingProdusen)), fn ($v) => $v !== ''));
                                             @endphp
 
-                                            <div class="unified-row mb-4 p-3 border rounded" style="background-color: #f8f9fa;" data-row-index="{{ $produkNo }}">
+                                            <div class="unified-row mb-4 p-3 border rounded shadow-sm" style="background-color: #f8f9fa; border-left: 4px solid #435ebe;" data-row-index="{{ $produkNo }}">
                                                 <div class="d-flex justify-content-between align-items-center mb-3">
-                                                    <h6 class="mb-0 text-white">Produk {{ $produkNo + 1 }}</h6>
+                                                    <h5 class="mb-0 text-primary">Produk {{ $produkNo + 1 }}</h5>
                                                 </div>
 
                                                 <!-- Informasi Produk (Header) -->
@@ -756,7 +756,7 @@
                                                                     @endif
                                                                     <div class="form-group">
                                                                         <label class="form-label">Ganti Foto Bahan Baku (Max 1MB)</label>
-                                                                        <input type="file" name="image_bahan_baku[]" class="form-control" accept="image/*" capture="camera">
+                                                                        <input type="file" name="image_bahan_baku[]" class="form-control image-bahan-baku-input" accept="image/*" capture="camera">
                                                                     </div>
                                                                 </div>
                                                             </div>
@@ -1455,8 +1455,8 @@ document.addEventListener('DOMContentLoaded', function() {
             if (label) {
                 updateProdukLabel(row, index);
             } else {
-                const title = row.querySelector('h6');
                 if (title) title.textContent = `Produk ${index + 1}`;
+                if (title) title.outerHTML = `<h5 class="text-primary mb-3">${title.textContent}</h5>`;
             }
         });
     }
@@ -1666,6 +1666,103 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     } catch (err) {
         console.error('Error flattening BBP edit form on submit:', err);
+    }
+});
+
+/* --- IMAGE COMPRESSION LOGIC --- */
+const MAX_SIZE = 1024 * 1024; // 1MB
+
+function fileToDataURL(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
+}
+
+function loadImage(src) {
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.onerror = reject;
+        img.src = src;
+    });
+}
+
+async function compressImage(file) {
+    const dataUrl = await fileToDataURL(file);
+    const img = await loadImage(dataUrl);
+
+    const maxDimension = 1920;
+    let { width, height } = img;
+    if (width > height && width > maxDimension) {
+        height = Math.round((height * maxDimension) / width);
+        width = maxDimension;
+    } else if (height >= width && height > maxDimension) {
+        width = Math.round((width * maxDimension) / height);
+        height = maxDimension;
+    }
+
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(img, 0, 0, width, height);
+
+    let quality = 0.85;
+    let blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', quality));
+    while (blob && blob.size > MAX_SIZE && quality > 0.4) {
+        quality -= 0.1;
+        blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', quality));
+    }
+
+    const newName = (file.name || 'image').replace(/\.[^/.]+$/, '') + '.jpg';
+    return new File([blob], newName, { type: 'image/jpeg', lastModified: Date.now() });
+}
+
+async function handleImageInputChange(input) {
+    const file = input.files && input.files[0] ? input.files[0] : null;
+    if (!file) return;
+
+    if (file.size <= MAX_SIZE) return;
+
+    // Show processing feedback
+    const formGroup = input.closest('.form-group');
+    const labelEl = formGroup ? formGroup.querySelector('.form-label') : null;
+    const originalLabel = labelEl ? labelEl.innerHTML : 'Foto';
+    
+    if (labelEl) {
+        labelEl.innerHTML = originalLabel + ' <span class="badge bg-primary"><i class="bi bi-hourglass-split"></i> Mengompres...</span>';
+    }
+    input.disabled = true;
+
+    try {
+        const compressedFile = await compressImage(file);
+        const dt = new DataTransfer();
+        dt.items.add(compressedFile);
+        input.files = dt.files;
+        
+        if (labelEl) {
+            labelEl.innerHTML = originalLabel + ' <span class="badge bg-success"><i class="bi bi-check-circle"></i> Selesai (Auto-Compressed)</span>';
+        }
+    } catch (e) {
+        console.error('Compression error:', e);
+        if (labelEl) {
+            labelEl.innerHTML = originalLabel + ' <span class="badge bg-danger"><i class="bi bi-exclamation-triangle"></i> Kompresi Gagal</span>';
+        }
+    } finally {
+        input.disabled = false;
+        setTimeout(() => {
+            if (labelEl) labelEl.innerHTML = originalLabel;
+        }, 3000);
+    }
+}
+
+document.addEventListener('change', function(e) {
+    const input = e.target;
+    if (input && input.classList && input.classList.contains('image-bahan-baku-input')) {
+        handleImageInputChange(input);
     }
 });
 

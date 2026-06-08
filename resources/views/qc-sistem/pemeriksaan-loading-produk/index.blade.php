@@ -141,7 +141,7 @@
                                         <th>Tanggal</th>
                                         <th>Shift</th>
                                         <th>Plant</th>
-                                        <th>Produk</th>
+                                        <th>Nama Produk</th>
                                         <th>Customer</th>
                                         <th>No. Kendaraan</th>
                                         <th>Verifikasi</th>
@@ -173,7 +173,8 @@
                                                     $firstPId = $pData[0]['id_produk'] ?? null;
                                                     $pName = $firstPId ? ($produkNamaById[$firstPId] ?? '-') : '-';
                                                 @endphp
-                                                {{ $pName }} <br> @if($countP > 1) <small class="text-primary">+{{ $countP-1 }} lainnya</small> @endif
+                                                <span class="badge bg-info">{{ $pName }}</span>
+                                                @if($countP > 1) <br><small class="text-muted">+{{ $countP-1 }} lainnya</small> @endif
                                             </td>
                                             <td>{{ $item->tujuanPengiriman->customer->nama_cust ?? '-' }}</td>
                                             <td>{{ $item->kendaraan->no_kendaraan ?? '-' }}</td>

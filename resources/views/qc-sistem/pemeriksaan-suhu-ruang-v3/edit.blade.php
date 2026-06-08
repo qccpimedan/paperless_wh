@@ -158,11 +158,11 @@
                                                             </div>
                                                             <div class="col-md-4">
                                                                 <label for="{{ $fieldKey }}_{{ $i }}_display">Display (°C)</label>
-                                                                <input type="text" id="{{ $fieldKey }}_{{ $i }}_display" class="form-control form-control-sm" name="{{ $fieldKey }}_{{ $i }}_display" placeholder="Masukkan nilai" value="{{ old($fieldKey . '_' . $i . '_display', $unitData['display'] ?? '') }}">
+                                                                <input type="text" inputmode="text" id="{{ $fieldKey }}_{{ $i }}_display" class="form-control form-control-sm" name="{{ $fieldKey }}_{{ $i }}_display" placeholder="Masukkan nilai" value="{{ old($fieldKey . '_' . $i . '_display', $unitData['display'] ?? '') }}">
                                                             </div>
                                                             <div class="col-md-4">
                                                                 <label for="{{ $fieldKey }}_{{ $i }}_actual">Actual (°C)</label>
-                                                                <input type="text" id="{{ $fieldKey }}_{{ $i }}_actual" class="form-control form-control-sm" name="{{ $fieldKey }}_{{ $i }}_actual" placeholder="Masukkan nilai" value="{{ old($fieldKey . '_' . $i . '_actual', $unitData['actual'] ?? '') }}">
+                                                                <input type="text" inputmode="text" id="{{ $fieldKey }}_{{ $i }}_actual" class="form-control form-control-sm" name="{{ $fieldKey }}_{{ $i }}_actual" placeholder="Masukkan nilai" value="{{ old($fieldKey . '_' . $i . '_actual', $unitData['actual'] ?? '') }}">
                                                             </div>
                                                         </div>
                                                     </div>
