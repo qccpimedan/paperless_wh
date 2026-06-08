@@ -29,7 +29,7 @@
         </div>
 
         <div class="sidebar-menu">
-            <ul class="menu pt-3">
+            <ul class="menu pt-3" data-accordion="true">
                 <li class="sidebar-title">Menu</li>
 
                 <li class="sidebar-item {{ request()->routeIs('dashboard') ? 'active' : '' }}">

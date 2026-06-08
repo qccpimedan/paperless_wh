@@ -13,6 +13,8 @@
             })
             ->get();
     }
+    $userRole = auth()->user()->role ? strtolower(auth()->user()->role->role) : null;
+    $canVerify = in_array($userRole, ['qc inspector', 'warehouse', 'produksi', 'spv qc', 'superadmin', 'produksi/warehouse']);
 @endphp
 <div id="main">
     <header class="mb-3">
@@ -25,46 +27,57 @@
         <div class="page-title">
             <div class="row">
                 <div class="col-12 col-md-6 order-md-1 order-last">
-                    <h3>Pemeriksaan Return Barang Dari Customer</h3>
-                    <p class="text-subtitle text-muted">Daftar pemeriksaan return barang</p>
+                    <h3>Pemeriksaan Return Barang Customer</h3>
+                    <p class="text-subtitle text-muted">Kelola data pemeriksaan return barang dari customer</p>
                 </div>
                 <div class="col-12 col-md-6 order-md-2 order-first">
                     <nav aria-label="breadcrumb" class="breadcrumb-header float-start float-lg-end">
                         <ol class="breadcrumb">
-                            <li class="breadcrumb-item"><a href="{{ route('return-barang.index') }}">Pemeriksaan Return Barang</a></li>
-                            <li class="breadcrumb-item active" aria-current="page">Pemeriksaan Return Barang</li>
+                            <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
+                            <li class="breadcrumb-item active" aria-current="page">Return Barang</li>
                         </ol>
                     </nav>
                 </div>
             </div>
         </div>
 
+        @if(session('success'))
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="bi bi-check-circle-fill me-2"></i> {{ session('success') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
+        @if(session('error'))
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i> {{ session('error') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
+
         <section class="section">
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="card-title">Daftar Pemeriksaan Return Barang</h5>
-                    @can('create_pemeriksaan_return_barang_customer')
-                        <a href="{{ route('return-barang.create') }}" class="btn btn-primary">
-                            <i class="bi bi-plus-circle"></i> Tambah Pemeriksaan
-                        </a>
-                    @endcan
+                    <h5 class="card-title mb-0">Daftar Pemeriksaan Return Barang</h5>
+                    <div class="d-flex gap-2">
+                        @if($canVerify)
+                            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#multiApprovalModal">
+                                <i class="bi bi-patch-check"></i> Multi Approval
+                            </button>
+                        @endif
+                        @can('create_pemeriksaan_return_barang_customer')
+                            <a href="{{ route('return-barang.create') }}" class="btn btn-primary">
+                                <i class="bi bi-plus-circle"></i> Tambah Pemeriksaan
+                            </a>
+                        @endcan
+                    </div>
                 </div>
                 <div class="card-body">
-                    @if ($message = Session::get('success'))
-                        <div class="alert alert-success alert-dismissible fade show" role="alert">
-                            {{ $message }}
-                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                        </div>
-                    @endif
-
                     <div class="row mb-4 p-3 bg-light rounded">
-                        <div class="col-md-12 mb-3">
-                            <h6 class="mb-3"><i class="bi bi-funnel"></i> Filter & Cetak PDF</h6>
-                        </div>
-                        <form action="{{ route('return-barang.export-pdf') }}" method="GET" class="row g-3" id="pdfFilterForm">
+                        <div class="col-md-12 mb-3"><h6><i class="bi bi-funnel"></i> Filter & Verifikasi Massal</h6></div>
+                        <form action="{{ route('return-barang.export-pdf') }}" method="GET" class="row g-3" id="filterForm">
                             <div class="col-md-3">
                                 <label class="form-label">Shift</label>
-                                <select name="id_shift" class="form-select" id="shiftSelect" required>
+                                <select name="id_shift" class="form-select" id="shiftSelect">
                                     <option value="">-- Pilih Shift --</option>
                                     @foreach($shifts ?? [] as $shift)
                                         <option value="{{ $shift->id }}" data-shift-name="{{ $shift->shift }}" data-is-date-range="{{ $shift->is_date_range }}" {{ request('id_shift') == $shift->id ? 'selected' : '' }}>
@@ -75,479 +88,257 @@
                             </div>
                             <div class="col-md-3" id="tanggalDariWrapper">
                                 <label class="form-label">Tanggal Dari</label>
-                                <input type="date" name="tanggal_dari" class="form-control" id="tanggalDari" value="{{ request('tanggal_dari') }}">
+                                <input type="date" name="tanggal_dari" class="form-control" value="{{ request('tanggal_dari') }}">
                             </div>
                             <div class="col-md-3" id="tanggalSampaiWrapper">
                                 <label class="form-label">Tanggal Sampai</label>
-                                <input type="date" name="tanggal_sampai" class="form-control" id="tanggalSampai" value="{{ request('tanggal_sampai') }}">
+                                <input type="date" name="tanggal_sampai" class="form-control" value="{{ request('tanggal_sampai') }}">
                             </div>
                             <div class="col-md-3" id="tanggalSingleWrapper" style="display: none;">
                                 <label class="form-label">Tanggal</label>
-                                <input type="date" name="tanggal" class="form-control" id="tanggalSingle" value="{{ request('tanggal') }}">
+                                <input type="date" name="tanggal" class="form-control" value="{{ request('tanggal') }}">
                             </div>
-
-                                                                <div class="col-md-3">
-                                    <label class="form-label">Kategori</label>
-                                    <select name="kategori_code" class="form-select kategori-produk-select" id="filterKategori">
-                                        <option value="">-- Semua Kategori --</option>
-                                        @if(isset($produkKategoriOptions))
-                                            @foreach($produkKategoriOptions as $kategori)
-                                                <option value="{{ $kategori }}" {{ request("kategori_code") == $kategori ? "selected" : "" }}>
-                                                    {{ $kategori }}
-                                                </option>
-                                            @endforeach
-                                        @endif
-                                    </select>
-                                </div>
-                                <div class="col-md-3">
-                                    <label class="form-label">Nama Produk</label>
-                                    <select name="id_produk" class="form-select produk-select" id="filterProduk" data-selected="{{ request('id_produk', '') }}">
-                                        <option value="">-- Semua Produk --</option>
-                                    </select>
-                                </div>
-
+                            <div class="col-md-3">
+                                <label class="form-label">Kategori</label>
+                                <select name="kategori_code" class="form-select" id="filterKategori">
+                                    <option value="">-- Semua Kategori --</option>
+                                    @foreach($produkKategoriOptions ?? [] as $k)
+                                        <option value="{{ $k }}" {{ request('kategori_code') == $k ? 'selected' : '' }}>{{ $k }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Produk</label>
+                                <select name="id_produk" class="form-select" id="filterProduk" data-selected="{{ request('id_produk') }}">
+                                    <option value="">-- Semua Produk --</option>
+                                </select>
+                            </div>
                             <div class="col-md-3 d-flex align-items-end">
-                                <button type="submit" class="btn btn-success w-100">
-                                    <i class="bi bi-file-pdf"></i> Cetak PDF
-                                </button>
+                                <button type="submit" class="btn btn-success w-100"><i class="bi bi-file-pdf"></i> PDF</button>
                             </div>
                         </form>
                     </div>
-
+                    
                     <form action="{{ route('return-barang.index') }}" method="GET" class="row g-3 mb-3">
-                        <div class="col-md-9">
-                            <input type="text" name="search" class="form-control" placeholder="Cari tanggal/customer/produk..." value="{{ request('search') }}">
-                        </div>
-                        <div class="col-md-3 d-flex align-items-end">
-                            <button type="submit" class="btn btn-primary w-100">Cari</button>
+                        <div class="col-md-9"><input type="text" name="search" class="form-control" placeholder="Cari Produk, Customer, atau Kode Produksi..." value="{{ request('search') }}"></div>
+                        <div class="col-md-3 d-flex align-items-end gap-2">
+                            <button type="submit" class="btn btn-primary btn-sm">Cari Data</button>
+                            <a href="{{ route('return-barang.index') }}" class="btn btn-secondary btn-sm">Reset</a>
                         </div>
                     </form>
 
-                    <script>
-                        document.addEventListener('DOMContentLoaded', function() {
-                            const shiftSelect = document.getElementById('shiftSelect');
-                            const tanggalDariWrapper = document.getElementById('tanggalDariWrapper');
-                            const tanggalSampaiWrapper = document.getElementById('tanggalSampaiWrapper');
-                            const tanggalSingleWrapper = document.getElementById('tanggalSingleWrapper');
-                            const tanggalDari = document.getElementById('tanggalDari');
-                            const tanggalSampai = document.getElementById('tanggalSampai');
-                            const tanggalSingle = document.getElementById('tanggalSingle');
-
-                            function updateDateFields() {
-                                const selectedOption = shiftSelect.options[shiftSelect.selectedIndex];
-                                const shiftName = selectedOption ? selectedOption.getAttribute('data-shift-name') : null;
-
-                                const isShift1 = shiftName && (shiftName.toLowerCase().includes('1') || shiftName.toLowerCase().includes('pagi'));
-                                const isShift2or3 = shiftName && !isDateRange;
-
-                                if (isShift1) {
-                                    tanggalDariWrapper.style.display = 'block';
-                                    tanggalSampaiWrapper.style.display = 'block';
-                                    tanggalSingleWrapper.style.display = 'none';
-
-                                    tanggalDari.required = true;
-                                    tanggalSampai.required = true;
-                                    tanggalSingle.required = false;
-                                    tanggalSingle.value = '';
-                                } else if (isShift2or3) {
-                                    tanggalDariWrapper.style.display = 'none';
-                                    tanggalSampaiWrapper.style.display = 'none';
-                                    tanggalSingleWrapper.style.display = 'block';
-
-                                    tanggalDari.required = false;
-                                    tanggalSampai.required = false;
-                                    tanggalSingle.required = true;
-                                    tanggalDari.value = '';
-                                    tanggalSampai.value = '';
-                                } else {
-                                    tanggalDariWrapper.style.display = 'none';
-                                    tanggalSampaiWrapper.style.display = 'none';
-                                    tanggalSingleWrapper.style.display = 'none';
-
-                                    tanggalDari.required = false;
-                                    tanggalSampai.required = false;
-                                    tanggalSingle.required = false;
-                                }
-                            }
-
-                            shiftSelect.addEventListener('change', updateDateFields);
-                            updateDateFields();
-                        });
-                    </script>
-
-                    <div class="table-responsive">
-                        <table class="table table-striped text-center" id="table1" data-disable-datatable="1" style="white-space: nowrap;">
-                            <thead>
-                                <tr>
-                                    <th>No</th>
-                                    <th>Tanggal</th>
-                                    <th>Shift</th>
-                                    <th>Plant</th>
-                                    <th>Customer</th>
-                                    <th>Produk</th>
-                                    <!-- <th>Kondisi</th> -->
-                                    <!-- <th>Rekomendasi</th> -->
-                                    <th>Verifikasi</th>
-                                    <th>Catatan Verifikasi</th>
-                                    <th>Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @forelse($pemeriksaans as $index => $pemeriksaan)
+                    <form id="batchActionForm" action="{{ route('return-barang.batch-verify') }}" method="POST">
+                        @csrf
+                        <div class="table-responsive">
+                            <table class="table table-striped text-center" style="white-space: nowrap;">
+                                <thead>
                                     <tr>
-                                        <td>{{ ($pemeriksaans->firstItem() ?? 1) + $index }}</td>
-                                        <td>{{ \Carbon\Carbon::parse($pemeriksaan->tanggal)->format('d/m/Y') }}</td>
-                                        <td>
-                                            <span class="badge bg-primary">{{ $pemeriksaan->shift->shift ?? '-' }}</span>
-                                        </td>
-                                        <td>
-                                            <span class="badge bg-primary">{{ $pemeriksaan->user->plant->plant ?? '-' }}</span>
-                                        </td>
-                                        <td>
-                                            <strong>{{ $pemeriksaan->customer->nama_cust ?? '-' }}</strong>
-                                        </td>
-                                        <td>
-                                            @if($pemeriksaan->produk_data && count($pemeriksaan->produk_data) > 0)
+                                        <th>
+                                            @if($canVerify) <input type="checkbox" id="selectAll" class="form-check-input">
+                                            @else <i class="bi bi-check-square"></i> @endif
+                                        </th>
+                                        <th>No</th>
+                                        <th>Tanggal</th>
+                                        <th>Shift</th>
+                                        <th>Plant</th>
+                                        <th>Customer</th>
+                                        <th>Produk</th>
+                                        <th>Kode Produksi</th>
+                                        <th>Verifikasi</th>
+                                        <th>Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @forelse($pemeriksaans as $index => $item)
+                                        @php
+                                            $st = $item->status_verifikasi ?? 'pending';
+                                            $canRowV = false;
+                                            if ($userRole === 'qc inspector' && ($st === 'pending' || $st === null)) $canRowV = true;
+                                            elseif (($userRole === 'produksi' || $userRole === 'warehouse' || $userRole === 'produksi/warehouse') && $st === 'sent_to_produksi') $canRowV = true;
+                                            elseif (($userRole === 'spv qc' || $userRole === 'superadmin') && $st === 'approved_produksi') $canRowV = true;
+                                        @endphp
+                                        <tr>
+                                            <td>
+                                                @if($canRowV) <input type="checkbox" name="selected_uuids[]" value="{{ $item->uuid }}" class="form-check-input row-checkbox">
+                                                @else <i class="bi bi-dash text-muted"></i> @endif
+                                            </td>
+                                            <td>{{ ($pemeriksaans->firstItem() ?? 1) + $index }}</td>
+                                            <td><strong>{{ $item->tanggal->format('d/m/Y') }}</strong></td>
+                                            <td><span class="badge bg-primary">{{ $item->shift->shift ?? '-' }}</span></td>
+                                            <td><span class="badge bg-secondary">{{ $item->user->plant->plant ?? '-' }}</span></td>
+                                            <td>{{ $item->customer->nama_cust ?? '-' }}</td>
+                                            <td>
                                                 @php
-                                                    $firstProduk = $pemeriksaan->produk_data[0];
-                                                    $produkName = \App\Models\Produk::find($firstProduk['id_produk'])?->nama_produk ?? 'Produk tidak ditemukan';
-                                                    $totalProduk = count($pemeriksaan->produk_data);
+                                                    $pData = $item->produk_data ?? [];
+                                                    $countP = count($pData);
+                                                    $firstPId = $pData[0]['id_produk'] ?? null;
+                                                    $pName = $firstPId ? ($produkNamaById[$firstPId] ?? '-') : '-';
                                                 @endphp
-                                                {{ $produkName }} <span class="badge bg-info">{{ $totalProduk }}</span>
-                                            @else
-                                                -
-                                            @endif
-                                        </td>
-                                        <!-- <td>
-                                            @if($pemeriksaan->produk_data && count($pemeriksaan->produk_data) > 0)
-                                                <span class="badge bg-info">{{ $pemeriksaan->produk_data[0]['kondisi_produk'] ?? '-' }}</span>
-                                            @else
-                                                <span class="badge bg-secondary">-</span>
-                                            @endif
-                                        </td>
-                                        <td>
-                                            @if($pemeriksaan->produk_data && count($pemeriksaan->produk_data) > 0)
-                                                <span class="badge bg-warning">{{ $pemeriksaan->produk_data[0]['rekomendasi'] ?? '-' }}</span>
-                                            @else
-                                                <span class="badge bg-secondary">-</span>
-                                            @endif
-                                        </td> -->
-                                        <td>
-                                            @php
-                                                $userRole = auth()->user()->role ? strtolower(auth()->user()->role->role) : null;
-                                                $status = $pemeriksaan->status_verifikasi ?? 'pending';
-                                            @endphp
-                                            
-                                            @if($status === 'pending' || $status === null)
-                                                @if($userRole === 'qc inspector')
-                                                    <form action="{{ route('return-barang.send-to-produksi', $pemeriksaan->uuid) }}" method="POST" style="display: inline-block;">
-                                                        @csrf
-                                                        <button type="submit" class="btn btn-sm btn-primary" title="Kirim ke Tim Warehouse">
-                                                            <i class="bi bi-send"></i> Kirim
-                                                        </button>
-                                                    </form>
-                                                @else
-                                                    <span class="badge bg-secondary">Pending</span>
+                                                <span class="badge bg-info">{{ $pName }}</span>
+                                                @if($countP > 1)
+                                                    <br><small class="text-primary">+{{ $countP-1 }} lainnya</small>
                                                 @endif
-                                            @elseif($status === 'sent_to_produksi')
-                                                <span class="badge bg-warning">Menunggu Tim Warehouse</span>
-                                                @if($userRole === 'produksi')
-                                                    <button class="btn btn-sm btn-success mt-1" data-bs-toggle="modal" data-bs-target="#approveProduksiModal{{ $pemeriksaan->id }}" title="Approve">
-                                                        <i class="bi bi-check-circle"></i> Approve
-                                                    </button>
-                                                    <button class="btn btn-sm btn-danger mt-1" data-bs-toggle="modal" data-bs-target="#rejectProduksiModal{{ $pemeriksaan->id }}" title="Reject">
-                                                        <i class="bi bi-x-circle"></i> Reject
-                                                    </button>
+                                            </td>
+                                            <td>
+                                                @php
+                                                    $kodeArr = collect($pData)->pluck('kode_produksi')->filter()->unique()->values()->all();
+                                                    $countKode = count($kodeArr);
+                                                    $firstKode = $kodeArr[0] ?? '-';
+                                                @endphp
+                                                <span class="">{{ $firstKode }}</span>
+                                                @if($countKode > 1)
+                                                    <br><small class="text-primary">+{{ $countKode-1 }} lainnya</small>
                                                 @endif
-                                            @elseif($status === 'approved_produksi')
-                                                <span class="badge bg-info">Disetujui Tim Warehouse</span>
-                                                @if($userRole === 'spv qc')
-                                                    <button class="btn btn-sm btn-success mt-1" data-bs-toggle="modal" data-bs-target="#approveSPVModal{{ $pemeriksaan->id }}" title="Verifikasi">
-                                                        <i class="bi bi-check-circle"></i> Verifikasi
-                                                    </button>
-                                                    <button class="btn btn-sm btn-danger mt-1" data-bs-toggle="modal" data-bs-target="#rejectSPVModal{{ $pemeriksaan->id }}" title="Reject">
-                                                        <i class="bi bi-x-circle"></i> Reject
-                                                    </button>
-                                                @endif
-                                            @elseif($status === 'approved_spv')
-                                                <span class="badge bg-success">Disetujui SPV QC</span>
-                                            @elseif($status === 'rejected_produksi')
-                                                <span class="badge bg-danger">Ditolak Tim Warehouse</span>
-                                            @elseif($status === 'rejected_spv')
-                                                <span class="badge bg-danger">Ditolak SPV QC</span>
-                                            @endif
-                                        </td>
-                                        <td>
-                                            @if($pemeriksaan->verification_notes)
-                                                <small class="text-muted">{{ Str::limit($pemeriksaan->verification_notes, 50) }}</small>
-                                            @else
-                                                <span class="text-muted">-</span>
-                                            @endif
-                                        </td>
-                                        <td>
-                                            @can('view_pemeriksaan_return_barang_customer')
-                                                <a href="{{ route('return-barang.show', $pemeriksaan->uuid) }}" class="btn btn-sm btn-info">
-                                                    <i class="bi bi-eye"></i>
-                                                </a>
-                                            @endcan
-                                            @can('edit_pemeriksaan_return_barang_customer')
-                                                <a href="{{ route('return-barang.edit', $pemeriksaan->uuid) }}" class="btn btn-sm btn-warning">
-                                                    <i class="bi bi-pencil"></i>
-                                                </a>
-                                            @endcan
-                                            @can('delete_pemeriksaan_return_barang_customer')
-                                                <form action="{{ route('return-barang.destroy', $pemeriksaan->uuid) }}" method="POST" style="display:inline;">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Yakin ingin menghapus?')">
-                                                        <i class="bi bi-trash"></i>
-                                                    </button>
-                                                </form>
-                                            @endcan
-                                        </td>
-                                    </tr>
-
-                                    <!-- Modal Approve Produksi -->
-                                    <div class="modal fade" id="approveProduksiModal{{ $pemeriksaan->id }}" tabindex="-1" aria-hidden="true">
-                                        <div class="modal-dialog">
-                                            <div class="modal-content">
-                                                <div class="modal-header">
-                                                    <h5 class="modal-title">Approve Pemeriksaan</h5>
-                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                                </div>
-                                                <form action="{{ route('return-barang.approve-produksi', $pemeriksaan->uuid) }}" method="POST">
-                                                    @csrf
-                                                    <div class="modal-body">
-                                                        @if($pemeriksaan->verification_notes)
-                                                            <div class="alert alert-info mb-3">
-                                                                <strong>Catatan Sebelumnya:</strong><br>
-                                                                {{ $pemeriksaan->verification_notes }}
-                                                            </div>
-                                                        @endif
-                                                        <div class="mb-3">
-                                                            <label class="form-label">Catatan (Opsional)</label>
-                                                            <textarea class="form-control" name="notes" rows="3" placeholder="Masukkan catatan jika ada"></textarea>
+                                            </td>
+                                            <td>
+                                                @if($st === 'pending' || $st === null)
+                                                    @if($userRole === 'qc inspector')
+                                                        <button type="submit" class="btn btn-sm btn-primary" formaction="{{ route('return-barang.send-to-produksi', $item->uuid) }}"><i class="bi bi-send"></i> Kirim</button>
+                                                    @else <span class="badge bg-secondary">Pending</span> @endif
+                                                @elseif($st === 'sent_to_produksi')
+                                                    <span class="badge bg-warning text-dark">Menunggu Warehouse</span>
+                                                    @if($userRole === 'produksi' || $userRole === 'warehouse' || $userRole === 'produksi/warehouse')
+                                                        <div class="mt-1">
+                                                            <button type="button" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#appProduksi{{ $item->id }}"><i class="bi bi-check-circle"></i> Verifikasi</button>
+                                                            <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#rejProduksi{{ $item->id }}"><i class="bi bi-x-circle"></i> Tolak</button>
                                                         </div>
-                                                    </div>
-                                                    <div class="modal-footer">
-                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                                                        <button type="submit" class="btn btn-success">Approve</button>
-                                                    </div>
-                                                </form>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Modal Reject Produksi -->
-                                    <div class="modal fade" id="rejectProduksiModal{{ $pemeriksaan->id }}" tabindex="-1" aria-hidden="true">
-                                        <div class="modal-dialog">
-                                            <div class="modal-content">
-                                                <div class="modal-header">
-                                                    <h5 class="modal-title">Reject Pemeriksaan</h5>
-                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                                </div>
-                                                <form action="{{ route('return-barang.reject-produksi', $pemeriksaan->uuid) }}" method="POST">
-                                                    @csrf
-                                                    <div class="modal-body">
-                                                        @if($pemeriksaan->verification_notes)
-                                                            <div class="alert alert-info mb-3">
-                                                                <strong>Catatan Sebelumnya:</strong><br>
-                                                                {{ $pemeriksaan->verification_notes }}
-                                                            </div>
-                                                        @endif
-                                                        <div class="mb-3">
-                                                            <label class="form-label">Alasan Penolakan <span class="text-danger">*</span></label>
-                                                            <textarea class="form-control" name="notes" rows="3" placeholder="Masukkan alasan penolakan" required></textarea>
+                                                    @endif
+                                                @elseif($st === 'approved_produksi')
+                                                    <span class="badge bg-info text-white">Disetujui Warehouse</span>
+                                                    @if($userRole === 'spv qc' || $userRole === 'superadmin')
+                                                        <div class="mt-1">
+                                                            <button type="button" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#appSPV{{ $item->id }}"><i class="bi bi-check-circle"></i> Verifikasi</button>
+                                                            <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#rejSPV{{ $item->id }}"><i class="bi bi-x-circle"></i> Tolak</button>
                                                         </div>
-                                                    </div>
-                                                    <div class="modal-footer">
-                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                                                        <button type="submit" class="btn btn-danger">Reject</button>
-                                                    </div>
-                                                </form>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Modal Approve SPV QC -->
-                                    <div class="modal fade" id="approveSPVModal{{ $pemeriksaan->id }}" tabindex="-1" aria-hidden="true">
-                                        <div class="modal-dialog">
-                                            <div class="modal-content">
-                                                <div class="modal-header">
-                                                    <h5 class="modal-title">Verifikasi Pemeriksaan</h5>
-                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                    @endif
+                                                @elseif($st === 'approved_spv') <span class="badge bg-success">Disetujui SPV QC</span>
+                                                @else <span class="badge bg-danger">{{ str_replace('_', ' ', $st) }}</span> @endif
+                                            </td>
+                                            <td>
+                                                <div class="btn-vertical">
+                                                    @can('view_pemeriksaan_return_barang_customer') <a href="{{ route('return-barang.show', $item->uuid) }}" class="btn btn-sm btn-info text-white"><i class="bi bi-eye"></i></a> @endcan
+                                                    @can('edit_pemeriksaan_return_barang_customer') <a href="{{ route('return-barang.edit', $item->uuid) }}" class="btn btn-sm btn-warning text-white"><i class="bi bi-pencil"></i></a> @endcan
+                                                    @can('delete_pemeriksaan_return_barang_customer')
+                                                        <button type="button" class="btn btn-sm btn-danger" onclick="if(confirm('Yakin ingin menghapus data ini?')) document.getElementById('del-{{$item->uuid}}').submit()"><i class="bi bi-trash"></i></button>
+                                                    @endcan
                                                 </div>
-                                                <form action="{{ route('return-barang.approve-spv', $pemeriksaan->uuid) }}" method="POST">
-                                                    @csrf
-                                                    <div class="modal-body">
-                                                        @if($pemeriksaan->verification_notes)
-                                                            <div class="alert alert-info mb-3">
-                                                                <strong>Catatan Sebelumnya:</strong><br>
-                                                                {{ $pemeriksaan->verification_notes }}
-                                                            </div>
-                                                        @endif
-                                                        <div class="mb-3">
-                                                            <label class="form-label">Catatan (Opsional)</label>
-                                                            <textarea class="form-control" name="notes" rows="3" placeholder="Masukkan catatan jika ada"></textarea>
-                                                        </div>
-                                                    </div>
-                                                    <div class="modal-footer">
-                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                                                        <button type="submit" class="btn btn-success">Verifikasi</button>
-                                                    </div>
-                                                </form>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Modal Reject SPV QC -->
-                                    <div class="modal fade" id="rejectSPVModal{{ $pemeriksaan->id }}" tabindex="-1" aria-hidden="true">
-                                        <div class="modal-dialog">
-                                            <div class="modal-content">
-                                                <div class="modal-header">
-                                                    <h5 class="modal-title">Reject Pemeriksaan</h5>
-                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                                </div>
-                                                <form action="{{ route('return-barang.reject-spv', $pemeriksaan->uuid) }}" method="POST">
-                                                    @csrf
-                                                    <div class="modal-body">
-                                                        @if($pemeriksaan->verification_notes)
-                                                            <div class="alert alert-info mb-3">
-                                                                <strong>Catatan Sebelumnya:</strong><br>
-                                                                {{ $pemeriksaan->verification_notes }}
-                                                            </div>
-                                                        @endif
-                                                        <div class="mb-3">
-                                                            <label class="form-label">Alasan Penolakan <span class="text-danger">*</span></label>
-                                                            <textarea class="form-control" name="notes" rows="3" placeholder="Masukkan alasan penolakan" required></textarea>
-                                                        </div>
-                                                    </div>
-                                                    <div class="modal-footer">
-                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                                                        <button type="submit" class="btn btn-danger">Reject</button>
-                                                    </div>
-                                                </form>
-                                            </div>
-                                        </div>
-                                    </div>
-                                @empty
-                                    <tr>
-                                        <td colspan="11" class="text-center text-muted">Tidak ada data</td>
-                                    </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <div class="d-flex justify-content-end mt-3">
-                        {{ $pemeriksaans->appends(request()->query())->links() }}
-                    </div>
+                                            </td>
+                                        </tr>
+                                    @empty
+                                        <tr><td colspan="9" class="text-center py-4">Belum ada data</td></tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="d-flex justify-content-between mt-3">
+                            <div>
+                                @if($canVerify)
+                                    <button type="submit" class="btn btn-primary" id="btnBatch" disabled onclick="return confirm('Verifikasi terpilih?')">
+                                        <i class="bi bi-patch-check"></i> Verifikasi Terpilih (<span id="countSelected">0</span>)
+                                    </button>
+                                @endif
+                            </div>
+                            <div>{{ $pemeriksaans->appends(request()->query())->links() }}</div>
+                        </div>
+                    </form>
                 </div>
             </div>
         </section>
+
+        {{-- MODALS --}}
+        @if($canVerify)
+            <div class="modal fade" id="multiApprovalModal" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Multi Approval (Verifikasi Massal)</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <form action="{{ route('return-barang.batch-verify') }}" method="POST">
+                            @csrf
+                            <div class="modal-body">
+                                <div class="alert alert-info">
+                                    <i class="bi bi-info-circle-fill me-2"></i> Verifikasi semua data berdasarkan rentang tanggal yang dipilih.
+                                </div>
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label">Tanggal Dari</label>
+                                        <input type="date" name="tanggal_dari" class="form-control" required>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Tanggal Sampai</label>
+                                        <input type="date" name="tanggal_sampai" class="form-control" required>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                                <button type="submit" class="btn btn-primary" onclick="return confirm('Proses verifikasi massal?')">Proses Verifikasi</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        @endif
+
+        @foreach($pemeriksaans as $item)
+            <div class="modal fade" id="appProduksi{{ $item->id }}" tabindex="-1" aria-hidden="true"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Approve Warehouse</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><form action="{{ route('return-barang.approve-produksi', $item->uuid) }}" method="POST">@csrf<div class="modal-body"><textarea class="form-control" name="notes" placeholder="Catatan (Opsional)"></textarea></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button><button type="submit" class="btn btn-success">Approve</button></div></form></div></div></div>
+            <div class="modal fade" id="rejProduksi{{ $item->id }}" tabindex="-1" aria-hidden="true"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Reject Warehouse</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><form action="{{ route('return-barang.reject-produksi', $item->uuid) }}" method="POST">@csrf<div class="modal-body"><textarea class="form-control" name="notes" placeholder="Alasan penolakan" required></textarea></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button><button type="submit" class="btn btn-danger">Reject</button></div></form></div></div></div>
+            <div class="modal fade" id="appSPV{{ $item->id }}" tabindex="-1" aria-hidden="true"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Verifikasi SPV QC</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><form action="{{ route('return-barang.approve-spv', $item->uuid) }}" method="POST">@csrf<div class="modal-body"><textarea class="form-control" name="notes" placeholder="Catatan (Opsional)"></textarea></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button><button type="submit" class="btn btn-success">Verifikasi</button></div></form></div></div></div>
+            <div class="modal fade" id="rejSPV{{ $item->id }}" tabindex="-1" aria-hidden="true"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Reject SPV QC</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><form action="{{ route('return-barang.reject-spv', $item->uuid) }}" method="POST">@csrf<div class="modal-body"><textarea class="form-control" name="notes" placeholder="Alasan penolakan" required></textarea></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button><button type="submit" class="btn btn-danger">Reject</button></div></form></div></div></div>
+        @endforeach
     </div>
+
+    {{-- Forms Hapus di luar agar tidak nested --}}
+    @foreach($pemeriksaans as $item)
+        @can('delete_pemeriksaan_return_barang')
+            <form id="del-{{$item->uuid}}" action="{{ route('return-barang.destroy', $item->uuid) }}" method="POST" style="display:none;">
+                @csrf
+                @method('DELETE')
+            </form>
+        @endcan
+    @endforeach
 </div>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const produkByKategori = @json($produkByKategori ?? []);
-    const kategoriSelect = document.querySelector('select.kategori-produk-select[name="kategori_code"]');
-    const produkSelect = document.querySelector('select.produk-select[name="id_produk"]');
-
-    let kategoriChoices = null;
-    let produkChoices = null;
-
-    const initChoicesSafe = function(selectEl) {
-        try {
-            if (!selectEl) return null;
-            if (typeof Choices === 'undefined') return null;
-            return new Choices(selectEl, {
-                searchResultLimit: 100,
-                    searchFuzziness: 0.000001,
-                    fuseOptions: { ignoreLocation: true, threshold: 0.2, matchAllTokens: false },
-                    searchEnabled: true,
-                searchPlaceholderValue: 'Cari...',
-                itemSelectText: 'Tekan untuk memilih',
-                noResultsText: 'Tidak ada hasil ditemukan',
-                noChoicesText: 'Tidak ada pilihan tersedia',
-                removeItemButton: true,
-                shouldSort: false,
-                placeholder: true,
-                placeholderValue: 'Pilih...'
-            });
-        } catch (e) {
-            return null;
-        }
-    };
-
-    kategoriChoices = initChoicesSafe(kategoriSelect);
-    produkChoices = initChoicesSafe(produkSelect);
-
-    const populateProdukOptions = function(kategoriCode) {
-        if (!produkSelect) return;
-
-        const selectedFromAttr = produkSelect.getAttribute('data-selected') || '';
-
-        // If no category selected, just showing empty or we can show all depending on requirements.
-        // Let's just show from selected category to closely mirror create.blade.php.
-        // If they want to search "Semua Kategori", maybe load all? 
-        // The previous logic was: if !selectedCat then add all.
-        let options = [];
-        if (!kategoriCode) {
-            // Flatten all
-            Object.values(produkByKategori).forEach(arr => {
-                options = options.concat(arr);
-            });
-        } else {
-            options = (produkByKategori && produkByKategori[kategoriCode]) ? produkByKategori[kategoriCode] : [];
-        }
-
-        if (produkChoices) {
-            const choiceItems = [{ value: '', label: '-- Semua Produk --', selected: !selectedFromAttr }].concat(
-                options.map((p) => {
-                    const v = String(p.id);
-                    return {
-                        value: v,
-                        label: String(p.nama),
-                        selected: selectedFromAttr === v,
-                    };
-                })
-            );
-
-            try {
-                produkChoices.clearChoices();
-                produkChoices.setChoices(choiceItems, 'value', 'label', true);
-            } catch (e) {
+    const pByCat = @json($produkByKategori ?? []);
+    const kRel = document.getElementById('filterKategori'), pRel = document.getElementById('filterProduk');
+    
+    if (kRel && pRel) {
+        const initC = (el) => (typeof Choices !== 'undefined') ? new Choices(el, { searchEnabled: true, itemSelectText: '', removeItemButton: true }) : null;
+        const kC = initC(kRel), pC = initC(pRel);
+        const pop = (v) => {
+            const sel = pRel.getAttribute('data-selected');
+            let os = [];
+            if (!v) Object.values(pByCat).forEach(a => os = os.concat(a));
+            else os = pByCat[v] || [];
+            if (pC) {
+                pC.clearChoices();
+                pC.setChoices([{value:'', label:'-- Semua Produk --', selected:!sel}].concat(os.map(o=>({value:String(o.id), label:o.nama, selected:o.id==sel}))), 'value', 'label', true);
             }
-        } else {
-            while (produkSelect.options.length > 0) {
-                produkSelect.remove(0);
-            }
-            produkSelect.add(new Option('-- Semua Produk --', ''));
-            options.forEach(function(p) {
-                produkSelect.add(new Option(p.nama, p.id));
-            });
+        };
+        kRel.onchange = (e) => pop(e.target.value);
+        pop(kRel.value);
+    }
 
-            if (selectedFromAttr) {
-                produkSelect.value = selectedFromAttr;
-            }
-        }
-    };
+    const sAll = document.getElementById('selectAll'), rows = document.querySelectorAll('.row-checkbox'), btnB = document.getElementById('btnBatch'), cSp = document.getElementById('countSelected');
+    if (sAll) sAll.onclick = () => { rows.forEach(r => r.checked = sAll.checked); u(); };
+    rows.forEach(r => r.onclick = u);
+    function u() { const n = document.querySelectorAll('.row-checkbox:checked').length; if(btnB){ btnB.disabled = n===0; cSp.innerText = n; } }
 
-    if (kategoriSelect) {
-        kategoriSelect.addEventListener('change', function() {
-            if (produkSelect) {
-                produkSelect.setAttribute('data-selected', '');
-            }
-            populateProdukOptions(kategoriSelect.value);
-        });
-        
-        // Initial populate (handle old inputs)
-        setTimeout(() => {
-            populateProdukOptions(kategoriSelect.value);
-        }, 100);
+    const shiftS = document.getElementById('shiftSelect');
+    const tD = document.getElementById('tanggalDariWrapper'), tSm = document.getElementById('tanggalSampaiWrapper'), tSi = document.getElementById('tanggalSingleWrapper');
+    if(shiftS){
+        const upD = () => {
+            const o = shiftS.options[shiftS.selectedIndex];
+            const isR = o.getAttribute('data-is-date-range') == '1';
+            const sN = o.getAttribute('data-shift-name');
+            tD.style.display = isR ? 'block' : 'none'; tSm.style.display = isR ? 'block' : 'none';
+            tSi.style.display = (!isR && sN) ? 'block' : 'none';
+        };
+        shiftS.onchange = upD; upD();
     }
 });
 </script>
-
 @endsection

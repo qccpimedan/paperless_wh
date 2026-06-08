@@ -1192,4 +1192,84 @@ return view('qc-sistem.pemeriksaan-kedatangan-kemasan.index', compact('pemeriksa
         $filename = 'laporan-pemeriksaan-kemasan-' . $filenameDate . '.pdf';
         return $pdf->download($filename);
     }
+
+    /**
+     * Batch verify records based on date range and shift
+     */
+    public function batchVerify(Request $request)
+    {
+        $user = Auth::user();
+        $userRole = $user->role ? strtolower($user->role->role) : null;
+        $selectedUuids = $request->input('selected_uuids', []);
+
+        $query = PemeriksaanKedatanganKemasan::query();
+
+        // JIKA MENGGUNAKAN CHECKBOX (PRIORITAS UTAMA)
+        if (!empty($selectedUuids)) {
+            $query->whereIn('uuid', $selectedUuids);
+        } else {
+            // JIKA MENGGUNAKAN KONTROL RANGE TANGGAL (FALLBACK)
+            $tanggal_dari = $request->input('tanggal_dari');
+            $tanggal_sampai = $request->input('tanggal_sampai');
+
+            if (!$tanggal_dari || !$tanggal_sampai) {
+                return back()->with('error', 'Silakan tentukan rentang tanggal atau gunakan checkbox untuk memilih data.');
+            }
+
+            $query->whereBetween('tanggal', [$tanggal_dari, $tanggal_sampai]);
+        }
+        
+        // Filter berdasarkan plant user
+        $effectivePlantId = $this->getActivePlantId($user);
+        if (!($user->role && $userRole === 'superadmin')) {
+            $query->whereHas('user', function ($q) use ($effectivePlantId) {
+                $q->where('id_plant', $effectivePlantId);
+            });
+        }
+
+        // Tentukan status asal dan status tujuan berdasarkan role
+        $fromStatus = null;
+        $updateData = [];
+
+        if ($userRole === 'qc inspector') {
+            $fromStatus = ['pending', null];
+            $updateData = [
+                'status_verifikasi' => 'sent_to_produksi',
+                'verified_by' => $user->id,
+                'verified_by_qc' => $user->id,
+                'verified_at' => now()
+            ];
+        } elseif ($userRole === 'produksi') {
+            $fromStatus = ['sent_to_produksi'];
+            $updateData = [
+                'status_verifikasi' => 'approved_produksi',
+                'verified_by' => $user->id,
+                'verified_by_produksi' => $user->id,
+                'verified_at' => now()
+            ];
+        } elseif ($userRole === 'spv qc' || $userRole === 'superadmin') {
+            $fromStatus = ['approved_produksi'];
+            $updateData = [
+                'status_verifikasi' => 'approved_spv',
+                'verified_by' => $user->id,
+                'verified_by_spv' => $user->id,
+                'verified_at' => now()
+            ];
+        }
+
+        if (!$fromStatus) {
+            return back()->with('error', 'Anda tidak memiliki akses untuk melakukan verifikasi.');
+        }
+
+        // Filter data yang sesuai status asal
+        $query->whereIn('status_verifikasi', (array) $fromStatus);
+
+        $count = $query->count();
+        if ($count > 0) {
+            $query->update($updateData);
+            return back()->with('success', "$count data pemeriksaan berhasil diverifikasi secara massal.");
+        }
+
+        return back()->with('info', 'Tidak ada data yang perlu diverifikasi pada filter tersebut.');
+    }
 }

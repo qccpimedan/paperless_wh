@@ -252,6 +252,34 @@
             padding: 0.5rem 0;
             overflow: hidden;
         }
+        .switch-plant-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .switch-plant-list::-webkit-scrollbar {
+            width: 5px;
+        }
+        .switch-plant-list::-webkit-scrollbar-thumb {
+            background: #c4b5fd;
+            border-radius: 10px;
+        }
+        .switch-plant-search {
+            padding: 0.5rem 0.75rem;
+            border-bottom: 1px solid #eee;
+        }
+        .switch-plant-search input {
+            width: 100%;
+            padding: 0.35rem 0.6rem;
+            font-size: 0.82rem;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .switch-plant-search input:focus {
+            border-color: #6f42c1;
+            box-shadow: 0 0 0 2px rgba(111, 66, 193, 0.15);
+        }
         .switch-plant-dropdown .dropdown-header {
             background: linear-gradient(135deg, #6f42c1 0%, #5a289e 100%);
             color: #fff;
@@ -318,6 +346,35 @@
             color: #dc3545;
             background: rgba(220, 53, 69, 0.07);
         }
+
+        /* ===== Sidebar Active Contrast ===== */
+        .sidebar-item.active > .sidebar-link {
+            background-color: #435ebe !important;
+            margin-top: 6px;
+            margin-bottom: 6px;
+            /* box-shadow: 0 4px 10px rgba(67, 94, 190, 0.35) !important; */
+        }
+
+        .sidebar-item.active > .sidebar-link i,
+        .sidebar-item.active > .sidebar-link span {
+            color: #fff !important;
+            font-weight: 700 !important;
+        }
+
+        .submenu-item.active > a {
+            color: #435ebe !important;
+            font-weight: 800 !important;
+            background-color: rgba(67, 94, 190, 0.1) !important;
+            border-radius: 7px;
+            padding-left: 1.5rem !important;
+            transition: all 0.3s ease;
+        }
+
+        .submenu-item.active > a::before {
+            content: "➜";
+            margin-right: 8px;
+            font-size: 0.8rem;
+        }
     </style>
 </head>
 <body>
@@ -367,8 +424,12 @@
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end switch-plant-dropdown" aria-labelledby="switchPlantDropdown">
                             <li><h6 class="dropdown-header"><i class="bi bi-building me-1"></i>Switch Plant</h6></li>
+                            <li class="switch-plant-search">
+                                <input type="text" id="searchPlantInput" placeholder="Cari plant..." autocomplete="off">
+                            </li>
+                            <div class="switch-plant-list">
                             @forelse($allPlants as $plant)
-                            <li>
+                            <li class="plant-list-item" data-plant-name="{{ strtolower($plant->plant) }}">
                                 <form method="POST" action="{{ route('manager.switch-plant') }}">
                                     @csrf
                                     <input type="hidden" name="plant_id" value="{{ $plant->id }}">
@@ -389,6 +450,7 @@
                                 </div>
                             </li>
                             @endforelse
+                            </div>
                             @if($authUser->active_plant_id)
                             <li><hr class="dropdown-divider my-1"></li>
                             <li>
@@ -636,6 +698,71 @@ setInterval(updateNotificationBell, 60000);
 document.addEventListener('click', function(e) {
     if (!e.target.closest('#notification-bell') && !e.target.closest('#notification-dropdown')) {
         notificationDropdown.style.display = 'none';
+    }
+});
+
+/**
+ * Sidebar Accordion Logic (Mazer Force Reset)
+ * Memastikan hanya satu menu utama yang terbuka dalam satu waktu
+ */
+document.addEventListener('DOMContentLoaded', function() {
+    const menuUl = document.querySelector('ul.menu[data-accordion="true"]');
+    if (!menuUl) return;
+
+    // Ambil semua link utama (Data Master, Pemeriksaan Kedatangan, dsb)
+    const topLevelLinks = menuUl.querySelectorAll('.sidebar-item.has-sub > .sidebar-link');
+
+    topLevelLinks.forEach(link => {
+        link.addEventListener('click', function(e) {
+            const currentItem = this.parentElement;
+
+            // Jika menu yang diklik sudah aktif, biarkan template Mazer menangani toggle-nya sendiri
+            // Tapi kita bersihkan SEMUA menu lain terlebih dahulu
+            const allHasSub = menuUl.querySelectorAll('.sidebar-item.has-sub');
+            
+            allHasSub.forEach(item => {
+                if (item !== currentItem) {
+                    // Hapus class active agar menu lain tertutup
+                    item.classList.remove('active');
+                    
+                    // Sembunyikan submenunya secara paksa
+                    const submenu = item.querySelector('.submenu');
+                    if (submenu) {
+                        submenu.classList.remove('active');
+                        // Gunakan !important lewat style attribute jika perlu, atau cukup display none
+                        submenu.style.display = 'none';
+                    }
+                }
+            });
+        }, true); // UseCapture: true agar dieksekusi sebelum script Mazer
+    });
+});
+
+// Switch Plant Search Filter
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('searchPlantInput');
+    if (!searchInput) return;
+
+    searchInput.addEventListener('input', function() {
+        const keyword = this.value.toLowerCase().trim();
+        const items = document.querySelectorAll('.plant-list-item');
+        items.forEach(function(item) {
+            const name = item.getAttribute('data-plant-name') || '';
+            item.style.display = name.includes(keyword) ? '' : 'none';
+        });
+    });
+
+    // Prevent dropdown from closing when clicking on search input
+    searchInput.addEventListener('click', function(e) {
+        e.stopPropagation();
+    });
+
+    // Focus on search input when dropdown opens
+    const dropdownBtn = document.querySelector('#switchPlantDropdown .switch-plant-btn');
+    if (dropdownBtn) {
+        dropdownBtn.addEventListener('click', function() {
+            setTimeout(function() { searchInput.focus(); }, 150);
+        });
     }
 });
 </script>

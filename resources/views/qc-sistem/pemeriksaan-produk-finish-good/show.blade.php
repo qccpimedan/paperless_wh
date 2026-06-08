@@ -302,7 +302,7 @@
                                                     @endif
                                                 </div>
                                             </div>
-                                            <span class="badge bg-primary">{{ count($items) }} Batch</span>
+                                            <!-- <span class="badge bg-primary">{{ count($items) }} Batch</span> -->
                                         </div>
                                     </div>
 

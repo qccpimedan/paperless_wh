@@ -1,6 +1,21 @@
 @extends('layouts.app')
 @section('container')
-
+@php
+    $user = \Illuminate\Support\Facades\Auth::user();
+    if ($user && $user->role && strtolower($user->role->role) === 'superadmin') {
+        $shifts = \App\Models\Shift::all();
+    } else {
+        $shifts = \App\Models\Shift::query()
+            ->when($user && $user->id_plant, function ($q) use ($user) {
+                $q->whereHas('user', function ($qu) use ($user) {
+                    $qu->where('id_plant', $user->id_plant);
+                });
+            })
+            ->get();
+    }
+    $userRole = auth()->user()->role ? strtolower(trim(auth()->user()->role->role)) : null;
+    $canVerify = in_array($userRole, ['qc inspector', 'qc_inspector', 'warehouse', 'produksi', 'spv qc', 'spv_qc', 'superadmin', 'produksi/warehouse']);
+@endphp
 <div id="main">
     <header class="mb-3">
         <a href="#" class="burger-btn d-block d-xl-none">
@@ -12,14 +27,14 @@
         <div class="page-title">
             <div class="row">
                 <div class="col-12 col-md-6 order-md-1 order-last">
-                    <h3>Detail Komplain</h3>
-                    <p class="text-subtitle text-muted">Kelola detail komplain produk</p>
+                    <h3>Laporan Komplain</h3>
+                    <p class="text-subtitle text-muted">Kelola data laporan komplain masuk</p>
                 </div>
                 <div class="col-12 col-md-6 order-md-2 order-first">
                     <nav aria-label="breadcrumb" class="breadcrumb-header float-start float-lg-end">
                         <ol class="breadcrumb">
                             <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
-                            <li class="breadcrumb-item active" aria-current="page">Detail Komplain</li>
+                            <li class="breadcrumb-item active" aria-current="page">Laporan Komplain</li>
                         </ol>
                     </nav>
                 </div>
@@ -28,7 +43,13 @@
 
         @if(session('success'))
             <div class="alert alert-success alert-dismissible fade show" role="alert">
-                {{ session('success') }}
+                <i class="bi bi-check-circle-fill me-2"></i> {{ session('success') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
+        @if(session('error'))
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i> {{ session('error') }}
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
         @endif
@@ -36,364 +57,277 @@
         <section class="section">
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="card-title mb-0">Daftar Detail Komplain</h5>
-                    @can('create_detail_komplain')
-                        <a href="{{ route('detail-komplain.create') }}" class="btn btn-primary">
-                            <i class="bi bi-plus-circle"></i> Tambah Komplain
-                        </a>
-                    @endcan
+                    <h5 class="card-title mb-0">Daftar Laporan Komplain</h5>
+                    <div class="d-flex gap-2">
+                        @if($canVerify)
+                            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#multiApprovalModal">
+                                <i class="bi bi-patch-check"></i> Multi Approval
+                            </button>
+                        @endif
+                        @can('create_detail_komplain')
+                            <a href="{{ route('detail-komplain.create') }}" class="btn btn-primary">
+                                <i class="bi bi-plus-circle"></i> Tambah Laporan
+                            </a>
+                        @endcan
+                    </div>
                 </div>
                 <div class="card-body">
+                    <div class="row mb-4 p-3 bg-light rounded">
+                        <div class="col-md-12 mb-3"><h6><i class="bi bi-funnel"></i> Filter & Verifikasi Massal</h6></div>
+                        <form action="{{ route('detail-komplain.export-pdf') }}" method="GET" class="row g-3" id="filterForm">
+                            <div class="col-md-3">
+                                <label class="form-label">Shift</label>
+                                <select name="id_shift" class="form-select" id="shiftSelect">
+                                    <option value="">-- Pilih Shift --</option>
+                                    @foreach($shifts ?? [] as $shift)
+                                        <option value="{{ $shift->id }}" data-shift-name="{{ $shift->shift }}" data-is-date-range="{{ $shift->is_date_range }}" {{ request('id_shift') == $shift->id ? 'selected' : '' }}>
+                                            {{ $shift->shift }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col-md-3" id="tanggalDariWrapper">
+                                <label class="form-label">Tanggal Dari</label>
+                                <input type="date" name="tanggal_dari" class="form-control" value="{{ request('tanggal_dari') }}">
+                            </div>
+                            <div class="col-md-3" id="tanggalSampaiWrapper">
+                                <label class="form-label">Tanggal Sampai</label>
+                                <input type="date" name="tanggal_sampai" class="form-control" value="{{ request('tanggal_sampai') }}">
+                            </div>
+                            <div class="col-md-3" id="tanggalSingleWrapper" style="display: none;">
+                                <label class="form-label">Tanggal</label>
+                                <input type="date" name="tanggal" class="form-control" value="{{ request('tanggal') }}">
+                            </div>
+                            <div class="col-md-3 d-flex align-items-end">
+                                <button type="submit" class="btn btn-success w-100"><i class="bi bi-file-pdf"></i> PDF</button>
+                            </div>
+                        </form>
+                    </div>
+                    
                     <form action="{{ route('detail-komplain.index') }}" method="GET" class="row g-3 mb-3">
-                        <div class="col-md-9">
-                            <input type="text" name="search" class="form-control" placeholder="Cari tanggal/shift/supplier/produk/kode/status..." value="{{ request('search') }}">
-                        </div>
-                        <div class="col-md-3 d-flex align-items-end">
-                            <button type="submit" class="btn btn-primary w-100">Cari</button>
+                        <div class="col-md-9"><input type="text" name="search" class="form-control" placeholder="Cari Produk..." value="{{ request('search') }}"></div>
+                        <div class="col-md-3 d-flex align-items-end gap-2">
+                            <button type="submit" class="btn btn-primary btn-sm">Cari Data</button>
+                            <a href="{{ route('detail-komplain.index') }}" class="btn btn-secondary btn-sm">Reset</a>
                         </div>
                     </form>
 
-                    <div class="table-responsive">
-                        <table class="table table-striped text-center" id="table1" data-disable-datatable="1" style="white-space:nowrap;">
-                            <thead>
-                                <tr>
-                                    <th>No</th>
-                                    <th>Tanggal</th>
-                                    <th>Shift</th>
-                                    <th>Plan</th>
-                                    <!-- <th>No. PO</th> -->
-                                    <th>Supplier</th>
-                                    <th>Produk</th>
-                                    <th>Dokumentasi</th>
-                                    <th>Upload Supplier</th>
-                                    <th>Verifikasi</th>
-                                    <th>Catatan Verifikasi</th>
-                                    <th>Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @forelse($komplains as $index => $komplain)
+                    <form id="batchActionForm" action="{{ route('detail-komplain.batch-verify') }}" method="POST">
+                        @csrf
+                        <div class="table-responsive">
+                            <table class="table table-striped text-center" style="white-space: nowrap;">
+                                <thead>
                                     <tr>
-                                        <td>{{ ($komplains->firstItem() ?? 1) + $index }}</td>
-                                        <td>{{ $komplain->tanggal_kedatangan->format('d-m-Y') }}</td>
-                                        <td>
-                                            <span class="badge bg-info">
-                                                {{ $komplain->shift->shift ?? 'Shift tidak ditemukan' }}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            @if($komplain->user->plant)
-                                            <span class="badge bg-primary">{{ $komplain->user->plant->plant }}</span>
-                                            @else
-                                            <span class="badge bg-secondary">No Plant</span>
-                                            @endif
-                                        </td>
-                                        <td><strong>{{ $komplain->nama_supplier }}</strong></td>
-                                        <!-- <td>{{ $komplain->no_po }}</td> -->
-                                        <td>
-                                            @php
-                                                $idProdukArr = is_array($komplain->id_produk_array ?? null) ? $komplain->id_produk_array : [];
-                                                $idProdukArr = array_values(array_filter($idProdukArr, fn ($v) => $v !== null && $v !== ''));
-                                                $namaProdukArr = is_array($komplain->nama_produk_array ?? null) ? $komplain->nama_produk_array : [];
-                                                $namaProdukArr = array_values(array_filter($namaProdukArr, fn ($v) => $v !== null && $v !== ''));
-                                                $firstProduk = $komplain->nama_produk;
-                                                $baseCount = !empty($idProdukArr) ? count($idProdukArr) : count($namaProdukArr);
-                                                $extraCount = max($baseCount - 1, 0);
-                                            @endphp
-                                            {{ $firstProduk ?? '-' }}
-                                            @if($extraCount > 0)
-                                                <span class="badge bg-secondary">+{{ $extraCount }} item</span>
-                                            @endif
-                                        </td>
-                                        <td>
-                                            @php
-                                                $dokArr = is_array($komplain->dokumentasi_array ?? null) ? $komplain->dokumentasi_array : [];
-                                                $dokArr = array_values(array_filter($dokArr, fn ($v) => $v !== null && $v !== ''));
-                                                $firstDok = $dokArr[0] ?? $komplain->dokumentasi;
-                                            @endphp
-                                            @if($firstDok)
-                                                <a href="{{ asset('storage/' . $firstDok) }}" target="_blank" class="btn btn-sm btn-info">
-                                                    <i class="bi bi-eye"></i> Lihat
-                                                </a>
-                                            @else
-                                                <span class="badge bg-secondary">-</span>
-                                            @endif
-                                        </td>
-                                        <td>
-                                            @if($komplain->upload_suplier)
-                                                <a href="{{ asset('storage/' . $komplain->upload_suplier) }}" 
-                                                   target="_blank" class="btn btn-sm btn-success">
-                                                    <i class="bi bi-download"></i> Download
-                                                </a>
-                                            @else
-                                                <button type="button" class="btn btn-sm btn-warning" data-bs-toggle="modal" 
-                                                        data-bs-target="#uploadModal{{ $komplain->uuid }}">
-                                                    <i class="bi bi-upload"></i> Upload
-                                                </button>
-                                            @endif
-                                        </td>
-                                        <td>
-                                            @php
-                                                $userRole = auth()->user()->role ? strtolower(auth()->user()->role->role) : null;
-                                                $status = $komplain->status_verifikasi ?? 'pending';
-                                            @endphp
-                                            
-                                            @if($status === 'pending' || $status === null)
-                                                @if($userRole === 'qc inspector')
-                                                    <form action="{{ route('detail-komplain.send-to-qc', $komplain->uuid) }}" method="POST" style="display: inline-block;">
-                                                        @csrf
-                                                        <button type="submit" class="btn btn-sm btn-primary" title="Kirim ke Tim Warehouse">
-                                                            <i class="bi bi-send"></i> Kirim
-                                                        </button>
-                                                    </form>
+                                        <th>
+                                            @if($canVerify) <input type="checkbox" id="selectAll" class="form-check-input">
+                                            @else <i class="bi bi-check-square"></i> @endif
+                                        </th>
+                                        <th>No</th>
+                                        <th>Tanggal</th>
+                                        <th>Shift</th>
+                                        <th>Plant</th>
+                                        <th>Supplier</th>
+                                        <th>Produk</th>
+                                        <th>Dokumentasi</th>
+                                        <th>Upload Supplier</th>
+                                        <th>Verifikasi</th>
+                                        <th>Catatan Verifikasi</th>
+                                        <th>Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @forelse($komplains as $index => $item)
+                                        @php
+                                            $st = $item->status_verifikasi ?? 'pending';
+                                            $canRowV = false;
+                                            if (in_array($userRole, ['qc inspector', 'qc_inspector']) && ($st === 'pending' || $st === null)) $canRowV = true;
+                                            elseif (in_array($userRole, ['produksi', 'warehouse', 'produksi/warehouse']) && $st === 'sent_to_qc') $canRowV = true;
+                                            elseif (in_array($userRole, ['spv qc', 'spv_qc', 'superadmin']) && $st === 'approved_qc') $canRowV = true;
+                                        @endphp
+                                        <tr>
+                                            <td>
+                                                @if($canRowV) <input type="checkbox" name="selected_uuids[]" value="{{ $item->uuid }}" class="form-check-input row-checkbox">
+                                                @else <i class="bi bi-dash text-muted"></i> @endif
+                                            </td>
+                                            <td>{{ ($komplains->firstItem() ?? 1) + $index }}</td>
+                                            <td><strong>{{ \Carbon\Carbon::parse($item->tanggal_kedatangan)->format('d/m/Y') }}</strong></td>
+                                            <td><span class="badge bg-primary">{{ $item->shift->shift ?? 'Shift tidak ditemukan' }}</span></td>
+                                            <td><span class="badge bg-secondary">{{ $item->user->plant->plant ?? '-' }}</span></td>
+                                            <td>{{ $item->nama_supplier ?? '-' }}</td>
+                                            <td>{{ $item->nama_produk ?? '-' }}</td>
+                                            <td>
+                                                @if($item->dokumentasi)
+                                                    <a href="{{ asset('storage/' . $item->dokumentasi) }}" target="_blank" class="btn btn-sm btn-info text-white"><i class="bi bi-eye"></i> Lihat</a>
                                                 @else
-                                                    <span class="badge bg-secondary">Pending</span>
+                                                    <span class="badge bg-secondary">-</span>
                                                 @endif
-                                            @elseif($status === 'sent_to_qc')
-                                                <span class="badge bg-warning">Menunggu Tim Warehouse</span>
-                                                @if($userRole === 'produksi')
-                                                    <button class="btn btn-sm btn-success mt-1" data-bs-toggle="modal" data-bs-target="#approveQCModal{{ $komplain->id }}" title="Approve">
-                                                        <i class="bi bi-check-circle"></i> Approve
-                                                    </button>
-                                                    <button class="btn btn-sm btn-danger mt-1" data-bs-toggle="modal" data-bs-target="#rejectQCModal{{ $komplain->id }}" title="Reject">
-                                                        <i class="bi bi-x-circle"></i> Reject
-                                                    </button>
-                                                @endif
-                                            @elseif($status === 'approved_qc')
-                                                <span class="badge bg-info">Disetujui Tim Warehouse</span>
-                                                @if($userRole === 'spv qc')
-                                                    <button class="btn btn-sm btn-success mt-1" data-bs-toggle="modal" data-bs-target="#approveSPVModal{{ $komplain->id }}" title="Verifikasi">
-                                                        <i class="bi bi-check-circle"></i> Verifikasi
-                                                    </button>
-                                                    <button class="btn btn-sm btn-danger mt-1" data-bs-toggle="modal" data-bs-target="#rejectSPVModal{{ $komplain->id }}" title="Reject">
-                                                        <i class="bi bi-x-circle"></i> Reject
-                                                    </button>
-                                                @endif
-                                            @elseif($status === 'approved_spv')
-                                                <span class="badge bg-success">Disetujui SPV QC</span>
-                                            @elseif($status === 'rejected_qc')
-                                                <span class="badge bg-danger">Ditolak QC</span>
-                                            @elseif($status === 'rejected_spv')
-                                                <span class="badge bg-danger">Ditolak SPV QC</span>
-                                            @endif
-                                        </td>
-                                        <td>
-                                            @if($komplain->verification_notes)
-                                                <small class="text-muted">{{ Str::limit($komplain->verification_notes, 50) }}</small>
-                                            @else
-                                                <span class="text-muted">-</span>
-                                            @endif
-                                        </td>
-                                        <td>
-                                            <div class="btn-vertical">
-                                                @can('view_detail_komplain')
-                                                    <a href="{{ route('detail-komplain.show', $komplain->uuid) }}" 
-                                                       class="btn btn-sm btn-info" title="Lihat Detail">
-                                                        <i class="bi bi-eye"></i>
+                                            </td>
+                                            <td>
+                                                @if($item->upload_suplier)
+                                                    <a href="{{ asset('storage/' . $item->upload_suplier) }}" 
+                                                    target="_blank" class="btn btn-sm btn-success">
+                                                        <i class="bi bi-download"></i> Download
                                                     </a>
-                                                @endcan
-                                                @can('edit_detail_komplain')
-                                                    <a href="{{ route('detail-komplain.edit', $komplain->uuid) }}" 
-                                                       class="btn btn-sm btn-warning" title="Edit">
-                                                        <i class="bi bi-pencil"></i>
+                                                @else
+                                                    <button type="button" class="btn btn-sm btn-warning" data-bs-toggle="modal" 
+                                                            data-bs-target="#uploadModal{{ $item->uuid }}">
+                                                        <i class="bi bi-upload"></i> Upload
+                                                    </button>
+                                                @endif
+                                            </td>
+                                            <td>
+                                                @if($st === 'pending' || $st === null)
+                                                    @if(in_array($userRole, ['qc inspector', 'qc_inspector']))
+                                                        <button type="submit" class="btn btn-sm btn-primary" formaction="{{ route('detail-komplain.send-to-produksi', $item->uuid) }}"><i class="bi bi-send"></i> Kirim</button>
+                                                    @else <span class="badge bg-secondary">Pending</span> @endif
+                                                @elseif($st === 'sent_to_qc')
+                                                    <span class="badge bg-warning text-dark">Menunggu Produksi</span>
+                                                    @if(in_array($userRole, ['produksi', 'warehouse', 'produksi/warehouse']))
+                                                        <div class="mt-1">
+                                                            <button type="button" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#appProduksi{{ $item->id }}"><i class="bi bi-check-circle"></i> Verifikasi</button>
+                                                            <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#rejProduksi{{ $item->id }}"><i class="bi bi-x-circle"></i> Tolak</button>
+                                                        </div>
+                                                    @endif
+                                                @elseif($st === 'approved_qc')
+                                                    <span class="badge bg-info text-white">Disetujui Produksi</span>
+                                                    @if(in_array($userRole, ['spv qc', 'spv_qc', 'superadmin']))
+                                                        <div class="mt-1">
+                                                            <button type="button" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#appSPV{{ $item->id }}"><i class="bi bi-check-circle"></i> Verifikasi</button>
+                                                            <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#rejSPV{{ $item->id }}"><i class="bi bi-x-circle"></i> Tolak</button>
+                                                        </div>
+                                                    @endif
+                                                @elseif($st === 'approved_spv') <span class="badge bg-success">Disetujui SPV QC</span>
+                                                @else <span class="badge bg-danger">{{ str_replace('_', ' ', $st) }}</span> @endif
+                                            </td>
+                                            <td>{{ $item->verification_notes ?? '-' }}</td>
+                                            <td>
+                                                <div class="btn-vertical">
+                                                    @can('view_detail_komplain') <a href="{{ route('detail-komplain.show', $item->uuid) }}" class="btn btn-sm btn-info text-white"><i class="bi bi-eye"></i></a> @endcan
+                                                    <a href="{{ route('detail-komplain.export-pdf', $item->uuid) }}" 
+                                                    class="btn btn-sm btn-secondary" title="Export PDF" target="_blank">
+                                                        <i class="bi bi-file-earmark-arrow-down"></i>
                                                     </a>
-                                                @endcan
-                                                <a href="{{ route('detail-komplain.export-pdf', $komplain->uuid) }}" 
-                                                   class="btn btn-sm btn-secondary" title="Export PDF" target="_blank">
-                                                    <i class="bi bi-file-earmark-arrow-down"></i>
-                                                </a>
-                                                @can('delete_detail_komplain')
-                                                    <form action="{{ route('detail-komplain.destroy', $komplain->uuid) }}" 
-                                                          method="POST" style="display:inline;">
-                                                        @csrf @method('DELETE')
-                                                        <button type="submit" class="btn btn-sm btn-danger" title="Hapus"
-                                                                onclick="return confirm('Yakin ingin menghapus?')">
-                                                            <i class="bi bi-trash"></i>
-                                                        </button>
-                                                    </form>
-                                                @endcan
-                                            </div>
-                                        </td>
-                                    </tr>
-
-                                    <!-- Modal Upload Supplier -->
-                                    <div class="modal fade" id="uploadModal{{ $komplain->uuid }}" tabindex="-1" aria-labelledby="uploadLabel{{ $komplain->uuid }}" aria-hidden="true">
-                                        <div class="modal-dialog">
-                                            <div class="modal-content">
-                                                <div class="modal-header">
-                                                    <h5 class="modal-title" id="uploadLabel{{ $komplain->uuid }}">
-                                                        Upload File Supplier - {{ $komplain->nama_supplier }}
-                                                    </h5>
-                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                    @can('edit_detail_komplain') <a href="{{ route('detail-komplain.edit', $item->uuid) }}" class="btn btn-sm btn-warning text-white"><i class="bi bi-pencil"></i></a> @endcan
+                                                    @can('delete_detail_komplain')
+                                                        <form action="{{ route('detail-komplain.destroy', $item->uuid) }}" method="POST" onsubmit="return confirm('Hapus data ini?')" style="display:inline;">
+                                                            @csrf @method('DELETE')
+                                                            <button type="submit" class="btn btn-sm btn-danger"><i class="bi bi-trash"></i></button>
+                                                        </form>
+                                                    @endcan
                                                 </div>
-                                                <form action="{{ route('detail-komplain.upload-suplier', $komplain->uuid) }}" method="POST" enctype="multipart/form-data">
-                                                    @csrf
-                                                    <div class="modal-body">
-                                                        <div class="mb-3">
-                                                            <label for="upload_suplier{{ $komplain->uuid }}" class="form-label">
-                                                                File Supplier <span class="text-danger">*</span>
-                                                            </label>
-                                                            <input type="file" class="form-control" 
-                                                                   id="upload_suplier{{ $komplain->uuid }}" 
-                                                                   name="upload_suplier" 
-                                                                   accept=".pdf,.doc,.docx,.xls,.xlsx" required>
-                                                            <small class="text-muted">Format: PDF, Word (.doc, .docx), Excel (.xls, .xlsx) | Max 2MB</small>
-                                                        </div>
-                                                    </div>
-                                                    <div class="modal-footer">
-                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                                                        <button type="submit" class="btn btn-primary">Upload</button>
-                                                    </div>
-                                                </form>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Modal Approve QC -->
-                                    <div class="modal fade" id="approveQCModal{{ $komplain->id }}" tabindex="-1" aria-hidden="true">
-                                        <div class="modal-dialog">
-                                            <div class="modal-content">
-                                                <div class="modal-header">
-                                                    <h5 class="modal-title">Approve Komplain</h5>
-                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                                </div>
-                                                <form action="{{ route('detail-komplain.approve-qc', $komplain->uuid) }}" method="POST">
-                                                    @csrf
-                                                    <div class="modal-body">
-                                                        @if($komplain->verification_notes)
-                                                            <div class="alert alert-info mb-3">
-                                                                <strong>Catatan Sebelumnya:</strong><br>
-                                                                {{ $komplain->verification_notes }}
-                                                            </div>
-                                                        @endif
-                                                        <div class="mb-3">
-                                                            <label class="form-label">Catatan (Opsional)</label>
-                                                            <textarea class="form-control" name="notes" rows="3" placeholder="Masukkan catatan jika ada"></textarea>
-                                                        </div>
-                                                    </div>
-                                                    <div class="modal-footer">
-                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                                                        <button type="submit" class="btn btn-success">Approve</button>
-                                                    </div>
-                                                </form>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Modal Reject QC -->
-                                    <div class="modal fade" id="rejectQCModal{{ $komplain->id }}" tabindex="-1" aria-hidden="true">
-                                        <div class="modal-dialog">
-                                            <div class="modal-content">
-                                                <div class="modal-header">
-                                                    <h5 class="modal-title">Reject Komplain</h5>
-                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                                </div>
-                                                <form action="{{ route('detail-komplain.reject-qc', $komplain->uuid) }}" method="POST">
-                                                    @csrf
-                                                    <div class="modal-body">
-                                                        @if($komplain->verification_notes)
-                                                            <div class="alert alert-info mb-3">
-                                                                <strong>Catatan Sebelumnya:</strong><br>
-                                                                {{ $komplain->verification_notes }}
-                                                            </div>
-                                                        @endif
-                                                        <div class="mb-3">
-                                                            <label class="form-label">Alasan Penolakan <span class="text-danger">*</span></label>
-                                                            <textarea class="form-control" name="notes" rows="3" placeholder="Masukkan alasan penolakan" required></textarea>
-                                                        </div>
-                                                    </div>
-                                                    <div class="modal-footer">
-                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                                                        <button type="submit" class="btn btn-danger">Reject</button>
-                                                    </div>
-                                                </form>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Modal Approve SPV QC -->
-                                    <div class="modal fade" id="approveSPVModal{{ $komplain->id }}" tabindex="-1" aria-hidden="true">
-                                        <div class="modal-dialog">
-                                            <div class="modal-content">
-                                                <div class="modal-header">
-                                                    <h5 class="modal-title">Verifikasi Komplain</h5>
-                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                                </div>
-                                                <form action="{{ route('detail-komplain.approve-spv', $komplain->uuid) }}" method="POST">
-                                                    @csrf
-                                                    <div class="modal-body">
-                                                        @if($komplain->verification_notes)
-                                                            <div class="alert alert-info mb-3">
-                                                                <strong>Catatan Sebelumnya:</strong><br>
-                                                                {{ $komplain->verification_notes }}
-                                                            </div>
-                                                        @endif
-                                                        <div class="mb-3">
-                                                            <label class="form-label">Catatan (Opsional)</label>
-                                                            <textarea class="form-control" name="notes" rows="3" placeholder="Masukkan catatan jika ada"></textarea>
-                                                        </div>
-                                                    </div>
-                                                    <div class="modal-footer">
-                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                                                        <button type="submit" class="btn btn-success">Verifikasi</button>
-                                                    </div>
-                                                </form>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Modal Reject SPV QC -->
-                                    <div class="modal fade" id="rejectSPVModal{{ $komplain->id }}" tabindex="-1" aria-hidden="true">
-                                        <div class="modal-dialog">
-                                            <div class="modal-content">
-                                                <div class="modal-header">
-                                                    <h5 class="modal-title">Reject Komplain</h5>
-                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                                </div>
-                                                <form action="{{ route('detail-komplain.reject-spv', $komplain->uuid) }}" method="POST">
-                                                    @csrf
-                                                    <div class="modal-body">
-                                                        @if($komplain->verification_notes)
-                                                            <div class="alert alert-info mb-3">
-                                                                <strong>Catatan Sebelumnya:</strong><br>
-                                                                {{ $komplain->verification_notes }}
-                                                            </div>
-                                                        @endif
-                                                        <div class="mb-3">
-                                                            <label class="form-label">Alasan Penolakan <span class="text-danger">*</span></label>
-                                                            <textarea class="form-control" name="notes" rows="3" placeholder="Masukkan alasan penolakan" required></textarea>
-                                                        </div>
-                                                    </div>
-                                                    <div class="modal-footer">
-                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                                                        <button type="submit" class="btn btn-danger">Reject</button>
-                                                    </div>
-                                                </form>
-                                            </div>
-                                        </div>
-                                    </div>
-                                @empty
-                                    <tr>
-                                        <td colspan="11" class="text-center text-muted py-4">
-                                            <i class="bi bi-inbox fs-1"></i>
-                                            <p class="mt-2">Belum ada data komplain</p>
-                                            <a href="{{ route('detail-komplain.create') }}" class="btn btn-primary">
-                                                <i class="bi bi-plus-circle"></i> Tambah Komplain Pertama
-                                            </a>
-                                        </td>
-                                    </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <div class="d-flex justify-content-end mt-3">
-                        {{ $komplains->appends(request()->query())->links() }}
-                    </div>
+                                            </td>
+                                        </tr>
+                                    @empty
+                                        <tr><td colspan="11" class="text-center py-4">Belum ada data</td></tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="d-flex justify-content-between mt-3">
+                            <div>
+                                @if($canVerify)
+                                    <button type="submit" class="btn btn-primary" id="btnBatch" disabled onclick="return confirm('Verifikasi terpilih?')">
+                                        <i class="bi bi-patch-check"></i> Verifikasi Terpilih (<span id="countSelected">0</span>)
+                                    </button>
+                                @endif
+                            </div>
+                            <div>{{ $komplains->appends(request()->query())->links() }}</div>
+                        </div>
+                    </form>
                 </div>
             </div>
         </section>
+
+        {{-- MODALS --}}
+        @if($canVerify)
+            <div class="modal fade" id="multiApprovalModal" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Multi Approval (Verifikasi Massal)</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <form action="{{ route('detail-komplain.batch-verify') }}" method="POST">
+                            @csrf
+                            <div class="modal-body">
+                                <div class="alert alert-info">
+                                    <i class="bi bi-info-circle-fill me-2"></i> Verifikasi semua data berdasarkan rentang tanggal yang dipilih.
+                                </div>
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label">Tanggal Dari</label>
+                                        <input type="date" name="tanggal_dari" class="form-control" required>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Tanggal Sampai</label>
+                                        <input type="date" name="tanggal_sampai" class="form-control" required>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                                <button type="submit" class="btn btn-primary" onclick="return confirm('Proses verifikasi massal?')">Proses Verifikasi</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        @endif
+
+        @foreach($komplains as $item)
+            <div class="modal fade" id="appProduksi{{ $item->id }}" tabindex="-1" aria-hidden="true"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Approve Produksi</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><form action="{{ route('detail-komplain.approve-qc', $item->uuid) }}" method="POST">@csrf<div class="modal-body"><textarea class="form-control" name="notes" placeholder="Catatan (Opsional)"></textarea></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button><button type="submit" class="btn btn-success">Approve</button></div></form></div></div></div>
+            <div class="modal fade" id="rejProduksi{{ $item->id }}" tabindex="-1" aria-hidden="true"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Reject Produksi</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><form action="{{ route('detail-komplain.reject-qc', $item->uuid) }}" method="POST">@csrf<div class="modal-body"><textarea class="form-control" name="notes" placeholder="Alasan penolakan" required></textarea></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button><button type="submit" class="btn btn-danger">Reject</button></div></form></div></div></div>
+            <div class="modal fade" id="appSPV{{ $item->id }}" tabindex="-1" aria-hidden="true"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Verifikasi SPV QC</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><form action="{{ route('detail-komplain.approve-spv', $item->uuid) }}" method="POST">@csrf<div class="modal-body"><textarea class="form-control" name="notes" placeholder="Catatan (Opsional)"></textarea></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button><button type="submit" class="btn btn-success">Verifikasi</button></div></form></div></div></div>
+            <div class="modal fade" id="rejSPV{{ $item->id }}" tabindex="-1" aria-hidden="true"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Reject SPV QC</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><form action="{{ route('detail-komplain.reject-spv', $item->uuid) }}" method="POST">@csrf<div class="modal-body"><textarea class="form-control" name="notes" placeholder="Alasan penolakan" required></textarea></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button><button type="submit" class="btn btn-danger">Reject</button></div></form></div></div></div>
+        @endforeach
+        @foreach($komplains as $komplain)
+            <div class="modal fade" id="uploadModal{{ $komplain->uuid }}" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Upload Dokumen Supplier</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <form action="{{ route('detail-komplain.upload-supplier', $komplain->uuid) }}" method="POST" enctype="multipart/form-data">
+                            @csrf
+                            <div class="modal-body">
+                                <div class="mb-3">
+                                    <label class="form-label">File Dokumen <span class="text-danger">*</span></label>
+                                    <input type="file" name="upload_suplier" class="form-control" accept=".pdf,.jpg,.jpeg,.png" required>
+                                    <div class="form-text">Format: PDF, JPG, JPEG, PNG</div>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                                <button type="submit" class="btn btn-primary">Upload</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        @endforeach
     </div>
 </div>
 
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const sAll = document.getElementById('selectAll'), rows = document.querySelectorAll('.row-checkbox'), btnB = document.getElementById('btnBatch'), cSp = document.getElementById('countSelected');
+    if (sAll) sAll.onclick = () => { rows.forEach(r => r.checked = sAll.checked); u(); };
+    rows.forEach(r => r.onclick = u);
+    function u() { const n = document.querySelectorAll('.row-checkbox:checked').length; if(btnB){ btnB.disabled = n===0; cSp.innerText = n; } }
+
+    const shiftS = document.getElementById('shiftSelect');
+    const tD = document.getElementById('tanggalDariWrapper'), tSm = document.getElementById('tanggalSampaiWrapper'), tSi = document.getElementById('tanggalSingleWrapper');
+    if(shiftS){
+        const upD = () => {
+            const o = shiftS.options[shiftS.selectedIndex];
+            const isR = o.getAttribute('data-is-date-range') == '1';
+            const sN = o.getAttribute('data-shift-name');
+            tD.style.display = isR ? 'block' : 'none'; tSm.style.display = isR ? 'block' : 'none';
+            tSi.style.display = (!isR && sN) ? 'block' : 'none';
+        };
+        shiftS.onchange = upD; upD();
+    }
+});
+</script>
 @endsection

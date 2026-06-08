@@ -217,7 +217,7 @@ class DetailKomplainController extends Controller
             'id_shift' => $request->id_shift,
             'no_po' => $request->no_po,
 
-            // legacy scalar fields (keep compatibility with existing index/show)
+            // legacy scalar fields
             'nama_produk' => $firstNamaProduk,
             'kode_produksi' => $firstKodeProduksi,
             'expired_date' => $firstExpiredDate,
@@ -228,7 +228,7 @@ class DetailKomplainController extends Controller
             'di_buat_oleh' => $firstDibuat,
             'setujui_oleh' => $firstSetujui,
 
-            // array/json fields (kemasan concept)
+            // array/json fields
             'id_produk_array' => array_values($idProdukArr),
             'kategori_code_array' => array_values($kategoriCodeArr),
             'nama_produk_array' => array_values($namaProdukArr),
@@ -242,6 +242,7 @@ class DetailKomplainController extends Controller
             'setujui_oleh_array' => array_values($setujuiArr),
 
             'id_user' => Auth::id(),
+            'status_verifikasi' => 'pending',
         ]);
 
         return redirect()->route('detail-komplain.index')
@@ -454,15 +455,15 @@ class DetailKomplainController extends Controller
                        ->with('success', 'Komplain berhasil diupdate');
     }
 
-    public function uploadSuplier(Request $request, DetailKomplain $detailKomplain)
+    public function uploadSupplier(Request $request, DetailKomplain $detail_komplain)
     {
         $request->validate([
-            'upload_suplier' => 'required|file|mimes:pdf,doc,docx,xls,xlsx|max:5120',
+            'upload_suplier' => 'required|file|mimes:pdf,jpg,jpeg,png|max:5120',
         ]);
 
         // Hapus file lama jika ada
-        if ($detailKomplain->upload_suplier) {
-            Storage::disk('public')->delete($detailKomplain->upload_suplier);
+        if ($detail_komplain->upload_suplier) {
+            Storage::disk('public')->delete($detail_komplain->upload_suplier);
         }
 
         // Upload file baru
@@ -470,7 +471,7 @@ class DetailKomplainController extends Controller
         $uploadPath = $file->store('komplain/upload-suplier', 'public');
 
         // Update database
-        $detailKomplain->update(['upload_suplier' => $uploadPath]);
+        $detail_komplain->update(['upload_suplier' => $uploadPath]);
 
         return redirect()->route('detail-komplain.index')
                        ->with('success', 'File supplier berhasil diupload');
@@ -500,16 +501,163 @@ class DetailKomplainController extends Controller
                        ->with('success', 'Komplain berhasil dihapus');
     }
 
-    public function exportPdf(DetailKomplain $detailKomplain)
+    public function exportPdf(Request $request, $uuid = null)
     {
         $user = Auth::user();
-        // SuperAdmin bisa export semua, Admin hanya sesuai plant
-        if ($user->role->role !== 'SuperAdmin' && $user->getEffectivePlantId() !== $detailKomplain->user->id_plant) {
-            abort(403, 'Unauthorized');
+        $userRole = $user->role ? strtolower($user->role->role) : null;
+
+        if ($uuid) {
+            $detailKomplain = DetailKomplain::where('uuid', $uuid)->firstOrFail();
+            if ($userRole !== 'superadmin' && $user->getEffectivePlantId() !== $detailKomplain->user->id_plant) {
+                abort(403, 'Unauthorized');
+            }
+            $pdf = Pdf::loadView('qc-sistem.detail-komplain.eksport_pdf', compact('detailKomplain'));
+            return $pdf->download('komplain-' . $detailKomplain->uuid . '.pdf');
         }
 
-        $pdf = Pdf::loadView('qc-sistem.detail-komplain.eksport_pdf', compact('detailKomplain'));
-        return $pdf->download('komplain-' . $detailKomplain->uuid . '.pdf');
+        // Export Massal (Filter)
+        $id_shift = $request->input('id_shift');
+        $tanggal_dari = $request->input('tanggal_dari');
+        $tanggal_sampai = $request->input('tanggal_sampai');
+        $tanggal = $request->input('tanggal');
+
+        $query = DetailKomplain::query();
+
+        if ($userRole !== 'superadmin') {
+            $query->whereHas('user', function($q) use ($user) {
+                $q->where('id_plant', $user->getEffectivePlantId());
+            });
+        }
+
+        if ($id_shift) {
+            $query->where('id_shift', $id_shift);
+            $shift = \App\Models\Shift::find($id_shift);
+            if ($shift && $shift->is_date_range) {
+                if ($tanggal_dari && $tanggal_sampai) {
+                    $query->whereBetween('tanggal_kedatangan', [$tanggal_dari, $tanggal_sampai]);
+                }
+            } else {
+                if ($tanggal) {
+                    $query->whereDate('tanggal_kedatangan', $tanggal);
+                }
+            }
+        }
+
+        $pemeriksaans = $query->get();
+
+        if ($pemeriksaans->isEmpty()) {
+            return redirect()->back()->with('error', 'Data tidak ditemukan untuk di-export.');
+        }
+
+        $pdf = Pdf::loadView('qc-sistem.detail-komplain.eksport_pdf', [
+            'pemeriksaans' => $pemeriksaans,
+            'tanggal' => $tanggal,
+            'tanggal_dari' => $tanggal_dari,
+            'tanggal_sampai' => $tanggal_sampai,
+            'shift' => \App\Models\Shift::find($id_shift),
+        ]);
+
+        return $pdf->download('laporan-detail-komplain-' . date('Ymd-His') . '.pdf');
+    }
+
+    public function batchVerify(Request $request)
+    {
+        $user = Auth::user();
+        $userRole = $user->role ? strtolower($user->role->role) : null;
+        $id_shift = $request->input('id_shift');
+        $tanggal_dari = $request->input('tanggal_dari');
+        $tanggal_sampai = $request->input('tanggal_sampai');
+        $tanggal = $request->input('tanggal');
+        $selected_uuids = $request->input('selected_uuids');
+
+        $query = DetailKomplain::query();
+
+        if ($userRole !== 'superadmin') {
+            $query->whereHas('user', function($q) use ($user) {
+                $q->where('id_plant', $user->getEffectivePlantId());
+            });
+        }
+
+        if (!empty($selected_uuids)) {
+            $query->whereIn('uuid', $selected_uuids);
+        } else {
+            // JIKA MENGGUNAKAN KONTROL RANGE TANGGAL (FALLBACK)
+            $tanggal_dari = $request->input('tanggal_dari');
+            $tanggal_sampai = $request->input('tanggal_sampai');
+
+            if (!$tanggal_dari || !$tanggal_sampai) {
+                return back()->with('error', 'Silakan tentukan rentang tanggal atau gunakan checkbox untuk memilih data.');
+            }
+
+            $query->whereBetween('tanggal_kedatangan', [$tanggal_dari, $tanggal_sampai]);
+        }
+
+        $fromStatus = null;
+        $updateData = [];
+
+        if ($userRole === 'qc inspector' || $userRole === 'qc_inspector') {
+            $fromStatus = ['pending', null];
+            $updateData = [
+                'status_verifikasi' => 'sent_to_qc',
+                'verified_by' => $user->id,
+                'verified_at' => now()
+            ];
+        } elseif ($userRole === 'produksi' || $userRole === 'warehouse' || $userRole === 'produksi/warehouse') {
+            $fromStatus = ['sent_to_qc'];
+            $updateData = [
+                'status_verifikasi' => 'approved_qc',
+                'verified_by' => $user->id,
+                'verified_at' => now()
+            ];
+        } elseif ($userRole === 'spv qc' || $userRole === 'spv_qc' || $userRole === 'superadmin') {
+            $fromStatus = ['approved_qc'];
+            $updateData = [
+                'status_verifikasi' => 'approved_spv',
+                'verified_by' => $user->id,
+                'verified_at' => now()
+            ];
+        }
+
+        if (!$fromStatus) {
+            return back()->with('error', 'Role Anda tidak diizinkan melakukan verifikasi.');
+        }
+
+        $query->whereIn('status_verifikasi', (array) $fromStatus);
+        $count = $query->count();
+
+        if ($count > 0) {
+            $query->update($updateData);
+            return back()->with('success', "$count data pemeriksaan berhasil diverifikasi secara massal.");
+        }
+
+        return back()->with('info', 'Tidak ada data yang memenuhi syarat untuk diverifikasi pada filter tersebut.');
+    }
+
+    /**
+     * Send komplain to Produksi for verification (QC Inspector action)
+     */
+    public function sendToProduksi(DetailKomplain $detailKomplain)
+    {
+        $user = Auth::user();
+        $userRole = $user->role ? strtolower(trim($user->role->role)) : null;
+
+        // Check if user is QC Inspector
+        if (!in_array($userRole, ['qc inspector', 'qc_inspector', 'superadmin'])) {
+            return redirect()->back()->with('error', 'Hanya QC Inspector yang dapat mengirim data.');
+        }
+
+        // Only pending status can be sent
+        if ($detailKomplain->status_verifikasi !== 'pending' && $detailKomplain->status_verifikasi !== null) {
+            return redirect()->back()->with('error', 'Hanya data dengan status pending yang dapat dikirim.');
+        }
+
+        $detailKomplain->update([
+            'status_verifikasi' => 'sent_to_qc',
+            'verified_by_qc' => $user->id,
+            'verified_at' => now(),
+        ]);
+
+        return redirect()->back()->with('success', 'Komplain berhasil dikirim.');
     }
 
     /**

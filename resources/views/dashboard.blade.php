@@ -44,15 +44,6 @@
                             
                             <div class="row mt-4">
                                 <div class="col-md-4">
-                                    <div class="card bg-primary text-white">
-                                        <div class="card-body">
-                                            <h5>Data Master</h5>
-                                            <p>Kelola data role, plant, dan user</p>
-                                            <a href="#" class="btn btn-light btn-sm">Coming Soon</a>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-md-4">
                                     <div class="card bg-success text-white">
                                         <div class="card-body">
                                             <h5>QC System</h5>

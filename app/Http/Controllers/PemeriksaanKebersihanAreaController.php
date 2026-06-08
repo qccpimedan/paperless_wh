@@ -58,7 +58,10 @@ class PemeriksaanKebersihanAreaController extends Controller
 
         $pemeriksaans = $query->latest()->paginate(25);
 
-        return view('qc-sistem.pemeriksaan-kebersihan-area.index', compact('pemeriksaans'));
+        $areaNamaById = InputArea::pluck('nama_area', 'id')->all();
+        $masterFormNamaById = InputMasterForm::pluck('nama_form', 'id')->all();
+
+        return view('qc-sistem.pemeriksaan-kebersihan-area.index', compact('pemeriksaans', 'areaNamaById', 'masterFormNamaById'));
     }
 
     /**
@@ -514,5 +517,81 @@ class PemeriksaanKebersihanAreaController extends Controller
 
         $filename = 'laporan-kebersihan-area-' . ($uuid ? $firstP->uuid : date('Ymd-His')) . '.pdf';
         return $pdf->download($filename);
+    }
+
+    public function batchVerify(Request $request)
+    {
+        $user = Auth::user();
+        $userRole = $user->role ? strtolower($user->role->role) : null;
+        $id_shift = $request->input('id_shift');
+        $tanggal_dari = $request->input('tanggal_dari');
+        $tanggal_sampai = $request->input('tanggal_sampai');
+        $tanggal = $request->input('tanggal');
+        $selected_uuids = $request->input('selected_uuids');
+
+        $query = PemeriksaanKebersihanArea::query();
+
+        if ($userRole !== 'superadmin') {
+            $query->whereHas('user', function($q) use ($user) {
+                $q->where('id_plant', $user->getEffectivePlantId());
+            });
+        }
+
+        if (!empty($selected_uuids)) {
+            $query->whereIn('uuid', $selected_uuids);
+        } else {
+            // JIKA MENGGUNAKAN KONTROL RANGE TANGGAL (FALLBACK)
+            $tanggal_dari = $request->input('tanggal_dari');
+            $tanggal_sampai = $request->input('tanggal_sampai');
+
+            if (!$tanggal_dari || !$tanggal_sampai) {
+                return back()->with('error', 'Silakan tentukan rentang tanggal atau gunakan checkbox untuk memilih data.');
+            }
+
+            $query->whereBetween('tanggal', [$tanggal_dari, $tanggal_sampai]);
+        }
+
+        $fromStatus = null;
+        $updateData = [];
+
+        if ($userRole === 'qc inspector') {
+            $fromStatus = ['pending', null];
+            $updateData = [
+                'status_verifikasi' => 'sent_to_produksi',
+                'verified_by' => $user->id,
+                'verified_by_qc' => $user->id,
+                'verified_at' => now()
+            ];
+        } elseif ($userRole === 'produksi' || $userRole === 'warehouse' || $userRole === 'produksi/warehouse') {
+            $fromStatus = ['sent_to_produksi'];
+            $updateData = [
+                'status_verifikasi' => 'approved_produksi',
+                'verified_by' => $user->id,
+                'verified_by_produksi' => $user->id,
+                'verified_at' => now()
+            ];
+        } elseif ($userRole === 'spv qc' || $userRole === 'superadmin') {
+            $fromStatus = ['approved_produksi'];
+            $updateData = [
+                'status_verifikasi' => 'approved_spv',
+                'verified_by' => $user->id,
+                'verified_by_spv' => $user->id,
+                'verified_at' => now()
+            ];
+        }
+
+        if (!$fromStatus) {
+            return back()->with('error', 'Role Anda tidak diizinkan melakukan verifikasi.');
+        }
+
+        $query->whereIn('status_verifikasi', (array) $fromStatus);
+        $count = $query->count();
+
+        if ($count > 0) {
+            $query->update($updateData);
+            return back()->with('success', "$count data pemeriksaan berhasil diverifikasi secara massal.");
+        }
+
+        return back()->with('info', 'Tidak ada data yang memenuhi syarat untuk diverifikasi pada filter tersebut.');
     }
 }

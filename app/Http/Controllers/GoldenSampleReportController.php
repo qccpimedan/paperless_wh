@@ -179,7 +179,16 @@ class GoldenSampleReportController extends Controller
         }
         $deskripsis = $deskripsiQuery->latest()->get();
         
-        return view('qc-sistem.golden-sample-retort.edit', compact('goldenSampleReport', 'plants', 'deskripsis'));
+        // Get shifts
+        if ($user->role && strtolower($user->role->role) === 'superadmin') {
+            $shifts = Shift::with(['user.plant'])->get();
+        } else {
+            $shifts = Shift::whereHas('user', function ($query) use ($user) {
+                $query->where('id_plant', $user->getEffectivePlantId());
+            })->with(['user.plant'])->get();
+        }
+        
+        return view('qc-sistem.golden-sample-retort.edit', compact('goldenSampleReport', 'plants', 'deskripsis', 'shifts'));
     }
 
     /**
@@ -191,6 +200,8 @@ class GoldenSampleReportController extends Controller
         
         $request->validate([
             'id_plant' => 'required|string',
+            'id_shift' => 'required|exists:shifts,id',
+            'tanggal' => 'required|date',
             'plant_manual' => 'nullable|string|max:255|required_if:id_plant,other',
             'sample_type' => 'required|string|max:255',
             'masa_penyimpanan' => 'required|string|max:255',
@@ -211,6 +222,7 @@ class GoldenSampleReportController extends Controller
         
         $goldenSampleReport->update([
             'id_plant' => $idPlant,
+            'id_shift' => $request->id_shift,
             'plant_manual' => $request->id_plant === 'other' ? $request->plant_manual : null,
             'sample_type' => $request->sample_type,
             'tanggal' => $request->tanggal,
@@ -490,6 +502,83 @@ class GoldenSampleReportController extends Controller
 
         $filenameDate = $tanggal ?? $tanggalDari ?? date('Y-m-d');
         $filename = 'laporan-golden-sample-report-' . $filenameDate . '.pdf';
+        $filename = 'laporan-golden-sample-' . ($uuid ? $firstP->uuid : date('Ymd-His')) . '.pdf';
         return $pdf->download($filename);
+    }
+
+    public function batchVerify(Request $request)
+    {
+        $user = Auth::user();
+        $userRole = $user->role ? strtolower($user->role->role) : null;
+        $id_shift = $request->input('id_shift');
+        $tanggal_dari = $request->input('tanggal_dari');
+        $tanggal_sampai = $request->input('tanggal_sampai');
+        $tanggal = $request->input('tanggal');
+        $selected_uuids = $request->input('selected_uuids');
+
+        $query = GoldenSampleReport::query();
+
+        if ($userRole !== 'superadmin') {
+            $query->whereHas('user', function($q) use ($user) {
+                $q->where('id_plant', $user->getEffectivePlantId());
+            });
+        }
+
+        if (!empty($selected_uuids)) {
+            $query->whereIn('uuid', $selected_uuids);
+        } else {
+            // JIKA MENGGUNAKAN KONTROL RANGE TANGGAL (FALLBACK)
+            $tanggal_dari = $request->input('tanggal_dari');
+            $tanggal_sampai = $request->input('tanggal_sampai');
+
+            if (!$tanggal_dari || !$tanggal_sampai) {
+                return back()->with('error', 'Silakan tentukan rentang tanggal atau gunakan checkbox untuk memilih data.');
+            }
+
+            $query->whereBetween('tanggal', [$tanggal_dari, $tanggal_sampai]);
+        }
+
+        $fromStatus = null;
+        $updateData = [];
+
+        if ($userRole === 'qc inspector') {
+            $fromStatus = ['pending', null];
+            $updateData = [
+                'status_verifikasi' => 'sent_to_produksi',
+                'verified_by' => $user->id,
+                'verified_by_qc' => $user->id,
+                'verified_at' => now()
+            ];
+        } elseif ($userRole === 'produksi' || $userRole === 'warehouse' || $userRole === 'produksi/warehouse') {
+            $fromStatus = ['sent_to_produksi'];
+            $updateData = [
+                'status_verifikasi' => 'approved_produksi',
+                'verified_by' => $user->id,
+                'verified_by_produksi' => $user->id,
+                'verified_at' => now()
+            ];
+        } elseif ($userRole === 'spv qc' || $userRole === 'superadmin') {
+            $fromStatus = ['approved_produksi'];
+            $updateData = [
+                'status_verifikasi' => 'approved_spv',
+                'verified_by' => $user->id,
+                'verified_by_spv' => $user->id,
+                'verified_at' => now()
+            ];
+        }
+
+        if (!$fromStatus) {
+            return back()->with('error', 'Role Anda tidak diizinkan melakukan verifikasi.');
+        }
+
+        $query->whereIn('status_verifikasi', (array) $fromStatus);
+        $count = $query->count();
+
+        if ($count > 0) {
+            $query->update($updateData);
+            return back()->with('success', "$count data pemeriksaan berhasil diverifikasi secara massal.");
+        }
+
+        return back()->with('info', 'Tidak ada data yang memenuhi syarat untuk diverifikasi pada filter tersebut.');
     }
 }

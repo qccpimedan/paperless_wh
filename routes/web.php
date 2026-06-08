@@ -197,7 +197,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('pemeriksaan-suhu-ruang-v2/{pemeriksaanSuhuRuangV2:uuid}/print-pdf', [PemeriksaanSuhuRuangV2Controller::class, 'printPDF'])->name('pemeriksaan-suhu-ruang-v2.print-pdf');
         Route::get('pemeriksaan-suhu-ruang-v3/export-pdf', [PemeriksaanSuhuRuangV3Controller::class, 'exportPDF'])->name('pemeriksaan-suhu-ruang-v3.export-pdf');
         Route::get('pemeriksaan-suhu-ruang-v3/{pemeriksaanSuhuRuangV3:uuid}/print-pdf', [PemeriksaanSuhuRuangV3Controller::class, 'printPDF'])->name('pemeriksaan-suhu-ruang-v3.print-pdf');
-        Route::get('detail-komplain/{detailKomplain:uuid}/export-pdf', [DetailKomplainController::class, 'exportPdf'])->name('detail-komplain.export-pdf');
+        Route::get('detail-komplain/export-pdf/{uuid?}', [DetailKomplainController::class, 'exportPdf'])->name('detail-komplain.export-pdf');
         
         // Routes Tambah data per uuid
         Route::get('pemeriksaan-kedatangan-kemasan/{pemeriksaanKedatanganKemasan:uuid}/tambah-baris', [PemeriksaanKedatanganKemasanController::class, 'createRow'])->name('pemeriksaan-kedatangan-kemasan.tambah-baris');
@@ -208,7 +208,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('pemeriksaan-chemical/{pemeriksaanChemical:uuid}/tambah-baris', [PemeriksaanKedatanganChemicalController::class, 'storeRow'])->name('pemeriksaan-chemical.store-baris');
         
         // Upload File Detail Komplain
-        Route::post('detail-komplain/{detailKomplain:uuid}/upload-suplier', [DetailKomplainController::class, 'uploadSuplier'])->name('detail-komplain.upload-suplier');
+        Route::post('detail-komplain/{detail_komplain:uuid}/upload-supplier', [DetailKomplainController::class, 'uploadSupplier'])->name('detail-komplain.upload-supplier');
         
         // Routes Menu
         Route::resource('pemeriksaan-kedatangan-kemasan', PemeriksaanKedatanganKemasanController::class);
@@ -229,6 +229,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         
         
         // Routes untuk verifikasi pemeriksaan barang mudah pecah
+        Route::post('barang-mudah-pecah/batch-verify', [PemeriksaanBarangMudahPecahController::class, 'batchVerify'])->name('pemeriksaan-barang-mudah-pecah.batch-verify');
         Route::post('pemeriksaan-barang-mudah-pecah/{pemeriksaanBarangMudahPecah:uuid}/send-to-produksi', [PemeriksaanBarangMudahPecahController::class, 'sendToProduksi'])->name('pemeriksaan-barang-mudah-pecah.send-to-produksi');
         Route::post('pemeriksaan-barang-mudah-pecah/{pemeriksaanBarangMudahPecah:uuid}/approve-produksi', [PemeriksaanBarangMudahPecahController::class, 'approveProduksi'])->name('pemeriksaan-barang-mudah-pecah.approve-produksi');
         Route::post('pemeriksaan-barang-mudah-pecah/{pemeriksaanBarangMudahPecah:uuid}/reject-produksi', [PemeriksaanBarangMudahPecahController::class, 'rejectProduksi'])->name('pemeriksaan-barang-mudah-pecah.reject-produksi');
@@ -236,13 +237,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('pemeriksaan-barang-mudah-pecah/{pemeriksaanBarangMudahPecah:uuid}/reject-spv', [PemeriksaanBarangMudahPecahController::class, 'rejectSPV'])->name('pemeriksaan-barang-mudah-pecah.reject-spv');
         
         // Routes untuk verifikasi detail komplain
-        Route::post('detail-komplain/{detailKomplain:uuid}/send-to-qc', [DetailKomplainController::class, 'sendToQC'])->name('detail-komplain.send-to-qc');
-        Route::post('detail-komplain/{detailKomplain:uuid}/approve-qc', [DetailKomplainController::class, 'approveQC'])->name('detail-komplain.approve-qc');
-        Route::post('detail-komplain/{detailKomplain:uuid}/reject-qc', [DetailKomplainController::class, 'rejectQC'])->name('detail-komplain.reject-qc');
-        Route::post('detail-komplain/{detailKomplain:uuid}/approve-spv', [DetailKomplainController::class, 'approveSPV'])->name('detail-komplain.approve-spv');
-        Route::post('detail-komplain/{detailKomplain:uuid}/reject-spv', [DetailKomplainController::class, 'rejectSPV'])->name('detail-komplain.reject-spv');
+        Route::post('detail-komplain/batch-verify', [DetailKomplainController::class, 'batchVerify'])->name('detail-komplain.batch-verify');
+        Route::post('/detail-komplain/batch-verify', [DetailKomplainController::class, 'batchVerify'])->name('detail-komplain.batch-verify');
+        Route::post('/detail-komplain/{detail_komplain:uuid}/send-to-produksi', [DetailKomplainController::class, 'sendToProduksi'])->name('detail-komplain.send-to-produksi');
+        Route::post('/detail-komplain/{detail_komplain:uuid}/approve-qc', [DetailKomplainController::class, 'approveQC'])->name('detail-komplain.approve-qc');
+        Route::post('/detail-komplain/{detail_komplain:uuid}/reject-qc', [DetailKomplainController::class, 'rejectQC'])->name('detail-komplain.reject-qc');
+        Route::post('/detail-komplain/{detail_komplain:uuid}/approve-spv', [DetailKomplainController::class, 'approveSPV'])->name('detail-komplain.approve-spv');
+        Route::post('/detail-komplain/{detail_komplain:uuid}/reject-spv', [DetailKomplainController::class, 'rejectSPV'])->name('detail-komplain.reject-spv');
         
         // Routes untuk verifikasi golden sample report
+        Route::post('golden-sample-reports/batch-verify', [GoldenSampleReportController::class, 'batchVerify'])->name('golden-sample-reports.batch-verify');
         Route::post('golden-sample-reports/{goldenSampleReport:uuid}/send-to-produksi', [GoldenSampleReportController::class, 'sendToProduksi'])->name('golden-sample-reports.send-to-produksi');
         Route::post('golden-sample-reports/{goldenSampleReport:uuid}/approve-produksi', [GoldenSampleReportController::class, 'approveProduksi'])->name('golden-sample-reports.approve-produksi');
         Route::post('golden-sample-reports/{goldenSampleReport:uuid}/reject-produksi', [GoldenSampleReportController::class, 'rejectProduksi'])->name('golden-sample-reports.reject-produksi');
@@ -250,7 +254,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('golden-sample-reports/{goldenSampleReport:uuid}/reject-spv', [GoldenSampleReportController::class, 'rejectSPV'])->name('golden-sample-reports.reject-spv');
         
         // Routes untuk verifikasi pemeriksaan kebersihan area
-        Route::post('pemeriksaan-kebersihan-area/{pemeriksaanKebersihanArea:uuid}/send-to-produksi', [PemeriksaanKebersihanAreaController::class, 'sendToProduksi'])->name('pemeriksaan-kebersihan-area.send-to-produksi');
+        Route::post('kebersihan-area/batch-verify', [PemeriksaanKebersihanAreaController::class, 'batchVerify'])->name('kebersihan-area.batch-verify');
+        Route::post('kebersihan-area/{pemeriksaanKebersihanArea:uuid}/send-to-produksi', [PemeriksaanKebersihanAreaController::class, 'sendToProduksi'])->name('kebersihan-area.send-to-produksi');
         Route::post('pemeriksaan-kebersihan-area/{pemeriksaanKebersihanArea:uuid}/approve-produksi', [PemeriksaanKebersihanAreaController::class, 'approveProduksi'])->name('pemeriksaan-kebersihan-area.approve-produksi');
         Route::post('pemeriksaan-kebersihan-area/{pemeriksaanKebersihanArea:uuid}/reject-produksi', [PemeriksaanKebersihanAreaController::class, 'rejectProduksi'])->name('pemeriksaan-kebersihan-area.reject-produksi');
         Route::post('pemeriksaan-kebersihan-area/{pemeriksaanKebersihanArea:uuid}/approve-spv', [PemeriksaanKebersihanAreaController::class, 'approveSPV'])->name('pemeriksaan-kebersihan-area.approve-spv');
@@ -260,24 +265,34 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('pemeriksaan-suhu-ruang/{pemeriksaanSuhuRuang:uuid}/send-to-produksi', [PemeriksaanSuhuRuangController::class, 'sendToProduksi'])->name('pemeriksaan-suhu-ruang.send-to-produksi');
         Route::post('pemeriksaan-suhu-ruang/{pemeriksaanSuhuRuang:uuid}/approve-produksi', [PemeriksaanSuhuRuangController::class, 'approveProduksi'])->name('pemeriksaan-suhu-ruang.approve-produksi');
         Route::post('pemeriksaan-suhu-ruang/{pemeriksaanSuhuRuang:uuid}/reject-produksi', [PemeriksaanSuhuRuangController::class, 'rejectProduksi'])->name('pemeriksaan-suhu-ruang.reject-produksi');
+        
+        // Routes untuk verifikasi pemeriksaan suhu ruang v1
+        Route::post('pemeriksaan-suhu-ruang/batch-verify', [PemeriksaanSuhuRuangController::class, 'batchVerify'])->name('pemeriksaan-suhu-ruang.batch-verify');
         Route::post('pemeriksaan-suhu-ruang/{pemeriksaanSuhuRuang:uuid}/approve-spv', [PemeriksaanSuhuRuangController::class, 'approveSPV'])->name('pemeriksaan-suhu-ruang.approve-spv');
         Route::post('pemeriksaan-suhu-ruang/{pemeriksaanSuhuRuang:uuid}/reject-spv', [PemeriksaanSuhuRuangController::class, 'rejectSPV'])->name('pemeriksaan-suhu-ruang.reject-spv');
+        
+        // Routes untuk verifikasi pemeriksaan suhu ruang v2
+        Route::post('pemeriksaan-suhu-ruang-v2/batch-verify', [PemeriksaanSuhuRuangV2Controller::class, 'batchVerify'])->name('pemeriksaan-suhu-ruang-v2.batch-verify');
+        Route::post('pemeriksaan-suhu-ruang-v2/{pemeriksaanSuhuRuangV2:uuid}/approve-spv', [PemeriksaanSuhuRuangV2Controller::class, 'approveSPV'])->name('pemeriksaan-suhu-ruang-v2.approve-spv');
+        Route::post('pemeriksaan-suhu-ruang-v2/{pemeriksaanSuhuRuangV2:uuid}/reject-spv', [PemeriksaanSuhuRuangV2Controller::class, 'rejectSPV'])->name('pemeriksaan-suhu-ruang-v2.reject-spv');
+        
+        // Routes untuk verifikasi pemeriksaan suhu ruang v3
+        Route::post('pemeriksaan-suhu-ruang-v3/batch-verify', [PemeriksaanSuhuRuangV3Controller::class, 'batchVerify'])->name('pemeriksaan-suhu-ruang-v3.batch-verify');
+        Route::post('pemeriksaan-suhu-ruang-v3/{pemeriksaanSuhuRuangV3:uuid}/approve-spv', [PemeriksaanSuhuRuangV3Controller::class, 'approveSPV'])->name('pemeriksaan-suhu-ruang-v3.approve-spv');
+        Route::post('pemeriksaan-suhu-ruang-v3/{pemeriksaanSuhuRuangV3:uuid}/reject-spv', [PemeriksaanSuhuRuangV3Controller::class, 'rejectSPV'])->name('pemeriksaan-suhu-ruang-v3.reject-spv');
         
         // Routes untuk verifikasi pemeriksaan suhu ruang v2 (cs meat)
         Route::post('pemeriksaan-suhu-ruang-v2/{pemeriksaanSuhuRuangV2:uuid}/send-to-produksi', [PemeriksaanSuhuRuangV2Controller::class, 'sendToProduksi'])->name('pemeriksaan-suhu-ruang-v2.send-to-produksi');
         Route::post('pemeriksaan-suhu-ruang-v2/{pemeriksaanSuhuRuangV2:uuid}/approve-produksi', [PemeriksaanSuhuRuangV2Controller::class, 'approveProduksi'])->name('pemeriksaan-suhu-ruang-v2.approve-produksi');
         Route::post('pemeriksaan-suhu-ruang-v2/{pemeriksaanSuhuRuangV2:uuid}/reject-produksi', [PemeriksaanSuhuRuangV2Controller::class, 'rejectProduksi'])->name('pemeriksaan-suhu-ruang-v2.reject-produksi');
-        Route::post('pemeriksaan-suhu-ruang-v2/{pemeriksaanSuhuRuangV2:uuid}/approve-spv', [PemeriksaanSuhuRuangV2Controller::class, 'approveSPV'])->name('pemeriksaan-suhu-ruang-v2.approve-spv');
-        Route::post('pemeriksaan-suhu-ruang-v2/{pemeriksaanSuhuRuangV2:uuid}/reject-spv', [PemeriksaanSuhuRuangV2Controller::class, 'rejectSPV'])->name('pemeriksaan-suhu-ruang-v2.reject-spv');
         
         // Routes untuk verifikasi pemeriksaan suhu ruang v3 (gudang dry)
         Route::post('pemeriksaan-suhu-ruang-v3/{pemeriksaanSuhuRuangV3:uuid}/send-to-produksi', [PemeriksaanSuhuRuangV3Controller::class, 'sendToProduksi'])->name('pemeriksaan-suhu-ruang-v3.send-to-produksi');
         Route::post('pemeriksaan-suhu-ruang-v3/{pemeriksaanSuhuRuangV3:uuid}/approve-produksi', [PemeriksaanSuhuRuangV3Controller::class, 'approveProduksi'])->name('pemeriksaan-suhu-ruang-v3.approve-produksi');
         Route::post('pemeriksaan-suhu-ruang-v3/{pemeriksaanSuhuRuangV3:uuid}/reject-produksi', [PemeriksaanSuhuRuangV3Controller::class, 'rejectProduksi'])->name('pemeriksaan-suhu-ruang-v3.reject-produksi');
-        Route::post('pemeriksaan-suhu-ruang-v3/{pemeriksaanSuhuRuangV3:uuid}/approve-spv', [PemeriksaanSuhuRuangV3Controller::class, 'approveSPV'])->name('pemeriksaan-suhu-ruang-v3.approve-spv');
-        Route::post('pemeriksaan-suhu-ruang-v3/{pemeriksaanSuhuRuangV3:uuid}/reject-spv', [PemeriksaanSuhuRuangV3Controller::class, 'rejectSPV'])->name('pemeriksaan-suhu-ruang-v3.reject-spv');
         
         // Routes untuk verifikasi pemeriksaan return barang customer
+        Route::post('return-barang/batch-verify', [PemeriksaanReturnBarangCustomerController::class, 'batchVerify'])->name('return-barang.batch-verify');
         Route::post('return-barang/{pemeriksaanReturnBarangCustomer:uuid}/send-to-produksi', [PemeriksaanReturnBarangCustomerController::class, 'sendToProduksi'])->name('return-barang.send-to-produksi');
         Route::post('return-barang/{pemeriksaanReturnBarangCustomer:uuid}/approve-produksi', [PemeriksaanReturnBarangCustomerController::class, 'approveProduksi'])->name('return-barang.approve-produksi');
         Route::post('return-barang/{pemeriksaanReturnBarangCustomer:uuid}/reject-produksi', [PemeriksaanReturnBarangCustomerController::class, 'rejectProduksi'])->name('return-barang.reject-produksi');
@@ -285,6 +300,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('return-barang/{pemeriksaanReturnBarangCustomer:uuid}/reject-spv', [PemeriksaanReturnBarangCustomerController::class, 'rejectSPV'])->name('return-barang.reject-spv');
         
         // Routes untuk verifikasi pemeriksaan loading produk
+        Route::post('pemeriksaan-loading-produk/batch-verify', [PemeriksaanLoadingProdukController::class, 'batchVerify'])->name('pemeriksaan-loading-produk.batch-verify');
         Route::post('pemeriksaan-loading-produk/{pemeriksaanLoadingProduk:uuid}/send-to-produksi', [PemeriksaanLoadingProdukController::class, 'sendToProduksi'])->name('pemeriksaan-loading-produk.send-to-produksi');
         Route::post('pemeriksaan-loading-produk/{pemeriksaanLoadingProduk:uuid}/approve-produksi', [PemeriksaanLoadingProdukController::class, 'approveProduksi'])->name('pemeriksaan-loading-produk.approve-produksi');
         Route::post('pemeriksaan-loading-produk/{pemeriksaanLoadingProduk:uuid}/reject-produksi', [PemeriksaanLoadingProdukController::class, 'rejectProduksi'])->name('pemeriksaan-loading-produk.reject-produksi');
@@ -292,6 +308,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('pemeriksaan-loading-produk/{pemeriksaanLoadingProduk:uuid}/reject-spv', [PemeriksaanLoadingProdukController::class, 'rejectSPV'])->name('pemeriksaan-loading-produk.reject-spv');
         
         // Routes untuk verifikasi pemeriksaan loading kendaraan
+        Route::post('pemeriksaan-loading-kendaraan/batch-verify', [PemeriksaanLoadingKendaraanController::class, 'batchVerify'])->name('pemeriksaan-loading-kendaraan.batch-verify');
         Route::post('pemeriksaan-loading-kendaraan/{pemeriksaanLoadingKendaraan:uuid}/send-to-produksi', [PemeriksaanLoadingKendaraanController::class, 'sendToProduksi'])->name('pemeriksaan-loading-kendaraan.send-to-produksi');
         Route::post('pemeriksaan-loading-kendaraan/{pemeriksaanLoadingKendaraan:uuid}/approve-produksi', [PemeriksaanLoadingKendaraanController::class, 'approveProduksi'])->name('pemeriksaan-loading-kendaraan.approve-produksi');
         Route::post('pemeriksaan-loading-kendaraan/{pemeriksaanLoadingKendaraan:uuid}/reject-produksi', [PemeriksaanLoadingKendaraanController::class, 'rejectProduksi'])->name('pemeriksaan-loading-kendaraan.reject-produksi');
@@ -299,6 +316,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('pemeriksaan-loading-kendaraan/{pemeriksaanLoadingKendaraan:uuid}/reject-spv', [PemeriksaanLoadingKendaraanController::class, 'rejectSPV'])->name('pemeriksaan-loading-kendaraan.reject-spv');
         
         // Routes untuk verifikasi pemeriksaan kedatangan kemasan
+        Route::post('pemeriksaan-kedatangan-kemasan/batch-verify', [PemeriksaanKedatanganKemasanController::class, 'batchVerify'])->name('pemeriksaan-kedatangan-kemasan.batch-verify');
         Route::post('pemeriksaan-kedatangan-kemasan/{pemeriksaanKedatanganKemasan:uuid}/send-to-produksi', [PemeriksaanKedatanganKemasanController::class, 'sendToProduksi'])->name('pemeriksaan-kedatangan-kemasan.send-to-produksi');
         Route::post('pemeriksaan-kedatangan-kemasan/{pemeriksaanKedatanganKemasan:uuid}/approve-produksi', [PemeriksaanKedatanganKemasanController::class, 'approveProduksi'])->name('pemeriksaan-kedatangan-kemasan.approve-produksi');
         Route::post('pemeriksaan-kedatangan-kemasan/{pemeriksaanKedatanganKemasan:uuid}/reject-produksi', [PemeriksaanKedatanganKemasanController::class, 'rejectProduksi'])->name('pemeriksaan-kedatangan-kemasan.reject-produksi');
@@ -306,6 +324,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('pemeriksaan-kedatangan-kemasan/{pemeriksaanKedatanganKemasan:uuid}/reject-spv', [PemeriksaanKedatanganKemasanController::class, 'rejectSPV'])->name('pemeriksaan-kedatangan-kemasan.reject-spv');
 
         // Routes untuk verifikasi pemeriksaan produk finish good
+        Route::post('pemeriksaan-produk-finish-good/batch-verify', [PemeriksaanProdukFinishGoodController::class, 'batchVerify'])->name('pemeriksaan-produk-finish-good.batch-verify');
         Route::post('pemeriksaan-produk-finish-good/{pemeriksaanProdukFinishGood:uuid}/send-to-produksi', [PemeriksaanProdukFinishGoodController::class, 'sendToProduksi'])->name('pemeriksaan-produk-finish-good.send-to-produksi');
         Route::post('pemeriksaan-produk-finish-good/{pemeriksaanProdukFinishGood:uuid}/approve-produksi', [PemeriksaanProdukFinishGoodController::class, 'approveProduksi'])->name('pemeriksaan-produk-finish-good.approve-produksi');
         Route::post('pemeriksaan-produk-finish-good/{pemeriksaanProdukFinishGood:uuid}/reject-produksi', [PemeriksaanProdukFinishGoodController::class, 'rejectProduksi'])->name('pemeriksaan-produk-finish-good.reject-produksi');
@@ -313,6 +332,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('pemeriksaan-produk-finish-good/{pemeriksaanProdukFinishGood:uuid}/reject-spv', [PemeriksaanProdukFinishGoodController::class, 'rejectSPV'])->name('pemeriksaan-produk-finish-good.reject-spv');
         
         // Routes untuk verifikasi pemeriksaan kedatangan bahan baku penunjang
+        Route::post('pemeriksaan-bahan-baku/batch-verify', [PemeriksaanKedatanganBahanBakuPenunjangController::class, 'batchVerify'])->name('pemeriksaan-bahan-baku.batch-verify');
         Route::post('pemeriksaan-bahan-baku/{pemeriksaanBahanBaku:uuid}/send-to-produksi', [PemeriksaanKedatanganBahanBakuPenunjangController::class, 'sendToProduksi'])->name('pemeriksaan-bahan-baku.send-to-produksi');
         Route::post('pemeriksaan-bahan-baku/{pemeriksaanBahanBaku:uuid}/approve-produksi', [PemeriksaanKedatanganBahanBakuPenunjangController::class, 'approveProduksi'])->name('pemeriksaan-bahan-baku.approve-produksi');
         Route::post('pemeriksaan-bahan-baku/{pemeriksaanBahanBaku:uuid}/reject-produksi', [PemeriksaanKedatanganBahanBakuPenunjangController::class, 'rejectProduksi'])->name('pemeriksaan-bahan-baku.reject-produksi');
@@ -320,7 +340,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('pemeriksaan-bahan-baku/{pemeriksaanBahanBaku:uuid}/reject-spv', [PemeriksaanKedatanganBahanBakuPenunjangController::class, 'rejectSPV'])->name('pemeriksaan-bahan-baku.reject-spv');
         
         // Routes untuk verifikasi pemeriksaan kedatangan chemical
-        Route::post('pemeriksaan-chemical/{pemeriksaanChemical:uuid}/send-to-produksi', [PemeriksaanKedatanganChemicalController::class, 'sendToProduksi'])->name('pemeriksaan-chemical.send-to-produksi');
+        Route::post('pemeriksaan-chemical/batch-verify', [PemeriksaanKedatanganChemicalController::class, 'batchVerify'])->name('pemeriksaan-chemical.batch-verify');
+        Route::post('pemeriksaan-chemical/{pemeriksaanKedatanganChemical:uuid}/send-to-produksi', [PemeriksaanKedatanganChemicalController::class, 'sendToProduksi'])->name('pemeriksaan-chemical.send-to-produksi');
         Route::post('pemeriksaan-chemical/{pemeriksaanChemical:uuid}/approve-produksi', [PemeriksaanKedatanganChemicalController::class, 'approveProduksi'])->name('pemeriksaan-chemical.approve-produksi');
         Route::post('pemeriksaan-chemical/{pemeriksaanChemical:uuid}/reject-produksi', [PemeriksaanKedatanganChemicalController::class, 'rejectProduksi'])->name('pemeriksaan-chemical.reject-produksi');
         Route::post('pemeriksaan-chemical/{pemeriksaanChemical:uuid}/approve-spv', [PemeriksaanKedatanganChemicalController::class, 'approveSPV'])->name('pemeriksaan-chemical.approve-spv');
