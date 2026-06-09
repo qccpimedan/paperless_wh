@@ -15,6 +15,7 @@ class ProdukImport implements ToCollection, WithHeadingRow
 
     /** @var array<int, string> */
     public array $errors = [];
+    public array $added_products = [];
 
     public function collection(Collection $rows)
     {
@@ -51,6 +52,7 @@ class ProdukImport implements ToCollection, WithHeadingRow
                 'kategori_code' => $kategori,
             ]);
 
+            $this->added_products[] = $nama;
             $this->inserted++;
         }
     }

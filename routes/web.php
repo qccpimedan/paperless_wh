@@ -51,6 +51,9 @@ Route::match(['get', 'post'], '/', function () {
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+Route::get('/logout', function () {
+    return redirect('/login');
+});
 // Dashboard
 Route::get('/dashboard', [AuthController::class, 'dashboard'])->name('dashboard');
 
@@ -159,8 +162,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         // Supir Management Routes
         Route::resource('supirs', SupirController::class);
         // Produk Management Routes
+        Route::get('produks/export-update', [ProdukController::class, 'exportUpdate'])->name('produks.export-update');
         Route::resource('produks', ProdukController::class);
         Route::post('produks/import', [ProdukController::class, 'import'])->name('produks.import');
+        Route::post('produks/import-update', [ProdukController::class, 'importUpdate'])->name('produks.import-update');
         // Ekspedisi Management Routes
         Route::resource('ekspedisis', EkspedisiController::class);
         Route::post('ekspedisis/import', [EkspedisiController::class, 'import'])->name('ekspedisis.import');

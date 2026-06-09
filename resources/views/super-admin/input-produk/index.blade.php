@@ -27,7 +27,17 @@
 
         @if(session('success'))
             <div class="alert alert-success alert-dismissible fade show" role="alert">
-                {{ session('success') }}
+                <i class="bi bi-check-circle"></i> {{ session('success') }}
+                @if(session('updated_products') && count(session('updated_products')) > 0)
+                    <div class="mt-2" style="max-height: 150px; overflow-y: auto;">
+                        <small><strong>Daftar Produk:</strong></small>
+                        <ul class="mb-0 small">
+                            @foreach(session('updated_products') as $productName)
+                                <li>{{ $productName }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
         @endif
@@ -43,12 +53,20 @@
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
         @endif
-<!-- done -->
         <section class="section">
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="card-title mb-0">Daftar Produk</h5>
                     <div class="d-flex gap-2">
+                        <!-- import produsen dan distributor by kategori produk -->
+                        <div class="btn-group" role="group">
+                            <button type="button" class="btn btn-sm btn-info text-white" data-bs-toggle="modal" data-bs-target="#updatePDModal">
+                                <i class="bi bi-pencil-square"></i> Import Produsen & Distributor
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-info" data-bs-toggle="modal" data-bs-target="#infoPDModal" title="Klik untuk informasi penggunaan">
+                                <i class="bi bi-question-circle"></i>
+                            </button>
+                        </div>
                         @can('create_produks')
                         <button type="button" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#importModal">
                             <i class="bi bi-file-earmark-excel"></i> Import Excel
@@ -91,6 +109,115 @@
                 </div>
             </div>
         </section>
+    </div>
+</div>
+
+<!-- Modal Informasi Penggunaan (Scenario B) -->
+<div class="modal fade" id="infoPDModal" tabindex="-1" aria-labelledby="infoPDModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-info">
+                <h5 class="modal-title text-white" id="infoPDModalLabel">
+                    <i class="bi bi-info-circle"></i> Informasi & Panduan Fitur
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <h6>Apa fungsi tombol ini?</h6>
+                <p>Tombol ini digunakan khusus untuk <strong>melengkapi atau memperbarui</strong> data Produsen dan Distributor pada produk yang sudah terdaftar di sistem secara massal.</p>
+                
+                <hr>
+                
+                <h6>Langkah-langkah penggunaan:</h6>
+                <div class="stepper">
+                    <div class="d-flex mb-3">
+                        <div class="flex-shrink-0">
+                            <span class="badge bg-primary rounded-pill">1</span>
+                        </div>
+                        <div class="ms-3">
+                            <strong>Download Data:</strong> Klik tombol, pilih kategori produk (misal: WHSE), lalu download file Excel-nya. File tersebut akan berisi daftar produk yang sudah ada di kategori tersebut.
+                        </div>
+                    </div>
+                    <div class="d-flex mb-3">
+                        <div class="flex-shrink-0">
+                            <span class="badge bg-primary rounded-pill">2</span>
+                        </div>
+                        <div class="ms-3">
+                            <strong>Isi Produsen/Distributor:</strong> Buka file Excel, isi kolom Produsen dan Distributor. Jika lebih dari satu, pisahkan dengan tanda titik koma ( <strong>;</strong> ).
+                            <br><small class="text-muted">Contoh: PT. Surya; PT. Maju</small>
+                        </div>
+                    </div>
+                    <div class="d-flex mb-3">
+                        <div class="flex-shrink-0">
+                            <span class="badge bg-primary rounded-pill">3</span>
+                        </div>
+                        <div class="ms-3">
+                            <strong>Upload Kembali:</strong> Simpan file Excel, lalu upload kembali melalui tombol "Import Update Data" di dalam modal yang sama.
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="alert alert-warning mt-3">
+                    <small><strong>Penting:</strong> Jangan mengubah kolom "ID SISTEM" pada file Excel agar sistem dapat mengenali produk dengan benar.</small>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Mengerti</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Update Produsen/Distributor (Skenario B) -->
+<div class="modal fade" id="updatePDModal" tabindex="-1" aria-labelledby="updatePDModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="updatePDModalLabel">
+                    <i class="bi bi-pencil-square"></i> Lengkapi Produsen/Distributor
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i> 
+                    <strong>Skenario Update:</strong>
+                    <ol class="mb-0 mt-2">
+                        <li>Pilih Kategori lalu download data eksis.</li>
+                        <li>Lengkapi kolom Produsen & Distributor (gunakan pemisah <code>;</code> untuk memilih lebih dari 1).</li>
+                        <li>Upload kembali file yang sudah diedit.</li>
+                    </ol>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label">1. Pilih Kategori & Download</label>
+                    <form action="{{ route('produks.export-update') }}" method="GET">
+                        <select name="kategori_code" class="form-select mb-2" required>
+                            <option value="">-- Pilih Kategori --</option>
+                            @foreach(($kategoriOptions ?? []) as $kat)
+                                <option value="{{ $kat }}">{{ $kat }}</option>
+                            @endforeach
+                        </select>
+                        <button type="submit" class="btn btn-outline-primary w-100">
+                            <i class="bi bi-download"></i> Download Data Eksis
+                        </button>
+                    </form>
+                </div>
+
+                <hr>
+
+                <div class="mt-4">
+                    <label class="form-label">2. Upload File yang Sudah Diedit</label>
+                    <form action="{{ route('produks.import-update') }}" method="POST" enctype="multipart/form-data">
+                        @csrf
+                        <input type="file" name="file" class="form-control mb-2" accept=".xlsx,.xls,.csv" required>
+                        <button type="submit" class="btn btn-info text-white w-100">
+                            <i class="bi bi-upload"></i> Import Update Data
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
