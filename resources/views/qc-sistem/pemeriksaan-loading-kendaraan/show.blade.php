@@ -82,13 +82,19 @@
                                 <div class="col-md-6">
                                     <div class="mb-3">
                                         <label class="form-label"><strong>Jenis Kendaraan</strong></label>
-                                        <p class="text-muted">{{ $pemeriksaanLoadingKendaraan->kendaraan->jenis_kendaraan ?? '-' }} - {{ $pemeriksaanLoadingKendaraan->kendaraan->no_kendaraan ?? '-' }}</p>
+                                        <p class="text-muted">
+                                            @if($pemeriksaanLoadingKendaraan->kendaraan)
+                                                {{ $pemeriksaanLoadingKendaraan->kendaraan->jenis_kendaraan ?? '-' }} - {{ $pemeriksaanLoadingKendaraan->kendaraan->no_kendaraan ?? '-' }}
+                                            @else
+                                                {{ $pemeriksaanLoadingKendaraan->jenis_kendaraan_manual ?? '-' }} - {{ $pemeriksaanLoadingKendaraan->no_kendaraan_manual ?? '-' }}
+                                            @endif
+                                        </p>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="mb-3">
                                         <label class="form-label"><strong>Tujuan Pengiriman</strong></label>
-                                        <p class="text-muted">{{ $pemeriksaanLoadingKendaraan->tujuanPengiriman->nama_tujuan ?? '-' }}</p>
+                                        <p class="text-muted">{{ $pemeriksaanLoadingKendaraan->tujuanPengiriman->nama_tujuan ?? $pemeriksaanLoadingKendaraan->nama_tujuan_manual ?? '-' }}</p>
                                     </div>
                                 </div>
                                 <div class="col-md-6">

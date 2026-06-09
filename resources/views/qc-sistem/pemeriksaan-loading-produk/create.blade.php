@@ -163,10 +163,10 @@
                                                     <label for="id_supir">Nama Supir</label>
                                                     <select id="id_supir" class="form-control @error('id_supir') is-invalid @enderror" name="id_supir">
                                                         <option value="">Pilih Supir</option>
+                                                        <option value="other" {{ old('id_supir') == 'other' ? 'selected' : '' }}>-- Lainnya (Input Manual) --</option>
                                                         @foreach($supirs as $supir)
                                                             <option value="{{ $supir->id }}" {{ old('id_supir') == $supir->id ? 'selected' : '' }}>{{ $supir->nama_supir }}</option>
                                                         @endforeach
-                                                        <option value="other" {{ old('id_supir') == 'other' ? 'selected' : '' }}>-- Lainnya (Input Manual) --</option>
                                                     </select>
                                                     @error('id_supir')
                                                         <div class="invalid-feedback">{{ $message }}</div>

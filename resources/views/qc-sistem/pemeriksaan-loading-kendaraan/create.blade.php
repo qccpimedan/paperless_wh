@@ -192,27 +192,46 @@
                                             </div>
                                             <!-- Tanggal -->
                                             <div class="col-md-6">
-                                                <label for="tanggal">Tanggal <span class="text-danger">*</span></label>
-                                                <input type="date" id="tanggal" class="form-control @error('tanggal') is-invalid @enderror"
-                                                    name="tanggal" value="{{ old('tanggal', date('Y-m-d')) }}" required>
-                                                @error('tanggal')
+                                                <div class="form-group mb-3">
+                                                    <label for="tanggal">Tanggal <span class="text-danger">*</span></label>
+                                                    <input type="date" id="tanggal" class="form-control @error('tanggal') is-invalid @enderror"
+                                                        name="tanggal" value="{{ old('tanggal', date('Y-m-d')) }}" required>
+                                                    @error('tanggal')
+                                                        <div class="invalid-feedback">{{ $message }}</div>
+                                                    @enderror
+                                                </div>
+                                            </div>
+                                            <!-- Shift -->
+                                            <div class="col-md-6">
+                                                <label for="id_shift">Shift</label>
+                                                <select id="id_shift" class="form-select @error('id_shift') is-invalid @enderror"
+                                                    name="id_shift">
+                                                    <option value="">-- Pilih Shift --</option>
+                                                    @foreach($shifts as $shift)
+                                                        <option value="{{ $shift->id }}" {{ old('id_shift') == $shift->id ? 'selected' : '' }}>
+                                                            {{ $shift->shift }}
+                                                        </option>
+                                                    @endforeach
+                                                </select>
+                                                @error('id_shift')
                                                     <div class="invalid-feedback">{{ $message }}</div>
                                                 @enderror
                                             </div>
-
                                             <!-- Ekspedisi -->
                                             <div class="col-md-6">
-                                                <label for="id_ekspedisi">Ekspedisi <span class="text-danger">*</span></label>
-                                                <select id="id_ekspedisi" class="form-select @error('id_ekspedisi') is-invalid @enderror"
-                                                    name="id_ekspedisi" required>
-                                                    <option value="">-- Pilih Ekspedisi --</option>
-                                                    @foreach($ekspedisis as $ekspedisi)
-                                                        <option value="{{ $ekspedisi->id }}" {{ old('id_ekspedisi') == $ekspedisi->id ? 'selected' : '' }}>{{ $ekspedisi->nama_ekspedisi }}</option>
-                                                    @endforeach
-                                                </select>
-                                                @error('id_ekspedisi')
-                                                    <div class="invalid-feedback">{{ $message }}</div>
-                                                @enderror
+                                                <div class="form-group mb-3">
+                                                    <label for="id_ekspedisi">Ekspedisi <span class="text-danger">*</span></label>
+                                                    <select id="id_ekspedisi" class="form-select @error('id_ekspedisi') is-invalid @enderror"
+                                                        name="id_ekspedisi" required>
+                                                        <option value="">-- Pilih Ekspedisi --</option>
+                                                        @foreach($ekspedisis as $ekspedisi)
+                                                            <option value="{{ $ekspedisi->id }}" {{ old('id_ekspedisi') == $ekspedisi->id ? 'selected' : '' }}>{{ $ekspedisi->nama_ekspedisi }}</option>
+                                                        @endforeach
+                                                    </select>
+                                                    @error('id_ekspedisi')
+                                                        <div class="invalid-feedback">{{ $message }}</div>
+                                                    @enderror
+                                                </div>
                                             </div>
 
                                             <!-- Kendaraan -->
@@ -260,33 +279,36 @@
 
                                             <!-- Tujuan Pengiriman -->
                                             <div class="col-md-6">
-                                                <label for="id_tujuan_pengiriman">Tujuan Pengiriman <span class="text-danger">*</span></label>
-                                                <select id="id_tujuan_pengiriman" class="form-select @error('id_tujuan_pengiriman') is-invalid @enderror"
-                                                    name="id_tujuan_pengiriman" required>
-                                                    <option value="">-- Pilih Tujuan --</option>
-                                                    @foreach($tujuanPengirimens as $tujuan)
-                                                        <option value="{{ $tujuan->id }}" {{ old('id_tujuan_pengiriman') == $tujuan->id ? 'selected' : '' }}>{{ $tujuan->nama_tujuan }}</option>
-                                                    @endforeach
-                                                </select>
-                                                @error('id_tujuan_pengiriman')
-                                                    <div class="invalid-feedback">{{ $message }}</div>
-                                                @enderror
-                                            </div>
-                                            <!-- Shift -->
-                                            <div class="col-md-6">
-                                                <label for="id_shift">Shift</label>
-                                                <select id="id_shift" class="form-select @error('id_shift') is-invalid @enderror"
-                                                    name="id_shift">
-                                                    <option value="">-- Pilih Shift --</option>
-                                                    @foreach($shifts as $shift)
-                                                        <option value="{{ $shift->id }}" {{ old('id_shift') == $shift->id ? 'selected' : '' }}>
-                                                            {{ $shift->shift }}
-                                                        </option>
-                                                    @endforeach
-                                                </select>
-                                                @error('id_shift')
-                                                    <div class="invalid-feedback">{{ $message }}</div>
-                                                @enderror
+                                                <div class="form-group mb-3">
+                                                    <label for="id_tujuan_pengiriman">Tujuan Pengiriman <span class="text-danger">*</span></label>
+                                                    <select id="id_tujuan_pengiriman" class="form-select @error('id_tujuan_pengiriman') is-invalid @enderror"
+                                                        name="id_tujuan_pengiriman" required>
+                                                        <option value="">-- Pilih Tujuan --</option>
+                                                        <option value="lainnya" {{ old('id_tujuan_pengiriman') == 'lainnya' ? 'selected' : '' }}>-- Lainnya (Input Manual) --</option>
+                                                        @foreach($tujuanPengirimens as $tujuan)
+                                                            <option value="{{ $tujuan->id }}" {{ old('id_tujuan_pengiriman') == $tujuan->id ? 'selected' : '' }}>{{ $tujuan->nama_tujuan }}</option>
+                                                        @endforeach
+                                                    </select>
+                                                    @error('id_tujuan_pengiriman')
+                                                        <div class="invalid-feedback">{{ $message }}</div>
+                                                    @enderror
+                                                </div>
+
+                                                {{-- Input Manual Tujuan Pengiriman --}}
+                                                <div id="manual_tujuan_pengiriman_input" class="mt-2" style="display: {{ old('id_tujuan_pengiriman') == 'lainnya' ? 'block' : 'none' }};">
+                                                    <div class="row">
+                                                        <div class="col-md-12">
+                                                            <div class="form-group">
+                                                                <label for="nama_tujuan_manual">Tujuan Pengiriman</label>
+                                                                <input type="text" id="nama_tujuan_manual" class="form-control @error('nama_tujuan_manual') is-invalid @enderror"
+                                                                    name="nama_tujuan_manual" value="{{ old('nama_tujuan_manual') }}" placeholder="Masukkan tujuan pengiriman">
+                                                                @error('nama_tujuan_manual')
+                                                                    <div class="invalid-feedback">{{ $message }}</div>
+                                                                @enderror
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
                                             </div>
                                             <!-- Std Precooling -->
                                             <div class="col-md-6">
@@ -422,51 +444,84 @@ document.addEventListener('DOMContentLoaded', function() {
         });
 
         return new Choices(selectEl, {
-            searchResultLimit: 100,
-                    searchFuzziness: 0.000001,
-                    fuseOptions: { ignoreLocation: true, threshold: 0.2, matchAllTokens: false },
-                    searchEnabled: true,
+            searchEnabled: true,
             searchPlaceholderValue: 'Cari...',
             searchFields: ['label', 'value'],
             itemSelectText: '',
             noResultsText: 'Tidak ada hasil ditemukan',
             noChoicesText: 'Tidak ada pilihan tersedia',
-            shouldSort: false,
+            shouldSort: true, // Ubah ke true agar kita bisa pakai sorter kustom
+            sorter: function(a, b) {
+                // Selalu taruh opsi manual (value: other atau lainnya) di paling atas
+                if (a.value === 'other' || a.value === 'lainnya') return -1;
+                if (b.value === 'other' || b.value === 'lainnya') return 1;
+                
+                // Sisanya biarkan sesuai urutan HTML (tidak diurutkan alfabet)
+                return 0;
+            },
             placeholder: true,
             placeholderValue: placeholderText || 'Pilih...',
+            searchResultLimit: 100,
             fuseOptions: {
                 includeScore: true,
-                threshold: 0.4,
-                distance: 1000,
-                tokenize: true,
+                threshold: 0.3,
+                distance: 100,
+                ignoreLocation: true,
                 matchAllTokens: false
             }
         });
     }
 
+    function toggleManualTujuan(value) {
+        const manualTujuanInput = document.getElementById('manual_tujuan_pengiriman_input');
+        if (!manualTujuanInput) return;
+        manualTujuanInput.style.display = (value === 'lainnya') ? 'block' : 'none';
+        
+        if (value !== 'lainnya') {
+            const inputManual = document.getElementById('nama_tujuan_manual');
+            if (inputManual) inputManual.value = '';
+        }
+    }
+
+    function toggleManualKendaraan(value) {
+        const manualKendaraanInput = document.getElementById('manual_kendaraan_input');
+        if (!manualKendaraanInput) return;
+        manualKendaraanInput.style.display = (value === 'other') ? 'block' : 'none';
+    }
+
     // Inisialisasi setiap dropdown
     initChoicesSelect(document.getElementById('id_ekspedisi'), '-- Pilih Ekspedisi --');
+    
+    // -------- Tujuan Pengiriman & Manual Toggle --------
+    const tujuanSelectEl = document.getElementById('id_tujuan_pengiriman');
+    const manualTujuanInput = document.getElementById('manual_tujuan_pengiriman_input');
+
+    if (tujuanSelectEl) {
+        toggleManualTujuan(tujuanSelectEl.value);
+        initChoicesSelect(tujuanSelectEl, '-- Pilih Tujuan --');
+        
+        tujuanSelectEl.addEventListener('change', function() {
+            toggleManualTujuan(this.value);
+        });
+    }
     
     // -------- Kendaraan & Manual Toggle --------
     const kendaraanSelectEl = document.getElementById('id_kendaraan');
     const manualKendaraanInput = document.getElementById('manual_kendaraan_input');
 
-    function toggleManualKendaraan(value) {
-        if (!manualKendaraanInput) return;
-        manualKendaraanInput.style.display = (value === 'other') ? 'block' : 'none';
-    }
-
     if (kendaraanSelectEl) {
         toggleManualKendaraan(kendaraanSelectEl.value);
-        const kendaraanChoices = initChoicesSelect(kendaraanSelectEl, '-- Pilih Kendaraan --');
+        initChoicesSelect(kendaraanSelectEl, '-- Pilih Kendaraan --');
         
         kendaraanSelectEl.addEventListener('change', function() {
             toggleManualKendaraan(this.value);
         });
     }
 
-    initChoicesSelect(document.getElementById('id_tujuan_pengiriman'), '-- Pilih Tujuan --');
-    initChoicesSelect(document.getElementById('id_std_precooling'), '-- Pilih Std Precooling --');
+    const stdPrecoolingEl = document.getElementById('id_std_precooling');
+    if (stdPrecoolingEl) {
+        initChoicesSelect(stdPrecoolingEl, '-- Pilih Std Precooling --');
+    }
 });
 </script>
 @endsection
