@@ -114,8 +114,22 @@ class ProdukUpdateReferenceSheet implements FromCollection, WithHeadings, Should
 
     public function collection()
     {
-        $produsens = Produsen::orderBy('nama_produsen')->pluck('nama_produsen');
-        $distributors = Distributor::orderBy('nama_distributor')->pluck('nama_distributor');
+        $user = Auth::user();
+        $effectivePlantId = $user->getEffectivePlantId();
+
+        // Ambil produsen yang terdaftar di plant ini
+        $produsens = Produsen::whereHas('user', function ($query) use ($effectivePlantId) {
+                $query->where('id_plant', $effectivePlantId);
+            })
+            ->orderBy('nama_produsen')
+            ->pluck('nama_produsen');
+
+        // Ambil distributor yang terdaftar di plant ini
+        $distributors = Distributor::whereHas('user', function ($query) use ($effectivePlantId) {
+                $query->where('id_plant', $effectivePlantId);
+            })
+            ->orderBy('nama_distributor')
+            ->pluck('nama_distributor');
 
         $data = [];
         $max = max(count($produsens), count($distributors));
