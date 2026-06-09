@@ -129,7 +129,11 @@ class PemeriksaanLoadingKendaraanController extends Controller
             ],
             'jenis_kendaraan_manual' => 'nullable|required_if:id_kendaraan,other|string|max:255',
             'no_kendaraan_manual' => 'nullable|required_if:id_kendaraan,other|string|max:255',
-            'id_tujuan_pengiriman' => 'required|exists:tujuan_pengirimen,id',
+            'id_tujuan_pengiriman' => [
+                'required',
+                $request->input('id_tujuan_pengiriman') !== 'lainnya' ? 'exists:tujuan_pengirimen,id' : '',
+            ],
+            'nama_tujuan_manual' => 'nullable|required_if:id_tujuan_pengiriman,lainnya|string|max:255',
             'id_std_precooling' => 'required|exists:std_precoolings,id',
             'id_shift' => 'nullable|exists:shifts,id',
             'jam_mulai' => 'required|date_format:H:i',
@@ -148,6 +152,16 @@ class PemeriksaanLoadingKendaraanController extends Controller
                 'id_user' => Auth::id(),
             ]);
             $idKendaraan = $kendaraan->id;
+        }
+
+        // Handle tujuan pengiriman manual
+        $idTujuanPengiriman = $request->id_tujuan_pengiriman;
+        if ($idTujuanPengiriman === 'lainnya') {
+            $tujuanPengiriman = TujuanPengiriman::create([
+                'nama_tujuan' => $request->nama_tujuan_manual,
+                'id_user' => Auth::id(),
+            ]);
+            $idTujuanPengiriman = $tujuanPengiriman->id;
         }
 
         // Prepare kondisi data
@@ -174,7 +188,7 @@ class PemeriksaanLoadingKendaraanController extends Controller
             'tanggal' => $request->tanggal,
             'id_ekspedisi' => $request->id_ekspedisi,
             'id_kendaraan' => $idKendaraan,
-            'id_tujuan_pengiriman' => $request->id_tujuan_pengiriman,
+            'id_tujuan_pengiriman' => $idTujuanPengiriman,
             'id_std_precooling' => $request->id_std_precooling,
             'id_shift' => $request->id_shift,
             'kondisi_kebersihan_mobil' => json_encode($kondisiKebersihanMobil),
@@ -254,7 +268,11 @@ class PemeriksaanLoadingKendaraanController extends Controller
             ],
             'jenis_kendaraan_manual' => 'nullable|required_if:id_kendaraan,other|string|max:255',
             'no_kendaraan_manual' => 'nullable|required_if:id_kendaraan,other|string|max:255',
-            'id_tujuan_pengiriman' => 'required|exists:tujuan_pengirimen,id',
+            'id_tujuan_pengiriman' => [
+                'required',
+                $request->input('id_tujuan_pengiriman') !== 'lainnya' ? 'exists:tujuan_pengirimen,id' : '',
+            ],
+            'nama_tujuan_manual' => 'nullable|required_if:id_tujuan_pengiriman,lainnya|string|max:255',
             'id_std_precooling' => 'required|exists:std_precoolings,id',
             'id_shift' => 'nullable|exists:shifts,id',
             'jam_mulai' => 'nullable',
@@ -273,6 +291,16 @@ class PemeriksaanLoadingKendaraanController extends Controller
                 'id_user' => Auth::id(),
             ]);
             $idKendaraan = $kendaraan->id;
+        }
+
+        // Handle tujuan pengiriman manual
+        $idTujuanPengiriman = $request->id_tujuan_pengiriman;
+        if ($idTujuanPengiriman === 'lainnya') {
+            $tujuanPengiriman = TujuanPengiriman::create([
+                'nama_tujuan' => $request->nama_tujuan_manual,
+                'id_user' => Auth::id(),
+            ]);
+            $idTujuanPengiriman = $tujuanPengiriman->id;
         }
 
         // Prepare kondisi data
@@ -298,7 +326,7 @@ class PemeriksaanLoadingKendaraanController extends Controller
             'tanggal' => $request->tanggal,
             'id_ekspedisi' => $request->id_ekspedisi,
             'id_kendaraan' => $idKendaraan,
-            'id_tujuan_pengiriman' => $request->id_tujuan_pengiriman,
+            'id_tujuan_pengiriman' => $idTujuanPengiriman,
             'id_std_precooling' => $request->id_std_precooling,
             'id_shift' => $request->id_shift,
             'kondisi_kebersihan_mobil' => json_encode($kondisiKebersihanMobil),

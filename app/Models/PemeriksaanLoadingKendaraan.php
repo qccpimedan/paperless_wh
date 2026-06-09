@@ -30,6 +30,7 @@ class PemeriksaanLoadingKendaraan extends Model
         'keterangan',
         'segel_gembok',
         'no_segel',
+        'nama_tujuan_manual',
         'status_verifikasi',
         'verified_by',
         'verified_by_qc',

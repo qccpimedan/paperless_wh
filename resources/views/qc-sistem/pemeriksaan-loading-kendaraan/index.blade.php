@@ -151,7 +151,7 @@
                                             <td><span class="badge bg-primary">{{ $item->shift->shift ?? '-' }}</span></td>
                                             <td><span class="badge bg-secondary">{{ $item->user->plant->plant ?? '-' }}</span></td>
                                             <td>{{ $item->kendaraan->jenis_kendaraan ?? '-' }} - {{ $item->kendaraan->no_kendaraan ?? '-' }}</td>
-                                            <td>{{ $item->tujuanPengiriman->nama_tujuan ?? '-' }}</td>
+                                            <td>{{ $item->tujuanPengiriman->nama_tujuan ?? $item->nama_tujuan_manual ?? '-' }}</td>
                                             <td>
                                                 @if($st === 'pending' || $st === null)
                                                     @if($userRole === 'qc inspector')

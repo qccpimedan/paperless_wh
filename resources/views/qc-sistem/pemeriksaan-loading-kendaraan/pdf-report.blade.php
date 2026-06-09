@@ -342,12 +342,20 @@
                         <tr>
                             <td>
                                 <span class="subheader-label">Kendaraan:</span>
-                                <span class="subheader-value">{{ $firstRecord->kendaraan ? (($firstRecord->kendaraan->jenis_kendaraan ?? '-') . ' - ' . ($firstRecord->kendaraan->no_kendaraan ?? '-')) : '-' }}</span>
+                                <span class="subheader-value">
+                                    @if($firstRecord->kendaraan)
+                                        {{ $firstRecord->kendaraan->jenis_kendaraan ?? '-' }} - {{ $firstRecord->kendaraan->no_kendaraan ?? '-' }}
+                                    @elseif($firstRecord->jenis_kendaraan_manual)
+                                        {{ $firstRecord->jenis_kendaraan_manual }} - {{ $firstRecord->no_kendaraan_manual ?? '-' }}
+                                    @else
+                                        -
+                                    @endif
+                                </span>
                             </td>
                             <td class="subheader-divider"></td>
                             <td>
                                 <span class="subheader-label">Tujuan:</span>
-                                <span class="subheader-value">{{ $firstRecord->tujuanPengiriman->nama_tujuan ?? '-' }}</span>
+                                <span class="subheader-value">{{ $firstRecord->tujuanPengiriman->nama_tujuan ?? $firstRecord->nama_tujuan_manual ?? '-' }}</span>
                             </td>
                             <td class="subheader-divider"></td>
                             <td>
