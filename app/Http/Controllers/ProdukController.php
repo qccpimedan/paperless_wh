@@ -278,12 +278,13 @@ class ProdukController extends Controller
 
         $import = new ProdukImport();
         Excel::import($import, $request->file('file'));
+        
+        $message = "Berhasil menambahkan {$import->inserted} produk baru.";
 
-        $message = "Import selesai. Inserted: {$import->inserted}. Skipped: {$import->skipped}.";
-
-        if (!empty($import->errors)) {
+        if (!empty($import->errors) || !empty($import->added_products)) {
             return redirect()->route('produks.index')
                 ->with('success', $message)
+                ->with('updated_products', $import->added_products) // Gunakan key yang sama agar UI seragam
                 ->with('import_errors', $import->errors);
         }
 
@@ -292,6 +293,44 @@ class ProdukController extends Controller
 
     public function template()
     {
-        return Excel::download(new ProdukTemplateExport(), 'template_import_produk.xlsx');
+        return Excel::download(new \App\Exports\ProdukTemplateExport(), 'template_import_produk.xlsx');
+    }
+
+    /**
+     * Skenario B: Export data eksis untuk diupdate P/D
+     */
+    public function exportUpdate(Request $request)
+    {
+        $kategori = $request->input('kategori_code');
+        if (!$kategori) {
+            return back()->with('error', 'Silakan pilih kategori terlebih dahulu.');
+        }
+
+        $filename = 'data_produk_' . strtolower(str_replace(' ', '_', $kategori)) . '_update.xlsx';
+        return Excel::download(new \App\Exports\ProdukUpdateExport($kategori), $filename);
+    }
+
+    /**
+     * Skenario B: Import data excel untuk update relasi P/D
+     */
+    public function importUpdate(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|file|mimes:xlsx,xls,csv',
+        ]);
+
+        $import = new \App\Imports\ProdukUpdateImport();
+        Excel::import($import, $request->file('file'));
+
+        $message = "Update data selesai. Berhasil update: {$import->updated_count} baris.";
+
+        if (!empty($import->errors) || !empty($import->updated_products)) {
+            return redirect()->route('produks.index')
+                ->with('success', $message)
+                ->with('updated_products', $import->updated_products)
+                ->with('import_errors', $import->errors);
+        }
+
+        return redirect()->route('produks.index')->with('success', $message);
     }
 }
