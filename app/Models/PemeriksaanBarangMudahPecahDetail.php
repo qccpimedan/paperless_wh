@@ -25,6 +25,10 @@ class PemeriksaanBarangMudahPecahDetail extends Model
         'nama_karyawan',
     ];
 
+    protected $casts = [
+        'jumlah_barang' => 'integer',
+    ];
+
     protected static function boot()
     {
         parent::boot();

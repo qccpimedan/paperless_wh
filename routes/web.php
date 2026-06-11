@@ -221,6 +221,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::resource('pemeriksaan-chemical', PemeriksaanKedatanganChemicalController::class);
         Route::resource('pemeriksaan-produk-finish-good', PemeriksaanProdukFinishGoodController::class);
         Route::get('pemeriksaan-loading-produk/download-template', [PemeriksaanLoadingProdukController::class, 'downloadTemplate'])->name('pemeriksaan-loading-produk.download-template');
+        Route::get('pemeriksaan-loading-produk/download-template-universal', [PemeriksaanLoadingProdukController::class, 'downloadTemplateUniversal'])->name('pemeriksaan-loading-produk.download-template-universal');
+        Route::post('pemeriksaan-loading-produk/import-universal', [PemeriksaanLoadingProdukController::class, 'importUniversal'])->name('pemeriksaan-loading-produk.import-universal');
         Route::resource('pemeriksaan-loading-produk', PemeriksaanLoadingProdukController::class);
         Route::resource('pemeriksaan-loading-kendaraan', PemeriksaanLoadingKendaraanController::class);
         Route::resource('return-barang', PemeriksaanReturnBarangCustomerController::class)->parameters(['return-barang' => 'pemeriksaanReturnBarangCustomer:uuid']);

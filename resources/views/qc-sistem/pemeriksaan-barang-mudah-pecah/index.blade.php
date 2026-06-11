@@ -152,8 +152,14 @@
                                             <td><span class="badge bg-secondary">{{ $item->user->plant->plant ?? '-' }}</span></td>
                                             <td>{{ $item->area->nama_area ?? '-' }}</td>
                                             <td>
-                                                @php $totalBarang = $item->details->sum('jumlah_barang'); @endphp
-                                                <span class="badge bg-info text-white">{{ $totalBarang }}</span>
+                                                @php 
+                                                    $totalBarang = $item->details->sum('jumlah_barang');
+                                                    $countDetails = $item->details->count();
+                                                @endphp
+                                                <!-- <span class="badge bg-info text-white">{{ $totalBarang }}</span> -->
+                                                @if($countDetails > 0)
+                                                    <small class="badge bg-info">{{ $countDetails }} item</small>
+                                                @endif
                                             </td>
                                             <td>
                                                 @if($st === 'pending' || $st === null)
