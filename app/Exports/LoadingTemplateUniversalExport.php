@@ -183,6 +183,9 @@ class LoadingFormSheet implements
                         ]
                     ]
                 ]);
+                // Enable sheet protection
+                $sheet->getProtection()->setSheet(true);
+                $sheet->getProtection()->setPassword('qc123'); // Optional: simple password
             },
         ];
     }
@@ -193,6 +196,7 @@ class MasterDataSheet implements
     \Maatwebsite\Excel\Concerns\WithHeadings,
     \Maatwebsite\Excel\Concerns\WithTitle,
     \Maatwebsite\Excel\Concerns\WithStyles,
+    \Maatwebsite\Excel\Concerns\WithEvents,
     \Maatwebsite\Excel\Concerns\ShouldAutoSize
 {
     public function collection()
@@ -234,6 +238,19 @@ class MasterDataSheet implements
                     'startColor' => ['rgb' => '70AD47']
                 ]
             ],
+        ];
+    }
+
+    public function registerEvents(): array
+    {
+        return [
+            \Maatwebsite\Excel\Events\AfterSheet::class => function(\Maatwebsite\Excel\Events\AfterSheet $event) {
+                $sheet = $event->sheet->getDelegate();
+                
+                // Lock the entire sheet
+                $sheet->getProtection()->setSheet(true);
+                $sheet->getProtection()->setPassword('qc123'); // Optional
+            },
         ];
     }
 }
