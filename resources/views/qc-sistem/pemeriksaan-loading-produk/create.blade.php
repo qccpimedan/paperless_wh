@@ -306,6 +306,43 @@
 
                                         <!-- DATA PRODUK -->
                                         <h5 class="text-primary mb-3 mt-4">Data Produk <span class="text-danger">*</span></h5>
+                                        
+                                        <!-- Universal Import Section -->
+                                        <div class="alert border-primary" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <div>
+                                                    <h6 class="mb-2 text-white"><i class="bi bi-lightning-charge-fill text-warning"></i> <strong>CARA CEPAT - Import Multiple Produk Sekaligus</strong></h6>
+                                                    <p class="mb-2 text-white" style="font-size: 0.95rem;">Untuk loading dengan <strong>banyak produk berbeda</strong>, gunakan fitur ini untuk menghemat waktu:</p>
+                                                    <ol class="mb-0 ps-3 text-white" style="font-size: 0.90rem;">
+                                                        <li>Download <strong>Template Universal</strong> (berisi semua produk)</li>
+                                                        <li>Isi kode item, batch, ED, jumlah untuk produk yang dibutuhkan</li>
+                                                        <li>Hapus baris produk yang tidak digunakan</li>
+                                                        <li>Upload file Excel</li>
+                                                    </ol>
+                                                </div>
+                                                <div class="text-end ms-3" style="min-width: 220px;">
+                                                    <a href="{{ route('pemeriksaan-loading-produk.download-template-universal') }}" 
+                                                       class="btn btn-light btn-sm mb-2 d-block" style="font-weight: 600;">
+                                                        <i class="bi bi-download"></i> Download Template Universal
+                                                    </a>
+                                                    <button type="button" class="btn btn-sm btn-warning d-block" id="btn-import-universal" style="font-weight: 600; color: #000;">
+                                                        <i class="bi bi-file-earmark-excel"></i> Import Universal
+                                                    </button>
+                                                    <input type="file" id="file-import-universal" accept=".xlsx,.xls" style="display:none;">
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- <div class="text-center my-4">
+                                            <div class="d-flex align-items-center justify-content-center">
+                                                <hr class="flex-grow-1">
+                                                <span class="badge bg-dark mx-3 px-4 py-2" style="font-size: 0.9rem; font-weight: 600;">ATAU</span>
+                                                <hr class="flex-grow-1">
+                                            </div>
+                                        </div>
+
+                                        <h6 class="text-dark mb-3" style="font-weight: 600;"><i class="bi bi-pencil-square"></i> Input Manual per Produk:</h6> -->
+                                        
                                         <div id="produk-groups">
                                             @php
                                                 $selectedProdukId = old('id_produk', '');
@@ -335,9 +372,10 @@
                                                         </div>
                                                     </div>
                                                     <div class="col-md-6">
+                                                        <!-- Hidden: Field ini tidak digunakan lagi karena sistem sudah pakai produk_data[] -->
                                                         <div class="form-group">
-                                                            <label>Nama Produk <span class="text-danger">*</span></label>
-                                                            <select class="form-select produk-select @error('id_produk') is-invalid @enderror" name="id_produk" data-selected="{{ old('id_produk', '') }}" required>
+                                                            <label>Nama Produk</label>
+                                                            <select class="form-select produk-select @error('id_produk') is-invalid @enderror" name="id_produk_legacy" data-selected="{{ old('id_produk', '') }}">
                                                                 <option value="">-- Pilih Produk --</option>
                                                             </select>
                                                             @error('id_produk')
@@ -347,7 +385,7 @@
                                                     </div>
                                                 </div>
 
-                                                <div class="d-flex justify-content-between align-items-center mt-3 mb-2">
+                                                <!-- <div class="d-flex justify-content-between align-items-center mt-3 mb-2">
                                                     <h6 class="text-secondary mb-0">Detail Produk</h6>
                                                     <div class="btn-group">
                                                         <button type="button" class="btn btn-outline-success btn-sm download-template-btn">
@@ -358,13 +396,13 @@
                                                         </button>
                                                         <input type="file" class="import-excel-input" accept=".xlsx, .xls" style="display:none;">
                                                     </div>
-                                                </div>
+                                                </div> -->
                                                 <!-- Tambahkan ini tepat di bawah div d-flex yang berisi tombol Template & Import -->
-                                                <div class="alert alert-light-info color-info mt-2 mb-3 py-2 px-3" style="font-size: 0.85rem;">
+                                                <!-- <div class="alert alert-light-info color-info mt-2 mb-3 py-2 px-3" style="font-size: 0.85rem;">
                                                     <i class="bi bi-info-circle-fill me-2"></i>
                                                     <strong>Cara Cepat:</strong> 1. Pilih Produk > 2. Klik <strong>Template</strong> > 3. Isi Excel > 4. Klik <strong>Import</strong>. 
                                                     <span class="text-muted">(Sistem akan mengisi baris detail secara otomatis dari file Excel Anda)</span>
-                                                </div>
+                                                </div> -->
 
                                                 <div class="produk-container">
                                                     <div class="produk-row mb-4 p-3 border rounded" style="background-color: #f8f9fa;">
@@ -1257,18 +1295,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     </div>
                 </div>
             </div>
-            <div class="d-flex justify-content-between align-items-center mt-3 mb-2">
-                <h6 class="text-secondary mb-0">Detail Produk</h6>
-                <div class="btn-group">
-                    <button type="button" class="btn btn-outline-success btn-sm download-template-btn">
-                        <i class="bi bi-download"></i> Template
-                    </button>
-                    <button type="button" class="btn btn-outline-info btn-sm import-excel-btn">
-                        <i class="bi bi-file-earmark-excel"></i> Import
-                    </button>
-                    <input type="file" class="import-excel-input" accept=".xlsx, .xls" style="display:none;">
-                </div>
-            </div>
             <div class="produk-container">
                 <div class="produk-row mb-4 p-3 border rounded" style="background-color: #f8f9fa;">
                     <div class="d-flex justify-content-between align-items-center mb-2">
@@ -1339,6 +1365,189 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         collapseAllProdukExcept(newGroup);
     });
+});
+</script>
+
+<!-- Universal Import Handler -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const btnImportUniversal = document.getElementById('btn-import-universal');
+    const fileImportUniversal = document.getElementById('file-import-universal');
+
+    if (btnImportUniversal && fileImportUniversal) {
+        btnImportUniversal.addEventListener('click', function() {
+            fileImportUniversal.click();
+        });
+
+        fileImportUniversal.addEventListener('change', async function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            console.log('📁 File selected:', file.name);
+
+            // Show loading
+            const originalBtn = btnImportUniversal.innerHTML;
+            btnImportUniversal.disabled = true;
+            btnImportUniversal.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Importing...';
+
+            const formData = new FormData();
+            formData.append('excel_file', file);
+            formData.append('_token', '{{ csrf_token() }}');
+
+            try {
+                console.log('🚀 Sending request to server...');
+                
+                const response = await fetch('{{ route("pemeriksaan-loading-produk.import-universal") }}', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                console.log('📡 Response status:', response.status);
+                
+                const result = await response.json();
+                console.log('📦 Response data:', result);
+
+                if (result.success) {
+                    console.log('✅ Success! Data count:', result.data.length);
+                    
+                    // Clear existing produk groups
+                    const produkGroups = document.getElementById('produk-groups');
+                    if (!produkGroups) {
+                        console.error('❌ Element #produk-groups not found!');
+                        alert('Error: Element produk-groups tidak ditemukan');
+                        throw new Error('Element produk-groups tidak ditemukan');
+                    }
+                    
+                    produkGroups.innerHTML = '';
+                    console.log('🗑️ Cleared existing produk groups');
+
+                    // Create produk groups from imported data
+                    result.data.forEach((item, index) => {
+                        console.log(`➕ Adding produk #${index + 1}:`, item);
+                        addProdukGroupFromImport(item, index);
+                    });
+
+                    console.log('✅ All produk groups added!');
+
+                    // Show success message
+                    alert('Berhasil! ' + result.message);
+                } else {
+                    console.error('❌ Import failed:', result);
+                    
+                    let errorMsg = result.message || 'Terjadi kesalahan';
+                    if (result.errors && result.errors.length > 0) {
+                        errorMsg += ':\n' + result.errors.join('\n');
+                    }
+                    
+                    alert('Import Gagal: ' + errorMsg);
+                }
+            } catch (error) {
+                console.error('💥 Import error:', error);
+                alert('Error: Terjadi kesalahan saat import file - ' + error.message);
+            } finally {
+                btnImportUniversal.disabled = false;
+                btnImportUniversal.innerHTML = originalBtn;
+                fileImportUniversal.value = '';
+            }
+        });
+    }
+
+    function addProdukGroupFromImport(data, index) {
+        const container = document.getElementById('produk-groups');
+        const groupIndex = index;
+        
+        const groupHtml = `
+            <div class="produk-group mb-4 p-3 border rounded" style="background-color: #ffffff;" data-group-index="${groupIndex}">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h6 class="text-secondary mb-0">Produk #${groupIndex + 1}</h6>
+                    ${groupIndex > 0 ? '<button type="button" class="btn btn-sm btn-danger remove-produk-group"><i class="bi bi-trash"></i></button>' : ''}
+                </div>
+
+                <input type="hidden" name="produk_data[${groupIndex}][id_produk]" value="${data.id_produk}">
+                
+                <div class="mb-2">
+                    <strong>Produk:</strong> <span class="produk-name-display">${data.nama_produk || 'ID: ' + data.id_produk}</span>
+                </div>
+
+                <div class="produk-container">
+                    <div class="produk-row mb-4 p-3 border rounded" style="background-color: #f8f9fa;">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Kode Produksi</label>
+                                    <input type="text" class="form-control" name="produk_data[${groupIndex}][kode_produksi]" value="${data.kode_produksi || ''}" placeholder="Kode Produksi">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Best Before</label>
+                                    <input type="date" class="form-control" name="produk_data[${groupIndex}][best_before]" value="${data.best_before || ''}">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label>Jumlah Kemasan</label>
+                                    <input type="text" class="form-control" name="produk_data[${groupIndex}][jumlah_kemasan]" value="${data.jumlah_kemasan || ''}" placeholder="Contoh: 100 Karton">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label>Jumlah Sampling</label>
+                                    <input type="text" class="form-control" name="produk_data[${groupIndex}][jumlah_sampling]" value="${data.jumlah_sampling || ''}" placeholder="Contoh: 10 Karton">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label>Berat per Karung atau Box</label>
+                                    <input type="text" class="form-control" name="produk_data[${groupIndex}][berat_perkarung]" value="${data.berat_perkarung || ''}" placeholder="Contoh: 25 Kg">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-check mt-4">
+                                    <input class="form-check-input" type="checkbox" name="produk_data[${groupIndex}][kondisi_kemasan]" value="1" ${data.kondisi_kemasan ? 'checked' : ''} id="kondisi_${groupIndex}">
+                                    <label class="form-check-label" for="kondisi_${groupIndex}">
+                                        Kondisi Kemasan Baik
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Keterangan</label>
+                                    <textarea class="form-control" name="produk_data[${groupIndex}][keterangan]" rows="2" placeholder="Keterangan tambahan untuk detail ini">${data.keterangan || ''}</textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        container.insertAdjacentHTML('beforeend', groupHtml);
+
+        // Add remove handler
+        const removeBtn = container.querySelector(`[data-group-index="${groupIndex}"] .remove-produk-group`);
+        if (removeBtn) {
+            removeBtn.addEventListener('click', function() {
+                this.closest('.produk-group').remove();
+                updateProdukNumbers();
+            });
+        }
+    }
+
+    function updateProdukNumbers() {
+        document.querySelectorAll('#produk-groups .produk-group').forEach((group, index) => {
+            const title = group.querySelector('h6');
+            if (title) {
+                title.textContent = `Produk #${index + 1}`;
+            }
+        });
+    }
 });
 </script>
 

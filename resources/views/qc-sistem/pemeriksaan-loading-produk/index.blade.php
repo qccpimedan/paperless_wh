@@ -176,7 +176,17 @@
                                                 <span class="badge bg-info">{{ $pName }}</span>
                                                 @if($countP > 1) <br><small class="text-muted">+{{ $countP-1 }} lainnya</small> @endif
                                             </td>
-                                            <td>{{ $item->tujuanPengiriman->customer->nama_cust ?? '-' }}</td>
+                                            <td>
+                                                @if($item->tujuanPengiriman)
+                                                    @if($item->tujuanPengiriman->customer)
+                                                        {{ $item->tujuanPengiriman->customer->nama_cust }}
+                                                    @else
+                                                        {{ $item->tujuanPengiriman->nama_tujuan ?? '-' }}
+                                                    @endif
+                                                @else
+                                                    -
+                                                @endif
+                                            </td>
                                             <td>{{ $item->kendaraan->no_kendaraan ?? '-' }}</td>
                                             <td>
                                                 @if($st === 'pending' || $st === null)

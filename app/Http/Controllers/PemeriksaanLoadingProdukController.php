@@ -16,6 +16,10 @@ use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf as PDF;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\LoadingTemplateExport;
+use App\Exports\LoadingTemplateUniversalExport;
+use App\Imports\LoadingUniversalImport;
+use App\Imports\LoadingUniversalSheetImport;
+use Maatwebsite\Excel\HeadingRowImport;
 
 class PemeriksaanLoadingProdukController extends Controller
 {
@@ -29,7 +33,7 @@ class PemeriksaanLoadingProdukController extends Controller
             'user.role',
             'user.plant',
             'shift',
-            'tujuanPengiriman',
+            'tujuanPengiriman.customer', // Load customer relationship
             'kendaraan',
             'supir',
             'produk'
@@ -246,7 +250,7 @@ class PemeriksaanLoadingProdukController extends Controller
             'kondisi_produk' => 'nullable|in:Frozen,Fresh,Dry',
             'segel_gembok' => 'nullable|in:segel,gembok',
             'no_segel' => 'nullable|required_if:segel_gembok,segel|string|max:255',
-            'id_produk' => 'required|exists:produks,id',
+            'id_produk' => 'nullable|exists:produks,id', // Changed from required to nullable
             'produk_detail' => 'nullable|array|min:1',
             'produk_detail.*.kode_produksi' => 'nullable|string|max:255',
             'produk_detail.*.best_before' => 'nullable|date',
@@ -905,6 +909,76 @@ class PemeriksaanLoadingProdukController extends Controller
         }
 
         return Excel::download(new LoadingTemplateExport($produk), 'Template_Loading_' . str_replace(' ', '_', $produk->nama_produk) . '.xlsx');
+    }
+
+    public function downloadTemplateUniversal()
+    {
+        return Excel::download(
+            new LoadingTemplateUniversalExport(), 
+            'Template_Loading_Universal_' . date('Ymd') . '.xlsx'
+        );
+    }
+
+    public function importUniversal(Request $request)
+    {
+        try {
+            $request->validate([
+                'excel_file' => 'required|file|mimes:xlsx,xls|max:10240'
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            \Log::error('Validation failed:', $e->errors());
+            return response()->json([
+                'success' => false,
+                'message' => 'Validasi file gagal',
+                'errors' => $e->errors()
+            ], 422);
+        }
+
+        try {
+            \Log::info('Starting import process...');
+            
+            $sheetImport = new LoadingUniversalSheetImport();
+            Excel::import($sheetImport, $request->file('excel_file'));
+            
+            // Get the actual import instance that was used during import
+            $import = $sheetImport->getImportInstance();
+
+            if ($import->hasErrors()) {
+                \Log::error('Import has errors:', $import->getErrors());
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Import gagal dengan error',
+                    'errors' => $import->getErrors()
+                ], 422);
+            }
+
+            $produkData = $import->getProdukData();
+
+            if (empty($produkData)) {
+                \Log::warning('No valid product data found');
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Tidak ada data produk yang valid untuk diimport. Pastikan Anda mengisi nama produk di sheet "Form Input".'
+                ], 422);
+            }
+
+            \Log::info('Import successful. Products: ' . count($produkData));
+
+            return response()->json([
+                'success' => true,
+                'data' => $produkData,
+                'message' => count($produkData) . ' item berhasil diimport'
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Import Universal Error: ' . $e->getMessage());
+            \Log::error('Stack trace: ' . $e->getTraceAsString());
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan saat import: ' . $e->getMessage()
+            ], 500);
+        }
+
     }
 
     public function batchVerify(Request $request)
