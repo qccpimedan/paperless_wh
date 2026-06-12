@@ -923,14 +923,33 @@ class PemeriksaanLoadingProdukController extends Controller
     {
         try {
             $request->validate([
-                'excel_file' => 'required|file|mimes:xlsx,xls|max:10240'
+                'excel_file' => 'required|file|max:10240'
             ]);
+            
+            $file = $request->file('excel_file');
+            $extension = strtolower($file->getClientOriginalExtension());
+            if (!in_array($extension, ['xlsx', 'xls'])) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Format file tidak didukung',
+                    'errors' => ['File harus berupa .xlsx atau .xls']
+                ], 422);
+            }
         } catch (\Illuminate\Validation\ValidationException $e) {
             \Log::error('Validation failed:', $e->errors());
+            
+            // Format errors for JS
+            $errorDetails = [];
+            foreach ($e->errors() as $field => $messages) {
+                foreach ($messages as $msg) {
+                    $errorDetails[] = $msg;
+                }
+            }
+
             return response()->json([
                 'success' => false,
                 'message' => 'Validasi file gagal',
-                'errors' => $e->errors()
+                'errors' => $errorDetails
             ], 422);
         }
 

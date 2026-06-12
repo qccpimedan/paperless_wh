@@ -1435,8 +1435,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     console.error('❌ Import failed:', result);
                     
                     let errorMsg = result.message || 'Terjadi kesalahan';
-                    if (result.errors && result.errors.length > 0) {
+                    if (result.errors && Array.isArray(result.errors) && result.errors.length > 0) {
                         errorMsg += ':\n' + result.errors.join('\n');
+                    } else if (result.errors && typeof result.errors === 'object') {
+                        // Handle object format just in case
+                        const flatErrors = Object.values(result.errors).flat();
+                        if (flatErrors.length > 0) errorMsg += ':\n' + flatErrors.join('\n');
                     }
                     
                     alert('Import Gagal: ' + errorMsg);
