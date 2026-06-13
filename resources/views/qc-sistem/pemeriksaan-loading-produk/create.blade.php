@@ -1399,10 +1399,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 const response = await fetch('{{ route("pemeriksaan-loading-produk.import-universal") }}', {
                     method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                    },
                     body: formData
                 });
 
                 console.log('📡 Response status:', response.status);
+                
+                if (response.status === 419) {
+                    throw new Error('Sesi haman telah berakhir/expired. Silakan refresh (muat ulang) halaman ini dan coba lagi.');
+                }
                 
                 const result = await response.json();
                 console.log('📦 Response data:', result);

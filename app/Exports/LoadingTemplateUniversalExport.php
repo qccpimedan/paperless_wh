@@ -183,9 +183,8 @@ class LoadingFormSheet implements
                         ]
                     ]
                 ]);
-                // Enable sheet protection
-                $sheet->getProtection()->setSheet(true);
-                $sheet->getProtection()->setPassword('qc123'); // Optional: simple password
+                // Removed sheet protection from Form Input to avoid issues on tablets/WPS
+                // but we keep Master Data sheet protected separately.
             },
         ];
     }
