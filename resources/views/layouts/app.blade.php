@@ -34,22 +34,22 @@
             z-index: 1000 !important;
         }
 
-        /* ===== FIX SIDEBAR SCROLL TABLET ===== */
+        /* ===== FIX SIDEBAR SCROLL TABLET & PC ===== */
         .sidebar-wrapper {
             overflow-y: auto !important; /* Paksa native scroll agar menu bawah tidak terpotong */
-            padding-bottom: 80px !important; /* Memberi ruang di bawah agar item terakhir benar-benar terlihat */
+            padding-bottom: 80px !important; /* Memberi ruang di bawah agar item terakhir terlihat */
+            scrollbar-width: none; /* Firefox: sembunyikan scrollbar native */
         }
         
-        /* Modifikasi bentuk scrollbar bawaan browser */
+        /* Chrome/Safari/Edge: sembunyikan scrollbar native */
         .sidebar-wrapper::-webkit-scrollbar {
-            width: 5px;
+            display: none;
         }
-        .sidebar-wrapper::-webkit-scrollbar-track {
-            background: transparent;
-        }
-        .sidebar-wrapper::-webkit-scrollbar-thumb {
-            background-color: rgba(0, 0, 0, 0.2);
-            border-radius: 10px;
+
+        /* Sembunyikan Perfect Scrollbar rail agar tidak dobel */
+        .sidebar-wrapper > .ps__rail-y,
+        .sidebar-wrapper > .ps__rail-x {
+            display: none !important;
         }
 
         /* ===== Table Styles ===== */
