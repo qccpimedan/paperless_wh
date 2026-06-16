@@ -36,14 +36,25 @@
 
         /* ===== FIX SIDEBAR SCROLL TABLET & PC ===== */
         .sidebar-wrapper {
-            overflow-y: auto !important; /* Paksa native scroll agar menu bawah tidak terpotong */
-            padding-bottom: 80px !important; /* Memberi ruang di bawah agar item terakhir terlihat */
-            scrollbar-width: none; /* Firefox: sembunyikan scrollbar native */
+            overflow-y: auto !important;
+            padding-bottom: 80px !important;
+            scrollbar-width: thin; /* Firefox: scrollbar tipis */
+            scrollbar-color: rgba(0,0,0,0.2) transparent; /* Firefox: warna scrollbar */
         }
         
-        /* Chrome/Safari/Edge: sembunyikan scrollbar native */
+        /* Chrome/Safari/Edge: scrollbar tipis dan rapi */
         .sidebar-wrapper::-webkit-scrollbar {
-            display: none;
+            width: 5px;
+        }
+        .sidebar-wrapper::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .sidebar-wrapper::-webkit-scrollbar-thumb {
+            background-color: rgba(0,0,0,0.2);
+            border-radius: 10px;
+        }
+        .sidebar-wrapper::-webkit-scrollbar-thumb:hover {
+            background-color: rgba(0,0,0,0.35);
         }
 
         /* Sembunyikan Perfect Scrollbar rail agar tidak dobel */
