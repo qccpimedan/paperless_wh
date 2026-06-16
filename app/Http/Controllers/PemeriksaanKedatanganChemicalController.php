@@ -16,6 +16,15 @@ use Monarobase\CountryList\CountryListFacade as Countries;
 
 class PemeriksaanKedatanganChemicalController extends Controller
 {
+    private function safeFuzzyMatch($a, $b)
+    {
+        if (!$a || !$b) return false;
+        $shorter = min(strlen($a), strlen($b));
+        $longer  = max(strlen($a), strlen($b));
+        return $shorter >= 4 && $longer > 0 && ($shorter / $longer) >= 0.5
+            && (str_contains($a, $b) || str_contains($b, $a));
+    }
+
     public function index(Request $request)
     {
         $user = Auth::user();
@@ -224,7 +233,7 @@ return view('qc-sistem.pemeriksaan-kedatangan-chemical.index', compact('pemeriks
 
                 // Fallback partial match on normalized strings
                 foreach ($chemicalByNorm as $chemNorm => $chemId) {
-                    if ($chemNorm && $normKey && (str_contains($chemNorm, $normKey) || str_contains($normKey, $chemNorm))) {
+                    if ($this->safeFuzzyMatch($chemNorm, $normKey)) {
                         return [$p->id => $chemId];
                     }
                 }
@@ -319,7 +328,7 @@ return view('qc-sistem.pemeriksaan-kedatangan-chemical.index', compact('pemeriks
                 if (!$mapped && $produkKey) {
                     $normProdukKey = $normalizeName($produkKey);
                     foreach ($chemicalIdByNorm as $chemNorm => $chemId) {
-                        if ($chemNorm && $normProdukKey && (str_contains($chemNorm, $normProdukKey) || str_contains($normProdukKey, $chemNorm))) {
+                        if ($this->safeFuzzyMatch($chemNorm, $normProdukKey)) {
                             $mapped = $chemId;
                             break;
                         }
@@ -654,7 +663,7 @@ return view('qc-sistem.pemeriksaan-kedatangan-chemical.index', compact('pemeriks
                 }
 
                 foreach ($chemicalByNorm as $chemNorm => $chemId) {
-                    if ($chemNorm && $normKey && (str_contains($chemNorm, $normKey) || str_contains($normKey, $chemNorm))) {
+                    if ($this->safeFuzzyMatch($chemNorm, $normKey)) {
                         return [$p->id => $chemId];
                     }
                 }
@@ -777,7 +786,7 @@ return view('qc-sistem.pemeriksaan-kedatangan-chemical.index', compact('pemeriks
                 }
 
                 foreach ($chemicalByNorm as $chemNorm => $chemId) {
-                    if ($chemNorm && $normKey && (str_contains($chemNorm, $normKey) || str_contains($normKey, $chemNorm))) {
+                    if ($this->safeFuzzyMatch($chemNorm, $normKey)) {
                         return [$p->id => $chemId];
                     }
                 }
@@ -847,7 +856,7 @@ return view('qc-sistem.pemeriksaan-kedatangan-chemical.index', compact('pemeriks
                 if (!$mapped) {
                     $normKey = $normalizeName($produkKey);
                     foreach ($chemicalIdByNorm as $chemNorm => $chemId) {
-                        if ($chemNorm && $normKey && (str_contains($chemNorm, $normKey) || str_contains($normKey, $chemNorm))) {
+                        if ($this->safeFuzzyMatch($chemNorm, $normKey)) {
                             $mapped = $chemId;
                             break;
                         }
@@ -1012,7 +1021,7 @@ return view('qc-sistem.pemeriksaan-kedatangan-chemical.index', compact('pemeriks
                 if (!$mapped && $produkKey) {
                     $normProdukKey = $normalizeName($produkKey);
                     foreach ($chemicalIdByNorm as $chemNorm => $chemId) {
-                        if ($chemNorm && $normProdukKey && (str_contains($chemNorm, $normProdukKey) || str_contains($normProdukKey, $chemNorm))) {
+                        if ($this->safeFuzzyMatch($chemNorm, $normProdukKey)) {
                             $mapped = $chemId;
                             break;
                         }

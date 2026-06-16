@@ -295,13 +295,7 @@
                 }
             @endphp
             
-            {!! $renderUnitTable('Cold Storage', $cold, $defaultJam, $unitJamCold) !!}
-            {!! $renderUnitTable('Anteroom Loading', $anteroom, $defaultJam, $unitJamAnteroom) !!}
-            {!! $render3Col('Pre Loading', $pre, $defaultJam) !!}
-            {!! $render3Col('Prestaging', $prestaging, $defaultJam) !!}
-            {!! $render3Col('Anteroom Ekspansi ABF', $abf, $defaultJam) !!}
-            {!! $render3Col('Chillroom RM', $rm, $defaultJam) !!}
-            {!! $render3Col('Chillroom Domestik', $dom, $defaultJam) !!}
+            {{-- Tabel per ruangan ditiadakan karena format riwayat di bawah sudah melengkappi data initial (input pertama) --}}
 
             {{-- Data & Riwayat Pemeriksaan Table --}}
             <div class="section-title">Data & Riwayat Pemeriksaan</div>

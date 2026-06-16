@@ -181,6 +181,20 @@
                                                     @can('delete_pemeriksaan_suhu_ruang')
                                                         <button type="button" class="btn btn-sm btn-danger" onclick="if(confirm('Yakin ingin menghapus data ini?')) document.getElementById('del-{{$item->uuid}}').submit()"><i class="bi bi-trash"></i></button>
                                                     @endcan
+                                                    <a href="{{ route('pemeriksaan-suhu-ruang.edit', $item->uuid) }}?edit_per_2jam=1" 
+                                                        class="btn btn-sm btn-success" title="Edit Per Jam">
+                                                        <i class="bi bi-hourglass-bottom"></i>
+                                                    </a>
+                                                    @can('view_pemeriksaan_suhu_ruang')
+                                                    <a href="{{ route('pemeriksaan-suhu-ruang.history', $item->uuid) }}" 
+                                                        class="btn btn-sm btn-secondary" title="Lihat History">
+                                                        <i class="bi bi-clock-history"></i>
+                                                    </a>
+                                                    @endcan
+                                                    <a href="{{ route('pemeriksaan-suhu-ruang.print-pdf', $item->uuid) }}" 
+                                                        class="btn btn-sm btn-danger" title="Cetak PDF" target="_blank">
+                                                        <i class="bi bi-file-earmark-text"></i>
+                                                    </a>
                                                 </div>
                                             </td>
                                         </tr>

@@ -11,11 +11,85 @@ use App\Models\Distributor;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Http\UploadedFile;
 use Monarobase\CountryList\CountryListFacade as Countries; // Menggunakan Facade
 
 
 class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
 {
+
+    /**
+     * Simpan file COA (PDF atau gambar).
+     * Jika gambar > 3MB, otomatis dikompres sebelum disimpan.
+     */
+    private function compressAndStoreCoa($uploadedFile, string $subDir = 'pemeriksaan-bahan-baku-penunjang/coa'): ?string
+    {
+        if (!$uploadedFile) return null;
+
+        $sizeBytes = $uploadedFile->getSize();
+        $mimeType  = $uploadedFile->getMimeType();
+        $threshold = 3 * 1024 * 1024; // 3 MB
+
+        $isImage = in_array($mimeType, ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']);
+
+        if ($isImage && $sizeBytes > $threshold) {
+            $tmpPath = $uploadedFile->getRealPath();
+
+            switch ($mimeType) {
+                case 'image/jpeg':
+                case 'image/jpg':
+                    $img = @imagecreatefromjpeg($tmpPath);
+                    break;
+                case 'image/png':
+                    $img = @imagecreatefrompng($tmpPath);
+                    break;
+                case 'image/webp':
+                    $img = function_exists('imagecreatefromwebp') ? @imagecreatefromwebp($tmpPath) : null;
+                    break;
+                default:
+                    $img = null;
+            }
+
+            if ($img) {
+                $width  = imagesx($img);
+                $height = imagesy($img);
+
+                // Scale down jika dimensi terlalu besar (max 1920px)
+                $maxDim = 1920;
+                if ($width > $maxDim || $height > $maxDim) {
+                    $ratio = min($maxDim / $width, $maxDim / $height);
+                    $newW  = (int) round($width  * $ratio);
+                    $newH  = (int) round($height * $ratio);
+                    $resized = imagecreatetruecolor($newW, $newH);
+                    if ($mimeType === 'image/png') {
+                        imagealphablending($resized, false);
+                        imagesavealpha($resized, true);
+                    }
+                    imagecopyresampled($resized, $img, 0, 0, 0, 0, $newW, $newH, $width, $height);
+                    imagedestroy($img);
+                    $img = $resized;
+                }
+
+                // Compress ke JPEG quality 60
+                $tmpCompressed = tempnam(sys_get_temp_dir(), 'coa_');
+                imagejpeg($img, $tmpCompressed, 60);
+                imagedestroy($img);
+
+                $compressedSize = filesize($tmpCompressed);
+                if ($compressedSize < $sizeBytes) {
+                    $newFilename = pathinfo($uploadedFile->hashName(), PATHINFO_FILENAME) . '.jpg';
+                    $path = $subDir . '/' . $newFilename;
+                    Storage::disk('public')->put($path, file_get_contents($tmpCompressed));
+                    @unlink($tmpCompressed);
+                    return $path;
+                }
+                @unlink($tmpCompressed);
+            }
+        }
+
+        return $uploadedFile->storePublicly($subDir, 'public');
+    }
 
     private function mapProdukToBahanIds(Request $request, $produkIds, $currentBahanIds = [])
     {
@@ -78,9 +152,17 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
             if (!$mapped && $produkKey) {
                 $normKey = $normalizeName($produkKey);
                 foreach ($bahanIdByNorm as $bNorm => $bId) {
-                    if ($bNorm && $normKey && (str_contains($bNorm, $normKey) || str_contains($normKey, $bNorm))) {
-                        $mapped = $bId;
-                        break;
+                    if ($bNorm && $normKey) {
+                        $shorter = min(strlen($bNorm), strlen($normKey));
+                        $longer  = max(strlen($bNorm), strlen($normKey));
+                        // Hanya fuzzy-match jika string pendek minimal 4 karakter
+                        // DAN panjang string pendek >= 50% dari string panjang (mencegah "gul" cocok dengan "regular")
+                        if ($shorter >= 4 && $longer > 0 && ($shorter / $longer) >= 0.5
+                            && (str_contains($bNorm, $normKey) || str_contains($normKey, $bNorm))
+                        ) {
+                            $mapped = $bId;
+                            break;
+                        }
                     }
                 }
             }
@@ -390,7 +472,8 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
             'hasil_uji_ffa.*' => 'nullable|string|max:255',
             'keterangan' => 'nullable|array',
             'keterangan.*' => 'nullable|string',
-            'file_coa.*' => 'nullable|mimes:pdf|max:5120',
+            'file_coa.*' => 'nullable|mimes:pdf,jpg,jpeg,png,webp,gif|max:1024',
+            'file_coa_img.*' => 'nullable|image|max:1024',
             'image_bahan_baku' => 'nullable|array',
             'image_bahan_baku.*' => 'nullable|image|max:1024',
         ]);
@@ -507,15 +590,12 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
         }
 
         $fileCoaPaths = [];
-        $uploadedCoas = (array) $request->file('file_coa', []);
-        $rowCountFileCoa = max(count($request->input('coa', [])), count($uploadedCoas));
+        $uploadedCoas    = (array) $request->file('file_coa', []);
+        $uploadedCoaImgs = (array) $request->file('file_coa_img', []);
+        $rowCountFileCoa = max(count($request->input('coa', [])), count($uploadedCoas), count($uploadedCoaImgs));
         for ($i = 0; $i < $rowCountFileCoa; $i++) {
-            $uploadedFile = $uploadedCoas[$i] ?? null;
-            if ($uploadedFile) {
-                $fileCoaPaths[$i] = $uploadedFile->storePublicly('pemeriksaan-bahan-baku-penunjang/coa', 'public');
-            } else {
-                $fileCoaPaths[$i] = null;
-            }
+            $uploadedFile = $uploadedCoaImgs[$i] ?? $uploadedCoas[$i] ?? null;
+            $fileCoaPaths[$i] = $this->compressAndStoreCoa($uploadedFile);
         }
         $data['file_coa_array'] = json_encode(array_values($fileCoaPaths));
 
@@ -538,6 +618,8 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
         unset($data['kondisi_fisik_benda_asing']);
         unset($data['kondisi_fisik_aroma']);
         unset($data['image_bahan_baku']);
+        unset($data['file_coa']);
+        unset($data['file_coa_img']);
 
         // Process array fields dari form dan simpan ke kolom database yang benar
         foreach ($arrayFieldMapping as $formField => $dbColumn) {
@@ -782,7 +864,8 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
             'hasil_uji_ffa.*' => 'nullable|string|max:255',
             'keterangan' => 'nullable|array',
             'keterangan.*' => 'nullable|string',
-            'file_coa.*' => 'nullable|mimes:pdf|max:5120',
+            'file_coa.*' => 'nullable|mimes:pdf,jpg,jpeg,png,webp,gif|max:1024',
+            'file_coa_img.*' => 'nullable|image|max:1024',
             'image_bahan_baku' => 'nullable|array',
             'image_bahan_baku.*' => 'nullable|image|max:1024',
         ]);
@@ -904,17 +987,20 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
         }
 
         $newFileCoa = [];
-        $uploadedCoas = (array) $request->file('file_coa', []);
+        $uploadedCoas    = (array) $request->file('file_coa', []);
+        $uploadedCoaImgs = (array) $request->file('file_coa_img', []);
         $rowCountFileCoa = max(
             count($request->input('id_bahan', [])),
             count($request->input('produsen', [])),
             count($request->input('distributor', [])),
-            count($request->input('coa', []))
+            count($request->input('coa', [])),
+            count($uploadedCoas),
+            count($uploadedCoaImgs)
         );
         for ($i = 0; $i < $rowCountFileCoa; $i++) {
-            $uploadedFile = $uploadedCoas[$i] ?? null;
+            $uploadedFile = $uploadedCoaImgs[$i] ?? $uploadedCoas[$i] ?? null;
             if ($uploadedFile) {
-                $newFileCoa[$i] = $uploadedFile->storePublicly('pemeriksaan-bahan-baku-penunjang/coa', 'public');
+                $newFileCoa[$i] = $this->compressAndStoreCoa($uploadedFile);
             } else {
                 $newFileCoa[$i] = $existingFileCoa[$i] ?? null;
             }
@@ -948,6 +1034,8 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
         unset($data['kondisi_fisik_benda_asing']);
         unset($data['kondisi_fisik_aroma']);
         unset($data['image_bahan_baku']);
+        unset($data['file_coa']);
+        unset($data['file_coa_img']);
 
         // Process array fields dari form dan simpan ke kolom database yang benar
         foreach ($arrayFieldMapping as $formField => $dbColumn) {
@@ -1130,7 +1218,8 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
             'logo_halal' => 'nullable|in:0,1',
             'dokumen_halal' => 'nullable|in:0,1',
             'coa' => 'nullable|in:0,1',
-            'file_coa' => 'nullable|mimes:pdf|max:5120',
+            'file_coa' => 'nullable|mimes:pdf,jpg,jpeg,png,webp,gif|max:1024',
+            'file_coa_img' => 'nullable|image|max:1024',
             'image_bahan_baku' => 'nullable|image|max:1024',
         ]);
 
@@ -1187,9 +1276,9 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
         if (!is_array($fileCoaArr)) {
             $fileCoaArr = [];
         }
-        $uploadedFileCoa = $request->file('file_coa');
+        $uploadedFileCoa = $request->file('file_coa_img') ?? $request->file('file_coa');
         if ($uploadedFileCoa) {
-            $fileCoaArr[] = $uploadedFileCoa->storePublicly('pemeriksaan-bahan-baku-penunjang/coa', 'public');
+            $fileCoaArr[] = $this->compressAndStoreCoa($uploadedFileCoa);
         } else {
             $fileCoaArr[] = null;
         }
@@ -1382,6 +1471,13 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
 
         // Prepare valid bahan IDs based on filter
         $matchedBahanIds = [];
+        $safeFuzzyMatch = function ($normName, $bNorm) {
+            if (!$normName || !$bNorm) return false;
+            $shorter = min(strlen($bNorm), strlen($normName));
+            $longer  = max(strlen($bNorm), strlen($normName));
+            return $shorter >= 4 && $longer > 0 && ($shorter / $longer) >= 0.5
+                && (str_contains($bNorm, $normName) || str_contains($normName, $bNorm));
+        };
         if ($id_produk) {
             $produk = \App\Models\Produk::find($id_produk);
             if ($produk) {
@@ -1389,7 +1485,7 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
                 $bahans = \App\Models\Bahan::select('id', 'nama_bahan')->get();
                 foreach($bahans as $b) {
                     $bNorm = preg_replace('/[^a-z0-9]+/i', '', strtolower(trim((string) $b->nama_bahan)));
-                    if ($bNorm && $normName && (str_contains($bNorm, $normName) || str_contains($normName, $bNorm))) {
+                    if ($safeFuzzyMatch($normName, $bNorm)) {
                         $matchedBahanIds[] = $b->id;
                     }
                 }
@@ -1401,7 +1497,7 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
                 $normName = preg_replace('/[^a-z0-9]+/i', '', strtolower(trim((string) $produk->nama_produk)));
                 foreach($bahans as $b) {
                     $bNorm = preg_replace('/[^a-z0-9]+/i', '', strtolower(trim((string) $b->nama_bahan)));
-                    if ($bNorm && $normName && (str_contains($bNorm, $normName) || str_contains($normName, $bNorm))) {
+                    if ($safeFuzzyMatch($normName, $bNorm)) {
                         $matchedBahanIds[] = $b->id;
                     }
                 }
