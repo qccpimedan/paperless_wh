@@ -645,13 +645,38 @@
                                                         </div>
                                                     </div>
 
-                                                    <div class="form-section mb-3">
-                                                        <h6 class="text-primary mb-2">Upload COA (PDF)</h6>
-                                                        <div class="row">
+                                                    <div class="form-section mb-3 coa-upload-section">
+                                                        <h6 class="text-primary mb-2">Upload COA</h6>
+                                                        <div class="row mb-2">
+                                                            <div class="col-md-12">
+                                                                <div class="form-group">
+                                                                    <label class="form-label d-block">Tipe File</label>
+                                                                    <div class="form-check form-check-inline">
+                                                                        <input class="form-check-input coa-type-pdf" type="radio" name="coa_type[]" value="pdf" checked>
+                                                                        <label class="form-check-label">PDF</label>
+                                                                    </div>
+                                                                    <div class="form-check form-check-inline">
+                                                                        <input class="form-check-input coa-type-img" type="radio" name="coa_type[]" value="gambar">
+                                                                        <label class="form-check-label">Gambar</label>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="row coa-pdf-input">
                                                             <div class="col-md-6">
                                                                 <div class="form-group">
                                                                     <label class="form-label">File COA (PDF)</label>
                                                                     <input type="file" name="file_coa[]" class="form-control" accept="application/pdf">
+                                                                    <small class="form-text text-muted">Format: PDF. Maksimal 1MB.</small>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="row coa-img-input" style="display:none;">
+                                                            <div class="col-md-6">
+                                                                <div class="form-group">
+                                                                    <label class="form-label">Foto COA</label>
+                                                                    <input type="file" name="file_coa_img[]" class="form-control" accept="image/*" capture="environment">
+                                                                    <small class="form-text text-muted">Format: JPG, PNG, WEBP, GIF. Maksimal 1MB. Gambar &gt; 3MB akan dikompres otomatis.</small>
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -1970,13 +1995,38 @@ function addNewRow() {
             </div>
         </div>
 
-        <div class="form-section mb-3">
-            <h6 class="text-primary mb-2">Upload COA (PDF)</h6>
-            <div class="row">
+        <div class="form-section mb-3 coa-upload-section">
+            <h6 class="text-primary mb-2">Upload COA</h6>
+            <div class="row mb-2">
+                <div class="col-md-12">
+                    <div class="form-group">
+                        <label class="form-label d-block">Tipe File</label>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input coa-type-pdf" type="radio" name="coa_type[]" value="pdf" checked>
+                            <label class="form-check-label">PDF</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input coa-type-img" type="radio" name="coa_type[]" value="gambar">
+                            <label class="form-check-label">Gambar</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row coa-pdf-input">
                 <div class="col-md-6">
                     <div class="form-group">
                         <label class="form-label">File COA (PDF)</label>
                         <input type="file" name="file_coa[]" class="form-control" accept="application/pdf">
+                        <small class="form-text text-muted">Format: PDF. Maksimal 1MB.</small>
+                    </div>
+                </div>
+            </div>
+            <div class="row coa-img-input" style="display:none;">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label">Foto COA</label>
+                        <input type="file" name="file_coa_img[]" class="form-control" accept="image/*" capture="environment">
+                        <small class="form-text text-muted">Format: JPG, PNG, WEBP, GIF. Maksimal 1MB. Gambar &gt; 3MB akan dikompres otomatis.</small>
                     </div>
                 </div>
             </div>
@@ -2400,10 +2450,49 @@ async function handleImageInputChange(input) {
 
 document.addEventListener('change', function(e) {
     const input = e.target;
-    if (input && input.classList && input.classList.contains('image-bahan-baku-input')) {
+    if (input && ((input.classList && input.classList.contains('image-bahan-baku-input')) || input.name === 'file_coa_img[]')) {
         handleImageInputChange(input);
     }
 });
+
+// COA type toggle: PDF / Gambar
+document.addEventListener('change', function(e) {
+    if (e.target.classList.contains('coa-type-pdf') && e.target.checked) {
+        const section = e.target.closest('.coa-upload-section');
+        if (!section) return;
+        section.querySelector('.coa-pdf-input').style.display = '';
+        section.querySelector('.coa-img-input').style.display = 'none';
+        section.querySelector('.coa-img-input input[type="file"]').value = '';
+    }
+    if (e.target.classList.contains('coa-type-img') && e.target.checked) {
+        const section = e.target.closest('.coa-upload-section');
+        if (!section) return;
+        section.querySelector('.coa-pdf-input').style.display = 'none';
+        section.querySelector('.coa-img-input').style.display = '';
+        section.querySelector('.coa-pdf-input input[type="file"]').value = '';
+    }
+});
+
+// Before submit: disable hidden COA file input + radio buttons so only active one is sent
+try {
+    const coaForm = document.querySelector('form[action*="pemeriksaan-bahan-baku"]');
+    if (coaForm) {
+        coaForm.addEventListener('submit', function() {
+            document.querySelectorAll('.coa-upload-section').forEach(function(section) {
+                var pdfDiv = section.querySelector('.coa-pdf-input');
+                var imgDiv = section.querySelector('.coa-img-input');
+                if (pdfDiv && imgDiv) {
+                    var pdfInput = pdfDiv.querySelector('input[type="file"]');
+                    var imgInput = imgDiv.querySelector('input[type="file"]');
+                    if (pdfDiv.style.display === 'none' && pdfInput) { pdfInput.disabled = true; }
+                    if (imgDiv.style.display === 'none' && imgInput) { imgInput.disabled = true; }
+                }
+                // Disable radio buttons (UI only, not needed by backend)
+                section.querySelectorAll('input[type="radio"]').forEach(function(r) { r.disabled = true; });
+            });
+        }, true); // capture phase → runs before the flatten handler
+    }
+} catch(err) {}
 
 // Initialize on page load
 updateRemoveButtons();
