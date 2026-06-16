@@ -146,41 +146,62 @@
 
                             <div class="card mb-3" style="border-left: 4px solid #435ebe;">
                                 <div class="card-header bg-light">
-                                    <h6 class="mb-0">Produk: {{ $produkTitle }}</h6>
+                                    <h6 class="mb-1">Produk {{ $loop->iteration }}</h6>
                                 </div>
                                 <div class="card-body">
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <table class="table table-borderless table-sm">
-                                                <tr>
-                                                    <td width="40%"><strong>Produsen:</strong></td>
-                                                    <td>
-                                                        @if(count($prodList) > 1)
-                                                            <ol class="mb-0 ps-3">
-                                                                @foreach($prodList as $item)<li>{{ $item }}</li>@endforeach
-                                                            </ol>
-                                                        @elseif(count($prodList) === 1)
-                                                            {{ $prodList[0] }}
-                                                        @else
-                                                            -
-                                                        @endif
-                                                    </td>
-                                                </tr>
-                                                <tr>
-                                                    <td><strong>Distributor:</strong></td>
-                                                    <td>
-                                                        @if(count($distList) > 1)
-                                                            <ol class="mb-0 ps-3">
-                                                                @foreach($distList as $item)<li>{{ $item }}</li>@endforeach
-                                                            </ol>
-                                                        @elseif(count($distList) === 1)
-                                                            {{ $distList[0] }}
-                                                        @else
-                                                            -
-                                                        @endif
-                                                    </td>
-                                                </tr>
-                                            </table>
+                                    <div class="mb-3">
+                                        <div class="d-flex flex-wrap gap-2">
+                                            <!-- @if($produkTitle)
+                                                <span class="badge bg-info">{{ $produkTitle }}</span>
+                                            @endif -->
+
+                                            @if(count($prodList) > 0)
+                                                <span class="badge bg-light text-dark border d-inline-block text-start p-2">
+                                                    <strong>Produsen:</strong>
+                                                    @if(count($prodList) > 1)
+                                                        <ol class="mb-0 ps-3 mt-1 text-start">
+                                                            @foreach($prodList as $item)<li>{{ $item }}</li>@endforeach
+                                                        </ol>
+                                                    @else
+                                                        <span class="ms-1">{{ $prodList[0] }}</span>
+                                                    @endif
+                                                </span>
+                                            @endif
+
+                                            @if(count($distList) > 0)
+                                                <span class="badge bg-light text-dark border d-inline-block text-start p-2">
+                                                    <strong>Distributor:</strong>
+                                                    @if(count($distList) > 1)
+                                                        <ol class="mb-0 ps-3 mt-1 text-start">
+                                                            @foreach($distList as $item)<li>{{ $item }}</li>@endforeach
+                                                        </ol>
+                                                    @else
+                                                        <span class="ms-1">{{ $distList[0] }}</span>
+                                                    @endif
+                                                </span>
+                                            @endif
+                                        </div>
+
+                                        <div class="mt-2 small">
+                                            <span class="me-2"><strong>Dokumen:</strong></span>
+                                            @php
+                                                $firstIdx = $detailIdxList[0] ?? null;
+                                                $firstDet = $firstIdx !== null ? ($detailChemicals[$firstIdx] ?? []) : [];
+                                                $logoVal = $firstDet['persyaratan_dokumen_halal'] ?? null;
+                                                $coaVal = $firstDet['coa'] ?? null;
+                                            @endphp
+                                            
+                                            @if($logoVal)
+                                                <span class="badge bg-success me-1">Dokumen Halal ✓</span>
+                                            @else
+                                                <span class="badge bg-danger me-1">Dokumen Halal ✗</span>
+                                            @endif
+
+                                            @if($coaVal)
+                                                <span class="badge bg-success me-1">COA ✓</span>
+                                            @else
+                                                <span class="badge bg-danger me-1">COA ✗</span>
+                                            @endif
                                         </div>
                                     </div>
 
@@ -233,62 +254,64 @@
                                                 </div>
                                             </div>
 
-                                            @if(isset($detail['kondisi_fisik']) || isset($detail['persyaratan_dokumen_halal']) || isset($detail['coa']))
+                                            @if(isset($detail['kondisi_fisik']))
                                                 <div class="row mt-2">
-                                                    <div class="col-12">
-                                                        <h6 class="text-primary small mb-2">Kondisi Fisik & Dokumentasi</h6>
-                                                        <div class="row">
-                                                            <div class="col-md-6">
-                                                                <strong class="small d-block mb-2">Kondisi Fisik:</strong>
-                                                                @php
-                                                                    $kondisiFisikLabels = [
-                                                                        'kemasan' => 'Kemasan',
-                                                                        'warna' => 'Warna'
-                                                                    ];
-                                                                @endphp
-                                                                @foreach($kondisiFisikLabels as $key => $label)
-                                                                    <div class="d-flex align-items-center small mb-1">
-                                                                        @if(isset($detail['kondisi_fisik'][$key]) && $detail['kondisi_fisik'][$key])
-                                                                            <span class="badge bg-success me-2" style="min-width: 24px;">✓</span>
-                                                                        @else
-                                                                            <span class="badge bg-danger me-2" style="min-width: 24px;">✗</span>
-                                                                        @endif
-                                                                        <span>{{ $label }}</span>
+                                                    <div class="col-md-6 offset-md-6">
+                                                        <table class="table table-borderless table-sm mb-0">
+                                                            <tr>
+                                                                <td width="40%"><strong>Kondisi Fisik:</strong></td>
+                                                                <td>
+                                                                    <div class="d-flex flex-column gap-1">
+                                                                        @php
+                                                                            $kemasanVal = $detail['kondisi_fisik']['kemasan'] ?? null;
+                                                                            $warnaVal = $detail['kondisi_fisik']['warna'] ?? null;
+                                                                        @endphp
+                                                                        <div class="d-flex align-items-center small">
+                                                                            @if($kemasanVal)
+                                                                                <span class="badge bg-success me-2" style="min-width: 24px;">✓</span>
+                                                                            @else
+                                                                                <span class="badge bg-danger me-2" style="min-width: 24px;">✗</span>
+                                                                            @endif
+                                                                            <span>Kemasan</span>
+                                                                        </div>
+                                                                        <div class="d-flex align-items-center small">
+                                                                            @if($warnaVal)
+                                                                                <span class="badge bg-success me-2" style="min-width: 24px;">✓</span>
+                                                                            @else
+                                                                                <span class="badge bg-danger me-2" style="min-width: 24px;">✗</span>
+                                                                            @endif
+                                                                            <span>Warna</span>
+                                                                        </div>
                                                                     </div>
-                                                                @endforeach
-                                                            </div>
-                                                            <div class="col-md-6">
-                                                                <strong class="small d-block mb-2">Dokumentasi:</strong>
-                                                                <div class="d-flex align-items-center small mb-1">
-                                                                    @if(isset($detail['persyaratan_dokumen_halal']) && $detail['persyaratan_dokumen_halal'])
-                                                                        <span class="badge bg-success me-2" style="min-width: 24px;">✓</span>
-                                                                    @else
-                                                                        <span class="badge bg-danger me-2" style="min-width: 24px;">✗</span>
-                                                                    @endif
-                                                                    <span>Persyaratan Dokumen Halal</span>
-                                                                </div>
-                                                                <div class="d-flex align-items-center small mb-1">
-                                                                    @if(isset($detail['coa']) && $detail['coa'])
-                                                                        <span class="badge bg-success me-2" style="min-width: 24px;">✓</span>
-                                                                    @else
-                                                                        <span class="badge bg-danger me-2" style="min-width: 24px;">✗</span>
-                                                                    @endif
-                                                                    <span>COA</span>
-                                                                </div>
-                                                            </div>
-                                                        </div>
+                                                                </td>
+                                                            </tr>
+                                                        </table>
                                                     </div>
                                                 </div>
                                             @endif
 
                                             @if($imgPath)
-                                                <div class="row mt-2">
-                                                    <div class="col-12">
-                                                        <h6 class="text-primary small mb-2">Foto Chemical</h6>
-                                                        <div class="p-2 bg-white rounded">
-                                                            <a href="{{ asset('storage/' . $imgPath) }}" target="_blank">
-                                                                <img src="{{ asset('storage/' . $imgPath) }}" alt="Foto Chemical" style="max-width: 260px; height: auto; border: 1px solid #ddd; padding: 4px;">
-                                                            </a>
+                                                <div class="mt-3">
+                                                    <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#modalFoto{{ $i }}">
+                                                        <i class="bi bi-image"></i> Lihat Foto Produk
+                                                    </button>
+
+                                                    <!-- Modal Foto -->
+                                                    <div class="modal fade" id="modalFoto{{ $i }}" tabindex="-1" aria-labelledby="modalFotoLabel{{ $i }}" aria-hidden="true">
+                                                        <div class="modal-dialog modal-dialog-centered modal-lg">
+                                                            <div class="modal-content">
+                                                                <div class="modal-header">
+                                                                    <h5 class="modal-title" id="modalFotoLabel{{ $i }}">Foto Produk - Detail #{{ $detailNo + 1 }}</h5>
+                                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                                </div>
+                                                                <div class="modal-body text-center bg-light">
+                                                                    <img src="{{ asset('storage/' . $imgPath) }}" alt="Foto Produk" class="img-fluid rounded shadow-sm border p-1" style="max-height: 80vh;">
+                                                                </div>
+                                                                <div class="modal-footer">
+                                                                    <a href="{{ asset('storage/' . $imgPath) }}" target="_blank" class="btn btn-info btn-sm">Buka di Tab Baru</a>
+                                                                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Tutup</button>
+                                                                </div>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>
