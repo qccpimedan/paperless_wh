@@ -43,8 +43,23 @@
                     @endcan
                 </div>
                 <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <form action="{{ route('users.index') }}" method="GET" class="d-flex gap-2">
+                                <input type="text" name="search" class="form-control" placeholder="Cari Nama, Username, atau Email..." value="{{ request('search') }}">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-search"></i>
+                                </button>
+                                @if(request('search'))
+                                    <a href="{{ route('users.index') }}" class="btn btn-secondary">
+                                        <i class="bi bi-x-circle"></i>
+                                    </a>
+                                @endif
+                            </form>
+                        </div>
+                    </div>
                     <div class="table-responsive">
-                        <table class="table table-striped text-center" id="table1" style="white-space:nowrap;">
+                        <table class="table table-striped text-center" style="white-space:nowrap;">
                             <thead>
                                 <tr>
                                     <th>No</th>
@@ -59,7 +74,7 @@
                             <tbody>
                                 @forelse($users as $index => $user)
                                     <tr>
-                                        <td>{{ $index + 1 }}</td>
+                                        <td>{{ ($users->currentPage() - 1) * $users->perPage() + ($index + 1) }}</td>
                                         <td>
                                             <strong>{{ $user->name }}</strong>
                                         </td>
@@ -144,6 +159,9 @@
                                 @endforelse
                             </tbody>
                         </table>
+                    </div>
+                    <div class="mt-4">
+                        {{ $users->links() }}
                     </div>
                 </div>
             </div>

@@ -107,11 +107,11 @@
                                                 <div class="card-body p-0">
                                                     <div class="table-responsive">
                                                         <table class="table table-hover align-middle mb-0" id="barangTable" style="display: none;">
-                                                            <thead class="table-primary text-center">
+                                                            <thead class="text-center">
                                                                 <tr>
                                                                     <th style="width: 5%">#</th>
                                                                     <th style="width: 25%">Nama Barang</th>
-                                                                    <th style="width: 20%">Sub Area</th>
+                                                                    <th style="width: 20%">Sub Area (Opsional)</th>
                                                                     <th style="width: 8%">Jumlah</th>
                                                                     <th style="width: 12%">Verifikasi Pra-Op</th>
                                                                     <th style="width: 12%">Verifikasi Post-Op</th>
@@ -361,7 +361,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             const idx = customRowIndex++;
             const row = document.createElement('tr');
-            row.className = 'barang-row bg-light-warning';
+            row.className = 'barang-row';
             row.setAttribute('data-index', idx);
             
             // Generate sub area options (optional, not required)
@@ -371,12 +371,12 @@ document.addEventListener('DOMContentLoaded', function() {
             });
 
             row.innerHTML = `
-                <td class="text-center text-warning fw-bold"><i class="bi bi-pencil-square" title="Baris Kustom"></i></td>
+                <td class="text-center text-primary fw-bold"><i class="bi bi-pencil-square" title="Baris Kustom"></i></td>
                 <td class="text-start">
-                    <input type="text" class="form-control mb-1 fw-semibold border-warning" name="details[${idx}][nama_barang_manual]" placeholder="Nama barang kustom *" required>
+                    <input type="text" class="form-control mb-1 fw-semibold border-primary" name="details[${idx}][nama_barang_manual]" placeholder="Nama barang kustom *" required>
                 </td>
                 <td>
-                    <select class="form-select border-warning" name="details[${idx}][id_input_area_locations]">
+                    <select class="form-select border-primary" name="details[${idx}][id_input_area_locations]">
                         ${subAreaOptions}
                     </select>
                 </td>
