@@ -39,28 +39,31 @@
                             <h4 class="card-title">Selamat Datang, {{ Auth::user()->name }}!</h4>
                         </div>
                         <div class="card-body">
-                            <p><strong>Role:</strong> {{ Auth::user()->role->role ?? 'Tidak ada role' }}</p>
-                            <p><strong>Plant:</strong> {{ Auth::user()->plant->plant ?? 'Tidak ada plant' }}</p>
-                            
-                            <div class="row mt-4">
-                                <div class="col-md-4">
-                                    <div class="card bg-success text-white">
-                                        <div class="card-body">
-                                            <h5>QC System</h5>
-                                            <p>Sistem Quality Control</p>
-                                            <a href="#" class="btn btn-light btn-sm">Coming Soon</a>
-                                        </div>
-                                    </div>
+                            <p>
+                                <strong>Role:</strong>
+                                @php
+                                    $role = Auth::user()->role->role ?? null;
+                                    $roleColor = match($role) {
+                                        default     => 'secondary',
+                                    };
+                                @endphp
+                                <span class="badge bg-{{ $roleColor }}">{{ $role ?? 'Tidak ada role' }}</span>
+                            </p>
+                            <p>
+                                <strong>Plant:</strong>
+                                <span class="badge bg-info text-dark">{{ Auth::user()->plant->plant ?? 'Tidak ada plant' }}</span>
+                            </p>
+                            <div class="card text-center py-5">
+                                {{-- Icon --}}
+                                <div class="mb-4">
+                                    <i class="bi bi-tools" style="font-size: 3rem; color: #6c757d;"></i>
                                 </div>
-                                <div class="col-md-4">
-                                    <div class="card bg-info text-white">
-                                        <div class="card-body">
-                                            <h5>Reports</h5>
-                                            <p>Laporan dan analisis</p>
-                                            <a href="#" class="btn btn-light btn-sm">Coming Soon</a>
-                                        </div>
-                                    </div>
-                                </div>
+
+                                {{-- Judul --}}
+                                <h4 class="mb-2">Dashboard sedang dalam pengembangan</h4>
+                                <p class="text-muted mb-4">
+                                    Fitur ini belum selesai dikerjakan. Tim sedang mempersiapkan tampilan terbaik untuk Anda.
+                                </p>
                             </div>
                         </div>
                     </div>

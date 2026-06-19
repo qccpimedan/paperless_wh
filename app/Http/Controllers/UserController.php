@@ -13,9 +13,20 @@ class UserController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $users = User::with(['role', 'plant', 'allowedPlants'])->latest()->get();
+        $search = $request->input('search');
+        
+        $users = User::with(['role', 'plant', 'allowedPlants'])
+            ->when($search, function($query) use ($search) {
+                $query->where('name', 'like', "%{$search}%")
+                      ->orWhere('username', 'like', "%{$search}%")
+                      ->orWhere('email', 'like', "%{$search}%");
+            })
+            ->latest()
+            ->paginate(10)
+            ->withQueryString();
+
         return view('super-admin.input-user.index', compact('users'));
     }
 
