@@ -46,7 +46,7 @@
                                     </ul>
                                 </div>
                             @endif
-                            <form action="{{ route('pemeriksaan-chemical.store') }}" method="POST">
+                            <form action="{{ route('pemeriksaan-chemical.store') }}" method="POST" enctype="multipart/form-data">
                                 @csrf
                                 
                                 <!-- SECTION 1: Informasi Dasar -->
@@ -511,7 +511,7 @@
                                                             <div class="col-md-6">
                                                                 <div class="form-group">
                                                                     <label class="form-label">Foto Chemical (Max 1MB)</label>
-                                                                    <input type="file" name="image_chemical[]" class="form-control" accept="image/*" capture="camera">
+                                                                    <input type="file" name="image_chemical[]" class="form-control image-chemical-input" accept="image/*">
                                                                     @error('image_chemical.0')
                                                                         <div class="invalid-feedback d-block">{{ $message }}</div>
                                                                     @enderror
@@ -1214,7 +1214,7 @@ function addNewRow() {
                         <div class="col-md-6">
                             <div class="form-group">
                                 <label class="form-label">Foto Chemical (Max 1MB)</label>
-                                <input type="file" name="image_chemical[]" class="form-control" accept="image/*" capture="camera">
+                                <input type="file" name="image_chemical[]" class="form-control image-chemical-input" accept="image/*">
                             </div>
                         </div>
                     </div>
@@ -1592,5 +1592,101 @@ function updateRemoveButtons() {
 
 // Initialize on page load
 updateRemoveButtons();
+
+/* --- IMAGE COMPRESSION LOGIC --- */
+const MAX_SIZE = 1024 * 1024; // 1MB
+
+function fileToDataURL(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
+}
+
+function loadImage(src) {
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.onerror = reject;
+        img.src = src;
+    });
+}
+
+async function compressImage(file) {
+    const dataUrl = await fileToDataURL(file);
+    const img = await loadImage(dataUrl);
+
+    const maxDimension = 1920;
+    let { width, height } = img;
+    if (width > height && width > maxDimension) {
+        height = Math.round((height * maxDimension) / width);
+        width = maxDimension;
+    } else if (height >= width && height > maxDimension) {
+        width = Math.round((width * maxDimension) / height);
+        height = maxDimension;
+    }
+
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(img, 0, 0, width, height);
+
+    let quality = 0.85;
+    let blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', quality));
+    while (blob && blob.size > MAX_SIZE && quality > 0.4) {
+        quality -= 0.1;
+        blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', quality));
+    }
+
+    const newName = (file.name || 'image').replace(/\.[^/.]+$/, '') + '.jpg';
+    return new File([blob], newName, { type: 'image/jpeg', lastModified: Date.now() });
+}
+
+async function handleImageInputChange(input) {
+    const file = input.files && input.files[0] ? input.files[0] : null;
+    if (!file) return;
+
+    if (file.size <= MAX_SIZE) return;
+
+    const formGroup = input.closest('.form-group');
+    const labelEl = formGroup ? formGroup.querySelector('.form-label') : null;
+    const originalLabel = labelEl ? labelEl.innerHTML : 'Foto';
+
+    if (labelEl) {
+        labelEl.innerHTML = originalLabel + ' <span class="badge bg-primary"><i class="bi bi-hourglass-split"></i> Mengompres...</span>';
+    }
+    input.disabled = true;
+
+    try {
+        const compressedFile = await compressImage(file);
+        const dt = new DataTransfer();
+        dt.items.add(compressedFile);
+        input.files = dt.files;
+
+        if (labelEl) {
+            labelEl.innerHTML = originalLabel + ' <span class="badge bg-success"><i class="bi bi-check-circle"></i> Selesai (Auto-Compressed)</span>';
+        }
+    } catch (e) {
+        console.error('Compression error:', e);
+        if (labelEl) {
+            labelEl.innerHTML = originalLabel + ' <span class="badge bg-danger"><i class="bi bi-exclamation-triangle"></i> Kompresi Gagal</span>';
+        }
+    } finally {
+        input.disabled = false;
+        setTimeout(() => {
+            if (labelEl) labelEl.innerHTML = originalLabel;
+        }, 3000);
+    }
+}
+
+document.addEventListener('change', function(e) {
+    const input = e.target;
+    if (input && input.classList && input.classList.contains('image-chemical-input')) {
+        handleImageInputChange(input);
+    }
+});
 </script>
 @endpush
