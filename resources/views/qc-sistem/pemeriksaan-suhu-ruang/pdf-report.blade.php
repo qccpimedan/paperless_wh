@@ -230,90 +230,6 @@
                     </tr>
                 </table>
             </div>
-            
-            {{-- Data Pemeriksaan Terkini --}}
-            <!-- @if(!empty($suhu['cold_storage'] ?? []))
-                <div class="section-title">Cold Storage</div>
-                <table class="data">
-                    <thead>
-                        <tr>
-                            <th style="width: 25%">Unit</th>
-                            <th>Setting (°C)</th>
-                            <th>Display (°C)</th>
-                            <th>Actual (°C)</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach($suhu['cold_storage'] as $item)
-                            <tr>
-                                <td>CS {{ $item['unit'] }}</td>
-                                <td>{{ $item['setting'] ?? '-' }}</td>
-                                <td>{{ $item['display'] ?? '-' }}</td>
-                                <td>{{ $item['actual'] ?? '-' }}</td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            @endif
-
-            @if(!empty($suhu['anteroom_loading'] ?? []))
-                <div class="section-title">Anteroom Loading</div>
-                <table class="data">
-                    <thead>
-                        <tr>
-                            <th style="width: 25%">Unit</th>
-                            <th>Setting (°C)</th>
-                            <th>Display (°C)</th>
-                            <th>Actual (°C)</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach($suhu['anteroom_loading'] as $item)
-                            <tr>
-                                <td>Anteroom Loading {{ $item['unit'] }}</td>
-                                <td>{{ $item['setting'] ?? '-' }}</td>
-                                <td>{{ $item['display'] ?? '-' }}</td>
-                                <td>{{ $item['actual'] ?? '-' }}</td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            @endif
-
-            @php
-                $singleAreas = [
-                    'pre_loading' => 'Pre Loading',
-                    'prestaging' => 'Prestaging',
-                    'anteroom_ekspansi_further' => 'Anteroom Ekspansi Further',
-                    'anteroom_ekspansi_sausage' => 'Anteroom Ekspansi Sausage',
-                ];
-            @endphp
-
-            @foreach($singleAreas as $key => $label)
-                @if(!empty($suhu[$key] ?? []))
-                    <div class="section-title">{{ $label }}</div>
-                    <table class="data">
-                        <thead>
-                            <tr>
-                                <th>Setting (°C)</th>
-                                <th>Display (°C)</th>
-                                @if(isset($suhu[$key]['actual']))
-                                    <th>Actual (°C)</th>
-                                @endif
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>{{ $suhu[$key]['setting'] ?? '-' }}</td>
-                                <td>{{ $suhu[$key]['display'] ?? '-' }}</td>
-                                @if(isset($suhu[$key]['actual']))
-                                    <td>{{ $suhu[$key]['actual'] ?? '-' }}</td>
-                                @endif
-                            </tr>
-                        </tbody>
-                    </table>
-                @endif
-            @endforeach -->
 
             {{-- Data & Riwayat Pemeriksaan Table --}}
             <div class="section-title">Data & Riwayat Pemeriksaan</div>
@@ -482,12 +398,16 @@
                     </tbody>
                 </table>
             @endif
+            
+            <div style="text-align: right; padding-right: 10px; font-style: italic; font-size: 9px; color: #666; margin-top: 5px;">
+                QW 11/00
+            </div>
 
             <div class="signature">
                 <table class="signature-table">
                     <tr>
                         <td class="signature-cell">
-                            <div class="signature-header-item">Dibuat Oleh (QC)</div>
+                            <div class="signature-header-item">Dibuat Oleh</div>
                             <div class="signature-space">
                                 @if($p->verifiedByQc || $p->user)
                                     @php
@@ -504,7 +424,7 @@
                             <div class="signature-name">{{ $p->verifiedByQc->name ?? $p->user->name ?? '-' }}</div>
                         </td>
                         <td class="signature-cell">
-                            <div class="signature-header-item">Disetujui Oleh (Tim Warehouse)</div>
+                            <div class="signature-header-item">Diketahui Oleh</div>
                             <div class="signature-space">
                                 @if($p->verifiedByProduksi)
                                     @php
@@ -520,7 +440,7 @@
                             <div class="signature-name">{{ $p->verifiedByProduksi->name ?? '-' }}</div>
                         </td>
                         <td class="signature-cell">
-                            <div class="signature-header-item">Diverifikasi Oleh (SPV QC)</div>
+                            <div class="signature-header-item">Disetujui Oleh</div>
                             <div class="signature-space">
                                 @if($p->verifiedBySpv)
                                     @php
@@ -537,10 +457,6 @@
                         </td>
                     </tr>
                 </table>
-            </div>
-
-            <div style="text-align: right; padding-right: 10px; font-style: italic; font-size: 9px; color: #666; margin-top: 5px;">
-                QW 11/00
             </div>
 
             @if($idx < (count($pemeriksaans ?? []) - 1))

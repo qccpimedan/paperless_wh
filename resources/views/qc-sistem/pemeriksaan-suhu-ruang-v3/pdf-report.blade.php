@@ -386,11 +386,15 @@
                 </tbody>
             </table>
 
+            <div style="text-align: right; padding-right: 10px; font-style: italic; font-size: 9px; color: #666; margin-top: 5px;">
+                QW 11/00
+            </div>
+            
             <div class="signature">
                 <table class="signature-table">
                     <tr>
                         <td class="signature-cell">
-                            <div class="signature-header-item">Dibuat Oleh (QC)</div>
+                            <div class="signature-header-item">Dibuat Oleh</div>
                             <div class="signature-space">
                                 @if($p->verifiedByQc || $p->user)
                                     @php
@@ -407,7 +411,7 @@
                             <div class="signature-name">{{ $p->verifiedByQc->name ?? $p->user->name ?? '-' }}</div>
                         </td>
                         <td class="signature-cell">
-                            <div class="signature-header-item">Disetujui Oleh (Tim Warehouse)</div>
+                            <div class="signature-header-item">Diketahui Oleh</div>
                             <div class="signature-space">
                                 @if($p->verifiedByProduksi)
                                     @php
@@ -423,7 +427,7 @@
                             <div class="signature-name">{{ $p->verifiedByProduksi->name ?? '-' }}</div>
                         </td>
                         <td class="signature-cell">
-                            <div class="signature-header-item">Diverifikasi Oleh (SPV QC)</div>
+                            <div class="signature-header-item">Disetujui Oleh</div>
                             <div class="signature-space">
                                 @if($p->verifiedBySpv)
                                     @php
@@ -440,10 +444,6 @@
                         </td>
                     </tr>
                 </table>
-            </div>
-
-            <div style="text-align: right; padding-right: 10px; font-style: italic; font-size: 9px; color: #666; margin-top: 5px;">
-                QW 11/00
             </div>
 
             @if($idx < (count($pemeriksaans ?? []) - 1))

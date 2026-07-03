@@ -829,7 +829,7 @@
 
                             <!-- 2. Diperiksa Oleh (PRODUKSI/WAREHOUSE VERIFIER) -->
                             <td class="signature-cell">
-                                <div class="signature-header-item">Diperiksa Oleh:</div>
+                                <div class="signature-header-item">Diketahui Oleh:</div>
                                 <div class="signature-space">
                                     @if($firstRecord && $firstRecord->produksiVerifier)
                                         @php
@@ -847,7 +847,7 @@
 
                             <!-- 3. Diketahui Oleh (SPV VERIFIER) -->
                             <td class="signature-cell">
-                                <div class="signature-header-item">Diketahui Oleh:</div>
+                                <div class="signature-header-item">Disetujui Oleh:</div>
                                 <div class="signature-space">
                                     @if($firstRecord && $firstRecord->spvVerifier)
                                         @php

@@ -432,8 +432,8 @@
                                     <div class="column-header">PEMERIKSAAN #{{ $columnNumber }}</div>
 
                                     <div class="section-title">Data Umum</div>
-                                    <div class="field-row"><span class="field-label">No</span><span class="field-value">{{ $columnNumber }}</span></div>
-                                    <div class="field-row"><span class="field-label">Tanggal</span><span class="field-value">{{ $pemeriksaan->tanggal ? $pemeriksaan->tanggal->format('d/m/Y') : '-' }}</span></div>
+                                    <!-- <div class="field-row"><span class="field-label">No</span><span class="field-value">{{ $columnNumber }}</span></div> -->
+                                    <!-- <div class="field-row"><span class="field-label">Tanggal</span><span class="field-value">{{ $pemeriksaan->tanggal ? $pemeriksaan->tanggal->format('d/m/Y') : '-' }}</span></div> -->
                                     <!-- <div class="field-row"><span class="field-label">Shift</span><span class="field-value">{{ $pemeriksaan->shift->shift ?? '-' }}</span></div> -->
                                     <!-- <div class="field-row"><span class="field-label">Plant</span><span class="field-value">{{ $pemeriksaan->user->plant->plant ?? '-' }}</span></div> -->
                                     <div class="field-row"><span class="field-label">Customer</span><span class="field-value">{{ $row ? ($customerMap[$row['id_customer'] ?? null] ?? '-') : '-' }}</span></div>
@@ -442,7 +442,7 @@
                                     <div class="section-title">Kendaraan</div>
                                     <div class="field-row"><span class="field-label">Nopol</span><span class="field-value">{{ $pemeriksaan->no_polisi ?? '-' }}</span></div>
                                     <div class="field-row"><span class="field-label">Supir</span><span class="field-value">{{ $pemeriksaan->nama_supir ?? '-' }}</span></div>
-                                    <div class="field-row"><span class="field-label">Jml Datang</span><span class="field-value">{{ $pemeriksaan->waktu_kedatangan_display ?? ($pemeriksaan->waktu_kedatangan ?? '-') }}</span></div>
+                                    <div class="field-row"><span class="field-label">Waktu Kedatangan</span><span class="field-value">{{ $pemeriksaan->waktu_kedatangan_display ?? ($pemeriksaan->waktu_kedatangan ?? '-') }}</span></div>
                                     <div class="field-row"><span class="field-label">Suhu Produk</span><span class="field-value">{{ $pemeriksaan->suhu_mobil ?? '-' }}</span></div>
 
                                     <div class="section-title">Alasan Return</div>
@@ -456,8 +456,8 @@
                                             <div class="field-row"><span class="field-label">Kondisi Produk</span><span class="field-value">{{ $row['kondisi_produk'] ?? '-' }}</span></div>
                                             <div class="field-row"><span class="field-label">Suhu Produk</span><span class="field-value">{{ $row['suhu_produk'] ?? '-' }}</span></div>
                                             <div class="field-row"><span class="field-label">Kode Produksi</span><span class="field-value">{{ $row['kode_produksi'] ?? '-' }}</span></div>
-                                            <div class="field-row"><span class="field-label">Expired Date</span><span class="field-value">{{ !empty($row['expired_date']) ? \Carbon\Carbon::parse($row['expired_date'])->format('d/m/Y') : '-' }}</span></div>
-                                            <div class="field-row"><span class="field-label">Jml Produk</span><span class="field-value">{{ $row['jumlah_barang'] ?? '-' }}</span></div>
+                                            <div class="field-row"><span class="field-label">Best Before</span><span class="field-value">{{ !empty($row['expired_date']) ? \Carbon\Carbon::parse($row['expired_date'])->format('d/m/Y') : '-' }}</span></div>
+                                            <div class="field-row"><span class="field-label">Jumlah Barang</span><span class="field-value">{{ $row['jumlah_barang'] ?? '-' }}</span></div>
                                             <div class="field-row"><span class="field-label">Kondisi Kemasan</span><span class="field-value">@if(isset($row['kondisi_kemasan'])){{ $row['kondisi_kemasan'] ? 'Baik' : 'Rusak' }}@else-@endif</span></div>
                                             <div class="field-row"><span class="field-label">Kondisi Produk</span><span class="field-value">@if(isset($row['kondisi_produk_check'])){{ $row['kondisi_produk_check'] ? 'Baik' : 'Rusak' }}@else-@endif</span></div>
                                             <div class="field-row"><span class="field-label">Rekomendasi</span><span class="field-value">{{ $row['rekomendasi'] ?? '-' }}</span></div>
@@ -473,6 +473,9 @@
                         </tr>
                     </table>
                 </div>
+                <div style="text-align: right; padding-right: 10px; font-style: italic; font-size: 9px; color: #666; margin-top: 5px;">
+                    QW 11/00
+                </div>
 
                 <div class="signature-section">
                     @php
@@ -482,7 +485,7 @@
                     <table class="signature-table">
                         <tr>
                             <td class="signature-cell">
-                                <div class="signature-header-item">Dibuat Oleh (QC)</div>
+                                <div class="signature-header-item">Dibuat Oleh</div>
                                 <div class="signature-space">
                                     @if($firstRecord && $firstRecord->qcVerifier)
                                         @php
@@ -498,7 +501,7 @@
                                 <div class="signature-name">{{ $firstRecord->qcVerifier->name ?? '-' }}</div>
                             </td>
                             <td class="signature-cell">
-                                <div class="signature-header-item">Disetujui Oleh (Tim Warehouse)</div>
+                                <div class="signature-header-item">Diketahui Oleh</div>
                                 <div class="signature-space">
                                     @if($firstRecord && $firstRecord->produksiVerifier)
                                         @php
@@ -514,7 +517,7 @@
                                 <div class="signature-name">{{ $firstRecord->produksiVerifier->name ?? '-' }}</div>
                             </td>
                             <td class="signature-cell">
-                                <div class="signature-header-item">Diverifikasi Oleh (SPV QC)</div>
+                                <div class="signature-header-item">Disetujui Oleh</div>
                                 <div class="signature-space">
                                     @if($firstRecord && $firstRecord->spvVerifier)
                                         @php
@@ -531,10 +534,6 @@
                             </td>
                         </tr>
                     </table>
-                </div>
-
-                <div style="text-align: right; padding-right: 10px; font-style: italic; font-size: 9px; color: #666; margin-top: 5px;">
-                    QW 11/00
                 </div>
 
                 @if(!$loop->last)

@@ -384,7 +384,7 @@
         <table class="signature-table">
             <tr>
                 <td class="signature-cell">
-                    <div class="signature-header-item">Dibuat Oleh (QC)</div>
+                    <div class="signature-header-item">Dibuat Oleh</div>
                     <div class="signature-space">
                         @if($firstRecord && $firstRecord->qcVerifier)
                             @php
@@ -400,7 +400,7 @@
                     <div class="signature-name">{{ $firstRecord && $firstRecord->qcVerifier ? $firstRecord->qcVerifier->name : '-' }}</div>
                 </td>
                 <td class="signature-cell">
-                    <div class="signature-header-item">Disetujui Oleh (Tim Warehouse)</div>
+                    <div class="signature-header-item">Diketahui Oleh</div>
                     <div class="signature-space">
                         @if($firstRecord && $firstRecord->produksiVerifier)
                             @php
@@ -416,7 +416,7 @@
                     <div class="signature-name">{{ $firstRecord && $firstRecord->produksiVerifier ? $firstRecord->produksiVerifier->name : '-' }}</div>
                 </td>
                 <td class="signature-cell">
-                    <div class="signature-header-item">Diverifikasi Oleh (SPV QC)</div>
+                    <div class="signature-header-item">Disetujui Oleh</div>
                     <div class="signature-space">
                         @if($firstRecord && $firstRecord->spvVerifier)
                             @php

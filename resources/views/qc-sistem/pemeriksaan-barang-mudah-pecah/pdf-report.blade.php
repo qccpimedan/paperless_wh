@@ -365,7 +365,7 @@
         <table class="signature-table">
             <tr>
                 <td class="signature-cell">
-                    <div class="signature-header-item">Dibuat Oleh (QC)</div>
+                    <div class="signature-header-item">Dibuat Oleh</div>
                     <div class="signature-space">
                         @if($qcName)
                             @php
@@ -381,7 +381,7 @@
                     <div class="signature-name">{{ $qcName ?: '-' }}</div>
                 </td>
                 <td class="signature-cell">
-                    <div class="signature-header-item">Disetujui Oleh (Tim Warehouse)</div>
+                    <div class="signature-header-item">Diketahui Oleh</div>
                     <div class="signature-space">
                         @if($produksiName)
                             @php
@@ -397,7 +397,7 @@
                     <div class="signature-name">{{ $produksiName ?: '-' }}</div>
                 </td>
                 <td class="signature-cell">
-                    <div class="signature-header-item">Diverifikasi Oleh (SPV QC)</div>
+                    <div class="signature-header-item">Disetujui Oleh</div>
                     <div class="signature-space">
                         @if($spvName)
                             @php

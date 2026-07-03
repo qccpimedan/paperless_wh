@@ -10,7 +10,7 @@
     <style>
         @page {
             size: A4;
-            margin: 8mm;
+            margin: 10mm;
         }
         
         * {
@@ -21,8 +21,8 @@
         
         body {
             font-family: 'Segoe UI', Arial, sans-serif;
-            font-size: 8.5px;
-            line-height: 1.35;
+            font-size: 9px;
+            line-height: 1.3;
             color: #1a1a1a;
             background: #fff;
         }
@@ -32,13 +32,12 @@
             max-width: 100%;
         }
         
-        /* HEADER - Improved */
         .header {
             display: table;
             width: 100%;
-            margin-bottom: 8px;
+            margin-bottom: 12px;
             border-bottom: 3px solid #c41e3a;
-            padding-bottom: 6px;
+            padding-bottom: 10px;
             page-break-inside: avoid;
         }
         
@@ -62,13 +61,13 @@
         
         .header-logo {
             display: table-cell;
-            width: 45px;
+            width: 50px;
             vertical-align: middle;
         }
         
         .header-logo img {
-            width: 40px;
-            height: 40px;
+            width: 45px;
+            height: 45px;
             object-fit: contain;
         }
         
@@ -89,11 +88,11 @@
         .header-company p {
             font-size: 7.5px;
             color: #444;
-            margin-bottom: 0px;
+            margin-bottom: 0;
         }
         
         .header-title h1 {
-            font-size: 11px;
+            font-size: 12px;
             font-weight: bold;
             color: #1a1a1a;
             background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
@@ -103,12 +102,11 @@
             display: inline-block;
         }
 
-        /* SUBHEADER - Grid Layout Fixed */
         .subheader {
             width: 100%;
             border: 1px solid #dee2e6;
-            border-radius: 6px;
-            margin-bottom: 8px;
+            border-radius: 4px;
+            margin-bottom: 10px;
             background: #f8f9fa;
             page-break-inside: avoid;
             padding: 0;
@@ -120,7 +118,7 @@
         }
         
         .subheader-table td {
-            padding: 4px 8px;
+            padding: 5px 8px;
             font-size: 7.5px;
             border-bottom: 1px solid #e9ecef;
             vertical-align: top;
@@ -133,7 +131,6 @@
         .subheader-label {
             font-weight: 600;
             color: #495057;
-            width: 80px;
         }
         
         .subheader-value {
@@ -146,88 +143,90 @@
             padding: 0;
         }
 
-        /* DATA TABLE - 4 Column Layout */
-        .page-break {
-            page-break-after: avoid;
-            margin-bottom: 8px;
+        .page-section {
+            page-break-inside: avoid;
+            margin-bottom: 12px;
         }
         
-        .page-break:last-child {
-            page-break-after: avoid;
-        }
-        
-        .data-table {
+        .columns-wrap {
             width: 100%;
-            border-collapse: collapse;
             border: 1px solid #dee2e6;
-            border-radius: 6px;
+            border-radius: 4px;
             overflow: hidden;
+            display: table;
+            table-layout: fixed;
         }
         
-        .data-column {
+        .columns-wrap .col {
             width: 25%;
-            border: 1px solid #dee2e6;
-            padding: 6px;
-            vertical-align: top;
-            font-size: 7.5px;
+            display: table-cell;
+            border-right: 1px solid #dee2e6;
+            padding: 7px;
+            font-size: 7px;
             background: #fff;
+            vertical-align: top;
+            page-break-inside: avoid;
         }
         
-        .data-column[data-numbered="true"] {
-            counter-reset: section-counter;
+        .columns-wrap .col:last-child {
+            border-right: none;
         }
         
-        .data-column:not([data-numbered="true"]) .section-title::before {
-            content: "";
+        .columns-wrap .col.empty-col {
+            background: #f8f9fa;
         }
         
-        .column-header {
+        .col-header {
             font-weight: bold;
-            font-size: 8px;
+            font-size: 7.5px;
             color: #8b1428;
-            background: linear-gradient(135deg, #8b1428 0%, #5c0e1a 100%);
-            padding: 5px 6px;
-            margin: -6px -6px 6px -6px;
+            background: #fff;
+            padding: 5px 7px;
+            margin: -7px -7px 6px -7px;
             text-align: center;
             letter-spacing: 0.5px;
             text-transform: uppercase;
         }
         
-        .section-title {
+        .sec-title {
             font-weight: bold;
-            font-size: 7.5px;
+            font-size: 7px;
             color: #c41e3a;
             border-bottom: 1.5px solid #c41e3a;
-            margin-top: 6px;
-            margin-bottom: 4px;
-            padding-bottom: 2px;
+            margin-top: 5px;
+            margin-bottom: 3px;
+            padding-bottom: 1px;
             text-transform: uppercase;
-            letter-spacing: 0.3px;
         }
         
-        .data-column[data-numbered="true"] .section-title {
-            counter-increment: section-counter;
+        .col[data-num="true"] .sec-title {
+            counter-increment: sec-c;
         }
         
-        .data-column[data-numbered="true"] .section-title::before {
-            content: counter(section-counter) ". ";
+        .col[data-num="true"] .sec-title::before {
+            content: counter(sec-c) ". ";
         }
         
-        .field-row {
+        .col[data-num="true"] {
+            counter-reset: sec-c;
+        }
+        
+        .f-row {
             margin-bottom: 2px;
             display: table;
             width: 100%;
         }
         
-        .field-label {
+        .f-label {
             display: table-cell;
             font-weight: 600;
             color: #495057;
-            width: 45px;
-            padding-right: 5px;
+            width: 48px;
+            padding-right: 3px;
+            white-space: nowrap;
         }
         
-        .field-value {
+        .f-value {
             display: table-cell;
             color: #1a1a1a;
             word-wrap: break-word;
@@ -244,103 +243,80 @@
             font-weight: bold;
         }
 
-        /* SIGNATURE SECTION */
         .signature-section {
-            margin-top: 8px;
-            padding: 8px;
+            margin-top: 12px;
+            padding: 12px;
             border: 1px solid #dee2e6;
-            border-radius: 6px;
+            border-radius: 4px;
             background: #f8f9fa;
             page-break-inside: avoid;
         }
         
-        .signature-note {
+        .sig-note {
             font-size: 6.5px;
             color: #495057;
-            padding: 4px 8px;
+            padding: 5px 8px;
             background: #fff;
             border: 1px solid #e9ecef;
-            border-radius: 4px;
-            margin-bottom: 8px;
+            border-radius: 3px;
+            margin-bottom: 10px;
             line-height: 1.4;
         }
         
-        .signature-note .ok-text {
+        .sig-note .ok {
             color: #28a745;
             font-weight: 600;
         }
         
-        .signature-note .not-ok-text {
+        .sig-note .not-ok {
             color: #dc3545;
             font-weight: 600;
         }
         
-        .signature-table {
+        .sig-table {
             width: 100%;
             border-collapse: collapse;
         }
         
-        .signature-cell {
+        .sig-cell {
             width: 33.33%;
             text-align: center;
             padding: 0 10px;
             vertical-align: top;
         }
         
-        .signature-header-item {
+        .sig-label {
             font-size: 7.5px;
             font-weight: 600;
             color: #495057;
-            padding-bottom: 15px;
+            padding-bottom: 20px;
         }
         
-        .signature-space {
-            height: 45px;
+        .sig-space {
+            height: 50px;
             margin: 0 5px;
             display: flex;
             align-items: center;
             justify-content: center;
         }
-
-        .signature-line-empty {
-            border-bottom: 1.5px solid #1a1a1a;
-            height: 30px;
+        
+        .sig-line {
+            border-bottom: 2px solid #1a1a1a;
+            height: 35px;
             width: 100%;
         }
         
-        .qr-code-img {
-            max-height: 45px;
-            max-width: 45px;
+        .qr-img {
+            max-height: 50px;
+            max-width: 50px;
         }
         
-        .signature-name {
+        .sig-name {
             font-size: 7.5px;
             font-weight: bold;
             color: #1a1a1a;
-            padding-top: 6px;
+            padding-top: 5px;
             text-transform: uppercase;
-            letter-spacing: 0.3px;
-        }
-
-        /* FOOTER */
-        .footer {
-            margin-top: 15px;
-            padding: 10px 15px;
-            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
-            border-radius: 4px;
-            text-align: center;
-            page-break-inside: avoid;
-        }
-        
-        .footer p {
-            color: #fff;
-            font-size: 7px;
-            margin: 2px 0;
-        }
-        
-        .footer .footer-main {
-            font-weight: 600;
-            font-size: 8px;
         }
 
         .empty-message {
@@ -353,41 +329,26 @@
             border: 1px dashed #dee2e6;
         }
         
-        /* Status badges */
-        .status-badge {
-            display: inline-block;
-            padding: 2px 8px;
-            border-radius: 3px;
-            font-size: 7px;
-            font-weight: 600;
-            text-transform: uppercase;
-        }
-        
-        .status-release {
-            background: #d4edda;
-            color: #155724;
-        }
-        
-        .status-hold {
-            background: #fff3cd;
-            color: #856404;
-        }
-        
-        .status-reject {
-            background: #f8d7da;
-            color: #721c24;
+        .clearfix::after {
+            content: "";
+            display: table;
+            clear: both;
         }
     </style>
 </head>
 <body>
     <div class="container">
+
         @if($pemeriksaans->count() > 0)
             @php
                 $columnsPerPage = 4;
 
                 $allBahanIds = [];
+                $pdfColumns = collect();
+
                 foreach ($pemeriksaans as $p) {
                     $idBahansTmp = json_decode($p->id_bahan_array ?? '[]', true) ?? [];
+
                     if (!empty($idBahansTmp)) {
                         foreach ($idBahansTmp as $tmpId) {
                             if ($tmpId) {
@@ -395,19 +356,7 @@
                             }
                         }
                     }
-                }
 
-                $bahanMap = [];
-                if (!empty($allBahanIds)) {
-                    $bahanMap = \App\Models\Bahan::whereIn('id', array_values(array_unique($allBahanIds)))
-                        ->pluck('nama_bahan', 'id')
-                        ->toArray();
-                }
-
-                // Chunking logic per record so tables don't mix different shifts/dates
-                $recordChunks = collect();
-                foreach ($pemeriksaans as $p) {
-                    $idBahansTmp = json_decode($p->id_bahan_array ?? '[]', true) ?? [];
                     $produsensTmp = json_decode($p->produsen_array ?? '[]', true) ?? [];
                     $negaraProdusensTmp = json_decode($p->negara_produsen_array ?? '[]', true) ?? [];
                     $distributorsTmp = json_decode($p->distributor_array ?? '[]', true) ?? [];
@@ -430,67 +379,52 @@
                     $fileCoasTmp = json_decode($p->file_coa_array ?? '[]', true) ?? [];
                     $imageBahanBakusTmp = json_decode($p->image_bahan_baku_array ?? '[]', true) ?? [];
                     $statusBarisesTmp = json_decode($p->status_baris_array ?? '[]', true) ?? [];
+                    $kondisiFisiksTmp = json_decode($p->kondisi_fisik_array ?? '[]', true) ?? [];
 
                     $rowCount = max(
                         1,
-                        count($idBahansTmp),
-                        count($produsensTmp),
-                        count($negaraProdusensTmp),
-                        count($distributorsTmp),
-                        count($kodeProduksisTmp),
-                        count($expireDatesTmp),
-                        count($jumlahDatangsTmp),
-                        count($jumlahSamplingsTmp),
-                        count($spesifikasisTmp),
-                        count($kondisiProduksTmp),
-                        count($suhuProduksTmp),
-                        count($suhuProdukTypesTmp),
-                        count($suhuMobilsTmp),
-                        count($suhuMobilTypesTmp),
-                        count($kondisiProdukSuhusTmp),
-                        count($hasilUjiFfasTmp),
-                        count($keterangansTmp),
-                        count($logoHalalsTmp),
-                        count($dokumenHalalsTmp),
-                        count($coasTmp),
-                        count($fileCoasTmp),
-                        count($imageBahanBakusTmp),
-                        count($statusBarisesTmp)
+                        count($idBahansTmp), count($produsensTmp), count($negaraProdusensTmp),
+                        count($distributorsTmp), count($kodeProduksisTmp), count($expireDatesTmp),
+                        count($jumlahDatangsTmp), count($jumlahSamplingsTmp), count($spesifikasisTmp),
+                        count($kondisiProduksTmp), count($suhuProduksTmp), count($suhuProdukTypesTmp),
+                        count($suhuMobilsTmp), count($suhuMobilTypesTmp), count($kondisiProdukSuhusTmp),
+                        count($hasilUjiFfasTmp), count($keterangansTmp), count($logoHalalsTmp),
+                        count($dokumenHalalsTmp), count($coasTmp), count($fileCoasTmp),
+                        count($imageBahanBakusTmp), count($statusBarisesTmp), count($kondisiFisiksTmp)
                     );
 
-                    $validRows = collect();
                     for ($i = 0; $i < $rowCount; $i++) {
                         $id_bahan = $idBahansTmp[$i] ?? null;
-                        
-                        // Periksa array jika filterBahanIds ada
+
                         if (isset($filterBahanIds) && is_array($filterBahanIds)) {
-                            // Jika array filterBahanIds tidak kosong, bahan harus ada di dalamnya
                             if (!empty($filterBahanIds) && !in_array($id_bahan, $filterBahanIds)) {
                                 continue;
                             }
                         }
 
-                        $validRows->push([
+                        $pdfColumns->push([
                             'record' => $p,
                             'rowIndex' => $i,
                         ]);
                     }
-                    
-                    if ($validRows->isNotEmpty()) {
-                        $chunks = $validRows->chunk($columnsPerPage);
-                        foreach ($chunks as $chunk) {
-                            $recordChunks->push($chunk);
-                        }
-                    }
                 }
+
+                $bahanMap = [];
+                if (!empty($allBahanIds)) {
+                    $bahanMap = \App\Models\Bahan::whereIn('id', array_values(array_unique($allBahanIds)))
+                        ->pluck('nama_bahan', 'id')
+                        ->toArray();
+                }
+
+                $chunks = $pdfColumns->chunk($columnsPerPage);
             @endphp
             
-            @foreach($recordChunks as $pageIndex => $pageRecords)
+            @foreach($chunks as $pageIndex => $pageRecords)
                 @php
                     $firstColumn = $pageRecords->first();
-                    $firstRecord = $firstColumn ? $firstColumn['record'] : null;
+                    $fRec = $firstColumn ? $firstColumn['record'] : null;
                 @endphp
-                {{-- HEADER (Setiap halaman) --}}
+                <div class="page-section">
                 <div class="header">
                     <div class="header-left">
                         <div class="logo-company">
@@ -498,13 +432,13 @@
                                 <img src="{{ public_path('dist/images/logo/cpi-logo.png') }}" alt="Logo CPI">
                             </div>
                             <div class="header-company">
-                            <h2>PT. CHAROEN POKPHAND INDONESIA</h2>
-                            @php
-                                $plantName = $firstRecord && $firstRecord->user && $firstRecord->user->plant ? $firstRecord->user->plant->plant : 'MEDAN';
-                            @endphp
-                            <p>FOOD DIVISION {{ strtoupper($plantName) }}</p>
-                            <p>{{ strtoupper($plantName) }} - INDONESIA</p>
-                        </div>
+                                <h2>PT. CHAROEN POKPHAND INDONESIA</h2>
+                                @php
+                                    $plantName = $fRec && $fRec->user && $fRec->user->plant ? $fRec->user->plant->plant : 'MEDAN';
+                                @endphp
+                                <p>FOOD DIVISION {{ strtoupper($plantName) }}</p>
+                                <p>{{ strtoupper($plantName) }} - INDONESIA</p>
+                            </div>
                         </div>
                     </div>
                     <div class="header-right">
@@ -513,461 +447,238 @@
                         </div>
                     </div>
                 </div>
-
-                {{-- SUBHEADER (Setiap halaman) --}}
                 <div class="subheader">
                     <table class="subheader-table">
                         <tr>
-                            <td>
-                                <span class="subheader-label">Hari/Tanggal:</span>
-                                <span class="subheader-value">{{ $firstRecord->tanggal ? (is_string($firstRecord->tanggal) ? $firstRecord->tanggal : $firstRecord->tanggal->format('d/m/Y')) : '-' }}</span>
-                            </td>
+                            <td><span class="subheader-label">Hari/Tgl:</span> <span class="subheader-value">{{ $fRec && $fRec->tanggal ? (is_string($fRec->tanggal) ? $fRec->tanggal : $fRec->tanggal->format('d/m/Y')) : '-' }}</span></td>
                             <td class="subheader-divider"></td>
-                            <td>
-                                <span class="subheader-label">Shift:</span>
-                                <span class="subheader-value">{{ $firstRecord->shift->shift ?? '-' }}</span>
-                            </td>
+                            <td><span class="subheader-label">Shift:</span> <span class="subheader-value">{{ $fRec->shift->shift ?? '-' }}</span></td>
                             <td class="subheader-divider"></td>
-                            <td>
-                                <span class="subheader-label">Jenis Mobil:</span>
-                                <span class="subheader-value">{{ $firstRecord->jenis_mobil ?? '-' }}</span>
-                            </td>
+                            <td><span class="subheader-label">Jenis Mobil:</span> <span class="subheader-value">{{ $fRec->jenis_mobil ?? '-' }}</span></td>
                             <td class="subheader-divider"></td>
-                            <td>
-                                <span class="subheader-label">No. Mobil:</span>
-                                <span class="subheader-value">{{ $firstRecord->no_mobil ?? '-' }}</span>
-                            </td>
+                            <td><span class="subheader-label">No. Mobil:</span> <span class="subheader-value">{{ $fRec->no_mobil ?? '-' }}</span></td>
                         </tr>
                         <tr>
-                            <td>
-                                <span class="subheader-label">Segel/Gembok:</span>
-                                <span class="subheader-value">{{ $firstRecord->segel_gembok ? ucfirst($firstRecord->segel_gembok) : '-' }}</span>
-                            </td>
+                            <td><span class="subheader-label">Segel:</span> <span class="subheader-value">{{ $fRec && $fRec->segel_gembok ? ucfirst($fRec->segel_gembok) : '-' }}</span></td>
                             <td class="subheader-divider"></td>
-                            <td>
-                                <span class="subheader-label">No. Segel:</span>
-                                <span class="subheader-value">{{ $firstRecord->no_segel ?? '-' }}</span>
-                            </td>
+                            <td><span class="subheader-label">No. Segel:</span> <span class="subheader-value">{{ $fRec->no_segel ?? '-' }}</span></td>
                             <td class="subheader-divider"></td>
-                            <td colspan="3">
-                                <span class="subheader-label">Nama Supir:</span>
-                                <span class="subheader-value">{{ $firstRecord->nama_supir ?? '-' }}</span>
-                            </td>
+                            <td colspan="3"><span class="subheader-label">Supir:</span> <span class="subheader-value">{{ $fRec->nama_supir ?? '-' }}</span></td>
                         </tr>
                     </table>
                 </div>
 
-                {{-- DATA TABLE --}}
-                <div class="page-break">
-                    <table class="data-table">
-                        <tr>
-                            @foreach($pageRecords as $index => $column)
-                                @php
-                                    $pemeriksaan = $column['record'];
-                                    $rowIndex = $column['rowIndex'];
-                                    $columnNumber = ($pageIndex * $columnsPerPage) + $loop->iteration;
-                                @endphp
-                                <td class="data-column" data-numbered="true">
-                                    <div class="column-header">
-                                        PEMERIKSAAN #{{ $columnNumber }}
-                                    </div>
+                <div class="columns-wrap clearfix">
+                    @foreach($pageRecords as $index => $column)
+                        @php
+                            $p = $column['record'];
+                            $ri = $column['rowIndex'];
+                            $cn = ($pageIndex * $columnsPerPage) + $loop->iteration;
+                        @endphp
+                        <div class="col" data-num="true">
+                            <div class="col-header">PEMERIKSAAN #{{ $cn }}</div>
 
-                                    {{-- KONDISI MOBIL --}}
-                                    @php
-                                        $kondisiMobil = $pemeriksaan->kondisi_mobil ?? [];
-                                        $checkedItems = array_filter($kondisiMobil);
-                                    @endphp
-                                    @if(count($checkedItems) > 0)
-                                        <div class="section-title">Kondisi Mobil</div>
-                                        @foreach($checkedItems as $key => $value)
-                                            @if($value)
-                                                <div class="field-row">
-                                                    <span class="check-item">{{ ucfirst(str_replace('_', ' ', $key)) }}</span>
-                                                </div>
-                                            @endif
-                                        @endforeach
+                            @php
+                                $km = $p->kondisi_mobil ?? [];
+                                $ci = array_filter($km);
+                            @endphp
+                            @if(count($ci) > 0)
+                                <div class="sec-title">Kondisi Mobil</div>
+                                @foreach($ci as $key => $v)
+                                    @if($v)
+                                        <div class="f-row"><span class="check-item">{{ ucfirst(str_replace('_', ' ', $key)) }}</span></div>
                                     @endif
+                                @endforeach
+                            @endif
 
-                                    {{-- BAHAN BAKU PENUNJANG (Single Row) --}}
-                                    @php
-                                        $id_bahans = json_decode($pemeriksaan->id_bahan_array ?? '[]', true) ?? [];
-                                        $produsens_arr = json_decode($pemeriksaan->produsen_array ?? '[]', true) ?? [];
-                                        $negara_produsens_arr = json_decode($pemeriksaan->negara_produsen_array ?? '[]', true) ?? [];
-                                        $distributors_arr = json_decode($pemeriksaan->distributor_array ?? '[]', true) ?? [];
-                                        $kode_produksis = json_decode($pemeriksaan->kode_produksi_array ?? '[]', true) ?? [];
-                                        $expire_dates = json_decode($pemeriksaan->expire_date_array ?? '[]', true) ?? [];
-                                        $jumlah_datangs = json_decode($pemeriksaan->jumlah_datang_array ?? '[]', true) ?? [];
-                                        $jumlah_samplings = json_decode($pemeriksaan->jumlah_sampling_array ?? '[]', true) ?? [];
-                                        $spesifikasis = json_decode($pemeriksaan->spesifikasi_array ?? '[]', true) ?? [];
-                                        $id_bahan = $id_bahans[$rowIndex] ?? null;
-                                        $produsen_val = $produsens_arr[$rowIndex] ?? null;
-                                        $negara_produsen_val = $negara_produsens_arr[$rowIndex] ?? null;
-                                        $distributor_val = $distributors_arr[$rowIndex] ?? null;
-                                        $kode_produksi_val = $kode_produksis[$rowIndex] ?? null;
-                                        $expire_date_val = $expire_dates[$rowIndex] ?? null;
-                                        $jumlah_datang_val = $jumlah_datangs[$rowIndex] ?? null;
-                                        $jumlah_sampling_val = $jumlah_samplings[$rowIndex] ?? null;
-                                        $spesifikasi_val = $spesifikasis[$rowIndex] ?? null;
-                                        // Normalisasi: jika nilai masih array (data lama), ubah ke string
-                                        if (is_array($produsen_val)) { $produsen_val = implode(', ', array_filter($produsen_val)); }
-                                        if (is_array($distributor_val)) { $distributor_val = implode(', ', array_filter($distributor_val)); }
-                                        if (is_array($negara_produsen_val)) { $negara_produsen_val = implode(', ', array_filter($negara_produsen_val)); }
-                                        if (is_array($kode_produksi_val)) { $kode_produksi_val = implode(', ', array_filter($kode_produksi_val)); }
-                                        if (is_array($jumlah_datang_val)) { $jumlah_datang_val = implode(', ', array_filter($jumlah_datang_val)); }
-                                        if (is_array($jumlah_sampling_val)) { $jumlah_sampling_val = implode(', ', array_filter($jumlah_sampling_val)); }
-                                        if (is_array($spesifikasi_val)) { $spesifikasi_val = implode('; ', array_filter($spesifikasi_val)); }
-                                    @endphp
-                                    @if($id_bahan || $produsen_val || $negara_produsen_val || $distributor_val || $kode_produksi_val || $expire_date_val || $jumlah_datang_val || $jumlah_sampling_val || $spesifikasi_val)
-                                        <div class="section-title">Bahan Baku Penunjang</div>
-                                        <div style="margin-top: 6px; padding-top: 6px; border-top: 1px solid #ddd; font-size: 8px;">
-                                            @if($id_bahan)
-                                                <div class="field-row">
-                                                    <span class="field-label">Nama:</span>
-                                                    <span class="field-value">{{ $bahanMap[$id_bahan] ?? 'N/A' }}</span>
-                                                </div>
-                                            @endif
-                                            @if($produsen_val)
-                                                <div class="field-row">
-                                                    <span class="field-label">Prod:</span>
-                                                    <span class="field-value">{{ $produsen_val }}</span>
-                                                </div>
-                                            @endif
-                                            @if($negara_produsen_val)
-                                                <div class="field-row">
-                                                    <span class="field-label">Neg:</span>
-                                                    <span class="field-value">{{ $negara_produsen_val }}</span>
-                                                </div>
-                                            @endif
-                                            @if($distributor_val)
-                                                <div class="field-row">
-                                                    <span class="field-label">Dist:</span>
-                                                    <span class="field-value">{{ $distributor_val }}</span>
-                                                </div>
-                                            @endif
-                                            @if($kode_produksi_val)
-                                                <div class="field-row">
-                                                    <span class="field-label">Kode:</span>
-                                                    <span class="field-value">{{ $kode_produksi_val }}</span>
-                                                </div>
-                                            @endif
-                                            @if($expire_date_val)
-                                                <div class="field-row">
-                                                    <span class="field-label">Exp:</span>
-                                                    <span class="field-value">{{ \Carbon\Carbon::parse($expire_date_val)->format('d/m/Y') }}</span>
-                                                </div>
-                                            @endif
-                                            @if($jumlah_datang_val)
-                                                <div class="field-row">
-                                                    <span class="field-label">Jumlah Datang:</span>
-                                                    <span class="field-value">{{ $jumlah_datang_val }}</span>
-                                                </div>
-                                            @endif
-                                            @if($jumlah_sampling_val)
-                                                <div class="field-row">
-                                                    <span class="field-label">Jumlah Sampling:</span>
-                                                    <span class="field-value">{{ $jumlah_sampling_val }}</span>
-                                                </div>
-                                            @endif
-                                            @if($spesifikasi_val)
-                                                <div class="field-row">
-                                                    <span class="field-label">Spes:</span>
-                                                    <span class="field-value">{{ substr($spesifikasi_val, 0, 30) }}{{ strlen($spesifikasi_val) > 30 ? '...' : '' }}</span>
-                                                </div>
-                                            @endif
-                                        </div>
-                                    @endif
+                            @php
+                                $tempId = json_decode($p->id_bahan_array ?? '[]', true) ?? [];
+                                $tempArr = json_decode($p->negara_produsen_array ?? '[]', true) ?? [];
+                                $bahan_id = $tempId[$ri] ?? null;
+                                $negara_val = $tempArr[$ri] ?? null;
+                                if (is_array($negara_val)) { $negara_val = implode(', ', array_filter($negara_val)); }
+                            @endphp
+                            @if($bahan_id || $negara_val)
+                                <div class="sec-title">Bahan Baku Penunjang</div>
+                                @if($bahan_id)
+                                    <div class="f-row"><span class="f-label">Nama:</span><span class="f-value">{{ $bahanMap[$bahan_id] ?? 'N/A' }}</span></div>
+                                @endif
+                                @if($negara_val)
+                                    <div class="f-row"><span class="f-label">Negara:</span><span class="f-value">{{ $negara_val }}</span></div>
+                                @endif
+                            @endif
 
-                                    {{-- KONDISI SUHU (Single Row) --}}
-                                    @php
-                                        $kondisi_produks = json_decode($pemeriksaan->kondisi_produk ?? '[]', true) ?? [];
-                                        $suhu_produks = json_decode($pemeriksaan->suhu_produk ?? '[]', true) ?? [];
-                                        $suhu_produk_types = json_decode($pemeriksaan->suhu_produk_type ?? '[]', true) ?? [];
-                                        $suhu_mobils = json_decode($pemeriksaan->suhu_mobil_array ?? '[]', true) ?? [];
-                                        $suhu_mobil_types = json_decode($pemeriksaan->suhu_mobil_type_array ?? '[]', true) ?? [];
-                                        $kondisi_produk_suhus = json_decode($pemeriksaan->kondisi_produk_suhu ?? '[]', true) ?? [];
+                            @php
+                                $sps = json_decode($p->suhu_produk ?? '[]', true) ?? [];
+                                $spts = json_decode($p->suhu_produk_type ?? '[]', true) ?? [];
+                                $sms = json_decode($p->suhu_mobil_array ?? '[]', true) ?? [];
+                                $smts = json_decode($p->suhu_mobil_type_array ?? '[]', true) ?? [];
+                                $kps = json_decode($p->kondisi_produk_suhu ?? '[]', true) ?? [];
+                                $sp_v = $sps[$ri] ?? null;
+                                $spt_v = $spts[$ri] ?? null;
+                                $sm_v = $sms[$ri] ?? null;
+                                $smt_v = $smts[$ri] ?? null;
+                                $kp_v = $kps[$ri] ?? null;
+                            @endphp
+                            @if($spt_v || $sp_v !== null || $smt_v || $sm_v !== null || $kp_v)
+                                <div class="sec-title">Kondisi Suhu</div>
+                                @if($spt_v)<div class="f-row"><span class="f-label" style="width:65px;">Suhu Produk:</span><span class="f-value">{{ $spt_v }}</span></div>@endif
+                                @if($sp_v !== null && $sp_v !== '')<div class="f-row"><span class="f-label" style="width:65px;">Nilai:</span><span class="f-value">{{ $sp_v }}°C</span></div>@endif
+                                @if($smt_v)<div class="f-row"><span class="f-label" style="width:65px;">Suhu Mobil:</span><span class="f-value">{{ $smt_v }}</span></div>@endif
+                                @if($sm_v !== null && $sm_v !== '')<div class="f-row"><span class="f-label" style="width:65px;">Nilai Mobil:</span><span class="f-value">{{ $sm_v }}°C</span></div>@endif
+                                @if($kp_v !== null && $kp_v !== '')<div class="f-row"><span class="f-label" style="width:65px;">Suhu Kondisi:</span><span class="f-value">{{ $kp_v }}°C</span></div>@endif
+                            @endif
 
-                                        $kondisi_produk_val = $kondisi_produks[$rowIndex] ?? null;
-                                        $suhu_produk_val = $suhu_produks[$rowIndex] ?? null;
-                                        $suhu_produk_type_val = $suhu_produk_types[$rowIndex] ?? null;
-                                        $suhu_mobil_val = $suhu_mobils[$rowIndex] ?? null;
-                                        $suhu_mobil_type_val = $suhu_mobil_types[$rowIndex] ?? null;
-                                        $kondisi_produk_suhu_val = $kondisi_produk_suhus[$rowIndex] ?? null;
-                                    @endphp
-                                    @if($kondisi_produk_val || $suhu_produk_val !== null || $suhu_produk_type_val || $suhu_mobil_val !== null || $suhu_mobil_type_val || $kondisi_produk_suhu_val)
-                                        <div class="section-title">Kondisi Suhu</div>
-                                        <div style="margin-top: 6px; padding-top: 6px; border-top: 1px solid #ddd; font-size: 8px;">
-                                            @if($suhu_produk_type_val)
-                                                <div class="field-row">
-                                                    <span class="field-label" style="width: 95px;">Suhu Produk:</span>
-                                                    <span class="field-value">{{ $suhu_produk_type_val }}</span>
-                                                </div>
-                                            @endif
-                                            @if($suhu_produk_val !== null && $suhu_produk_val !== '')
-                                                <div class="field-row">
-                                                    <span class="field-label" style="width: 95px;">Nilai Suhu Produk:</span>
-                                                    <span class="field-value">{{ $suhu_produk_val }}°C</span>
-                                                </div>
-                                            @endif
-                                            @if($suhu_mobil_type_val)
-                                                <div class="field-row">
-                                                    <span class="field-label" style="width: 95px;">Suhu Mobil:</span>
-                                                    <span class="field-value">{{ $suhu_mobil_type_val }}</span>
-                                                </div>
-                                            @endif
-                                            @if($suhu_mobil_val !== null && $suhu_mobil_val !== '')
-                                                <div class="field-row">
-                                                    <span class="field-label" style="width: 95px;">Nilai Suhu Mobil:</span>
-                                                    <span class="field-value">{{ $suhu_mobil_val }}°C</span>
-                                                </div>
-                                            @endif
-                                            @if($kondisi_produk_val)
-                                                <div class="field-row">
-                                                    <span class="field-label" style="width: 95px;">Kondisi Produk:</span>
-                                                    <span class="field-value">{{ $kondisi_produk_val }}</span>
-                                                </div>
-                                            @endif
-                                            @if($kondisi_produk_suhu_val !== null && $kondisi_produk_suhu_val !== '')
-                                                <div class="field-row">
-                                                    <span class="field-label" style="width: 95px;">Suhu Kondisi Produk:</span>
-                                                    <span class="field-value">{{ $kondisi_produk_suhu_val }}°C</span>
-                                                </div>
-                                            @endif
-                                        </div>
-                                    @endif
+                            @php
+                                $ffas = json_decode($p->hasil_uji_ffa_array ?? '[]', true) ?? [];
+                                $kets = json_decode($p->keterangan_array ?? '[]', true) ?? [];
+                                $ffa_v = $ffas[$ri] ?? null;
+                                $ket_v = $kets[$ri] ?? null;
+                            @endphp
+                            @if($ffa_v || $ket_v)
+                                <div class="sec-title">Analisis</div>
+                                @if($ffa_v)<div class="f-row"><span class="f-label">FFA:</span><span class="f-value">{{ $ffa_v }}</span></div>@endif
+                                @if($ket_v)<div class="f-row"><span class="f-label">Ket:</span><span class="f-value">{{ substr($ket_v, 0, 20) }}{{ strlen($ket_v) > 20 ? '..' : '' }}</span></div>@endif
+                            @endif
 
-                                    {{-- ANALISIS (Single Row) --}}
-                                    @php
-                                        $hasil_uji_ffas = json_decode($pemeriksaan->hasil_uji_ffa_array ?? '[]', true) ?? [];
-                                        $keterangans = json_decode($pemeriksaan->keterangan_array ?? '[]', true) ?? [];
+                            @php
+                                $kfs = json_decode($p->kondisi_fisik_array ?? '[]', true) ?? [];
+                                $kf_v = $kfs[$ri] ?? [];
+                            @endphp
+                            @if(!empty($kf_v))
+                                <div class="sec-title">Kondisi Fisik</div>
+                                @if(isset($kf_v['kemasan']))<div class="f-row"><span class="f-label">Kemasan:</span><span class="f-value">{{ $kf_v['kemasan'] ? 'V' : 'X' }}</span></div>@endif
+                                @if(isset($kf_v['warna']))<div class="f-row"><span class="f-label">Warna:</span><span class="f-value">{{ $kf_v['warna'] ? 'V' : 'X' }}</span></div>@endif
+                                @if(isset($kf_v['benda_asing']))<div class="f-row"><span class="f-label">B.Asing:</span><span class="f-value">{{ $kf_v['benda_asing'] ? 'V' : 'X' }}</span></div>@endif
+                                @if(isset($kf_v['aroma']))<div class="f-row"><span class="f-label">Aroma:</span><span class="f-value">{{ $kf_v['aroma'] ? 'V' : 'X' }}</span></div>@endif
+                            @endif
 
-                                        $hasil_uji_ffa_val = $hasil_uji_ffas[$rowIndex] ?? null;
-                                        $keterangan_val = $keterangans[$rowIndex] ?? null;
-                                    @endphp
-                                    @if($hasil_uji_ffa_val || $keterangan_val)
-                                        <div class="section-title">Analisis</div>
-                                        <div style="margin-top: 6px; padding-top: 6px; border-top: 1px solid #ddd; font-size: 8px;">
-                                            @if($hasil_uji_ffa_val)
-                                                <div class="field-row">
-                                                    <span class="field-label">FFA:</span>
-                                                    <span class="field-value">{{ $hasil_uji_ffa_val }}</span>
-                                                </div>
-                                            @endif
-                                            @if($keterangan_val)
-                                                <div class="field-row">
-                                                    <span class="field-label">Ket:</span>
-                                                    <span class="field-value">{{ $keterangan_val }}</span>
-                                                </div>
-                                            @endif
-                                        </div>
-                                    @endif
+                            @php
+                                $lhs = json_decode($p->logo_halal_array ?? '[]', true) ?? [];
+                                $dhs = json_decode($p->dokumen_halal_array ?? '[]', true) ?? [];
+                                $cas = json_decode($p->coa_array ?? '[]', true) ?? [];
+                                $fcs = json_decode($p->file_coa_array ?? '[]', true) ?? [];
+                                $lh_v = $lhs[$ri] ?? null;
+                                $dh_v = $dhs[$ri] ?? null;
+                                $ca_v = $cas[$ri] ?? null;
+                                $fc_v = $fcs[$ri] ?? null;
+                            @endphp
+                            @if($lh_v !== null || $dh_v !== null || $ca_v !== null || $fc_v)
+                                <div class="sec-title">Dokumentasi</div>
+                                @if($lh_v !== null)<div class="f-row"><span class="f-label" style="width:55px;">Logo Halal:</span><span class="f-value">{{ $lh_v ? 'Ya' : 'Tidak' }}</span></div>@endif
+                                @if($dh_v !== null)<div class="f-row"><span class="f-label" style="width:55px;">Dok. Halal:</span><span class="f-value">{{ $dh_v ? 'Ya' : 'Tidak' }}</span></div>@endif
+                                @if($ca_v !== null)<div class="f-row"><span class="f-label" style="width:55px;">COA:</span><span class="f-value">{{ $ca_v ? 'Ya' : 'Tidak' }}</span></div>@endif
+                                <!-- @if($fc_v)<div class="f-row"><span class="f-label" style="width:55px;">File COA:</span><span class="f-value">Ada</span></div>@endif -->
+                            @endif
 
-                                    {{-- KONDISI FISIK (Single Row) --}}
-                                    @php
-                                        $kondisi_fisiks = json_decode($pemeriksaan->kondisi_fisik_array ?? '[]', true) ?? [];
-                                        $kondisi_fisik_val = $kondisi_fisiks[$rowIndex] ?? [];
-                                    @endphp
-                                    @if(!empty($kondisi_fisik_val))
-                                        <div class="section-title">Kondisi Fisik</div>
-                                        <div style="margin-top: 6px; padding-top: 6px; border-top: 1px solid #ddd; font-size: 8px;">
-                                            @if(isset($kondisi_fisik_val['kemasan']))
-                                                <div class="field-row">
-                                                    <span class="field-label">Kemasan:</span>
-                                                    <span class="field-value">{{ ($kondisi_fisik_val['kemasan'] ?? false) ? 'V' : 'X' }}</span>
-                                                </div>
-                                            @endif
-                                            @if(isset($kondisi_fisik_val['warna']))
-                                                <div class="field-row">
-                                                    <span class="field-label">Warna:</span>
-                                                    <span class="field-value">{{ ($kondisi_fisik_val['warna'] ?? false) ? 'V' : 'X' }}</span>
-                                                </div>
-                                            @endif
-                                            @if(isset($kondisi_fisik_val['benda_asing']))
-                                                <div class="field-row">
-                                                    <span class="field-label">B.Asing:</span>
-                                                    <span class="field-value">{{ ($kondisi_fisik_val['benda_asing'] ?? false) ? 'V' : 'X' }}</span>
-                                                </div>
-                                            @endif
-                                            @if(isset($kondisi_fisik_val['aroma']))
-                                                <div class="field-row">
-                                                    <span class="field-label">Aroma:</span>
-                                                    <span class="field-value">{{ ($kondisi_fisik_val['aroma'] ?? false) ? 'V' : 'X' }}</span>
-                                                </div>
-                                            @endif
-                                        </div>
-                                    @endif
+                            @php
+                                $sbs = json_decode($p->status_baris_array ?? '[]', true) ?? [];
+                                $sb_v = $sbs[$ri] ?? null;
+                            @endphp
+                            @if($sb_v)
+                                <div class="sec-title">Status Release</div>
+                                <div class="f-row">
+                                    <span class="f-label" style="width:55px;">Status:</span>
+                                    <span class="f-value">
+                                        @if($sb_v === 'Release')
+                                            <span style="color:#2f855a;font-weight:bold;background:#c6f6d5;padding:1px 4px;border-radius:2px;">RELEASE</span>
+                                        @elseif($sb_v === 'Hold')
+                                            <span style="color:#9c4221;font-weight:bold;background:#feebc8;padding:1px 4px;border-radius:2px;">HOLD</span>
+                                        @else
+                                            <span style="color:#4a5568;font-weight:bold;background:#edf2f7;padding:1px 4px;border-radius:2px;">{{ strtoupper($sb_v) }}</span>
+                                        @endif
+                                    </span>
+                                </div>
+                            @endif
 
-                                    {{-- DOKUMENTASI (Single Row) --}}
-                                    @php
-                                        $logo_halals = json_decode($pemeriksaan->logo_halal_array ?? '[]', true) ?? [];
-                                        $dokumen_halals = json_decode($pemeriksaan->dokumen_halal_array ?? '[]', true) ?? [];
-                                        $coas = json_decode($pemeriksaan->coa_array ?? '[]', true) ?? [];
-                                        $file_coas = json_decode($pemeriksaan->file_coa_array ?? '[]', true) ?? [];
+                            @php
+                                $ibs = json_decode($p->image_bahan_baku_array ?? '[]', true) ?? [];
+                                $ip_v = $ibs[$ri] ?? null;
+                                $ifp = null;
+                                if ($ip_v) { $ifp = public_path('storage/' . $ip_v); }
+                            @endphp
+                            @if($ifp && file_exists($ifp))
+                                <div class="sec-title">Foto Bahan Baku</div>
+                                <div style="margin-top:4px;padding-top:4px;border-top:1px solid #ddd;text-align:center;">
+                                    <img src="{{ $ifp }}" alt="Foto" style="max-width:120px;max-height:80px;border:1px solid #dee2e6;border-radius:3px;padding:1px;">
+                                </div>
+                            @endif
+                        </div>
+                    @endforeach
 
-                                        $logo_halal_val = $logo_halals[$rowIndex] ?? null;
-                                        $dokumen_halal_val = $dokumen_halals[$rowIndex] ?? null;
-                                        $coa_val = $coas[$rowIndex] ?? null;
-                                        $file_coa_val = $file_coas[$rowIndex] ?? null;
-                                    @endphp
-                                    @if($logo_halal_val !== null || $dokumen_halal_val !== null || $coa_val !== null || $file_coa_val)
-                                        <div class="section-title">Dokumentasi</div>
-                                        <div style="margin-top: 6px; padding-top: 6px; border-top: 1px solid #ddd; font-size: 8px;">
-                                            @if($logo_halal_val !== null)
-                                                <div class="field-row">
-                                                    <span class="field-label" style="width: 55px;">Logo Halal:</span>
-                                                    <span class="field-value">{{ $logo_halal_val ? 'Ya' : 'Tidak' }}</span>
-                                                </div>
-                                            @endif
-                                            @if($dokumen_halal_val !== null)
-                                                <div class="field-row">
-                                                    <span class="field-label" style="width: 55px;">Dok. Halal:</span>
-                                                    <span class="field-value">{{ $dokumen_halal_val ? 'Ya' : 'Tidak' }}</span>
-                                                </div>
-                                            @endif
-                                            @if($coa_val !== null)
-                                                <div class="field-row">
-                                                    <span class="field-label" style="width: 55px;">COA:</span>
-                                                    <span class="field-value">{{ $coa_val ? 'Ya' : 'Tidak' }}</span>
-                                                </div>
-                                            @endif
-                                            @if($file_coa_val)
-                                                <div class="field-row">
-                                                    <span class="field-label" style="width: 55px;">File COA:</span>
-                                                    <span class="field-value" style="color: #2b6cb0; font-weight: bold;">Ada (Dilampirkan)</span>
-                                                </div>
-                                            @endif
-                                        </div>
-                                    @endif
-
-                                    {{-- STATUS RELEASE (Single Row) --}}
-                                    @php
-                                        $status_barises = json_decode($pemeriksaan->status_baris_array ?? '[]', true) ?? [];
-                                        $status_baris_val = $status_barises[$rowIndex] ?? null;
-                                    @endphp
-                                    @if($status_baris_val)
-                                        <div class="section-title">Status Release</div>
-                                        <div style="margin-top: 6px; padding-top: 6px; border-top: 1px solid #ddd; font-size: 8px;">
-                                            <div class="field-row">
-                                                <span class="field-label" style="width: 55px;">Status:</span>
-                                                <span class="field-value">
-                                                    @if($status_baris_val === 'Release')
-                                                        <span style="color: #2f855a; font-weight: bold; background: #c6f6d5; padding: 1px 4px; border-radius: 2px;">RELEASE</span>
-                                                    @elseif($status_baris_val === 'Hold')
-                                                        <span style="color: #9c4221; font-weight: bold; background: #feebc8; padding: 1px 4px; border-radius: 2px;">HOLD</span>
-                                                    @else
-                                                        <span style="color: #4a5568; font-weight: bold; background: #edf2f7; padding: 1px 4px; border-radius: 2px;">{{ strtoupper($status_baris_val) }}</span>
-                                                    @endif
-                                                </span>
-                                            </div>
-                                        </div>
-                                    @endif
-
-                                    {{-- FOTO BAHAN BAKU (Single Row) --}}
-                                    @php
-                                        $image_bahan_bakus = json_decode($pemeriksaan->image_bahan_baku_array ?? '[]', true) ?? [];
-                                        $image_path_val = $image_bahan_bakus[$rowIndex] ?? null;
-                                        $imgFullPath = null;
-                                        if ($image_path_val) {
-                                            $imgFullPath = public_path('storage/' . $image_path_val);
-                                        }
-                                    @endphp
-                                    @if($imgFullPath && file_exists($imgFullPath))
-                                        <div class="section-title">Foto Bahan Baku</div>
-                                        <div style="margin-top: 6px; padding-top: 6px; border-top: 1px solid #ddd; font-size: 8px; text-align: center;">
-                                            <img src="{{ $imgFullPath }}" alt="Foto Bahan Baku" style="max-width: 150px; max-height: 120px; border: 1px solid #dee2e6; border-radius: 4px; padding: 2px;">
-                                        </div>
-                                    @endif
-
-                                </td>
-                            @endforeach
-                        </tr>
-                    </table>
+                    @for($i = $pageRecords->count(); $i < $columnsPerPage; $i++)
+                        <div class="col empty-col"></div>
+                    @endfor
                 </div>
-
-                {{-- SIGNATURE (Setiap halaman) --}}
-                <div class="signature-section">
-                    <div class="signature-note">
-                        <span class="ok-text">V</span> : OK (Kondisi Mobil, Kemasan, Warna, Benda Asing, Aroma: Sesuai Standar, Logo Halal, Halal Berlaku, COA: Tersedia)<br>
-                        <span class="not-ok-text">X</span> : Parameter Tidak Sesuai
-                    </div>
-                    
-                    @php
-                        $firstRecord = $pemeriksaans->first();
-                    @endphp
-                    <table class="signature-table">
-                        <tr>
-                            <!-- 1. Dibuat Oleh (QC VERIFIER) -->
-                            <td class="signature-cell">
-                                <div class="signature-header-item">Dibuat Oleh:</div>
-                                <div class="signature-space">
-                                    @if($firstRecord && $firstRecord->qcVerifier)
-                                        @php
-                                            $qcQrData = "Dokumen #{$firstRecord->id} telah diverifikasi secara sistem oleh {$firstRecord->qcVerifier->name} (Tim QC)";
-                                            $qcQrCodeSvg = \SimpleSoftwareIO\QrCode\Facades\QrCode::size(55)->generate($qcQrData);
-                                            $base64QcSvg = "data:image/svg+xml;base64," . base64_encode($qcQrCodeSvg);
-                                        @endphp
-                                        <img src="{{ $base64QcSvg }}" class="qr-code-img" alt="QR Code QC">
-                                    @else
-                                        <div class="signature-line-empty"></div>
-                                    @endif
-                                </div>
-                                <div class="signature-name">{{ $firstRecord && $firstRecord->qcVerifier ? $firstRecord->qcVerifier->name : '-' }}</div>
-                            </td>
-
-                            <!-- 2. Diperiksa Oleh (PRODUKSI/WAREHOUSE VERIFIER) -->
-                            <td class="signature-cell">
-                                <div class="signature-header-item">Diperiksa Oleh:</div>
-                                <div class="signature-space">
-                                    @if($firstRecord && $firstRecord->produksiVerifier)
-                                        @php
-                                            $prodQrData = "Dokumen #{$firstRecord->id} telah diverifikasi secara sistem oleh {$firstRecord->produksiVerifier->name} (Tim Warehouse)";
-                                            $prodQrCodeSvg = \SimpleSoftwareIO\QrCode\Facades\QrCode::size(55)->generate($prodQrData);
-                                            $base64ProdSvg = "data:image/svg+xml;base64," . base64_encode($prodQrCodeSvg);
-                                        @endphp
-                                        <img src="{{ $base64ProdSvg }}" class="qr-code-img" alt="QR Code Warehouse">
-                                    @else
-                                        <div class="signature-line-empty"></div>
-                                    @endif
-                                </div>
-                                <div class="signature-name">{{ $firstRecord && $firstRecord->produksiVerifier ? $firstRecord->produksiVerifier->name : '-' }}</div>
-                            </td>
-
-                            <!-- 3. Diketahui Oleh (SPV VERIFIER) -->
-                            <td class="signature-cell">
-                                <div class="signature-header-item">Diketahui Oleh:</div>
-                                <div class="signature-space">
-                                    @if($firstRecord && $firstRecord->spvVerifier)
-                                        @php
-                                            $spvQrData = "Dokumen #{$firstRecord->id} telah diverifikasi secara sistem oleh {$firstRecord->spvVerifier->name} (Tim Supervisor QC)";
-                                            $spvQrCodeSvg = \SimpleSoftwareIO\QrCode\Facades\QrCode::size(55)->generate($spvQrData);
-                                            $base64SpvSvg = "data:image/svg+xml;base64," . base64_encode($spvQrCodeSvg);
-                                        @endphp
-                                        <img src="{{ $base64SpvSvg }}" class="qr-code-img" alt="QR Code SPV">
-                                    @else
-                                        <div class="signature-line-empty"></div>
-                                    @endif
-                                </div>
-                                <div class="signature-name">{{ $firstRecord && $firstRecord->spvVerifier ? $firstRecord->spvVerifier->name : '-' }}</div>
-                            </td>
-                        </tr>
-                    </table>
-                </div>
-
-                <div style="text-align: right; padding-right: 10px; font-style: italic; font-size: 9px; color: #666; margin-top: 5px;">
+                <div style="text-align:right;padding-right:10px;font-style:italic;font-size:8px;color:#666;margin-top:4px;page-break-inside:avoid;">
                     QW 01/00
                 </div>
 
-                <!-- {{-- FOOTER (Setiap halaman) --}}
-                <div class="footer">
-                    <p>PT. CHAROEN POKPHAND INDONESIA</p>
-                    <p>FOOD DIVISION MEDAN</p>
-                    <p>MEDAN - INDONESIA</p>
-                    <p class="footer-main">QW 02/01</p>
-                </div> -->
+                <div class="signature-section">
+                    <div class="sig-note">
+                        <span class="ok">V</span> : OK (Kondisi Mobil, Kemasan, Warna, Benda Asing, Aroma: Sesuai Standar, Logo Halal, Halal Berlaku, COA: Tersedia)<br>
+                        <span class="not-ok">X</span> : Parameter Tidak Sesuai
+                    </div>
+                    
+                    @php $fRec = $pemeriksaans->first(); @endphp
+                    <table class="sig-table">
+                        <tr>
+                            <td class="sig-cell">
+                                <div class="sig-label">Dibuat Oleh:</div>
+                                <div class="sig-space">
+                                    @if($fRec && $fRec->qcVerifier)
+                                        @php
+                                            $d = "Dokumen #{$fRec->id} telah diverifikasi secara sistem oleh {$fRec->qcVerifier->name} (Tim QC)";
+                                            $q = \SimpleSoftwareIO\QrCode\Facades\QrCode::size(50)->generate($d);
+                                            $b = "data:image/svg+xml;base64," . base64_encode($q);
+                                        @endphp
+                                        <img src="{{ $b }}" class="qr-img" alt="QR">
+                                    @else
+                                        <div class="sig-line"></div>
+                                    @endif
+                                </div>
+                                <div class="sig-name">{{ $fRec && $fRec->qcVerifier ? $fRec->qcVerifier->name : '-' }}</div>
+                            </td>
+                            <td class="sig-cell">
+                                <div class="sig-label">Diketahui Oleh:</div>
+                                <div class="sig-space">
+                                    @if($fRec && $fRec->produksiVerifier)
+                                        @php
+                                            $d = "Dokumen #{$fRec->id} telah diverifikasi secara sistem oleh {$fRec->produksiVerifier->name} (Tim Warehouse)";
+                                            $q = \SimpleSoftwareIO\QrCode\Facades\QrCode::size(50)->generate($d);
+                                            $b = "data:image/svg+xml;base64," . base64_encode($q);
+                                        @endphp
+                                        <img src="{{ $b }}" class="qr-img" alt="QR">
+                                    @else
+                                        <div class="sig-line"></div>
+                                    @endif
+                                </div>
+                                <div class="sig-name">{{ $fRec && $fRec->produksiVerifier ? $fRec->produksiVerifier->name : '-' }}</div>
+                            </td>
+                            <td class="sig-cell">
+                                <div class="sig-label">Disetujui Oleh:</div>
+                                <div class="sig-space">
+                                    @if($fRec && $fRec->spvVerifier)
+                                        @php
+                                            $d = "Dokumen #{$fRec->id} telah diverifikasi secara sistem oleh {$fRec->spvVerifier->name} (Tim Supervisor QC)";
+                                            $q = \SimpleSoftwareIO\QrCode\Facades\QrCode::size(50)->generate($d);
+                                            $b = "data:image/svg+xml;base64," . base64_encode($q);
+                                        @endphp
+                                        <img src="{{ $b }}" class="qr-img" alt="QR">
+                                    @else
+                                        <div class="sig-line"></div>
+                                    @endif
+                                </div>
+                                <div class="sig-name">{{ $fRec && $fRec->spvVerifier ? $fRec->spvVerifier->name : '-' }}</div>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
 
-                {{-- PAGE BREAK (Hanya jika bukan halaman terakhir) --}}
                 @if(!$loop->last)
                     <div style="page-break-after: always;"></div>
                 @endif
+                </div>
             @endforeach
         @else
             <div class="empty-message">

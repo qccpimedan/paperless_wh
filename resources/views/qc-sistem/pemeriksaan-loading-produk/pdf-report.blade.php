@@ -459,7 +459,7 @@
 
                                     <div class="section-title">Detail</div>
                                     <div class="field-row">
-                                        <span class="field-label">Kode:</span>
+                                        <span class="field-label">Kode Produksi:</span>
                                         <span class="field-value">{{ $kodeProduksi ?? '-' }}</span>
                                     </div>
                                     <div class="field-row">
@@ -480,15 +480,15 @@
                                         </span>
                                     </div>
                                     <div class="field-row">
-                                        <span class="field-label">Kemasan:</span>
+                                        <span class="field-label">Jumlah Kemasan:</span>
                                         <span class="field-value">{{ $jumlahKemasan ?? '-' }}</span>
                                     </div>
                                     <div class="field-row">
-                                        <span class="field-label">Sampling:</span>
+                                        <span class="field-label">Jumlah Sampling:</span>
                                         <span class="field-value">{{ $jumlahSampling ?? '-' }}</span>
                                     </div>
                                     <div class="field-row">
-                                        <span class="field-label">Berat:</span>
+                                        <span class="field-label">Berat per Karung & Box:</span>
                                         <span class="field-value">{{ $beratPerKarung ?? '-' }}</span>
                                     </div>
 
@@ -512,13 +512,16 @@
                                         <span class="field-value">{{ $formatBool($kondisiKemasan) }}</span>
                                     </div>
                                     <div class="field-row">
-                                        <span class="field-label">Ket:</span>
+                                        <span class="field-label">Keterangan:</span>
                                         <span class="field-value">{{ $keterangan ?? '-' }}</span>
                                     </div>
                                 </td>
                             @endforeach
                         </tr>
                     </table>
+                </div>
+                <div style="text-align: right; padding-right: 10px; font-style: italic; font-size: 9px; color: #666; margin-top: 5px;">
+                    QW 10/00
                 </div>
 
 
@@ -529,7 +532,7 @@
                     <table class="signature-table">
                         <tr>
                             <td class="signature-cell">
-                                <div class="signature-header-item">Dibuat Oleh (QC)</div>
+                                <div class="signature-header-item">Dibuat Oleh</div>
                                 <div class="signature-space">
                                     @if($qcUser)
                                         @php
@@ -545,7 +548,7 @@
                                 <div class="signature-name">{{ $qcUser ?: '-' }}</div>
                             </td>
                             <td class="signature-cell">
-                                <div class="signature-header-item">Disetujui Oleh (Tim Warehouse)</div>
+                                <div class="signature-header-item">Diketahui Oleh</div>
                                 <div class="signature-space">
                                     @if($produksiUser)
                                         @php
@@ -561,7 +564,7 @@
                                 <div class="signature-name">{{ $produksiUser ?: '-' }}</div>
                             </td>
                             <td class="signature-cell">
-                                <div class="signature-header-item">Diverifikasi Oleh (SPV QC)</div>
+                                <div class="signature-header-item">Disetujui Oleh</div>
                                 <div class="signature-space">
                                     @if($spvQcUser)
                                         @php
@@ -578,14 +581,6 @@
                             </td>
                         </tr>
                     </table>
-                </div>
-                <!-- <div class="footer">
-                    <p class="footer-main">Total Data: {{ $items->count() }} | Halaman: {{ $pageIndex + 1 }} / {{ $chunks->count() }}</p>
-                    <p>Dokumen ini adalah laporan resmi dari PT. Charoen Pokphand Indonesia - Food Division</p>
-                </div> -->
-
-                <div style="text-align: right; padding-right: 10px; font-style: italic; font-size: 9px; color: #666; margin-top: 5px;">
-                    QW 10/00
                 </div>
 
                 @if(!$loop->last)
