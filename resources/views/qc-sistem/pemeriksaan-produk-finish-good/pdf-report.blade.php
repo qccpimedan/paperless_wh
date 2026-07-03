@@ -148,36 +148,38 @@
             margin-bottom: 15px;
         }
 
-        .cards {
+        .data-table {
             width: 100%;
-        }
-
-        .card {
-            width: 48.5%;
-            float: left;
+            border-collapse: collapse;
             border: 1px solid #dee2e6;
             border-radius: 6px;
+            overflow: hidden;
+            page-break-inside: avoid;
+        }
+
+        .data-table tr {
+            page-break-inside: avoid;
+        }
+
+        .data-column {
+            width: 25%;
+            border: 1px solid #dee2e6;
             padding: 10px;
             vertical-align: top;
             font-size: 7px;
             background: #fff;
-            margin-bottom: 8px;
             page-break-inside: avoid;
         }
 
-        .card-right {
-            float: right;
-        }
-
-        .clear {
-            clear: both;
+        .data-column.empty-col {
+            background: #f8f9fa;
         }
 
         .column-header {
             font-weight: bold;
             font-size: 9px;
             color: #8b1428;
-            background: linear-gradient(135deg, #8b1428 0%, #5c0e1a 100%);
+            background: #fff;
             padding: 8px 10px;
             margin: -10px -10px 10px -10px;
             text-align: center;
@@ -306,28 +308,6 @@
 </head>
 <body>
     <div class="container">
-        <div class="header">
-            <div class="header-left">
-                <div class="logo-company">
-                    <div class="header-logo">
-                        <img src="{{ public_path('dist/images/logo/cpi-logo.png') }}" alt="Logo CPI">
-                    </div>
-                    <div class="header-company">
-                        <h2>PT. CHAROEN POKPHAND INDONESIA</h2>
-                        @php
-                            $plantName = $firstRecord && $firstRecord->user && $firstRecord->user->plant ? $firstRecord->user->plant->plant : 'MEDAN';
-                        @endphp
-                        <p>FOOD DIVISION {{ strtoupper($plantName) }}</p>
-                        <p>{{ strtoupper($plantName) }} - INDONESIA</p>
-                    </div>
-                </div>
-            </div>
-            <div class="header-right">
-                <div class="header-title">
-                    <h1>PEMERIKSAAN PRODUK FINISH GOOD</h1>
-                </div>
-            </div>
-        </div>
 
         @if($pemeriksaans->count() > 0)
             @php
@@ -444,7 +424,28 @@
                 @php
                     $firstColumn = $pageRecords->first();
                     $firstRecord = $firstColumn ? $firstColumn['record'] : null;
+                    $plantName = $firstRecord && $firstRecord->user && $firstRecord->user->plant ? $firstRecord->user->plant->plant : 'MEDAN';
                 @endphp
+
+                <div class="header">
+                    <div class="header-left">
+                        <div class="logo-company">
+                            <div class="header-logo">
+                                <img src="{{ public_path('dist/images/logo/cpi-logo.png') }}" alt="Logo CPI">
+                            </div>
+                            <div class="header-company">
+                                <h2>PT. CHAROEN POKPHAND INDONESIA</h2>
+                                <p>FOOD DIVISION {{ strtoupper($plantName) }}</p>
+                                <p>{{ strtoupper($plantName) }} - INDONESIA</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="header-right">
+                        <div class="header-title">
+                            <h1>PEMERIKSAAN PRODUK FINISH GOOD</h1>
+                        </div>
+                    </div>
+                </div>
 
                 <div class="subheader">
                     <table class="subheader-table">
@@ -489,167 +490,168 @@
                 </div>
 
                 <div class="page-break">
-                    <div class="cards">
-                        @foreach($pageRecords as $colIndex => $column)
-                            @php
-                                $pemeriksaan = $column['record'];
-                                $rowIndex = $column['rowIndex'];
-                                $columnNumber = ($pageIndex * $columnsPerPage) + $loop->iteration;
+                    <table class="data-table">
+                        <tr>
+                            @foreach($pageRecords as $colIndex => $column)
+                                @php
+                                    $pemeriksaan = $column['record'];
+                                    $rowIndex = $column['rowIndex'];
+                                    $columnNumber = ($pageIndex * $columnsPerPage) + $loop->iteration;
 
-                                $idProduk = (is_array($pemeriksaan->id_produk_array) ? ($pemeriksaan->id_produk_array[$rowIndex] ?? null) : null);
-                                $kategori = (is_array($pemeriksaan->kategori_code_array) ? ($pemeriksaan->kategori_code_array[$rowIndex] ?? null) : null);
-                                $kodeProduksi = (is_array($pemeriksaan->kode_produksi_array) ? ($pemeriksaan->kode_produksi_array[$rowIndex] ?? null) : null);
-                                $expireDate = (is_array($pemeriksaan->expire_date_array) ? ($pemeriksaan->expire_date_array[$rowIndex] ?? null) : null);
-                                $jumlahDatang = (is_array($pemeriksaan->jumlah_datang_array) ? ($pemeriksaan->jumlah_datang_array[$rowIndex] ?? null) : null);
-                                $jumlahSampling = (is_array($pemeriksaan->jumlah_sampling_array) ? ($pemeriksaan->jumlah_sampling_array[$rowIndex] ?? null) : null);
-                                $negara = (is_array($pemeriksaan->negara_produsen_array) ? ($pemeriksaan->negara_produsen_array[$rowIndex] ?? null) : null);
-                                $kondisiProduk = (is_array($pemeriksaan->kondisi_produk_array) ? ($pemeriksaan->kondisi_produk_array[$rowIndex] ?? null) : null);
-                                $kondisiProdukSuhu = (is_array($pemeriksaan->kondisi_produk_suhu_value_array) ? ($pemeriksaan->kondisi_produk_suhu_value_array[$rowIndex] ?? null) : null);
+                                    $idProduk = (is_array($pemeriksaan->id_produk_array) ? ($pemeriksaan->id_produk_array[$rowIndex] ?? null) : null);
+                                    $kategori = (is_array($pemeriksaan->kategori_code_array) ? ($pemeriksaan->kategori_code_array[$rowIndex] ?? null) : null);
+                                    $kodeProduksi = (is_array($pemeriksaan->kode_produksi_array) ? ($pemeriksaan->kode_produksi_array[$rowIndex] ?? null) : null);
+                                    $expireDate = (is_array($pemeriksaan->expire_date_array) ? ($pemeriksaan->expire_date_array[$rowIndex] ?? null) : null);
+                                    $jumlahDatang = (is_array($pemeriksaan->jumlah_datang_array) ? ($pemeriksaan->jumlah_datang_array[$rowIndex] ?? null) : null);
+                                    $jumlahSampling = (is_array($pemeriksaan->jumlah_sampling_array) ? ($pemeriksaan->jumlah_sampling_array[$rowIndex] ?? null) : null);
+                                    $negara = (is_array($pemeriksaan->negara_produsen_array) ? ($pemeriksaan->negara_produsen_array[$rowIndex] ?? null) : null);
+                                    $kondisiProduk = (is_array($pemeriksaan->kondisi_produk_array) ? ($pemeriksaan->kondisi_produk_array[$rowIndex] ?? null) : null);
+                                    $kondisiProdukSuhu = (is_array($pemeriksaan->kondisi_produk_suhu_value_array) ? ($pemeriksaan->kondisi_produk_suhu_value_array[$rowIndex] ?? null) : null);
 
-                                $suhuMobilType = (is_array($pemeriksaan->suhu_mobil_type_array) ? ($pemeriksaan->suhu_mobil_type_array[$rowIndex] ?? null) : null);
-                                $suhuMobilValue = (is_array($pemeriksaan->suhu_mobil_value_array) ? ($pemeriksaan->suhu_mobil_value_array[$rowIndex] ?? null) : null);
-                                $suhuProdukType = (is_array($pemeriksaan->suhu_produk_type_array) ? ($pemeriksaan->suhu_produk_type_array[$rowIndex] ?? null) : null);
-                                $suhuProdukValue = (is_array($pemeriksaan->suhu_produk_value_array) ? ($pemeriksaan->suhu_produk_value_array[$rowIndex] ?? null) : null);
+                                    $suhuMobilType = (is_array($pemeriksaan->suhu_mobil_type_array) ? ($pemeriksaan->suhu_mobil_type_array[$rowIndex] ?? null) : null);
+                                    $suhuMobilValue = (is_array($pemeriksaan->suhu_mobil_value_array) ? ($pemeriksaan->suhu_mobil_value_array[$rowIndex] ?? null) : null);
+                                    $suhuProdukType = (is_array($pemeriksaan->suhu_produk_type_array) ? ($pemeriksaan->suhu_produk_type_array[$rowIndex] ?? null) : null);
+                                    $suhuProdukValue = (is_array($pemeriksaan->suhu_produk_value_array) ? ($pemeriksaan->suhu_produk_value_array[$rowIndex] ?? null) : null);
 
-                                $kondisiKemasan = (is_array($pemeriksaan->kondisi_kemasan_array) ? ($pemeriksaan->kondisi_kemasan_array[$rowIndex] ?? null) : null);
-                                $kondisiWarna = (is_array($pemeriksaan->kondisi_warna_array) ? ($pemeriksaan->kondisi_warna_array[$rowIndex] ?? null) : null);
-                                $kondisiAroma = (is_array($pemeriksaan->kondisi_aroma_array) ? ($pemeriksaan->kondisi_aroma_array[$rowIndex] ?? null) : null);
-                                $logoHalal = (is_array($pemeriksaan->logo_halal_array) ? ($pemeriksaan->logo_halal_array[$rowIndex] ?? null) : null);
-                                $dokumenHalal = (is_array($pemeriksaan->dokumen_halal_array) ? ($pemeriksaan->dokumen_halal_array[$rowIndex] ?? null) : null);
-                                $coa = (is_array($pemeriksaan->coa_array) ? ($pemeriksaan->coa_array[$rowIndex] ?? null) : null);
-                                $statusBaris = (is_array($pemeriksaan->status_array) ? ($pemeriksaan->status_array[$rowIndex] ?? null) : null);
-                                $keterangan = (is_array($pemeriksaan->keterangan_array) ? ($pemeriksaan->keterangan_array[$rowIndex] ?? null) : null);
+                                    $kondisiKemasan = (is_array($pemeriksaan->kondisi_kemasan_array) ? ($pemeriksaan->kondisi_kemasan_array[$rowIndex] ?? null) : null);
+                                    $kondisiWarna = (is_array($pemeriksaan->kondisi_warna_array) ? ($pemeriksaan->kondisi_warna_array[$rowIndex] ?? null) : null);
+                                    $kondisiAroma = (is_array($pemeriksaan->kondisi_aroma_array) ? ($pemeriksaan->kondisi_aroma_array[$rowIndex] ?? null) : null);
+                                    $logoHalal = (is_array($pemeriksaan->logo_halal_array) ? ($pemeriksaan->logo_halal_array[$rowIndex] ?? null) : null);
+                                    $dokumenHalal = (is_array($pemeriksaan->dokumen_halal_array) ? ($pemeriksaan->dokumen_halal_array[$rowIndex] ?? null) : null);
+                                    $coa = (is_array($pemeriksaan->coa_array) ? ($pemeriksaan->coa_array[$rowIndex] ?? null) : null);
+                                    $statusBaris = (is_array($pemeriksaan->status_array) ? ($pemeriksaan->status_array[$rowIndex] ?? null) : null);
+                                    $keterangan = (is_array($pemeriksaan->keterangan_array) ? ($pemeriksaan->keterangan_array[$rowIndex] ?? null) : null);
 
-                                $kondisiMobilRaw = $pemeriksaan->kondisi_mobil;
-                                $kondisiMobil = is_array($kondisiMobilRaw) ? $kondisiMobilRaw : [];
+                                    $kondisiMobilRaw = $pemeriksaan->kondisi_mobil;
+                                    $kondisiMobil = is_array($kondisiMobilRaw) ? $kondisiMobilRaw : [];
 
-                                $produsenVal = (is_array($pemeriksaan->produsen_array) ? ($pemeriksaan->produsen_array[$rowIndex] ?? null) : null);
-                                $distributorVal = (is_array($pemeriksaan->distributor_array) ? ($pemeriksaan->distributor_array[$rowIndex] ?? null) : null);
-                                $produsenVal = $normalizeList($produsenVal);
-                                $distributorVal = $normalizeList($distributorVal);
+                                    $produsenVal = (is_array($pemeriksaan->produsen_array) ? ($pemeriksaan->produsen_array[$rowIndex] ?? null) : null);
+                                    $distributorVal = (is_array($pemeriksaan->distributor_array) ? ($pemeriksaan->distributor_array[$rowIndex] ?? null) : null);
+                                    $produsenVal = $normalizeList($produsenVal);
+                                    $distributorVal = $normalizeList($distributorVal);
+                                @endphp
 
-                                $isRight = ($loop->iteration % 2 === 0);
-                            @endphp
+                                <td class="data-column" data-numbered="true">
+                                    <div class="column-header">PEMERIKSAAN #{{ $columnNumber }}</div>
 
-                            <div class="card {{ $isRight ? 'card-right' : '' }}">
-                                <div class="column-header">PEMERIKSAAN #{{ $columnNumber }}</div>
-
-                                <div class="section-title">Produk</div>
-                                <div class="field-row">
-                                    <span class="field-label">Kategori:</span>
-                                    <span class="field-value">{{ $kategori ?? '-' }}</span>
-                                </div>
-                                <div class="field-row">
-                                    <span class="field-label">Nama:</span>
-                                    <span class="field-value">{{ $idProduk ? ($produkMap[$idProduk] ?? 'N/A') : '-' }}</span>
-                                </div>
-                                <div class="field-row">
-                                    <span class="field-label">Negara:</span>
-                                    <span class="field-value">{{ $negara ?? '-' }}</span>
-                                </div>
-                                <div class="field-row">
-                                    <span class="field-label">Produsen:</span>
-                                    <span class="field-value">{{ $produsenVal ?: '-' }}</span>
-                                </div>
-                                <div class="field-row">
-                                    <span class="field-label">Distributor:</span>
-                                    <span class="field-value">{{ $distributorVal ?: '-' }}</span>
-                                </div>
-
-                                <div class="section-title">Batch</div>
-                                <div class="field-row">
-                                    <span class="field-label">Kode Produksi:</span>
-                                    <span class="field-value">{{ $kodeProduksi ?? '-' }}</span>
-                                </div>
-                                <div class="field-row">
-                                    <span class="field-label">Exp:</span>
-                                    <span class="field-value">{{ $expireDate ? ($formatDate($expireDate) ?? '-') : '-' }}</span>
-                                </div>
-                                <div class="field-row">
-                                    <span class="field-label">Jumlah Datang:</span>
-                                    <span class="field-value">{{ $jumlahDatang ?? '-' }}</span>
-                                </div>
-                                <div class="field-row">
-                                    <span class="field-label">Jumlah Sampling:</span>
-                                    <span class="field-value">{{ $jumlahSampling ?? '-' }}</span>
-                                </div>
-                                
-                                <div class="section-title">Suhu</div>
-                                <div class="field-row">
-                                    <span class="field-label">Kondisi Produk:</span>
-                                    <span class="field-value">{{ $kondisiProduk ? ($kondisiProduk . (($kondisiProdukSuhu !== null && $kondisiProdukSuhu !== '') ? (' ' . $formatTemp($kondisiProdukSuhu)) : '')) : '-' }}</span>
-                                </div>
-                                <div class="field-row">
-                                    <span class="field-label">Suhu Mobil:</span>
-                                    <span class="field-value">{{ $suhuMobilType ? ($suhuMobilType . ' ' . ($formatTemp($suhuMobilValue) ?? '')) : '-' }}</span>
-                                </div>
-                                <div class="field-row">
-                                    <span class="field-label">Suhu Produk:</span>
-                                    <span class="field-value">{{ $suhuProdukType ? ($suhuProdukType . ' ' . ($formatTemp($suhuProdukValue) ?? '')) : '-' }}</span>
-                                </div>
-
-                                <div class="section-title">Kondisi Mobil</div>
-                                @foreach($kondisiMobilLabels as $key => $label)
-                                    @php $v = data_get($kondisiMobil, $key); @endphp
+                                    <div class="section-title">Produk</div>
                                     <div class="field-row">
-                                        <span class="field-label">{{ $label }}:</span>
-                                        <span class="field-value">{{ $formatBool($v) }}</span>
+                                        <span class="field-label">Kategori:</span>
+                                        <span class="field-value">{{ $kategori ?? '-' }}</span>
                                     </div>
-                                @endforeach
+                                    <div class="field-row">
+                                        <span class="field-label">Nama:</span>
+                                        <span class="field-value">{{ $idProduk ? ($produkMap[$idProduk] ?? 'N/A') : '-' }}</span>
+                                    </div>
+                                    <div class="field-row">
+                                        <span class="field-label">Negara:</span>
+                                        <span class="field-value">{{ $negara ?? '-' }}</span>
+                                    </div>
+                                    <div class="field-row">
+                                        <span class="field-label">Produsen:</span>
+                                        <span class="field-value">{{ $produsenVal ?: '-' }}</span>
+                                    </div>
+                                    <div class="field-row">
+                                        <span class="field-label">Distributor:</span>
+                                        <span class="field-value">{{ $distributorVal ?: '-' }}</span>
+                                    </div>
 
-                                <div class="section-title">Pemeriksaan</div>
-                                <div class="field-row">
-                                    <span class="field-label">Kemasan:</span>
-                                    <span class="field-value">{{ $formatBool($kondisiKemasan) }}</span>
-                                </div>
-                                <div class="field-row">
-                                    <span class="field-label">Warna:</span>
-                                    <span class="field-value">{{ $formatBool($kondisiWarna) }}</span>
-                                </div>
-                                <div class="field-row">
-                                    <span class="field-label">Aroma:</span>
-                                    <span class="field-value">{{ $formatBool($kondisiAroma) }}</span>
-                                </div>
+                                    <div class="section-title">Batch</div>
+                                    <div class="field-row">
+                                        <span class="field-label">Kode Produksi:</span>
+                                        <span class="field-value">{{ $kodeProduksi ?? '-' }}</span>
+                                    </div>
+                                    <div class="field-row">
+                                        <span class="field-label">Exp:</span>
+                                        <span class="field-value">{{ $expireDate ? ($formatDate($expireDate) ?? '-') : '-' }}</span>
+                                    </div>
+                                    <div class="field-row">
+                                        <span class="field-label">Jumlah Datang:</span>
+                                        <span class="field-value">{{ $jumlahDatang ?? '-' }}</span>
+                                    </div>
+                                    <div class="field-row">
+                                        <span class="field-label">Jumlah Sampling:</span>
+                                        <span class="field-value">{{ $jumlahSampling ?? '-' }}</span>
+                                    </div>
+                                    
+                                    <div class="section-title">Suhu</div>
+                                    <div class="field-row">
+                                        <span class="field-label">Kondisi Produk:</span>
+                                        <span class="field-value">{{ $kondisiProduk ? ($kondisiProduk . (($kondisiProdukSuhu !== null && $kondisiProdukSuhu !== '') ? (' ' . $formatTemp($kondisiProdukSuhu)) : '')) : '-' }}</span>
+                                    </div>
+                                    <div class="field-row">
+                                        <span class="field-label">Suhu Mobil:</span>
+                                        <span class="field-value">{{ $suhuMobilType ? ($suhuMobilType . ' ' . ($formatTemp($suhuMobilValue) ?? '')) : '-' }}</span>
+                                    </div>
+                                    <div class="field-row">
+                                        <span class="field-label">Suhu Produk:</span>
+                                        <span class="field-value">{{ $suhuProdukType ? ($suhuProdukType . ' ' . ($formatTemp($suhuProdukValue) ?? '')) : '-' }}</span>
+                                    </div>
 
-                                <div class="section-title">Dokumen</div>
-                                <div class="field-row">
-                                    <span class="field-label">Logo Halal:</span>
-                                    <span class="field-value">{{ $formatBool($logoHalal) }}</span>
-                                </div>
-                                <div class="field-row">
-                                    <span class="field-label">Dokumen Halal:</span>
-                                    <span class="field-value">{{ $formatBool($dokumenHalal) }}</span>
-                                </div>
-                                <div class="field-row">
-                                    <span class="field-label">COA:</span>
-                                    <span class="field-value">{{ $formatBool($coa) }}</span>
-                                </div>
+                                    <div class="section-title">Kondisi Mobil</div>
+                                    @foreach($kondisiMobilLabels as $key => $label)
+                                        @php $v = data_get($kondisiMobil, $key); @endphp
+                                        <div class="field-row">
+                                            <span class="field-label">{{ $label }}:</span>
+                                            <span class="field-value">{{ $formatBool($v) }}</span>
+                                        </div>
+                                    @endforeach
 
-                                <div class="section-title">Status</div>
-                                <div class="field-row">
-                                    <span class="field-label">Status:</span>
-                                    <span class="field-value">{{ $statusBaris ?? '-' }}</span>
-                                </div>
-                                <div class="field-row">
-                                    <span class="field-label">Ket:</span>
-                                    <span class="field-value">{{ $keterangan ?? '-' }}</span>
-                                </div>
-                            </div>
+                                    <div class="section-title">Pemeriksaan</div>
+                                    <div class="field-row">
+                                        <span class="field-label">Kemasan:</span>
+                                        <span class="field-value">{{ $formatBool($kondisiKemasan) }}</span>
+                                    </div>
+                                    <div class="field-row">
+                                        <span class="field-label">Warna:</span>
+                                        <span class="field-value">{{ $formatBool($kondisiWarna) }}</span>
+                                    </div>
+                                    <div class="field-row">
+                                        <span class="field-label">Aroma:</span>
+                                        <span class="field-value">{{ $formatBool($kondisiAroma) }}</span>
+                                    </div>
 
-                            @if($loop->iteration % 2 === 0)
-                                <div class="clear"></div>
-                            @endif
-                        @endforeach
+                                    <div class="section-title">Dokumen</div>
+                                    <div class="field-row">
+                                        <span class="field-label">Logo Halal:</span>
+                                        <span class="field-value">{{ $formatBool($logoHalal) }}</span>
+                                    </div>
+                                    <div class="field-row">
+                                        <span class="field-label">Dokumen Halal:</span>
+                                        <span class="field-value">{{ $formatBool($dokumenHalal) }}</span>
+                                    </div>
+                                    <div class="field-row">
+                                        <span class="field-label">COA:</span>
+                                        <span class="field-value">{{ $formatBool($coa) }}</span>
+                                    </div>
 
-                        <div class="clear"></div>
-                    </div>
+                                    <div class="section-title">Status</div>
+                                    <div class="field-row">
+                                        <span class="field-label">Status:</span>
+                                        <span class="field-value">{{ $statusBaris ?? '-' }}</span>
+                                    </div>
+                                    <div class="field-row">
+                                        <span class="field-label">Ket:</span>
+                                        <span class="field-value">{{ $keterangan ?? '-' }}</span>
+                                    </div>
+                                </td>
+                            @endforeach
+
+                            @for($i = $pageRecords->count(); $i < $columnsPerPage; $i++)
+                                <td class="data-column empty-col"></td>
+                            @endfor
+                        </tr>
+                    </table>
+                </div>
+                <div style="text-align: right; padding-right: 10px; font-style: italic; font-size: 9px; color: #666; margin-top: 5px;">
+                    QW 12/00
                 </div>
 
                 <div class="signature-section">
                     <table class="signature-table">
                         <tr>
                             <td class="signature-cell">
-                                <div class="signature-header-item">Dibuat Oleh (QC)</div>
+                                <div class="signature-header-item">Dibuat Oleh</div>
                                 <div class="signature-space">
                                     @if($qcUser)
                                         @php
@@ -665,7 +667,7 @@
                                 <div class="signature-name">{{ $qcUser ?: '-' }}</div>
                             </td>
                             <td class="signature-cell">
-                                <div class="signature-header-item">Disetujui Oleh (Tim Warehouse)</div>
+                                <div class="signature-header-item">Diketahui Oleh</div>
                                 <div class="signature-space">
                                     @if($produksiUser)
                                         @php
@@ -681,7 +683,7 @@
                                 <div class="signature-name">{{ $produksiUser ?: '-' }}</div>
                             </td>
                             <td class="signature-cell">
-                                <div class="signature-header-item">Diverifikasi Oleh (SPV QC)</div>
+                                <div class="signature-header-item">Disetujui Oleh</div>
                                 <div class="signature-space">
                                     @if($spvQcUser)
                                         @php
@@ -698,10 +700,6 @@
                             </td>
                         </tr>
                     </table>
-                </div>
-
-                <div style="text-align: right; padding-right: 10px; font-style: italic; font-size: 9px; color: #666; margin-top: 5px;">
-                    QW 12/00
                 </div>
 
                 <!-- <div class="footer">

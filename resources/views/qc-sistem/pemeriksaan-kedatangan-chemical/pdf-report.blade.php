@@ -150,28 +150,31 @@
             width: 100%;
             border-collapse: collapse;
             margin-bottom: 10px;
+            page-break-inside: avoid;
         }
         
         .data-table tr {
             border: 1px solid #dee2e6;
+            page-break-inside: avoid;
         }
         
         .data-column {
             width: 25%;
             border: 1px solid #dee2e6;
-            padding: 10px;
+            padding: 8px;
             vertical-align: top;
-            font-size: 8px;
+            font-size: 7.5px;
             background: #fff;
+            page-break-inside: avoid;
         }
         
         .column-header {
             font-weight: bold;
-            font-size: 9px;
+            font-size: 7.5px;
             color: #8b1428;
-            background: linear-gradient(135deg, #8b1428 0%, #5c0e1a 100%);
-            padding: 8px 10px;
-            margin: -10px -10px 10px -10px;
+            background: #fff;
+            padding: 5px 7px;
+            margin: -8px -8px 6px -8px;
             text-align: center;
             letter-spacing: 0.5px;
             text-transform: uppercase;
@@ -417,31 +420,32 @@
                 }
             @endphp
             
-            <div class="header">
-                <div class="header-left">
-                    <div class="logo-company">
-                        <div class="header-logo">
-                            <img src="{{ public_path('dist/images/logo/cpi-logo.png') }}" alt="Logo CPI">
-                        </div>
-                        <div class="header-company">
-                            <h2>PT. CHAROEN POKPHAND INDONESIA</h2>
-                            <p>FOOD DIVISION {{ strtoupper($plantName) }}</p>
-                            <p>{{ strtoupper($plantName) }} - INDONESIA</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="header-right">
-                    <div class="header-title">
-                        <h1>PEMERIKSAAN CHEMICAL</h1>
-                    </div>
-                </div>
-            </div>
-
             @foreach($chunks as $pageIndex => $pageRecords)
                 @php
                     $firstColumn = $pageRecords->first();
                     $firstRecord = $firstColumn ? $firstColumn['record'] : null;
+                    $plantName = $firstRecord && $firstRecord->user && $firstRecord->user->plant ? $firstRecord->user->plant->plant : 'MEDAN';
                 @endphp
+
+                <div class="header">
+                    <div class="header-left">
+                        <div class="logo-company">
+                            <div class="header-logo">
+                                <img src="{{ public_path('dist/images/logo/cpi-logo.png') }}" alt="Logo CPI">
+                            </div>
+                            <div class="header-company">
+                                <h2>PT. CHAROEN POKPHAND INDONESIA</h2>
+                                <p>FOOD DIVISION {{ strtoupper($plantName) }}</p>
+                                <p>{{ strtoupper($plantName) }} - INDONESIA</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="header-right">
+                        <div class="header-title">
+                            <h1>PEMERIKSAAN CHEMICAL</h1>
+                        </div>
+                    </div>
+                </div>
 
                 {{-- SUBHEADER (Setiap halaman) --}}
                 <div class="subheader">
@@ -558,7 +562,7 @@
                                             @endif
                                             @if(isset($chemicalDetail['kode_produksi']))
                                                 <div class="field-row">
-                                                    <span class="field-label">Kode:</span>
+                                                    <span class="field-label">Kode Produksi:</span>
                                                     <span class="field-value">{{ $chemicalDetail['kode_produksi'] ?? '-' }}</span>
                                                 </div>
                                             @endif
@@ -570,13 +574,13 @@
                                             @endif
                                             @if(isset($chemicalDetail['jumlah_datang']))
                                                 <div class="field-row">
-                                                    <span class="field-label">Jumlah:</span>
+                                                    <span class="field-label">Jumlah Datang:</span>
                                                     <span class="field-value">{{ $chemicalDetail['jumlah_datang'] ?? '-' }}</span>
                                                 </div>
                                             @endif
                                             @if(isset($chemicalDetail['jumlah_sampling']))
                                                 <div class="field-row">
-                                                    <span class="field-label">Samp:</span>
+                                                    <span class="field-label">Jumlah Sampling:</span>
                                                     <span class="field-value">{{ $chemicalDetail['jumlah_sampling'] ?? '-' }}</span>
                                                 </div>
                                             @endif
@@ -648,6 +652,9 @@
                             @endforeach
                         </tr>
                     </table>
+                    <div style="text-align: right; padding-right: 10px; font-style: italic; font-size: 9px; color: #666; margin-top: 5px;">
+                        QW 03/00
+                    </div>
                 </div>
 
                 {{-- SIGNATURE (Setiap halaman) --}}
@@ -679,7 +686,7 @@
                                 <div class="signature-name">{{ $firstRecord && $firstRecord->qcVerifier ? $firstRecord->qcVerifier->name : '-' }}</div>
                             </td>
                             <td class="signature-cell">
-                                <div class="signature-header-item">Diperiksa Oleh:</div>
+                                <div class="signature-header-item">Diketahui Oleh:</div>
                                 <div class="signature-space">
                                     @if($firstRecord && $firstRecord->produksiVerifier)
                                         @php
@@ -695,7 +702,7 @@
                                 <div class="signature-name">{{ $firstRecord && $firstRecord->produksiVerifier ? $firstRecord->produksiVerifier->name : '-' }}</div>
                             </td>
                             <td class="signature-cell">
-                                <div class="signature-header-item">Diketahui Oleh:</div>
+                                <div class="signature-header-item">Disetujui Oleh:</div>
                                 <div class="signature-space">
                                     @if($firstRecord && $firstRecord->spvVerifier)
                                         @php
@@ -712,10 +719,6 @@
                             </td>
                         </tr>
                     </table>
-                </div>
-
-                <div style="text-align: right; padding-right: 10px; font-style: italic; font-size: 9px; color: #666; margin-top: 5px;">
-                    QW 03/00
                 </div>
 
                 {{-- PAGE BREAK (Hanya jika bukan halaman terakhir) --}}

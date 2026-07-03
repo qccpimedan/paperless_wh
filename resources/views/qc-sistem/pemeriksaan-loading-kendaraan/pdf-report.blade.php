@@ -363,20 +363,6 @@
                                 <span class="subheader-value">{{ $firstRecord->stdPrecooling->nama_std_precooling ?? '-' }}</span>
                             </td>
                         </tr>
-                        <tr>
-                            <td colspan="5">
-                                <span class="subheader-label">Segel/Gembok:</span>
-                                <span class="subheader-value">
-                                    @if(!$firstRecord || $firstRecord->segel_gembok === null)
-                                        -
-                                    @elseif($firstRecord->segel_gembok)
-                                        Segel{{ $firstRecord->no_segel ? ' (No: ' . $firstRecord->no_segel . ')' : '' }}
-                                    @else
-                                        Gembok
-                                    @endif
-                                </span>
-                            </td>
-                        </tr>
                     </table>
                 </div>
 
@@ -449,7 +435,7 @@
                                         </span>
                                     </div>
                                     <div class="field-row">
-                                        <span class="field-label">Ket:</span>
+                                        <span class="field-label">Keterangan:</span>
                                         <span class="field-value">{{ $pemeriksaan->keterangan ?? '-' }}</span>
                                     </div>
                                 </td>
@@ -462,7 +448,7 @@
                     <table class="signature-table">
                         <tr>
                             <td class="signature-cell">
-                                <div class="signature-header-item">Dibuat Oleh (QC)</div>
+                                <div class="signature-header-item">Dibuat Oleh</div>
                                 <div class="signature-space">
                                     @if($pageRecords->first() && $pageRecords->first()->qcVerifier)
                                         @php
@@ -478,7 +464,7 @@
                                 <div class="signature-name">{{ $pageRecords->first()->qcVerifier->name ?? '-' }}</div>
                             </td>
                             <td class="signature-cell">
-                                <div class="signature-header-item">Disetujui Oleh (Tim Warehouse)</div>
+                                <div class="signature-header-item">Diketahui Oleh</div>
                                 <div class="signature-space">
                                     @if($pageRecords->first() && $pageRecords->first()->produksiVerifier)
                                         @php
@@ -494,7 +480,7 @@
                                 <div class="signature-name">{{ $pageRecords->first()->produksiVerifier->name ?? '-' }}</div>
                             </td>
                             <td class="signature-cell">
-                                <div class="signature-header-item">Diverifikasi Oleh (SPV QC)</div>
+                                <div class="signature-header-item">Disetujui Oleh</div>
                                 <div class="signature-space">
                                     @if($pageRecords->first() && $pageRecords->first()->spvVerifier)
                                         @php
