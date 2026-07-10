@@ -112,7 +112,7 @@
                             <a href="{{ route('input-areas.index') }}">Input Area</a>
                         </li>
                         <li class="submenu-item {{ request()->routeIs('barangs.*') ? 'active' : '' }}">
-                            <a href="{{ route('barangs.index')}}">Input Barang</a>
+                            <a href="{{ route('barangs.index')}}">Input Barang Mudah Pecah</a>
                         </li>
                         <li class="submenu-item {{ request()->routeIs('customers.*') ? 'active' : '' }}">
                             <a href="{{ route('customers.index')}}">Input Customer</a>

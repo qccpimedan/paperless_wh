@@ -148,25 +148,27 @@ class PemeriksaanLoadingProdukController extends Controller
             $supirs = Supir::with(['user.plant'])->get();
             $produks = Produk::with(['user.plant'])->get();
         } else {
-            // Filter berdasarkan plant user yang login
-            $shifts = Shift::whereHas('user', function ($query) use ($user) {
-                $query->where('id_plant', $user->getEffectivePlantId());
+            // Filter berdasarkan id_plant asli user (bukan effective plant)
+            $plantId = $user->id_plant;
+            
+            $shifts = Shift::whereHas('user', function ($query) use ($plantId) {
+                $query->where('id_plant', $plantId);
             })->with(['user.plant'])->get();
             
-            $tujuanPengirimans = TujuanPengiriman::whereHas('user', function ($query) use ($user) {
-                $query->where('id_plant', $user->getEffectivePlantId());
+            $tujuanPengirimans = TujuanPengiriman::whereHas('user', function ($query) use ($plantId) {
+                $query->where('id_plant', $plantId);
             })->with(['user.plant', 'customer'])->get();
             
-            $kendaraans = JenisKendaraan::whereHas('user', function ($query) use ($user) {
-                $query->where('id_plant', $user->getEffectivePlantId());
+            $kendaraans = JenisKendaraan::whereHas('user', function ($query) use ($plantId) {
+                $query->where('id_plant', $plantId);
             })->with(['user.plant'])->get();
             
-            $supirs = Supir::whereHas('user', function ($query) use ($user) {
-                $query->where('id_plant', $user->getEffectivePlantId());
+            $supirs = Supir::whereHas('user', function ($query) use ($plantId) {
+                $query->where('id_plant', $plantId);
             })->with(['user.plant'])->get();
             
-            $produks = Produk::whereHas('user', function ($query) use ($user) {
-                $query->where('id_plant', $user->getEffectivePlantId());
+            $produks = Produk::whereHas('user', function ($query) use ($plantId) {
+                $query->where('id_plant', $plantId);
             })->with(['user.plant'])->get();
         }
 
@@ -411,25 +413,27 @@ class PemeriksaanLoadingProdukController extends Controller
             $supirs = Supir::with(['user.plant'])->get();
             $produks = Produk::with(['user.plant'])->get();
         } else {
-            // Filter berdasarkan plant user yang login
-            $shifts = Shift::whereHas('user', function ($query) use ($user) {
-                $query->where('id_plant', $user->getEffectivePlantId());
+            // Filter berdasarkan id_plant asli user (bukan effective plant)
+            $plantId = $user->id_plant;
+            
+            $shifts = Shift::whereHas('user', function ($query) use ($plantId) {
+                $query->where('id_plant', $plantId);
             })->with(['user.plant'])->get();
             
-            $tujuanPengirimans = TujuanPengiriman::whereHas('user', function ($query) use ($user) {
-                $query->where('id_plant', $user->getEffectivePlantId());
+            $tujuanPengirimans = TujuanPengiriman::whereHas('user', function ($query) use ($plantId) {
+                $query->where('id_plant', $plantId);
             })->with(['user.plant', 'customer'])->get();
             
-            $kendaraans = JenisKendaraan::whereHas('user', function ($query) use ($user) {
-                $query->where('id_plant', $user->getEffectivePlantId());
+            $kendaraans = JenisKendaraan::whereHas('user', function ($query) use ($plantId) {
+                $query->where('id_plant', $plantId);
             })->with(['user.plant'])->get();
             
-            $supirs = Supir::whereHas('user', function ($query) use ($user) {
-                $query->where('id_plant', $user->getEffectivePlantId());
+            $supirs = Supir::whereHas('user', function ($query) use ($plantId) {
+                $query->where('id_plant', $plantId);
             })->with(['user.plant'])->get();
             
-            $produks = Produk::whereHas('user', function ($query) use ($user) {
-                $query->where('id_plant', $user->getEffectivePlantId());
+            $produks = Produk::whereHas('user', function ($query) use ($plantId) {
+                $query->where('id_plant', $plantId);
             })->with(['user.plant'])->get();
         }
 
