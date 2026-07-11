@@ -85,10 +85,30 @@
                                                     <label for="id_tujuan_pengiriman">Customer & Tujuan Pengiriman</label>
                                                     <select id="id_tujuan_pengiriman" class="form-select @error('id_tujuan_pengiriman') is-invalid @enderror" name="id_tujuan_pengiriman">
                                                         <option value="">-- Pilih Tujuan --</option>
-                                                        <option value="other" {{ old('id_tujuan_pengiriman') == 'other' ? 'selected' : '' }}>-- Lainnya (Input Manual) --</option>
+                                                        <option value="other" {{ old('id_tujuan_pengiriman') == 'other' ? 'selected' : '' }}>✏️ Lainnya (Input Manual)</option>
                                                         @foreach($tujuanPengirimans as $tujuan)
-                                                            <option value="{{ $tujuan->id }}" {{ old('id_tujuan_pengiriman') == $tujuan->id ? 'selected' : '' }}>{{ $tujuan->customer ? $tujuan->customer->nama_cust . ' - ' . $tujuan->nama_tujuan : $tujuan->nama_tujuan }}</option>
+                                                            @php
+                                                                $namaCustomer = $tujuan->customer->nama_cust ?? null;
+                                                                $namaTujuan   = $tujuan->nama_tujuan ?? null;
+                                                                if ($namaCustomer && $namaTujuan && $namaTujuan !== '-') {
+                                                                    $label = $namaCustomer . ' - ' . $namaTujuan;
+                                                                } elseif ($namaCustomer) {
+                                                                    $label = $namaCustomer;
+                                                                } elseif ($namaTujuan && $namaTujuan !== '-') {
+                                                                    $label = $namaTujuan;
+                                                                } else {
+                                                                    $label = 'Tujuan #' . $tujuan->id;
+                                                                }
+                                                            @endphp
+                                                            <option value="{{ $tujuan->id }}" {{ old('id_tujuan_pengiriman') == $tujuan->id ? 'selected' : '' }}>{{ $label }}</option>
                                                         @endforeach
+                                                        @if(!empty($customersWithoutTujuan) && $customersWithoutTujuan->count() > 0)
+                                                            @foreach($customersWithoutTujuan as $customer)
+                                                                <option value="customer_{{ $customer->id }}" {{ old('id_tujuan_pengiriman') == 'customer_'.$customer->id ? 'selected' : '' }}>
+                                                                    {{ $customer->nama_cust }} (belum ada tujuan)
+                                                                </option>
+                                                            @endforeach
+                                                        @endif
                                                     </select>
                                                     @error('id_tujuan_pengiriman')
                                                         <div class="invalid-feedback">{{ $message }}</div>

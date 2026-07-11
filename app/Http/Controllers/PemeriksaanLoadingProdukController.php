@@ -147,6 +147,9 @@ class PemeriksaanLoadingProdukController extends Controller
             $kendaraans = JenisKendaraan::with(['user.plant'])->get();
             $supirs = Supir::with(['user.plant'])->get();
             $produks = Produk::with(['user.plant'])->get();
+
+            // Ambil semua customer
+            $allCustomers = Customer::orderBy('nama_cust')->get();
         } else {
             // Filter berdasarkan id_plant asli user (bukan effective plant)
             $plantId = $user->id_plant;
@@ -170,6 +173,11 @@ class PemeriksaanLoadingProdukController extends Controller
             $produks = Produk::whereHas('user', function ($query) use ($plantId) {
                 $query->where('id_plant', $plantId);
             })->with(['user.plant'])->get();
+
+            // Ambil semua customer milik plant yang sama
+            $allCustomers = Customer::whereHas('user', function ($query) use ($plantId) {
+                $query->where('id_plant', $plantId);
+            })->orderBy('nama_cust')->get();
         }
 
         if ($produks->isEmpty()) {
@@ -207,6 +215,20 @@ class PemeriksaanLoadingProdukController extends Controller
             ->pluck('kategori_code', 'id')
             ->all();
 
+        // Buat dropdown list gabungan:
+        // 1. TujuanPengiriman yang sudah ada (dengan nama customer & tujuan)
+        // 2. Customer yang BELUM punya TujuanPengiriman di plant ini
+        // Format: [['type' => 'tujuan', 'id' => ..., 'label' => ...], ['type' => 'customer', 'id' => ..., 'label' => ...]]
+        $customerIdsWithTujuan = $tujuanPengirimans
+            ->pluck('id_customer')
+            ->filter()
+            ->unique()
+            ->values();
+
+        $customersWithoutTujuan = $allCustomers->filter(function ($c) use ($customerIdsWithTujuan) {
+            return !$customerIdsWithTujuan->contains($c->id);
+        });
+
         return view('qc-sistem.pemeriksaan-loading-produk.create', compact(
             'shifts', 
             'tujuanPengirimans', 
@@ -215,7 +237,8 @@ class PemeriksaanLoadingProdukController extends Controller
             'produks',
             'produkKategoriOptions',
             'produkByKategori',
-            'produkKategoriById'
+            'produkKategoriById',
+            'customersWithoutTujuan'
         ));
     }
 
@@ -276,14 +299,14 @@ class PemeriksaanLoadingProdukController extends Controller
         if ($request->id_kendaraan === 'other') {
             // Jika input manual diisi
             if ($request->jenis_kendaraan_manual && $request->no_kendaraan_manual) {
-                // Buat record baru di tabel master
-                $kendaraan = JenisKendaraan::create([
-                    'jenis_kendaraan' => $request->jenis_kendaraan_manual,
-                    'no_kendaraan' => $request->no_kendaraan_manual,
-                    'id_user' => Auth::id(),
-                ]);
-                
-                // Gunakan ID dari record baru
+                // firstOrCreate: cek no_kendaraan dulu, jika sudah ada gunakan yang lama
+                $kendaraan = JenisKendaraan::firstOrCreate(
+                    ['no_kendaraan' => $request->no_kendaraan_manual],
+                    [
+                        'jenis_kendaraan' => $request->jenis_kendaraan_manual,
+                        'id_user' => Auth::id(),
+                    ]
+                );
                 $validated['id_kendaraan'] = $kendaraan->id;
             } else {
                 // Jika input manual tidak diisi, set id_kendaraan ke null
@@ -293,17 +316,27 @@ class PemeriksaanLoadingProdukController extends Controller
 
         if ($request->id_tujuan_pengiriman === 'other') {
             if ($request->nama_customer_manual && $request->nama_tujuan_manual) {
-                $customer = Customer::create([
-                    'nama_cust' => $request->nama_customer_manual,
-                    'id_user' => Auth::id(),
-                ]);
-
-                $tujuan = TujuanPengiriman::create([
-                    'id_user' => Auth::id(),
-                    'id_customer' => $customer->id,
-                    'nama_tujuan' => $request->nama_tujuan_manual,
-                ]);
-
+                // firstOrCreate: tidak buat dobel jika nama sudah ada
+                $customer = Customer::firstOrCreate(
+                    ['nama_cust' => $request->nama_customer_manual, 'id_user' => Auth::id()]
+                );
+                $tujuan = TujuanPengiriman::firstOrCreate(
+                    ['id_customer' => $customer->id, 'nama_tujuan' => $request->nama_tujuan_manual],
+                    ['id_user' => Auth::id()]
+                );
+                $validated['id_tujuan_pengiriman'] = $tujuan->id;
+            } else {
+                $validated['id_tujuan_pengiriman'] = null;
+            }
+        } elseif (is_string($request->id_tujuan_pengiriman) && str_starts_with($request->id_tujuan_pengiriman, 'customer_')) {
+            // User memilih customer yang belum punya tujuan pengiriman
+            $customerId = (int) str_replace('customer_', '', $request->id_tujuan_pengiriman);
+            $customerExists = Customer::find($customerId);
+            if ($customerExists) {
+                $tujuan = TujuanPengiriman::firstOrCreate(
+                    ['id_customer' => $customerId, 'nama_tujuan' => '-'],
+                    ['id_user' => Auth::id()]
+                );
                 $validated['id_tujuan_pengiriman'] = $tujuan->id;
             } else {
                 $validated['id_tujuan_pengiriman'] = null;
@@ -312,11 +345,10 @@ class PemeriksaanLoadingProdukController extends Controller
 
         if ($request->id_supir === 'other') {
             if ($request->nama_supir_manual) {
-                $supir = Supir::create([
-                    'nama_supir' => $request->nama_supir_manual,
-                    'id_user' => Auth::id(),
-                ]);
-
+                // firstOrCreate: tidak buat dobel jika nama supir sudah ada
+                $supir = Supir::firstOrCreate(
+                    ['nama_supir' => $request->nama_supir_manual, 'id_user' => Auth::id()]
+                );
                 $validated['id_supir'] = $supir->id;
             } else {
                 $validated['id_supir'] = null;
@@ -530,14 +562,14 @@ class PemeriksaanLoadingProdukController extends Controller
         if ($request->id_kendaraan === 'other') {
             // Jika input manual diisi
             if ($request->jenis_kendaraan_manual && $request->no_kendaraan_manual) {
-                // Buat record baru di tabel master
-                $kendaraan = JenisKendaraan::create([
-                    'jenis_kendaraan' => $request->jenis_kendaraan_manual,
-                    'no_kendaraan' => $request->no_kendaraan_manual,
-                    'id_user' => Auth::id(),
-                ]);
-                
-                // Gunakan ID dari record baru
+                // firstOrCreate: cek no_kendaraan dulu, jika sudah ada gunakan yang lama
+                $kendaraan = JenisKendaraan::firstOrCreate(
+                    ['no_kendaraan' => $request->no_kendaraan_manual],
+                    [
+                        'jenis_kendaraan' => $request->jenis_kendaraan_manual,
+                        'id_user' => Auth::id(),
+                    ]
+                );
                 $validated['id_kendaraan'] = $kendaraan->id;
             } else {
                 // Jika input manual tidak diisi, set id_kendaraan ke null
@@ -547,16 +579,15 @@ class PemeriksaanLoadingProdukController extends Controller
 
         if ($request->id_tujuan_pengiriman === 'other') {
             if ($request->nama_customer_manual && $request->nama_tujuan_manual) {
-                $customer = Customer::create([
-                    'nama_cust' => $request->nama_customer_manual,
-                    'id_user' => Auth::id(),
-                ]);
+                // Gunakan firstOrCreate agar tidak ada data dobel jika nama sudah ada
+                $customer = Customer::firstOrCreate(
+                    ['nama_cust' => $request->nama_customer_manual, 'id_user' => Auth::id()]
+                );
 
-                $tujuan = TujuanPengiriman::create([
-                    'id_user' => Auth::id(),
-                    'id_customer' => $customer->id,
-                    'nama_tujuan' => $request->nama_tujuan_manual,
-                ]);
+                $tujuan = TujuanPengiriman::firstOrCreate(
+                    ['id_customer' => $customer->id, 'nama_tujuan' => $request->nama_tujuan_manual],
+                    ['id_user' => Auth::id()]
+                );
 
                 $validated['id_tujuan_pengiriman'] = $tujuan->id;
             } else {
@@ -566,11 +597,10 @@ class PemeriksaanLoadingProdukController extends Controller
 
         if ($request->id_supir === 'other') {
             if ($request->nama_supir_manual) {
-                $supir = Supir::create([
-                    'nama_supir' => $request->nama_supir_manual,
-                    'id_user' => Auth::id(),
-                ]);
-
+                // firstOrCreate: tidak buat dobel jika nama supir sudah ada
+                $supir = Supir::firstOrCreate(
+                    ['nama_supir' => $request->nama_supir_manual, 'id_user' => Auth::id()]
+                );
                 $validated['id_supir'] = $supir->id;
             } else {
                 $validated['id_supir'] = null;
