@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 namespace App\Http\Controllers;
 
@@ -146,21 +146,20 @@ class PemeriksaanLoadingKendaraanController extends Controller
 
         $idKendaraan = $request->id_kendaraan;
         if ($idKendaraan === 'other') {
-            $kendaraan = JenisKendaraan::create([
-                'jenis_kendaraan' => $request->jenis_kendaraan_manual,
-                'no_kendaraan' => $request->no_kendaraan_manual,
-                'id_user' => Auth::id(),
-            ]);
+            $kendaraan = JenisKendaraan::firstOrCreate(
+                ['no_kendaraan' => $request->no_kendaraan_manual],
+                ['jenis_kendaraan' => $request->jenis_kendaraan_manual, 'id_user' => Auth::id()]
+            );
             $idKendaraan = $kendaraan->id;
         }
 
         // Handle tujuan pengiriman manual
         $idTujuanPengiriman = $request->id_tujuan_pengiriman;
         if ($idTujuanPengiriman === 'lainnya') {
-            $tujuanPengiriman = TujuanPengiriman::create([
-                'nama_tujuan' => $request->nama_tujuan_manual,
-                'id_user' => Auth::id(),
-            ]);
+            $tujuanPengiriman = TujuanPengiriman::firstOrCreate(
+                ['nama_tujuan' => $request->nama_tujuan_manual],
+                ['id_user' => Auth::id()]
+            );
             $idTujuanPengiriman = $tujuanPengiriman->id;
         }
 
@@ -285,21 +284,20 @@ class PemeriksaanLoadingKendaraanController extends Controller
 
         $idKendaraan = $request->id_kendaraan;
         if ($idKendaraan === 'other') {
-            $kendaraan = JenisKendaraan::create([
-                'jenis_kendaraan' => $request->jenis_kendaraan_manual,
-                'no_kendaraan' => $request->no_kendaraan_manual,
-                'id_user' => Auth::id(),
-            ]);
+            $kendaraan = JenisKendaraan::firstOrCreate(
+                ['no_kendaraan' => $request->no_kendaraan_manual],
+                ['jenis_kendaraan' => $request->jenis_kendaraan_manual, 'id_user' => Auth::id()]
+            );
             $idKendaraan = $kendaraan->id;
         }
 
         // Handle tujuan pengiriman manual
         $idTujuanPengiriman = $request->id_tujuan_pengiriman;
         if ($idTujuanPengiriman === 'lainnya') {
-            $tujuanPengiriman = TujuanPengiriman::create([
-                'nama_tujuan' => $request->nama_tujuan_manual,
-                'id_user' => Auth::id(),
-            ]);
+            $tujuanPengiriman = TujuanPengiriman::firstOrCreate(
+                ['nama_tujuan' => $request->nama_tujuan_manual],
+                ['id_user' => Auth::id()]
+            );
             $idTujuanPengiriman = $tujuanPengiriman->id;
         }
 
