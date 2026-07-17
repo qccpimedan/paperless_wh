@@ -396,7 +396,7 @@
                                                 <div class="col-md-6">
                                                     <div class="form-group">
                                                         <label class="form-label">Produk</label>
-                                                        <select class="form-control produk-select @error('id_bahan.0') is-invalid @enderror" name="id_bahan[]">
+                                                        <select class="form-control produk-select @error('id_produk.0') is-invalid @enderror" name="id_produk[]">
                                                             <option value="">Pilih Produk</option>
                                                         </select>
                                                         @error('id_bahan.0')
@@ -1529,13 +1529,13 @@ function populateProdukOptionsForRow(rowEl) {
                     searchFuzziness: 0.000001,
                     fuseOptions: { ignoreLocation: true, threshold: 0.2, matchAllTokens: false },
                     searchEnabled: true,
-                searchPlaceholderValue: 'Cari...',
-                itemSelectText: 'Tekan untuk memilih',
-                noResultsText: 'Tidak ada hasil ditemukan',
-                noChoicesText: 'Tidak ada pilihan tersedia',
-                removeItemButton: true,
-                shouldSort: false,
-                placeholder: true,
+                    searchPlaceholderValue: 'Cari...',
+                    itemSelectText: 'Tekan untuk memilih',
+                    noResultsText: 'Tidak ada hasil ditemukan',
+                    noChoicesText: 'Tidak ada pilihan tersedia',
+                    removeItemButton: false,
+                    shouldSort: false,
+                    placeholder: true,
                 placeholderValue: 'Pilih...'
             });
             instance.setChoices(choiceItems, 'value', 'label', true);

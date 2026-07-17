@@ -139,6 +139,12 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
         $missingMapErrors = [];
 
         foreach ($produkIds as $idx => $produkId) {
+            $produkId = (string) $produkId;
+            if ($produkId === '' || $produkId === '0') {
+                $mappedBahanIds[$idx] = $currentBahanIds[$idx] ?? null;
+                continue;
+            }
+
             $produkKey = $produkNameById[(int) $produkId] ?? null;
             $produkRawName = $produkRawNameById[(int) $produkId] ?? null;
             $currentBahanId = $currentBahanIds[$idx] ?? null;
