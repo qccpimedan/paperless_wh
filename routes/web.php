@@ -57,6 +57,18 @@ Route::get('/logout', function () {
 // Dashboard
 Route::get('/dashboard', [AuthController::class, 'dashboard'])->name('dashboard');
 
+// Keep-Alive endpoint untuk refresh session & CSRF token tanpa reload halaman
+Route::middleware(['auth'])->get('/keep-alive', function () {
+    // Mengakses session memastikan session ter-refresh otomatis
+    session()->put('last_activity', now());
+
+    return response()->json([
+        'status' => 'ok',
+        'csrf_token' => csrf_token(),
+        'expires_at' => now()->addMinutes(config('session.lifetime', 120))->toISOString(),
+    ]);
+})->name('keep-alive');
+
 // Protected Routes (require authentication)
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/debug/check-roles', function () {
