@@ -796,5 +796,235 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 @stack('scripts')
+
+<!-- ===== SESSION KEEP-ALIVE & WARNING POPUP (GLOBAL) ===== -->
+<script>
+(function() {
+    Konfigurasi (sinkron dengan config/session.php lifetime = 120 menit)
+    const SESSION_LIFETIME_MS  = 120 * 60 * 1000; // 120 menit — PRODUCTION
+    const WARN_BEFORE_MS       = 5  * 60 * 1000;  // Peringatkan 5 menit — PRODUCTION
+    const KEEPALIVE_INTERVAL   = 10 * 60 * 1000;  // Ping setiap 10 menit — PRODUCTION
+
+    // ===== MODE TEST: hapus comment di bawah untuk testing cepat =====
+    // const SESSION_LIFETIME_MS  = 30 * 1000; // 30 detik — TEST
+    // const WARN_BEFORE_MS       = 10 * 1000; // Peringatkan 10 detik sebelum expired — TEST
+    // const KEEPALIVE_INTERVAL   = 60 * 1000; // Ping setiap 1 menit — TEST
+    // const KEEPALIVE_URL        = '{{ route("keep-alive") }}';
+
+    let sessionExpiresAt = Date.now() + SESSION_LIFETIME_MS;
+    let warnTimer        = null;
+    let expireTimer      = null;
+    let countdownInterval= null;
+    let popupShown       = false;
+    let activityDebounce = null;
+
+    // ---------- Deteksi aktivitas user ----------
+    // Setiap kali user berinteraksi, reset timer session
+    const ACTIVITY_EVENTS = ['mousedown', 'mousemove', 'keydown', 'touchstart', 'scroll', 'click', 'input'];
+
+    function onUserActivity() {
+        // Debounce: jangan terlalu sering reset (max 1x per 10 detik)
+        if (activityDebounce) return;
+        activityDebounce = setTimeout(function() {
+            activityDebounce = null;
+        }, 10000);
+
+        // Jika popup belum muncul, reset timer
+        if (!popupShown) {
+            sessionExpiresAt = Date.now() + SESSION_LIFETIME_MS;
+            scheduleWarning();
+        }
+    }
+
+    ACTIVITY_EVENTS.forEach(function(event) {
+        document.addEventListener(event, onUserActivity, { passive: true });
+    });
+
+    // ---------- Buat elemen popup ----------
+    const overlay = document.createElement('div');
+    overlay.id = 'session-warn-overlay';
+    overlay.innerHTML = `
+        <div id="session-warn-modal">
+            <div id="session-warn-icon">⏳</div>
+            <h5 id="session-warn-title">Sesi Akan Berakhir</h5>
+            <p id="session-warn-msg">Sesi Anda akan berakhir dalam <strong id="session-countdown">5:00</strong>.<br>Apakah Anda masih aktif?</p>
+            <div id="session-warn-buttons">
+                <button id="session-stay-btn" class="btn-stay">Ya, Saya Masih Di Sini</button>
+                <button id="session-logout-btn" class="btn-logout">Keluar</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(overlay);
+
+    // ---------- CSS inline agar tidak bergantung pada stylesheet ----------
+    const style = document.createElement('style');
+    style.textContent = `
+        #session-warn-overlay {
+            display: none;
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.55);
+            z-index: 99999;
+            align-items: center;
+            justify-content: center;
+        }
+        #session-warn-overlay.show { display: flex; }
+        #session-warn-modal {
+            background: #fff;
+            border-radius: 16px;
+            padding: 2rem 2.5rem;
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            animation: swm-in .25s ease;
+        }
+        @keyframes swm-in {
+            from { transform: scale(.85); opacity: 0; }
+            to   { transform: scale(1);  opacity: 1; }
+        }
+        #session-warn-icon { font-size: 3rem; margin-bottom: .5rem; }
+        #session-warn-title { font-weight: 700; font-size: 1.25rem; margin-bottom: .5rem; color: #333; }
+        #session-warn-msg { color: #555; font-size: .95rem; margin-bottom: 1.5rem; }
+        #session-countdown { color: #dc3545; font-size: 1.1rem; }
+        #session-warn-buttons { display: flex; gap: .75rem; justify-content: center; flex-wrap: wrap; }
+        .btn-stay {
+            background: #435ebe; color: #fff; border: none;
+            padding: .6rem 1.4rem; border-radius: 8px;
+            font-weight: 600; cursor: pointer; font-size: .9rem;
+            transition: background .2s;
+        }
+        .btn-stay:hover { background: #2f4aa6; }
+        .btn-logout {
+            background: #fff; color: #dc3545;
+            border: 2px solid #dc3545;
+            padding: .6rem 1.4rem; border-radius: 8px;
+            font-weight: 600; cursor: pointer; font-size: .9rem;
+            transition: all .2s;
+        }
+        .btn-logout:hover { background: #dc3545; color: #fff; }
+    `;
+    document.head.appendChild(style);
+
+    // ---------- Helpers ----------
+    function formatTime(ms) {
+        const total = Math.max(0, Math.floor(ms / 1000));
+        const m = Math.floor(total / 60);
+        const s = total % 60;
+        return m + ':' + String(s).padStart(2, '0');
+    }
+
+    function updateCsrfTokens(newToken) {
+        // Update semua input _token di semua form
+        document.querySelectorAll('input[name="_token"]').forEach(el => el.value = newToken);
+        // Update meta tag csrf jika ada
+        const meta = document.querySelector('meta[name="csrf-token"]');
+        if (meta) meta.setAttribute('content', newToken);
+    }
+
+    function refreshSession() {
+        fetch(KEEPALIVE_URL, {
+            headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
+            credentials: 'same-origin'
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.status === 'ok') {
+                // Update CSRF token di seluruh halaman
+                updateCsrfTokens(data.csrf_token);
+                // Reset timer
+                sessionExpiresAt = Date.now() + SESSION_LIFETIME_MS;
+                scheduleWarning();
+            }
+        })
+        .catch(() => { /* silent fail */ });
+    }
+
+    function showPopup() {
+        popupShown = true;
+        overlay.classList.add('show');
+
+        // Mulai countdown
+        countdownInterval = setInterval(function() {
+            // Hentikan jika popup sudah ditutup (user klik "Ya")
+            if (!popupShown) {
+                clearInterval(countdownInterval);
+                countdownInterval = null;
+                return;
+            }
+            const remaining = sessionExpiresAt - Date.now();
+            const cdEl = document.getElementById('session-countdown');
+            if (cdEl) cdEl.textContent = formatTime(remaining);
+            if (remaining <= 0) {
+                clearInterval(countdownInterval);
+                countdownInterval = null;
+                // Session benar-benar expired — redirect ke login
+                window.location.href = '/login';
+            }
+        }, 1000);
+    }
+
+    function hidePopup() {
+        popupShown = false;
+        overlay.classList.remove('show');
+        // Hentikan countdown interval
+        clearInterval(countdownInterval);
+        countdownInterval = null;
+        // PENTING: Cancel expireTimer agar tidak redirect setelah popup ditutup
+        clearTimeout(warnTimer);
+        clearTimeout(expireTimer);
+        warnTimer = null;
+        expireTimer = null;
+    }
+
+    function scheduleWarning() {
+        clearTimeout(warnTimer);
+        clearTimeout(expireTimer);
+
+        const timeUntilWarn   = SESSION_LIFETIME_MS - WARN_BEFORE_MS;
+        const timeUntilExpire = SESSION_LIFETIME_MS;
+
+        warnTimer = setTimeout(function() {
+            if (!popupShown) showPopup();
+        }, timeUntilWarn);
+
+        expireTimer = setTimeout(function() {
+            if (!popupShown) window.location.href = '/login';
+        }, timeUntilExpire);
+    }
+
+    // ---------- Tombol "Saya Masih Di Sini" ----------
+    document.getElementById('session-stay-btn').addEventListener('click', function() {
+        // Reset waktu expired DULU sebelum apapun
+        sessionExpiresAt = Date.now() + SESSION_LIFETIME_MS;
+        // Tutup popup dan hentikan countdown
+        hidePopup();
+        // Refresh session di server (background)
+        refreshSession();
+    });
+
+    // ---------- Tombol "Keluar" ----------
+    document.getElementById('session-logout-btn').addEventListener('click', function() {
+        // Submit form logout
+        const logoutForm = document.querySelector('form[action*="logout"]');
+        if (logoutForm) {
+            logoutForm.submit();
+        } else {
+            window.location.href = '/login';
+        }
+    });
+
+    // ---------- Background ping setiap 10 menit ----------
+    // Ini memastikan session tidak expired selama user aktif membuka halaman
+    setInterval(function() {
+        if (!popupShown) {
+            refreshSession();
+        }
+    }, KEEPALIVE_INTERVAL);
+
+    // ---------- Mulai timer saat halaman dibuka ----------
+    scheduleWarning();
+
+})();
+</script>
 </body>
 </html>
