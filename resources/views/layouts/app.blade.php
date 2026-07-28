@@ -800,16 +800,11 @@ document.addEventListener('DOMContentLoaded', function() {
 <!-- ===== SESSION KEEP-ALIVE & WARNING POPUP (GLOBAL) ===== -->
 <script>
 (function() {
-    Konfigurasi (sinkron dengan config/session.php lifetime = 120 menit)
+    // Konfigurasi (sinkron dengan config/session.php lifetime = 120 menit)
     const SESSION_LIFETIME_MS  = 120 * 60 * 1000; // 120 menit — PRODUCTION
-    const WARN_BEFORE_MS       = 5  * 60 * 1000;  // Peringatkan 5 menit — PRODUCTION
-    const KEEPALIVE_INTERVAL   = 10 * 60 * 1000;  // Ping setiap 10 menit — PRODUCTION
-
-    // ===== MODE TEST: hapus comment di bawah untuk testing cepat =====
-    // const SESSION_LIFETIME_MS  = 30 * 1000; // 30 detik — TEST
-    // const WARN_BEFORE_MS       = 10 * 1000; // Peringatkan 10 detik sebelum expired — TEST
-    // const KEEPALIVE_INTERVAL   = 60 * 1000; // Ping setiap 1 menit — TEST
-    // const KEEPALIVE_URL        = '{{ route("keep-alive") }}';
+    const WARN_BEFORE_MS       = 5  * 60 * 1000;  // Peringatkan 5 menit sebelum expired
+    const KEEPALIVE_INTERVAL   = 10 * 60 * 1000;  // Ping setiap 10 menit (background)
+    const KEEPALIVE_URL        = '{{ route("keep-alive") }}';
 
     let sessionExpiresAt = Date.now() + SESSION_LIFETIME_MS;
     let warnTimer        = null;
