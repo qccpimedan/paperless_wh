@@ -105,6 +105,10 @@
                         <td class="subheader-label">Shift</td>
                         <td>{{ $shiftName }}</td>
                     </tr>
+                    <!-- <tr>
+                        <td class="subheader-label">Pukul</td>
+                        <td>{{ $p->pukul ?? '-' }}</td>
+                    </tr> -->
                     <tr>
                         <td class="subheader-label">Suhu Produk</td>
                         <td style="font-weight: bold;">{{ $p->suhu_produk ?? '-' }}</td>
@@ -299,7 +303,7 @@
                 <thead>
                     <tr>
                         <th style="width: 5%">No</th>
-                        <!-- <th style="width: 14%">Pukul</th> -->
+                        <th style="width: 14%">Pukul</th>
                         <th style="width: 21%">Lokasi</th>
                         <th style="width: 30%">Sebelumnya</th>
                         <th style="width: 30%">Sesudahnya</th>
@@ -377,7 +381,7 @@
                             @endif
                         @endif
                     @endforeach
-<!--  -->
+
                     {{-- 2. Tampilkan Riwayat Perubahan (History) --}}
                     @if($p->relationLoaded('histories') && $p->histories && $p->histories->count() > 0)
                         <tr>
