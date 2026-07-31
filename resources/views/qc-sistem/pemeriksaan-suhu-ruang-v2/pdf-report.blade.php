@@ -377,7 +377,7 @@
                             @endif
                         @endif
                     @endforeach
-
+<!--  -->
                     {{-- 2. Tampilkan Riwayat Perubahan (History) --}}
                     @if($p->relationLoaded('histories') && $p->histories && $p->histories->count() > 0)
                         <tr>
