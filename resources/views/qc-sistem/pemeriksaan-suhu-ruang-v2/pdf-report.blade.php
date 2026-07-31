@@ -105,10 +105,10 @@
                         <td class="subheader-label">Shift</td>
                         <td>{{ $shiftName }}</td>
                     </tr>
-                    <tr>
+                    <!-- <tr>
                         <td class="subheader-label">Pukul</td>
                         <td>{{ $p->pukul ?? '-' }}</td>
-                    </tr>
+                    </tr> -->
                     <tr>
                         <td class="subheader-label">Suhu Produk</td>
                         <td style="font-weight: bold;">{{ $p->suhu_produk ?? '-' }}</td>
@@ -303,7 +303,7 @@
                 <thead>
                     <tr>
                         <th style="width: 5%">No</th>
-                        <th style="width: 14%">Waktu</th>
+                        <th style="width: 14%">Pukul</th>
                         <th style="width: 21%">Lokasi</th>
                         <th style="width: 30%">Sebelumnya</th>
                         <th style="width: 30%">Sesudahnya</th>
@@ -361,10 +361,10 @@
                         @php $secData = $getInitialVal($field); @endphp
                         @if(!empty($secData))
                             @if(in_array($field, ['suhu_cold_storage', 'suhu_anteroom_loading']))
-                                @foreach($secData as $uKey => $item)
+                                        @foreach($secData as $uKey => $item)
                                     <tr>
                                         <td style="text-align: center;">{{ $histNo++ }}</td>
-                                        <td>{{ $initialTime }}</td>
+                                        <td>{{ $p->created_at ? $p->created_at->format('H:i') : '-' }}</td>
                                         <td>{{ $label }} {{ $uKey }}</td>
                                         <td style="background: #fff3cd; text-align: center;">-</td>
                                         <td style="background: #d4edda;">{{ $renderVal($item) }}</td>
@@ -373,7 +373,7 @@
                             @else
                                 <tr>
                                     <td style="text-align: center;">{{ $histNo++ }}</td>
-                                    <td>{{ $initialTime }}</td>
+                                    <td>{{ $p->created_at ? $p->created_at->format('H:i') : '-' }}</td>
                                     <td>{{ $label }}</td>
                                     <td style="background: #fff3cd; text-align: center;">-</td>
                                     <td style="background: #d4edda;">{{ $renderVal($secData) }}</td>
@@ -393,6 +393,11 @@
                             @php
                                 $hTime = $history->created_at ? $history->created_at->format('d/m/Y H:i') : '-';
                                 $changes = [];
+
+                                // Pukul
+                                if (($history->pukul_lama ?? null) != ($history->pukul_baru ?? null)) {
+                                    $changes[] = ['lokasi' => 'Pukul', 'lama' => $history->pukul_lama ?? '(Kosong)', 'baru' => $history->pukul_baru ?? '(Kosong)'];
+                                }
 
                                 // Keterangan
                                 if (($history->keterangan_lama ?? null) != ($history->keterangan_baru ?? null)) {
@@ -448,7 +453,7 @@
                             @foreach($changes as $cIdx => $change)
                                 <tr>
                                     <td style="text-align: center;">{{ $histNo++ }}</td>
-                                    <td>{{ $cIdx === 0 ? $hTime : '' }}</td>
+                                    <td>{{ $cIdx === 0 ? ($history->created_at ? $history->created_at->format('H:i') : '-') : '' }}</td>
                                     <td>{{ $change['lokasi'] }}</td>
                                     <td style="background: #fff3cd;">{{ $change['lama'] }}</td>
                                     <td style="background: #d4edda;">{{ $change['baru'] }}</td>
