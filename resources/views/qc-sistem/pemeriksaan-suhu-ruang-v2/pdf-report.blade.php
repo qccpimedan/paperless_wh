@@ -361,13 +361,14 @@
 
                     {{-- 1. Tampilkan Data Input Pertama (Initial State) --}}
                     <tr>
-                        <td colspan="4" style="background: #f8f9fa; font-weight: bold; font-size: 9px; color: #555; text-align: center; border-bottom: 1px solid #dee2e6;">
+                        <td colspan="5" style="background: #f8f9fa; font-weight: bold; font-size: 9px; color: #555; text-align: center; border-bottom: 1px solid #dee2e6;">
                             --- INPUT DATA PERTAMA ---
                         </td>
                     </tr>
                     {{-- Tampilkan Pukul sebagai baris pertama --}}
                     <tr>
                         <td style="text-align: center;">{{ $histNo++ }}</td>
+                        <td>{{ $initialPukul }}</td>
                         <td>Pukul</td>
                         <td style="background: #fff3cd; text-align: center;">-</td>
                         <td style="background: #d4edda;">{{ $initialPukul }}</td>
@@ -376,9 +377,10 @@
                         @php $secData = $getInitialVal($field); @endphp
                         @if(!empty($secData))
                             @if(in_array($field, ['suhu_cold_storage', 'suhu_anteroom_loading']))
-                                        @foreach($secData as $uKey => $item)
+                                @foreach($secData as $uKey => $item)
                                     <tr>
                                         <td style="text-align: center;">{{ $histNo++ }}</td>
+                                        <td>{{ $initialPukul }}</td>
                                         <td>{{ $label }} {{ $uKey }}</td>
                                         <td style="background: #fff3cd; text-align: center;">-</td>
                                         <td style="background: #d4edda;">{{ $renderVal($item) }}</td>
@@ -387,6 +389,7 @@
                             @else
                                 <tr>
                                     <td style="text-align: center;">{{ $histNo++ }}</td>
+                                    <td>{{ $initialPukul }}</td>
                                     <td>{{ $label }}</td>
                                     <td style="background: #fff3cd; text-align: center;">-</td>
                                     <td style="background: #d4edda;">{{ $renderVal($secData) }}</td>
@@ -466,7 +469,7 @@
                             @foreach($changes as $cIdx => $change)
                                 <tr>
                                     <td style="text-align: center;">{{ $histNo++ }}</td>
-                                    <td>{{ $cIdx === 0 ? ($history->created_at ? $history->created_at->format('H:i') : '-') : '' }}</td>
+                                    <td>-</td>
                                     <td>{{ $change['lokasi'] }}</td>
                                     <td style="background: #fff3cd;">{{ $change['lama'] }}</td>
                                     <td style="background: #d4edda;">{{ $change['baru'] }}</td>
