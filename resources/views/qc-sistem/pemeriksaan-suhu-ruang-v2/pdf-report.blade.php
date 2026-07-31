@@ -105,10 +105,6 @@
                         <td class="subheader-label">Shift</td>
                         <td>{{ $shiftName }}</td>
                     </tr>
-                    <!-- <tr>
-                        <td class="subheader-label">Pukul</td>
-                        <td>{{ $p->pukul ?? '-' }}</td>
-                    </tr> -->
                     <tr>
                         <td class="subheader-label">Suhu Produk</td>
                         <td style="font-weight: bold;">{{ $p->suhu_produk ?? '-' }}</td>
@@ -303,7 +299,7 @@
                 <thead>
                     <tr>
                         <th style="width: 5%">No</th>
-                        <th style="width: 14%">Pukul</th>
+                        <!-- <th style="width: 14%">Pukul</th> -->
                         <th style="width: 21%">Lokasi</th>
                         <th style="width: 30%">Sebelumnya</th>
                         <th style="width: 30%">Sesudahnya</th>
@@ -364,7 +360,7 @@
                                         @foreach($secData as $uKey => $item)
                                     <tr>
                                         <td style="text-align: center;">{{ $histNo++ }}</td>
-                                        <td>{{ $p->created_at ? $p->created_at->format('H:i') : '-' }}</td>
+                                        <td>{{ $initialTime }}</td>
                                         <td>{{ $label }} {{ $uKey }}</td>
                                         <td style="background: #fff3cd; text-align: center;">-</td>
                                         <td style="background: #d4edda;">{{ $renderVal($item) }}</td>
@@ -373,7 +369,7 @@
                             @else
                                 <tr>
                                     <td style="text-align: center;">{{ $histNo++ }}</td>
-                                    <td>{{ $p->created_at ? $p->created_at->format('H:i') : '-' }}</td>
+                                    <td>{{ $initialTime }}</td>
                                     <td>{{ $label }}</td>
                                     <td style="background: #fff3cd; text-align: center;">-</td>
                                     <td style="background: #d4edda;">{{ $renderVal($secData) }}</td>
