@@ -360,7 +360,7 @@
                                         @foreach($secData as $uKey => $item)
                                     <tr>
                                         <td style="text-align: center;">{{ $histNo++ }}</td>
-                                        <td>{{ $initialTime }}</td>
+                                        <td>{{ $p->created_at ? $p->created_at->format('H:i') : '-' }}</td>
                                         <td>{{ $label }} {{ $uKey }}</td>
                                         <td style="background: #fff3cd; text-align: center;">-</td>
                                         <td style="background: #d4edda;">{{ $renderVal($item) }}</td>
@@ -369,7 +369,7 @@
                             @else
                                 <tr>
                                     <td style="text-align: center;">{{ $histNo++ }}</td>
-                                    <td>{{ $initialTime }}</td>
+                                    <td>{{ $p->created_at ? $p->created_at->format('H:i') : '-' }}</td>
                                     <td>{{ $label }}</td>
                                     <td style="background: #fff3cd; text-align: center;">-</td>
                                     <td style="background: #d4edda;">{{ $renderVal($secData) }}</td>
@@ -377,7 +377,7 @@
                             @endif
                         @endif
                     @endforeach
-
+<!--  -->
                     {{-- 2. Tampilkan Riwayat Perubahan (History) --}}
                     @if($p->relationLoaded('histories') && $p->histories && $p->histories->count() > 0)
                         <tr>
