@@ -303,10 +303,9 @@
                 <thead>
                     <tr>
                         <th style="width: 5%">No</th>
-                        <th style="width: 14%">Pukul</th>
-                        <th style="width: 21%">Lokasi</th>
-                        <th style="width: 30%">Sebelumnya</th>
-                        <th style="width: 30%">Sesudahnya</th>
+                        <th style="width: 25%">Lokasi</th>
+                        <th style="width: 35%">Sebelumnya</th>
+                        <th style="width: 35%">Sesudahnya</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -361,17 +360,9 @@
 
                     {{-- 1. Tampilkan Data Input Pertama (Initial State) --}}
                     <tr>
-                        <td colspan="5" style="background: #f8f9fa; font-weight: bold; font-size: 9px; color: #555; text-align: center; border-bottom: 1px solid #dee2e6;">
+                        <td colspan="4" style="background: #f8f9fa; font-weight: bold; font-size: 9px; color: #555; text-align: center; border-bottom: 1px solid #dee2e6;">
                             --- INPUT DATA PERTAMA ---
                         </td>
-                    </tr>
-                    {{-- Tampilkan Pukul sebagai baris pertama --}}
-                    <tr>
-                        <td style="text-align: center;">{{ $histNo++ }}</td>
-                        <td>{{ $initialPukul }}</td>
-                        <td>Pukul</td>
-                        <td style="background: #fff3cd; text-align: center;">-</td>
-                        <td style="background: #d4edda;">{{ $initialPukul }}</td>
                     </tr>
                     @foreach($suhuFieldsConfig as $field => $label)
                         @php $secData = $getInitialVal($field); @endphp
@@ -380,7 +371,6 @@
                                 @foreach($secData as $uKey => $item)
                                     <tr>
                                         <td style="text-align: center;">{{ $histNo++ }}</td>
-                                        <td>{{ $initialPukul }}</td>
                                         <td>{{ $label }} {{ $uKey }}</td>
                                         <td style="background: #fff3cd; text-align: center;">-</td>
                                         <td style="background: #d4edda;">{{ $renderVal($item) }}</td>
@@ -389,7 +379,6 @@
                             @else
                                 <tr>
                                     <td style="text-align: center;">{{ $histNo++ }}</td>
-                                    <td>{{ $initialPukul }}</td>
                                     <td>{{ $label }}</td>
                                     <td style="background: #fff3cd; text-align: center;">-</td>
                                     <td style="background: #d4edda;">{{ $renderVal($secData) }}</td>
@@ -401,7 +390,7 @@
                     {{-- 2. Tampilkan Riwayat Perubahan (History) --}}
                     @if($p->relationLoaded('histories') && $p->histories && $p->histories->count() > 0)
                         <tr>
-                            <td colspan="5" style="background: #f8f9fa; font-weight: bold; font-size: 9px; color: #c41e3a; text-align: center; border-top: 2px solid #dee2e6; border-bottom: 1px solid #dee2e6;">
+                            <td colspan="4" style="background: #f8f9fa; font-weight: bold; font-size: 9px; color: #c41e3a; text-align: center; border-top: 2px solid #dee2e6; border-bottom: 1px solid #dee2e6;">
                                 --- RIWAYAT PERUBAHAN / UPDATE ---
                             </td>
                         </tr>
@@ -469,7 +458,6 @@
                             @foreach($changes as $cIdx => $change)
                                 <tr>
                                     <td style="text-align: center;">{{ $histNo++ }}</td>
-                                    <td>-</td>
                                     <td>{{ $change['lokasi'] }}</td>
                                     <td style="background: #fff3cd;">{{ $change['lama'] }}</td>
                                     <td style="background: #d4edda;">{{ $change['baru'] }}</td>
