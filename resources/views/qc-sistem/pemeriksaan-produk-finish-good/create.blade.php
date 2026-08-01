@@ -118,11 +118,11 @@
                                             <div class="form-group">
                                                 <label><strong>Segel/Gembok</strong></label>
                                                 <div class="form-check">
-                                                    <input class="form-check-input" type="radio" id="segel_option" name="segel_gembok" value="segel" {{ old('segel_gembok') == 'segel' ? 'checked' : '' }}>
+                                                    <input class="form-check-input" type="radio" id="segel_option" name="segel_gembok" value="segel" onchange="toggleNoSegel()" {{ old('segel_gembok') == 'segel' ? 'checked' : '' }}>
                                                     <label class="form-check-label" for="segel_option">Segel</label>
                                                 </div>
                                                 <div class="form-check">
-                                                    <input class="form-check-input" type="radio" id="gembok_option" name="segel_gembok" value="gembok" {{ old('segel_gembok') == 'gembok' ? 'checked' : '' }}>
+                                                    <input class="form-check-input" type="radio" id="gembok_option" name="segel_gembok" value="gembok" onchange="toggleNoSegel()" {{ old('segel_gembok') == 'gembok' ? 'checked' : '' }}>
                                                     <label class="form-check-label" for="gembok_option">Gembok</label>
                                                 </div>
                                                 @error('segel_gembok')
@@ -149,7 +149,7 @@
                                     <h5 class="text-primary mb-3">Kondisi Mobil Pengangkut</h5>
                                     <div class="mb-3">
                                         <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" id="kondisi_mobil_check_all">
+                                            <input class="form-check-input" type="checkbox" id="kondisi_mobil_check_all" onchange="toggleAllKondisiMobil(this)">
                                             <label class="form-check-label" for="kondisi_mobil_check_all">Centang semua (Ya)</label>
                                         </div>
                                     </div>
@@ -1121,27 +1121,40 @@ function setupAllKondisiProdukSuhuRows() {
     });
 }
 
-function setupKondisiMobilCheckAll() {
+// Function untuk toggle semua radio button kondisi mobil
+function toggleAllKondisiMobil(checkbox) {
     const section = document.getElementById('kondisi-mobil-section');
-    const checkAll = document.getElementById('kondisi_mobil_check_all');
-    if (!section || !checkAll) return;
+    if (!section) {
+        alert('Section kondisi mobil tidak ditemukan!');
+        return;
+    }
 
-    checkAll.addEventListener('change', function() {
-        const radios = section.querySelectorAll('input[type="radio"][name^="kondisi_mobil["]');
-        if (this.checked) {
-            radios.forEach((radio) => {
-                if (radio.value === '1') radio.checked = true;
-            });
-        } else {
-            const names = new Set();
-            radios.forEach((radio) => names.add(radio.name));
-            names.forEach((name) => {
-                section.querySelectorAll(`input[type="radio"][name="${name}"]`).forEach((r) => {
-                    r.checked = false;
-                });
-            });
-        }
-    });
+    // Cari semua radio button dalam section kondisi mobil
+    const allRadios = section.querySelectorAll('input[type="radio"][name^="kondisi_mobil["]');
+    console.log('Total radio buttons found:', allRadios.length);
+    
+    if (checkbox.checked) {
+        // Centang semua radio button dengan value="1" (Ya)
+        let checkedCount = 0;
+        allRadios.forEach(function(radio) {
+            if (radio.value === '1') {
+                radio.checked = true;
+                checkedCount++;
+            }
+        });
+        console.log('Checked', checkedCount, 'radio buttons');
+    } else {
+        // Uncheck semua radio buttons
+        allRadios.forEach(function(radio) {
+            radio.checked = false;
+        });
+        console.log('Unchecked all radio buttons');
+    }
+}
+
+function setupKondisiMobilCheckAll() {
+    // Function sudah diganti dengan inline onchange handler
+    console.log('setupKondisiMobilCheckAll called - using inline handler');
 }
 
 function setupRowRadios(rowEl) {
