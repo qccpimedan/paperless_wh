@@ -46,7 +46,7 @@
                                     </ul>
                                 </div>
                             @endif
-                            <form action="{{ route('pemeriksaan-chemical.store') }}" method="POST" enctype="multipart/form-data">
+                            <form id="form-pemeriksaan-kedatangan-chemical" data-autosave="true" action="{{ route('pemeriksaan-chemical.store') }}" method="POST" enctype="multipart/form-data">
                                 @csrf
                                 
                                 <!-- SECTION 1: Informasi Dasar -->

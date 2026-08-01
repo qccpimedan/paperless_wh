@@ -45,7 +45,7 @@
                                     </div>
                                 @endif
 
-                                <form id="return-barang-form" class="form form-horizontal" action="{{ route('return-barang.store') }}" method="POST" novalidate>
+                                <form id="form-pemeriksaan-return-barang-customer" data-autosave="true" class="form form-horizontal" action="{{ route('return-barang.store') }}" method="POST" novalidate>
                                     @csrf
                                     <div class="form-body">
                                         <div class="row">

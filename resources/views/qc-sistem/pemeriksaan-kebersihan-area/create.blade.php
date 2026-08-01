@@ -45,7 +45,7 @@
                                     </div>
                                 @endif
 
-                                <form class="form form-horizontal" action="{{ route('pemeriksaan-kebersihan-area.store') }}" method="POST">
+                                <form id="form-pemeriksaan-kebersihan-area" data-autosave="true" class="form form-horizontal" action="{{ route('pemeriksaan-kebersihan-area.store') }}" method="POST">
                                     @csrf
                                     <div class="form-body">
                                         <!-- Global Fields -->

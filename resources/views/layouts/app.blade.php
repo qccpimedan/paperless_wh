@@ -23,6 +23,71 @@
     <!-- select negara -->
     <link rel="stylesheet" href="{{asset('dist/vendors/choices.js/choices.min.css')}}">
     
+    <!-- Suppress browser extension console errors -->
+    <!-- <script>
+        // Suppress noisy browser extension warnings in console (Production Mode)
+        if (!window.location.hostname.includes('localhost') || true) {
+            (function() {
+                const originalError = console.error;
+                const originalWarn = console.warn;
+                
+                console.error = function(...args) {
+                    const message = JSON.stringify(args);
+                    // Filter out browser extension errors
+                    if (message.includes('contentscript') || 
+                        message.includes('chrome-extension') ||
+                        message.includes('moz-extension') ||
+                        message.includes('ObjectMultiplex') || 
+                        message.includes('orphaned data') ||
+                        message.includes('app-init-liveness') ||
+                        message.includes('background-liveness')) {
+                        return; // Suppress these errors
+                    }
+                    originalError.apply(console, args);
+                };
+                
+                console.warn = function(...args) {
+                    const message = JSON.stringify(args);
+                    // Filter out MaxListeners and extension warnings
+                    if (message.includes('MaxListenersExceededWarning') ||
+                        message.includes('Possible EventEmitter memory leak') ||
+                        message.includes('contentscript') ||
+                        message.includes('chrome-extension') ||
+                        message.includes('moz-extension')) {
+                        return; // Suppress these warnings
+                    }
+                    originalWarn.apply(console, args);
+                };
+
+                // Global error handler untuk suppress extension errors
+                window.addEventListener('error', function(e) {
+                    const message = e.message || '';
+                    const filename = e.filename || '';
+                    if (filename.includes('contentscript') || 
+                        filename.includes('chrome-extension') ||
+                        filename.includes('moz-extension') ||
+                        message.includes('ObjectMultiplex')) {
+                        e.stopImmediatePropagation();
+                        e.preventDefault();
+                        return false;
+                    }
+                }, true);
+
+                // Unhandled promise rejection handler
+                window.addEventListener('unhandledrejection', function(e) {
+                    const message = e.reason?.message || '';
+                    if (message.includes('ObjectMultiplex') ||
+                        message.includes('contentscript') ||
+                        message.includes('orphaned data')) {
+                        e.stopImmediatePropagation();
+                        e.preventDefault();
+                        return false;
+                    }
+                }, true);
+            })();
+        }
+    </script> -->
+    
     <style>
         /* ===== Navbar & Sidebar Z-Index ===== */
         .navbar.sticky-top {
@@ -563,7 +628,8 @@
     <!-- DataTables JS -->
     <script src="{{asset('dist/vendors/datatables/jquery.dataTables.min.js')}}"></script>
     <script src="{{asset('dist/vendors/datatables/dataTables.bootstrap5.min.js')}}"></script>
-
+    <!-- CSRF Token Auto-Refresh Script -->
+    <script src="{{ asset('js/csrf-refresh.js') }}"></script>
     
 <script>
 // Initialize DataTable for any table with id="table1"
@@ -800,10 +866,10 @@ document.addEventListener('DOMContentLoaded', function() {
 <!-- ===== SESSION KEEP-ALIVE & WARNING POPUP (GLOBAL) ===== -->
 <script>
 (function() {
-    // Konfigurasi (sinkron dengan config/session.php lifetime = 120 menit)
-    const SESSION_LIFETIME_MS  = 120 * 60 * 1000; // 120 menit — PRODUCTION
-    const WARN_BEFORE_MS       = 5  * 60 * 1000;  // Peringatkan 5 menit sebelum expired
-    const KEEPALIVE_INTERVAL   = 10 * 60 * 1000;  // Ping setiap 10 menit (background)
+    // Konfigurasi (sinkron dengan config/session.php lifetime = 480 menit)
+    const SESSION_LIFETIME_MS  = 480 * 60 * 1000; // 480 menit (8 jam) — PRODUCTION
+    const WARN_BEFORE_MS       = 10  * 60 * 1000;  // Peringatkan 10 menit sebelum expired
+    const KEEPALIVE_INTERVAL   = 15 * 60 * 1000;  // Ping setiap 15 menit (background)
     const KEEPALIVE_URL        = '{{ route("keep-alive") }}';
 
     let sessionExpiresAt = Date.now() + SESSION_LIFETIME_MS;
@@ -842,7 +908,7 @@ document.addEventListener('DOMContentLoaded', function() {
         <div id="session-warn-modal">
             <div id="session-warn-icon">⏳</div>
             <h5 id="session-warn-title">Sesi Akan Berakhir</h5>
-            <p id="session-warn-msg">Sesi Anda akan berakhir dalam <strong id="session-countdown">5:00</strong>.<br>Apakah Anda masih aktif?</p>
+            <p id="session-warn-msg">Sesi Anda akan berakhir dalam <strong id="session-countdown">10:00</strong>.<br>Apakah Anda masih aktif?</p>
             <div id="session-warn-buttons">
                 <button id="session-stay-btn" class="btn-stay">Ya, Saya Masih Di Sini</button>
                 <button id="session-logout-btn" class="btn-logout">Keluar</button>
@@ -1021,5 +1087,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
 })();
 </script>
+
 </body>
 </html>

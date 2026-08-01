@@ -45,7 +45,7 @@
                                     </div>
                                 @endif
 
-                                <form class="form form-horizontal" action="{{ route('golden-sample-reports.store') }}" method="POST">
+                                <form id="form-golden-sample-report" data-autosave="true" class="form form-horizontal" action="{{ route('golden-sample-reports.store') }}" method="POST">
                                     @csrf
                                     <div class="form-body">
                                         <!-- BAGIAN HEADER -->
