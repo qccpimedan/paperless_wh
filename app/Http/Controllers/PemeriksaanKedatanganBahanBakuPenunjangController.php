@@ -318,7 +318,10 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
 
         $produkNamaById = $produkList->pluck('nama_produk', 'id')->all();
 
-        return view('qc-sistem.pemeriksaan-kedatangan-bahan-baku-penunjang.index', compact('pemeriksaans', 'produkKategoriOptions', 'produkList', 'produkByKategori', 'produkNamaById'));
+        // Ambil juga nama bahan dari tabel bahans untuk lookup id_bahan_array
+        $bahanNamaById = \App\Models\Bahan::select(['id', 'nama_bahan'])->get()->pluck('nama_bahan', 'id')->all();
+
+        return view('qc-sistem.pemeriksaan-kedatangan-bahan-baku-penunjang.index', compact('pemeriksaans', 'produkKategoriOptions', 'produkList', 'produkByKategori', 'produkNamaById', 'bahanNamaById'));
     }
 
     public function create()

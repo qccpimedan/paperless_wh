@@ -369,21 +369,63 @@ class PemeriksaanLoadingProdukController extends Controller
         $validated['segel_gembok'] = $request->input('segel_gembok') === 'segel';
         $validated['temperature_produk'] = !empty($temperatureProduk) ? $temperatureProduk : null;
         
-        // Process product data
-        // Priority: opsi 2 (single id_produk select + produk_data[*] rows with hidden id_produk)
+        // Process product data - tujuan per group (1 grup = 1 tujuan, bisa banyak detail row)
         $produkData = [];
         if ($request->has('produk_data') && is_array($request->produk_data)) {
+            // Pass 1: Resolve tujuan per id_produk (karena dropdown tujuan ada di level group)
+            $tujuanByProdukId = [];
+            foreach ($request->produk_data as $produk) {
+                $rawTujuan = $produk['id_tujuan_pengiriman'] ?? null;
+                $idProduk  = $produk['id_produk'] ?? null;
+                if (!$idProduk || !$rawTujuan || isset($tujuanByProdukId[$idProduk])) continue;
+
+                $idTujuanResolved = null;
+                if ($rawTujuan === 'other') {
+                    $namaCustomer = $produk['nama_customer_manual'] ?? null;
+                    $namaTujuan   = $produk['nama_tujuan_manual'] ?? null;
+                    if ($namaCustomer && $namaTujuan) {
+                        $customer = Customer::firstOrCreate(['nama_cust' => $namaCustomer, 'id_user' => Auth::id()]);
+                        $tujuan   = TujuanPengiriman::firstOrCreate(
+                            ['id_customer' => $customer->id, 'nama_tujuan' => $namaTujuan],
+                            ['id_user' => Auth::id()]
+                        );
+                        $idTujuanResolved = $tujuan->id;
+                    }
+                } elseif (str_starts_with((string)$rawTujuan, 'customer_')) {
+                    $customerId = (int) str_replace('customer_', '', $rawTujuan);
+                    $cust = Customer::find($customerId);
+                    if ($cust) {
+                        $tujuan = TujuanPengiriman::firstOrCreate(
+                            ['id_customer' => $customerId, 'nama_tujuan' => '-'],
+                            ['id_user' => Auth::id()]
+                        );
+                        $idTujuanResolved = $tujuan->id;
+                    }
+                } else {
+                    $idTujuanResolved = (int) $rawTujuan ?: null;
+                }
+
+                if ($idTujuanResolved) {
+                    $tujuanByProdukId[$idProduk] = $idTujuanResolved;
+                }
+            }
+
+            // Pass 2: Build produk_data dengan tujuan di-propagate ke semua detail row
             foreach ($request->produk_data as $produk) {
                 if (!empty($produk['id_produk'])) {
+                    $idProduk = $produk['id_produk'];
+                    $idTujuanProduk = $tujuanByProdukId[$idProduk] ?? null;
+
                     $produkData[] = [
-                        'id_produk' => $produk['id_produk'],
-                        'kode_produksi' => $produk['kode_produksi'] ?? null,
-                        'best_before' => $produk['best_before'] ?? null,
-                        'jumlah_kemasan' => $produk['jumlah_kemasan'] ?? null,
-                        'jumlah_sampling' => $produk['jumlah_sampling'] ?? null,
-                        'berat_perkarung' => $produk['berat_perkarung'] ?? null,
-                        'kondisi_kemasan' => isset($produk['kondisi_kemasan']) ? (bool)$produk['kondisi_kemasan'] : true,
-                        'keterangan' => $produk['keterangan'] ?? null,
+                        'id_produk'             => $idProduk,
+                        'id_tujuan_pengiriman'  => $idTujuanProduk,
+                        'kode_produksi'         => $produk['kode_produksi'] ?? null,
+                        'best_before'           => $produk['best_before'] ?? null,
+                        'jumlah_kemasan'        => $produk['jumlah_kemasan'] ?? null,
+                        'jumlah_sampling'       => $produk['jumlah_sampling'] ?? null,
+                        'berat_perkarung'       => $produk['berat_perkarung'] ?? null,
+                        'kondisi_kemasan'       => isset($produk['kondisi_kemasan']) ? (bool)$produk['kondisi_kemasan'] : true,
+                        'keterangan'            => $produk['keterangan'] ?? null,
                     ];
                 }
             }
@@ -620,20 +662,63 @@ class PemeriksaanLoadingProdukController extends Controller
         $validated['temperature_produk'] = !empty($temperatureProduk) ? $temperatureProduk : null;
         $validated['segel_gembok'] = $request->input('segel_gembok') === 'segel';
         
-        // Process produk_data array untuk multiple produk
+        // Process produk_data array untuk multiple produk - tujuan per group
         $produkData = [];
         if ($request->has('produk_data')) {
+            // Pass 1: Resolve tujuan per id_produk
+            $tujuanByProdukId = [];
+            foreach ($request->produk_data as $produk) {
+                $rawTujuan = $produk['id_tujuan_pengiriman'] ?? null;
+                $idProduk  = $produk['id_produk'] ?? null;
+                if (!$idProduk || !$rawTujuan || isset($tujuanByProdukId[$idProduk])) continue;
+
+                $idTujuanResolved = null;
+                if ($rawTujuan === 'other') {
+                    $namaCustomer = $produk['nama_customer_manual'] ?? null;
+                    $namaTujuan   = $produk['nama_tujuan_manual'] ?? null;
+                    if ($namaCustomer && $namaTujuan) {
+                        $customer = Customer::firstOrCreate(['nama_cust' => $namaCustomer, 'id_user' => Auth::id()]);
+                        $tujuan   = TujuanPengiriman::firstOrCreate(
+                            ['id_customer' => $customer->id, 'nama_tujuan' => $namaTujuan],
+                            ['id_user' => Auth::id()]
+                        );
+                        $idTujuanResolved = $tujuan->id;
+                    }
+                } elseif (str_starts_with((string)$rawTujuan, 'customer_')) {
+                    $customerId = (int) str_replace('customer_', '', $rawTujuan);
+                    $cust = Customer::find($customerId);
+                    if ($cust) {
+                        $tujuan = TujuanPengiriman::firstOrCreate(
+                            ['id_customer' => $customerId, 'nama_tujuan' => '-'],
+                            ['id_user' => Auth::id()]
+                        );
+                        $idTujuanResolved = $tujuan->id;
+                    }
+                } else {
+                    $idTujuanResolved = (int) $rawTujuan ?: null;
+                }
+
+                if ($idTujuanResolved) {
+                    $tujuanByProdukId[$idProduk] = $idTujuanResolved;
+                }
+            }
+
+            // Pass 2: Build produk_data dengan tujuan di-propagate ke semua detail row
             foreach ($request->produk_data as $produk) {
                 if (!empty($produk['id_produk'])) {
+                    $idProduk = $produk['id_produk'];
+                    $idTujuanProduk = $tujuanByProdukId[$idProduk] ?? null;
+
                     $produkData[] = [
-                        'id_produk' => $produk['id_produk'],
-                        'kode_produksi' => $produk['kode_produksi'] ?? null,
-                        'best_before' => $produk['best_before'] ?? null,
-                        'jumlah_kemasan' => $produk['jumlah_kemasan'] ?? null,
-                        'jumlah_sampling' => $produk['jumlah_sampling'] ?? null,
-                        'berat_perkarung' => $produk['berat_perkarung'] ?? null,
-                        'kondisi_kemasan' => isset($produk['kondisi_kemasan']) ? (bool)$produk['kondisi_kemasan'] : true,
-                        'keterangan' => $produk['keterangan'] ?? null,
+                        'id_produk'             => $idProduk,
+                        'id_tujuan_pengiriman'  => $idTujuanProduk,
+                        'kode_produksi'         => $produk['kode_produksi'] ?? null,
+                        'best_before'           => $produk['best_before'] ?? null,
+                        'jumlah_kemasan'        => $produk['jumlah_kemasan'] ?? null,
+                        'jumlah_sampling'       => $produk['jumlah_sampling'] ?? null,
+                        'berat_perkarung'       => $produk['berat_perkarung'] ?? null,
+                        'kondisi_kemasan'       => isset($produk['kondisi_kemasan']) ? (bool)$produk['kondisi_kemasan'] : true,
+                        'keterangan'            => $produk['keterangan'] ?? null,
                     ];
                 }
             }

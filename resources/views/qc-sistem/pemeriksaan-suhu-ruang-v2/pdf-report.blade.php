@@ -456,8 +456,11 @@
                             @endphp
 
                             @foreach($changes as $cIdx => $change)
+                                @php
+                                    $isPukul = (strcasecmp($change['lokasi'] ?? '', 'pukul') === 0);
+                                @endphp
                                 <tr>
-                                    <td style="text-align: center;">{{ $histNo++ }}</td>
+                                    <td style="text-align: center;">{{ $isPukul ? '' : $histNo++ }}</td>
                                     <td>{{ $change['lokasi'] }}</td>
                                     <td style="background: #fff3cd;">{{ $change['lama'] }}</td>
                                     <td style="background: #d4edda;">{{ $change['baru'] }}</td>

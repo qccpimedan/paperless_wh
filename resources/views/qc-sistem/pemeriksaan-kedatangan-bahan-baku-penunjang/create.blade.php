@@ -419,9 +419,9 @@
                                                                     $oldDistributor0 = array_values(array_filter($oldDistributor0, fn ($v) => $v !== null && $v !== ''));
                                                                 @endphp
                                                                 @forelse ($oldDistributor0 as $d)
-                                                                    <span class="badge bg-light-info text-info">{{ $d }}</span>
+                                                                    <span class="badge bg-light-info text-info badge-removable" data-value="{{ $d }}">{{ $d }} <button type="button" class="badge-remove-btn" onclick="removeBadgeItem(this, 'distributor')">&times;</button></span>
                                                                 @empty
-                                                                    <span class="text-muted small">Data Ini Kosong Tolong Isi Data Masternya Dahaulu</span>
+                                                                    <span class="text-muted small badge-empty">-</span>
                                                                 @endforelse
                                                             </div>
                                                             <div class="distributor-hidden-inputs">
@@ -444,9 +444,9 @@
                                                                     $oldProdusen0 = array_values(array_filter($oldProdusen0, fn ($v) => $v !== null && $v !== ''));
                                                                 @endphp
                                                                 @forelse ($oldProdusen0 as $p)
-                                                                    <span class="badge bg-light-primary text-primary">{{ $p }}</span>
+                                                                    <span class="badge bg-light-primary text-primary badge-removable" data-value="{{ $p }}">{{ $p }} <button type="button" class="badge-remove-btn" onclick="removeBadgeItem(this, 'produsen')">&times;</button></span>
                                                                 @empty
-                                                                    <span class="text-muted small">Data Ini Kosong Tolong Isi Data Masternya Dahaulu</span>
+                                                                    <span class="text-muted small badge-empty">-</span>
                                                                 @endforelse
                                                             </div>
                                                             <div class="produsen-hidden-inputs">
@@ -829,6 +829,30 @@
     }
     .collapse-chevron { transition: transform .2s ease; }
     .collapse-toggle-btn[aria-expanded="true"] .collapse-chevron { transform: rotate(180deg); }
+
+    /* Style untuk badge produsen & distributor removable */
+    .badge-removable {
+        display: inline-flex !important;
+        align-items: center;
+        gap: 6px;
+        padding-right: 6px !important;
+    }
+    .badge-remove-btn {
+        background: none;
+        border: none;
+        padding: 0 2px;
+        font-size: 13px;
+        font-weight: bold;
+        line-height: 1;
+        cursor: pointer;
+        color: #dc3545;
+        border-radius: 50%;
+        transition: color .15s, background .15s;
+    }
+    .badge-remove-btn:hover {
+        color: #fff;
+        background: #dc3545;
+    }
 </style>
 
 @push('scripts')
@@ -1583,16 +1607,17 @@ function applyProdukMetaForRow(rowEl) {
     const prodVals = meta ? normalizeMulti(meta.produsen) : [];
     const distVals = meta ? normalizeMulti(meta.distributor) : [];
 
-    const renderBadges = (containerEl, values, badgeClass) => {
+    const renderBadges = (containerEl, values, badgeClass, type) => {
         if (!values || values.length === 0) {
-            containerEl.innerHTML = '<span class="text-muted small">-</span>';
+            containerEl.innerHTML = '<span class="text-muted small badge-empty">-</span>';
             return;
         }
         containerEl.innerHTML = '';
         values.forEach((v) => {
             const span = document.createElement('span');
-            span.className = badgeClass;
-            span.textContent = String(v);
+            span.className = badgeClass + ' badge-removable';
+            span.setAttribute('data-value', String(v).trim());
+            span.innerHTML = `${String(v)} <button type="button" class="badge-remove-btn" onclick="removeBadgeItem(this, '${type}')">&times;</button>`;
             containerEl.appendChild(span);
         });
     };
@@ -1608,8 +1633,8 @@ function applyProdukMetaForRow(rowEl) {
         });
     };
 
-    renderBadges(produsenBadges, prodVals, 'badge bg-light-primary text-primary');
-    renderBadges(distributorBadges, distVals, 'badge bg-light-info text-info');
+    renderBadges(produsenBadges, prodVals, 'badge bg-light-primary text-primary', 'produsen');
+    renderBadges(distributorBadges, distVals, 'badge bg-light-info text-info', 'distributor');
     renderHiddenInputs(produsenHidden, 'produsen', prodVals);
     renderHiddenInputs(distributorHidden, 'distributor', distVals);
 }
@@ -2496,6 +2521,70 @@ try {
 
 // Initialize on page load
 updateRemoveButtons();
+
+/**
+ * Hapus satu badge Produsen/Distributor dari tampilan form Bahan Baku Penunjang.
+ * Data master TIDAK berubah.
+ *
+ * @param {HTMLButtonElement} btn  — tombol × yang diklik
+ * @param {string} type            — 'produsen' | 'distributor'
+ */
+function removeBadgeItem(btn, type) {
+    const badge = btn.closest('.badge-removable');
+    if (!badge) return;
+
+    const rowEl = badge.closest('.unified-row');
+    const badgesContainer = badge.closest('.produsen-badges, .distributor-badges');
+    
+    // Hapus badge dari tampilan
+    badge.remove();
+
+    // Jika tidak ada badge tersisa, tampilkan placeholder "-"
+    if (badgesContainer) {
+        const remaining = badgesContainer.querySelectorAll('.badge-removable');
+        if (remaining.length === 0) {
+            const placeholder = document.createElement('span');
+            placeholder.className = 'text-muted small badge-empty';
+            placeholder.textContent = '-';
+            badgesContainer.appendChild(placeholder);
+        }
+    }
+
+    // Rebuild hidden inputs dari badge yang tersisa
+    if (rowEl) {
+        const produsenBadgesEl = rowEl.querySelector('.produsen-badges');
+        const distributorBadgesEl = rowEl.querySelector('.distributor-badges');
+
+        const getValsFromBadges = (el) => {
+            if (!el) return [];
+            return Array.from(el.querySelectorAll('.badge-removable[data-value]'))
+                       .map(b => String(b.getAttribute('data-value') || b.dataset.value || '').trim())
+                       .filter(v => v !== '');
+        };
+
+        const produsenVals = getValsFromBadges(produsenBadgesEl);
+        const distributorVals = getValsFromBadges(distributorBadgesEl);
+
+        const headerProdusenHidden = rowEl.querySelector('.produsen-hidden-inputs');
+        const headerDistributorHidden = rowEl.querySelector('.distributor-hidden-inputs');
+        const rowIndex = rowEl.dataset.rowIndex ? String(rowEl.dataset.rowIndex) : '0';
+
+        const rebuildHidden = (wrap, vals, namePrefix) => {
+            if (!wrap) return;
+            wrap.innerHTML = '';
+            vals.forEach(v => {
+                const inp = document.createElement('input');
+                inp.type = 'hidden';
+                inp.name = `${namePrefix}[${rowIndex}][]`;
+                inp.value = v;
+                wrap.appendChild(inp);
+            });
+        };
+
+        rebuildHidden(headerProdusenHidden, produsenVals, 'produsen');
+        rebuildHidden(headerDistributorHidden, distributorVals, 'distributor');
+    }
+}
 </script>
 @endpush
 @endsection

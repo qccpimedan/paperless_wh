@@ -170,14 +170,21 @@
                                             <td>
                                                 @php
                                                     $bArr = json_decode($item->id_bahan_array ?? '[]', true);
-                                                    $namaBahanArray = array_values(array_filter(array_map(function ($id) use ($produkNamaById) {
-                                                        return $produkNamaById[$id] ?? null;
-                                                    }, is_array($bArr) ? $bArr : [])));
+                                                    // Filter out null values first, then convert to int and lookup
+                                                    $bArr = is_array($bArr) ? array_filter($bArr, function($id) { return $id !== null; }) : [];
+                                                    $namaBahanArray = array_values(array_filter(array_map(function ($id) use ($bahanNamaById) {
+                                                        // Convert to integer for array key lookup
+                                                        $id = (int)$id;
+                                                        return $bahanNamaById[$id] ?? null;
+                                                    }, $bArr)));
                                                 @endphp
-                                                @if($item->bahan) <span class="badge bg-info">{{ $item->bahan->nama_bahan }}</span>
+                                                @if($item->bahan)
+                                                    <span class="badge bg-info">{{ $item->bahan->nama_bahan }}</span>
                                                 @elseif(count($namaBahanArray) > 0)
                                                     <span class="badge bg-info">{{ $namaBahanArray[0] }}</span>
-                                                    @if(count($namaBahanArray) > 1) <br><small>+{{ count($namaBahanArray)-1 }} lainnya</small> @endif
+                                                    @if(count($namaBahanArray) > 1)
+                                                        <br><small class="text-muted">+{{ count($namaBahanArray)-1 }} lainnya</small>
+                                                    @endif
                                                 @else - @endif
                                             </td>
                                             <td>

@@ -210,8 +210,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('pemeriksaan-barang-mudah-pecah/export-pdf', [PemeriksaanBarangMudahPecahController::class, 'exportPDF'])->name('pemeriksaan-barang-mudah-pecah.export-pdf');
         Route::get('pemeriksaan-suhu-ruang/export-pdf', [PemeriksaanSuhuRuangController::class, 'exportPDF'])->name('pemeriksaan-suhu-ruang.export-pdf');
         Route::get('pemeriksaan-suhu-ruang/{pemeriksaanSuhuRuang:uuid}/print-pdf', [PemeriksaanSuhuRuangController::class, 'printPDF'])->name('pemeriksaan-suhu-ruang.print-pdf');
-        Route::get('pemeriksaan-suhu-ruang-v2/export-pdf', [PemeriksaanSuhuRuangV2Controller::class, 'exportPDF'])->name('pemeriksaan-suhu-ruang-v2.export-pdf');
-        Route::get('pemeriksaan-suhu-ruang-v2/{pemeriksaanSuhuRuangV2:uuid}/print-pdf', [PemeriksaanSuhuRuangV2Controller::class, 'printPDF'])->name('pemeriksaan-suhu-ruang-v2.print-pdf');
+         Route::get('pemeriksaan-suhu-ruang-v2/export-pdf', [PemeriksaanSuhuRuangV2Controller::class, 'exportPDF'])->name('pemeriksaan-suhu-ruang-v2.export-pdf');
+         Route::get('pemeriksaan-suhu-ruang-v2/export-excel', [PemeriksaanSuhuRuangV2Controller::class, 'exportExcel'])->name('pemeriksaan-suhu-ruang-v2.export-excel');
+         Route::get('pemeriksaan-suhu-ruang-v2/{pemeriksaanSuhuRuangV2:uuid}/print-pdf', [PemeriksaanSuhuRuangV2Controller::class, 'printPDF'])->name('pemeriksaan-suhu-ruang-v2.print-pdf');
         Route::get('pemeriksaan-suhu-ruang-v3/export-pdf', [PemeriksaanSuhuRuangV3Controller::class, 'exportPDF'])->name('pemeriksaan-suhu-ruang-v3.export-pdf');
         Route::get('pemeriksaan-suhu-ruang-v3/{pemeriksaanSuhuRuangV3:uuid}/print-pdf', [PemeriksaanSuhuRuangV3Controller::class, 'printPDF'])->name('pemeriksaan-suhu-ruang-v3.print-pdf');
         Route::get('detail-komplain/export-pdf/{uuid?}', [DetailKomplainController::class, 'exportPdf'])->name('detail-komplain.export-pdf');

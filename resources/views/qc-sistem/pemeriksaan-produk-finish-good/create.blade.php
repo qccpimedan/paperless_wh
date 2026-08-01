@@ -654,6 +654,30 @@
     }
     .collapse-chevron { transition: transform .2s ease; }
     .collapse-toggle-btn[aria-expanded="true"] .collapse-chevron { transform: rotate(180deg); }
+
+    /* Style untuk badge produsen & distributor removable */
+    .badge-removable {
+        display: inline-flex !important;
+        align-items: center;
+        gap: 6px;
+        padding-right: 6px !important;
+    }
+    .badge-remove-btn {
+        background: none;
+        border: none;
+        padding: 0 2px;
+        font-size: 13px;
+        font-weight: bold;
+        line-height: 1;
+        cursor: pointer;
+        color: #dc3545;
+        border-radius: 50%;
+        transition: color .15s, background .15s;
+    }
+    .badge-remove-btn:hover {
+        color: #fff;
+        background: #dc3545;
+    }
 </style>
 
 @push('scripts')
@@ -1216,21 +1240,22 @@ function applyProdukMetaForRow(rowEl) {
     const produkId = String(produkSelect.value || '');
     const meta = produkId && produkMeta ? produkMeta[produkId] : null;
 
-    const renderBadges = (el, list) => {
+    const renderBadges = (el, list, type) => {
         if (!el) return;
         el.innerHTML = '';
         const arr = Array.isArray(list) ? list : [];
         if (arr.length === 0) {
             const empty = document.createElement('span');
-            empty.className = 'text-muted small';
+            empty.className = 'text-muted small badge-empty';
             empty.textContent = '-';
             el.appendChild(empty);
             return;
         }
         arr.forEach((t) => {
             const span = document.createElement('span');
-            span.className = 'badge bg-light-secondary me-1 mb-1';
-            span.textContent = t;
+            span.className = 'badge bg-light-secondary me-1 mb-1 badge-removable';
+            span.setAttribute('data-value', String(t).trim());
+            span.innerHTML = `${String(t)} <button type="button" class="badge-remove-btn" onclick="removeBadgeItem(this, '${type}')">&times;</button>`;
             el.appendChild(span);
         });
     };
@@ -1238,8 +1263,8 @@ function applyProdukMetaForRow(rowEl) {
     const produsen = meta && Array.isArray(meta.produsen) ? meta.produsen : [];
     const distributor = meta && Array.isArray(meta.distributor) ? meta.distributor : [];
 
-    renderBadges(produsenBadges, produsen);
-    renderBadges(distributorBadges, distributor);
+    renderBadges(produsenBadges, produsen, 'produsen');
+    renderBadges(distributorBadges, distributor, 'distributor');
 
     if (produsenHidden) produsenHidden.value = JSON.stringify(produsen);
     if (distributorHidden) distributorHidden.value = JSON.stringify(distributor);
@@ -1652,6 +1677,56 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 });
+
+/**
+ * Hapus satu badge Produsen/Distributor dari tampilan form Finish Good.
+ * Data master TIDAK berubah.
+ *
+ * @param {HTMLButtonElement} btn  — tombol × yang diklik
+ * @param {string} type            — 'produsen' | 'distributor'
+ */
+function removeBadgeItem(btn, type) {
+    const badge = btn.closest('.badge-removable');
+    if (!badge) return;
+
+    const rowEl = badge.closest('.unified-row');
+    const badgesContainer = badge.closest('.produsen-badges, .distributor-badges');
+    
+    // Hapus badge dari tampilan
+    badge.remove();
+
+    // Jika tidak ada badge tersisa, tampilkan placeholder "-"
+    if (badgesContainer) {
+        const remaining = badgesContainer.querySelectorAll('.badge-removable');
+        if (remaining.length === 0) {
+            const placeholder = document.createElement('span');
+            placeholder.className = 'text-muted small badge-empty';
+            placeholder.textContent = '-';
+            badgesContainer.appendChild(placeholder);
+        }
+    }
+
+    // Update input hidden di row terkait
+    if (rowEl) {
+        const produsenBadgesEl = rowEl.querySelector('.produsen-badges');
+        const distributorBadgesEl = rowEl.querySelector('.distributor-badges');
+        const produsenHidden = rowEl.querySelector('input.produsen-hidden');
+        const distributorHidden = rowEl.querySelector('input.distributor-hidden');
+
+        if (type === 'produsen' && produsenHidden) {
+            const remaining = produsenBadgesEl ? Array.from(produsenBadgesEl.querySelectorAll('.badge-removable')).map(s => s.getAttribute('data-value') || '') : [];
+            const cleanArray = remaining.filter(val => val !== '');
+            produsenHidden.value = JSON.stringify(cleanArray);
+        } else if (type === 'distributor' && distributorHidden) {
+            const remaining = distributorBadgesEl ? Array.from(distributorBadgesEl.querySelectorAll('.badge-removable')).map(s => s.getAttribute('data-value') || '') : [];
+            const cleanArray = remaining.filter(val => val !== '');
+            distributorHidden.value = JSON.stringify(cleanArray);
+        }
+
+        // Sinkronisasi ke input detail di level yang lebih rendah
+        syncHeaderToDetails(rowEl);
+    }
+}
 </script>
 @endpush
 @endsection

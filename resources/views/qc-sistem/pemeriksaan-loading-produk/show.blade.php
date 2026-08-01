@@ -60,22 +60,6 @@
                                     </td>
                                 </tr>
                                 <tr>
-                                    <td><strong>Customer & Tujuan Pengiriman:</strong></td>
-                                    <td>
-                                        @if($pemeriksaanLoading->tujuanPengiriman)
-                                            <span class="badge bg-info">
-                                                @if($pemeriksaanLoading->tujuanPengiriman->customer)
-                                                    {{ $pemeriksaanLoading->tujuanPengiriman->customer->nama_cust }} - {{ $pemeriksaanLoading->tujuanPengiriman->nama_tujuan }}
-                                                @else
-                                                    {{ $pemeriksaanLoading->tujuanPengiriman->nama_tujuan }}
-                                                @endif
-                                            </span>
-                                        @else
-                                            -
-                                        @endif
-                                    </td>
-                                </tr>
-                                <tr>
                                     <td><strong>Jenis dan No. Kendaraan:</strong></td>
                                     <td>
                                         @if($pemeriksaanLoading->kendaraan)
@@ -252,6 +236,21 @@
                             <div class="col-md-12">
                                 <h5 class="text-primary mb-3">Detail Produk</h5>
                                 @foreach($pemeriksaanLoading->produk_data as $index => $produk)
+                                    @php
+                                        $idProdukItem = $produk['id_produk'] ?? null;
+
+                                        // Resolve nama tujuan per produk
+                                        $idTujuanItem = $produk['id_tujuan_pengiriman'] ?? null;
+                                        $tujuanLabel = '-';
+                                        if ($idTujuanItem) {
+                                            $tujuanObj = \App\Models\TujuanPengiriman::with('customer')->find($idTujuanItem);
+                                            if ($tujuanObj) {
+                                                $tujuanLabel = $tujuanObj->customer
+                                                    ? $tujuanObj->customer->nama_cust . ($tujuanObj->nama_tujuan && $tujuanObj->nama_tujuan !== '-' ? ' - ' . $tujuanObj->nama_tujuan : '')
+                                                    : ($tujuanObj->nama_tujuan ?? '-');
+                                            }
+                                        }
+                                    @endphp
                                     <div class="card mb-3" style="border-left: 4px solid #435ebe;">
                                         <div class="card-body">
                                             <h6 class="card-title mb-3">Detail #{{ $index + 1 }}</h6>
@@ -267,6 +266,10 @@
                                                                 @endphp
                                                                 <strong>{{ $produkName ?? 'Produk tidak ditemukan' }}</strong>
                                                             </td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td><strong>Customer & Tujuan:</strong></td>
+                                                            <td><span class="badge bg-info">{{ $tujuanLabel }}</span></td>
                                                         </tr>
                                                         <tr>
                                                             <td><strong>Kode Produksi:</strong></td>

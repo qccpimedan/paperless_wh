@@ -7,9 +7,11 @@ use App\Models\PemeriksaanSuhuRuangV2History;
 use App\Models\Shift;
 use App\Models\Produk;
 use App\Traits\EditablePer2JamTrait;
+use App\Exports\PemeriksaanSuhuRuangV2Export;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
+use Maatwebsite\Excel\Facades\Excel;
 
 class PemeriksaanSuhuRuangV2Controller extends Controller
 {
@@ -687,6 +689,146 @@ class PemeriksaanSuhuRuangV2Controller extends Controller
         $filename = 'laporan-pemeriksaan-suhu-ruang-v2-' . $filenameDate . '.pdf';
         $filename = 'laporan-pemeriksaan-suhu-ruang-v2-' . $filenameDate . '.pdf';
         return $pdf->download($filename);
+    }
+
+    public function exportExcel(Request $request)
+    {
+        $user = Auth::user();
+        $id_shift = $request->input('id_shift');
+        $tanggalDari = $request->input('tanggal_dari');
+        $tanggalSampai = $request->input('tanggal_sampai');
+        $tanggal = $request->input('tanggal');
+
+        $query = PemeriksaanSuhuRuangV2::with([
+            'user.role',
+            'user.plant',
+            'produk',
+            'shift',
+            'verifiedBy.role'
+        ])->with([
+            'qcVerifier' => function ($q) {
+                $q->select('id', 'name');
+            },
+            'produksiVerifier' => function ($q) {
+                $q->select('id', 'name');
+            },
+            'spvVerifier' => function ($q) {
+                $q->select('id', 'name');
+            },
+            'histories' => function ($q) {
+                $q->select(
+                    'id',
+                    'id_pemeriksaan_suhu_ruang_v2',
+                    'created_at',
+                    'suhu_produk_lama',
+                    'suhu_produk_baru',
+                    'pukul_lama',
+                    'pukul_baru',
+                    'keterangan_lama',
+                    'keterangan_baru',
+                    'tindakan_koreksi_lama',
+                    'tindakan_koreksi_baru',
+                    'suhu_cold_storage_lama',
+                    'suhu_cold_storage_baru',
+                    'suhu_anteroom_loading_lama',
+                    'suhu_anteroom_loading_baru',
+                    'suhu_pre_loading_lama',
+                    'suhu_pre_loading_baru',
+                    'suhu_prestaging_lama',
+                    'suhu_prestaging_baru',
+                    'suhu_anteroom_ekspansi_abf_lama',
+                    'suhu_anteroom_ekspansi_abf_baru',
+                    'suhu_chillroom_rm_lama',
+                    'suhu_chillroom_rm_baru',
+                    'suhu_chillroom_domestik_lama',
+                    'suhu_chillroom_domestik_baru'
+                )
+                    ->orderByDesc('id');
+            }
+        ]);
+
+        if ($user->role && strtolower($user->role->role) !== 'superadmin') {
+            $query->whereHas('user', function ($q) use ($user) {
+                $q->where('id_plant', $user->getEffectivePlantId());
+            });
+        }
+
+        if ($id_shift) {
+            $query->where('id_shift', $id_shift);
+        }
+
+        if ($id_shift) {
+            $shift = Shift::find($id_shift);
+            $shiftName = $shift ? trim(strtolower((string) $shift->shift)) : null;
+
+            $isShift1 = $shift && $shift->is_date_range;
+
+            if ($isShift1) {
+                if ($tanggalDari && $tanggalSampai) {
+                    $query->whereBetween('tanggal', [$tanggalDari, $tanggalSampai]);
+                } elseif ($tanggalDari) {
+                    $query->whereDate('tanggal', '>=', $tanggalDari);
+                } elseif ($tanggalSampai) {
+                    $query->whereDate('tanggal', '<=', $tanggalSampai);
+                }
+            } else {
+                if ($tanggal) {
+                    $query->whereDate('tanggal', $tanggal);
+                }
+            }
+        } else {
+            if ($tanggal) {
+                $query->whereDate('tanggal', $tanggal);
+            }
+        }
+
+        $pemeriksaans = $query->latest()->get();
+
+        $shift = $id_shift ? Shift::find($id_shift) : null;
+
+        $qcUser = null;
+        $produksiUser = null;
+        $spvQcUser = null;
+
+        $allQcIds = $pemeriksaans->pluck('verified_by_qc')->filter()->unique();
+        $allProduksiIds = $pemeriksaans->pluck('verified_by_produksi')->filter()->unique();
+        $allSpvIds = $pemeriksaans->pluck('verified_by_spv')->filter()->unique();
+
+        if ($allQcIds->count() > 0) {
+            $qcUserData = User::with('role')->whereIn('id', $allQcIds->toArray())->first();
+            if ($qcUserData) {
+                $qcUser = $qcUserData->name;
+            }
+        }
+
+        if ($allProduksiIds->count() > 0) {
+            $produksiUserData = User::with('role')->whereIn('id', $allProduksiIds->toArray())->first();
+            if ($produksiUserData) {
+                $produksiUser = $produksiUserData->name;
+            }
+        }
+
+        if ($allSpvIds->count() > 0) {
+            $spvUserData = User::with('role')->whereIn('id', $allSpvIds->toArray())->first();
+            if ($spvUserData) {
+                $spvQcUser = $spvUserData->name;
+            }
+        }
+
+        $params = [
+            'tanggal' => $tanggal,
+            'tanggal_dari' => $tanggalDari,
+            'tanggal_sampai' => $tanggalSampai,
+            'shift' => $shift,
+            'qcUser' => $qcUser,
+            'produksiUser' => $produksiUser,
+            'spvQcUser' => $spvQcUser,
+        ];
+
+        $filenameDate = $tanggal ?? $tanggalDari ?? date('Y-m-d');
+        $filename = 'laporan-pemeriksaan-suhu-ruang-v2-' . $filenameDate . '.xlsx';
+        
+        return Excel::download(new PemeriksaanSuhuRuangV2Export($pemeriksaans, $params), $filename);
     }
 
     public function batchVerify(Request $request)

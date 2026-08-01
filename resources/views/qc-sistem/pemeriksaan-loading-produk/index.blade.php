@@ -120,7 +120,7 @@
                     </div>
                     
                     <form action="{{ route('pemeriksaan-loading-produk.index') }}" method="GET" class="row g-3 mb-3">
-                        <div class="col-md-9"><input type="text" name="search" class="form-control" placeholder="Cari Produk, Customer, atau No. Kendaraan..." value="{{ request('search') }}"></div>
+                        <div class="col-md-9"><input type="text" name="search" class="form-control" placeholder="Cari Produk, atau No. Kendaraan..." value="{{ request('search') }}"></div>
                         <div class="col-md-3 d-flex align-items-end gap-2">
                             <button type="submit" class="btn btn-primary btn-sm">Cari Data</button>
                             <a href="{{ route('pemeriksaan-loading-produk.index') }}" class="btn btn-secondary btn-sm">Reset</a>
@@ -142,7 +142,7 @@
                                         <th>Shift</th>
                                         <th>Plant</th>
                                         <th>Nama Produk</th>
-                                        <th>Customer</th>
+                                        <!-- <th>Customer</th> -->
                                         <th>No. Kendaraan</th>
                                         <th>Verifikasi</th>
                                         <th>Aksi</th>
@@ -176,7 +176,7 @@
                                                 <span class="badge bg-info">{{ $pName }}</span>
                                                 @if($countP > 1) <br><small class="text-muted">+{{ $countP-1 }} lainnya</small> @endif
                                             </td>
-                                            <td>
+                                            <!-- <td>
                                                 @if($item->tujuanPengiriman)
                                                     @if($item->tujuanPengiriman->customer)
                                                         {{ $item->tujuanPengiriman->customer->nama_cust }}
@@ -186,7 +186,7 @@
                                                 @else
                                                     -
                                                 @endif
-                                            </td>
+                                            </td> -->
                                             <td>{{ $item->kendaraan->no_kendaraan ?? '-' }}</td>
                                             <td>
                                                 @if($st === 'pending' || $st === null)
