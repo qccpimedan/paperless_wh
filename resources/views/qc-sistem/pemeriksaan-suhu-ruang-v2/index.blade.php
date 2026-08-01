@@ -74,7 +74,7 @@
                 <div class="card-body">
                     <div class="row mb-4 p-3 bg-light rounded">
                         <div class="col-md-12 mb-3"><h6><i class="bi bi-funnel"></i> Filter & Verifikasi Massal</h6></div>
-                        <form action="{{ route('pemeriksaan-suhu-ruang-v2.export-pdf') }}" method="GET" class="row g-3" id="filterForm">
+                         <form method="GET" class="row g-3" id="filterForm">
                             <div class="col-md-3">
                                 <label class="form-label">Shift</label>
                                 <select name="id_shift" class="form-select" id="shiftSelect">
@@ -98,8 +98,9 @@
                                 <label class="form-label">Tanggal</label>
                                 <input type="date" name="tanggal" class="form-control" value="{{ request('tanggal') }}">
                             </div>
-                            <div class="col-md-3 d-flex align-items-end">
-                                <button type="submit" class="btn btn-success w-100"><i class="bi bi-file-pdf"></i> PDF</button>
+                            <div class="col-md-3 d-flex align-items-end gap-2">
+                                <button type="submit" formaction="{{ route('pemeriksaan-suhu-ruang-v2.export-pdf') }}" class="btn btn-danger flex-fill"><i class="bi bi-file-pdf"></i> PDF</button>
+                                <button type="submit" formaction="{{ route('pemeriksaan-suhu-ruang-v2.export-excel') }}" class="btn btn-success flex-fill"><i class="bi bi-file-earmark-excel"></i> Excel</button>
                             </div>
                         </form>
                     </div>
