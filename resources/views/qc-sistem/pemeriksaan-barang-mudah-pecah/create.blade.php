@@ -46,7 +46,7 @@
                                     </div>
                                 @endif
 
-                                <form action="{{ route('pemeriksaan-barang-mudah-pecah.store') }}" method="POST" novalidate>
+                                <form id="form-pemeriksaan-barang-mudah-pecah" data-autosave="true" action="{{ route('pemeriksaan-barang-mudah-pecah.store') }}" method="POST" novalidate>
                                     @csrf
 
                                     <!-- Informasi Dasar -->

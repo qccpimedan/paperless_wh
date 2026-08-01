@@ -45,7 +45,7 @@
                                     </div>
                                 @endif
 
-                                <form class="form form-horizontal" action="{{ route('pemeriksaan-kedatangan-kemasan.store') }}" method="POST" enctype="multipart/form-data">
+                                <form id="form-pemeriksaan-kedatangan-kemasan" data-autosave="true" class="form form-horizontal" action="{{ route('pemeriksaan-kedatangan-kemasan.store') }}" method="POST" enctype="multipart/form-data">
                                     @csrf
                                     
                                     <!-- Informasi Dasar -->

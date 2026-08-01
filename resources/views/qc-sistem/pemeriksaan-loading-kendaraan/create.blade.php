@@ -45,7 +45,7 @@
                                     </div>
                                 @endif
 
-                                <form class="form form-horizontal" action="{{ route('pemeriksaan-loading-kendaraan.store') }}" method="POST">
+                                <form id="form-pemeriksaan-loading-kendaraan" data-autosave="true" class="form form-horizontal" action="{{ route('pemeriksaan-loading-kendaraan.store') }}" method="POST">
                                     @csrf
                                     <div class="form-body">
                                         <div class="row">

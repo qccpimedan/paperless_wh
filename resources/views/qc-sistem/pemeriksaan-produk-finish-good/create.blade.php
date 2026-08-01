@@ -49,7 +49,7 @@
                                 </div>
                             @endif
 
-                            <form action="{{ route('pemeriksaan-produk-finish-good.store') }}" method="POST" enctype="multipart/form-data">
+                            <form id="form-pemeriksaan-produk-finish-good" data-autosave="true" action="{{ route('pemeriksaan-produk-finish-good.store') }}" method="POST" enctype="multipart/form-data">
                                 @csrf
 
                                 <div class="form-section mb-4">

@@ -45,7 +45,7 @@
                                     </div>
                                 @endif
 
-                                <form class="form form-horizontal" action="{{ route('pemeriksaan-loading-produk.store') }}" method="POST">
+                                <form id="form-pemeriksaan-loading-produk" data-autosave="true" class="form form-horizontal" action="{{ route('pemeriksaan-loading-produk.store') }}" method="POST">
                                     @csrf
                                     <div class="form-body">
                                         <!-- INFORMASI DASAR -->

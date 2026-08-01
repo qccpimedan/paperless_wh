@@ -50,7 +50,7 @@
                                 </div>
                             @endif
 
-                            <form action="{{ route('pemeriksaan-bahan-baku.store') }}" method="POST" enctype="multipart/form-data">
+                            <form id="form-pemeriksaan-bahan-baku-penunjang" data-autosave="true" action="{{ route('pemeriksaan-bahan-baku.store') }}" method="POST" enctype="multipart/form-data">
                                 @csrf
                                 <!-- Informasi Dasar -->
                                 <div class="form-section mb-4">

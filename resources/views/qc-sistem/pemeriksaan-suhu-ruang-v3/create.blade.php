@@ -40,7 +40,7 @@
                                         </ul>
                                     </div>
                                 @endif
-                                <form class="form form-horizontal" action="{{ route('pemeriksaan-suhu-ruang-v3.store') }}" method="POST">
+                                <form id="form-pemeriksaan-suhu-ruang-v3" data-autosave="true" class="form form-horizontal" action="{{ route('pemeriksaan-suhu-ruang-v3.store') }}" method="POST">
                                     @csrf
                                     <div class="form-body">
                                         <div class="row">

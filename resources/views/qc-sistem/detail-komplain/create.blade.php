@@ -33,7 +33,7 @@
                     <h5 class="card-title">Form Input Detail Komplain</h5>
                 </div>
                 <div class="card-body">
-                    <form action="{{ route('detail-komplain.store') }}" method="POST" enctype="multipart/form-data">
+                    <form id="form-detail-komplain" data-autosave="true" action="{{ route('detail-komplain.store') }}" method="POST" enctype="multipart/form-data">
                         @csrf
 
                         <!-- SECTION 1: INFORMASI SUPPLIER & PENGIRIMAN -->

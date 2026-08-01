@@ -47,6 +47,14 @@ Route::match(['get', 'post'], '/', function () {
     }
     return redirect('/login');
 });
+
+// CSRF Token Refresh Route
+Route::get('/csrf-token', function () {
+    return response()->json([
+        'csrf_token' => csrf_token()
+    ]);
+})->middleware('web');
+
 // Authentication Routes
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [AuthController::class, 'login']);
