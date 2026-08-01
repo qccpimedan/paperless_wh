@@ -83,53 +83,13 @@
                                         <div class="row">
                                             <div class="col-md-6">
                                                 <div class="form-group">
-                                                    <label for="id_tujuan_pengiriman">Customer & Tujuan Pengiriman</label>
-                                                    <select id="id_tujuan_pengiriman" class="form-select @error('id_tujuan_pengiriman') is-invalid @enderror" name="id_tujuan_pengiriman">
-                                                        <option value="">-- Pilih Tujuan --</option>
-                                                        @foreach($tujuanPengirimans as $tujuan)
-                                                            <option value="{{ $tujuan->id }}" {{ old('id_tujuan_pengiriman', $pemeriksaanLoading->id_tujuan_pengiriman) == $tujuan->id ? 'selected' : '' }}>{{ $tujuan->customer ? $tujuan->customer->nama_cust . ' - ' . $tujuan->nama_tujuan : $tujuan->nama_tujuan }}</option>
-                                                        @endforeach
-                                                        <option value="other" {{ old('id_tujuan_pengiriman', $pemeriksaanLoading->nama_customer_manual ? 'other' : '') == 'other' ? 'selected' : '' }}>-- Lainnya (Input Manual) --</option>
-                                                    </select>
-                                                    @error('id_tujuan_pengiriman')
-                                                        <div class="invalid-feedback">{{ $message }}</div>
-                                                    @enderror
-
-                                                    <div id="manual_tujuan_pengiriman_input" class="mt-2" style="display: {{ old('id_tujuan_pengiriman', $pemeriksaanLoading->nama_customer_manual ? 'other' : '') == 'other' ? 'block' : 'none' }};">
-                                                        <div class="row">
-                                                            <div class="col-md-6">
-                                                                <div class="form-group">
-                                                                    <label for="nama_customer_manual">Customer</label>
-                                                                    <input type="text" id="nama_customer_manual" class="form-control @error('nama_customer_manual') is-invalid @enderror"
-                                                                        name="nama_customer_manual" value="{{ old('nama_customer_manual', $pemeriksaanLoading->nama_customer_manual) }}" placeholder="Masukkan nama customer">
-                                                                    @error('nama_customer_manual')
-                                                                        <div class="invalid-feedback">{{ $message }}</div>
-                                                                    @enderror
-                                                                </div>
-                                                            </div>
-                                                            <div class="col-md-6">
-                                                                <div class="form-group">
-                                                                    <label for="nama_tujuan_manual">Tujuan Pengiriman</label>
-                                                                    <input type="text" id="nama_tujuan_manual" class="form-control @error('nama_tujuan_manual') is-invalid @enderror"
-                                                                        name="nama_tujuan_manual" value="{{ old('nama_tujuan_manual', $pemeriksaanLoading->nama_tujuan_manual) }}" placeholder="Masukkan tujuan pengiriman">
-                                                                    @error('nama_tujuan_manual')
-                                                                        <div class="invalid-feedback">{{ $message }}</div>
-                                                                    @enderror
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <div class="form-group">
                                                     <label for="id_kendaraan">Jenis & No Kendaraan</label>
                                                     <select id="id_kendaraan" class="form-select @error('id_kendaraan') is-invalid @enderror" name="id_kendaraan">
                                                         <option value="">-- Pilih Kendaraan --</option>
+                                                        <option value="other" {{ old('id_kendaraan', $pemeriksaanLoading->jenis_kendaraan_manual ? 'other' : '') == 'other' ? 'selected' : '' }}>-- Lainnya (Input Manual) --</option>
                                                         @foreach($kendaraans as $kendaraan)
                                                             <option value="{{ $kendaraan->id }}" {{ old('id_kendaraan', $pemeriksaanLoading->id_kendaraan) == $kendaraan->id ? 'selected' : '' }}>{{ $kendaraan->jenis_kendaraan }} - {{ $kendaraan->no_kendaraan }}</option>
                                                         @endforeach
-                                                        <option value="other" {{ old('id_kendaraan', $pemeriksaanLoading->jenis_kendaraan_manual ? 'other' : '') == 'other' ? 'selected' : '' }}>-- Lainnya (Input Manual) --</option>
                                                     </select>
                                                     @error('id_kendaraan')
                                                         <div class="invalid-feedback">{{ $message }}</div>
@@ -170,10 +130,10 @@
                                                     <label for="id_supir">Nama Supir</label>
                                                     <select id="id_supir" class="form-control @error('id_supir') is-invalid @enderror" name="id_supir">
                                                         <option value="">Pilih Supir</option>
+                                                        <option valuex="other" {{ old('id_supir', $pemeriksaanLoading->nama_supir_manual ? 'other' : '') == 'other' ? 'selected' : '' }}>-- Lainnya (Input Manual) --</option>
                                                         @foreach($supirs as $supir)
                                                             <option value="{{ $supir->id }}" {{ old('id_supir', $pemeriksaanLoading->id_supir) == $supir->id ? 'selected' : '' }}>{{ $supir->nama_supir }}</option>
                                                         @endforeach
-                                                        <option value="other" {{ old('id_supir', $pemeriksaanLoading->nama_supir_manual ? 'other' : '') == 'other' ? 'selected' : '' }}>-- Lainnya (Input Manual) --</option>
                                                     </select>
                                                     @error('id_supir')
                                                         <div class="invalid-feedback">{{ $message }}</div>
@@ -379,6 +339,43 @@
                                                         <button type="button" class="btn btn-sm btn-outline-danger remove-produk-group" style="display:{{ $groups->count() > 1 ? 'inline-block' : 'none' }};">Hapus Produk</button>
                                                     </div>
 
+                                                    {{-- Customer & Tujuan per produk --}}
+                                                    @php
+                                                        $savedTujuanId = $firstRow['id_tujuan_pengiriman'] ?? null;
+                                                    @endphp
+                                                    <div class="row mb-3 produk-tujuan-section">
+                                                        <div class="col-md-12">
+                                                            <div class="form-group">
+                                                                <label>Customer & Tujuan Pengiriman</label>
+                                                                <select class="form-select produk-tujuan-select" name="produk_data[{{ $groupIndex }}][id_tujuan_pengiriman]">
+                                                                    <option value="">-- Pilih Tujuan --</option>
+                                                                    <option value="other" {{ $savedTujuanId == 'other' ? 'selected' : '' }}>✏️ Lainnya (Input Manual)</option>
+                                                                    @foreach($tujuanPengirimans as $tujuan)
+                                                                        @php
+                                                                            $nc = $tujuan->customer->nama_cust ?? null;
+                                                                            $nt = $tujuan->nama_tujuan ?? null;
+                                                                            if ($nc && $nt && $nt !== '-') $lbl = $nc . ' - ' . $nt;
+                                                                            elseif ($nc) $lbl = $nc;
+                                                                            elseif ($nt && $nt !== '-') $lbl = $nt;
+                                                                            else $lbl = 'Tujuan #' . $tujuan->id;
+                                                                        @endphp
+                                                                        <option value="{{ $tujuan->id }}" {{ $savedTujuanId == $tujuan->id ? 'selected' : '' }}>{{ $lbl }}</option>
+                                                                    @endforeach
+                                                                </select>
+                                                                <div class="produk-tujuan-manual mt-2" style="display:none;">
+                                                                    <div class="row">
+                                                                        <div class="col-md-6">
+                                                                            <input type="text" class="form-control produk-customer-manual" name="produk_data[{{ $groupIndex }}][nama_customer_manual]" placeholder="Nama Customer">
+                                                                        </div>
+                                                                        <div class="col-md-6">
+                                                                            <input type="text" class="form-control produk-tujuan-manual-input" name="produk_data[{{ $groupIndex }}][nama_tujuan_manual]" placeholder="Nama Tujuan Pengiriman">
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
                                                     <div class="row">
                                                         <div class="col-md-6">
                                                             <div class="form-group">
@@ -461,10 +458,10 @@
                                                 </div>
                                             @endforeach
                                         </div>
-                                        <button type="button" id="add-produk-group" class="btn btn-sm btn-success mb-4">+ Tambah Produk</button>
+                                        <!-- <button type="button" id="add-produk-group" class="btn btn-sm btn-success mb-4">+ Tambah Produk</button> -->
 
                                         <!-- HASIL PEMERIKSAAN -->
-                                        <h5 class="text-primary mb-3 mt-4">Hasil Pemeriksaan</h5>
+                                        <!-- <h5 class="text-primary mb-3 mt-4">Hasil Pemeriksaan</h5>
                                         <div class="row">
                                             <div class="col-md-12">
                                                 <div class="form-group">
@@ -477,7 +474,7 @@
                                                     @enderror
                                                 </div>
                                             </div>
-                                        </div>
+                                        </div> -->
 
                                         <!-- BUTTONS -->
                                         <div class="col-sm-12 d-flex justify-content-end mt-4">
@@ -531,7 +528,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const kendaraanChoices = initChoicesSelect(document.getElementById('id_kendaraan'), '-- Pilih Kendaraan --');
     const supirChoices = initChoicesSelect(document.getElementById('id_supir'), 'Pilih Supir');
 
-    // Toggle manual tujuan pengiriman input
+    // Toggle manual tujuan pengiriman input (legacy - kept for safety)
     const tujuanSelect = document.getElementById('id_tujuan_pengiriman');
     const manualTujuanDiv = document.getElementById('manual_tujuan_pengiriman_input');
     if (tujuanSelect && manualTujuanDiv) {
@@ -539,6 +536,51 @@ document.addEventListener('DOMContentLoaded', function() {
             manualTujuanDiv.style.display = this.value === 'other' ? 'block' : 'none';
         });
     }
+
+    // ======= TUJUAN PER PRODUK =======
+    function bindTujuanToggleEdit(groupEl) {
+        const sel = groupEl.querySelector('select.produk-tujuan-select');
+        const div = groupEl.querySelector('.produk-tujuan-manual');
+        if (!sel || !div) return;
+
+        // Init Choices.js dengan preserved selected value
+        const savedValue = sel.value; // Simpan value yang sudah di-set dari PHP
+        if (typeof Choices !== 'undefined' && !sel._choicesInstance) {
+            try {
+                const choicesInst = new Choices(sel, {
+                    searchResultLimit: 100,
+                    searchFuzziness: 0.000001,
+                    fuseOptions: { ignoreLocation: true, threshold: 0.2, matchAllTokens: false },
+                    searchEnabled: true,
+                    searchPlaceholderValue: 'Cari customer...',
+                    itemSelectText: '',
+                    noResultsText: 'Tidak ada hasil ditemukan',
+                    noChoicesText: 'Tidak ada pilihan tersedia',
+                    shouldSort: false,
+                    placeholder: true,
+                    placeholderValue: '-- Pilih Tujuan --'
+                });
+                sel._choicesInstance = choicesInst;
+
+                // Restore selected value setelah Choices.js init
+                if (savedValue) {
+                    try { choicesInst.setChoiceByValue(String(savedValue)); } catch(e) {}
+                }
+            } catch (e) {}
+        }
+
+        // Toggle manual input + sync hidden inputs
+        function checkToggle() {
+            div.style.display = sel.value === 'other' ? 'block' : 'none';
+            groupEl.querySelectorAll('.row-tujuan-hidden').forEach(h => { h.value = sel.value; });
+        }
+
+        sel.addEventListener('change', checkToggle);
+        checkToggle();
+    }
+
+    // Init untuk semua produk-group yang sudah ada di halaman edit
+    document.querySelectorAll('#produk-groups .produk-group').forEach(bindTujuanToggleEdit);
 
     // Toggle manual kendaraan input
     const kendaraanSelect = document.getElementById('id_kendaraan');

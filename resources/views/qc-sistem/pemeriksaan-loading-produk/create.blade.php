@@ -82,66 +82,6 @@
                                         <div class="row">
                                             <div class="col-md-6">
                                                 <div class="form-group">
-                                                    <label for="id_tujuan_pengiriman">Customer & Tujuan Pengiriman</label>
-                                                    <select id="id_tujuan_pengiriman" class="form-select @error('id_tujuan_pengiriman') is-invalid @enderror" name="id_tujuan_pengiriman">
-                                                        <option value="">-- Pilih Tujuan --</option>
-                                                        <option value="other" {{ old('id_tujuan_pengiriman') == 'other' ? 'selected' : '' }}>✏️ Lainnya (Input Manual)</option>
-                                                        @foreach($tujuanPengirimans as $tujuan)
-                                                            @php
-                                                                $namaCustomer = $tujuan->customer->nama_cust ?? null;
-                                                                $namaTujuan   = $tujuan->nama_tujuan ?? null;
-                                                                if ($namaCustomer && $namaTujuan && $namaTujuan !== '-') {
-                                                                    $label = $namaCustomer . ' - ' . $namaTujuan;
-                                                                } elseif ($namaCustomer) {
-                                                                    $label = $namaCustomer;
-                                                                } elseif ($namaTujuan && $namaTujuan !== '-') {
-                                                                    $label = $namaTujuan;
-                                                                } else {
-                                                                    $label = 'Tujuan #' . $tujuan->id;
-                                                                }
-                                                            @endphp
-                                                            <option value="{{ $tujuan->id }}" {{ old('id_tujuan_pengiriman') == $tujuan->id ? 'selected' : '' }}>{{ $label }}</option>
-                                                        @endforeach
-                                                        @if(!empty($customersWithoutTujuan) && $customersWithoutTujuan->count() > 0)
-                                                            @foreach($customersWithoutTujuan as $customer)
-                                                                <option value="customer_{{ $customer->id }}" {{ old('id_tujuan_pengiriman') == 'customer_'.$customer->id ? 'selected' : '' }}>
-                                                                    {{ $customer->nama_cust }} (belum ada tujuan)
-                                                                </option>
-                                                            @endforeach
-                                                        @endif
-                                                    </select>
-                                                    @error('id_tujuan_pengiriman')
-                                                        <div class="invalid-feedback">{{ $message }}</div>
-                                                    @enderror
-
-                                                    <div id="manual_tujuan_pengiriman_input" class="mt-2" style="display: none;">
-                                                        <div class="row">
-                                                            <div class="col-md-6">
-                                                                <div class="form-group">
-                                                                    <label for="nama_customer_manual">Customer</label>
-                                                                    <input type="text" id="nama_customer_manual" class="form-control @error('nama_customer_manual') is-invalid @enderror"
-                                                                        name="nama_customer_manual" value="{{ old('nama_customer_manual') }}" placeholder="Masukkan nama customer">
-                                                                    @error('nama_customer_manual')
-                                                                        <div class="invalid-feedback">{{ $message }}</div>
-                                                                    @enderror
-                                                                </div>
-                                                            </div>
-                                                            <div class="col-md-6">
-                                                                <div class="form-group">
-                                                                    <label for="nama_tujuan_manual">Tujuan Pengiriman</label>
-                                                                    <input type="text" id="nama_tujuan_manual" class="form-control @error('nama_tujuan_manual') is-invalid @enderror"
-                                                                        name="nama_tujuan_manual" value="{{ old('nama_tujuan_manual') }}" placeholder="Masukkan tujuan pengiriman">
-                                                                    @error('nama_tujuan_manual')
-                                                                        <div class="invalid-feedback">{{ $message }}</div>
-                                                                    @enderror
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <div class="form-group">
                                                     <label for="id_kendaraan">Jenis & No Kendaraan</label>
                                                     <select id="id_kendaraan" class="form-select @error('id_kendaraan') is-invalid @enderror" name="id_kendaraan">
                                                         <option value="">-- Pilih Kendaraan --</option>
@@ -376,6 +316,7 @@
                                                     <h6 class="text-secondary mb-0">Produk #1</h6>
                                                 </div>
 
+                                                
                                                 <div class="row">
                                                     <div class="col-md-6">
                                                         <div class="form-group">
@@ -383,7 +324,7 @@
                                                             <select class="choices form-select kategori-produk-select @error('kategori_code') is-invalid @enderror" name="kategori_code" required>
                                                                 <option value="">-- Pilih Kategori --</option>
                                                                 @foreach(($produkKategoriOptions ?? []) as $kategori)
-                                                                    <option value="{{ $kategori }}" {{ $selectedKategori == $kategori ? 'selected' : '' }}>{{ $kategori }}</option>
+                                                                <option value="{{ $kategori }}" {{ $selectedKategori == $kategori ? 'selected' : '' }}>{{ $kategori }}</option>
                                                                 @endforeach
                                                             </select>
                                                             @error('kategori_code')
@@ -400,29 +341,49 @@
                                                             </select>
                                                             @error('id_produk')
                                                                 <div class="invalid-feedback">{{ $message }}</div>
-                                                            @enderror
+                                                                @enderror
                                                         </div>
                                                     </div>
                                                 </div>
-
-                                                <!-- <div class="d-flex justify-content-between align-items-center mt-3 mb-2">
-                                                    <h6 class="text-secondary mb-0">Detail Produk</h6>
-                                                    <div class="btn-group">
-                                                        <button type="button" class="btn btn-outline-success btn-sm download-template-btn">
-                                                            <i class="bi bi-download"></i> Template
-                                                        </button>
-                                                        <button type="button" class="btn btn-outline-info btn-sm import-excel-btn">
-                                                            <i class="bi bi-file-earmark-excel"></i> Import
-                                                        </button>
-                                                        <input type="file" class="import-excel-input" accept=".xlsx, .xls" style="display:none;">
+                                                {{-- === CUSTOMER & TUJUAN PENGIRIMAN (per produk) === --}}
+                                                <div class="row produk-tujuan-section">
+                                                    <div class="col-md-12">
+                                                        <div class="form-group">
+                                                            <label>Customer & Tujuan Pengiriman</label>
+                                                            <select class="form-select produk-tujuan-select" name="produk_data[0][id_tujuan_pengiriman]">
+                                                                <option value="">-- Pilih Tujuan --</option>
+                                                                <option value="other">✏️ Lainnya (Input Manual)</option>
+                                                                @foreach($tujuanPengirimans as $tujuan)
+                                                                    @php
+                                                                        $nc = $tujuan->customer->nama_cust ?? null;
+                                                                        $nt = $tujuan->nama_tujuan ?? null;
+                                                                        if ($nc && $nt && $nt !== '-') $lbl = $nc . ' - ' . $nt;
+                                                                        elseif ($nc) $lbl = $nc;
+                                                                        elseif ($nt && $nt !== '-') $lbl = $nt;
+                                                                        else $lbl = 'Tujuan #' . $tujuan->id;
+                                                                    @endphp
+                                                                    <option value="{{ $tujuan->id }}">{{ $lbl }}</option>
+                                                                @endforeach
+                                                                @if(!empty($customersWithoutTujuan) && $customersWithoutTujuan->count() > 0)
+                                                                    @foreach($customersWithoutTujuan as $cust)
+                                                                        <option value="customer_{{ $cust->id }}">{{ $cust->nama_cust }} (belum ada tujuan)</option>
+                                                                    @endforeach
+                                                                @endif
+                                                            </select>
+                                                            {{-- Input manual --}}
+                                                            <div class="produk-tujuan-manual mt-2" style="display:none;">
+                                                                <div class="row">
+                                                                    <div class="col-md-6">
+                                                                        <input type="text" class="form-control produk-customer-manual" name="produk_data[0][nama_customer_manual]" placeholder="Nama Customer">
+                                                                    </div>
+                                                                    <div class="col-md-6">
+                                                                        <input type="text" class="form-control produk-tujuan-manual-input" name="produk_data[0][nama_tujuan_manual]" placeholder="Nama Tujuan Pengiriman">
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
                                                     </div>
-                                                </div> -->
-                                                <!-- Tambahkan ini tepat di bawah div d-flex yang berisi tombol Template & Import -->
-                                                <!-- <div class="alert alert-light-info color-info mt-2 mb-3 py-2 px-3" style="font-size: 0.85rem;">
-                                                    <i class="bi bi-info-circle-fill me-2"></i>
-                                                    <strong>Cara Cepat:</strong> 1. Pilih Produk > 2. Klik <strong>Template</strong> > 3. Isi Excel > 4. Klik <strong>Import</strong>. 
-                                                    <span class="text-muted">(Sistem akan mengisi baris detail secara otomatis dari file Excel Anda)</span>
-                                                </div> -->
+                                                </div>
 
                                                 <div class="produk-container">
                                                     <div class="produk-row mb-4 p-3 border rounded" style="background-color: #f8f9fa;">
@@ -495,6 +456,33 @@
                 </div>
             </div>
         </section>
+    </div>
+</div>
+
+{{-- ===== MODAL KONFIRMASI CUSTOMER ===== --}}
+<div class="modal fade" id="modalSamaTujuan" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-warning">
+                <h5 class="modal-title"><i class="bi bi-people me-2"></i>Customer & Tujuan Pengiriman</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center py-4">
+                <div class="mb-3">
+                    <i class="bi bi-question-circle text-warning" style="font-size:3rem;"></i>
+                </div>
+                <h6 class="fw-bold mb-2">Apakah Customer & Tujuan Pengiriman sama dengan produk sebelumnya?</h6>
+                <p class="text-muted small mb-0" id="modal-tujuan-prev-label">—</p>
+            </div>
+            <div class="modal-footer justify-content-center gap-2">
+                <button type="button" class="btn btn-success" id="modal-tujuan-ya">
+                    <i class="bi bi-check-circle me-1"></i> Ya, Sama
+                </button>
+                <button type="button" class="btn btn-outline-secondary" id="modal-tujuan-tidak">
+                    <i class="bi bi-x-circle me-1"></i> Tidak, Berbeda
+                </button>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -644,6 +632,28 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     const produkByKategori = @json($produkByKategori ?? []);
+
+    // Data tujuan pengiriman untuk digunakan saat membuat grup baru
+    const tujuanPengirimanOptions = [
+        { value: '', label: '-- Pilih Tujuan --' },
+        { value: 'other', label: '✏️ Lainnya (Input Manual)' },
+        @foreach($tujuanPengirimans as $tujuan)
+            @php
+                $nc = $tujuan->customer->nama_cust ?? null;
+                $nt = $tujuan->nama_tujuan ?? null;
+                if ($nc && $nt && $nt !== '-') $lbl = $nc . ' - ' . $nt;
+                elseif ($nc) $lbl = $nc;
+                elseif ($nt && $nt !== '-') $lbl = $nt;
+                else $lbl = 'Tujuan #' . $tujuan->id;
+            @endphp
+            { value: '{{ $tujuan->id }}', label: {!! json_encode($lbl) !!} },
+        @endforeach
+        @if(!empty($customersWithoutTujuan) && $customersWithoutTujuan->count() > 0)
+            @foreach($customersWithoutTujuan as $cust)
+                { value: 'customer_{{ $cust->id }}', label: '{{ $cust->nama_cust }} (belum ada tujuan)' },
+            @endforeach
+        @endif
+    ];
 
     const choicesInstances = new WeakMap();
 
@@ -995,6 +1005,10 @@ document.addEventListener('DOMContentLoaded', function() {
         let globalIndex = 0;
 
         groups.forEach((groupEl) => {
+            // Ambil nilai tujuan dari dropdown grup ini
+            const tujuanSelect = groupEl.querySelector('select.produk-tujuan-select');
+            const tujuanValue = tujuanSelect ? tujuanSelect.value : '';
+
             const rows = Array.from(groupEl.querySelectorAll('.produk-container .produk-row'));
             rows.forEach((row, idxInGroup) => {
                 updateDetailLabel(row, idxInGroup);
@@ -1005,6 +1019,18 @@ document.addEventListener('DOMContentLoaded', function() {
                     const updated = name.replace(/produk_data\[\d+\]/g, `produk_data[${globalIndex}]`);
                     if (updated !== name) el.setAttribute('name', updated);
                 });
+
+                // Tambahkan/update hidden input id_tujuan_pengiriman di setiap row
+                // agar controller menerima tujuan per detail row
+                let tujuanHidden = row.querySelector('input.row-tujuan-hidden');
+                if (!tujuanHidden) {
+                    tujuanHidden = document.createElement('input');
+                    tujuanHidden.type = 'hidden';
+                    tujuanHidden.className = 'row-tujuan-hidden';
+                    row.appendChild(tujuanHidden);
+                }
+                tujuanHidden.setAttribute('name', `produk_data[${globalIndex}][id_tujuan_pengiriman]`);
+                tujuanHidden.value = tujuanValue;
 
                 globalIndex += 1;
             });
@@ -1287,111 +1313,234 @@ document.addEventListener('DOMContentLoaded', function() {
         const groupsWrapper = document.getElementById('produk-groups');
         if (!groupsWrapper) return;
 
-        const newGroup = document.createElement('div');
-        newGroup.className = 'produk-group mb-4 p-3 border rounded';
-        newGroup.style.backgroundColor = '#ffffff';
-        newGroup.setAttribute('data-group-index', String(document.querySelectorAll('#produk-groups .produk-group').length));
+        // Ambil tujuan dari grup terakhir
+        const existingGroups = document.querySelectorAll('#produk-groups .produk-group');
+        const lastGroup = existingGroups[existingGroups.length - 1];
+        let prevTujuanValue = '';
+        let prevTujuanLabel = '—';
 
-        newGroup.innerHTML = `
-            <div class="d-flex justify-content-between align-items-center mb-2">
-                <h6 class="text-secondary mb-0">Produk</h6>
-            </div>
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="form-group">
-                        <label>Kategori <span class="text-danger">*</span></label>
-                        <select class="choices form-select kategori-produk-select">
-                            <option value="">-- Pilih Kategori --</option>
-                            ${Object.keys(produkByKategori || {}).map((k) => `<option value="${String(k)}">${String(k)}</option>`).join('')}
-                        </select>
+        if (lastGroup) {
+            const prevSelect = lastGroup.querySelector('select.produk-tujuan-select');
+            if (prevSelect && prevSelect.value) {
+                prevTujuanValue = prevSelect.value;
+                const selOpt = prevSelect.options[prevSelect.selectedIndex];
+                prevTujuanLabel = selOpt ? selOpt.text.trim() : '—';
+            }
+        }
+
+        // Build tujuan options dari variabel global tujuanPengirimanOptions
+        const tujuanOptionsHtml = tujuanPengirimanOptions
+            .map(opt => `<option value="${opt.value}">${opt.label}</option>`)
+            .join('');
+
+        function createNewGroup(copyTujuan) {
+            const newGroup = document.createElement('div');
+            newGroup.className = 'produk-group mb-4 p-3 border rounded';
+            newGroup.style.backgroundColor = '#ffffff';
+            newGroup.setAttribute('data-group-index', String(document.querySelectorAll('#produk-groups .produk-group').length));
+
+            newGroup.innerHTML = `
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h6 class="text-secondary mb-0">Produk</h6>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Kategori <span class="text-danger">*</span></label>
+                            <select class="choices form-select kategori-produk-select">
+                                <option value="">-- Pilih Kategori --</option>
+                                ${Object.keys(produkByKategori || {}).map((k) => `<option value="${String(k)}">${String(k)}</option>`).join('')}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Nama Produk <span class="text-danger">*</span></label>
+                            <select class="form-select produk-select" data-selected="">
+                                <option value="">-- Pilih Produk --</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
-                <div class="col-md-6">
-                    <div class="form-group">
-                        <label>Nama Produk <span class="text-danger">*</span></label>
-                        <select class="form-select produk-select" data-selected="">
-                            <option value="">-- Pilih Produk --</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-            <div class="produk-container">
-                <div class="produk-row mb-4 p-3 border rounded" style="background-color: #f8f9fa;">
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <h6 class="text-secondary mb-0">Detail #1</h6>
-                        <button type="button" class="btn btn-danger btn-sm remove-detail" style="display:none;"><i class="bi bi-trash"></i> Hapus Detail</button>
-                    </div>
-                    <input type="hidden" class="produk-id-hidden" name="produk_data[0][id_produk]" value="">
-                    <div class="row">
-                        <div class="col-md-3">
-                            <label>Kode Produksi</label>
-                            <input type="text" class="form-control" name="produk_data[0][kode_produksi]" placeholder="Kode Produksi">
-                        </div>
-                        <div class="col-md-3">
-                            <label>Best Before</label>
-                            <input type="date" class="form-control" name="produk_data[0][best_before]">
-                        </div>
-                        <div class="col-md-3">
-                            <label>Jumlah Kemasan</label>
-                            <input type="text" class="form-control" name="produk_data[0][jumlah_kemasan]" placeholder="Contoh: 100 Karton">
-                        </div>
-                        <div class="col-md-3">
-                            <label>Jumlah Sampling</label>
-                            <input type="text" class="form-control" name="produk_data[0][jumlah_sampling]" placeholder="Contoh: 10 Karton">
-                        </div>
-                    </div>
-                    <div class="row mt-3">
-                        <div class="col-md-3">
-                            <label>Berat per Karung atau Box</label>
-                            <input type="text" class="form-control" name="produk_data[0][berat_perkarung]" placeholder="Contoh: 25 Kg">
-                        </div>
-                    </div>
-                    <div class="row mt-3">
-                        <div class="col-md-12">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="produk_data[0][kondisi_kemasan]" value="1" checked>
-                                <label class="form-check-label">Kondisi Kemasan Baik</label>
+                <div class="row produk-tujuan-section">
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <label>Customer & Tujuan Pengiriman</label>
+                            <select class="form-select produk-tujuan-select" name="produk_data[0][id_tujuan_pengiriman]">
+                                ${tujuanOptionsHtml}
+                            </select>
+                            <div class="produk-tujuan-manual mt-2" style="display:none;">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <input type="text" class="form-control produk-customer-manual" name="produk_data[0][nama_customer_manual]" placeholder="Nama Customer">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <input type="text" class="form-control produk-tujuan-manual-input" name="produk_data[0][nama_tujuan_manual]" placeholder="Nama Tujuan Pengiriman">
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
-                    <div class="row mt-3">
-                        <div class="col-md-12">
-                            <label>Keterangan</label>
-                            <textarea class="form-control" name="produk_data[0][keterangan]" rows="2" placeholder="Keterangan tambahan"></textarea>
+                </div>
+                <div class="produk-container">
+                    <div class="produk-row mb-4 p-3 border rounded" style="background-color: #f8f9fa;">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6 class="text-secondary mb-0">Detail #1</h6>
+                            <button type="button" class="btn btn-danger btn-sm remove-detail" style="display:none;"><i class="bi bi-trash"></i> Hapus Detail</button>
+                        </div>
+                        <input type="hidden" class="produk-id-hidden" name="produk_data[0][id_produk]" value="">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <label>Kode Produksi</label>
+                                <input type="text" class="form-control" name="produk_data[0][kode_produksi]" placeholder="Kode Produksi">
+                            </div>
+                            <div class="col-md-3">
+                                <label>Best Before</label>
+                                <input type="date" class="form-control" name="produk_data[0][best_before]">
+                            </div>
+                            <div class="col-md-3">
+                                <label>Jumlah Kemasan</label>
+                                <input type="text" class="form-control" name="produk_data[0][jumlah_kemasan]" placeholder="Contoh: 100 Karton">
+                            </div>
+                            <div class="col-md-3">
+                                <label>Jumlah Sampling</label>
+                                <input type="text" class="form-control" name="produk_data[0][jumlah_sampling]" placeholder="Contoh: 10 Karton">
+                            </div>
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col-md-3">
+                                <label>Berat per Karung atau Box</label>
+                                <input type="text" class="form-control" name="produk_data[0][berat_perkarung]" placeholder="Contoh: 25 Kg">
+                            </div>
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col-md-12">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="produk_data[0][kondisi_kemasan]" value="1" checked>
+                                    <label class="form-check-label">Kondisi Kemasan Baik</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col-md-12">
+                                <label>Keterangan</label>
+                                <textarea class="form-control" name="produk_data[0][keterangan]" rows="2" placeholder="Keterangan tambahan"></textarea>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-            <button type="button" class="btn btn-primary btn-sm mt-2 add-detail"><i class="bi bi-plus"></i> Tambah Detail</button>
+                <button type="button" class="btn btn-primary btn-sm mt-2 add-detail"><i class="bi bi-plus"></i> Tambah Detail</button>
 
-            <div class="row mt-3 pt-3 border-top">
-                <div class="col-md-12">
-                    <button type="button" class="btn btn-danger btn-sm remove-produk-group"><i class="bi bi-trash"></i> Hapus Produk</button>
+                <div class="row mt-3 pt-3 border-top">
+                    <div class="col-md-12">
+                        <button type="button" class="btn btn-danger btn-sm remove-produk-group"><i class="bi bi-trash"></i> Hapus Produk</button>
+                    </div>
                 </div>
-            </div>
-        `;
+            `;
 
-        groupsWrapper.appendChild(newGroup);
-        ensureProdukCollapsible(newGroup, document.querySelectorAll('#produk-groups .produk-group').length - 1);
-        updateGroupTitles();
-        bindGroupEvents(newGroup);
+            groupsWrapper.appendChild(newGroup);
+            bindTujuanToggle(newGroup, copyTujuan ? prevTujuanValue : null);
 
-        // Match kemasan behavior: open the newly added produk and collapse others
-        const body = newGroup.querySelector(':scope > .produk-collapse.collapse');
-        if (body) {
-            const inst = bsCollapse(body);
-            if (inst) inst.show();
-            else body.classList.add('show');
+            ensureProdukCollapsible(newGroup, document.querySelectorAll('#produk-groups .produk-group').length - 1);
+            updateGroupTitles();
+            bindGroupEvents(newGroup);
+
+            const body = newGroup.querySelector(':scope > .produk-collapse.collapse');
+            if (body) {
+                const inst = bsCollapse(body);
+                if (inst) inst.show();
+                else body.classList.add('show');
+            }
+            collapseAllProdukExcept(newGroup);
         }
-        collapseAllProdukExcept(newGroup);
+
+        // Jika tujuan belum dipilih, langsung buat tanpa modal
+        if (!prevTujuanValue) {
+            createNewGroup(false);
+            return;
+        }
+
+        // Tampilkan modal konfirmasi
+        const modalLabelEl = document.getElementById('modal-tujuan-prev-label');
+        if (modalLabelEl) modalLabelEl.textContent = prevTujuanLabel;
+
+        const modalEl = document.getElementById('modalSamaTujuan');
+        if (!modalEl || typeof bootstrap === 'undefined') {
+            createNewGroup(false);
+            return;
+        }
+
+        const modalInst = new bootstrap.Modal(modalEl);
+        modalInst.show();
+
+        const btnYa = document.getElementById('modal-tujuan-ya');
+        const btnTidak = document.getElementById('modal-tujuan-tidak');
+
+        function cleanup() {
+            btnYa.removeEventListener('click', onYa);
+            btnTidak.removeEventListener('click', onTidak);
+        }
+        function onYa() { modalInst.hide(); createNewGroup(true);  cleanup(); }
+        function onTidak() { modalInst.hide(); createNewGroup(false); cleanup(); }
+
+        btnYa.addEventListener('click', onYa);
+        btnTidak.addEventListener('click', onTidak);
     });
+
+    // Bind toggle manual input tujuan per grup
+    function bindTujuanToggle(groupEl, initialValue) {
+        const sel = groupEl.querySelector('select.produk-tujuan-select');
+        const div = groupEl.querySelector('.produk-tujuan-manual');
+        if (!sel || !div) return;
+
+        // Inisialisasi Choices.js
+        if (typeof Choices !== 'undefined' && !sel._choicesInstance) {
+            try {
+                const choicesInst = new Choices(sel, {
+                    searchResultLimit: 100,
+                    searchFuzziness: 0.000001,
+                    fuseOptions: { ignoreLocation: true, threshold: 0.2, matchAllTokens: false },
+                    searchEnabled: true,
+                    searchPlaceholderValue: 'Cari customer...',
+                    itemSelectText: '',
+                    noResultsText: 'Tidak ada hasil ditemukan',
+                    noChoicesText: 'Tidak ada pilihan tersedia',
+                    shouldSort: false,
+                    placeholder: true,
+                    placeholderValue: '-- Pilih Tujuan --'
+                });
+                sel._choicesInstance = choicesInst;
+
+                // Set initial value SETELAH Choices.js selesai init
+                if (initialValue) {
+                    try { choicesInst.setChoiceByValue(String(initialValue)); } catch(e) {}
+                } else {
+                    try { choicesInst.setChoiceByValue(''); } catch(e) {}
+                }
+            } catch (e) {}
+        }
+
+        // Toggle manual input + update hidden inputs di semua rows
+        function checkToggle() {
+            div.style.display = sel.value === 'other' ? 'block' : 'none';
+            // Sync tujuan value ke semua row-tujuan-hidden di grup ini
+            groupEl.querySelectorAll('.row-tujuan-hidden').forEach(h => {
+                h.value = sel.value;
+            });
+        }
+
+        sel.addEventListener('change', checkToggle);
+        checkToggle();
+    }
+
+    // Init toggle untuk grup pertama (tanpa copy value)
+    document.querySelectorAll('#produk-groups .produk-group').forEach(g => bindTujuanToggle(g, null));
 });
 </script>
-
-<!-- Universal Import Handler -->
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const btnImportUniversal = document.getElementById('btn-import-universal');
+$(document).ready(function() {
+<!-- Universal Import Handler -->
     const fileImportUniversal = document.getElementById('file-import-universal');
 
     if (btnImportUniversal && fileImportUniversal) {

@@ -620,6 +620,32 @@
         </div>
     </div>
 </div>
+
+<style>
+    /* Style untuk badge produsen & distributor removable */
+    .badge-removable {
+        display: inline-flex !important;
+        align-items: center;
+        gap: 6px;
+        padding-right: 6px !important;
+    }
+    .badge-remove-btn {
+        background: none;
+        border: none;
+        padding: 0 2px;
+        font-size: 13px;
+        font-weight: bold;
+        line-height: 1;
+        cursor: pointer;
+        color: #dc3545;
+        border-radius: 50%;
+        transition: color .15s, background .15s;
+    }
+    .badge-remove-btn:hover {
+        color: #fff;
+        background: #dc3545;
+    }
+</style>
 @endsection
 
 @push('scripts')
@@ -765,22 +791,25 @@ document.addEventListener('DOMContentLoaded', function() {
         idProdusenHidden.value = (Array.isArray(produsenIds) && produsenIds.length > 0) ? String(produsenIds[0]) : '';
         idDistributorHidden.value = (Array.isArray(distributorIds) && distributorIds.length > 0) ? String(distributorIds[0]) : '';
 
-        const renderBadges = (containerEl, values, badgeClass) => {
-            if (!Array.isArray(values) || values.length === 0) {
-                containerEl.innerHTML = '<span class="text-muted small">-</span>';
+        const renderBadges = (containerEl, idValues, nameValues, badgeClass, type) => {
+            if (!Array.isArray(nameValues) || nameValues.length === 0) {
+                containerEl.innerHTML = '<span class="text-muted small badge-empty">-</span>';
                 return;
             }
             containerEl.innerHTML = '';
-            values.forEach((v) => {
+            nameValues.forEach((v, index) => {
+                const idVal = idValues && idValues[index] ? idValues[index] : '';
                 const span = document.createElement('span');
-                span.className = badgeClass;
-                span.textContent = String(v);
+                span.className = badgeClass + ' badge-removable';
+                span.setAttribute('data-value', String(v).trim());
+                span.setAttribute('data-id', String(idVal));
+                span.innerHTML = `${String(v)} <button type="button" class="badge-remove-btn" onclick="removeBadgeItem(this, '${type}')">&times;</button>`;
                 containerEl.appendChild(span);
             });
         };
 
-        renderBadges(produsenBadges, produsenNames, 'badge bg-light-primary text-primary');
-        renderBadges(distributorBadges, distributorNames, 'badge bg-light-info text-info');
+        renderBadges(produsenBadges, produsenIds, produsenNames, 'badge bg-light-primary text-primary', 'produsen');
+        renderBadges(distributorBadges, distributorIds, distributorNames, 'badge bg-light-info text-info', 'distributor');
     }
 
     document.addEventListener('change', function(e) {
@@ -1688,5 +1717,58 @@ document.addEventListener('change', function(e) {
         handleImageInputChange(input);
     }
 });
+
+/**
+ * Hapus satu badge Produsen/Distributor dari tampilan form Chemical.
+ * Data master TIDAK berubah.
+ *
+ * @param {HTMLButtonElement} btn  — tombol × yang diklik
+ * @param {string} type            — 'produsen' | 'distributor'
+ */
+function removeBadgeItem(btn, type) {
+    const badge = btn.closest('.badge-removable');
+    if (!badge) return;
+
+    const rowEl = badge.closest('.unified-row');
+    const badgesContainer = badge.closest('.produsen-badges, .distributor-badges');
+    
+    // Hapus badge dari tampilan
+    badge.remove();
+
+    // Jika tidak ada badge tersisa, tampilkan placeholder "-"
+    if (badgesContainer) {
+        const remaining = badgesContainer.querySelectorAll('.badge-removable');
+        if (remaining.length === 0) {
+            const placeholder = document.createElement('span');
+            placeholder.className = 'text-muted small badge-empty';
+            placeholder.textContent = '-';
+            badgesContainer.appendChild(placeholder);
+        }
+    }
+
+    // Update input hidden di row terkait
+    if (rowEl) {
+        const produsenBadgesEl = rowEl.querySelector('.produsen-badges');
+        const distributorBadgesEl = rowEl.querySelector('.distributor-badges');
+        const idProdusenHidden = rowEl.querySelector('.id-produsen-hidden');
+        const idDistributorHidden = rowEl.querySelector('.id-distributor-hidden');
+
+        if (type === 'produsen' && idProdusenHidden) {
+            const remainingBadges = produsenBadgesEl ? produsenBadgesEl.querySelectorAll('.badge-removable') : [];
+            if (remainingBadges.length > 0) {
+                idProdusenHidden.value = remainingBadges[0].getAttribute('data-id') || remainingBadges[0].dataset.id || '';
+            } else {
+                idProdusenHidden.value = '';
+            }
+        } else if (type === 'distributor' && idDistributorHidden) {
+            const remainingBadges = distributorBadgesEl ? distributorBadgesEl.querySelectorAll('.badge-removable') : [];
+            if (remainingBadges.length > 0) {
+                idDistributorHidden.value = remainingBadges[0].getAttribute('data-id') || remainingBadges[0].dataset.id || '';
+            } else {
+                idDistributorHidden.value = '';
+            }
+        }
+    }
+}
 </script>
 @endpush

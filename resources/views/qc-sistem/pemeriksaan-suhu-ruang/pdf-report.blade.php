@@ -237,10 +237,9 @@
                 <thead>
                     <tr>
                         <th style="width: 5%">No</th>
-                        <th style="width: 14%">Waktu</th>
-                        <th style="width: 21%">Lokasi</th>
-                        <th style="width: 30%">Sebelumnya</th>
-                        <th style="width: 30%">Sesudahnya</th>
+                        <th style="width: 25%">Lokasi</th>
+                        <th style="width: 35%">Sebelumnya</th>
+                        <th style="width: 35%">Sesudahnya</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -285,7 +284,7 @@
 
                     {{-- 1. Tampilkan Data Input Pertama (Initial State) --}}
                     <tr>
-                        <td colspan="5" style="background: #f8f9fa; font-weight: bold; font-size: 9px; color: #555; text-align: center; border-bottom: 1px solid #dee2e6;">
+                        <td colspan="4" style="background: #f8f9fa; font-weight: bold; font-size: 9px; color: #555; text-align: center; border-bottom: 1px solid #dee2e6;">
                             --- INPUT DATA PERTAMA ---
                         </td>
                     </tr>
@@ -296,7 +295,6 @@
                                 @foreach($secData as $item)
                                     <tr>
                                         <td style="text-align: center;">{{ $histNo++ }}</td>
-                                        <td>{{ $initialTime }}</td>
                                         <td>{{ $secLabel }} {{ $item['unit'] ?? '' }}</td>
                                         <td style="background: #fff3cd; text-align: center;">-</td>
                                         <td style="background: #d4edda;">{{ $renderVal($item) }}</td>
@@ -305,7 +303,6 @@
                             @else
                                 <tr>
                                     <td style="text-align: center;">{{ $histNo++ }}</td>
-                                    <td>{{ $initialTime }}</td>
                                     <td>{{ $secLabel }}</td>
                                     <td style="background: #fff3cd; text-align: center;">-</td>
                                     <td style="background: #d4edda;">{{ $renderVal($secData) }}</td>
@@ -317,7 +314,7 @@
                     {{-- 2. Tampilkan Riwayat Perubahan (History) --}}
                     @if($p->relationLoaded('histories') && $p->histories && $p->histories->count() > 0)
                         <tr>
-                            <td colspan="5" style="background: #f8f9fa; font-weight: bold; font-size: 9px; color: #c41e3a; text-align: center; border-top: 2px solid #dee2e6; border-bottom: 1px solid #dee2e6;">
+                            <td colspan="4" style="background: #f8f9fa; font-weight: bold; font-size: 9px; color: #c41e3a; text-align: center; border-top: 2px solid #dee2e6; border-bottom: 1px solid #dee2e6;">
                                 --- RIWAYAT PERUBAHAN / UPDATE ---
                             </td>
                         </tr>
@@ -366,9 +363,11 @@
                             @endphp
 
                             @foreach($changes as $cIdx => $change)
+                                @php
+                                    $isPukul = (strcasecmp($change['lokasi'] ?? '', 'pukul') === 0);
+                                @endphp
                                 <tr>
-                                    <td style="text-align: center;">{{ $histNo++ }}</td>
-                                    <td>{{ $cIdx === 0 ? $hTime : '' }}</td>
+                                    <td style="text-align: center;">{{ $isPukul ? '' : $histNo++ }}</td>
                                     <td>{{ $change['lokasi'] }}</td>
                                     <td style="background: #fff3cd;">{{ $change['lama'] }}</td>
                                     <td style="background: #d4edda;">{{ $change['baru'] }}</td>

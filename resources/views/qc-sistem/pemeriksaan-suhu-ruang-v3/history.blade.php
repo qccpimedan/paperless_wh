@@ -48,7 +48,7 @@
                                     <div class="col-md-8">
                                         <h6 class="mb-0">
                                             <i class="bi bi-clock-history"></i>
-                                            {{ $history->created_at->format('d/m/Y H:i:s') }}
+                                            {{ $history->created_at->format('d/m/Y') }}
                                         </h6>
                                         <small class="text-muted">Diubah oleh: <strong>{{ $history->user->name }}</strong></small>
                                     </div>

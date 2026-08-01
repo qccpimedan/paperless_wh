@@ -435,6 +435,7 @@
                                     $row = ($rowIndex !== null) ? ($rows[$rowIndex] ?? []) : [];
 
                                     $idProduk = $row['id_produk'] ?? null;
+                                    $idTujuanProduk = $row['id_tujuan_pengiriman'] ?? null;
                                     $kodeProduksi = $row['kode_produksi'] ?? null;
                                     $bestBefore = $row['best_before'] ?? null;
                                     $jumlahKemasan = $row['jumlah_kemasan'] ?? null;
@@ -442,6 +443,17 @@
                                     $beratPerKarung = $row['berat_perkarung'] ?? null;
                                     $kondisiKemasan = $row['kondisi_kemasan'] ?? null;
                                     $keterangan = $row['keterangan'] ?? null;
+
+                                    // Resolve tujuan label per produk
+                                    $tujuanPdfLabel = '-';
+                                    if ($idTujuanProduk) {
+                                        $tObj = \App\Models\TujuanPengiriman::with('customer')->find($idTujuanProduk);
+                                        if ($tObj) {
+                                            $tujuanPdfLabel = $tObj->customer
+                                                ? $tObj->customer->nama_cust . ($tObj->nama_tujuan && $tObj->nama_tujuan !== '-' ? ' - ' . $tObj->nama_tujuan : '')
+                                                : ($tObj->nama_tujuan ?? '-');
+                                        }
+                                    }
 
                                     $temperatureMobil = $pemeriksaan->temperature_mobil;
                                     $temperatureProduk = is_array($pemeriksaan->temperature_produk) ? $pemeriksaan->temperature_produk : [];
@@ -455,6 +467,10 @@
                                     <div class="field-row">
                                         <span class="field-label">Nama:</span>
                                         <span class="field-value">{{ $idProduk ? ($produkMap[$idProduk] ?? 'N/A') : '-' }}</span>
+                                    </div>
+                                    <div class="field-row">
+                                        <span class="field-label">Customer/Tujuan:</span>
+                                        <span class="field-value">{{ $tujuanPdfLabel }}</span>
                                     </div>
 
                                     <div class="section-title">Detail</div>

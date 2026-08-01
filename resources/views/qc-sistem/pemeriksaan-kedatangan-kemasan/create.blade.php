@@ -417,9 +417,12 @@
 
                                                                 <div class="produsen-badges d-flex flex-wrap gap-1">
                                                                     @forelse ($oldProdusen0 as $p)
-                                                                        <span class="badge bg-light-primary text-primary">{{ $p }}</span>
+                                                                        <span class="badge bg-light-primary text-primary badge-removable" data-value="{{ $p }}">
+                                                                            {{ $p }}
+                                                                            <button type="button" class="badge-remove-btn" title="Hapus produsen ini dari form" onclick="removeBadgeItem(this, 'produsen')">×</button>
+                                                                        </span>
                                                                     @empty
-                                                                        <span class="text-muted small">-</span>
+                                                                        <span class="text-muted small badge-empty">-</span>
                                                                     @endforelse
                                                                 </div>
 
@@ -449,9 +452,12 @@
 
                                                                 <div class="distributor-badges d-flex flex-wrap gap-1">
                                                                     @forelse ($oldDistributor0 as $d)
-                                                                        <span class="badge bg-light-info text-info">{{ $d }}</span>
+                                                                        <span class="badge bg-light-info text-info badge-removable" data-value="{{ $d }}">
+                                                                            {{ $d }}
+                                                                            <button type="button" class="badge-remove-btn" title="Hapus distributor ini dari form" onclick="removeBadgeItem(this, 'distributor')">×</button>
+                                                                        </span>
                                                                     @empty
-                                                                        <span class="text-muted small">-</span>
+                                                                        <span class="text-muted small badge-empty">-</span>
                                                                     @endforelse
                                                                 </div>
 
@@ -735,6 +741,30 @@
     }
     .collapse-chevron { transition: transform .2s ease; }
     .collapse-toggle-btn[aria-expanded="true"] .collapse-chevron { transform: rotate(180deg); }
+
+    /* Badge hapus tombol */
+    .badge-removable {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding-right: 4px;
+    }
+    .badge-remove-btn {
+        background: none;
+        border: none;
+        padding: 0 2px;
+        font-size: 13px;
+        font-weight: bold;
+        line-height: 1;
+        cursor: pointer;
+        color: #dc3545;
+        border-radius: 50%;
+        transition: color .15s, background .15s;
+    }
+    .badge-remove-btn:hover {
+        color: #fff;
+        background: #dc3545;
+    }
 </style>
 
 <script>
@@ -1472,16 +1502,28 @@ document.addEventListener('DOMContentLoaded', function() {
         const prodVals = normalizeMulti(meta.produsen);
         const distVals = normalizeMulti(meta.distributor);
 
-        const renderBadges = (containerEl, values, badgeClass) => {
+        const renderBadges = (containerEl, values, badgeClass, type) => {
             if (!values || values.length === 0) {
-                containerEl.innerHTML = '<span class="text-muted small">-</span>';
+                containerEl.innerHTML = '<span class="text-muted small badge-empty">-</span>';
                 return;
             }
             containerEl.innerHTML = '';
             values.forEach((v) => {
                 const span = document.createElement('span');
-                span.className = badgeClass;
-                span.textContent = String(v);
+                span.className = badgeClass + ' badge-removable';
+                span.dataset.value = String(v);
+
+                const textNode = document.createTextNode(String(v) + ' ');
+                span.appendChild(textNode);
+
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'badge-remove-btn';
+                btn.title = 'Hapus ' + (type === 'produsen' ? 'produsen' : 'distributor') + ' ini dari form';
+                btn.textContent = '×';
+                btn.setAttribute('onclick', `removeBadgeItem(this, '${type}')`);
+                span.appendChild(btn);
+
                 containerEl.appendChild(span);
             });
         };
@@ -1497,8 +1539,8 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         };
 
-        renderBadges(produsenBadges, prodVals, 'badge bg-light-primary text-primary');
-        renderBadges(distributorBadges, distVals, 'badge bg-light-info text-info');
+        renderBadges(produsenBadges, prodVals, 'badge bg-light-primary text-primary', 'produsen');
+        renderBadges(distributorBadges, distVals, 'badge bg-light-info text-info', 'distributor');
         renderHiddenInputs(produsenHidden, 'produsen-hidden-item', prodVals);
         renderHiddenInputs(distributorHidden, 'distributor-hidden-item', distVals);
 
@@ -1506,13 +1548,51 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function syncHeaderToDetails(rowEl) {
+        window.syncHeaderToDetailsGlobal = syncHeaderToDetails; // expose ke global untuk removeBadgeItem
         const kategoriSelect = rowEl.querySelector('select.kategori-produk-select');
         const produkSelect = rowEl.querySelector('select.produk-select');
-        const produsenTemplate = rowEl.querySelectorAll('.produsen-hidden-inputs .produsen-hidden-item');
-        const distributorTemplate = rowEl.querySelectorAll('.distributor-hidden-inputs .distributor-hidden-item');
 
         const kategoriVal = kategoriSelect ? String(kategoriSelect.value || '') : '';
         const produkVal = produkSelect ? String(produkSelect.value || '') : '';
+
+        // Baca nilai produsen/distributor dari badge yang MASIH ADA di UI (setelah user hapus)
+        // Bukan dari hidden input header, agar badge yang sudah dihapus user tidak ikut sync
+        const headerProdusenBadges = rowEl.querySelector(':scope > .produk-collapse .produsen-badges, .produsen-badges');
+        const headerDistributorBadges = rowEl.querySelector(':scope > .produk-collapse .distributor-badges, .distributor-badges');
+
+        const getValuesFromBadges = (containerEl) => {
+            if (!containerEl) return [];
+            return Array.from(containerEl.querySelectorAll('.badge-removable[data-value]'))
+                       .map(el => String(el.dataset.value || '').trim())
+                       .filter(v => v !== '');
+        };
+
+        const produsenVals = getValuesFromBadges(headerProdusenBadges);
+        const distributorVals = getValuesFromBadges(headerDistributorBadges);
+
+        // Update juga hidden inputs di header agar konsisten
+        const headerProdusenHidden = rowEl.querySelector('.produsen-hidden-inputs');
+        const headerDistributorHidden = rowEl.querySelector('.distributor-hidden-inputs');
+        if (headerProdusenHidden) {
+            headerProdusenHidden.innerHTML = '';
+            produsenVals.forEach(v => {
+                const inp = document.createElement('input');
+                inp.type = 'hidden';
+                inp.className = 'produsen-hidden-item';
+                inp.value = v;
+                headerProdusenHidden.appendChild(inp);
+            });
+        }
+        if (headerDistributorHidden) {
+            headerDistributorHidden.innerHTML = '';
+            distributorVals.forEach(v => {
+                const inp = document.createElement('input');
+                inp.type = 'hidden';
+                inp.className = 'distributor-hidden-item';
+                inp.value = v;
+                headerDistributorHidden.appendChild(inp);
+            });
+        }
 
         rowEl.querySelectorAll('.detail-item').forEach((detailEl) => {
             const kategoriHidden = detailEl.querySelector('input.kategori-code-hidden');
@@ -1525,20 +1605,20 @@ document.addEventListener('DOMContentLoaded', function() {
 
             if (prodWrap) {
                 prodWrap.innerHTML = '';
-                produsenTemplate.forEach((t) => {
+                produsenVals.forEach((v) => {
                     const input = document.createElement('input');
                     input.type = 'hidden';
-                    input.value = String(t.value || '');
+                    input.value = v;
                     prodWrap.appendChild(input);
                 });
             }
 
             if (distWrap) {
                 distWrap.innerHTML = '';
-                distributorTemplate.forEach((t) => {
+                distributorVals.forEach((v) => {
                     const input = document.createElement('input');
                     input.type = 'hidden';
-                    input.value = String(t.value || '');
+                    input.value = v;
                     distWrap.appendChild(input);
                 });
             }
@@ -1958,5 +2038,81 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 });
+
+/**
+ * Hapus satu badge Produsen/Distributor dari tampilan form.
+ * Data master TIDAK berubah — hanya berlaku untuk pengiriman form ini.
+ *
+ * @param {HTMLButtonElement} btn  — tombol × yang diklik
+ * @param {string} type            — 'produsen' | 'distributor'
+ */
+function removeBadgeItem(btn, type) {
+    const badge = btn.closest('.badge-removable');
+    if (!badge) return;
+
+    const rowEl = badge.closest('.unified-row');
+    const badgesContainer = badge.closest('.produsen-badges, .distributor-badges');
+
+    // Hapus badge dari tampilan
+    badge.remove();
+
+    // Jika tidak ada badge tersisa, tampilkan placeholder "-"
+    if (badgesContainer) {
+        const remaining = badgesContainer.querySelectorAll('.badge-removable');
+        if (remaining.length === 0) {
+            const placeholder = document.createElement('span');
+            placeholder.className = 'text-muted small badge-empty';
+            placeholder.textContent = '-';
+            badgesContainer.appendChild(placeholder);
+        }
+    }
+
+    // Rebuild hidden inputs di header & sync ke semua detail dalam row ini
+    if (rowEl && window.syncHeaderToDetailsGlobal) {
+        window.syncHeaderToDetailsGlobal(rowEl);
+    } else if (rowEl) {
+        // Fallback: trigger event agar applyProdukMetaForRow / syncHeaderToDetails terpanggil
+        // Kita cukup rebuild hidden inputs dari badge yang tersisa
+        const produsenBadgesEl = rowEl.querySelector('.produsen-badges');
+        const distributorBadgesEl = rowEl.querySelector('.distributor-badges');
+
+        const getValsFromBadges = (el) => {
+            if (!el) return [];
+            return Array.from(el.querySelectorAll('.badge-removable[data-value]'))
+                       .map(b => String(b.dataset.value || '').trim())
+                       .filter(v => v !== '');
+        };
+
+        const produsenVals = getValsFromBadges(produsenBadgesEl);
+        const distributorVals = getValsFromBadges(distributorBadgesEl);
+
+        // Update hidden inputs di header (bagian .form-section, bukan .detail-item)
+        const headerProdusenHidden = rowEl.querySelector('.form-section .produsen-hidden-inputs');
+        const headerDistributorHidden = rowEl.querySelector('.form-section .distributor-hidden-inputs');
+
+        const rebuildHidden = (wrap, vals, cls) => {
+            if (!wrap) return;
+            wrap.innerHTML = '';
+            vals.forEach(v => {
+                const inp = document.createElement('input');
+                inp.type = 'hidden';
+                inp.className = cls;
+                inp.value = v;
+                wrap.appendChild(inp);
+            });
+        };
+
+        rebuildHidden(headerProdusenHidden, produsenVals, 'produsen-hidden-item');
+        rebuildHidden(headerDistributorHidden, distributorVals, 'distributor-hidden-item');
+
+        // Update hidden inputs di setiap detail-item dalam row ini
+        rowEl.querySelectorAll('.detail-item').forEach((detailEl, idx) => {
+            const prodWrap = detailEl.querySelector('.produsen-hidden-inputs');
+            const distWrap = detailEl.querySelector('.distributor-hidden-inputs');
+            rebuildHidden(prodWrap, produsenVals, '');
+            rebuildHidden(distWrap, distributorVals, '');
+        });
+    }
+}
 </script>
 @endsection
