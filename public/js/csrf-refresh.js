@@ -71,6 +71,12 @@
             
             inputs.forEach(input => {
                 if (input.name && input.name !== '_token' && input.type !== 'file') {
+                    // Skip Choices.js internal elements
+                    if (input.classList.contains('choices__input') || 
+                        input.classList.contains('choices__list')) {
+                        return;
+                    }
+                    
                     if (input.type === 'checkbox') {
                         formData[input.name] = input.checked;
                     } else if (input.type === 'radio') {
@@ -113,6 +119,12 @@
                     Object.keys(data).forEach(name => {
                         const input = form.querySelector(`[name="${name}"]`);
                         if (input) {
+                            // Skip Choices.js internal elements
+                            if (input.classList.contains('choices__input') || 
+                                input.classList.contains('choices__list')) {
+                                return;
+                            }
+                            
                             if (input.type === 'checkbox') {
                                 input.checked = data[name];
                             } else if (input.type === 'radio') {
@@ -121,9 +133,18 @@
                             } else {
                                 input.value = data[name];
                                 
-                                // Trigger change event untuk Vue/Alpine.js
+                                // Trigger change event untuk Vue/Alpine.js dan Choices.js
                                 input.dispatchEvent(new Event('input', { bubbles: true }));
                                 input.dispatchEvent(new Event('change', { bubbles: true }));
+                                
+                                // Update Choices.js jika ada
+                                if (input._choices && typeof input._choices.setChoiceByValue === 'function') {
+                                    try {
+                                        input._choices.setChoiceByValue(data[name]);
+                                    } catch (e) {
+                                        console.warn('Failed to restore Choices.js value:', e);
+                                    }
+                                }
                             }
                         }
                     });
@@ -186,13 +207,16 @@
         
         // Clear saved data ketika form berhasil disubmit
         document.querySelectorAll('form[data-autosave="true"]').forEach(form => {
-            // Remove existing listener jika ada
-            const newForm = form.cloneNode(true);
-            form.parentNode.replaceChild(newForm, form);
+            // PENTING: Jangan gunakan cloneNode() karena akan menghancurkan Choices.js
+            // Gunakan flag untuk mencegah multiple listeners
+            if (form.dataset.autosaveListenerAttached === 'true') {
+                return; // Skip jika listener sudah ada
+            }
             
-            // Add new listener
-            newForm.addEventListener('submit', function(e) {
-                const formId = newForm.id || newForm.getAttribute('action');
+            form.dataset.autosaveListenerAttached = 'true';
+            
+            form.addEventListener('submit', function(e) {
+                const formId = this.id || this.getAttribute('action');
                 if (formId) {
                     // Clear setelah delay singkat untuk memastikan submit berhasil
                     setTimeout(() => {

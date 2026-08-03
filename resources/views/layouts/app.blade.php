@@ -15,13 +15,11 @@
     <link rel="stylesheet" href="{{asset('dist/css/app.css')}}">
     <link rel="stylesheet" href="{{asset('dist/vendors/simple-datatables/style.css')}}">
     <!-- Choices.js CSS -->
-    <link rel="stylesheet" href="{{ asset('dist/vendors/choices.js/choices.css') }}">
+    <link rel="stylesheet" href="{{ asset('dist/vendors/choices.js/choices.min.css') }}">
     <link rel="stylesheet" href="{{asset('dist/vendors/select2/css/select2.min.css')}}">
     <!-- DataTables Bootstrap5 CSS -->
     <link rel="stylesheet" href="{{asset('dist/vendors/datatables/dataTables.bootstrap5.min.css')}}">
     <link rel="icon" href="{{asset('dist/images/logo/logo5.png')}}" type="image/x-icon">
-    <!-- select negara -->
-    <link rel="stylesheet" href="{{asset('dist/vendors/choices.js/choices.min.css')}}">
     
     <!-- Suppress browser extension console errors -->
     <!-- <script>
@@ -621,8 +619,6 @@
     <script src="{{asset('dist/vendors/simple-datatables/simple-datatables.js')}}"></script>
     <!-- Choices.js Script -->
     <script src="{{asset('dist/vendors/choices.js/choices.min.js')}}"></script>
-    <!-- script negara -->
-    <script src="{{ asset('dist/vendors/choices.js/choices.js') }}"></script>
     <script src="{{asset('dist/vendors/jquery/jquery-3.7.1.min.js')}}"></script>
     <script src="{{asset('dist/vendors/select2/js/select2.min.js')}}"></script>
     <!-- DataTables JS -->
