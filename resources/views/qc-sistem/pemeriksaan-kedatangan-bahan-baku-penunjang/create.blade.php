@@ -683,7 +683,7 @@
                                                                 <div class="form-group">
                                                                     <label class="form-label">File COA (PDF)</label>
                                                                     <input type="file" name="file_coa[]" class="form-control" accept="application/pdf">
-                                                                    <small class="form-text text-muted">Format: PDF. Maksimal 1MB.</small>
+                                                                    <small class="form-text text-muted">Format: PDF. Maksimal 5MB.</small>
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -692,7 +692,7 @@
                                                                 <div class="form-group">
                                                                     <label class="form-label">Foto COA</label>
                                                                     <input type="file" name="file_coa_img[]" class="form-control" accept="image/*" capture="environment">
-                                                                    <small class="form-text text-muted">Format: JPG, PNG, WEBP, GIF. Maksimal 1MB. Gambar &gt; 3MB akan dikompres otomatis.</small>
+                                                                    <small class="form-text text-muted">Format: JPG, PNG, WEBP, GIF. Gambar &gt; 3MB akan dikompres otomatis.</small>
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -703,7 +703,7 @@
                                                         <div class="row">
                                                             <div class="col-md-6">
                                                                 <div class="form-group">
-                                                                    <label class="form-label">Foto Bahan Baku (Max 1MB)</label>
+                                                                    <label class="form-label">Foto Bahan Baku</label>
                                                                     <input type="file" name="image_bahan_baku[]" class="form-control image-bahan-baku-input" accept="image/*" capture="camera">
                                                                     @error('image_bahan_baku.0')
                                                                         <div class="invalid-feedback d-block">{{ $message }}</div>
@@ -2400,7 +2400,7 @@ function updateRemoveButtons() {
 }
 
 /* --- IMAGE COMPRESSION LOGIC --- */
-const MAX_SIZE = 1024 * 1024; // 1MB
+const MAX_SIZE = 1024 * 1024; // 1MB target (validation allows up to 5MB)
 
 function fileToDataURL(file) {
     return new Promise((resolve, reject) => {
@@ -2424,7 +2424,14 @@ async function compressImage(file) {
     const dataUrl = await fileToDataURL(file);
     const img = await loadImage(dataUrl);
 
-    const maxDimension = 1920;
+    // More aggressive initial resize for tablet cameras
+    let maxDimension = 1920;
+    
+    // If original file is very large (> 3MB), use smaller dimension
+    if (file.size > 3 * 1024 * 1024) {
+        maxDimension = 1280;
+    }
+    
     let { width, height } = img;
     if (width > height && width > maxDimension) {
         height = Math.round((height * maxDimension) / width);
@@ -2440,10 +2447,24 @@ async function compressImage(file) {
     const ctx = canvas.getContext('2d');
     ctx.drawImage(img, 0, 0, width, height);
 
-    let quality = 0.85;
+    // Start with quality 0.8 and reduce more aggressively
+    let quality = 0.8;
     let blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', quality));
-    while (blob && blob.size > MAX_SIZE && quality > 0.4) {
-        quality -= 0.1;
+    
+    // Keep compressing until under 1MB, allow going down to quality 0.3
+    while (blob && blob.size > MAX_SIZE && quality > 0.3) {
+        quality -= 0.05;
+        blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', quality));
+    }
+    
+    // If still too large, reduce dimensions further
+    if (blob && blob.size > MAX_SIZE) {
+        width = Math.round(width * 0.8);
+        height = Math.round(height * 0.8);
+        canvas.width = width;
+        canvas.height = height;
+        ctx.drawImage(img, 0, 0, width, height);
+        quality = 0.7;
         blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', quality));
     }
 
@@ -2455,7 +2476,9 @@ async function handleImageInputChange(input) {
     const file = input.files && input.files[0] ? input.files[0] : null;
     if (!file) return;
 
-    if (file.size <= MAX_SIZE) return;
+    // Compress if file > 500KB (more aggressive to prevent upload errors)
+    const COMPRESS_THRESHOLD = 512 * 1024; // 500KB
+    if (file.size <= COMPRESS_THRESHOLD) return;
 
     // Show processing feedback
     const formGroup = input.closest('.form-group');
