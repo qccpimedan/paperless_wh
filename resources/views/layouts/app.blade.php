@@ -97,6 +97,22 @@
             z-index: 1000 !important;
         }
 
+        /* ===== SIDEBAR CLOSE BUTTON (Mobile/Tablet) ===== */
+        /* Pastikan tombol close terlihat di mobile/tablet */
+        #sidebar .sidebar-hide {
+            transition: all 0.3s ease !important;
+        }
+        
+        #sidebar .sidebar-hide:hover {
+            background: #c82333 !important;
+            transform: scale(1.1) !important;
+            box-shadow: 0 6px 16px rgba(220, 53, 69, 0.7) !important;
+        }
+        
+        #sidebar .sidebar-hide:active {
+            transform: scale(0.95) !important;
+        }
+
         /* ===== FIX SIDEBAR SCROLL TABLET & PC ===== */
         .sidebar-wrapper {
             overflow-y: auto !important;
@@ -561,7 +577,7 @@
 
                     <!-- Notifications -->
                         <div class="position-relative">
-                            <button class="btn btn-link position-relative" id="notification-bell" style="color: #333; font-size: 1.5rem; border: none; padding: 0;">
+                            <button class="btn btn-link position-relative" id="notification-bell" style="color: #333; font-size: 1.5rem; border: none; padding: 0; outline: none; box-shadow: none;">
                                 <i class="bi bi-bell"></i>
                                 <span id="notification-badge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="display: none; font-size: 0.55rem; padding: 0.25rem 0.4rem;">
                                     <span id="notification-count">0</span>
@@ -578,7 +594,7 @@
 
                     <!-- User Profile Dropdown -->
                     <div class="dropdown">
-                        <button class="btn btn-link text-dark text-decoration-none d-flex align-items-center gap-2" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false" style="padding: 0;">
+                        <button class="btn btn-link text-dark text-decoration-none d-flex align-items-center gap-2" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false" style="padding: 0; outline: none; box-shadow: none;">
                             <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; font-size: 0.9rem; font-weight: bold;">
                                 {{ substr(Auth::user()->name ?? 'U', 0, 1) }}
                             </div>
@@ -607,6 +623,35 @@
         </nav>
 
         @include('partials.navbar')
+
+        <!-- TOMBOL CLOSE SIDEBAR MOBILE (OUTSIDE SIDEBAR) -->
+        <button type="button" id="sidebar-close-mobile" class="d-xl-none" style="position: fixed; top: 120px; right: 20px; z-index: 10000; display: none; align-items: center; justify-content: center; width: 40px; height: 40px; background: #dc3545; border: none; border-radius: 50%; color: #fff; box-shadow: 0 4px 16px rgba(220, 53, 69, 0.7); font-size: 28px; font-weight: bold; line-height: 1; cursor: pointer; padding: 0; outline: none;">
+            ✕
+        </button>
+
+        <style>
+        /* Remove focus outline dari semua button */
+        button:focus,
+        button:active,
+        .btn:focus,
+        .btn:active,
+        .btn-link:focus,
+        .btn-link:active {
+            outline: none !important;
+            box-shadow: none !important;
+        }
+        
+        /* Khusus untuk button navigation */
+        #notification-bell:focus,
+        #notification-bell:active,
+        #userDropdown:focus,
+        #userDropdown:active,
+        #sidebar-close-mobile:focus,
+        #sidebar-close-mobile:active {
+            outline: none !important;
+            box-shadow: none !important;
+        }
+        </style>
 
         @yield('container')
     </div>
@@ -639,6 +684,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (!(window.disableGlobalChoicesInit === true)) {
         const choicesElements = document.querySelectorAll('.choices');
         choicesElements.forEach(function(element) {
+            // Skip if already initialized (check multiple flags)
             if (element && element.dataset && element.dataset.choicesInitialized === 'true') {
                 return;
             }
@@ -646,11 +692,34 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (element.dataset) element.dataset.choicesInitialized = 'true';
                 return;
             }
+            if (element && element._choicesInstance) {
+                if (element.dataset) element.dataset.choicesInitialized = 'true';
+                return;
+            }
+            // Check if element has Choices internal class (already initialized)
+            if (element && element.classList && element.classList.contains('choices__input')) {
+                return;
+            }
+            if (element && element.parentElement && element.parentElement.classList && 
+                element.parentElement.classList.contains('choices')) {
+                return;
+            }
+            
+            // Only initialize on SELECT, INPUT[type=text], or INPUT[type=hidden] elements
+            if (!element || (element.tagName !== 'SELECT' && 
+                (element.tagName !== 'INPUT' || (element.type !== 'text' && element.type !== 'hidden')))) {
+                return;
+            }
+            
             try {
                 element._choices = new Choices(element, {
                     searchResultLimit: 100,
-                    searchFuzziness: 0.000001,
-                    fuseOptions: { ignoreLocation: true, threshold: 0.2, matchAllTokens: false },
+                    fuseOptions: { 
+                        ignoreLocation: true, 
+                        threshold: 0.2, 
+                        matchAllTokens: false,
+                        distance: 1000
+                    },
                     searchEnabled: true,
                     searchPlaceholderValue: 'Cari...',
                     itemSelectText: 'Tekan untuk memilih',
@@ -659,6 +728,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
                 if (element.dataset) element.dataset.choicesInitialized = 'true';
             } catch (e) {
+                // Silent fail - element may already be initialized
             }
         });
     }
@@ -730,6 +800,62 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Auto-check setiap 1 menit (60000 ms)
     setInterval(checkEditableRecords, 60000);
+    
+    // ===== SIDEBAR CLOSE BUTTON HANDLER (MOBILE/TABLET) =====
+    const closeBtn = document.getElementById('sidebar-close-mobile');
+    const sidebar = document.getElementById('sidebar');
+    const burgerBtn = document.querySelector('.burger-btn');
+    
+    if (closeBtn && sidebar && burgerBtn) {
+        // Show/hide close button based on sidebar state
+        function updateCloseBtnVisibility() {
+            if (window.innerWidth < 1200) {
+                if (sidebar.classList.contains('active')) {
+                    closeBtn.style.display = 'flex';
+                } else {
+                    closeBtn.style.display = 'none';
+                }
+            } else {
+                closeBtn.style.display = 'none';
+            }
+        }
+        
+        // Initial check
+        updateCloseBtnVisibility();
+        
+        // Watch for sidebar toggle
+        const observer = new MutationObserver(function(mutations) {
+            mutations.forEach(function(mutation) {
+                if (mutation.attributeName === 'class') {
+                    updateCloseBtnVisibility();
+                }
+            });
+        });
+        
+        observer.observe(sidebar, { attributes: true });
+        
+        // Handle window resize
+        window.addEventListener('resize', updateCloseBtnVisibility);
+        
+        // Handle close button click
+        closeBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            sidebar.classList.remove('active');
+            closeBtn.style.display = 'none';
+        });
+        
+        // Hover effects
+        closeBtn.addEventListener('mouseenter', function() {
+            this.style.background = '#c82333';
+            this.style.transform = 'scale(1.1)';
+        });
+        
+        closeBtn.addEventListener('mouseleave', function() {
+            this.style.background = '#dc3545';
+            this.style.transform = 'scale(1)';
+        });
+    }
 });
     // Handle notification bell dropdown
     const notificationBell = document.getElementById('notification-bell');

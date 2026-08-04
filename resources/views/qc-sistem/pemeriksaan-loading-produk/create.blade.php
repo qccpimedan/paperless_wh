@@ -115,9 +115,6 @@
                                                     </div>
                                                 </div>
                                             </div>
-                                        </div>
-
-                                        <div class="row">
                                             <div class="col-md-6">
                                                 <div class="form-group">
                                                     <label for="id_supir">Nama Supir</label>
@@ -500,16 +497,28 @@ document.addEventListener('DOMContentLoaded', function() {
     function initChoicesSelect(selectEl, placeholderText) {
         if (!selectEl || typeof Choices === 'undefined') return null;
 
+        // Check if already initialized
+        if (selectEl._choices || selectEl._choicesInstance || 
+            (selectEl.dataset && selectEl.dataset.choicesInitialized === 'true')) {
+            return selectEl._choices || selectEl._choicesInstance || null;
+        }
+
         // Pastikan teks setiap option sudah bersih (trim whitespace)
         Array.from(selectEl.options).forEach(function(opt) {
             opt.text = opt.text.trim();
         });
 
-        return new Choices(selectEl, {
+        const instance = new Choices(selectEl, {
             searchResultLimit: 100,
-                    searchFuzziness: 0.000001,
-                    fuseOptions: { ignoreLocation: true, threshold: 0.2, matchAllTokens: false },
-                    searchEnabled: true,
+            fuseOptions: { 
+                ignoreLocation: true, 
+                threshold: 0.2, 
+                matchAllTokens: false,
+                includeScore: true,
+                distance: 1000,
+                tokenize: true
+            },
+            searchEnabled: true,
             searchPlaceholderValue: 'Cari...',
             searchFields: ['label', 'value'],
             itemSelectText: '',
@@ -517,15 +526,11 @@ document.addEventListener('DOMContentLoaded', function() {
             noChoicesText: 'Tidak ada pilihan tersedia',
             shouldSort: false,
             placeholder: true,
-            placeholderValue: placeholderText || 'Pilih...',
-            fuseOptions: {
-                includeScore: true,
-                threshold: 0.4,
-                distance: 1000,
-                tokenize: true,
-                matchAllTokens: false
-            }
+            placeholderValue: placeholderText || 'Pilih...'
         });
+        
+        if (selectEl.dataset) selectEl.dataset.choicesInitialized = 'true';
+        return instance;
     }
 
     // -------- Tujuan Pengiriman --------
@@ -930,9 +935,13 @@ document.addEventListener('DOMContentLoaded', function() {
         try {
             const instance = new Choices(produkSelect, {
                 searchResultLimit: 100,
-                    searchFuzziness: 0.000001,
-                    fuseOptions: { ignoreLocation: true, threshold: 0.2, matchAllTokens: false },
-                    searchEnabled: true,
+                fuseOptions: { 
+                    ignoreLocation: true, 
+                    threshold: 0.2, 
+                    matchAllTokens: false,
+                    distance: 1000
+                },
+                searchEnabled: true,
                 searchPlaceholderValue: 'Cari...',
                 itemSelectText: 'Tekan untuk memilih',
                 noResultsText: 'Tidak ada hasil ditemukan',
@@ -953,6 +962,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
             choicesInstances.set(produkSelect, instance);
+            if (produkSelect.dataset) produkSelect.dataset.choicesInitialized = 'true';
         } catch (e) {
         }
     };
@@ -1495,12 +1505,17 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!sel || !div) return;
 
         // Inisialisasi Choices.js
-        if (typeof Choices !== 'undefined' && !sel._choicesInstance) {
+        if (typeof Choices !== 'undefined' && !sel._choicesInstance && 
+            !(sel.dataset && sel.dataset.choicesInitialized === 'true')) {
             try {
                 const choicesInst = new Choices(sel, {
                     searchResultLimit: 100,
-                    searchFuzziness: 0.000001,
-                    fuseOptions: { ignoreLocation: true, threshold: 0.2, matchAllTokens: false },
+                    fuseOptions: { 
+                        ignoreLocation: true, 
+                        threshold: 0.2, 
+                        matchAllTokens: false,
+                        distance: 1000
+                    },
                     searchEnabled: true,
                     searchPlaceholderValue: 'Cari customer...',
                     itemSelectText: '',
@@ -1511,6 +1526,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     placeholderValue: '-- Pilih Tujuan --'
                 });
                 sel._choicesInstance = choicesInst;
+                if (sel.dataset) sel.dataset.choicesInitialized = 'true';
 
                 // Set initial value SETELAH Choices.js selesai init
                 if (initialValue) {
@@ -1539,8 +1555,9 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 <script>
-$(document).ready(function() {
-<!-- Universal Import Handler -->
+document.addEventListener('DOMContentLoaded', function() {
+    // Universal Import Handler
+    const btnImportUniversal = document.getElementById('btn-import-universal');
     const fileImportUniversal = document.getElementById('file-import-universal');
 
     if (btnImportUniversal && fileImportUniversal) {

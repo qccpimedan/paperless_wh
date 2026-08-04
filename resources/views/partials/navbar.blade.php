@@ -1,29 +1,9 @@
 <div id="sidebar" class="active">
     <div class="sidebar-wrapper active">
-        <div class="sidebar-header">
+        <div class="sidebar-header position-relative" style="padding: 1rem;">
             <div class="d-flex justify-content-between align-items-center">
-                <!-- <div class="logo">
-                    <img src="{{ asset('dist/images/logo/logo8.png') }}" alt="Logo" style="width: 130px; height: auto;">
-                </div> -->
-                <div class="d-flex align-items-center gap-2">
-                    <!-- <div class="position-relative">
-                        <button class="btn btn-link position-relative" id="notification-bell" style="color: #333; font-size: 1.5rem; border: none; padding: 0;">
-                            <i class="bi bi-bell"></i>
-                            <span id="notification-badge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="display: none;">
-                                <span id="notification-count">0</span>
-                            </span>
-                        </button>
-                        <div id="notification-dropdown" class="position-absolute top-100 end-0 mt-2 bg-white rounded shadow-lg" style="display: none; width: 350px; max-height: 400px; overflow-y: auto; z-index: 1000;">
-                            <div class="p-3 border-bottom">
-                                <h6 class="mb-0">⏰ Edit Per 2 Jam Tersedia</h6>
-                            </div>
-                            <div id="notification-dropdown-list" class="p-3">
-                            </div>
-                        </div>
-                    </div> -->
-                    <div class="toggler">
-                        <a href="#" class="sidebar-hide d-xl-none d-block"><i class="bi bi-x bi-middle"></i></a>
-                    </div>
+                <div class="logo">
+                    <span style="font-weight: 700; font-size: 1.1rem; color: #435ebe;">Menu</span>
                 </div>
             </div>
         </div>

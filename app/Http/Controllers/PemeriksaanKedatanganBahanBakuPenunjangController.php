@@ -481,10 +481,10 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
             'hasil_uji_ffa.*' => 'nullable|string|max:255',
             'keterangan' => 'nullable|array',
             'keterangan.*' => 'nullable|string',
-            'file_coa.*' => 'nullable|mimes:pdf,jpg,jpeg,png,webp,gif|max:1024',
-            'file_coa_img.*' => 'nullable|image|max:1024',
+            'file_coa.*' => 'nullable|mimes:pdf,jpg,jpeg,png,webp,gif|max:5120',
+            'file_coa_img.*' => 'nullable|image|max:5120',
             'image_bahan_baku' => 'nullable|array',
-            'image_bahan_baku.*' => 'nullable|image|max:1024',
+            'image_bahan_baku.*' => 'nullable|image|max:5120',
         ]);
 
         // Process kondisi mobil dan fisik dengan logic yang benar
@@ -873,10 +873,10 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
             'hasil_uji_ffa.*' => 'nullable|string|max:255',
             'keterangan' => 'nullable|array',
             'keterangan.*' => 'nullable|string',
-            'file_coa.*' => 'nullable|mimes:pdf,jpg,jpeg,png,webp,gif|max:1024',
-            'file_coa_img.*' => 'nullable|image|max:1024',
+            'file_coa.*' => 'nullable|mimes:pdf,jpg,jpeg,png,webp,gif|max:5120',
+            'file_coa_img.*' => 'nullable|image|max:5120',
             'image_bahan_baku' => 'nullable|array',
-            'image_bahan_baku.*' => 'nullable|image|max:1024',
+            'image_bahan_baku.*' => 'nullable|image|max:5120',
         ]);
 
         // Process kondisi mobil dan fisik dengan logic yang benar
@@ -1227,9 +1227,9 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
             'logo_halal' => 'nullable|in:0,1',
             'dokumen_halal' => 'nullable|in:0,1',
             'coa' => 'nullable|in:0,1',
-            'file_coa' => 'nullable|mimes:pdf,jpg,jpeg,png,webp,gif|max:1024',
-            'file_coa_img' => 'nullable|image|max:1024',
-            'image_bahan_baku' => 'nullable|image|max:1024',
+            'file_coa' => 'nullable|mimes:pdf,jpg,jpeg,png,webp,gif|max:5120',
+            'file_coa_img' => 'nullable|image|max:5120',
+            'image_bahan_baku' => 'nullable|image|max:5120',
         ]);
 
         $appendJsonArray = function (?string $raw, $value): array {
