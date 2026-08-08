@@ -144,23 +144,22 @@ class PemeriksaanLoadingKendaraanController extends Controller
             'no_segel' => 'nullable|required_if:segel_gembok,segel|string|max:255',
         ]);
 
+        // Handle kendaraan manual — simpan sebagai teks, TIDAK membuat data master baru
         $idKendaraan = $request->id_kendaraan;
+        $jenisKendaraanManual = null;
+        $noKendaraanManual = null;
         if ($idKendaraan === 'other') {
-            $kendaraan = JenisKendaraan::firstOrCreate(
-                ['no_kendaraan' => $request->no_kendaraan_manual],
-                ['jenis_kendaraan' => $request->jenis_kendaraan_manual, 'id_user' => Auth::id()]
-            );
-            $idKendaraan = $kendaraan->id;
+            $idKendaraan = null;
+            $jenisKendaraanManual = $request->jenis_kendaraan_manual;
+            $noKendaraanManual    = $request->no_kendaraan_manual;
         }
 
-        // Handle tujuan pengiriman manual
+        // Handle tujuan pengiriman manual — simpan sebagai teks, TIDAK membuat data master baru
         $idTujuanPengiriman = $request->id_tujuan_pengiriman;
+        $namaTujuanManual = null;
         if ($idTujuanPengiriman === 'lainnya') {
-            $tujuanPengiriman = TujuanPengiriman::firstOrCreate(
-                ['nama_tujuan' => $request->nama_tujuan_manual],
-                ['id_user' => Auth::id()]
-            );
-            $idTujuanPengiriman = $tujuanPengiriman->id;
+            $idTujuanPengiriman = null;
+            $namaTujuanManual   = $request->nama_tujuan_manual;
         }
 
         // Prepare kondisi data
@@ -187,7 +186,10 @@ class PemeriksaanLoadingKendaraanController extends Controller
             'tanggal' => $request->tanggal,
             'id_ekspedisi' => $request->id_ekspedisi,
             'id_kendaraan' => $idKendaraan,
+            'jenis_kendaraan_manual' => $jenisKendaraanManual,
+            'no_kendaraan_manual'    => $noKendaraanManual,
             'id_tujuan_pengiriman' => $idTujuanPengiriman,
+            'nama_tujuan_manual'   => $namaTujuanManual,
             'id_std_precooling' => $request->id_std_precooling,
             'id_shift' => $request->id_shift,
             'kondisi_kebersihan_mobil' => json_encode($kondisiKebersihanMobil),
@@ -282,23 +284,22 @@ class PemeriksaanLoadingKendaraanController extends Controller
             'no_segel' => 'nullable|required_if:segel_gembok,segel|string|max:255',
         ]);
 
+        // Handle kendaraan manual — simpan sebagai teks, TIDAK membuat data master baru
         $idKendaraan = $request->id_kendaraan;
+        $jenisKendaraanManual = null;
+        $noKendaraanManual = null;
         if ($idKendaraan === 'other') {
-            $kendaraan = JenisKendaraan::firstOrCreate(
-                ['no_kendaraan' => $request->no_kendaraan_manual],
-                ['jenis_kendaraan' => $request->jenis_kendaraan_manual, 'id_user' => Auth::id()]
-            );
-            $idKendaraan = $kendaraan->id;
+            $idKendaraan = null;
+            $jenisKendaraanManual = $request->jenis_kendaraan_manual;
+            $noKendaraanManual    = $request->no_kendaraan_manual;
         }
 
-        // Handle tujuan pengiriman manual
+        // Handle tujuan pengiriman manual — simpan sebagai teks, TIDAK membuat data master baru
         $idTujuanPengiriman = $request->id_tujuan_pengiriman;
+        $namaTujuanManual = null;
         if ($idTujuanPengiriman === 'lainnya') {
-            $tujuanPengiriman = TujuanPengiriman::firstOrCreate(
-                ['nama_tujuan' => $request->nama_tujuan_manual],
-                ['id_user' => Auth::id()]
-            );
-            $idTujuanPengiriman = $tujuanPengiriman->id;
+            $idTujuanPengiriman = null;
+            $namaTujuanManual   = $request->nama_tujuan_manual;
         }
 
         // Prepare kondisi data
@@ -324,7 +325,10 @@ class PemeriksaanLoadingKendaraanController extends Controller
             'tanggal' => $request->tanggal,
             'id_ekspedisi' => $request->id_ekspedisi,
             'id_kendaraan' => $idKendaraan,
+            'jenis_kendaraan_manual' => $jenisKendaraanManual,
+            'no_kendaraan_manual'    => $noKendaraanManual,
             'id_tujuan_pengiriman' => $idTujuanPengiriman,
+            'nama_tujuan_manual'   => $namaTujuanManual,
             'id_std_precooling' => $request->id_std_precooling,
             'id_shift' => $request->id_shift,
             'kondisi_kebersihan_mobil' => json_encode($kondisiKebersihanMobil),

@@ -18,6 +18,8 @@ class PemeriksaanLoadingKendaraan extends Model
         'tanggal',
         'id_ekspedisi',
         'id_kendaraan',
+        'jenis_kendaraan_manual',
+        'no_kendaraan_manual',
         'id_tujuan_pengiriman',
         'id_std_precooling',
         'id_shift',

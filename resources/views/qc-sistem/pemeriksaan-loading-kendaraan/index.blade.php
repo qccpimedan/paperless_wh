@@ -126,7 +126,7 @@
                                         <th>Tanggal</th>
                                         <th>Shift</th>
                                         <th>Plant</th>
-                                        <th>No. Polisi</th>
+                                        <th>No. Kendaraan</th>
                                         <th>Tujuan</th>
                                         <th>Verifikasi</th>
                                         <th>Aksi</th>
