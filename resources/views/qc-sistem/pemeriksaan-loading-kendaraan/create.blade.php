@@ -49,9 +49,15 @@
                                     @csrf
                                     <div class="form-body">
                                         <div class="row">
-                                                                                        <!-- Kondisi Kebersihan Mobil -->
+                                        <!-- Kondisi Kebersihan Mobil -->
                                             <div class="col-md-6">
-                                                <label><strong>Kondisi Kebersihan Mobil <span class="text-danger">*</span></strong></label>
+                                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                                    <label class="mb-0"><strong>Kondisi Kebersihan Mobil <span class="text-danger">*</span></strong></label>
+                                                    <div>
+                                                        <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2" onclick="checkSemua('kondisi_kebersihan_mobil', 1)">Centang Ya</button>
+                                                        <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2" onclick="checkSemua('kondisi_kebersihan_mobil', 0)">Centang Tidak</button>
+                                                    </div>
+                                                </div>
                                                 <div class="mb-3">
                                                     <label class="form-label"><strong>1. Berdebu, Kondensasi</strong></label>
                                                     <div class="form-check">
@@ -111,7 +117,13 @@
 
                                             <!-- Kondisi Mobil -->
                                             <div class="col-md-6">
-                                                <label><strong>Kondisi Mobil <span class="text-danger">*</span></strong></label>
+                                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                                    <label class="mb-0"><strong>Kondisi Mobil <span class="text-danger">*</span></strong></label>
+                                                    <div>
+                                                        <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2" onclick="checkSemua('kondisi_mobil', 1)">Centang Ya</button>
+                                                        <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2" onclick="checkSemua('kondisi_mobil', 0)">Centang Tidak</button>
+                                                    </div>
+                                                </div>
                                                 <div class="mb-3">
                                                     <label class="form-label"><strong>1. Kaca Mobil Pecah</strong></label>
                                                     <div class="form-check">
@@ -217,201 +229,141 @@
                                                     <div class="invalid-feedback">{{ $message }}</div>
                                                 @enderror
                                             </div>
-                                            <!-- Ekspedisi -->
-                                            <div class="col-md-6">
-                                                <div class="form-group mb-3">
-                                                    <label for="id_ekspedisi">Ekspedisi <span class="text-danger">*</span></label>
-                                                    <select id="id_ekspedisi" class="form-select @error('id_ekspedisi') is-invalid @enderror"
-                                                        name="id_ekspedisi" required>
-                                                        <option value="">-- Pilih Ekspedisi --</option>
-                                                        @foreach($ekspedisis as $ekspedisi)
-                                                            <option value="{{ $ekspedisi->id }}" {{ old('id_ekspedisi') == $ekspedisi->id ? 'selected' : '' }}>{{ $ekspedisi->nama_ekspedisi }}</option>
-                                                        @endforeach
-                                                    </select>
-                                                    @error('id_ekspedisi')
-                                                        <div class="invalid-feedback">{{ $message }}</div>
-                                                    @enderror
-                                                </div>
+                                            {{-- ===== DYNAMIC KENDARAAN ENTRIES ===== --}}
+                                            <div class="col-md-12 mt-3 mb-2">
+                                                <h5 class="text-primary"><i class="bi bi-truck me-2"></i>Data Kendaraan</h5>
+                                                <hr class="mt-2 mb-3">
                                             </div>
 
-                                            <!-- Kendaraan -->
-                                            <div class="col-md-6">
-                                                <div class="form-group">
-                                                    <label for="id_kendaraan">Jenis & No Kendaraan</label>
-                                                    <select id="id_kendaraan" class="form-select @error('id_kendaraan') is-invalid @enderror" name="id_kendaraan">
-                                                        <option value="">-- Pilih Kendaraan --</option>
-                                                        <option value="other" {{ old('id_kendaraan') == 'other' ? 'selected' : '' }}>-- Lainnya (Input Manual) --</option>
-                                                        @foreach($kendaraans as $kendaraan)
-                                                            <option value="{{ $kendaraan->id }}" {{ old('id_kendaraan') == $kendaraan->id ? 'selected' : '' }}>{{ $kendaraan->jenis_kendaraan }} - {{ $kendaraan->no_kendaraan }}</option>
-                                                        @endforeach
-                                                    </select>
-                                                    @error('id_kendaraan')
-                                                        <div class="invalid-feedback">{{ $message }}</div>
-                                                    @enderror
-
-                                                    <!-- Input manual yang awalnya disembunyikan -->
-                                                    <div id="manual_kendaraan_input" class="mt-2" style="display: {{ old('id_kendaraan') == 'other' ? 'block' : 'none' }};">
-                                                        <div class="row">
+                                            <div id="kendaraan-entries-container" class="col-md-12">
+                                                {{-- Entry pertama (index 0) --}}
+                                                <div class="kendaraan-entry card border mb-3" data-index="0">
+                                                    <div class="card-header bg-light d-flex justify-content-between align-items-center py-2">
+                                                        <span class="fw-bold text-primary entry-label"><i class="bi bi-truck me-1"></i> Kendaraan #1</span>
+                                                        <button type="button" class="btn btn-danger btn-sm btn-remove-entry" style="display:none;" title="Hapus entry ini">
+                                                            <i class="bi bi-trash"></i> Hapus
+                                                        </button>
+                                                    </div>
+                                                    <div class="card-body">
+                                                        <div class="row g-3">
+                                                            {{-- Ekspedisi --}}
                                                             <div class="col-md-6">
-                                                                <div class="form-group">
-                                                                    <label for="jenis_kendaraan_manual">Jenis Kendaraan</label>
-                                                                    <input type="text" id="jenis_kendaraan_manual" class="form-control @error('jenis_kendaraan_manual') is-invalid @enderror" 
-                                                                        name="jenis_kendaraan_manual" value="{{ old('jenis_kendaraan_manual') }}" placeholder="Masukkan jenis kendaraan">
-                                                                    @error('jenis_kendaraan_manual')
-                                                                        <div class="invalid-feedback">{{ $message }}</div>
-                                                                    @enderror
+                                                                <label>Ekspedisi <span class="text-danger">*</span></label>
+                                                                <select class="form-select entry-ekspedisi" name="entries[0][id_ekspedisi]" required>
+                                                                    <option value="">-- Pilih Ekspedisi --</option>
+                                                                    @foreach($ekspedisis as $ekspedisi)
+                                                                        <option value="{{ $ekspedisi->id }}" {{ old('entries.0.id_ekspedisi') == $ekspedisi->id ? 'selected' : '' }}>{{ $ekspedisi->nama_ekspedisi }}</option>
+                                                                    @endforeach
+                                                                </select>
+                                                            </div>
+
+                                                            {{-- Kendaraan --}}
+                                                            <div class="col-md-6">
+                                                                <label>Jenis &amp; No Kendaraan</label>
+                                                                <select class="form-select entry-kendaraan" name="entries[0][id_kendaraan]">
+                                                                    <option value="">-- Pilih Kendaraan --</option>
+                                                                    <option value="other">-- Lainnya (Input Manual) --</option>
+                                                                    @foreach($kendaraans as $kendaraan)
+                                                                        <option value="{{ $kendaraan->id }}">{{ $kendaraan->jenis_kendaraan }} - {{ $kendaraan->no_kendaraan }}</option>
+                                                                    @endforeach
+                                                                </select>
+                                                                <div class="manual-kendaraan-input mt-2" style="display:none;">
+                                                                    <div class="row g-2">
+                                                                        <div class="col-6">
+                                                                            <input type="text" class="form-control" name="entries[0][jenis_kendaraan_manual]" placeholder="Jenis Kendaraan">
+                                                                        </div>
+                                                                        <div class="col-6">
+                                                                            <input type="text" class="form-control" name="entries[0][no_kendaraan_manual]" placeholder="No Kendaraan">
+                                                                        </div>
+                                                                    </div>
                                                                 </div>
                                                             </div>
+
+                                                            {{-- Tujuan Pengiriman --}}
                                                             <div class="col-md-6">
-                                                                <div class="form-group">
-                                                                    <label for="no_kendaraan_manual">No Kendaraan</label>
-                                                                    <input type="text" id="no_kendaraan_manual" class="form-control @error('no_kendaraan_manual') is-invalid @enderror" 
-                                                                        name="no_kendaraan_manual" value="{{ old('no_kendaraan_manual') }}" placeholder="Masukkan nomor kendaraan">
-                                                                    @error('no_kendaraan_manual')
-                                                                        <div class="invalid-feedback">{{ $message }}</div>
-                                                                    @enderror
+                                                                <label>Tujuan Pengiriman <span class="text-danger">*</span></label>
+                                                                <select class="form-select entry-tujuan" name="entries[0][id_tujuan_pengiriman]" required>
+                                                                    <option value="">-- Pilih Tujuan --</option>
+                                                                    <option value="lainnya">-- Lainnya (Input Manual) --</option>
+                                                                    @foreach($tujuanPengirimens as $tujuan)
+                                                                        <option value="{{ $tujuan->id }}">{{ $tujuan->nama_tujuan }}</option>
+                                                                    @endforeach
+                                                                </select>
+                                                                <div class="manual-tujuan-input mt-2" style="display:none;">
+                                                                    <input type="text" class="form-control" name="entries[0][nama_tujuan_manual]" placeholder="Masukkan tujuan pengiriman">
                                                                 </div>
+                                                            </div>
+
+                                                            {{-- Std Precooling --}}
+                                                            <div class="col-md-6">
+                                                                <label>Std Precooling <span class="text-danger">*</span></label>
+                                                                <select class="form-select entry-std-precooling" name="entries[0][id_std_precooling]" required>
+                                                                    <option value="">-- Pilih Std Precooling --</option>
+                                                                    @foreach($stdPrecoolings as $std)
+                                                                        <option value="{{ $std->id }}">{{ $std->nama_std_precooling }}</option>
+                                                                    @endforeach
+                                                                </select>
+                                                            </div>
+
+                                                            {{-- Jam Mulai --}}
+                                                            <div class="col-md-4">
+                                                                <label>Jam Mulai <span class="text-danger">*</span></label>
+                                                                <input type="time" class="form-control" name="entries[0][jam_mulai]" required>
+                                                            </div>
+
+                                                            {{-- Jam Selesai --}}
+                                                            <div class="col-md-4">
+                                                                <label>Jam Selesai <span class="text-danger">*</span></label>
+                                                                <input type="time" class="form-control" name="entries[0][jam_selesai]" required>
+                                                            </div>
+
+                                                            {{-- Suhu Precooling --}}
+                                                            <div class="col-md-4">
+                                                                <label>Suhu Precooling (°C) <span class="text-danger">*</span></label>
+                                                                <input type="text" class="form-control" name="entries[0][suhu_precooling]" placeholder="Contoh: -18°C" required>
+                                                            </div>
+
+                                                            {{-- Segel / Gembok --}}
+                                                            <div class="col-md-12">
+                                                                <label class="fw-bold text-primary">Segel &amp; Informasi Kendaraan</label>
+                                                            </div>
+                                                            <div class="col-md-6">
+                                                                <label class="fw-semibold">Segel/Gembok</label>
+                                                                <div class="d-flex gap-3 mt-1">
+                                                                    <div class="form-check">
+                                                                        <input class="form-check-input entry-segel" type="radio" name="entries[0][segel_gembok]" value="segel" id="segel_0">
+                                                                        <label class="form-check-label" for="segel_0">Segel</label>
+                                                                    </div>
+                                                                    <div class="form-check">
+                                                                        <input class="form-check-input entry-segel" type="radio" name="entries[0][segel_gembok]" value="gembok" id="gembok_0">
+                                                                        <label class="form-check-label" for="gembok_0">Gembok</label>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-md-6 no-segel-container" style="display:none;">
+                                                                <label>No. Segel</label>
+                                                                <input type="text" class="form-control" name="entries[0][no_segel]" placeholder="Nomor Segel">
+                                                            </div>
+
+                                                            {{-- Keterangan --}}
+                                                            <div class="col-md-12">
+                                                                <label>Keterangan</label>
+                                                                <textarea class="form-control" name="entries[0][keterangan]" rows="2" placeholder="Keterangan tambahan"></textarea>
                                                             </div>
                                                         </div>
                                                     </div>
                                                 </div>
                                             </div>
 
-                                            <!-- Tujuan Pengiriman -->
-                                            <div class="col-md-6">
-                                                <div class="form-group mb-3">
-                                                    <label for="id_tujuan_pengiriman">Tujuan Pengiriman <span class="text-danger">*</span></label>
-                                                    <select id="id_tujuan_pengiriman" class="form-select @error('id_tujuan_pengiriman') is-invalid @enderror"
-                                                        name="id_tujuan_pengiriman" required>
-                                                        <option value="">-- Pilih Tujuan --</option>
-                                                        <option value="lainnya" {{ old('id_tujuan_pengiriman') == 'lainnya' ? 'selected' : '' }}>-- Lainnya (Input Manual) --</option>
-                                                        @foreach($tujuanPengirimens as $tujuan)
-                                                            <option value="{{ $tujuan->id }}" {{ old('id_tujuan_pengiriman') == $tujuan->id ? 'selected' : '' }}>{{ $tujuan->nama_tujuan }}</option>
-                                                        @endforeach
-                                                    </select>
-                                                    @error('id_tujuan_pengiriman')
-                                                        <div class="invalid-feedback">{{ $message }}</div>
-                                                    @enderror
+                                            {{-- Buttons & Add Entry --}}
+                                            <div class="col-md-12 d-flex justify-content-between mt-3 mb-2">
+                                                <button type="button" id="btn-add-entry" class="btn btn-success btn-sm align-self-start">
+                                                    <i class="bi bi-plus-circle me-1"></i> Tambah Kendaraan
+                                                </button>
+                                                <div>
+                                                    <button type="submit" class="btn btn-primary me-1 mb-1">Simpan Data</button>
+                                                    <a href="{{ route('pemeriksaan-loading-kendaraan.index') }}" class="btn btn-light-secondary me-1 mb-1 btn-kembali-confirm">Kembali</a>
                                                 </div>
-
-                                                {{-- Input Manual Tujuan Pengiriman --}}
-                                                <div id="manual_tujuan_pengiriman_input" class="mt-2" style="display: {{ old('id_tujuan_pengiriman') == 'lainnya' ? 'block' : 'none' }};">
-                                                    <div class="row">
-                                                        <div class="col-md-12">
-                                                            <div class="form-group">
-                                                                <label for="nama_tujuan_manual">Tujuan Pengiriman</label>
-                                                                <input type="text" id="nama_tujuan_manual" class="form-control @error('nama_tujuan_manual') is-invalid @enderror"
-                                                                    name="nama_tujuan_manual" value="{{ old('nama_tujuan_manual') }}" placeholder="Masukkan tujuan pengiriman">
-                                                                @error('nama_tujuan_manual')
-                                                                    <div class="invalid-feedback">{{ $message }}</div>
-                                                                @enderror
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <!-- Std Precooling -->
-                                            <div class="col-md-6">
-                                                <label for="id_std_precooling">Std Precooling <span class="text-danger">*</span></label>
-                                                <select id="id_std_precooling" class="form-select @error('id_std_precooling') is-invalid @enderror"
-                                                    name="id_std_precooling" required>
-                                                    <option value="">-- Pilih Std Precooling --</option>
-                                                    @foreach($stdPrecoolings as $std)
-                                                        <option value="{{ $std->id }}" {{ old('id_std_precooling') == $std->id ? 'selected' : '' }}>{{ $std->nama_std_precooling }}</option>
-                                                    @endforeach
-                                                </select>
-                                                @error('id_std_precooling')
-                                                    <div class="invalid-feedback">{{ $message }}</div>
-                                                @enderror
-                                            </div>
-
-                                            <!-- Jam Mulai -->
-                                            <div class="col-md-6">
-                                                <label for="jam_mulai">Jam Mulai <span class="text-danger">*</span></label>
-                                                <input type="time" id="jam_mulai" class="form-control @error('jam_mulai') is-invalid @enderror"
-                                                    name="jam_mulai" value="{{ old('jam_mulai') }}" required>
-                                                @error('jam_mulai')
-                                                    <div class="invalid-feedback">{{ $message }}</div>
-                                                @enderror
-                                            </div>
-
-                                            <!-- Jam Selesai -->
-                                            <div class="col-md-6">
-                                                <label for="jam_selesai">Jam Selesai <span class="text-danger">*</span></label>
-                                                <input type="time" id="jam_selesai" class="form-control @error('jam_selesai') is-invalid @enderror"
-                                                    name="jam_selesai" value="{{ old('jam_selesai') }}" required>
-                                                @error('jam_selesai')
-                                                    <div class="invalid-feedback">{{ $message }}</div>
-                                                @enderror
-                                            </div>
-
-                                            <!-- Suhu Precooling -->
-                                            <div class="col-md-6">
-                                                <label for="suhu_precooling">Suhu Precooling (°C) <span class="text-danger">*</span></label>
-                                                <input type="text" id="suhu_precooling" class="form-control @error('suhu_precooling') is-invalid @enderror"
-                                                    name="suhu_precooling" placeholder="Contoh: -18°C" value="{{ old('suhu_precooling') }}" required>
-                                                @error('suhu_precooling')
-                                                    <div class="invalid-feedback">{{ $message }}</div>
-                                                @enderror
-                                            </div>
-                                            <br>
-                                            
-                                            <!-- Segel / Gembok -->
-                                            <div class="col-md-12 mt-2">
-                                                <h5 class="text-primary mb-3 mt-2">Segel & Informasi Kendaraan</h5>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <div class="form-group">
-                                                    <label><strong>Segel/Gembok</strong></label>
-                                                    <div class="form-check">
-                                                        <input class="form-check-input" type="radio" id="segel_option" name="segel_gembok" value="segel" {{ old('segel_gembok') == 'segel' ? 'checked' : '' }}>
-                                                        <label class="form-check-label" for="segel_option">Segel</label>
-                                                    </div>
-                                                    <div class="form-check">
-                                                        <input class="form-check-input" type="radio" id="gembok_option" name="segel_gembok" value="gembok" {{ old('segel_gembok') == 'gembok' ? 'checked' : '' }}>
-                                                        <label class="form-check-label" for="gembok_option">Gembok</label>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-6" id="no_segel_container" style="display: {{ old('segel_gembok') == 'segel' ? 'block' : 'none' }};">
-                                                <div class="form-group">
-                                                    <label for="no_segel">No. Segel</label>
-                                                    <input type="text" id="no_segel" class="form-control @error('no_segel') is-invalid @enderror"
-                                                        name="no_segel" value="{{ old('no_segel') }}" placeholder="Nomor Segel">
-                                                    @error('no_segel')
-                                                        <div class="invalid-feedback">{{ $message }}</div>
-                                                    @enderror
-                                                </div>
-                                            </div>
-
-                                            <script>
-                                                document.querySelectorAll('input[name="segel_gembok"]').forEach(function(radio) {
-                                                    radio.addEventListener('change', function() {
-                                                        const container = document.getElementById('no_segel_container');
-                                                        if (this.value === 'segel') {
-                                                            container.style.display = 'block';
-                                                        } else {
-                                                            container.style.display = 'none';
-                                                            document.getElementById('no_segel').value = '';
-                                                        }
-                                                    });
-                                                });
-                                            </script>
-
-                                            <!-- Keterangan -->
-                                            <div class="col-md-12">
-                                                <label for="keterangan">Keterangan</label>
-                                                <textarea id="keterangan" class="form-control @error('keterangan') is-invalid @enderror"
-                                                name="keterangan" rows="3" placeholder="Masukkan keterangan tambahan">{{ old('keterangan') }}</textarea>
-                                                @error('keterangan')
-                                                <div class="invalid-feedback">{{ $message }}</div>
-                                                @enderror
-                                            </div>
-
-                                            <!-- Buttons -->
-                                            <div class="col-md-12 d-flex justify-content-end mt-3">
-                                                <button type="submit" class="btn btn-primary me-1 mb-1">Simpan Data</button>
-                                                <a href="{{ route('pemeriksaan-loading-kendaraan.index') }}" class="btn btn-light-secondary me-1 mb-1 btn-kembali-confirm">Kembali</a>
                                             </div>
                                         </div>
                                     </div>
@@ -425,20 +377,122 @@
     </div>
 </div>
 
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    document.querySelectorAll('.btn-kembali-confirm').forEach((el) => {
-        el.addEventListener('click', function(e) {
-            const ok = confirm('Data belum disimpan. Yakin ingin kembali ke halaman index?');
-            if (!ok) e.preventDefault();
-        });
-    });
+{{-- Template tersembunyi untuk clone entry baru --}}
+<template id="entry-template">
+    <div class="kendaraan-entry card border mb-3" data-index="__IDX__">
+        <div class="card-header bg-light d-flex justify-content-between align-items-center py-2">
+            <span class="fw-bold text-primary entry-label"><i class="bi bi-truck me-1"></i> Kendaraan #__NUM__</span>
+            <button type="button" class="btn btn-danger btn-sm btn-remove-entry" title="Hapus entry ini">
+                <i class="bi bi-trash"></i> Hapus
+            </button>
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label>Ekspedisi <span class="text-danger">*</span></label>
+                    <select class="form-select entry-ekspedisi" name="entries[__IDX__][id_ekspedisi]" required>
+                        <option value="">-- Pilih Ekspedisi --</option>
+                        @foreach($ekspedisis as $ekspedisi)
+                            <option value="{{ $ekspedisi->id }}">{{ $ekspedisi->nama_ekspedisi }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label>Jenis &amp; No Kendaraan</label>
+                    <select class="form-select entry-kendaraan" name="entries[__IDX__][id_kendaraan]">
+                        <option value="">-- Pilih Kendaraan --</option>
+                        <option value="other">-- Lainnya (Input Manual) --</option>
+                        @foreach($kendaraans as $kendaraan)
+                            <option value="{{ $kendaraan->id }}">{{ $kendaraan->jenis_kendaraan }} - {{ $kendaraan->no_kendaraan }}</option>
+                        @endforeach
+                    </select>
+                    <div class="manual-kendaraan-input mt-2" style="display:none;">
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <input type="text" class="form-control" name="entries[__IDX__][jenis_kendaraan_manual]" placeholder="Jenis Kendaraan">
+                            </div>
+                            <div class="col-6">
+                                <input type="text" class="form-control" name="entries[__IDX__][no_kendaraan_manual]" placeholder="No Kendaraan">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <label>Tujuan Pengiriman <span class="text-danger">*</span></label>
+                    <select class="form-select entry-tujuan" name="entries[__IDX__][id_tujuan_pengiriman]" required>
+                        <option value="">-- Pilih Tujuan --</option>
+                        <option value="lainnya">-- Lainnya (Input Manual) --</option>
+                        @foreach($tujuanPengirimens as $tujuan)
+                            <option value="{{ $tujuan->id }}">{{ $tujuan->nama_tujuan }}</option>
+                        @endforeach
+                    </select>
+                    <div class="manual-tujuan-input mt-2" style="display:none;">
+                        <input type="text" class="form-control" name="entries[__IDX__][nama_tujuan_manual]" placeholder="Masukkan tujuan pengiriman">
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <label>Std Precooling <span class="text-danger">*</span></label>
+                    <select class="form-select entry-std-precooling" name="entries[__IDX__][id_std_precooling]" required>
+                        <option value="">-- Pilih Std Precooling --</option>
+                        @foreach($stdPrecoolings as $std)
+                            <option value="{{ $std->id }}">{{ $std->nama_std_precooling }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label>Jam Mulai <span class="text-danger">*</span></label>
+                    <input type="time" class="form-control" name="entries[__IDX__][jam_mulai]" required>
+                </div>
+                <div class="col-md-4">
+                    <label>Jam Selesai <span class="text-danger">*</span></label>
+                    <input type="time" class="form-control" name="entries[__IDX__][jam_selesai]" required>
+                </div>
+                <div class="col-md-4">
+                    <label>Suhu Precooling (°C) <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" name="entries[__IDX__][suhu_precooling]" placeholder="Contoh: -18°C" required>
+                </div>
+                <div class="col-md-12">
+                    <label class="fw-bold text-primary">Segel &amp; Informasi Kendaraan</label>
+                </div>
+                <div class="col-md-6">
+                    <label class="fw-semibold">Segel/Gembok</label>
+                    <div class="d-flex gap-3 mt-1">
+                        <div class="form-check">
+                            <input class="form-check-input entry-segel" type="radio" name="entries[__IDX__][segel_gembok]" value="segel" id="segel___IDX__">
+                            <label class="form-check-label" for="segel___IDX__">Segel</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input entry-segel" type="radio" name="entries[__IDX__][segel_gembok]" value="gembok" id="gembok___IDX__">
+                            <label class="form-check-label" for="gembok___IDX__">Gembok</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 no-segel-container" style="display:none;">
+                    <label>No. Segel</label>
+                    <input type="text" class="form-control" name="entries[__IDX__][no_segel]" placeholder="Nomor Segel">
+                </div>
+                <div class="col-md-12">
+                    <label>Keterangan</label>
+                    <textarea class="form-control" name="entries[__IDX__][keterangan]" rows="2" placeholder="Keterangan tambahan"></textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
 
+<script>
+function checkSemua(groupName, value) {
+    const selector = `input[type="radio"][name^="${groupName}"][value="${value}"]`;
+    document.querySelectorAll(selector).forEach(radio => radio.checked = true);
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+
+    /* ── helpers ── */
     // Helper: inisialisasi Choices.js dengan konfigurasi search yang baik
     function initChoicesSelect(selectEl, placeholderText) {
         if (!selectEl || typeof Choices === 'undefined') return null;
 
-        // Trim whitespace pada setiap teks option (safety net)
         Array.from(selectEl.options).forEach(function(opt) {
             opt.text = opt.text.trim();
         });
@@ -450,13 +504,10 @@ document.addEventListener('DOMContentLoaded', function() {
             itemSelectText: '',
             noResultsText: 'Tidak ada hasil ditemukan',
             noChoicesText: 'Tidak ada pilihan tersedia',
-            shouldSort: true, // Ubah ke true agar kita bisa pakai sorter kustom
+            shouldSort: true,
             sorter: function(a, b) {
-                // Selalu taruh opsi manual (value: other atau lainnya) di paling atas
                 if (a.value === 'other' || a.value === 'lainnya') return -1;
                 if (b.value === 'other' || b.value === 'lainnya') return 1;
-                
-                // Sisanya biarkan sesuai urutan HTML (tidak diurutkan alfabet)
                 return 0;
             },
             placeholder: true,
@@ -472,56 +523,129 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    function toggleManualTujuan(value) {
-        const manualTujuanInput = document.getElementById('manual_tujuan_pengiriman_input');
-        if (!manualTujuanInput) return;
-        manualTujuanInput.style.display = (value === 'lainnya') ? 'block' : 'none';
-        
-        if (value !== 'lainnya') {
-            const inputManual = document.getElementById('nama_tujuan_manual');
-            if (inputManual) inputManual.value = '';
+    function initEntryEvents(entryEl) {
+        // Init Choices
+        const ekspedisiSel = entryEl.querySelector('.entry-ekspedisi');
+        if (ekspedisiSel) initChoicesSelect(ekspedisiSel, '-- Pilih Ekspedisi --');
+
+        const kendaraanSel = entryEl.querySelector('.entry-kendaraan');
+        if (kendaraanSel) initChoicesSelect(kendaraanSel, '-- Pilih Kendaraan --');
+
+        const tujuanSel = entryEl.querySelector('.entry-tujuan');
+        if (tujuanSel) initChoicesSelect(tujuanSel, '-- Pilih Tujuan --');
+
+        const stdPrecoolingSel = entryEl.querySelector('.entry-std-precooling');
+        if (stdPrecoolingSel) initChoicesSelect(stdPrecoolingSel, '-- Pilih Std Precooling --');
+
+        // Toggle manual kendaraan
+        const manualKendaraan = entryEl.querySelector('.manual-kendaraan-input');
+        if (kendaraanSel && manualKendaraan) {
+            kendaraanSel.addEventListener('change', function () {
+                manualKendaraan.style.display = this.value === 'other' ? 'block' : 'none';
+                if (this.value !== 'other') {
+                    manualKendaraan.querySelectorAll('input').forEach(i => i.value = '');
+                }
+            });
+        }
+
+        // Toggle manual tujuan
+        const manualTujuan = entryEl.querySelector('.manual-tujuan-input');
+        if (tujuanSel && manualTujuan) {
+            tujuanSel.addEventListener('change', function () {
+                manualTujuan.style.display = this.value === 'lainnya' ? 'block' : 'none';
+                if (this.value !== 'lainnya') {
+                    const inp = manualTujuan.querySelector('input');
+                    if (inp) inp.value = '';
+                }
+            });
+        }
+
+        // Toggle no segel
+        const segelRadios = entryEl.querySelectorAll('.entry-segel');
+        const noSegelContainer = entryEl.querySelector('.no-segel-container');
+        segelRadios.forEach(radio => {
+            radio.addEventListener('change', function () {
+                if (noSegelContainer) {
+                    noSegelContainer.style.display = this.value === 'segel' ? 'block' : 'none';
+                    if (this.value !== 'segel') {
+                        const inp = noSegelContainer.querySelector('input');
+                        if (inp) inp.value = '';
+                    }
+                }
+            });
+        });
+
+        // Remove button
+        const removeBtn = entryEl.querySelector('.btn-remove-entry');
+        if (removeBtn) {
+            removeBtn.addEventListener('click', function () {
+                entryEl.remove();
+                reindexEntries();
+            });
         }
     }
 
-    function toggleManualKendaraan(value) {
-        const manualKendaraanInput = document.getElementById('manual_kendaraan_input');
-        if (!manualKendaraanInput) return;
-        manualKendaraanInput.style.display = (value === 'other') ? 'block' : 'none';
-    }
+    function reindexEntries() {
+        const container = document.getElementById('kendaraan-entries-container');
+        const entries = container.querySelectorAll('.kendaraan-entry');
+        entries.forEach((entry, idx) => {
+            entry.dataset.index = idx;
+            entry.querySelector('.entry-label').innerHTML = '<i class="bi bi-truck me-1"></i> Kendaraan #' + (idx + 1);
 
-    // Inisialisasi setiap dropdown
-    initChoicesSelect(document.getElementById('id_ekspedisi'), '-- Pilih Ekspedisi --');
-    
-    // -------- Tujuan Pengiriman & Manual Toggle --------
-    const tujuanSelectEl = document.getElementById('id_tujuan_pengiriman');
-    const manualTujuanInput = document.getElementById('manual_tujuan_pengiriman_input');
+            // Rename all fields
+            entry.querySelectorAll('[name]').forEach(el => {
+                el.name = el.name.replace(/entries\[\d+\]/, 'entries[' + idx + ']');
+            });
+            // Rename for/id radio labels
+            entry.querySelectorAll('[id]').forEach(el => {
+                el.id = el.id.replace(/_(segel|gembok)_\d+/, '_$1_' + idx);
+            });
+            entry.querySelectorAll('[for]').forEach(el => {
+                el.htmlFor = el.htmlFor.replace(/_(segel|gembok)_\d+/, '_$1_' + idx);
+            });
 
-    if (tujuanSelectEl) {
-        toggleManualTujuan(tujuanSelectEl.value);
-        initChoicesSelect(tujuanSelectEl, '-- Pilih Tujuan --');
-        
-        tujuanSelectEl.addEventListener('change', function() {
-            toggleManualTujuan(this.value);
+            // Show/hide remove button — always show if more than 1
+            const removeBtn = entry.querySelector('.btn-remove-entry');
+            if (removeBtn) removeBtn.style.display = entries.length > 1 ? 'inline-flex' : 'none';
         });
-    }
-    
-    // -------- Kendaraan & Manual Toggle --------
-    const kendaraanSelectEl = document.getElementById('id_kendaraan');
-    const manualKendaraanInput = document.getElementById('manual_kendaraan_input');
 
-    if (kendaraanSelectEl) {
-        toggleManualKendaraan(kendaraanSelectEl.value);
-        initChoicesSelect(kendaraanSelectEl, '-- Pilih Kendaraan --');
-        
-        kendaraanSelectEl.addEventListener('change', function() {
-            toggleManualKendaraan(this.value);
+        entryCount = entries.length;
+    }
+
+    /* ── init first entry ── */
+    let entryCount = 1;
+    const firstEntry = document.querySelector('.kendaraan-entry');
+    if (firstEntry) initEntryEvents(firstEntry);
+
+    /* ── add entry ── */
+    document.getElementById('btn-add-entry').addEventListener('click', function () {
+        const template = document.getElementById('entry-template');
+        const idx = entryCount;
+        const num = idx + 1;
+
+        let html = template.innerHTML
+            .replace(/__IDX__/g, idx)
+            .replace(/__NUM__/g, num);
+
+        const wrapper = document.createElement('div');
+        wrapper.innerHTML = html;
+        const newEntry = wrapper.firstElementChild;
+
+        document.getElementById('kendaraan-entries-container').appendChild(newEntry);
+        initEntryEvents(newEntry);
+        entryCount++;
+        reindexEntries();
+
+        // Scroll ke entry baru
+        newEntry.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+
+    /* ── confirm back ── */
+    document.querySelectorAll('.btn-kembali-confirm').forEach(el => {
+        el.addEventListener('click', function (e) {
+            if (!confirm('Data belum disimpan. Yakin ingin kembali?')) e.preventDefault();
         });
-    }
-
-    const stdPrecoolingEl = document.getElementById('id_std_precooling');
-    if (stdPrecoolingEl) {
-        initChoicesSelect(stdPrecoolingEl, '-- Pilih Std Precooling --');
-    }
+    });
 });
 </script>
 @endsection

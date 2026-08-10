@@ -122,47 +122,32 @@ class PemeriksaanLoadingKendaraanController extends Controller
     {
         $request->validate([
             'tanggal' => 'required|date',
-            'id_ekspedisi' => 'required|exists:ekspedisis,id',
-            'id_kendaraan' => [
-                'required',
-                $request->input('id_kendaraan') !== 'other' ? 'exists:jenis_kendaraans,id' : '',
-            ],
-            'jenis_kendaraan_manual' => 'nullable|required_if:id_kendaraan,other|string|max:255',
-            'no_kendaraan_manual' => 'nullable|required_if:id_kendaraan,other|string|max:255',
-            'id_tujuan_pengiriman' => [
-                'required',
-                $request->input('id_tujuan_pengiriman') !== 'lainnya' ? 'exists:tujuan_pengirimen,id' : '',
-            ],
-            'nama_tujuan_manual' => 'nullable|required_if:id_tujuan_pengiriman,lainnya|string|max:255',
-            'id_std_precooling' => 'required|exists:std_precoolings,id',
             'id_shift' => 'nullable|exists:shifts,id',
-            'jam_mulai' => 'required|date_format:H:i',
-            'jam_selesai' => 'required|date_format:H:i',
-            'suhu_precooling' => 'required|string|max:255',
-            'keterangan' => 'nullable|string',
-            'segel_gembok' => 'nullable|in:segel,gembok',
-            'no_segel' => 'nullable|required_if:segel_gembok,segel|string|max:255',
+            // Condition validations (root level)
+            'kondisi_kebersihan_mobil.*' => 'nullable|in:0,1',
+            'kondisi_mobil.*' => 'nullable|in:0,1',
+            
+            // Dynamic entries validations
+            'entries' => 'required|array|min:1',
+            'entries.*.id_ekspedisi' => 'required|exists:ekspedisis,id',
+            
+            'entries.*.id_kendaraan' => 'required',
+            'entries.*.jenis_kendaraan_manual' => 'nullable|required_if:entries.*.id_kendaraan,other|string|max:255',
+            'entries.*.no_kendaraan_manual' => 'nullable|required_if:entries.*.id_kendaraan,other|string|max:255',
+            
+            'entries.*.id_tujuan_pengiriman' => 'required',
+            'entries.*.nama_tujuan_manual' => 'nullable|required_if:entries.*.id_tujuan_pengiriman,lainnya|string|max:255',
+            
+            'entries.*.id_std_precooling' => 'required|exists:std_precoolings,id',
+            'entries.*.jam_mulai' => 'required|date_format:H:i',
+            'entries.*.jam_selesai' => 'required|date_format:H:i',
+            'entries.*.suhu_precooling' => 'required|string|max:255',
+            'entries.*.keterangan' => 'nullable|string',
+            'entries.*.segel_gembok' => 'nullable|in:segel,gembok',
+            'entries.*.no_segel' => 'nullable|required_if:entries.*.segel_gembok,segel|string|max:255',
         ]);
 
-        // Handle kendaraan manual — simpan sebagai teks, TIDAK membuat data master baru
-        $idKendaraan = $request->id_kendaraan;
-        $jenisKendaraanManual = null;
-        $noKendaraanManual = null;
-        if ($idKendaraan === 'other') {
-            $idKendaraan = null;
-            $jenisKendaraanManual = $request->jenis_kendaraan_manual;
-            $noKendaraanManual    = $request->no_kendaraan_manual;
-        }
-
-        // Handle tujuan pengiriman manual — simpan sebagai teks, TIDAK membuat data master baru
-        $idTujuanPengiriman = $request->id_tujuan_pengiriman;
-        $namaTujuanManual = null;
-        if ($idTujuanPengiriman === 'lainnya') {
-            $idTujuanPengiriman = null;
-            $namaTujuanManual   = $request->nama_tujuan_manual;
-        }
-
-        // Prepare kondisi data
+        // Setup the shared kondisi data
         $kondisiKebersihanMobil = [
             'berdebu' => $request->input('kondisi_kebersihan_mobil.berdebu'),
             'noda' => $request->input('kondisi_kebersihan_mobil.noda'),
@@ -181,28 +166,66 @@ class PemeriksaanLoadingKendaraanController extends Controller
             'terdapat_celah' => $request->input('kondisi_mobil.terdapat_celah'),
         ];
 
-        PemeriksaanLoadingKendaraan::create([
-            'id_user' => Auth::id(),
-            'tanggal' => $request->tanggal,
-            'id_ekspedisi' => $request->id_ekspedisi,
-            'id_kendaraan' => $idKendaraan,
-            'jenis_kendaraan_manual' => $jenisKendaraanManual,
-            'no_kendaraan_manual'    => $noKendaraanManual,
-            'id_tujuan_pengiriman' => $idTujuanPengiriman,
-            'nama_tujuan_manual'   => $namaTujuanManual,
-            'id_std_precooling' => $request->id_std_precooling,
-            'id_shift' => $request->id_shift,
-            'kondisi_kebersihan_mobil' => json_encode($kondisiKebersihanMobil),
-            'kondisi_mobil' => json_encode($kondisiMobil),
-            'jam_mulai' => $request->jam_mulai,
-            'jam_selesai' => $request->jam_selesai,
-            'suhu_precooling' => $request->suhu_precooling,
-            'keterangan' => $request->keterangan,
-            'segel_gembok' => $request->input('segel_gembok') === 'segel' ? true : ($request->input('segel_gembok') === 'gembok' ? false : null),
-            'no_segel' => $request->input('segel_gembok') === 'segel' ? $request->no_segel : null,
-        ]);
+        $kondisiKebersihanJson = json_encode($kondisiKebersihanMobil);
+        $kondisiMobilJson = json_encode($kondisiMobil);
 
-        return redirect()->route('pemeriksaan-loading-kendaraan.index')->with('success', 'Pemeriksaan loading kendaraan berhasil ditambahkan!');
+        // Loop over entries and insert each record
+        foreach ($request->entries as $entry) {
+            // Handle Kendaraan Manual
+            $idKendaraan = $entry['id_kendaraan'];
+            $jenisKendaraanManual = null;
+            $noKendaraanManual = null;
+            
+            if ($idKendaraan === 'other') {
+                $idKendaraan = null;
+                $jenisKendaraanManual = $entry['jenis_kendaraan_manual'] ?? null;
+                $noKendaraanManual    = $entry['no_kendaraan_manual'] ?? null;
+            } elseif (!\App\Models\JenisKendaraan::where('id', $idKendaraan)->exists()) {
+                // To safely handle UI issues where id could be invalid if they switch back/forth without refetching validation
+                continue; 
+            }
+
+            // Handle Tujuan Manual
+            $idTujuanPengiriman = $entry['id_tujuan_pengiriman'];
+            $namaTujuanManual = null;
+            if ($idTujuanPengiriman === 'lainnya') {
+                $idTujuanPengiriman = null;
+                $namaTujuanManual   = $entry['nama_tujuan_manual'] ?? null;
+            } elseif (!\App\Models\TujuanPengiriman::where('id', $idTujuanPengiriman)->exists()) {
+                continue; 
+            }
+
+            $segelGembok = null;
+            if (isset($entry['segel_gembok'])) {
+                if ($entry['segel_gembok'] === 'segel') $segelGembok = true;
+                elseif ($entry['segel_gembok'] === 'gembok') $segelGembok = false;
+            }
+
+            PemeriksaanLoadingKendaraan::create([
+                'id_user' => Auth::id(),
+                'tanggal' => $request->tanggal,
+                'id_shift' => $request->id_shift,
+                'kondisi_kebersihan_mobil' => $kondisiKebersihanJson,
+                'kondisi_mobil' => $kondisiMobilJson,
+                
+                'id_ekspedisi' => $entry['id_ekspedisi'],
+                'id_kendaraan' => $idKendaraan,
+                'jenis_kendaraan_manual' => $jenisKendaraanManual,
+                'no_kendaraan_manual'    => $noKendaraanManual,
+                'id_tujuan_pengiriman' => $idTujuanPengiriman,
+                'nama_tujuan_manual'   => $namaTujuanManual,
+                'id_std_precooling' => $entry['id_std_precooling'],
+                'jam_mulai' => $entry['jam_mulai'],
+                'jam_selesai' => $entry['jam_selesai'],
+                'suhu_precooling' => $entry['suhu_precooling'],
+                'keterangan' => $entry['keterangan'] ?? null,
+                'segel_gembok' => $segelGembok,
+                'no_segel' => $segelGembok === true ? ($entry['no_segel'] ?? null) : null,
+            ]);
+        }
+
+        return redirect()->route('pemeriksaan-loading-kendaraan.index')
+                         ->with('success', 'Pemeriksaan loading kendaraan berhasil ditambahkan!');
     }
 
     public function show(PemeriksaanLoadingKendaraan $pemeriksaanLoadingKendaraan)

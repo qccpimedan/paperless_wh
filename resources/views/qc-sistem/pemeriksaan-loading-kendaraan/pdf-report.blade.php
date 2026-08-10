@@ -333,35 +333,6 @@
                                 <span class="subheader-label">Shift:</span>
                                 <span class="subheader-value">{{ $firstRecord->shift->shift ?? '-' }}</span>
                             </td>
-                            <td class="subheader-divider"></td>
-                            <td>
-                                <span class="subheader-label">Ekspedisi:</span>
-                                <span class="subheader-value">{{ $firstRecord->ekspedisi->nama_ekspedisi ?? '-' }}</span>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <span class="subheader-label">Kendaraan:</span>
-                                <span class="subheader-value">
-                                    @if($firstRecord->kendaraan)
-                                        {{ $firstRecord->kendaraan->jenis_kendaraan ?? '-' }} - {{ $firstRecord->kendaraan->no_kendaraan ?? '-' }}
-                                    @elseif($firstRecord->jenis_kendaraan_manual)
-                                        {{ $firstRecord->jenis_kendaraan_manual }} - {{ $firstRecord->no_kendaraan_manual ?? '-' }}
-                                    @else
-                                        -
-                                    @endif
-                                </span>
-                            </td>
-                            <td class="subheader-divider"></td>
-                            <td>
-                                <span class="subheader-label">Tujuan:</span>
-                                <span class="subheader-value">{{ $firstRecord->tujuanPengiriman->nama_tujuan ?? $firstRecord->nama_tujuan_manual ?? '-' }}</span>
-                            </td>
-                            <td class="subheader-divider"></td>
-                            <td>
-                                <span class="subheader-label">Std Precooling:</span>
-                                <span class="subheader-value">{{ $firstRecord->stdPrecooling->nama_std_precooling ?? '-' }}</span>
-                            </td>
                         </tr>
                     </table>
                 </div>
@@ -391,6 +362,28 @@
                                 <td class="data-column">
                                     <div class="column-header">PEMERIKSAAN #{{ $columnNumber }}</div>
 
+                                    <div class="section-title">Informasi Kendaraan</div>
+                                    <div class="field-row">
+                                        <span class="field-label">Ekspedisi:</span>
+                                        <span class="field-value">{{ $pemeriksaan->ekspedisi->nama_ekspedisi ?? '-' }}</span>
+                                    </div>
+                                    <div class="field-row">
+                                        <span class="field-label">Kendaraan:</span>
+                                        <span class="field-value">
+                                            @if($pemeriksaan->kendaraan)
+                                                {{ $pemeriksaan->kendaraan->jenis_kendaraan ?? '-' }} - {{ $pemeriksaan->kendaraan->no_kendaraan ?? '-' }}
+                                            @elseif($pemeriksaan->jenis_kendaraan_manual)
+                                                {{ $pemeriksaan->jenis_kendaraan_manual }} - {{ $pemeriksaan->no_kendaraan_manual ?? '-' }}
+                                            @else
+                                                -
+                                            @endif
+                                        </span>
+                                    </div>
+                                    <div class="field-row">
+                                        <span class="field-label">Tujuan:</span>
+                                        <span class="field-value">{{ $pemeriksaan->tujuanPengiriman->nama_tujuan ?? $pemeriksaan->nama_tujuan_manual ?? '-' }}</span>
+                                    </div>                                    
+
                                     <div class="section-title">Waktu & Suhu</div>
                                     <div class="field-row">
                                         <span class="field-label">Jam Mulai:</span>
@@ -402,9 +395,12 @@
                                     </div>
                                     <div class="field-row">
                                         <span class="field-label">Suhu Precooling:</span>
-                                        <span class="field-value">{{ $pemeriksaan->suhu_precooling ?? '-' }}</span>
+                                        <span class="field-value" style="font-family: 'DejaVu Sans', sans-serif;">{{ $pemeriksaan->suhu_precooling ?? '-' }}</span>
                                     </div>
-
+                                    <div class="field-row">
+                                        <span class="field-label">Std Precooling:</span>
+                                        <span class="field-value" style="font-family: 'DejaVu Sans', sans-serif;">{{ $pemeriksaan->stdPrecooling->nama_std_precooling ?? '-' }}</span>
+                                    </div>
                                     <div class="section-title">Kebersihan Mobil</div>
                                     <div class="field-row"><span class="field-label">Berdebu:</span><span class="field-value">{{ $formatBool($kebersihanMobil['berdebu'] ?? null) }}</span></div>
                                     <div class="field-row"><span class="field-label">Noda/Sampah:</span><span class="field-value">{{ $formatBool($kebersihanMobil['noda'] ?? null) }}</span></div>
