@@ -127,7 +127,7 @@
                                         <th>Shift</th>
                                         <th>Plant</th>
                                         <th>No. Kendaraan</th>
-                                        <th>Tujuan</th>
+                                        <!-- <th>Tujuan</th> -->
                                         <th>Verifikasi</th>
                                         <th>Aksi</th>
                                     </tr>
@@ -159,7 +159,7 @@
                                                     -
                                                 @endif
                                             </td>
-                                            <td>{{ $item->tujuanPengiriman->nama_tujuan ?? $item->nama_tujuan_manual ?? '-' }}</td>
+                                            <!-- <td>{{ $item->tujuanPengiriman->nama_tujuan ?? $item->nama_tujuan_manual ?? '-' }}</td> -->
                                             <td>
                                                 @if($st === 'pending' || $st === null)
                                                     @if($userRole === 'qc inspector')
