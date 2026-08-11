@@ -105,7 +105,7 @@
                     </div>
                     
                     <form action="{{ route('pemeriksaan-loading-kendaraan.index') }}" method="GET" class="row g-3 mb-3">
-                        <div class="col-md-9"><input type="text" name="search" class="form-control" placeholder="Cari No. Polisi atau Tujuan..." value="{{ request('search') }}"></div>
+                        <div class="col-md-9"><input type="text" name="search" class="form-control" placeholder="Cari No. Polisi atau No. Kendaraan..." value="{{ request('search') }}"></div>
                         <div class="col-md-3 d-flex align-items-end gap-2">
                             <button type="submit" class="btn btn-primary btn-sm">Cari Data</button>
                             <a href="{{ route('pemeriksaan-loading-kendaraan.index') }}" class="btn btn-secondary btn-sm">Reset</a>
