@@ -647,9 +647,8 @@ class PemeriksaanBarangMudahPecahController extends Controller
             'shift' => $shift,
         ]);
 
-        $filenameDate = $tanggal ?? $tanggalDari ?? date('Y-m-d');
-        $filename = 'laporan-pemeriksaan-barang-mudah-pecah-' . $filenameDate . '.pdf';
-        $filename = 'laporan-barang-mudah-pecah-' . ($uuid ? $firstP->uuid : date('Ymd-His')) . '.pdf';
+        $firstP = $pemeriksaans->first();
+        $filename = 'laporan-barang-mudah-pecah-' . ($firstP ? $firstP->uuid : date('Ymd-His')) . '.pdf';
         return $pdf->download($filename);
     }
 
