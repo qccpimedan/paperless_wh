@@ -1652,71 +1652,98 @@ document.addEventListener('DOMContentLoaded', function() {
     function addProdukGroupFromImport(data, index) {
         const container = document.getElementById('produk-groups');
         const groupIndex = index;
+
+        // Build tujuan options HTML dari data PHP yang sudah di-encode sebagai JSON
+        const tujuanOptions = window._tujuanPengirimansJson || [];
+        let optionsHtml = `<option value="">-- Pilih Tujuan --</option>`;
+        optionsHtml += `<option value="other">✏️ Lainnya (Input Manual)</option>`;
+        tujuanOptions.forEach(t => {
+            const selected = (data.id_tujuan_pengiriman && String(data.id_tujuan_pengiriman) === String(t.id)) ? 'selected' : '';
+            optionsHtml += `<option value="${t.id}" ${selected}>${t.label}</option>`;
+        });
         
         const groupHtml = `
             <div class="produk-group mb-4 p-3 border rounded" style="background-color: #ffffff;" data-group-index="${groupIndex}">
                 <div class="d-flex justify-content-between align-items-center mb-2">
                     <h6 class="text-secondary mb-0">Produk #${groupIndex + 1}</h6>
-                    ${groupIndex > 0 ? '<button type="button" class="btn btn-sm btn-danger remove-produk-group"><i class="bi bi-trash"></i></button>' : ''}
+                    <button type="button" class="btn btn-sm btn-outline-danger remove-produk-group">Hapus Produk</button>
                 </div>
 
-                <input type="hidden" name="produk_data[${groupIndex}][id_produk]" value="${data.id_produk}">
-                
-                <div class="mb-2">
-                    <strong>Produk:</strong> <span class="produk-name-display">${data.nama_produk || 'ID: ' + data.id_produk}</span>
+                <div class="row mb-3 produk-tujuan-section">
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <label>Customer &amp; Tujuan Pengiriman</label>
+                            <select class="form-select produk-tujuan-select" name="produk_data[${groupIndex}][id_tujuan_pengiriman]">
+                                ${optionsHtml}
+                            </select>
+                            <div class="produk-tujuan-manual mt-2" style="display: none;">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <input type="text" class="form-control produk-customer-manual" name="produk_data[${groupIndex}][nama_customer_manual]" placeholder="Nama Customer">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <input type="text" class="form-control produk-tujuan-manual-input" name="produk_data[${groupIndex}][nama_tujuan_manual]" placeholder="Nama Tujuan Pengiriman">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="produk-container">
                     <div class="produk-row mb-4 p-3 border rounded" style="background-color: #f8f9fa;">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6 class="text-secondary mb-0">Detail #1</h6>
+                        </div>
+                        <input type="hidden" class="produk-id-hidden" name="produk_data[${groupIndex}][id_produk]" value="${data.id_produk}">
+                        <div class="mb-2">
+                            <strong>Produk:</strong> <span class="produk-name-display">${data.nama_produk || 'ID: ' + data.id_produk}</span>
+                        </div>
                         <div class="row">
-                            <div class="col-md-6">
+                            <div class="col-md-3">
                                 <div class="form-group">
                                     <label>Kode Produksi</label>
                                     <input type="text" class="form-control" name="produk_data[${groupIndex}][kode_produksi]" value="${data.kode_produksi || ''}" placeholder="Kode Produksi">
                                 </div>
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-md-3">
                                 <div class="form-group">
                                     <label>Best Before</label>
                                     <input type="date" class="form-control" name="produk_data[${groupIndex}][best_before]" value="${data.best_before || ''}">
                                 </div>
                             </div>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <div class="form-group">
                                     <label>Jumlah Kemasan</label>
                                     <input type="text" class="form-control" name="produk_data[${groupIndex}][jumlah_kemasan]" value="${data.jumlah_kemasan || ''}" placeholder="Contoh: 100 Karton">
                                 </div>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <div class="form-group">
                                     <label>Jumlah Sampling</label>
                                     <input type="text" class="form-control" name="produk_data[${groupIndex}][jumlah_sampling]" value="${data.jumlah_sampling || ''}" placeholder="Contoh: 10 Karton">
                                 </div>
                             </div>
-                            <div class="col-md-4">
+                        </div>
+                        <div class="row mt-2">
+                            <div class="col-md-3">
                                 <div class="form-group">
                                     <label>Berat per Karung atau Box</label>
                                     <input type="text" class="form-control" name="produk_data[${groupIndex}][berat_perkarung]" value="${data.berat_perkarung || ''}" placeholder="Contoh: 25 Kg">
                                 </div>
                             </div>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-check mt-4">
-                                    <input class="form-check-input" type="checkbox" name="produk_data[${groupIndex}][kondisi_kemasan]" value="1" ${data.kondisi_kemasan ? 'checked' : ''} id="kondisi_${groupIndex}">
-                                    <label class="form-check-label" for="kondisi_${groupIndex}">
-                                        Kondisi Kemasan Baik
-                                    </label>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
+                            <div class="col-md-9">
                                 <div class="form-group">
                                     <label>Keterangan</label>
-                                    <textarea class="form-control" name="produk_data[${groupIndex}][keterangan]" rows="2" placeholder="Keterangan tambahan untuk detail ini">${data.keterangan || ''}</textarea>
+                                    <textarea class="form-control" name="produk_data[${groupIndex}][keterangan]" rows="2" placeholder="Keterangan tambahan">${data.keterangan || ''}</textarea>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row mt-2">
+                            <div class="col-md-12">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="produk_data[${groupIndex}][kondisi_kemasan]" value="1" ${data.kondisi_kemasan ? 'checked' : ''} id="kondisi_import_${groupIndex}">
+                                    <label class="form-check-label" for="kondisi_import_${groupIndex}">Kondisi Kemasan Baik</label>
                                 </div>
                             </div>
                         </div>
@@ -1727,13 +1754,25 @@ document.addEventListener('DOMContentLoaded', function() {
         
         container.insertAdjacentHTML('beforeend', groupHtml);
 
-        // Add remove handler
-        const removeBtn = container.querySelector(`[data-group-index="${groupIndex}"] .remove-produk-group`);
-        if (removeBtn) {
-            removeBtn.addEventListener('click', function() {
-                this.closest('.produk-group').remove();
-                updateProdukNumbers();
-            });
+        // Bind toggle untuk "Lainnya (Input Manual)" pada tujuan pengiriman
+        const newGroup = container.querySelector(`[data-group-index="${groupIndex}"]`);
+        if (newGroup) {
+            const tujuanSel = newGroup.querySelector('.produk-tujuan-select');
+            const tujuanManualDiv = newGroup.querySelector('.produk-tujuan-manual');
+            if (tujuanSel && tujuanManualDiv) {
+                tujuanSel.addEventListener('change', function() {
+                    tujuanManualDiv.style.display = this.value === 'other' ? 'block' : 'none';
+                });
+            }
+
+            // Bind remove button
+            const removeBtn = newGroup.querySelector('.remove-produk-group');
+            if (removeBtn) {
+                removeBtn.addEventListener('click', function() {
+                    this.closest('.produk-group').remove();
+                    updateProdukNumbers();
+                });
+            }
         }
     }
 
@@ -1746,6 +1785,21 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 });
+</script>
+
+<script>
+// Data tujuan pengiriman tersedia untuk digunakan di addProdukGroupFromImport
+window._tujuanPengirimansJson = @json(
+    $tujuanPengirimans->map(function($t) {
+        $nc = optional($t->customer)->nama_cust;
+        $nt = $t->nama_tujuan;
+        if ($nc && $nt && $nt !== '-') $lbl = $nc . ' - ' . $nt;
+        elseif ($nc) $lbl = $nc;
+        elseif ($nt && $nt !== '-') $lbl = $nt;
+        else $lbl = 'Tujuan #' . $t->id;
+        return ['id' => $t->id, 'label' => $lbl];
+    })->values()
+);
 </script>
 
 <style>

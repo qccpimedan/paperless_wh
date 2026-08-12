@@ -30,6 +30,8 @@ class LoadingFormSheet implements
         return array_fill(0, 30, [
             '', // Nama Produk (will be dropdown)
             '', // Kategori (will be VLOOKUP)
+            '', // CUSTOMER
+            '', // TUJUAN PENGIRIMAN
             '', // Kode Produksi
             '', // Best Before
             '', // Jumlah Kemasan
@@ -46,6 +48,8 @@ class LoadingFormSheet implements
         return [
             'NAMA PRODUK',
             'KATEGORI',
+            'CUSTOMER',
+            'TUJUAN PENGIRIMAN',
             'KODE PRODUKSI',
             'BEST BEFORE (dd-mmm-yy)',
             'JUMLAH KEMASAN',
@@ -65,7 +69,7 @@ class LoadingFormSheet implements
     public function styles(\PhpOffice\PhpSpreadsheet\Worksheet\Worksheet $sheet)
     {
         // Header styling
-        $sheet->getStyle('A4:J4')->applyFromArray([
+        $sheet->getStyle('A4:L4')->applyFromArray([
             'font' => ['bold' => true, 'size' => 11, 'color' => ['rgb' => 'FFFFFF']],
             'fill' => [
                 'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
@@ -90,7 +94,7 @@ class LoadingFormSheet implements
                 $sheet->insertNewRowBefore(1, 3);
                 
                 // Title
-                $sheet->mergeCells('A1:J1');
+                $sheet->mergeCells('A1:L1');
                 $sheet->setCellValue('A1', 'TEMPLATE LOADING PRODUK - UNIVERSAL');
                 $sheet->getStyle('A1')->applyFromArray([
                     'font' => ['bold' => true, 'size' => 14, 'color' => ['rgb' => 'FFFFFF']],
@@ -103,8 +107,8 @@ class LoadingFormSheet implements
                 $sheet->getRowDimension(1)->setRowHeight(30);
                 
                 // Instructions
-                $sheet->mergeCells('A2:J2');
-                $sheet->setCellValue('A2', 'CARA MENGGUNAKAN: 1) Klik dropdown "NAMA PRODUK" dan pilih produk 2) Kategori akan terisi otomatis 3) Isi kolom Kode Produksi, Best Before, Jumlah, dll 4) Simpan dan upload file ini');
+                $sheet->mergeCells('A2:L2');
+                $sheet->setCellValue('A2', 'CARA MENGGUNAKAN: 1) Klik dropdown "NAMA PRODUK" dan pilih produk 2) Kategori akan terisi otomatis 3) Isi Customer & Tujuan 4) Isi kolom Kode Produksi, Best Before, Jumlah, dll 5) Simpan dan upload file ini');
                 $sheet->getStyle('A2')->applyFromArray([
                     'font' => ['italic' => true, 'size' => 10],
                     'fill' => [
@@ -121,17 +125,19 @@ class LoadingFormSheet implements
                 // Set column widths
                 $sheet->getColumnDimension('A')->setWidth(45); // Nama Produk (wider)
                 $sheet->getColumnDimension('B')->setWidth(15); // Kategori
-                $sheet->getColumnDimension('C')->setWidth(20); // Kode Produksi
-                $sheet->getColumnDimension('D')->setWidth(20); // Best Before
-                $sheet->getColumnDimension('E')->setWidth(18); // Jumlah Kemasan
-                $sheet->getColumnDimension('F')->setWidth(18); // Jumlah Sampling
-                $sheet->getColumnDimension('G')->setWidth(22); // Berat
-                $sheet->getColumnDimension('H')->setWidth(22); // Kondisi
-                $sheet->getColumnDimension('I')->setWidth(30); // Keterangan
-                $sheet->getColumnDimension('J')->setWidth(10); // ID (will be hidden)
+                $sheet->getColumnDimension('C')->setWidth(25); // Customer
+                $sheet->getColumnDimension('D')->setWidth(25); // Tujuan Pengiriman
+                $sheet->getColumnDimension('E')->setWidth(20); // Kode Produksi
+                $sheet->getColumnDimension('F')->setWidth(20); // Best Before
+                $sheet->getColumnDimension('G')->setWidth(18); // Jumlah Kemasan
+                $sheet->getColumnDimension('H')->setWidth(18); // Jumlah Sampling
+                $sheet->getColumnDimension('I')->setWidth(22); // Berat
+                $sheet->getColumnDimension('J')->setWidth(22); // Kondisi
+                $sheet->getColumnDimension('K')->setWidth(30); // Keterangan
+                $sheet->getColumnDimension('L')->setWidth(10); // ID (will be hidden)
                 
-                // Hide column J (ID_PRODUK)
-                $sheet->getColumnDimension('J')->setVisible(false);
+                // Hide column L (ID_PRODUK)
+                $sheet->getColumnDimension('L')->setVisible(false);
                 
                 // Add VLOOKUP formulas for Kategori (Column B)
                 for ($row = 5; $row <= 34; $row++) {
@@ -139,8 +145,8 @@ class LoadingFormSheet implements
                         "=IF(A{$row}=\"\",\"\",IFERROR(VLOOKUP(A{$row},'Master Data'!\$A:\$B,2,FALSE),\"\"))"
                     );
                     
-                    // Add VLOOKUP formulas for ID_PRODUK (Hidden Column J)
-                    $sheet->setCellValue("J{$row}", 
+                    // Add VLOOKUP formulas for ID_PRODUK (Hidden Column L)
+                    $sheet->setCellValue("L{$row}", 
                         "=IF(A{$row}=\"\",\"\",IFERROR(VLOOKUP(A{$row},'Master Data'!\$A:\$C,3,FALSE),\"\"))"
                     );
                 }
@@ -162,20 +168,20 @@ class LoadingFormSheet implements
                 // Lock protected columns (Kategori and ID)
                 $sheet->getStyle('B5:B34')->getProtection()
                     ->setLocked(\PhpOffice\PhpSpreadsheet\Style\Protection::PROTECTION_PROTECTED);
-                $sheet->getStyle('J5:J34')->getProtection()
+                $sheet->getStyle('L5:L34')->getProtection()
                     ->setLocked(\PhpOffice\PhpSpreadsheet\Style\Protection::PROTECTION_PROTECTED);
                 
                 // Unlock editable columns
                 $sheet->getStyle('A5:A34')->getProtection()
                     ->setLocked(\PhpOffice\PhpSpreadsheet\Style\Protection::PROTECTION_UNPROTECTED);
-                $sheet->getStyle('C5:I34')->getProtection()
+                $sheet->getStyle('C5:K34')->getProtection()
                     ->setLocked(\PhpOffice\PhpSpreadsheet\Style\Protection::PROTECTION_UNPROTECTED);
                 
                 // Freeze panes (freeze first 4 rows and column A)
                 $sheet->freezePane('B5');
                 
                 // Add borders to data area
-                $sheet->getStyle('A4:I34')->applyFromArray([
+                $sheet->getStyle('A4:K34')->applyFromArray([
                     'borders' => [
                         'allBorders' => [
                             'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
