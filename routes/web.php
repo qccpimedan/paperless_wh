@@ -211,6 +211,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('pemeriksaan-chemical/export-pdf', [PemeriksaanKedatanganChemicalController::class, 'exportPDF'])->name('pemeriksaan-chemical.export-pdf');
         Route::get('pemeriksaan-produk-finish-good/export-pdf', [PemeriksaanProdukFinishGoodController::class, 'exportPDF'])->name('pemeriksaan-produk-finish-good.export-pdf');
         Route::get('pemeriksaan-loading-produk/export-pdf', [PemeriksaanLoadingProdukController::class, 'exportPDF'])->name('pemeriksaan-loading-produk.export-pdf');
+        Route::get('pemeriksaan-loading-produk/export-excel', [PemeriksaanLoadingProdukController::class, 'exportExcel'])->name('pemeriksaan-loading-produk.export-excel');
         Route::get('pemeriksaan-loading-kendaraan/export-pdf', [PemeriksaanLoadingKendaraanController::class, 'exportPDF'])->name('pemeriksaan-loading-kendaraan.export-pdf');
         Route::get('return-barang/export-pdf', [PemeriksaanReturnBarangCustomerController::class, 'exportPDF'])->name('return-barang.export-pdf');
         Route::get('pemeriksaan-kebersihan-area/export-pdf/{uuid?}', [PemeriksaanKebersihanAreaController::class, 'exportPDF'])->name('pemeriksaan-kebersihan-area.export-pdf');

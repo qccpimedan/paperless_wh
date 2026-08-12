@@ -3,6 +3,9 @@
 namespace App\Imports;
 
 use App\Models\Produk;
+use App\Models\Customer;
+use App\Models\TujuanPengiriman;
+use Illuminate\Support\Facades\Auth;
 use Maatwebsite\Excel\Concerns\ToArray;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Maatwebsite\Excel\Concerns\WithStartRow;
@@ -91,10 +94,41 @@ class LoadingUniversalImport implements ToArray, WithHeadingRow, WithStartRow
                 }
             }
 
+            // Resolve Customer & Tujuan Pengiriman dari Excel
+            $idTujuanPengiriman = null;
+            $customerName = isset($row['customer']) ? trim($row['customer']) : '';
+            $tujuanName = isset($row['tujuan_pengiriman']) ? trim($row['tujuan_pengiriman']) : '';
+
+            if (!empty($customerName)) {
+                $userId = Auth::id();
+                
+                // Cari atau buat customer
+                $customer = Customer::firstOrCreate(
+                    ['nama_cust' => $customerName],
+                    ['id_user' => $userId]
+                );
+
+                // Default tujuan name to '-' jika kosong
+                $tujuanResolvedName = !empty($tujuanName) ? $tujuanName : '-';
+
+                // Cari atau buat tujuan pengiriman
+                $tujuan = TujuanPengiriman::firstOrCreate(
+                    [
+                        'id_customer' => $customer->id,
+                        'nama_tujuan' => $tujuanResolvedName
+                    ],
+                    ['id_user' => $userId]
+                );
+                
+                $idTujuanPengiriman = $tujuan->id;
+            }
+
             // Add to produk data
             $this->produkData[] = [
                 'id_produk' => $idProduk,
                 'nama_produk' => $produk->nama_produk,
+                'kategori_code' => $produk->kategori_code,
+                'id_tujuan_pengiriman' => $idTujuanPengiriman,
                 'kode_produksi' => $row['kode_produksi'] ?? null,
                 'best_before' => $bestBefore,
                 'jumlah_kemasan' => $row['jumlah_kemasan'] ?? null,
