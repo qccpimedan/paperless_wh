@@ -364,6 +364,16 @@
                             --- INPUT DATA PERTAMA ---
                         </td>
                     </tr>
+                    {{-- Baris Pukul untuk Input Pertama --}}
+                    @if($initialPukul && $initialPukul !== '-')
+                        <tr>
+                            <td style="text-align: center;"></td>
+                            <td>Pukul</td>
+                            <td style="background: #fff3cd; text-align: center;">-</td>
+                            <td style="background: #d4edda;">{{ $initialPukul }}</td>
+                        </tr>
+                    @endif
+
                     @foreach($suhuFieldsConfig as $field => $label)
                         @php $secData = $getInitialVal($field); @endphp
                         @if(!empty($secData))

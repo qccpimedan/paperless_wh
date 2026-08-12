@@ -280,6 +280,14 @@
                             (is_array($firstHistory->suhu_data_lama) ? $firstHistory->suhu_data_lama : (json_decode($firstHistory->suhu_data_lama ?? '[]', true) ?: [])) : 
                             $suhu;
                         $initialTime = $p->created_at->format('d/m/Y H:i');
+
+                        // Ambil nilai Pukul dari history pertama
+                        $initialPukul = '-';
+                        if ($firstHistory && isset($firstHistory->pukul_lama)) {
+                            $initialPukul = $firstHistory->pukul_lama;
+                        } elseif ($p->pukul) {
+                            $initialPukul = $p->pukul;
+                        }
                     @endphp
 
                     {{-- 1. Tampilkan Data Input Pertama (Initial State) --}}
@@ -288,6 +296,16 @@
                             --- INPUT DATA PERTAMA ---
                         </td>
                     </tr>
+                    {{-- Baris Pukul untuk Input Pertama --}}
+                    @if($initialPukul && $initialPukul !== '-')
+                        <tr>
+                            <td style="text-align: center;"></td>
+                            <td>Pukul</td>
+                            <td style="background: #fff3cd; text-align: center;">-</td>
+                            <td style="background: #d4edda;">{{ $initialPukul }}</td>
+                        </tr>
+                    @endif
+
                     @foreach($sectionLabels as $secKey => $secLabel)
                         @php $secData = $initialData[$secKey] ?? []; @endphp
                         @if(!empty($secData))
