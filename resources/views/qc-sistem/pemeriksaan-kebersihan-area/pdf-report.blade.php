@@ -356,7 +356,7 @@
                 @endforeach
             @endforeach
 
-            <div style="text-align:right;font-style:italic;font-size:9px;color:#666;margin-top:20px;">QW 02/00</div>
+            <div style="text-align:right;font-style:italic;font-size:9px;color:#666;margin-top:20px;">QC 07/00</div>
             <div class="signature-section">
                 <table class="signature-table">
                     <tr>
@@ -534,7 +534,7 @@
         </tbody>
     </table>
     <div style="text-align: right; padding-right: 10px; font-style: italic; font-size: 9px; color: #666; margin-top: 5px;">
-        QW 02/00
+        QC 07/00
     </div>
     <div class="signature-section">
         @php

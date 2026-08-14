@@ -333,7 +333,7 @@
                             </div>
                             <div class="header-right">
                                 <div class="header-title">
-                                    <h1>PEMERIKSAAN LOADING KENDARAAN</h1>
+                                    <h1>PEMERIKSAAN KENDARAAN LOADING</h1>
                                 </div>
                             </div>
                         </div>

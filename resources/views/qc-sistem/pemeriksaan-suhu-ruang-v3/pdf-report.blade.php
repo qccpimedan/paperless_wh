@@ -166,7 +166,7 @@
                             @if(!empty($p->tindakan_koreksi))<tr><td style="width:25%"><strong>Tindakan Koreksi</strong></td><td>{{ $p->tindakan_koreksi }}</td></tr>@endif
                         </tbody></table>
                     @endif
-                    <div style="text-align:right;font-style:italic;font-size:9px;color:#666;margin-top:5px;">QW 11/00</div>
+                    <div style="text-align:right;font-style:italic;font-size:9px;color:#666;margin-top:5px;">QW 06/00</div>
                     <div class="signature"><table class="signature-table"><tr>
                         <td class="signature-cell"><div class="signature-header-item">Dibuat Oleh</div><div class="signature-space">@if($p->verifiedByQc||$p->user) @php $q=\SimpleSoftwareIO\QrCode\Facades\QrCode::size(55)->generate("Diverifikasi ".($p->verifiedByQc->name??$p->user->name??'')); @endphp <img src="data:image/svg+xml;base64,{{ base64_encode($q) }}" class="qr-code-img">@else<div class="signature-line-empty"></div>@endif</div><div class="signature-name">{{ $p->verifiedByQc->name??$p->user->name??'-' }}</div></td>
                         <td class="signature-cell"><div class="signature-header-item">Diketahui Oleh</div><div class="signature-space">@if($p->verifiedByProduksi) @php $q=\SimpleSoftwareIO\QrCode\Facades\QrCode::size(55)->generate("Diverifikasi ".$p->verifiedByProduksi->name); @endphp <img src="data:image/svg+xml;base64,{{ base64_encode($q) }}" class="qr-code-img">@else<div class="signature-line-empty"></div>@endif</div><div class="signature-name">{{ $p->verifiedByProduksi->name??'-' }}</div></td>
@@ -196,7 +196,7 @@
                 </div>
                 <div class="header-right">
                     <div class="header-title">
-                        <h1>PEMERIKSAAN SUHU RUANG GUDANG DRY</h1>
+                        <h1>PEMERIKSAAN SUHU PRODUK DAN SUHU RUANG PENYIMPANAN</h1>
                     </div>
                 </div>
             </div>
@@ -550,7 +550,7 @@
             </table>
 
             <div style="text-align: right; padding-right: 10px; font-style: italic; font-size: 9px; color: #666; margin-top: 5px;">
-                QW 11/00
+                QW 06/00
             </div>
             
             <div class="signature">

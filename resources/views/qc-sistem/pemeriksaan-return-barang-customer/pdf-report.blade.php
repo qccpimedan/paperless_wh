@@ -379,7 +379,7 @@
                             </div>
                             <div class="header-right">
                                 <div class="header-title">
-                                    <h1>Pemeriksaan Return Barang Customer</h1>
+                                    <h1>PEMERIKSAAN RETURN BARANG DARI CUSTOMER</h1>
                                 </div>
                             </div>
                         </div>

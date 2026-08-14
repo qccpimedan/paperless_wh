@@ -410,7 +410,7 @@
                             </div>
                             <div class="header-right">
                                 <div class="header-title">
-                                    <h1>PEMERIKSAAN BAHAN BAKU PENUNJANG</h1>
+                                    <h1>PEMERIKSAAN KEDATANGAN BAHAN BAKU DAN BAHAN PENUNJANG</h1>
                                     <div style="font-size:8px;color:#666;margin-top:3px;">{{ strtoupper($currentShift->shift) }}</div>
                                 </div>
                             </div>

@@ -389,7 +389,7 @@
                         </td>
                         <td class="header-title-td">
                             <div class="header-title-box">
-                                PEMERIKSAAN CHEMICAL
+                                PEMERIKSAAN KEDATANGAN BAHAN KIMIA
                             </div>
                         </td>
                     </tr>

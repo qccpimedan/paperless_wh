@@ -98,7 +98,7 @@
                             </div>
                         </div>
                         <div class="header-right">
-                            <div class="header-title"><h1>PEMERIKSAAN SUHU RUANG FOOD PROCESSING</h1></div>
+                            <div class="header-title"><h1>PEMERIKSAAN SUHU PRODUK DAN SUHU RUANG PENYIMPANAN</h1></div>
                         </div>
                     </div>
                     <div class="subheader">
@@ -175,7 +175,7 @@
                             @if(!empty($p->tindakan_koreksi))<tr><td style="width:25%"><strong>Tindakan Koreksi</strong></td><td>{{ $p->tindakan_koreksi }}</td></tr>@endif
                         </tbody></table>
                     @endif
-                    <div style="text-align:right;padding-right:10px;font-style:italic;font-size:9px;color:#666;margin-top:5px;">QW 11/00</div>
+                    <div style="text-align:right;padding-right:10px;font-style:italic;font-size:9px;color:#666;margin-top:5px;">QW 06/00</div>
                     <div class="signature">
                         <table class="signature-table"><tr>
                             <td class="signature-cell">
@@ -586,7 +586,7 @@
             @endif
             
             <div style="text-align: right; padding-right: 10px; font-style: italic; font-size: 9px; color: #666; margin-top: 5px;">
-                QW 11/00
+                QW 06/00
             </div>
 
             <div class="signature">

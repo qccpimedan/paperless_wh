@@ -409,7 +409,7 @@
                                 </td>
                                 <td class="header-title-td">
                                     <div class="header-title-box">
-                                        PEMERIKSAAN PRODUK FINISH GOOD
+                                        PEMERIKSAAN KEDATANGAN FINISH GOOD
                                     </div>
                                 </td>
                             </tr>

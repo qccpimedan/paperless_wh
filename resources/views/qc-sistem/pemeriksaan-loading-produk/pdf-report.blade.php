@@ -596,7 +596,7 @@
 
                                 <div class="header-title-box">
 
-                                    PEMERIKSAAN LOADING PRODUK
+                                    PEMERIKSAAN LOADING
 
                                 </div>
 

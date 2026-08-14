@@ -501,8 +501,7 @@ class GoldenSampleReportController extends Controller
         ]);
 
         $filenameDate = $tanggal ?? $tanggalDari ?? date('Y-m-d');
-        $filename = 'laporan-golden-sample-report-' . $filenameDate . '.pdf';
-        $filename = 'laporan-golden-sample-' . ($uuid ? $firstP->uuid : date('Ymd-His')) . '.pdf';
+        $filename = 'laporan-golden-sample-' . $filenameDate . '.pdf';
         return $pdf->download($filename);
     }
 
