@@ -2131,4 +2131,120 @@ function removeBadgeItem(btn, type) {
     }
 }
 </script>
+
+<!-- Validasi Front-End Form -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('form-pemeriksaan-kedatangan-kemasan');
+    
+    if (!form) return;
+
+    /**
+     * Validasi Form - Cek field wajib:
+     * 1. Tanggal (wajib)
+     * 2. Status (minimal satu item harus "Hold" atau "Release")
+     */
+    function validateForm() {
+        const errors = [];
+        
+        // 1. Tanggal (wajib)
+        const tanggal = document.getElementById('tanggal');
+        if (!tanggal || !tanggal.value || tanggal.value.trim() === '') {
+            errors.push('Tanggal harus diisi');
+            highlightField(tanggal);
+        } else {
+            removeHighlight(tanggal);
+        }
+
+        // 2. Status (minimal satu item harus "Hold" atau "Release")
+        const statusSelects = document.querySelectorAll('select[name="status[]"]');
+        let hasValidStatus = false;
+        let firstStatusField = null;
+        
+        statusSelects.forEach((select, index) => {
+            if (!firstStatusField) firstStatusField = select;
+            
+            const value = select.value ? select.value.trim() : '';
+            if (value === 'Hold' || value === 'Release') {
+                hasValidStatus = true;
+                removeHighlight(select);
+            } else {
+                highlightField(select);
+            }
+        });
+        
+        if (!hasValidStatus) {
+            errors.push('Minimal satu item harus memilih Status "Hold" atau "Release"');
+            if (firstStatusField) {
+                highlightField(firstStatusField);
+            }
+        }
+
+        return errors;
+    }
+
+    /**
+     * Highlight field yang error
+     */
+    function highlightField(field) {
+        if (field) {
+            field.classList.add('is-invalid');
+            field.style.borderColor = '#dc3545';
+            field.style.boxShadow = '0 0 0 0.2rem rgba(220, 53, 69, 0.25)';
+        }
+    }
+
+    /**
+     * Remove highlight dari field
+     */
+    function removeHighlight(field) {
+        if (field) {
+            field.classList.remove('is-invalid');
+            field.style.borderColor = '';
+            field.style.boxShadow = '';
+        }
+    }
+
+    /**
+     * Handle form submit
+     */
+    form.addEventListener('submit', function(e) {
+        const errors = validateForm();
+        
+        if (errors.length > 0) {
+            e.preventDefault();
+            
+            // Tampilkan error messages
+            let errorMessage = '❌ Data Tidak Lengkap:\n\n';
+            errors.forEach((error, index) => {
+                errorMessage += `${index + 1}. ${error}\n`;
+            });
+            
+            // Gunakan SweetAlert jika tersedia, jika tidak gunakan alert biasa
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Validasi Gagal',
+                    html: `<div style="text-align: left; line-height: 1.8;">
+                        <strong>Berikut field yang belum diisi:</strong><br><br>
+                        ${errors.map((err, idx) => `<span style="display: block; margin-bottom: 8px;">${idx + 1}. ${err}</span>`).join('')}
+                    </div>`,
+                    confirmButtonColor: '#3085d6',
+                    confirmButtonText: 'OK'
+                });
+            } else {
+                alert(errorMessage);
+            }
+            
+            // Scroll ke field pertama yang error
+            const allFields = document.querySelectorAll('.is-invalid');
+            if (allFields.length > 0) {
+                allFields[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+                allFields[0].focus();
+            }
+        }
+        // Jika validasi berhasil, form akan submit normalmente
+    });
+});
+</script>
 @endsection

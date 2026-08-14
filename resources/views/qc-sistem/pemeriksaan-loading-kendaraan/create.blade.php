@@ -648,4 +648,175 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 });
 </script>
+
+<!-- Validasi Front-End Form -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('form-pemeriksaan-loading-kendaraan');
+    
+    if (!form) return;
+
+    /**
+     * Validasi Form - Cek semua field wajib
+     * Required fields:
+     * 1. tanggal (date input)
+     * 2. Minimal satu entry dalam entries array dengan:
+     *    - entries[*][id_ekspedisi]
+     *    - entries[*][id_tujuan_pengiriman]
+     *    - entries[*][id_std_precooling]
+     *    - entries[*][jam_mulai]
+     *    - entries[*][jam_selesai]
+     */
+    function validateForm() {
+        const errors = [];
+        
+        // 1. Tanggal (wajib)
+        const tanggal = document.getElementById('tanggal');
+        if (!tanggal || !tanggal.value || tanggal.value.trim() === '') {
+            errors.push('Tanggal harus diisi');
+            highlightField(tanggal);
+        } else {
+            removeHighlight(tanggal);
+        }
+
+        // 2. Minimal ada satu entry (data kendaraan)
+        const allEntries = document.querySelectorAll('.kendaraan-entry');
+        if (!allEntries || allEntries.length === 0) {
+            errors.push('Minimal ada satu data kendaraan yang harus diinput');
+            return errors;
+        }
+
+        // 3. Validasi setiap entry
+        allEntries.forEach((entry, entryIndex) => {
+            const entryNum = entryIndex + 1;
+            let entryValid = true;
+            
+            // Ekspedisi (wajib)
+            const ekspedisiSelect = entry.querySelector('.entry-ekspedisi');
+            if (!ekspedisiSelect || !ekspedisiSelect.value || ekspedisiSelect.value.trim() === '') {
+                errors.push(`Ekspedisi harus dipilih untuk Kendaraan #${entryNum}`);
+                highlightField(ekspedisiSelect);
+                entryValid = false;
+            } else {
+                removeHighlight(ekspedisiSelect);
+            }
+
+            // Tujuan Pengiriman (wajib)
+            const tujuanSelect = entry.querySelector('.entry-tujuan');
+            if (!tujuanSelect || !tujuanSelect.value || tujuanSelect.value.trim() === '') {
+                errors.push(`Tujuan Pengiriman harus dipilih untuk Kendaraan #${entryNum}`);
+                highlightField(tujuanSelect);
+                entryValid = false;
+            } else if (tujuanSelect.value === 'lainnya') {
+                // Jika "Lainnya (Input Manual)", cek field manual input
+                const tujuanManualInput = entry.querySelector('.manual-tujuan-input input');
+                if (!tujuanManualInput || !tujuanManualInput.value || tujuanManualInput.value.trim() === '') {
+                    errors.push(`Nama Tujuan Pengiriman (Manual) harus diisi untuk Kendaraan #${entryNum}`);
+                    highlightField(tujuanManualInput);
+                    entryValid = false;
+                } else {
+                    removeHighlight(tujuanManualInput);
+                }
+            } else {
+                removeHighlight(tujuanSelect);
+            }
+
+            // Std Precooling (wajib)
+            const stdPrecoolingSelect = entry.querySelector('.entry-std-precooling');
+            if (!stdPrecoolingSelect || !stdPrecoolingSelect.value || stdPrecoolingSelect.value.trim() === '') {
+                errors.push(`Std Precooling harus dipilih untuk Kendaraan #${entryNum}`);
+                highlightField(stdPrecoolingSelect);
+                entryValid = false;
+            } else {
+                removeHighlight(stdPrecoolingSelect);
+            }
+
+            // Jam Mulai (wajib)
+            const jamMulaiInput = entry.querySelector('input[name*="[jam_mulai]"]');
+            if (!jamMulaiInput || !jamMulaiInput.value || jamMulaiInput.value.trim() === '') {
+                errors.push(`Jam Mulai harus diisi untuk Kendaraan #${entryNum}`);
+                highlightField(jamMulaiInput);
+                entryValid = false;
+            } else {
+                removeHighlight(jamMulaiInput);
+            }
+
+            // Jam Selesai (wajib)
+            const jamSelesaiInput = entry.querySelector('input[name*="[jam_selesai]"]');
+            if (!jamSelesaiInput || !jamSelesaiInput.value || jamSelesaiInput.value.trim() === '') {
+                errors.push(`Jam Selesai harus diisi untuk Kendaraan #${entryNum}`);
+                highlightField(jamSelesaiInput);
+                entryValid = false;
+            } else {
+                removeHighlight(jamSelesaiInput);
+            }
+        });
+
+        return errors;
+    }
+
+    /**
+     * Highlight field yang error
+     */
+    function highlightField(field) {
+        if (field) {
+            field.classList.add('is-invalid');
+            field.style.borderColor = '#dc3545';
+            field.style.boxShadow = '0 0 0 0.2rem rgba(220, 53, 69, 0.25)';
+        }
+    }
+
+    /**
+     * Remove highlight dari field
+     */
+    function removeHighlight(field) {
+        if (field) {
+            field.classList.remove('is-invalid');
+            field.style.borderColor = '';
+            field.style.boxShadow = '';
+        }
+    }
+
+    /**
+     * Handle form submit
+     */
+    form.addEventListener('submit', function(e) {
+        const errors = validateForm();
+        
+        if (errors.length > 0) {
+            e.preventDefault();
+            
+            // Tampilkan error messages
+            let errorMessage = '❌ Data Tidak Lengkap:\n\n';
+            errors.forEach((error, index) => {
+                errorMessage += `${index + 1}. ${error}\n`;
+            });
+            
+            // Gunakan SweetAlert jika tersedia, jika tidak gunakan alert biasa
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Validasi Gagal',
+                    html: `<div style="text-align: left; line-height: 1.8;">
+                        <strong>Berikut field yang belum diisi:</strong><br><br>
+                        ${errors.map((err, idx) => `<span style="display: block; margin-bottom: 8px;">${idx + 1}. ${err}</span>`).join('')}
+                    </div>`,
+                    confirmButtonColor: '#3085d6',
+                    confirmButtonText: 'OK'
+                });
+            } else {
+                alert(errorMessage);
+            }
+            
+            // Scroll ke field pertama yang error
+            const allFields = document.querySelectorAll('.is-invalid');
+            if (allFields.length > 0) {
+                allFields[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+                allFields[0].focus();
+            }
+        }
+        // Jika validasi berhasil, form akan submit normalmente
+    });
+});
+</script>
 @endsection

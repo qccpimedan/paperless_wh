@@ -1813,4 +1813,252 @@ window._tujuanPengirimansJson = @json(
 
 <!-- SheetJS for Excel Parsing -->
 <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+
+<!-- Validasi Front-End Form -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('form-pemeriksaan-loading-produk');
+    
+    if (!form) return;
+
+    /**
+     * Validasi Form - Cek semua field wajib kecuali "Keterangan"
+     */
+    function validateForm() {
+        const errors = [];
+        
+        // 1. Tanggal (wajib)
+        const tanggal = document.getElementById('tanggal');
+        if (!tanggal || !tanggal.value || tanggal.value.trim() === '') {
+            errors.push('Tanggal harus diisi');
+            highlightField(tanggal);
+        } else {
+            removeHighlight(tanggal);
+        }
+
+        // 2. Shift (wajib)
+        const idShift = document.getElementById('id_shift');
+        if (!idShift || !idShift.value || idShift.value.trim() === '') {
+            errors.push('Shift harus dipilih');
+            highlightField(idShift);
+        } else {
+            removeHighlight(idShift);
+        }
+
+        // 3. Kendaraan (wajib) - jika dipilih "other", cek field manual
+        const idKendaraan = document.getElementById('id_kendaraan');
+        if (!idKendaraan || !idKendaraan.value || idKendaraan.value.trim() === '') {
+            errors.push('Kendaraan harus dipilih');
+            highlightField(idKendaraan);
+        } else if (idKendaraan.value === 'other') {
+            const jenisKendaraanManual = document.getElementById('jenis_kendaraan_manual');
+            const noKendaraanManual = document.getElementById('no_kendaraan_manual');
+            
+            if (!jenisKendaraanManual || !jenisKendaraanManual.value || jenisKendaraanManual.value.trim() === '') {
+                errors.push('Jenis Kendaraan (Manual) harus diisi');
+                highlightField(jenisKendaraanManual);
+            } else {
+                removeHighlight(jenisKendaraanManual);
+            }
+            
+            if (!noKendaraanManual || !noKendaraanManual.value || noKendaraanManual.value.trim() === '') {
+                errors.push('No Kendaraan (Manual) harus diisi');
+                highlightField(noKendaraanManual);
+            } else {
+                removeHighlight(noKendaraanManual);
+            }
+        } else {
+            removeHighlight(idKendaraan);
+        }
+
+        // 4. Supir (wajib) - jika dipilih "other", cek field manual
+        const idSupir = document.getElementById('id_supir');
+        if (!idSupir || !idSupir.value || idSupir.value.trim() === '') {
+            errors.push('Supir harus dipilih');
+            highlightField(idSupir);
+        } else if (idSupir.value === 'other') {
+            const namaSupirManual = document.getElementById('nama_supir_manual');
+            if (!namaSupirManual || !namaSupirManual.value || namaSupirManual.value.trim() === '') {
+                errors.push('Nama Supir (Manual) harus diisi');
+                highlightField(namaSupirManual);
+            } else {
+                removeHighlight(namaSupirManual);
+            }
+        } else {
+            removeHighlight(idSupir);
+        }
+
+        // 5. Mulai Loading (wajib)
+        const starLoading = document.getElementById('star_loading');
+        if (!starLoading || !starLoading.value || starLoading.value.trim() === '') {
+            errors.push('Mulai Loading harus diisi');
+            highlightField(starLoading);
+        } else {
+            removeHighlight(starLoading);
+        }
+
+        // 6. Selesai Loading (wajib)
+        const selesaiLoading = document.getElementById('selesai_loading');
+        if (!selesaiLoading || !selesaiLoading.value || selesaiLoading.value.trim() === '') {
+            errors.push('Selesai Loading harus diisi');
+            highlightField(selesaiLoading);
+        } else {
+            removeHighlight(selesaiLoading);
+        }
+
+        // 7. Temperature Mobil (wajib)
+        const temperatureMobil = document.getElementById('temperature_mobil');
+        if (!temperatureMobil || !temperatureMobil.value || temperatureMobil.value.trim() === '') {
+            errors.push('Temperature Mobil harus diisi');
+            highlightField(temperatureMobil);
+        } else {
+            removeHighlight(temperatureMobil);
+        }
+
+        // 8. Kondisi Produk (wajib)
+        const kondisiProduk = document.getElementById('kondisi_produk');
+        if (!kondisiProduk || !kondisiProduk.value || kondisiProduk.value.trim() === '') {
+            errors.push('Kondisi Produk harus dipilih');
+            highlightField(kondisiProduk);
+        } else {
+            removeHighlight(kondisiProduk);
+        }
+
+        // 9. Temperature Produk (wajib - minimal ada satu)
+        const temperatureFields = document.querySelectorAll('input[name="temperature_produk[]"]');
+        let hasTemperature = false;
+        temperatureFields.forEach(field => {
+            if (field.value && field.value.trim() !== '') {
+                hasTemperature = true;
+            }
+        });
+        if (!hasTemperature) {
+            errors.push('Temperature Produk harus diisi minimal satu');
+            if (temperatureFields.length > 0) {
+                highlightField(temperatureFields[0]);
+            }
+        } else {
+            temperatureFields.forEach(field => {
+                removeHighlight(field);
+            });
+        }
+
+        // 10. Kategori Produk (wajib) - cek di setiap produk group
+        const kategoriSelects = document.querySelectorAll('.kategori-produk-select');
+        let kategoriValid = true;
+        kategoriSelects.forEach(select => {
+            if (!select.value || select.value.trim() === '') {
+                errors.push('Kategori Produk harus dipilih untuk setiap produk');
+                highlightField(select);
+                kategoriValid = false;
+            } else {
+                removeHighlight(select);
+            }
+        });
+
+        // 11. Tujuan Pengiriman per produk (wajib) - jika "other", cek field manual
+        const produkGroups = document.querySelectorAll('.produk-group');
+        produkGroups.forEach((group, index) => {
+            const tujuanSelect = group.querySelector('.produk-tujuan-select');
+            if (!tujuanSelect || !tujuanSelect.value || tujuanSelect.value.trim() === '') {
+                errors.push(`Tujuan Pengiriman harus dipilih untuk Produk #${index + 1}`);
+                highlightField(tujuanSelect);
+            } else if (tujuanSelect.value === 'other') {
+                const customerManual = group.querySelector('.produk-customer-manual');
+                const tujuanManual = group.querySelector('.produk-tujuan-manual-input');
+                
+                if (!customerManual || !customerManual.value || customerManual.value.trim() === '') {
+                    errors.push(`Nama Customer (Manual) harus diisi untuk Produk #${index + 1}`);
+                    highlightField(customerManual);
+                } else {
+                    removeHighlight(customerManual);
+                }
+                
+                if (!tujuanManual || !tujuanManual.value || tujuanManual.value.trim() === '') {
+                    errors.push(`Nama Tujuan Pengiriman (Manual) harus diisi untuk Produk #${index + 1}`);
+                    highlightField(tujuanManual);
+                } else {
+                    removeHighlight(tujuanManual);
+                }
+            } else {
+                removeHighlight(tujuanSelect);
+                const customerManual = group.querySelector('.produk-customer-manual');
+                const tujuanManual = group.querySelector('.produk-tujuan-manual-input');
+                if (customerManual) removeHighlight(customerManual);
+                if (tujuanManual) removeHighlight(tujuanManual);
+            }
+        });
+
+        // 12. Data Produk harus ada minimal satu group
+        if (!produkGroups || produkGroups.length === 0) {
+            errors.push('Minimal ada satu data produk yang harus diinput');
+        }
+
+        return errors;
+    }
+
+    /**
+     * Highlight field yang error
+     */
+    function highlightField(field) {
+        if (field) {
+            field.classList.add('is-invalid');
+            field.style.borderColor = '#dc3545';
+            field.style.boxShadow = '0 0 0 0.2rem rgba(220, 53, 69, 0.25)';
+        }
+    }
+
+    /**
+     * Remove highlight dari field
+     */
+    function removeHighlight(field) {
+        if (field) {
+            field.classList.remove('is-invalid');
+            field.style.borderColor = '';
+            field.style.boxShadow = '';
+        }
+    }
+
+    /**
+     * Handle form submit
+     */
+    form.addEventListener('submit', function(e) {
+        const errors = validateForm();
+        
+        if (errors.length > 0) {
+            e.preventDefault();
+            
+            // Tampilkan error messages
+            let errorMessage = '❌ Data Tidak Lengkap:\n\n';
+            errors.forEach((error, index) => {
+                errorMessage += `${index + 1}. ${error}\n`;
+            });
+            
+            // Gunakan SweetAlert jika tersedia, jika tidak gunakan alert biasa
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Validasi Gagal',
+                    html: `<div style="text-align: left; line-height: 1.8;">
+                        <strong>Berikut field yang belum diisi:</strong><br><br>
+                        ${errors.map((err, idx) => `<span style="display: block; margin-bottom: 8px;">${idx + 1}. ${err}</span>`).join('')}
+                    </div>`,
+                    confirmButtonColor: '#3085d6',
+                    confirmButtonText: 'OK'
+                });
+            } else {
+                alert(errorMessage);
+            }
+            
+            // Scroll ke field pertama yang error
+            const allFields = document.querySelectorAll('.is-invalid');
+            if (allFields.length > 0) {
+                allFields[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+                allFields[0].focus();
+            }
+        }
+        // Jika validasi berhasil, form akan submit normalmente
+    });
+});
+</script>
 @endsection
