@@ -582,11 +582,14 @@ class PemeriksaanBarangMudahPecahController extends Controller
     public function exportPDF(Request $request)
     {
         $user = Auth::user();
-
         $id_shift = $request->input('id_shift');
         $tanggalDari = $request->input('tanggal_dari');
         $tanggalSampai = $request->input('tanggal_sampai');
         $tanggal = $request->input('tanggal');
+
+        if ($id_shift === 'all') {
+            return $this->exportPDFAllShift($request, $user, $tanggalDari, $tanggalSampai);
+        }
 
         $query = PemeriksaanBarangMudahPecah::with([
             'user.role',
@@ -640,16 +643,63 @@ class PemeriksaanBarangMudahPecahController extends Controller
         $shift = $id_shift ? Shift::find($id_shift) : null;
 
         $pdf = PDF::loadView('qc-sistem.pemeriksaan-barang-mudah-pecah.pdf-report', [
-            'pemeriksaans' => $pemeriksaans,
-            'tanggal' => $tanggal,
-            'tanggal_dari' => $tanggalDari,
+            'pemeriksaans'   => $pemeriksaans,
+            'tanggal'        => $tanggal,
+            'tanggal_dari'   => $tanggalDari,
             'tanggal_sampai' => $tanggalSampai,
-            'shift' => $shift,
+            'shift'          => $shift,
+            'isAllShift'     => false,
+            'dataPerShift'   => [],
         ]);
 
         $firstP = $pemeriksaans->first();
         $filename = 'laporan-barang-mudah-pecah-' . ($firstP ? $firstP->uuid : date('Ymd-His')) . '.pdf';
         return $pdf->download($filename);
+    }
+
+    /**
+     * Export PDF semua shift dikelompokkan per shift
+     */
+    private function exportPDFAllShift($request, $user, $tanggalDari, $tanggalSampai)
+    {
+        if ($user->role && strtolower($user->role->role) === 'superadmin') {
+            $allShifts = Shift::all();
+        } else {
+            $allShifts = Shift::query()
+                ->when($user->id_plant, fn($q) => $q->whereHas('user', fn($qu) => $qu->where('id_plant', $user->id_plant)))
+                ->get();
+        }
+
+        $dataPerShift = [];
+        foreach ($allShifts as $shift) {
+            $query = PemeriksaanBarangMudahPecah::with([
+                'user.role', 'user.plant', 'shift', 'area',
+                'details.barang', 'details.areaLocation',
+                'qcVerifier', 'produksiVerifier', 'spvVerifier',
+            ]);
+            if ($user->role && strtolower($user->role->role) !== 'superadmin') {
+                $query->whereHas('user', fn($q) => $q->where('id_plant', $user->getEffectivePlantId()));
+            }
+            $query->where('id_shift', $shift->id);
+            if ($tanggalDari && $tanggalSampai) { $query->whereBetween('tanggal', [$tanggalDari, $tanggalSampai]); }
+            elseif ($tanggalDari) { $query->whereDate('tanggal', '>=', $tanggalDari); }
+            elseif ($tanggalSampai) { $query->whereDate('tanggal', '<=', $tanggalSampai); }
+            $records = $query->latest()->get();
+            if ($records->isEmpty()) continue;
+            $dataPerShift[] = ['shift' => $shift, 'pemeriksaans' => $records];
+        }
+
+        $pdf = PDF::loadView('qc-sistem.pemeriksaan-barang-mudah-pecah.pdf-report', [
+            'pemeriksaans'   => collect(),
+            'tanggal'        => null,
+            'tanggal_dari'   => $tanggalDari,
+            'tanggal_sampai' => $tanggalSampai,
+            'shift'          => null,
+            'isAllShift'     => true,
+            'dataPerShift'   => $dataPerShift,
+        ]);
+
+        return $pdf->download('laporan-semua-shift-barang-mudah-pecah-' . ($tanggalDari ?? date('Y-m-d')) . ($tanggalSampai ? '-to-' . $tanggalSampai : '') . '.pdf');
     }
 
     public function batchVerify(Request $request)

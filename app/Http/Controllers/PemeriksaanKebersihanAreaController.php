@@ -105,7 +105,7 @@ class PemeriksaanKebersihanAreaController extends Controller
 
         $areaData = [];
 
-        foreach ($request->items as $item) {
+        foreach ($request->items as $index => $item) {
             $jamSebelum = !empty($item['jam_sebelum_proses']) ? substr((string) $item['jam_sebelum_proses'], 0, 5) : null;
             $jamSaat = !empty($item['jam_saat_proses']) ? substr((string) $item['jam_saat_proses'], 0, 5) : null;
 
@@ -128,6 +128,7 @@ class PemeriksaanKebersihanAreaController extends Controller
                         $keteranganKey = 'field_keterangan_' . $field->id;
                         $tindakanKey = 'field_tindakan_' . $field->id;
 
+                        // Cek apakah input tersedia, jika ada gunakan, jika tidak set null
                         $statusSebelum = isset($item[$statusSebelumKey]) ? (int) $item[$statusSebelumKey] : null;
                         $statusSaat = isset($item[$statusSaatKey]) ? (int) $item[$statusSaatKey] : null;
 
@@ -140,6 +141,7 @@ class PemeriksaanKebersihanAreaController extends Controller
                         
                         $areaRecord['fields'][] = [
                             'id_master_form_field' => $field->id,
+                            'field_id' => $field->id, // tambahan untuk backup
                             'status' => $legacyStatus,
                             'status_sebelum_proses' => $statusSebelum,
                             'status_saat_proses' => $statusSaat,
@@ -246,6 +248,7 @@ class PemeriksaanKebersihanAreaController extends Controller
                         $keteranganKey = 'field_keterangan_' . $field->id;
                         $tindakanKey = 'field_tindakan_' . $field->id;
 
+                        // Cek apakah input tersedia, jika ada gunakan, jika tidak set null
                         $statusSebelum = isset($item[$statusSebelumKey]) ? (int) $item[$statusSebelumKey] : null;
                         $statusSaat = isset($item[$statusSaatKey]) ? (int) $item[$statusSaatKey] : null;
 
@@ -258,6 +261,7 @@ class PemeriksaanKebersihanAreaController extends Controller
                         
                         $areaRecord['fields'][] = [
                             'id_master_form_field' => $field->id,
+                            'field_id' => $field->id, // tambahan untuk backup
                             'status' => $legacyStatus,
                             'status_sebelum_proses' => $statusSebelum,
                             'status_saat_proses' => $statusSaat,
@@ -445,6 +449,14 @@ class PemeriksaanKebersihanAreaController extends Controller
     {
         $user = Auth::user();
 
+        // All-shift mode (only applicable for batch export, not single record)
+        if (!$uuid && $request->input('id_shift') === 'all') {
+            return $this->exportPDFAllShift($request, $user,
+                $request->input('tanggal_dari'),
+                $request->input('tanggal_sampai')
+            );
+        }
+
         if ($uuid) {
             // Penarikan data per data (single record)
             $query = PemeriksaanKebersihanArea::where('uuid', $uuid);
@@ -517,6 +529,50 @@ class PemeriksaanKebersihanAreaController extends Controller
 
         $filename = 'laporan-kebersihan-area-' . ($uuid ? $firstP->uuid : date('Ymd-His')) . '.pdf';
         return $pdf->download($filename);
+    }
+
+    /**
+     * Export PDF semua shift dikelompokkan per shift
+     */
+    private function exportPDFAllShift($request, $user, $tanggalDari, $tanggalSampai)
+    {
+        if ($user->role && strtolower($user->role->role) === 'superadmin') {
+            $allShifts = Shift::all();
+        } else {
+            $allShifts = Shift::query()
+                ->when($user->id_plant, fn($q) => $q->whereHas('user', fn($qu) => $qu->where('id_plant', $user->id_plant)))
+                ->get();
+        }
+
+        $dataPerShift = [];
+        foreach ($allShifts as $shift) {
+            $query = PemeriksaanKebersihanArea::with([
+                'user.role', 'user.plant', 'shift',
+                'qcVerifier', 'produksiVerifier', 'spvVerifier',
+            ]);
+            if ($user->role && strtolower($user->role->role) !== 'superadmin') {
+                $query->whereHas('user', fn($q) => $q->where('id_plant', $user->getEffectivePlantId()));
+            }
+            $query->where('id_shift', $shift->id);
+            if ($tanggalDari && $tanggalSampai) { $query->whereBetween('tanggal', [$tanggalDari, $tanggalSampai]); }
+            elseif ($tanggalDari) { $query->whereDate('tanggal', '>=', $tanggalDari); }
+            elseif ($tanggalSampai) { $query->whereDate('tanggal', '<=', $tanggalSampai); }
+            $records = $query->latest()->get();
+            if ($records->isEmpty()) continue;
+            $dataPerShift[] = ['shift' => $shift, 'pemeriksaans' => $records];
+        }
+
+        $pdf = PDF::loadView('qc-sistem.pemeriksaan-kebersihan-area.pdf-report', [
+            'pemeriksaans'   => collect(),
+            'tanggal'        => null,
+            'tanggal_dari'   => $tanggalDari,
+            'tanggal_sampai' => $tanggalSampai,
+            'shift'          => null,
+            'isAllShift'     => true,
+            'dataPerShift'   => $dataPerShift,
+        ]);
+
+        return $pdf->download('laporan-semua-shift-kebersihan-area-' . ($tanggalDari ?? date('Y-m-d')) . ($tanggalSampai ? '-to-' . $tanggalSampai : '') . '.pdf');
     }
 
     public function batchVerify(Request $request)

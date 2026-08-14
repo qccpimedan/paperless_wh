@@ -79,6 +79,7 @@
                                 <label class="form-label">Shift</label>
                                 <select name="id_shift" class="form-select" id="shiftSelect">
                                     <option value="">-- Pilih Shift --</option>
+                                    <option value="all" {{ request('id_shift') == 'all' ? 'selected' : '' }}>📋 Semua Shift</option>
                                     @foreach($shifts ?? [] as $shift)
                                         <option value="{{ $shift->id }}" data-shift-name="{{ $shift->shift }}" data-is-date-range="{{ $shift->is_date_range }}" {{ request('id_shift') == $shift->id ? 'selected' : '' }}>
                                             {{ $shift->shift }}
@@ -189,10 +190,10 @@
                                                         <i class="bi bi-clock-history"></i>
                                                     </a>
                                                     @endcan
-                                                    <a href="{{ route('pemeriksaan-suhu-ruang-v3.print-pdf', $item->uuid) }}" 
+                                                    <!-- <a href="{{ route('pemeriksaan-suhu-ruang-v3.print-pdf', $item->uuid) }}" 
                                                         class="btn btn-sm btn-danger" title="Cetak PDF" target="_blank">
                                                         <i class="bi bi-file-earmark-text"></i>
-                                                    </a>
+                                                    </a> -->
                                                 </div>
                                             </td>
                                         </tr>
@@ -284,10 +285,16 @@ document.addEventListener('DOMContentLoaded', function() {
     if(shiftS){
         const upD = () => {
             const o = shiftS.options[shiftS.selectedIndex];
+            const val = shiftS.value;
+            const isAll = val === 'all';
             const isR = o.getAttribute('data-is-date-range') == '1';
             const sN = o.getAttribute('data-shift-name');
-            tD.style.display = isR ? 'block' : 'none'; tSm.style.display = isR ? 'block' : 'none';
-            tSi.style.display = (!isR && sN) ? 'block' : 'none';
+            if (isAll) {
+                tD.style.display = 'block'; tSm.style.display = 'block'; tSi.style.display = 'none';
+            } else {
+                tD.style.display = isR ? 'block' : 'none'; tSm.style.display = isR ? 'block' : 'none';
+                tSi.style.display = (!isR && sN) ? 'block' : 'none';
+            }
         };
         shiftS.onchange = upD; upD();
     }

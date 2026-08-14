@@ -51,12 +51,12 @@
                                             </p>
                                         </div>
                                     </div>
-                                    <div class="col-md-4">
+                                    <!-- <div class="col-md-4">
                                         <div class="mb-3">
                                             <label class="form-label"><strong>Dibuat Pada</strong></label>
                                             <p class="text-muted">{{ $pemeriksaanKebersihanArea->created_at->format('d M Y H:i:s')  }}</p>
                                         </div>
-                                    </div>
+                                    </div> -->
 
                                 </div>
 
@@ -170,7 +170,7 @@
 
                                 <div class="col-md-12 d-flex justify-content-end mt-4">
                                     <a href="{{ route('pemeriksaan-kebersihan-area.index') }}" class="btn btn-light-secondary me-1 mb-1">Kembali</a>
-                                    <a href="{{ route('pemeriksaan-kebersihan-area.edit', $pemeriksaanKebersihanArea->uuid) }}" class="btn btn-primary me-1 mb-1">Edit</a>
+                                    <a href="{{ route('pemeriksaan-kebersihan-area.edit', $pemeriksaanKebersihanArea->uuid) }}" class="btn btn-warning me-1 mb-1">Edit</a>
                                 </div>
                             </div>
                         </div>

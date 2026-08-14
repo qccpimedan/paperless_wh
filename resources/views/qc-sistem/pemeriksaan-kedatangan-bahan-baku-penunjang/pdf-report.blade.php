@@ -339,6 +339,244 @@
 <body>
     <div class="container">
 
+        @php $isAllShift = $isAllShift ?? false; @endphp
+
+        @if($isAllShift)
+            {{-- ======= MODE: SEMUA SHIFT ======= --}}
+            @if(empty($dataPerShift))
+                <div class="empty-message">
+                    <p>Tidak ada data pemeriksaan untuk semua shift pada periode yang dipilih.</p>
+                </div>
+            @else
+                @foreach($dataPerShift as $shiftGroupIndex => $shiftGroup)
+                    @php
+                        $pemeriksaans     = $shiftGroup['pemeriksaans'];
+                        $currentShift     = $shiftGroup['shift'];
+                        $qcUser           = $shiftGroup['qcUser'];
+                        $produksiUser     = $shiftGroup['produksiUser'];
+                        $spvQcUser        = $shiftGroup['spvQcUser'];
+                        $filterBahanIds   = $shiftGroup['filterBahanIds'];
+                        $columnsPerPage   = 4;
+                        $allBahanIds      = [];
+                        $pdfColumns       = collect();
+
+                        foreach ($pemeriksaans as $p) {
+                            $idBahansTmp = json_decode($p->id_bahan_array ?? '[]', true) ?? [];
+                            foreach ($idBahansTmp as $tmpId) { if ($tmpId) $allBahanIds[] = $tmpId; }
+
+                            $rowCount = max(1,
+                                count($idBahansTmp),
+                                count(json_decode($p->produsen_array ?? '[]', true) ?? []),
+                                count(json_decode($p->kode_produksi_array ?? '[]', true) ?? []),
+                                count(json_decode($p->expire_date_array ?? '[]', true) ?? []),
+                                count(json_decode($p->jumlah_datang_array ?? '[]', true) ?? []),
+                                count(json_decode($p->spesifikasi_array ?? '[]', true) ?? []),
+                                count(json_decode($p->kondisi_produk ?? '[]', true) ?? []),
+                                count(json_decode($p->suhu_produk ?? '[]', true) ?? []),
+                                count(json_decode($p->status_baris_array ?? '[]', true) ?? [])
+                            );
+                            for ($i = 0; $i < $rowCount; $i++) {
+                                $id_bahan = (json_decode($p->id_bahan_array ?? '[]', true) ?? [])[$i] ?? null;
+                                if (isset($filterBahanIds) && is_array($filterBahanIds) && !empty($filterBahanIds) && !in_array($id_bahan, $filterBahanIds)) continue;
+                                $pdfColumns->push(['record' => $p, 'rowIndex' => $i]);
+                            }
+                        }
+                        $bahanMap = [];
+                        if (!empty($allBahanIds)) {
+                            $bahanMap = \App\Models\Bahan::whereIn('id', array_values(array_unique($allBahanIds)))->pluck('nama_bahan', 'id')->toArray();
+                        }
+                        $chunks = $pdfColumns->chunk($columnsPerPage);
+                    @endphp
+
+                    @foreach($chunks as $pageIndex => $pageRecords)
+                        @php
+                            $firstColumn = $pageRecords->first();
+                            $fRec = $firstColumn ? $firstColumn['record'] : null;
+                        @endphp
+                        <div class="page-section">
+                        <div class="header">
+                            <div class="header-left">
+                                <div class="logo-company">
+                                    <div class="header-logo">
+                                        <img src="{{ public_path('dist/images/logo/cpi-logo.png') }}" alt="Logo CPI">
+                                    </div>
+                                    <div class="header-company">
+                                        <h2>PT. CHAROEN POKPHAND INDONESIA</h2>
+                                        @php $plantName = $fRec && $fRec->user && $fRec->user->plant ? $fRec->user->plant->plant : 'MEDAN'; @endphp
+                                        <p>FOOD DIVISION {{ strtoupper($plantName) }}</p>
+                                        <p>{{ strtoupper($plantName) }} - INDONESIA</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="header-right">
+                                <div class="header-title">
+                                    <h1>PEMERIKSAAN BAHAN BAKU PENUNJANG</h1>
+                                    <div style="font-size:8px;color:#666;margin-top:3px;">{{ strtoupper($currentShift->shift) }}</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="subheader">
+                            <table class="subheader-table">
+                                <tr>
+                                    <td><span class="subheader-label">Hari/Tgl:</span> <span class="subheader-value">{{ $fRec && $fRec->tanggal ? (is_string($fRec->tanggal) ? $fRec->tanggal : $fRec->tanggal->format('d/m/Y')) : '-' }}</span></td>
+                                    <td class="subheader-divider"></td>
+                                    <td><span class="subheader-label">Shift:</span> <span class="subheader-value">{{ $currentShift->shift }}</span></td>
+                                    <td class="subheader-divider"></td>
+                                    <td><span class="subheader-label">Jenis Mobil:</span> <span class="subheader-value">{{ $fRec->jenis_mobil ?? '-' }}</span></td>
+                                    <td class="subheader-divider"></td>
+                                    <td><span class="subheader-label">No. Mobil:</span> <span class="subheader-value">{{ $fRec->no_mobil ?? '-' }}</span></td>
+                                </tr>
+                                <tr>
+                                    <td><span class="subheader-label">Segel:</span> <span class="subheader-value">{{ $fRec && $fRec->segel_gembok ? ucfirst($fRec->segel_gembok) : '-' }}</span></td>
+                                    <td class="subheader-divider"></td>
+                                    <td><span class="subheader-label">No. Segel:</span> <span class="subheader-value">{{ $fRec->no_segel ?? '-' }}</span></td>
+                                    <td class="subheader-divider"></td>
+                                    <td colspan="3"><span class="subheader-label">Supir:</span> <span class="subheader-value">{{ $fRec->nama_supir ?? '-' }}</span></td>
+                                </tr>
+                            </table>
+                        </div>
+
+                        <div class="columns-wrap clearfix">
+                            @foreach($pageRecords as $index => $column)
+                                @php
+                                    $p  = $column['record'];
+                                    $ri = $column['rowIndex'];
+                                    $cn = ($pageIndex * $columnsPerPage) + $loop->iteration;
+                                @endphp
+                                <div class="col" data-num="true">
+                                    <div class="col-header">PEMERIKSAAN #{{ $cn }}</div>
+                                    @php $km = $p->kondisi_mobil ?? []; $ci = array_filter($km); @endphp
+                                    @if(count($ci) > 0)
+                                        <div class="sec-title">Kondisi Mobil</div>
+                                        @foreach($ci as $key => $v) @if($v)<div class="f-row"><span class="check-item">{{ ucfirst(str_replace('_', ' ', $key)) }}</span></div>@endif @endforeach
+                                    @endif
+                                    @php
+                                        $bahan_id  = (json_decode($p->id_bahan_array ?? '[]', true) ?? [])[$ri] ?? null;
+                                        $negara_val = (json_decode($p->negara_produsen_array ?? '[]', true) ?? [])[$ri] ?? null;
+                                        if (is_array($negara_val)) { $negara_val = implode(', ', array_filter($negara_val)); }
+                                    @endphp
+                                    @if($bahan_id || $negara_val)
+                                        <div class="sec-title">Bahan Baku Penunjang</div>
+                                        @if($bahan_id)<div class="f-row"><span class="f-label">Nama:</span><span class="f-value">{{ $bahanMap[$bahan_id] ?? 'N/A' }}</span></div>@endif
+                                        @if($negara_val)<div class="f-row"><span class="f-label">Negara:</span><span class="f-value">{{ $negara_val }}</span></div>@endif
+                                    @endif
+                                    @php
+                                        $sp_v  = (json_decode($p->suhu_produk ?? '[]', true) ?? [])[$ri] ?? null;
+                                        $spt_v = (json_decode($p->suhu_produk_type ?? '[]', true) ?? [])[$ri] ?? null;
+                                        $sm_v  = (json_decode($p->suhu_mobil_array ?? '[]', true) ?? [])[$ri] ?? null;
+                                        $smt_v = (json_decode($p->suhu_mobil_type_array ?? '[]', true) ?? [])[$ri] ?? null;
+                                        $kp_v  = (json_decode($p->kondisi_produk_suhu ?? '[]', true) ?? [])[$ri] ?? null;
+                                    @endphp
+                                    @if($spt_v || $sp_v !== null || $smt_v || $sm_v !== null || $kp_v)
+                                        <div class="sec-title">Kondisi Suhu</div>
+                                        @if($spt_v)<div class="f-row"><span class="f-label" style="width:65px;">Suhu Produk:</span><span class="f-value">{{ $spt_v }}</span></div>@endif
+                                        @if($sp_v !== null && $sp_v !== '')<div class="f-row"><span class="f-label" style="width:65px;">Nilai:</span><span class="f-value">{{ $sp_v }}°C</span></div>@endif
+                                        @if($smt_v)<div class="f-row"><span class="f-label" style="width:65px;">Suhu Mobil:</span><span class="f-value">{{ $smt_v }}</span></div>@endif
+                                        @if($sm_v !== null && $sm_v !== '')<div class="f-row"><span class="f-label" style="width:65px;">Nilai Mobil:</span><span class="f-value">{{ $sm_v }}°C</span></div>@endif
+                                        @if($kp_v !== null && $kp_v !== '')<div class="f-row"><span class="f-label" style="width:65px;">Suhu Kondisi:</span><span class="f-value">{{ $kp_v }}°C</span></div>@endif
+                                    @endif
+                                    @php
+                                        $ffa_v = (json_decode($p->hasil_uji_ffa_array ?? '[]', true) ?? [])[$ri] ?? null;
+                                        $ket_v = (json_decode($p->keterangan_array ?? '[]', true) ?? [])[$ri] ?? null;
+                                    @endphp
+                                    @if($ffa_v || $ket_v)
+                                        <div class="sec-title">Analisis</div>
+                                        @if($ffa_v)<div class="f-row"><span class="f-label">FFA:</span><span class="f-value">{{ $ffa_v }}</span></div>@endif
+                                        @if($ket_v)<div class="f-row"><span class="f-label">Ket:</span><span class="f-value">{{ substr($ket_v,0,20) }}{{ strlen($ket_v)>20?'..':'' }}</span></div>@endif
+                                    @endif
+                                    @php $kf_v = (json_decode($p->kondisi_fisik_array ?? '[]', true) ?? [])[$ri] ?? []; @endphp
+                                    @if(!empty($kf_v))
+                                        <div class="sec-title">Kondisi Fisik</div>
+                                        @if(isset($kf_v['kemasan']))<div class="f-row"><span class="f-label">Kemasan:</span><span class="f-value">{{ $kf_v['kemasan'] ? 'V' : 'X' }}</span></div>@endif
+                                        @if(isset($kf_v['warna']))<div class="f-row"><span class="f-label">Warna:</span><span class="f-value">{{ $kf_v['warna'] ? 'V' : 'X' }}</span></div>@endif
+                                        @if(isset($kf_v['benda_asing']))<div class="f-row"><span class="f-label">B.Asing:</span><span class="f-value">{{ $kf_v['benda_asing'] ? 'V' : 'X' }}</span></div>@endif
+                                        @if(isset($kf_v['aroma']))<div class="f-row"><span class="f-label">Aroma:</span><span class="f-value">{{ $kf_v['aroma'] ? 'V' : 'X' }}</span></div>@endif
+                                    @endif
+                                    @php
+                                        $lh_v = (json_decode($p->logo_halal_array ?? '[]', true) ?? [])[$ri] ?? null;
+                                        $dh_v = (json_decode($p->dokumen_halal_array ?? '[]', true) ?? [])[$ri] ?? null;
+                                        $ca_v = (json_decode($p->coa_array ?? '[]', true) ?? [])[$ri] ?? null;
+                                        $fc_v = (json_decode($p->file_coa_array ?? '[]', true) ?? [])[$ri] ?? null;
+                                    @endphp
+                                    @if($lh_v !== null || $dh_v !== null || $ca_v !== null || $fc_v)
+                                        <div class="sec-title">Dokumentasi</div>
+                                        @if($lh_v !== null)<div class="f-row"><span class="f-label" style="width:55px;">Logo Halal:</span><span class="f-value">{{ $lh_v ? 'Ya' : 'Tidak' }}</span></div>@endif
+                                        @if($dh_v !== null)<div class="f-row"><span class="f-label" style="width:55px;">Dok. Halal:</span><span class="f-value">{{ $dh_v ? 'Ya' : 'Tidak' }}</span></div>@endif
+                                        @if($ca_v !== null)<div class="f-row"><span class="f-label" style="width:55px;">COA:</span><span class="f-value">{{ $ca_v ? 'Ya' : 'Tidak' }}</span></div>@endif
+                                    @endif
+                                    @php $sb_v = (json_decode($p->status_baris_array ?? '[]', true) ?? [])[$ri] ?? null; @endphp
+                                    @if($sb_v)
+                                        <div class="sec-title">Status Release</div>
+                                        <div class="f-row"><span class="f-label" style="width:55px;">Status:</span><span class="f-value">
+                                            @if($sb_v === 'Release')<span style="color:#2f855a;font-weight:bold;background:#c6f6d5;padding:1px 4px;border-radius:2px;">RELEASE</span>
+                                            @elseif($sb_v === 'Hold')<span style="color:#9c4221;font-weight:bold;background:#feebc8;padding:1px 4px;border-radius:2px;">HOLD</span>
+                                            @else<span style="color:#4a5568;font-weight:bold;background:#edf2f7;padding:1px 4px;border-radius:2px;">{{ strtoupper($sb_v) }}</span>@endif
+                                        </span></div>
+                                    @endif
+                                    @php $ip_v = (json_decode($p->image_bahan_baku_array ?? '[]', true) ?? [])[$ri] ?? null; $ifp = $ip_v ? public_path('storage/' . $ip_v) : null; @endphp
+                                    @if($ifp && file_exists($ifp))
+                                        <div class="sec-title">Foto Bahan Baku</div>
+                                        <div style="margin-top:4px;text-align:center;"><img src="{{ $ifp }}" alt="Foto" style="max-width:120px;max-height:80px;border:1px solid #dee2e6;border-radius:3px;padding:1px;"></div>
+                                    @endif
+                                </div>
+                            @endforeach
+                            @for($i = $pageRecords->count(); $i < $columnsPerPage; $i++)
+                                <div class="col empty-col"></div>
+                            @endfor
+                        </div>
+                        <div style="text-align:right;padding-right:10px;font-style:italic;font-size:8px;color:#666;margin-top:4px;">QW 01/00</div>
+                        <div class="signature-section">
+                            <div class="sig-note">
+                                <span class="ok">V</span> : OK &nbsp; <span class="not-ok">X</span> : Tidak Sesuai
+                            </div>
+                            @php $fRecSig = $pemeriksaans->first(); @endphp
+                            <table class="sig-table"><tr>
+                                <td class="sig-cell">
+                                    <div class="sig-label">Dibuat Oleh:</div>
+                                    <div class="sig-space">
+                                        @if($fRecSig && $fRecSig->qcVerifier)
+                                            @php $qd="Dokumen #{$fRecSig->id} diverifikasi oleh {$fRecSig->qcVerifier->name} (QC)"; $qq=\SimpleSoftwareIO\QrCode\Facades\QrCode::size(50)->generate($qd); $qb="data:image/svg+xml;base64,".base64_encode($qq); @endphp
+                                            <img src="{{ $qb }}" class="qr-img" alt="QR">
+                                        @else <div class="sig-line"></div> @endif
+                                    </div>
+                                    <div class="sig-name">{{ $fRecSig && $fRecSig->qcVerifier ? $fRecSig->qcVerifier->name : '-' }}</div>
+                                </td>
+                                <td class="sig-cell">
+                                    <div class="sig-label">Diketahui Oleh:</div>
+                                    <div class="sig-space">
+                                        @if($fRecSig && $fRecSig->produksiVerifier)
+                                            @php $pd="Dokumen #{$fRecSig->id} diverifikasi oleh {$fRecSig->produksiVerifier->name} (Warehouse)"; $pq=\SimpleSoftwareIO\QrCode\Facades\QrCode::size(50)->generate($pd); $pb="data:image/svg+xml;base64,".base64_encode($pq); @endphp
+                                            <img src="{{ $pb }}" class="qr-img" alt="QR">
+                                        @else <div class="sig-line"></div> @endif
+                                    </div>
+                                    <div class="sig-name">{{ $fRecSig && $fRecSig->produksiVerifier ? $fRecSig->produksiVerifier->name : '-' }}</div>
+                                </td>
+                                <td class="sig-cell">
+                                    <div class="sig-label">Disetujui Oleh:</div>
+                                    <div class="sig-space">
+                                        @if($fRecSig && $fRecSig->spvVerifier)
+                                            @php $sd="Dokumen #{$fRecSig->id} diverifikasi oleh {$fRecSig->spvVerifier->name} (SPV QC)"; $sq=\SimpleSoftwareIO\QrCode\Facades\QrCode::size(50)->generate($sd); $sb="data:image/svg+xml;base64,".base64_encode($sq); @endphp
+                                            <img src="{{ $sb }}" class="qr-img" alt="QR">
+                                        @else <div class="sig-line"></div> @endif
+                                    </div>
+                                    <div class="sig-name">{{ $fRecSig && $fRecSig->spvVerifier ? $fRecSig->spvVerifier->name : '-' }}</div>
+                                </td>
+                            </tr></table>
+                        </div>
+                        @if(!$loop->last)<div style="page-break-after: always;"></div>@endif
+                        </div>
+                    @endforeach
+
+                    {{-- Page break antar shift, kecuali shift terakhir --}}
+                    @if(!$loop->last)
+                        <div style="page-break-after: always;"></div>
+                    @endif
+
+                @endforeach
+            @endif
+
+        @else
+            {{-- ======= MODE: SHIFT TUNGGAL (existing logic) ======= --}}
         @if($pemeriksaans->count() > 0)
             @php
                 $columnsPerPage = 4;
@@ -685,6 +923,7 @@
                 <p>Tidak ada data pemeriksaan yang sesuai dengan filter yang dipilih.</p>
             </div>
         @endif
+        @endif {{-- end isAllShift --}}
     </div>
 </body>
 </html>

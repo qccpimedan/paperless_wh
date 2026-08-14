@@ -470,6 +470,10 @@ class PemeriksaanSuhuRuangV3Controller extends Controller
         $tanggalSampai = $request->input('tanggal_sampai');
         $tanggal = $request->input('tanggal');
 
+        if ($id_shift === 'all') {
+            return $this->exportPDFAllShift($request, $user, $tanggalDari, $tanggalSampai);
+        }
+
         $query = PemeriksaanSuhuRuangV3::with([
             'user.role',
             'user.plant',
@@ -519,16 +523,62 @@ class PemeriksaanSuhuRuangV3Controller extends Controller
         $shift = $id_shift ? Shift::find($id_shift) : null;
 
         $pdf = \PDF::loadView('qc-sistem.pemeriksaan-suhu-ruang-v3.pdf-report', [
-            'pemeriksaans' => $pemeriksaans,
-            'tanggal' => $tanggal,
-            'tanggal_dari' => $tanggalDari,
+            'pemeriksaans'   => $pemeriksaans,
+            'tanggal'        => $tanggal,
+            'tanggal_dari'   => $tanggalDari,
             'tanggal_sampai' => $tanggalSampai,
-            'shift' => $shift,
+            'shift'          => $shift,
+            'isAllShift'     => false,
+            'dataPerShift'   => [],
         ]);
 
         $filenameDate = $tanggal ?? $tanggalDari ?? date('Y-m-d');
         $filename = 'laporan-pemeriksaan-suhu-ruang-v3-' . $filenameDate . '.pdf';
         return $pdf->download($filename);
+    }
+
+    /**
+     * Export PDF semua shift dikelompokkan per shift
+     */
+    private function exportPDFAllShift($request, $user, $tanggalDari, $tanggalSampai)
+    {
+        if ($user->role && strtolower($user->role->role) === 'superadmin') {
+            $allShifts = Shift::all();
+        } else {
+            $allShifts = Shift::query()
+                ->when($user->id_plant, fn($q) => $q->whereHas('user', fn($qu) => $qu->where('id_plant', $user->id_plant)))
+                ->get();
+        }
+
+        $dataPerShift = [];
+        foreach ($allShifts as $shift) {
+            $query = PemeriksaanSuhuRuangV3::with([
+                'user.role', 'user.plant', 'shift', 'histories',
+                'verifiedByQc.role', 'verifiedByProduksi.role', 'verifiedBySpv.role',
+            ]);
+            if ($user->role && strtolower($user->role->role) !== 'superadmin') {
+                $query->whereHas('user', fn($q) => $q->where('id_plant', $user->getEffectivePlantId()));
+            }
+            $query->where('id_shift', $shift->id);
+            if ($tanggalDari && $tanggalSampai) { $query->whereBetween('tanggal', [$tanggalDari, $tanggalSampai]); }
+            elseif ($tanggalDari) { $query->whereDate('tanggal', '>=', $tanggalDari); }
+            elseif ($tanggalSampai) { $query->whereDate('tanggal', '<=', $tanggalSampai); }
+            $records = $query->latest()->get();
+            if ($records->isEmpty()) continue;
+            $dataPerShift[] = ['shift' => $shift, 'pemeriksaans' => $records];
+        }
+
+        $pdf = \PDF::loadView('qc-sistem.pemeriksaan-suhu-ruang-v3.pdf-report', [
+            'pemeriksaans'   => collect(),
+            'tanggal'        => null,
+            'tanggal_dari'   => $tanggalDari,
+            'tanggal_sampai' => $tanggalSampai,
+            'shift'          => null,
+            'isAllShift'     => true,
+            'dataPerShift'   => $dataPerShift,
+        ]);
+
+        return $pdf->download('laporan-semua-shift-suhu-ruang-v3-' . ($tanggalDari ?? date('Y-m-d')) . ($tanggalSampai ? '-to-' . $tanggalSampai : '') . '.pdf');
     }
 
     public function batchVerify(Request $request)
