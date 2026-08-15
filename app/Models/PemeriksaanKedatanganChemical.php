@@ -87,4 +87,22 @@ class PemeriksaanKedatanganChemical extends Model
     {
         return $this->belongsTo(User::class, 'verified_by_spv');
     }
+
+    /**
+     * Unit parameters for jumlah datang and jumlah sampling
+     */
+    public static function unitParameters(): array
+    {
+        return [
+            'kg' => 'kg',
+            'gram' => 'gram',
+            'pcs' => 'pcs',
+            'roll' => 'roll',
+            'karung' => 'karung',
+            'box' => 'box',
+            'lembar' => 'lembar',
+            'liter' => 'liter',
+            'pail' => 'pail',
+        ];
+    }
 }

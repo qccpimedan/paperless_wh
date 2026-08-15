@@ -79,6 +79,7 @@
                                 <label class="form-label">Shift</label>
                                 <select name="id_shift" class="form-select" id="shiftSelect">
                                     <option value="">-- Pilih Shift --</option>
+                                    <option value="all" {{ request('id_shift') == 'all' ? 'selected' : '' }}>📋 Semua Shift</option>
                                     @foreach($shifts ?? [] as $shift)
                                         <option value="{{ $shift->id }}" data-shift-name="{{ $shift->shift }}" data-is-date-range="{{ $shift->is_date_range }}" {{ request('id_shift') == $shift->id ? 'selected' : '' }}>
                                             {{ $shift->shift }}
@@ -98,8 +99,9 @@
                                 <label class="form-label">Tanggal</label>
                                 <input type="date" name="tanggal" class="form-control" value="{{ request('tanggal') }}">
                             </div>
-                            <div class="col-md-3 d-flex align-items-end">
-                                <button type="submit" class="btn btn-success w-100"><i class="bi bi-file-pdf"></i> PDF</button>
+                            <div class="col-md-3 d-flex align-items-end gap-2">
+                                <button type="submit" formaction="{{ route('pemeriksaan-suhu-ruang.export-pdf') }}" class="btn btn-danger flex-fill"><i class="bi bi-file-pdf"></i> PDF</button>
+                                <button type="submit" formaction="{{ route('pemeriksaan-suhu-ruang.export-excel') }}" class="btn btn-success flex-fill"><i class="bi bi-file-earmark-excel"></i> Excel</button>
                             </div>
                         </form>
                     </div>
@@ -286,10 +288,16 @@ document.addEventListener('DOMContentLoaded', function() {
     if(shiftS){
         const upD = () => {
             const o = shiftS.options[shiftS.selectedIndex];
+            const val = shiftS.value;
+            const isAll = val === 'all';
             const isR = o.getAttribute('data-is-date-range') == '1';
             const sN = o.getAttribute('data-shift-name');
-            tD.style.display = isR ? 'block' : 'none'; tSm.style.display = isR ? 'block' : 'none';
-            tSi.style.display = (!isR && sN) ? 'block' : 'none';
+            if (isAll) {
+                tD.style.display = 'block'; tSm.style.display = 'block'; tSi.style.display = 'none';
+            } else {
+                tD.style.display = isR ? 'block' : 'none'; tSm.style.display = isR ? 'block' : 'none';
+                tSi.style.display = (!isR && sN) ? 'block' : 'none';
+            }
         };
         shiftS.onchange = upD; upD();
     }

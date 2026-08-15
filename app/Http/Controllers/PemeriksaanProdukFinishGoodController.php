@@ -280,7 +280,9 @@ return view('qc-sistem.pemeriksaan-produk-finish-good.index', compact('pemeriksa
         $kodeArr = $request->input('kode_produksi', []);
         $expireArr = $request->input('expire_date', []);
         $jmlDatangArr = $request->input('jumlah_datang', []);
+        $unitDatangArr = $request->input('unit_datang', []);
         $jmlSamplingArr = $request->input('jumlah_sampling', []);
+        $unitSamplingArr = $request->input('unit_sampling', []);
         $kemasanArr = $request->input('kondisi_kemasan', []);
         $warnaArr = $request->input('kondisi_warna', []);
         $aromaArr = $request->input('kondisi_aroma', []);
@@ -372,7 +374,9 @@ return view('qc-sistem.pemeriksaan-produk-finish-good.index', compact('pemeriksa
             'kode_produksi_array' => $kodeArr,
             'expire_date_array' => $expireArr,
             'jumlah_datang_array' => $jmlDatangArr,
+            'unit_datang_array' => $unitDatangArr,
             'jumlah_sampling_array' => $jmlSamplingArr,
+            'unit_sampling_array' => $unitSamplingArr,
             'kondisi_kemasan_array' => $kemasanArr,
             'kondisi_warna_array' => $warnaArr,
             'kondisi_aroma_array' => $aromaArr,
@@ -385,7 +389,7 @@ return view('qc-sistem.pemeriksaan-produk-finish-good.index', compact('pemeriksa
             'upload_coa_array' => $coaPaths,
         ]);
 
-        return redirect()->route('pemeriksaan-produk-finish-good.show', $pemeriksaan->uuid)
+        return redirect()->route('pemeriksaan-produk-finish-good.index', $pemeriksaan->uuid)
             ->with('success', 'Data pemeriksaan Finish Good berhasil disimpan');
     }
 
@@ -562,7 +566,9 @@ return view('qc-sistem.pemeriksaan-produk-finish-good.index', compact('pemeriksa
         $kodeArr = $request->input('kode_produksi', []);
         $expireArr = $request->input('expire_date', []);
         $jmlDatangArr = $request->input('jumlah_datang', []);
+        $unitDatangArr = $request->input('unit_datang', []);
         $jmlSamplingArr = $request->input('jumlah_sampling', []);
+        $unitSamplingArr = $request->input('unit_sampling', []);
         $kemasanArr = $request->input('kondisi_kemasan', []);
         $warnaArr = $request->input('kondisi_warna', []);
         $aromaArr = $request->input('kondisi_aroma', []);
@@ -663,7 +669,9 @@ return view('qc-sistem.pemeriksaan-produk-finish-good.index', compact('pemeriksa
             'kode_produksi_array' => $kodeArr,
             'expire_date_array' => $expireArr,
             'jumlah_datang_array' => $jmlDatangArr,
+            'unit_datang_array' => $unitDatangArr,
             'jumlah_sampling_array' => $jmlSamplingArr,
+            'unit_sampling_array' => $unitSamplingArr,
             'kondisi_kemasan_array' => $kemasanArr,
             'kondisi_warna_array' => $warnaArr,
             'kondisi_aroma_array' => $aromaArr,
@@ -838,6 +846,11 @@ return view('qc-sistem.pemeriksaan-produk-finish-good.index', compact('pemeriksa
         $id_produk = $request->input('id_produk');
         $kategori_code = $request->input('kategori_code');
 
+        // === MODE: ALL SHIFT ===
+        if ($id_shift === 'all') {
+            return $this->exportPDFAllShift($request, $user, $tanggalDari, $tanggalSampai, $id_produk, $kategori_code);
+        }
+
         $query = PemeriksaanProdukFinishGood::with([
             'user.role',
             'user.plant',
@@ -976,10 +989,155 @@ return view('qc-sistem.pemeriksaan-produk-finish-good.index', compact('pemeriksa
             'produksiUser' => $produksiUser,
             'spvQcUser' => $spvQcUser,
             'produkMap' => $produkMap,
+            'isAllShift' => false,
+            'dataPerShift' => [[
+                'pemeriksaans' => $pemeriksaans,
+                'shift' => $shift,
+                'qcUser' => $qcUser,
+                'produksiUser' => $produksiUser,
+                'spvQcUser' => $spvQcUser,
+                'produkMap' => $produkMap,
+            ]],
         ]);
 
         $filenameDate = $tanggal ?? $tanggalDari ?? date('Y-m-d');
         $filename = 'laporan-pemeriksaan-finish-good-' . $filenameDate . '.pdf';
+        return $pdf->download($filename);
+    }
+
+    private function exportPDFAllShift($request, $user, $tanggalDari, $tanggalSampai, $id_produk, $kategori_code)
+    {
+        // Ambil semua shift yang accessible
+        if ($user->role && strtolower($user->role->role) === 'superadmin') {
+            $allShifts = Shift::all();
+        } else {
+            $allShifts = Shift::query()
+                ->when($user->id_plant, function ($q) use ($user) {
+                    $q->whereHas('user', function ($qu) use ($user) {
+                        $qu->where('id_plant', $user->id_plant);
+                    });
+                })
+                ->get();
+        }
+
+        // Kumpulkan data per shift
+        $dataPerShift = [];
+
+        foreach ($allShifts as $shift) {
+            $query = PemeriksaanProdukFinishGood::with([
+                'user.role',
+                'user.plant',
+                'shift',
+                'qcVerifier'       => fn($q) => $q->select('id', 'name'),
+                'produksiVerifier' => fn($q) => $q->select('id', 'name'),
+                'spvVerifier'      => fn($q) => $q->select('id', 'name'),
+            ]);
+
+            // Plant filter
+            if ($user->role && strtolower($user->role->role) !== 'superadmin') {
+                $query->whereHas('user', function ($q) use ($user) {
+                    $q->where('id_plant', $user->getEffectivePlantId());
+                });
+            }
+
+            // Filter shift
+            $query->where('id_shift', $shift->id);
+
+            // Filter tanggal (rentang)
+            if ($tanggalDari && $tanggalSampai) {
+                $query->whereBetween('tanggal', [$tanggalDari, $tanggalSampai]);
+            } elseif ($tanggalDari) {
+                $query->whereDate('tanggal', '>=', $tanggalDari);
+            } elseif ($tanggalSampai) {
+                $query->whereDate('tanggal', '<=', $tanggalSampai);
+            }
+
+            // Filter produk / kategori
+            if ($id_produk) {
+                $query->where(function ($q) use ($id_produk) {
+                    $q->whereRaw("JSON_CONTAINS(id_produk_array, ?, '$')", [json_encode((int)$id_produk)])
+                      ->orWhereRaw("JSON_CONTAINS(id_produk_array, ?, '$')", [json_encode((string)$id_produk)])
+                      ->orWhere('id_produk_array', 'like', '%"' . $id_produk . '"%')
+                      ->orWhere('id_produk_array', 'like', '%,' . $id_produk . ',%')
+                      ->orWhere('id_produk_array', 'like', '[' . $id_produk . ',%')
+                      ->orWhere('id_produk_array', 'like', '%,' . $id_produk . ']');
+                });
+            } elseif ($kategori_code) {
+                $matchedIds = \App\Models\Produk::where('kategori_code', $kategori_code)->pluck('id')->toArray();
+                if (!empty($matchedIds)) {
+                    $query->where(function ($q) use ($matchedIds) {
+                        foreach ($matchedIds as $pid) {
+                            $q->orWhereRaw("JSON_CONTAINS(id_produk_array, ?, '$')", [json_encode((int)$pid)])
+                              ->orWhereRaw("JSON_CONTAINS(id_produk_array, ?, '$')", [json_encode((string)$pid)])
+                              ->orWhere('id_produk_array', 'like', '%"' . $pid . '"%')
+                              ->orWhere('id_produk_array', 'like', '%,' . $pid . ',%')
+                              ->orWhere('id_produk_array', 'like', '[' . $pid . ',%')
+                              ->orWhere('id_produk_array', 'like', '%,' . $pid . ']');
+                        }
+                    });
+                } else {
+                    // Jika kategori tidak punya produk, return no results
+                    $query->whereRaw('1 = 0');
+                }
+            }
+
+            $records = $query->latest()->get();
+
+            // Hanya masukkan jika ada data
+            if ($records->isNotEmpty()) {
+                // Kumpulkan verifier names
+                $qcUser = null; $produksiUser = null; $spvQcUser = null;
+                $qcId = $records->pluck('verified_by_qc')->filter()->unique()->first();
+                $prodId = $records->pluck('verified_by_produksi')->filter()->unique()->first();
+                $spvId = $records->pluck('verified_by_spv')->filter()->unique()->first();
+                if ($qcId) $qcUser = optional(User::find($qcId))->name;
+                if ($prodId) $produksiUser = optional(User::find($prodId))->name;
+                if ($spvId) $spvQcUser = optional(User::find($spvId))->name;
+
+                // Produk map untuk nama produk di PDF
+                $allProdukIds = $records
+                    ->flatMap(function ($p) {
+                        $ids = $p->id_produk_array;
+                        return is_array($ids) ? $ids : [];
+                    })
+                    ->filter(fn ($id) => !empty($id))
+                    ->unique()
+                    ->values();
+
+                $produkMap = $allProdukIds->isNotEmpty()
+                    ? Produk::whereIn('id', $allProdukIds->toArray())->pluck('nama_produk', 'id')->toArray()
+                    : [];
+
+                $dataPerShift[] = [
+                    'shift'        => $shift,
+                    'pemeriksaans' => $records,
+                    'qcUser'       => $qcUser,
+                    'produksiUser' => $produksiUser,
+                    'spvQcUser'    => $spvQcUser,
+                    'produkMap'    => $produkMap,
+                ];
+            }
+        }
+
+        $pdf = PDF::loadView('qc-sistem.pemeriksaan-produk-finish-good.pdf-report', [
+            'dataPerShift'   => $dataPerShift,
+            'tanggal'        => null,
+            'tanggal_dari'   => $tanggalDari,
+            'tanggal_sampai' => $tanggalSampai,
+            'shift'          => null,
+            'pemeriksaans'   => collect(),
+            'qcUser'         => null,
+            'produksiUser'   => null,
+            'spvQcUser'      => null,
+            'produkMap'      => [],
+            'isAllShift'     => true,
+        ]);
+
+        $filename = 'laporan-semua-shift-finish-good-'
+            . ($tanggalDari ?? date('Y-m-d'))
+            . ($tanggalSampai ? '-to-' . $tanggalSampai : '')
+            . '.pdf';
+
         return $pdf->download($filename);
     }
 

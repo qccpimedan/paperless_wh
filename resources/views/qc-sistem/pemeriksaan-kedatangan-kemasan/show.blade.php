@@ -117,7 +117,9 @@
                         $distributors = json_decode($pemeriksaanKedatanganKemasan->distributor_array ?? '[]', true) ?? [];
                         $kode_produksis = json_decode($pemeriksaanKedatanganKemasan->kode_produksi_array ?? '[]', true) ?? [];
                         $jumlah_datangs = json_decode($pemeriksaanKedatanganKemasan->jumlah_datang_array ?? '[]', true) ?? [];
+                        $unit_datangs = json_decode($pemeriksaanKedatanganKemasan->unit_datang_array ?? '[]', true) ?? [];
                         $jumlah_samplings = json_decode($pemeriksaanKedatanganKemasan->jumlah_sampling_array ?? '[]', true) ?? [];
+                        $unit_samplings = json_decode($pemeriksaanKedatanganKemasan->unit_sampling_array ?? '[]', true) ?? [];
                         $spesifikasis = json_decode($pemeriksaanKedatanganKemasan->spesifikasi_array ?? '[]', true) ?? [];
                         $penampakans = json_decode($pemeriksaanKedatanganKemasan->penampakan_array ?? '[]', true) ?? [];
                         $sealings = json_decode($pemeriksaanKedatanganKemasan->sealing_array ?? '[]', true) ?? [];
@@ -253,8 +255,8 @@
                                             <div class="col-md-6">
                                                 <table class="table table-borderless table-sm">
                                                     <tr><td width="40%"><strong>Kode Produksi:</strong></td><td>{{ $kode_produksis[$index] ?? '-' }}</td></tr>
-                                                    <tr><td><strong>Jumlah Datang:</strong></td><td>{{ $jumlah_datangs[$index] ?? '-' }}</td></tr>
-                                                    <tr><td><strong>Jumlah Sampling:</strong></td><td>{{ $jumlah_samplings[$index] ?? '-' }}</td></tr>
+                                                    <tr><td><strong>Jumlah Datang:</strong></td><td>{{ $jumlah_datangs[$index] ?? '-' }} @if($unit_datangs[$index] ?? null)<strong>{{ $unit_datangs[$index] }}</strong>@endif</td></tr>
+                                                    <tr><td><strong>Jumlah Sampling:</strong></td><td>{{ $jumlah_samplings[$index] ?? '-' }} @if($unit_samplings[$index] ?? null)<strong>{{ $unit_samplings[$index] }}</strong>@endif</td></tr>
                                                 </table>
                                             </div>
                                             <div class="col-md-6">

@@ -577,14 +577,30 @@
                                                     <div class="row">
                                                         <div class="col-md-6">
                                                             <div class="form-group">
-                                                                <label class="form-label">Jumlah Datang (kg)</label>
-                                                                <input type="text" class="form-control" name="jumlah_datang[]" placeholder="Jumlah Datang">
+                                                                <label class="form-label">Jumlah Datang</label>
+                                                                <div class="input-group" style="max-width: 100%;">
+                                                                    <input type="text" class="form-control" name="jumlah_datang[]" placeholder="Jumlah" min="0" step="any">
+                                                                    <select class="form-select" name="unit_datang[]" style="max-width: 120px;">
+                                                                        <option value="">Pilih Parameter</option>
+                                                                        @foreach(\App\Models\PemeriksaanKedatanganBahanBakuPenunjang::unitParameters() as $key => $label)
+                                                                            <option value="{{ $key }}">{{ $label }}</option>
+                                                                        @endforeach
+                                                                    </select>
+                                                                </div>
                                                             </div>
                                                         </div>
                                                         <div class="col-md-6">
                                                             <div class="form-group">
                                                                 <label class="form-label">Jumlah Sampling</label>
-                                                                <input type="text" class="form-control" name="jumlah_sampling[]" placeholder="Jumlah Sampling">
+                                                                <div class="input-group" style="max-width: 100%;">
+                                                                    <input type="text" class="form-control" name="jumlah_sampling[]" placeholder="Jumlah" min="0" step="any">
+                                                                    <select class="form-select" name="unit_sampling[]" style="max-width: 120px;">
+                                                                        <option value="">Pilih Parameter</option>
+                                                                        @foreach(\App\Models\PemeriksaanKedatanganBahanBakuPenunjang::unitParameters() as $key => $label)
+                                                                            <option value="{{ $key }}">{{ $label }}</option>
+                                                                        @endforeach
+                                                                    </select>
+                                                                </div>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -1838,14 +1854,38 @@ function addNewRow() {
         <div class="row">
             <div class="col-md-6">
                 <div class="form-group">
-                    <label class="form-label">Jumlah Datang (kg)</label>
-                    <input type="text" class="form-control" name="jumlah_datang[]" placeholder="Jumlah Datang">
+                    <label class="form-label">Jumlah Datang</label>
+                    <div class="input-group" style="max-width: 100%;">
+                        <input type="text" class="form-control" name="jumlah_datang[]" placeholder="Jumlah" min="0" step="any">
+                        <select class="form-select" name="unit_datang[]" style="max-width: 120px;">
+                            <option value="">Pilih Parameter</option>
+                            <option value="kg">kg</option>
+                            <option value="gram">gram</option>
+                            <option value="pcs">pcs</option>
+                            <option value="roll">roll</option>
+                            <option value="karung">karung</option>
+                            <option value="box">box</option>
+                            <option value="lembar">lembar</option>
+                        </select>
+                    </div>
                 </div>
             </div>
             <div class="col-md-6">
                 <div class="form-group">
                     <label class="form-label">Jumlah Sampling</label>
-                    <input type="text" class="form-control" name="jumlah_sampling[]" placeholder="Jumlah Sampling">
+                    <div class="input-group" style="max-width: 100%;">
+                        <input type="text" class="form-control" name="jumlah_sampling[]" placeholder="Jumlah" min="0" step="any">
+                        <select class="form-select" name="unit_sampling[]" style="max-width: 120px;">
+                            <option value="">Pilih Parameter</option>
+                            <option value="kg">kg</option>
+                            <option value="gram">gram</option>
+                            <option value="pcs">pcs</option>
+                            <option value="roll">roll</option>
+                            <option value="karung">karung</option>
+                            <option value="box">box</option>
+                            <option value="lembar">lembar</option>
+                        </select>
+                    </div>
                 </div>
             </div>
         </div>
@@ -2624,6 +2664,120 @@ function removeBadgeItem(btn, type) {
         rebuildHidden(headerDistributorHidden, distributorVals, 'distributor');
     }
 }
+</script>
+
+<!-- Validasi Front-End Form -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('form-pemeriksaan-bahan-baku-penunjang');
+    
+    if (!form) return;
+
+    /**
+     * Validasi Form - Cek field wajib
+     */
+    function validateForm() {
+        const errors = [];
+        
+        // 1. Tanggal (wajib)
+        const tanggal = document.getElementById('tanggal');
+        if (!tanggal || !tanggal.value || tanggal.value.trim() === '') {
+            errors.push('Tanggal harus diisi');
+            highlightField(tanggal);
+        } else {
+            removeHighlight(tanggal);
+        }
+
+        // 2. Status Baris (wajib) - Minimal satu item harus memilih "Hold" atau "Release"
+        const statusBaris = document.querySelectorAll('select[name="status_baris[]"]');
+        let hasValidStatus = false;
+        const statusErrors = [];
+        
+        statusBaris.forEach((select, index) => {
+            const value = select.value ? select.value.trim() : '';
+            if (value === 'Hold' || value === 'Release') {
+                hasValidStatus = true;
+                removeHighlight(select);
+            } else {
+                statusErrors.push(`Status Produk #${index + 1} harus dipilih (Hold atau Release)`);
+                highlightField(select);
+            }
+        });
+
+        if (!hasValidStatus) {
+            if (statusBaris.length === 0) {
+                errors.push('Minimal ada satu produk dengan Status yang harus dipilih (Hold atau Release)');
+            } else {
+                errors.push(...statusErrors);
+            }
+        }
+
+        return errors;
+    }
+
+    /**
+     * Highlight field yang error
+     */
+    function highlightField(field) {
+        if (field) {
+            field.classList.add('is-invalid');
+            field.style.borderColor = '#dc3545';
+            field.style.boxShadow = '0 0 0 0.2rem rgba(220, 53, 69, 0.25)';
+        }
+    }
+
+    /**
+     * Remove highlight dari field
+     */
+    function removeHighlight(field) {
+        if (field) {
+            field.classList.remove('is-invalid');
+            field.style.borderColor = '';
+            field.style.boxShadow = '';
+        }
+    }
+
+    /**
+     * Handle form submit
+     */
+    form.addEventListener('submit', function(e) {
+        const errors = validateForm();
+        
+        if (errors.length > 0) {
+            e.preventDefault();
+            
+            // Tampilkan error messages
+            let errorMessage = '❌ Data Tidak Lengkap:\n\n';
+            errors.forEach((error, index) => {
+                errorMessage += `${index + 1}. ${error}\n`;
+            });
+            
+            // Gunakan SweetAlert jika tersedia, jika tidak gunakan alert biasa
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Validasi Gagal',
+                    html: `<div style="text-align: left; line-height: 1.8;">
+                        <strong>Berikut field yang belum diisi:</strong><br><br>
+                        ${errors.map((err, idx) => `<span style="display: block; margin-bottom: 8px;">${idx + 1}. ${err}</span>`).join('')}
+                    </div>`,
+                    confirmButtonColor: '#3085d6',
+                    confirmButtonText: 'OK'
+                });
+            } else {
+                alert(errorMessage);
+            }
+            
+            // Scroll ke field pertama yang error
+            const allFields = document.querySelectorAll('.is-invalid');
+            if (allFields.length > 0) {
+                allFields[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+                allFields[0].focus();
+            }
+        }
+        // Jika validasi berhasil, form akan submit normalmente
+    });
+});
 </script>
 @endpush
 @endsection

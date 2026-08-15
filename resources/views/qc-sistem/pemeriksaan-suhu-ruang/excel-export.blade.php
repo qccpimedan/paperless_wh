@@ -83,20 +83,12 @@
         <tbody>
             @php
                 $histNo = 1;
-                $suhuFieldsConfig = [
-                    'suhu_cold_storage'          => 'Cold Storage',
-                    'suhu_anteroom_loading'      => 'Anteroom Loading',
-                    'suhu_pre_loading'           => 'Pre Loading',
-                    'suhu_prestaging'            => 'Prestaging',
-                    'suhu_anteroom_ekspansi_abf' => 'Anteroom Ekspansi ABF',
-                    'suhu_chillroom_rm'          => 'Chillroom RM',
-                    'suhu_chillroom_domestik'    => 'Chillroom Domestik',
-                ];
 
                 $renderVal = function($val) {
                     if ($val === null || $val === '' || $val === []) return '-';
                     if (is_array($val)) {
                         $parts = [];
+                        if (isset($val['unit'])) $parts[] = 'unit: ' . $val['unit'];
                         if (isset($val['setting'])) $parts[] = 'setting: ' . $val['setting'];
                         if (isset($val['display'])) $parts[] = 'display: ' . $val['display'];
                         if (isset($val['actual']))  $parts[] = 'actual: '  . $val['actual'];
@@ -105,26 +97,14 @@
                     return (string) $val;
                 };
 
-                $firstHistory = $p->histories->sortBy('created_at')->first();
-                $getInitialVal = function($field) use ($firstHistory, $p) {
-                    $oldField = $field . '_lama';
-                    if ($firstHistory) {
-                        $val = $firstHistory->$oldField;
-                        if (is_string($val) && !empty($val)) {
-                            $decoded = json_decode($val, true);
-                            return (json_last_error() === JSON_ERROR_NONE) ? $decoded : $val;
-                        }
-                        return $val;
-                    }
-                    return $p->$field;
-                };
-
-                $initialPukul = '-';
-                if ($firstHistory && isset($firstHistory->pukul_lama)) {
-                    $initialPukul = $firstHistory->pukul_lama;
-                } elseif ($p->pukul) {
-                    $initialPukul = $p->pukul;
+                // Ambil data suhu dari JSON
+                $initialSuhuData = $p->suhu_data ?? null;
+                if (is_string($initialSuhuData)) {
+                    $initialSuhuData = json_decode($initialSuhuData, true);
                 }
+                $initialSuhuData = is_array($initialSuhuData) ? $initialSuhuData : [];
+
+                $initialPukul = $p->pukul ?? '-';
             @endphp
 
             {{-- Separator: INPUT DATA PERTAMA --}}
@@ -144,14 +124,17 @@
                 </tr>
             @endif
 
-            @foreach($suhuFieldsConfig as $field => $label)
-                @php $secData = $getInitialVal($field); @endphp
-                @if(!empty($secData))
-                    @if(in_array($field, ['suhu_cold_storage', 'suhu_anteroom_loading']))
-                        @foreach($secData as $uKey => $item)
+            {{-- Render data suhu dari JSON --}}
+            @if(!empty($initialSuhuData))
+                @foreach($initialSuhuData as $lokasi => $data)
+                    @php
+                        $lokasiLabel = str_replace('_', ' ', ucwords(str_replace('suhu_', '', $lokasi), '_'));
+                    @endphp
+                    @if(is_array($data))
+                        @foreach($data as $idx => $item)
                             <tr>
                                 <td colspan="1" style="text-align:center; color:#555; background-color:#ffffff; padding:5px 8px; border:1px solid #dee2e6; font-size:9pt;">{{ $histNo++ }}</td>
-                                <td colspan="3" style="background-color:#ffffff; padding:5px 8px; border:1px solid #dee2e6; font-size:9pt;">{{ $label }} {{ $uKey }}</td>
+                                <td colspan="3" style="background-color:#ffffff; padding:5px 8px; border:1px solid #dee2e6; font-size:9pt;">{{ $lokasiLabel }}{{ isset($item['unit']) ? ' Unit ' . $item['unit'] : '' }}</td>
                                 <td colspan="4" style="background-color:#fff8e1; text-align:center; padding:5px 8px; border:1px solid #dee2e6; font-size:9pt;">-</td>
                                 <td colspan="4" style="background-color:#e8f5e9; padding:5px 8px; border:1px solid #dee2e6; font-size:9pt;">{{ $renderVal($item) }}</td>
                             </tr>
@@ -159,13 +142,13 @@
                     @else
                         <tr>
                             <td colspan="1" style="text-align:center; color:#555; background-color:#ffffff; padding:5px 8px; border:1px solid #dee2e6; font-size:9pt;">{{ $histNo++ }}</td>
-                            <td colspan="3" style="background-color:#ffffff; padding:5px 8px; border:1px solid #dee2e6; font-size:9pt;">{{ $label }}</td>
+                            <td colspan="3" style="background-color:#ffffff; padding:5px 8px; border:1px solid #dee2e6; font-size:9pt;">{{ $lokasiLabel }}</td>
                             <td colspan="4" style="background-color:#fff8e1; text-align:center; padding:5px 8px; border:1px solid #dee2e6; font-size:9pt;">-</td>
-                            <td colspan="4" style="background-color:#e8f5e9; padding:5px 8px; border:1px solid #dee2e6; font-size:9pt;">{{ $renderVal($secData) }}</td>
+                            <td colspan="4" style="background-color:#e8f5e9; padding:5px 8px; border:1px solid #dee2e6; font-size:9pt;">{{ $renderVal($data) }}</td>
                         </tr>
                     @endif
-                @endif
-            @endforeach
+                @endforeach
+            @endif
 
             {{-- Separator: RIWAYAT PERUBAHAN --}}
             @if($p->relationLoaded('histories') && $p->histories && $p->histories->count() > 0)
@@ -179,48 +162,56 @@
                     @php
                         $changes = [];
 
+                        // Cek perubahan pukul
                         if (($history->pukul_lama ?? null) != ($history->pukul_baru ?? null)) {
                             $changes[] = ['lokasi' => 'Pukul', 'lama' => $history->pukul_lama ?? '(Kosong)', 'baru' => $history->pukul_baru ?? '(Kosong)'];
                         }
+
+                        // Cek perubahan keterangan
                         if (($history->keterangan_lama ?? null) != ($history->keterangan_baru ?? null)) {
                             $changes[] = ['lokasi' => 'Keterangan', 'lama' => $history->keterangan_lama ?? '(Kosong)', 'baru' => $history->keterangan_baru ?? '(Kosong)'];
                         }
+
+                        // Cek perubahan tindakan koreksi
                         if (($history->tindakan_koreksi_lama ?? null) != ($history->tindakan_koreksi_baru ?? null)) {
                             $changes[] = ['lokasi' => 'Tindakan Koreksi', 'lama' => $history->tindakan_koreksi_lama ?? '(Kosong)', 'baru' => $history->tindakan_koreksi_baru ?? '(Kosong)'];
                         }
 
-                        foreach ($suhuFieldsConfig as $field => $label) {
-                            $oldField = $field . '_lama';
-                            $newField = $field . '_baru';
-                            $oldValue = $history->$oldField ?? null;
-                            $newValue = $history->$newField ?? null;
+                        // Cek perubahan suhu_data
+                        $oldSuhuData = $history->suhu_data_lama;
+                        $newSuhuData = $history->suhu_data_baru;
 
-                            if (is_string($oldValue) && !empty($oldValue)) {
-                                $decoded = json_decode($oldValue, true);
-                                $oldValue = (json_last_error() === JSON_ERROR_NONE) ? $decoded : null;
-                            }
-                            if (is_string($newValue) && !empty($newValue)) {
-                                $decoded = json_decode($newValue, true);
-                                $newValue = (json_last_error() === JSON_ERROR_NONE) ? $decoded : null;
-                            }
-                            if (is_object($oldValue)) { $oldValue = json_decode(json_encode($oldValue), true); }
-                            if (is_object($newValue)) { $newValue = json_decode(json_encode($newValue), true); }
+                        if (is_string($oldSuhuData)) {
+                            $oldSuhuData = json_decode($oldSuhuData, true) ?? [];
+                        }
+                        if (is_string($newSuhuData)) {
+                            $newSuhuData = json_decode($newSuhuData, true) ?? [];
+                        }
 
-                            $oldArray = is_array($oldValue) ? $oldValue : [];
-                            $newArray = is_array($newValue) ? $newValue : [];
-                            if (empty($oldArray) && empty($newArray)) continue;
+                        $oldSuhuData = is_array($oldSuhuData) ? $oldSuhuData : [];
+                        $newSuhuData = is_array($newSuhuData) ? $newSuhuData : [];
 
-                            if (in_array($field, ['suhu_cold_storage', 'suhu_anteroom_loading'])) {
-                                $allUnits = array_unique(array_merge(array_keys($oldArray), array_keys($newArray)));
-                                foreach ($allUnits as $uKey) {
-                                    $oldItem = $oldArray[$uKey] ?? null;
-                                    $newItem = $newArray[$uKey] ?? null;
-                                    if (json_encode($oldItem) === json_encode($newItem)) continue;
-                                    $changes[] = ['lokasi' => $label . ' ' . $uKey, 'lama' => $renderVal($oldItem), 'baru' => $renderVal($newItem)];
-                                }
-                            } else {
-                                if (json_encode($oldArray) !== json_encode($newArray)) {
-                                    $changes[] = ['lokasi' => $label, 'lama' => $renderVal($oldArray), 'baru' => $renderVal($newArray)];
+                        // Compare suhu data
+                        foreach (array_keys(array_merge($oldSuhuData, $newSuhuData)) as $lokasi) {
+                            $oldVal = $oldSuhuData[$lokasi] ?? null;
+                            $newVal = $newSuhuData[$lokasi] ?? null;
+
+                            if (json_encode($oldVal) !== json_encode($newVal)) {
+                                $lokasiLabel = str_replace('_', ' ', ucwords(str_replace('suhu_', '', $lokasi), '_'));
+                                
+                                if (is_array($oldVal) && is_array($newVal)) {
+                                    // If both are arrays, compare items
+                                    $allIndices = array_unique(array_merge(array_keys($oldVal ?? []), array_keys($newVal ?? [])));
+                                    foreach ($allIndices as $idx) {
+                                        $oldItem = $oldVal[$idx] ?? null;
+                                        $newItem = $newVal[$idx] ?? null;
+                                        if (json_encode($oldItem) !== json_encode($newItem)) {
+                                            $idxLabel = isset($oldItem['unit']) ? ' Unit ' . $oldItem['unit'] : (isset($newItem['unit']) ? ' Unit ' . $newItem['unit'] : ' ' . $idx);
+                                            $changes[] = ['lokasi' => $lokasiLabel . $idxLabel, 'lama' => $renderVal($oldItem), 'baru' => $renderVal($newItem)];
+                                        }
+                                    }
+                                } else {
+                                    $changes[] = ['lokasi' => $lokasiLabel, 'lama' => $renderVal($oldVal), 'baru' => $renderVal($newVal)];
                                 }
                             }
                         }
@@ -284,17 +275,17 @@
         <tbody>
             <tr>
                 <td colspan="4" style="text-align:center; vertical-align:bottom; padding:40px 8px 8px; border:1px solid #adb5bd; font-size:9pt;">
-                    <div style="border-top:1px solid #555; padding-top:4px; font-weight:bold;">{{ $p->qcVerifier->name ?? '-' }}</div>
+                    <div style="border-top:1px solid #555; padding-top:4px; font-weight:bold;">{{ $p->verifiedByQc->name ?? $p->user->name ?? '-' }}</div>
                 </td>
                 <td colspan="4" style="text-align:center; vertical-align:bottom; padding:40px 8px 8px; border:1px solid #adb5bd; font-size:9pt;">
-                    <div style="border-top:1px solid #555; padding-top:4px; font-weight:bold;">{{ $p->produksiVerifier->name ?? '-' }}</div>
+                    <div style="border-top:1px solid #555; padding-top:4px; font-weight:bold;">{{ $p->verifiedByProduksi->name ?? '-' }}</div>
                 </td>
                 <td colspan="4" style="text-align:center; vertical-align:bottom; padding:40px 8px 8px; border:1px solid #adb5bd; font-size:9pt;">
-                    <div style="border-top:1px solid #555; padding-top:4px; font-weight:bold;">{{ $p->spvVerifier->name ?? '-' }}</div>
+                    <div style="border-top:1px solid #555; padding-top:4px; font-weight:bold;">{{ $p->verifiedBySpv->name ?? '-' }}</div>
                 </td>
             </tr>
             <tr>
-                <td colspan="12" style="text-align:right; font-style:italic; font-size:8pt; color:#888888; padding-top:4px; border:none;">QW 06/00</td>
+                <td colspan="12" style="text-align:right; font-style:italic; font-size:8pt; color:#888888; padding-top:4px; border:none;">QW 11/00</td>
             </tr>
         </tbody>
     </table>

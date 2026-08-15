@@ -32,7 +32,9 @@ class PemeriksaanKedatanganKemasan extends Model
         'distributor',
         'kode_produksi',
         'jumlah_datang',
+        'unit_datang',
         'jumlah_sampling',
+        'unit_sampling',
         'kondisi_fisik',
         'ketebalan_micron',
         'dimensi',
@@ -56,7 +58,9 @@ class PemeriksaanKedatanganKemasan extends Model
         'distributor_array',
         'kode_produksi_array',
         'jumlah_datang_array',
+        'unit_datang_array',
         'jumlah_sampling_array',
+        'unit_sampling_array',
         'spesifikasi_array',
         'penampakan_array',
         'sealing_array',
@@ -194,6 +198,22 @@ class PemeriksaanKedatanganKemasan extends Model
             'penampakan' => false,
             'sealing' => false,
             'cetakan' => false,
+        ];
+    }
+
+    /**
+     * Unit parameters for jumlah datang and jumlah sampling
+     */
+    public static function unitParameters(): array
+    {
+        return [
+            'kg' => 'kg',
+            'gram' => 'gram',
+            'pcs' => 'pcs',
+            'roll' => 'roll',
+            'karung' => 'karung',
+            'box' => 'box',
+            'lembar' => 'lembar',
         ];
     }
 }

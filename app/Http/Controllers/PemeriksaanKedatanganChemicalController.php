@@ -389,7 +389,11 @@ return view('qc-sistem.pemeriksaan-kedatangan-chemical.index', compact('pemeriks
             'kode_produksi' => 'nullable|array',
             'expire_date' => 'nullable|array',
             'jumlah_datang' => 'nullable|array',
+            'unit_datang' => 'nullable|array',
+            'unit_datang.*' => 'nullable|string|in:kg,gram,pcs,roll,karung,box,lembar,liter,pail',
             'jumlah_sampling' => 'nullable|array',
+            'unit_sampling' => 'nullable|array',
+            'unit_sampling.*' => 'nullable|string|in:kg,gram,pcs,roll,karung,box,lembar,liter,pail',
             'kondisi_fisik_kemasan' => 'nullable|array',
             'kondisi_fisik_warna' => 'nullable|array',
             'persyaratan_dokumen_halal' => 'nullable|array',
@@ -433,7 +437,9 @@ return view('qc-sistem.pemeriksaan-kedatangan-chemical.index', compact('pemeriks
                 'kode_produksi' => $request->input('kode_produksi.' . $index),
                 'expire_date' => $request->input('expire_date.' . $index),
                 'jumlah_datang' => $request->input('jumlah_datang.' . $index),
+                'unit_datang' => !empty($request->input('unit_datang.' . $index)) ? [$request->input('unit_datang.' . $index)] : [],
                 'jumlah_sampling' => $request->input('jumlah_sampling.' . $index),
+                'unit_sampling' => !empty($request->input('unit_sampling.' . $index)) ? [$request->input('unit_sampling.' . $index)] : [],
                 'image_chemical' => $imagePath,
                 'kondisi_fisik' => [
                     'kemasan' => $request->input('kondisi_fisik_kemasan.' . $index) === '1',
@@ -1090,7 +1096,11 @@ return view('qc-sistem.pemeriksaan-kedatangan-chemical.index', compact('pemeriks
             'kode_produksi' => 'nullable|array',
             'expire_date' => 'nullable|array',
             'jumlah_datang' => 'nullable|array',
+            'unit_datang' => 'nullable|array',
+            'unit_datang.*' => 'nullable|string|in:kg,gram,pcs,roll,karung,box,lembar,liter,pail',
             'jumlah_sampling' => 'nullable|array',
+            'unit_sampling' => 'nullable|array',
+            'unit_sampling.*' => 'nullable|string|in:kg,gram,pcs,roll,karung,box,lembar,liter,pail',
             'kondisi_fisik_kemasan' => 'nullable|array',
             'kondisi_fisik_warna' => 'nullable|array',
             'persyaratan_dokumen_halal' => 'nullable|array',
@@ -1132,6 +1142,11 @@ return view('qc-sistem.pemeriksaan-kedatangan-chemical.index', compact('pemeriks
             $imagePath = $uploadedImage
                 ? $uploadedImage->storePublicly('pemeriksaan-chemical/images', 'public')
                 : $existingImage;
+            
+            // Extract unit parameters
+            $unitDatang = $request->input('unit_datang.' . $index);
+            $unitSampling = $request->input('unit_sampling.' . $index);
+            
             $detailChemicals[] = [
                 'id_chemical' => $idChemical,
                 'kondisi_chemical' => $request->input('kondisi_chemical.' . $index),
@@ -1141,7 +1156,9 @@ return view('qc-sistem.pemeriksaan-kedatangan-chemical.index', compact('pemeriks
                 'kode_produksi' => $request->input('kode_produksi.' . $index),
                 'expire_date' => $request->input('expire_date.' . $index),
                 'jumlah_datang' => $request->input('jumlah_datang.' . $index),
+                'unit_datang' => !empty($unitDatang) ? [$unitDatang] : [],
                 'jumlah_sampling' => $request->input('jumlah_sampling.' . $index),
+                'unit_sampling' => !empty($unitSampling) ? [$unitSampling] : [],
                 'image_chemical' => $imagePath,
                 'kondisi_fisik' => [
                     'kemasan' => $request->input('kondisi_fisik_kemasan.' . $index) === '1',
@@ -1278,6 +1295,11 @@ return view('qc-sistem.pemeriksaan-kedatangan-chemical.index', compact('pemeriks
         $tanggal = $request->input('tanggal');
         $id_produk = $request->input('id_produk');
         $kategori_code = $request->input('kategori_code');
+
+        // === MODE: ALL SHIFT ===
+        if ($id_shift === 'all') {
+            return $this->exportPDFAllShift($request, $user, $tanggalDari, $tanggalSampai, $id_produk, $kategori_code);
+        }
 
         $query = PemeriksaanKedatanganChemical::with([
             'user.role', 
@@ -1420,11 +1442,154 @@ return view('qc-sistem.pemeriksaan-kedatangan-chemical.index', compact('pemeriks
             'shift' => $shift,
             'qcUser' => $qcUser,
             'produksiUser' => $produksiUser,
-            'spvQcUser' => $spvQcUser
+            'spvQcUser' => $spvQcUser,
+            'isAllShift' => false,
+            'dataPerShift' => [[
+                'pemeriksaans' => $pemeriksaans,
+                'shift' => $shift,
+                'qcUser' => $qcUser,
+                'produksiUser' => $produksiUser,
+                'spvQcUser' => $spvQcUser,
+            ]],
         ]);
 
         $filenameDate = $tanggal ?? $tanggalDari ?? date('Y-m-d');
         $filename = 'laporan-pemeriksaan-chemical-' . $filenameDate . '.pdf';
+        return $pdf->download($filename);
+    }
+
+    private function exportPDFAllShift($request, $user, $tanggalDari, $tanggalSampai, $id_produk, $kategori_code)
+    {
+        // Ambil semua shift yang accessible
+        if ($user->role && strtolower($user->role->role) === 'superadmin') {
+            $allShifts = Shift::all();
+        } else {
+            $allShifts = Shift::query()
+                ->when($user->id_plant, function ($q) use ($user) {
+                    $q->whereHas('user', function ($qu) use ($user) {
+                        $qu->where('id_plant', $user->id_plant);
+                    });
+                })
+                ->get();
+        }
+
+        // Kumpulkan data per shift
+        $dataPerShift = [];
+
+        foreach ($allShifts as $shift) {
+            $query = PemeriksaanKedatanganChemical::with([
+                'user.role',
+                'user.plant',
+                'shift',
+                'qcVerifier'       => fn($q) => $q->select('id', 'name'),
+                'produksiVerifier' => fn($q) => $q->select('id', 'name'),
+                'spvVerifier'      => fn($q) => $q->select('id', 'name'),
+            ]);
+
+            // Plant filter
+            if ($user->role && strtolower($user->role->role) !== 'superadmin') {
+                $query->whereHas('user', function ($q) use ($user) {
+                    $q->where('id_plant', $user->getEffectivePlantId());
+                });
+            }
+
+            // Filter shift
+            $query->where('id_shift', $shift->id);
+
+            // Filter tanggal (rentang)
+            if ($tanggalDari && $tanggalSampai) {
+                $query->whereBetween('tanggal', [$tanggalDari, $tanggalSampai]);
+            } elseif ($tanggalDari) {
+                $query->whereDate('tanggal', '>=', $tanggalDari);
+            } elseif ($tanggalSampai) {
+                $query->whereDate('tanggal', '<=', $tanggalSampai);
+            }
+
+            // Filter produk / kategori
+            if ($id_produk || $kategori_code) {
+                $produkNames = [];
+
+                if ($id_produk) {
+                    $produk = \App\Models\Produk::find($id_produk);
+                    if ($produk) {
+                        $produkNames[] = $produk->nama_produk;
+                    }
+                } elseif ($kategori_code) {
+                    $produkNames = \App\Models\Produk::where('kategori_code', $kategori_code)
+                        ->pluck('nama_produk')
+                        ->filter()
+                        ->toArray();
+                }
+
+                if (!empty($produkNames)) {
+                    $matchedChemicalIds = \App\Models\Chemical::whereIn('nama_chemical', $produkNames)
+                        ->pluck('id')
+                        ->toArray();
+
+                    if (!empty($matchedChemicalIds)) {
+                        $query->where(function ($q) use ($matchedChemicalIds) {
+                            foreach ($matchedChemicalIds as $cid) {
+                                $q->orWhereRaw(
+                                    "JSON_CONTAINS(detail_chemicals, ?, '$')",
+                                    [json_encode(['id_chemical' => (int)$cid])]
+                                );
+                                $q->orWhereRaw(
+                                    "JSON_CONTAINS(detail_chemicals, ?, '$')",
+                                    [json_encode(['id_chemical' => (string)$cid])]
+                                );
+                                $q->orWhere('detail_chemicals', 'like', '%"id_chemical":' . $cid . '%');
+                                $q->orWhere('detail_chemicals', 'like', '%"id_chemical":"' . $cid . '"%');
+                            }
+                        });
+                    } else {
+                        $query->whereRaw('1 = 0');
+                    }
+                } else {
+                    $query->whereRaw('1 = 0');
+                }
+            }
+
+            $records = $query->latest()->get();
+
+            // Hanya masukkan jika ada data
+            if ($records->isNotEmpty()) {
+                // Kumpulkan verifier names
+                $qcUser = null; $produksiUser = null; $spvQcUser = null;
+                $qcId = $records->pluck('verified_by_qc')->filter()->unique()->first();
+                $prodId = $records->pluck('verified_by_produksi')->filter()->unique()->first();
+                $spvId = $records->pluck('verified_by_spv')->filter()->unique()->first();
+                if ($qcId) $qcUser = optional(User::find($qcId))->name;
+                if ($prodId) $produksiUser = optional(User::find($prodId))->name;
+                if ($spvId) $spvQcUser = optional(User::find($spvId))->name;
+
+                $dataPerShift[] = [
+                    'shift'        => $shift,
+                    'pemeriksaans' => $records,
+                    'qcUser'       => $qcUser,
+                    'produksiUser' => $produksiUser,
+                    'spvQcUser'    => $spvQcUser,
+                ];
+            }
+        }
+
+        $pdf = \PDF::loadView('qc-sistem.pemeriksaan-kedatangan-chemical.pdf-report', [
+            'dataPerShift'   => $dataPerShift,
+            'tanggal'        => null,
+            'tanggal_dari'   => $tanggalDari,
+            'tanggal_sampai' => $tanggalSampai,
+            'shift'          => null,
+            'pemeriksaans'   => collect(),
+            'qcUser'         => null,
+            'produksiUser'   => null,
+            'spvQcUser'      => null,
+            'isAllShift'     => true,
+        ]);
+
+        $filename = 'laporan-semua-shift-chemical-'
+            . ($tanggalDari ?? date('Y-m-d'))
+            . ($tanggalSampai ? '-to-' . $tanggalSampai : '')
+            . '.pdf';
+
         return $pdf->download($filename);
     }
 

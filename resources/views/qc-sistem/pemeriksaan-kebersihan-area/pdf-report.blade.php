@@ -248,6 +248,163 @@
     </style>
 </head>
 <body>
+    @php $isAllShift = $isAllShift ?? false; @endphp
+
+    @if($isAllShift)
+    {{-- ======= MODE: SEMUA SHIFT ======= --}}
+    @if(empty($dataPerShift))
+        <div style="text-align:center;padding:40px;color:#6c757d;font-style:italic;">Tidak ada data untuk semua shift.</div>
+    @else
+        @foreach($dataPerShift as $shiftGroup)
+            @php 
+                $pemeriksaans = $shiftGroup['pemeriksaans']; 
+                $currentShift = $shiftGroup['shift']; 
+                $firstRecord = $pemeriksaans->first(); 
+                $plantNameAS = $firstRecord && $firstRecord->user && $firstRecord->user->plant ? $firstRecord->user->plant->plant : 'MEDAN'; 
+            @endphp
+            <div class="header">
+                <div class="header-left">
+                    <div class="logo-company">
+                        <div class="header-logo"><img src="{{ public_path('dist/images/logo/cpi-logo.png') }}" alt="Logo CPI"></div>
+                        <div class="header-company">
+                            <h2>PT. CHAROEN POKPHAND INDONESIA</h2>
+                            <p>FOOD DIVISION {{ strtoupper($plantNameAS) }}</p>
+                            <p>{{ strtoupper($plantNameAS) }} - INDONESIA</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="header-right"><div class="header-title"><h1>PEMERIKSAAN KEBERSIHAN AREA</h1></div></div>
+            </div>
+            <div class="subheader">
+                <table class="subheader-table">
+                    <tr>
+                        <td class="subheader-label">Shift</td><td>{{ $currentShift->shift }}</td>
+                        <td class="subheader-divider"></td>
+                        <td class="subheader-label">Tanggal</td>
+                        <td>@if(!empty($tanggal_dari)||!empty($tanggal_sampai)){{ $tanggal_dari??'-' }} s/d {{ $tanggal_sampai??'-' }}@elseif(!empty($tanggal)){{ $tanggal }}@else-@endif</td>
+                        <td class="subheader-divider"></td>
+                        <td class="subheader-label">Total</td><td>{{ $pemeriksaans->count() }} Dokumen</td>
+                    </tr>
+                </table>
+            </div>
+
+            @foreach($pemeriksaans as $p)
+                @php 
+                    $areaData = is_string($p->area_data) ? json_decode($p->area_data, true) : $p->area_data; 
+                    $areaData = $areaData ?? []; 
+                @endphp
+                @foreach($areaData as $item)
+                    @php
+                        $selectedArea = \App\Models\InputArea::find($item['id_area'] ?? null);
+                        $selectedForm = \App\Models\InputMasterForm::find($item['id_master_form'] ?? null);
+                        $fields = $selectedForm ? $selectedForm->fields : [];
+                        $itemFields = collect($item['fields'] ?? []);
+                    @endphp
+                    <div style="background: #f8f9fa; padding: 8px; font-weight: bold; border-left: 4px solid #8b1428; margin-bottom: 5px; border-top: 1px solid #dee2e6; border-bottom: 1px solid #dee2e6; margin-top: 10px;">
+                        Area: {{ $selectedArea ? $selectedArea->nama_area : '-' }} | Form: {{ $selectedForm ? $selectedForm->nama_form : '-' }} | Tgl: {{ $p->tanggal ? \Carbon\Carbon::parse($p->tanggal)->format('d/m/Y') : '-' }}
+                    </div>
+                    <table class="report" style="width: 100%; margin-bottom: 10px;">
+                        <thead>
+                            <tr>
+                                <th style="width: 5%;">#</th>
+                                <th style="width: 32%;">Aspek Yang Dinilai</th>
+                                <th style="width: 10%;">Sebelum</th>
+                                <th style="width: 10%;">Sesudah</th>
+                                <th style="width: 10%;">Verifikasi</th>
+                                <th style="width: 17%;">Keterangan</th>
+                                <th style="width: 16%;">Tindakan</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($fields as $fIdx => $field)
+                                @php
+                                    $d = $itemFields->firstWhere('id_master_form_field', (int)$field->id);
+                                    $d = $d ?? [];
+                                @endphp
+                                <tr>
+                                    <td style="text-align:center;">{{ $fIdx + 1 }}</td>
+                                    <td>{{ $field->field_name }}</td>
+                                    <td style="text-align:center;">
+                                        @if(isset($d['status_sebelum_proses']) && $d['status_sebelum_proses'] !== null)
+                                            <span class="{{ $d['status_sebelum_proses'] == 1 ? 'badge-ok' : 'badge-no' }}">
+                                                {{ $d['status_sebelum_proses'] == 1 ? 'OK' : 'NO' }}
+                                            </span>
+                                        @else - @endif
+                                    </td>
+                                    <td style="text-align:center;">
+                                        @if(isset($d['status_saat_proses']) && $d['status_saat_proses'] !== null)
+                                            <span class="{{ $d['status_saat_proses'] == 1 ? 'badge-ok' : 'badge-no' }}">
+                                                {{ $d['status_saat_proses'] == 1 ? 'OK' : 'NO' }}
+                                            </span>
+                                        @else - @endif
+                                    </td>
+                                    <td style="text-align:center;">
+                                        @if(isset($d['verifikasi_hasil']) && $d['verifikasi_hasil'] !== null)
+                                            <span class="{{ $d['verifikasi_hasil'] == 1 ? 'badge-ok' : 'badge-no' }}">
+                                                {{ $d['verifikasi_hasil'] == 1 ? 'OK' : 'NO' }}
+                                            </span>
+                                        @else - @endif
+                                    </td>
+                                    <td>{{ $d['keterangan'] ?? '-' }}</td>
+                                    <td>{{ $d['tindakan_koreksi'] ?? '-' }}</td>
+                                </tr>
+                            @empty
+                                <tr><td colspan="7" style="text-align:center;">Tidak ada aspek penilaian</td></tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                @endforeach
+            @endforeach
+
+            <div style="text-align:right;font-style:italic;font-size:9px;color:#666;margin-top:20px;">QC 07/00</div>
+            <div class="signature-section">
+                <table class="signature-table">
+                    <tr>
+                        <td class="signature-cell">
+                            <div class="signature-header-item">Dibuat Oleh</div>
+                            <div class="signature-space">
+                                @if($firstRecord && $firstRecord->qcVerifier) 
+                                    @php $q=\SimpleSoftwareIO\QrCode\Facades\QrCode::size(55)->generate("Diverifikasi {$firstRecord->qcVerifier->name} (QC)"); @endphp 
+                                    <img src="data:image/svg+xml;base64,{{ base64_encode($q) }}" class="qr-code-img">
+                                @else
+                                    <div class="signature-line-empty"></div>
+                                @endif
+                            </div>
+                            <div class="signature-name">{{ $firstRecord?->qcVerifier?->name ?? '-' }}</div>
+                        </td>
+                        <td class="signature-cell">
+                            <div class="signature-header-item">Diketahui Oleh</div>
+                            <div class="signature-space">
+                                @if($firstRecord && $firstRecord->produksiVerifier) 
+                                    @php $q=\SimpleSoftwareIO\QrCode\Facades\QrCode::size(55)->generate("Diverifikasi {$firstRecord->produksiVerifier->name} (Warehouse)"); @endphp 
+                                    <img src="data:image/svg+xml;base64,{{ base64_encode($q) }}" class="qr-code-img">
+                                @else
+                                    <div class="signature-line-empty"></div>
+                                @endif
+                            </div>
+                            <div class="signature-name">{{ $firstRecord?->produksiVerifier?->name ?? '-' }}</div>
+                        </td>
+                        <td class="signature-cell">
+                            <div class="signature-header-item">Disetujui Oleh</div>
+                            <div class="signature-space">
+                                @if($firstRecord && $firstRecord->spvVerifier) 
+                                    @php $q=\SimpleSoftwareIO\QrCode\Facades\QrCode::size(55)->generate("Diverifikasi {$firstRecord->spvVerifier->name} (SPV QC)"); @endphp 
+                                    <img src="data:image/svg+xml;base64,{{ base64_encode($q) }}" class="qr-code-img">
+                                @else
+                                    <div class="signature-line-empty"></div>
+                                @endif
+                            </div>
+                            <div class="signature-name">{{ $firstRecord?->spvVerifier?->name ?? '-' }}</div>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            @if(!$loop->last)<div style="page-break-after:always;"></div>@endif
+        @endforeach
+    @endif
+
+    @else
+    {{-- ======= MODE: SHIFT TUNGGAL ======= --}}
     <div class="header">
         <div class="header-left">
             <div class="logo-company">
@@ -334,27 +491,29 @@
                                 <tbody>
                                     @forelse($fields as $fIdx => $field)
                                         @php
-                                            $d = $itemFields->firstWhere('id_master_form_field', $field->id);
+                                            // Cari berdasarkan id_master_form_field (nama key yang sesuai dengan struktur data)
+                                            $d = $itemFields->firstWhere('id_master_form_field', (int)$field->id);
+                                            $d = $d ?? [];
                                         @endphp
                                         <tr>
                                             <td style="text-align:center;">{{ $fIdx + 1 }}</td>
                                             <td>{{ $field->field_name }}</td>
                                             <td style="text-align:center;">
-                                                @if(isset($d['status_sebelum_proses']))
+                                                @if(isset($d['status_sebelum_proses']) && $d['status_sebelum_proses'] !== null)
                                                     <span class="{{ $d['status_sebelum_proses'] == 1 ? 'badge-ok' : 'badge-no' }}">
                                                         {{ $d['status_sebelum_proses'] == 1 ? 'OK' : 'NO' }}
                                                     </span>
                                                 @else - @endif
                                             </td>
                                             <td style="text-align:center;">
-                                                @if(isset($d['status_saat_proses']))
+                                                @if(isset($d['status_saat_proses']) && $d['status_saat_proses'] !== null)
                                                     <span class="{{ $d['status_saat_proses'] == 1 ? 'badge-ok' : 'badge-no' }}">
                                                         {{ $d['status_saat_proses'] == 1 ? 'OK' : 'NO' }}
                                                     </span>
                                                 @else - @endif
                                             </td>
                                             <td style="text-align:center;">
-                                                @if(isset($d['verifikasi_hasil']))
+                                                @if(isset($d['verifikasi_hasil']) && $d['verifikasi_hasil'] !== null)
                                                     <span class="{{ $d['verifikasi_hasil'] == 1 ? 'badge-ok' : 'badge-no' }}">
                                                         {{ $d['verifikasi_hasil'] == 1 ? 'OK' : 'NO' }}
                                                     </span>
@@ -375,7 +534,7 @@
         </tbody>
     </table>
     <div style="text-align: right; padding-right: 10px; font-style: italic; font-size: 9px; color: #666; margin-top: 5px;">
-        QW 02/00
+        QC 07/00
     </div>
     <div class="signature-section">
         @php
@@ -436,3 +595,4 @@
     </div>
 </body>
 </html>
+@endif {{-- end isAllShift --}}

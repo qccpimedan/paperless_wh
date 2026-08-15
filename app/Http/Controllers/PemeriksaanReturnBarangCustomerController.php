@@ -664,6 +664,11 @@ class PemeriksaanReturnBarangCustomerController extends Controller
         $id_produk = $request->input('id_produk');
         $kategori_code = $request->input('kategori_code');
 
+        // === MODE: ALL SHIFT ===
+        if ($id_shift === 'all') {
+            return $this->exportPDFAllShift($request, $user, $tanggalDari, $tanggalSampai, $id_produk, $kategori_code);
+        }
+
         $query = PemeriksaanReturnBarangCustomer::with([
             'user.role',
             'user.plant',
@@ -781,20 +786,108 @@ class PemeriksaanReturnBarangCustomerController extends Controller
         $shift = $id_shift ? Shift::find($id_shift) : null;
 
         $pdf = PDF::loadView('qc-sistem.pemeriksaan-return-barang-customer.pdf-report', [
-            'pemeriksaans' => $pemeriksaans,
+            'pemeriksaans'   => $pemeriksaans,
             'produkNamaById' => $produkNamaById,
-            'tanggal' => $tanggal,
-            'tanggal_dari' => $tanggalDari,
+            'tanggal'        => $tanggal,
+            'tanggal_dari'   => $tanggalDari,
             'tanggal_sampai' => $tanggalSampai,
-            'shift' => $shift,
-            'qcUser' => $qcUser,
-            'produksiUser' => $produksiUser,
-            'spvQcUser' => $spvQcUser,
+            'shift'          => $shift,
+            'qcUser'         => $qcUser,
+            'produksiUser'   => $produksiUser,
+            'spvQcUser'      => $spvQcUser,
+            'isAllShift'     => false,
+            'dataPerShift'   => [],
         ]);
 
         $filenameDate = $tanggal ?? $tanggalDari ?? date('Y-m-d');
         $filename = 'laporan-return-barang-' . $filenameDate . '.pdf';
         $filename = 'laporan-return-barang-' . $filenameDate . '.pdf';
+        return $pdf->download($filename);
+    }
+
+    /**
+     * Export PDF semua shift dikelompokkan per shift
+     */
+    private function exportPDFAllShift($request, $user, $tanggalDari, $tanggalSampai, $id_produk, $kategori_code)
+    {
+        if ($user->role && strtolower($user->role->role) === 'superadmin') {
+            $allShifts = Shift::all();
+        } else {
+            $allShifts = Shift::query()
+                ->when($user->id_plant, fn($q) => $q->whereHas('user', fn($qu) => $qu->where('id_plant', $user->id_plant)))
+                ->get();
+        }
+
+        $dataPerShift = [];
+
+        foreach ($allShifts as $shift) {
+            $query = PemeriksaanReturnBarangCustomer::with([
+                'user.role', 'user.plant', 'shift', 'ekspedisi', 'customer',
+                'qcVerifier'       => fn($q) => $q->select('id', 'name'),
+                'produksiVerifier' => fn($q) => $q->select('id', 'name'),
+                'spvVerifier'      => fn($q) => $q->select('id', 'name'),
+            ]);
+
+            if ($user->role && strtolower($user->role->role) !== 'superadmin') {
+                $query->whereHas('user', fn($q) => $q->where('id_plant', $user->getEffectivePlantId()));
+            }
+
+            $query->where('id_shift', $shift->id);
+
+            if ($tanggalDari && $tanggalSampai) {
+                $query->whereBetween('tanggal', [$tanggalDari, $tanggalSampai]);
+            } elseif ($tanggalDari) {
+                $query->whereDate('tanggal', '>=', $tanggalDari);
+            } elseif ($tanggalSampai) {
+                $query->whereDate('tanggal', '<=', $tanggalSampai);
+            }
+
+            if ($id_produk) {
+                $query->where(function ($q) use ($id_produk) {
+                    $q->whereRaw("JSON_CONTAINS(produk_data, ?, '$')", [json_encode(['id_produk' => (int)$id_produk])])
+                      ->orWhere('produk_data', 'like', '%"id_produk":' . $id_produk . '%');
+                });
+            } elseif ($kategori_code) {
+                $query->where('produk_data', 'like', '%"kategori_code":"' . $kategori_code . '"%');
+            }
+
+            $records = $query->latest()->get();
+            if ($records->isEmpty()) continue;
+
+            $produkIds = $records->flatMap(function ($p) {
+                return collect(is_array($p->produk_data) ? $p->produk_data : [])->pluck('id_produk')->filter();
+            })->unique()->values();
+
+            $produkNamaById = $produkIds->isNotEmpty()
+                ? Produk::whereIn('id', $produkIds)->pluck('nama_produk', 'id')->toArray()
+                : [];
+
+            $dataPerShift[] = [
+                'shift'          => $shift,
+                'pemeriksaans'   => $records,
+                'produkNamaById' => $produkNamaById,
+            ];
+        }
+
+        $pdf = PDF::loadView('qc-sistem.pemeriksaan-return-barang-customer.pdf-report', [
+            'pemeriksaans'   => collect(),
+            'produkNamaById' => [],
+            'tanggal'        => null,
+            'tanggal_dari'   => $tanggalDari,
+            'tanggal_sampai' => $tanggalSampai,
+            'shift'          => null,
+            'qcUser'         => null,
+            'produksiUser'   => null,
+            'spvQcUser'      => null,
+            'isAllShift'     => true,
+            'dataPerShift'   => $dataPerShift,
+        ]);
+
+        $filename = 'laporan-semua-shift-return-barang-'
+            . ($tanggalDari ?? date('Y-m-d'))
+            . ($tanggalSampai ? '-to-' . $tanggalSampai : '')
+            . '.pdf';
+
         return $pdf->download($filename);
     }
 

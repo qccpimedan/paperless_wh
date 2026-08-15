@@ -138,7 +138,7 @@
         </div>
 
         <!-- TITLE -->
-        <div class="title">Ketidaksesuaian Kedatangan Produk Dari Supplier</div>
+        <div class="title">KETIDAKSESUAIAN KEDATANGAN PRODUK DARI SUPPLIER</div>
 
         <!-- DETAIL KOMPLAIN TABLE -->
         <table>
@@ -231,7 +231,7 @@
             <tr><td style="font-weight: bold;">TTD :</td><td><div class="signature-box"></div></td></tr>
             <tr><td style="font-weight: bold;">Jabatan :</td><td><div class="form-box-small"></div></td></tr>
         </table>
-        <div class="footer">QW 04/02</div>
+        <div class="footer">QW 04/00</div>
     </div>
     @endforeach
 </body>

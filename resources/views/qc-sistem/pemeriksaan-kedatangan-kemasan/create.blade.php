@@ -523,19 +523,41 @@
                                                         </div>
                                                         <div class="col-md-4">
                                                             <div class="form-group">
-                                                                <label class="form-label">Jumlah Datang (Kg/pcs/roll)</label>
-                                                                <input type="text" class="form-control @error('jumlah_datang.0') is-invalid @enderror" name="jumlah_datang[]" value="{{ old('jumlah_datang.0') }}" placeholder="Jumlah Datang">
+                                                                <label class="form-label">Jumlah Datang</label>
+                                                                <div class="input-group" style="max-width: 100%;">
+                                                                    <input type="text" class="form-control @error('jumlah_datang.0') is-invalid @enderror" name="jumlah_datang[]" value="{{ old('jumlah_datang.0') }}" placeholder="Jumlah" min="0" step="any">
+                                                                    <select class="form-select @error('unit_datang.0') is-invalid @enderror" name="unit_datang[]" style="max-width: 120px;">
+                                                                        <option value="">Pilih Parameter</option>
+                                                                        @foreach(\App\Models\PemeriksaanKedatanganKemasan::unitParameters() as $key => $label)
+                                                                            <option value="{{ $key }}" {{ old('unit_datang.0') == $key ? 'selected' : '' }}>{{ $label }}</option>
+                                                                        @endforeach
+                                                                    </select>
+                                                                </div>
                                                                 @error('jumlah_datang.0')
-                                                                    <div class="invalid-feedback">{{ $message }}</div>
+                                                                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                                                                @enderror
+                                                                @error('unit_datang.0')
+                                                                    <div class="invalid-feedback d-block">{{ $message }}</div>
                                                                 @enderror
                                                             </div>
                                                         </div>
                                                         <div class="col-md-4">
                                                             <div class="form-group">
-                                                                <label class="form-label">Jumlah Sampling (pcs/kg/roll)</label>
-                                                                <input type="text" class="form-control @error('jumlah_sampling.0') is-invalid @enderror" name="jumlah_sampling[]" value="{{ old('jumlah_sampling.0') }}" placeholder="Jumlah Sampling">
+                                                                <label class="form-label">Jumlah Sampling</label>
+                                                                <div class="input-group" style="max-width: 100%;">
+                                                                    <input type="text" class="form-control @error('jumlah_sampling.0') is-invalid @enderror" name="jumlah_sampling[]" value="{{ old('jumlah_sampling.0') }}" placeholder="Jumlah" min="0" step="any">
+                                                                    <select class="form-select @error('unit_sampling.0') is-invalid @enderror" name="unit_sampling[]" style="max-width: 120px;">
+                                                                        <option value="">Pilih Parameter</option>
+                                                                        @foreach(\App\Models\PemeriksaanKedatanganKemasan::unitParameters() as $key => $label)
+                                                                            <option value="{{ $key }}" {{ old('unit_sampling.0') == $key ? 'selected' : '' }}>{{ $label }}</option>
+                                                                        @endforeach
+                                                                    </select>
+                                                                </div>
                                                                 @error('jumlah_sampling.0')
-                                                                    <div class="invalid-feedback">{{ $message }}</div>
+                                                                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                                                                @enderror
+                                                                @error('unit_sampling.0')
+                                                                    <div class="invalid-feedback d-block">{{ $message }}</div>
                                                                 @enderror
                                                             </div>
                                                         </div>
@@ -1157,14 +1179,38 @@ document.addEventListener('DOMContentLoaded', function() {
                             </div>
                             <div class="col-md-4">
                                 <div class="form-group">
-                                    <label class="form-label">Jumlah Datang (Kg/pcs/roll)</label>
-                                    <input type="text" class="form-control" name="jumlah_datang[]" placeholder="Jumlah Datang">
+                                    <label class="form-label">Jumlah Datang</label>
+                                    <div class="input-group" style="max-width: 100%;">
+                                        <input type="text" class="form-control" name="jumlah_datang[]" placeholder="Jumlah" min="0" step="any">
+                                        <select class="form-select" name="unit_datang[]" style="max-width: 120px;">
+                                            <option value="">Pilih Parameter</option>
+                                            <option value="kg">kg</option>
+                                            <option value="gram">gram</option>
+                                            <option value="pcs">pcs</option>
+                                            <option value="roll">roll</option>
+                                            <option value="karung">karung</option>
+                                            <option value="box">box</option>
+                                            <option value="lembar">lembar</option>
+                                        </select>
+                                    </div>
                                 </div>
                             </div>
                             <div class="col-md-4">
                                 <div class="form-group">
-                                    <label class="form-label">Jumlah Sampling (pcs/kg/roll)</label>
-                                    <input type="text" class="form-control" name="jumlah_sampling[]" placeholder="Jumlah Sampling">
+                                    <label class="form-label">Jumlah Sampling</label>
+                                    <div class="input-group" style="max-width: 100%;">
+                                        <input type="text" class="form-control" name="jumlah_sampling[]" placeholder="Jumlah" min="0" step="any">
+                                        <select class="form-select" name="unit_sampling[]" style="max-width: 120px;">
+                                            <option value="">Pilih Parameter</option>
+                                            <option value="kg">kg</option>
+                                            <option value="gram">gram</option>
+                                            <option value="pcs">pcs</option>
+                                            <option value="roll">roll</option>
+                                            <option value="karung">karung</option>
+                                            <option value="box">box</option>
+                                            <option value="lembar">lembar</option>
+                                        </select>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -1727,6 +1773,34 @@ document.addEventListener('DOMContentLoaded', function() {
                 h.value = '';
             });
 
+            // Ensure unit selects have all options available
+            const unitDatangSelect = clone.querySelector('select[name="unit_datang[]"]');
+            const unitSamplingSelect = clone.querySelector('select[name="unit_sampling[]"]');
+            
+            if (unitDatangSelect) {
+                // Ensure all options from first row are present
+                const firstUnitDatang = container.querySelector('select[name="unit_datang[]"]');
+                if (firstUnitDatang && unitDatangSelect.options.length <= 1) {
+                    // Clone options from first row
+                    Array.from(firstUnitDatang.options).forEach((opt) => {
+                        const newOpt = opt.cloneNode(true);
+                        unitDatangSelect.appendChild(newOpt);
+                    });
+                }
+            }
+            
+            if (unitSamplingSelect) {
+                // Ensure all options from first row are present
+                const firstUnitSampling = container.querySelector('select[name="unit_sampling[]"]');
+                if (firstUnitSampling && unitSamplingSelect.options.length <= 1) {
+                    // Clone options from first row
+                    Array.from(firstUnitSampling.options).forEach((opt) => {
+                        const newOpt = opt.cloneNode(true);
+                        unitSamplingSelect.appendChild(newOpt);
+                    });
+                }
+            }
+
             container.appendChild(clone);
             updateSectionLabels();
 
@@ -2130,5 +2204,121 @@ function removeBadgeItem(btn, type) {
         });
     }
 }
+</script>
+
+<!-- Validasi Front-End Form -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('form-pemeriksaan-kedatangan-kemasan');
+    
+    if (!form) return;
+
+    /**
+     * Validasi Form - Cek field wajib:
+     * 1. Tanggal (wajib)
+     * 2. Status (minimal satu item harus "Hold" atau "Release")
+     */
+    function validateForm() {
+        const errors = [];
+        
+        // 1. Tanggal (wajib)
+        const tanggal = document.getElementById('tanggal');
+        if (!tanggal || !tanggal.value || tanggal.value.trim() === '') {
+            errors.push('Tanggal harus diisi');
+            highlightField(tanggal);
+        } else {
+            removeHighlight(tanggal);
+        }
+
+        // 2. Status (minimal satu item harus "Hold" atau "Release")
+        const statusSelects = document.querySelectorAll('select[name="status[]"]');
+        let hasValidStatus = false;
+        let firstStatusField = null;
+        
+        statusSelects.forEach((select, index) => {
+            if (!firstStatusField) firstStatusField = select;
+            
+            const value = select.value ? select.value.trim() : '';
+            if (value === 'Hold' || value === 'Release') {
+                hasValidStatus = true;
+                removeHighlight(select);
+            } else {
+                highlightField(select);
+            }
+        });
+        
+        if (!hasValidStatus) {
+            errors.push('Minimal satu item harus memilih Status "Hold" atau "Release"');
+            if (firstStatusField) {
+                highlightField(firstStatusField);
+            }
+        }
+
+        return errors;
+    }
+
+    /**
+     * Highlight field yang error
+     */
+    function highlightField(field) {
+        if (field) {
+            field.classList.add('is-invalid');
+            field.style.borderColor = '#dc3545';
+            field.style.boxShadow = '0 0 0 0.2rem rgba(220, 53, 69, 0.25)';
+        }
+    }
+
+    /**
+     * Remove highlight dari field
+     */
+    function removeHighlight(field) {
+        if (field) {
+            field.classList.remove('is-invalid');
+            field.style.borderColor = '';
+            field.style.boxShadow = '';
+        }
+    }
+
+    /**
+     * Handle form submit
+     */
+    form.addEventListener('submit', function(e) {
+        const errors = validateForm();
+        
+        if (errors.length > 0) {
+            e.preventDefault();
+            
+            // Tampilkan error messages
+            let errorMessage = '❌ Data Tidak Lengkap:\n\n';
+            errors.forEach((error, index) => {
+                errorMessage += `${index + 1}. ${error}\n`;
+            });
+            
+            // Gunakan SweetAlert jika tersedia, jika tidak gunakan alert biasa
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Validasi Gagal',
+                    html: `<div style="text-align: left; line-height: 1.8;">
+                        <strong>Berikut field yang belum diisi:</strong><br><br>
+                        ${errors.map((err, idx) => `<span style="display: block; margin-bottom: 8px;">${idx + 1}. ${err}</span>`).join('')}
+                    </div>`,
+                    confirmButtonColor: '#3085d6',
+                    confirmButtonText: 'OK'
+                });
+            } else {
+                alert(errorMessage);
+            }
+            
+            // Scroll ke field pertama yang error
+            const allFields = document.querySelectorAll('.is-invalid');
+            if (allFields.length > 0) {
+                allFields[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+                allFields[0].focus();
+            }
+        }
+        // Jika validasi berhasil, form akan submit normalmente
+    });
+});
 </script>
 @endsection

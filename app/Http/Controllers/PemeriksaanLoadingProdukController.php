@@ -874,6 +874,11 @@ class PemeriksaanLoadingProdukController extends Controller
         $id_produk = $request->input('id_produk');
         $kategori_code = $request->input('kategori_code');
 
+        // === MODE: ALL SHIFT ===
+        if ($id_shift === 'all') {
+            return $this->exportPDFAllShift($request, $user, $tanggalDari, $tanggalSampai, $id_produk, $kategori_code);
+        }
+
         $query = PemeriksaanLoadingProduk::with([
             'user.role',
             'user.plant',
@@ -1007,10 +1012,162 @@ class PemeriksaanLoadingProdukController extends Controller
             'produksiUser' => $produksiUser,
             'spvQcUser' => $spvQcUser,
             'produkMap' => $produkMap,
+            'isAllShift' => false,
+            'dataPerShift' => [[
+                'pemeriksaans' => $pemeriksaans,
+                'shift' => $shift,
+                'qcUser' => $qcUser,
+                'produksiUser' => $produksiUser,
+                'spvQcUser' => $spvQcUser,
+                'produkMap' => $produkMap,
+            ]],
         ]);
 
         $filenameDate = $tanggal ?? $tanggalDari ?? date('Y-m-d');
         $filename = 'laporan-pemeriksaan-loading-produk-' . $filenameDate . '.pdf';
+        return $pdf->download($filename);
+    }
+
+    private function exportPDFAllShift($request, $user, $tanggalDari, $tanggalSampai, $id_produk, $kategori_code)
+    {
+        // Ambil semua shift yang accessible
+        if ($user->role && strtolower($user->role->role) === 'superadmin') {
+            $allShifts = Shift::all();
+        } else {
+            $allShifts = Shift::query()
+                ->when($user->id_plant, function ($q) use ($user) {
+                    $q->whereHas('user', function ($qu) use ($user) {
+                        $qu->where('id_plant', $user->id_plant);
+                    });
+                })
+                ->get();
+        }
+
+        // Kumpulkan data per shift
+        $dataPerShift = [];
+
+        foreach ($allShifts as $shift) {
+            $query = PemeriksaanLoadingProduk::with([
+                'user.role',
+                'user.plant',
+                'shift',
+                'tujuanPengiriman.customer',
+                'kendaraan',
+                'supir',
+                'qcVerifier' => function ($q) {
+                    $q->select('id', 'name');
+                },
+                'produksiVerifier' => function ($q) {
+                    $q->select('id', 'name');
+                },
+                'spvVerifier' => function ($q) {
+                    $q->select('id', 'name');
+                },
+            ]);
+
+            // Plant filter
+            if ($user->role && strtolower($user->role->role) !== 'superadmin') {
+                $query->whereHas('user', function ($q) use ($user) {
+                    $q->where('id_plant', $user->getEffectivePlantId());
+                });
+            }
+
+            // Filter by produk / kategori
+            if ($id_produk) {
+                $query->where(function ($q) use ($id_produk) {
+                    $q->whereRaw("JSON_CONTAINS(produk_data, ?, '$')", [json_encode(['id_produk' => (int)$id_produk])])
+                      ->orWhereRaw("JSON_CONTAINS(produk_data, ?, '$')", [json_encode(['id_produk' => (string)$id_produk])])
+                      ->orWhere('produk_data', 'like', '%"id_produk":' . $id_produk . '%')
+                      ->orWhere('produk_data', 'like', '%"id_produk":"' . $id_produk . '"%');
+                });
+            } elseif ($kategori_code) {
+                $matchedIds = \App\Models\Produk::where('kategori_code', $kategori_code)->pluck('id')->toArray();
+                if (!empty($matchedIds)) {
+                    $query->where(function ($q) use ($matchedIds) {
+                        foreach ($matchedIds as $pid) {
+                            $q->orWhereRaw("JSON_CONTAINS(produk_data, ?, '$')", [json_encode(['id_produk' => (int)$pid])])
+                              ->orWhereRaw("JSON_CONTAINS(produk_data, ?, '$')", [json_encode(['id_produk' => (string)$pid])])
+                              ->orWhere('produk_data', 'like', '%"id_produk":' . $pid . '%')
+                              ->orWhere('produk_data', 'like', '%"id_produk":"' . $pid . '"%');
+                        }
+                    });
+                } else {
+                    // Jika kategori tidak punya produk, return no results
+                    $query->whereRaw('1 = 0');
+                }
+            }
+
+            // Filter shift
+            $query->where('id_shift', $shift->id);
+
+            // Filter tanggal (rentang)
+            if ($tanggalDari && $tanggalSampai) {
+                $query->whereBetween('tanggal', [$tanggalDari, $tanggalSampai]);
+            } elseif ($tanggalDari) {
+                $query->whereDate('tanggal', '>=', $tanggalDari);
+            } elseif ($tanggalSampai) {
+                $query->whereDate('tanggal', '<=', $tanggalSampai);
+            }
+
+            $records = $query->latest()->get();
+
+            // Hanya masukkan jika ada data
+            if ($records->isNotEmpty()) {
+                // Kumpulkan verifier names
+                $qcUser = null; $produksiUser = null; $spvQcUser = null;
+                $qcId = $records->pluck('verified_by_qc')->filter()->unique()->first();
+                $prodId = $records->pluck('verified_by_produksi')->filter()->unique()->first();
+                $spvId = $records->pluck('verified_by_spv')->filter()->unique()->first();
+                if ($qcId) $qcUser = optional(User::find($qcId))->name;
+                if ($prodId) $produksiUser = optional(User::find($prodId))->name;
+                if ($spvId) $spvQcUser = optional(User::find($spvId))->name;
+
+                // Produk map untuk nama produk di PDF
+                $produkIds = $records
+                    ->flatMap(function ($p) {
+                        $rows = is_array($p->produk_data) ? $p->produk_data : [];
+                        return collect($rows)->pluck('id_produk');
+                    })
+                    ->filter()
+                    ->unique()
+                    ->values()
+                    ->all();
+
+                $produkMap = Produk::query()
+                    ->whereIn('id', $produkIds)
+                    ->pluck('nama_produk', 'id')
+                    ->all();
+
+                $dataPerShift[] = [
+                    'shift'        => $shift,
+                    'pemeriksaans' => $records,
+                    'qcUser'       => $qcUser,
+                    'produksiUser' => $produksiUser,
+                    'spvQcUser'    => $spvQcUser,
+                    'produkMap'    => $produkMap,
+                ];
+            }
+        }
+
+        $pdf = PDF::loadView('qc-sistem.pemeriksaan-loading-produk.pdf-report', [
+            'dataPerShift'   => $dataPerShift,
+            'tanggal'        => null,
+            'tanggal_dari'   => $tanggalDari,
+            'tanggal_sampai' => $tanggalSampai,
+            'shift'          => null,
+            'pemeriksaans'   => collect(),
+            'qcUser'         => null,
+            'produksiUser'   => null,
+            'spvQcUser'      => null,
+            'produkMap'      => [],
+            'isAllShift'     => true,
+        ]);
+
+        $filename = 'laporan-semua-shift-loading-produk-'
+            . ($tanggalDari ?? date('Y-m-d'))
+            . ($tanggalSampai ? '-to-' . $tanggalSampai : '')
+            . '.pdf';
+
         return $pdf->download($filename);
     }
 

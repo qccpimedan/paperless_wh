@@ -471,8 +471,16 @@
                                                         </div>
                                                         <div class="col-md-6">
                                                             <div class="form-group">
-                                                                <label class="form-label">Jumlah Datang (kg/liter/pail)</label>
-                                                                <input type="text" class="form-control" name="jumlah_datang[]" placeholder="Jumlah Datang (kg/liter/pail)">
+                                                                <label class="form-label">Jumlah Datang</label>
+                                                                <div class="input-group" style="max-width: 100%;">
+                                                                    <input type="text" class="form-control" name="jumlah_datang[]" placeholder="Jumlah">
+                                                                    <select class="form-select" name="unit_datang[]" style="max-width: 120px;">
+                                                                        <option value="">Pilih Parameter</option>
+                                                                        @foreach(\App\Models\PemeriksaanKedatanganChemical::unitParameters() as $key => $label)
+                                                                            <option value="{{ $key }}">{{ $label }}</option>
+                                                                        @endforeach
+                                                                    </select>
+                                                                </div>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -481,10 +489,17 @@
                                                         <div class="col-md-6">
                                                             <div class="form-group">
                                                                 <label class="form-label">Jumlah Sampling</label>
-                                                                <input type="text" class="form-control" name="jumlah_sampling[]" placeholder="Jumlah Sampling">
+                                                                <div class="input-group" style="max-width: 100%;">
+                                                                    <input type="text" class="form-control" name="jumlah_sampling[]" placeholder="Jumlah">
+                                                                    <select class="form-select" name="unit_sampling[]" style="max-width: 120px;">
+                                                                        <option value="">Pilih Parameter</option>
+                                                                        @foreach(\App\Models\PemeriksaanKedatanganChemical::unitParameters() as $key => $label)
+                                                                            <option value="{{ $key }}">{{ $label }}</option>
+                                                                        @endforeach
+                                                                    </select>
+                                                                </div>
                                                             </div>
                                                         </div>
-                                                    </div>
 
                                                     <!-- Kondisi Fisik -->
                                                     <div class="form-section mb-3">
@@ -662,6 +677,97 @@
         background: #dc3545;
     }
 </style>
+
+<!-- Validasi Front-End Form -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('form-pemeriksaan-kedatangan-chemical');
+    
+    if (!form) return;
+
+    /**
+     * Validasi Form - Cek field wajib yang diinginkan
+     */
+    function validateForm() {
+        const errors = [];
+        
+        // 1. Tanggal (wajib)
+        const tanggal = document.getElementById('tanggal');
+        if (!tanggal || !tanggal.value || tanggal.value.trim() === '') {
+            errors.push('Tanggal harus diisi');
+            highlightField(tanggal);
+        } else {
+            removeHighlight(tanggal);
+        }
+
+        return errors;
+    }
+
+    /**
+     * Highlight field yang error
+     */
+    function highlightField(field) {
+        if (field) {
+            field.classList.add('is-invalid');
+            field.style.borderColor = '#dc3545';
+            field.style.boxShadow = '0 0 0 0.2rem rgba(220, 53, 69, 0.25)';
+        }
+    }
+
+    /**
+     * Remove highlight dari field
+     */
+    function removeHighlight(field) {
+        if (field) {
+            field.classList.remove('is-invalid');
+            field.style.borderColor = '';
+            field.style.boxShadow = '';
+        }
+    }
+
+    /**
+     * Handle form submit
+     */
+    form.addEventListener('submit', function(e) {
+        const errors = validateForm();
+        
+        if (errors.length > 0) {
+            e.preventDefault();
+            
+            // Tampilkan error messages
+            let errorMessage = '❌ Data Tidak Lengkap:\n\n';
+            errors.forEach((error, index) => {
+                errorMessage += `${index + 1}. ${error}\n`;
+            });
+            
+            // Gunakan SweetAlert jika tersedia, jika tidak gunakan alert biasa
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Validasi Gagal',
+                    html: `<div style="text-align: left; line-height: 1.8;">
+                        <strong>Berikut field yang belum diisi:</strong><br><br>
+                        ${errors.map((err, idx) => `<span style="display: block; margin-bottom: 8px;">${idx + 1}. ${err}</span>`).join('')}
+                    </div>`,
+                    confirmButtonColor: '#3085d6',
+                    confirmButtonText: 'OK'
+                });
+            } else {
+                alert(errorMessage);
+            }
+            
+            // Scroll ke field pertama yang error
+            const allFields = document.querySelectorAll('.is-invalid');
+            if (allFields.length > 0) {
+                allFields[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+                allFields[0].focus();
+            }
+        }
+        // Jika validasi berhasil, form akan submit normalmente
+    });
+});
+</script>
+
 @endsection
 
 @push('scripts')
@@ -1161,8 +1267,16 @@ function addNewRow() {
             </div>
             <div class="col-md-6">
                 <div class="form-group">
-                    <label class="form-label">Jumlah Datang (kg/liter/pail)</label>
-                    <input type="text" class="form-control" name="jumlah_datang[]" placeholder="Jumlah Datang (kg/liter/pail)">
+                    <label class="form-label">Jumlah Datang</label>
+                    <div class="input-group">
+                        <input type="text" class="form-control" name="jumlah_datang[]" placeholder="Jumlah">
+                        <select class="form-select" name="unit_datang[]" style="max-width: 120px;">
+                            <option value="">Pilih Parameter</option>
+                            @foreach(\App\Models\PemeriksaanKedatanganChemical::unitParameters() as $unitKey => $unitLabel)
+                                <option value="{{ $unitKey }}">{{ $unitLabel }}</option>
+                            @endforeach
+                        </select>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1203,8 +1317,16 @@ function addNewRow() {
                     </div>
                     <div class="col-md-6">
                         <div class="form-group">
-                            <label class="form-label">Jumlah Datang (kg/liter/pail)</label>
-                            <input type="text" class="form-control" name="jumlah_datang[]" placeholder="Jumlah Datang (kg/liter/pail)">
+                            <label class="form-label">Jumlah Datang</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" name="jumlah_datang[]" placeholder="Jumlah">
+                                <select class="form-select" name="unit_datang[]" style="max-width: 120px;">
+                                    <option value="">Pilih Parameter</option>
+                                    @foreach(\App\Models\PemeriksaanKedatanganChemical::unitParameters() as $unitKey => $unitLabel)
+                                        <option value="{{ $unitKey }}">{{ $unitLabel }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1213,7 +1335,15 @@ function addNewRow() {
                     <div class="col-md-6">
                         <div class="form-group">
                             <label class="form-label">Jumlah Sampling</label>
-                            <input type="text" class="form-control" name="jumlah_sampling[]" placeholder="Jumlah Sampling">
+                            <div class="input-group">
+                                <input type="text" class="form-control" name="jumlah_sampling[]" placeholder="Jumlah">
+                                <select class="form-select" name="unit_sampling[]" style="max-width: 120px;">
+                                    <option value="">Pilih Parameter</option>
+                                    @foreach(\App\Models\PemeriksaanKedatanganChemical::unitParameters() as $unitKey => $unitLabel)
+                                        <option value="{{ $unitKey }}">{{ $unitLabel }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
                         </div>
                     </div>
                 </div>

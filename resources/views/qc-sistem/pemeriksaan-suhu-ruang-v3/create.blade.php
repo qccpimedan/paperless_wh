@@ -104,7 +104,14 @@
                                                                 <label for="{{ $fieldKey }}_{{ $i }}_setting">Setting (°C)</label>
                                                                 <select id="{{ $fieldKey }}_{{ $i }}_setting" class="form-select form-select-sm" name="{{ $fieldKey }}_{{ $i }}_setting">
                                                                     <option value="">-- Pilih atau Isi Manual --</option>
+                                                                    <option value="≤30" {{ old($fieldKey . '_' . $i . '_setting') == '≤30' ? 'selected' : '' }}>Std ≤ 30°C</option>
+                                                                    <option value="manual" {{ old($fieldKey . '_' . $i . '_setting') && old($fieldKey . '_' . $i . '_setting') != '≤30' ? 'selected' : '' }}>Input Manual</option>
                                                                 </select>
+                                                                <input type="text" inputmode="text" id="{{ $fieldKey }}_{{ $i }}_setting_manual"
+                                                                    class="form-control form-control-sm mt-1" name="{{ $fieldKey }}_{{ $i }}_setting_manual"
+                                                                    placeholder="Masukkan nilai manual"
+                                                                    value="{{ old($fieldKey . '_' . $i . '_setting') != '≤30' ? old($fieldKey . '_' . $i . '_setting') : '' }}"
+                                                                    style="display: {{ old($fieldKey . '_' . $i . '_setting') && old($fieldKey . '_' . $i . '_setting') != '≤30' ? 'block' : 'none' }};">
                                                             </div>
                                                             <div class="col-md-4">
                                                                 <label for="{{ $fieldKey }}_{{ $i }}_display">Display (°C)</label>
@@ -164,6 +171,18 @@
                     form.style.display = this.checked ? 'block' : 'none';
                 });
             });
+
+            // Toggle input manual for setting dropdown
+            for (let i = 1; i <= 4; i++) {
+                const settingSelect = document.getElementById(`${field}_${i}_setting`);
+                const settingManual = document.getElementById(`${field}_${i}_setting_manual`);
+                if (settingSelect && settingManual) {
+                    settingSelect.addEventListener('change', function() {
+                        settingManual.style.display = (this.value === 'manual') ? 'block' : 'none';
+                        if (this.value !== 'manual') settingManual.value = '';
+                    });
+                }
+            }
         });
     });
 </script>

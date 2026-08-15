@@ -283,7 +283,9 @@ return view('qc-sistem.pemeriksaan-kedatangan-kemasan.index', compact('pemeriksa
             'distributor.*.*' => 'nullable|string|max:255',
             'kode_produksi.*' => 'nullable|string|max:255',
             'jumlah_datang.*' => 'nullable|string|max:255',
+            'unit_datang.*' => 'nullable|string|in:kg,gram,pcs,roll,karung,box,lembar',
             'jumlah_sampling.*' => 'nullable|string|max:255',
+            'unit_sampling.*' => 'nullable|string|in:kg,gram,pcs,roll,karung,box,lembar',
             'spesifikasi.*' => 'nullable|string',
             'penampakan.*' => 'nullable|in:0,1',
             'sealing.*' => 'nullable|in:0,1',
@@ -320,7 +322,9 @@ return view('qc-sistem.pemeriksaan-kedatangan-kemasan.index', compact('pemeriksa
         $distributorInput = $request->input('distributor', []);
         $kode_produksis = $request->input('kode_produksi', []);
         $jumlah_datangs = $request->input('jumlah_datang', []);
+        $unit_datangs = $request->input('unit_datang', []);
         $jumlah_samplings = $request->input('jumlah_sampling', []);
+        $unit_samplings = $request->input('unit_sampling', []);
         $spesifikasis = $request->input('spesifikasi', []);
         $penampakans = array_values((array) $request->input('penampakan', []));
         $sealings = array_values((array) $request->input('sealing', []));
@@ -382,7 +386,9 @@ return view('qc-sistem.pemeriksaan-kedatangan-kemasan.index', compact('pemeriksa
             'distributor_array' => json_encode(is_array($distributors) ? $distributors : []),
             'kode_produksi_array' => json_encode(is_array($kode_produksis) ? $kode_produksis : []),
             'jumlah_datang_array' => json_encode(is_array($jumlah_datangs) ? $jumlah_datangs : []),
+            'unit_datang_array' => json_encode(is_array($unit_datangs) ? $unit_datangs : []),
             'jumlah_sampling_array' => json_encode(is_array($jumlah_samplings) ? $jumlah_samplings : []),
+            'unit_sampling_array' => json_encode(is_array($unit_samplings) ? $unit_samplings : []),
             'spesifikasi_array' => json_encode(is_array($spesifikasis) ? $spesifikasis : []),
             'penampakan_array' => json_encode(is_array($penampakans) ? $penampakans : []),
             'sealing_array' => json_encode(is_array($sealings) ? $sealings : []),
@@ -577,7 +583,9 @@ return view('qc-sistem.pemeriksaan-kedatangan-kemasan.index', compact('pemeriksa
             'distributor.*.*' => 'nullable|string|max:255',
             'kode_produksi.*' => 'nullable|string|max:255',
             'jumlah_datang.*' => 'nullable|string|max:255',
+            'unit_datang.*' => 'nullable|string|in:kg,gram,pcs,roll,karung,box,lembar',
             'jumlah_sampling.*' => 'nullable|string|max:255',
+            'unit_sampling.*' => 'nullable|string|in:kg,gram,pcs,roll,karung,box,lembar',
             'spesifikasi.*' => 'nullable|string',
             'penampakan.*' => 'nullable|in:0,1',
             'sealing.*' => 'nullable|in:0,1',
@@ -614,7 +622,9 @@ return view('qc-sistem.pemeriksaan-kedatangan-kemasan.index', compact('pemeriksa
         $distributorInput = $request->input('distributor', []);
         $kode_produksis = $request->input('kode_produksi', []);
         $jumlah_datangs = $request->input('jumlah_datang', []);
+        $unit_datangs = $request->input('unit_datang', []);
         $jumlah_samplings = $request->input('jumlah_sampling', []);
+        $unit_samplings = $request->input('unit_sampling', []);
         $spesifikasis = $request->input('spesifikasi', []);
         $penampakans = array_values((array) $request->input('penampakan', []));
         $sealings = array_values((array) $request->input('sealing', []));
@@ -682,7 +692,9 @@ return view('qc-sistem.pemeriksaan-kedatangan-kemasan.index', compact('pemeriksa
             'distributor_array' => json_encode(is_array($distributors) ? $distributors : []),
             'kode_produksi_array' => json_encode(is_array($kode_produksis) ? $kode_produksis : []),
             'jumlah_datang_array' => json_encode(is_array($jumlah_datangs) ? $jumlah_datangs : []),
+            'unit_datang_array' => json_encode(is_array($unit_datangs) ? $unit_datangs : []),
             'jumlah_sampling_array' => json_encode(is_array($jumlah_samplings) ? $jumlah_samplings : []),
+            'unit_sampling_array' => json_encode(is_array($unit_samplings) ? $unit_samplings : []),
             'spesifikasi_array' => json_encode(is_array($spesifikasis) ? $spesifikasis : []),
             'penampakan_array' => json_encode(is_array($penampakans) ? $penampakans : []),
             'sealing_array' => json_encode(is_array($sealings) ? $sealings : []),
@@ -1040,6 +1052,11 @@ return view('qc-sistem.pemeriksaan-kedatangan-kemasan.index', compact('pemeriksa
         $id_produk = $request->input('id_produk');
         $kategori_code = $request->input('kategori_code');
 
+        // === MODE: ALL SHIFT ===
+        if ($id_shift === 'all') {
+            return $this->exportPDFAllShift($request, $user, $tanggalDari, $tanggalSampai, $id_produk, $kategori_code);
+        }
+
         // Build query
         $query = PemeriksaanKedatanganKemasan::with([
             'user.role', 
@@ -1185,11 +1202,140 @@ return view('qc-sistem.pemeriksaan-kedatangan-kemasan.index', compact('pemeriksa
             'shift' => $shift,
             'qcUser' => $qcUser,
             'produksiUser' => $produksiUser,
-            'spvQcUser' => $spvQcUser
+            'spvQcUser' => $spvQcUser,
+            'isAllShift' => false,
+            'dataPerShift' => [[
+                'pemeriksaans' => $pemeriksaans,
+                'shift' => $shift,
+                'qcUser' => $qcUser,
+                'produksiUser' => $produksiUser,
+                'spvQcUser' => $spvQcUser,
+            ]],
         ]);
 
         $filenameDate = $tanggal ?? $tanggalDari ?? date('Y-m-d');
         $filename = 'laporan-pemeriksaan-kemasan-' . $filenameDate . '.pdf';
+        return $pdf->download($filename);
+    }
+
+    private function exportPDFAllShift($request, $user, $tanggalDari, $tanggalSampai, $id_produk, $kategori_code)
+    {
+        // Ambil semua shift yang accessible
+        if ($user->role && strtolower($user->role->role) === 'superadmin') {
+            $allShifts = Shift::all();
+        } else {
+            $allShifts = Shift::query()
+                ->when($user->id_plant, function ($q) use ($user) {
+                    $q->whereHas('user', function ($qu) use ($user) {
+                        $qu->where('id_plant', $user->id_plant);
+                    });
+                })
+                ->get();
+        }
+
+        // Kumpulkan data per shift
+        $dataPerShift = [];
+
+        foreach ($allShifts as $shift) {
+            $query = PemeriksaanKedatanganKemasan::with([
+                'user.role',
+                'user.plant',
+                'bahan',
+                'shift',
+                'qcVerifier'       => fn($q) => $q->select('id', 'name'),
+                'produksiVerifier' => fn($q) => $q->select('id', 'name'),
+                'spvVerifier'      => fn($q) => $q->select('id', 'name'),
+            ]);
+
+            // Plant filter
+            if ($user->role && strtolower($user->role->role) !== 'superadmin') {
+                $query->whereHas('user', function ($q) use ($user) {
+                    $q->where('id_plant', $user->getEffectivePlantId());
+                });
+            }
+
+            // Filter shift
+            $query->where('id_shift', $shift->id);
+
+            // Filter tanggal (rentang)
+            if ($tanggalDari && $tanggalSampai) {
+                $query->whereBetween('tanggal', [$tanggalDari, $tanggalSampai]);
+            } elseif ($tanggalDari) {
+                $query->whereDate('tanggal', '>=', $tanggalDari);
+            } elseif ($tanggalSampai) {
+                $query->whereDate('tanggal', '<=', $tanggalSampai);
+            }
+
+            // Filter produk / kategori
+            if ($id_produk) {
+                $query->where(function ($q) use ($id_produk) {
+                    $q->whereRaw("JSON_CONTAINS(id_bahan_array, ?, '$')", [json_encode((int)$id_produk)])
+                      ->orWhereRaw("JSON_CONTAINS(id_bahan_array, ?, '$')", [json_encode((string)$id_produk)])
+                      ->orWhere('id_bahan_array', 'like', '%"' . $id_produk . '"%')
+                      ->orWhere('id_bahan_array', 'like', '%,' . $id_produk . ',%')
+                      ->orWhere('id_bahan_array', 'like', '[' . $id_produk . ',%')
+                      ->orWhere('id_bahan_array', 'like', '%,' . $id_produk . ']');
+                });
+            } elseif ($kategori_code) {
+                $matchedIds = \App\Models\Produk::where('kategori_code', $kategori_code)->pluck('id')->toArray();
+                if (!empty($matchedIds)) {
+                    $query->where(function ($q) use ($matchedIds) {
+                        foreach ($matchedIds as $pid) {
+                            $q->orWhereRaw("JSON_CONTAINS(id_bahan_array, ?, '$')", [json_encode((int)$pid)])
+                              ->orWhereRaw("JSON_CONTAINS(id_bahan_array, ?, '$')", [json_encode((string)$pid)])
+                              ->orWhere('id_bahan_array', 'like', '%"' . $pid . '"%')
+                              ->orWhere('id_bahan_array', 'like', '%,' . $pid . ',%')
+                              ->orWhere('id_bahan_array', 'like', '[' . $pid . ',%')
+                              ->orWhere('id_bahan_array', 'like', '%,' . $pid . ']');
+                        }
+                    });
+                } else {
+                    // Jika kategori tidak punya produk, return no results
+                    $query->whereRaw('1 = 0');
+                }
+            }
+
+            $records = $query->latest()->get();
+
+            // Hanya masukkan jika ada data
+            if ($records->isNotEmpty()) {
+                // Kumpulkan verifier names
+                $qcUser = null; $produksiUser = null; $spvQcUser = null;
+                $qcId = $records->pluck('verified_by_qc')->filter()->unique()->first();
+                $prodId = $records->pluck('verified_by_produksi')->filter()->unique()->first();
+                $spvId = $records->pluck('verified_by_spv')->filter()->unique()->first();
+                if ($qcId) $qcUser = optional(User::find($qcId))->name;
+                if ($prodId) $produksiUser = optional(User::find($prodId))->name;
+                if ($spvId) $spvQcUser = optional(User::find($spvId))->name;
+
+                $dataPerShift[] = [
+                    'shift'        => $shift,
+                    'pemeriksaans' => $records,
+                    'qcUser'       => $qcUser,
+                    'produksiUser' => $produksiUser,
+                    'spvQcUser'    => $spvQcUser,
+                ];
+            }
+        }
+
+        $pdf = \PDF::loadView('qc-sistem.pemeriksaan-kedatangan-kemasan.pdf-report', [
+            'dataPerShift'   => $dataPerShift,
+            'tanggal'        => null,
+            'tanggal_dari'   => $tanggalDari,
+            'tanggal_sampai' => $tanggalSampai,
+            'shift'          => null,
+            'pemeriksaans'   => collect(),
+            'qcUser'         => null,
+            'produksiUser'   => null,
+            'spvQcUser'      => null,
+            'isAllShift'     => true,
+        ]);
+
+        $filename = 'laporan-semua-shift-kemasan-'
+            . ($tanggalDari ?? date('Y-m-d'))
+            . ($tanggalSampai ? '-to-' . $tanggalSampai : '')
+            . '.pdf';
+
         return $pdf->download($filename);
     }
 

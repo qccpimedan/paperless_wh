@@ -102,6 +102,15 @@
             display: inline-block;
         }
 
+        /* ===== BLOK CETAK UTUH (subheader + tabel + footer + ttd) =====
+           Dibungkus jadi satu supaya kalau tidak muat di halaman saat ini,
+           yang pindah adalah SATU BLOK UTUH, bukan tanda tangannya saja
+           yang terpisah dan menyisakan halaman kosong. */
+        .print-block {
+            page-break-inside: avoid;
+        }
+
+        /* ===== SUBHEADER (Shift & Tanggal) — DIPERBAIKI ===== */
         .subheader {
             width: 100%;
             border: 1px solid #dee2e6;
@@ -115,42 +124,32 @@
         .subheader-table {
             width: 100%;
             border-collapse: collapse;
+            table-layout: fixed;
         }
 
         .subheader-table td {
             padding: 8px 12px;
             font-size: 8px;
-            border-bottom: 1px solid #e9ecef;
             vertical-align: top;
+            width: 50%;
         }
 
-        .subheader-table tr:last-child td {
-            border-bottom: none;
+        .subheader-table td.subheader-col-right {
+            border-left: 1px solid #dee2e6;
         }
 
         .subheader-label {
             font-weight: 600;
             color: #495057;
-            width: 100px;
         }
 
         .subheader-value {
             color: #1a1a1a;
         }
 
-        .subheader-divider {
-            width: 1px;
-            background: #dee2e6;
-            padding: 0;
-        }
-
         .page-break {
             page-break-after: avoid;
             margin-bottom: 15px;
-        }
-
-        .page-break:last-child {
-            page-break-after: avoid;
         }
 
         .data-table {
@@ -159,6 +158,7 @@
             border: 1px solid #dee2e6;
             border-radius: 6px;
             overflow: hidden;
+            table-layout: fixed;
         }
 
         .data-column {
@@ -173,7 +173,7 @@
         .column-header {
             font-weight: bold;
             font-size: 9px;
-            color: #8b1428;
+            color: #ffffff;
             background: linear-gradient(135deg, #8b1428 0%, #5c0e1a 100%);
             padding: 8px 10px;
             margin: -10px -10px 10px -10px;
@@ -204,7 +204,7 @@
             display: table-cell;
             font-weight: 600;
             color: #495057;
-            width: 45px;
+            width: 62px;
             padding-right: 5px;
         }
 
@@ -235,7 +235,6 @@
             border: 1px solid #dee2e6;
             border-radius: 6px;
             background: #f8f9fa;
-            page-break-inside: avoid;
         }
 
         .signature-note {
@@ -291,7 +290,7 @@
             height: 40px;
             width: 100%;
         }
-        
+
         .qr-code-img {
             max-height: 55px;
             max-width: 55px;
@@ -304,6 +303,24 @@
             padding-top: 8px;
             text-transform: uppercase;
             letter-spacing: 0.3px;
+        }
+
+        .footer-note {
+            text-align: right;
+            padding-right: 10px;
+            font-style: italic;
+            font-size: 9px;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .shift-banner {
+            background: #c41e3a;
+            color: #fff;
+            padding: 6px 12px;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            page-break-inside: avoid;
         }
 
         .empty-message {
@@ -319,6 +336,141 @@
 </head>
 <body>
     <div class="container">
+        @php $isAllShift = $isAllShift ?? false; @endphp
+
+        @if($isAllShift)
+        {{-- ======= MODE: SEMUA SHIFT ======= --}}
+        @if(empty($dataPerShift))
+            <div class="empty-message"><p>Tidak ada data untuk semua shift pada periode yang dipilih.</p></div>
+        @else
+            @foreach($dataPerShift as $shiftGroup)
+                @php
+                    $pemeriksaans   = $shiftGroup['pemeriksaans'];
+                    $currentShift   = $shiftGroup['shift'];
+                    $produkNamaById = $shiftGroup['produkNamaById'];
+                    $firstRecord    = $pemeriksaans->first();
+                    $columnsPerPage = 4;
+                    $pdfColumns     = collect();
+                    foreach ($pemeriksaans as $p) {
+                        $rowsTmp  = is_array($p->produk_data) ? $p->produk_data : [];
+                        $rowCount = max(1, count($rowsTmp));
+                        for ($i = 0; $i < $rowCount; $i++) {
+                            $pdfColumns->push(['record' => $p, 'produkIndex' => $i]);
+                        }
+                    }
+                    $chunks = $pdfColumns->chunk($columnsPerPage);
+                @endphp
+
+                @foreach($chunks as $pageIndex => $pageRecords)
+                    <div class="print-block">
+                        {{-- Kop surat (logo + nama perusahaan) — sebelumnya HILANG di mode Semua Shift, sekarang ditambahkan di setiap halaman cetak --}}
+                        <div class="header">
+                            <div class="header-left">
+                                <div class="logo-company">
+                                    <div class="header-logo">
+                                        <img src="{{ public_path('dist/images/logo/cpi-logo.png') }}" alt="Logo CPI">
+                                    </div>
+                                    <div class="header-company">
+                                        <h2>PT. CHAROEN POKPHAND INDONESIA</h2>
+                                        <p>FOOD DIVISION {{ strtoupper($plantName) }}</p>
+                                        <p>{{ strtoupper($plantName) }} - INDONESIA</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="header-right">
+                                <div class="header-title">
+                                    <h1>PEMERIKSAAN RETURN BARANG DARI CUSTOMER</h1>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="subheader">
+                            <table class="subheader-table">
+                                <tr>
+                                    <td><span class="subheader-label">Shift</span><span class="subheader-value">: {{ $currentShift->shift }}</span></td>
+                                    <td class="subheader-col-right"><span class="subheader-label">Tanggal</span><span class="subheader-value">: {{ $tanggal_dari ?? '-' }}@if($tanggal_sampai) s/d {{ $tanggal_sampai }}@endif</span></td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="page-break">
+                            <table class="data-table"><tr>
+                                @foreach($pageRecords as $column)
+                                    @php
+                                        $pemeriksaan  = $column['record'];
+                                        $produkIndex  = $column['produkIndex'];
+                                        $columnNumber = ($pageIndex * $columnsPerPage) + $loop->iteration;
+                                        $rows         = is_array($pemeriksaan->produk_data) ? $pemeriksaan->produk_data : [];
+                                        $row          = $rows[$produkIndex] ?? null;
+                                        $allCustIds   = collect($rows)->pluck('id_customer')->filter()->unique()->values()->toArray();
+                                        $custMap      = !empty($allCustIds) ? \App\Models\Customer::whereIn('id', $allCustIds)->pluck('nama_cust','id')->toArray() : [];
+                                    @endphp
+                                    <td class="data-column">
+                                        <div class="column-header">PEMERIKSAAN #{{ $columnNumber }}</div>
+                                        <div class="section-title">Data Umum</div>
+                                        <div class="field-row"><span class="field-label">Customer</span><span class="field-value">{{ $row ? ($custMap[$row['id_customer'] ?? null] ?? '-') : '-' }}</span></div>
+                                        <div class="field-row"><span class="field-label">Ekspedisi</span><span class="field-value">{{ $pemeriksaan->ekspedisi->nama_ekspedisi ?? '-' }}</span></div>
+                                        <div class="section-title">Kendaraan</div>
+                                        <div class="field-row"><span class="field-label">Nopol</span><span class="field-value">{{ $pemeriksaan->no_polisi ?? '-' }}</span></div>
+                                        <div class="field-row"><span class="field-label">Supir</span><span class="field-value">{{ $pemeriksaan->nama_supir ?? '-' }}</span></div>
+                                        <div class="field-row"><span class="field-label">Waktu</span><span class="field-value">{{ $pemeriksaan->waktu_kedatangan_display ?? ($pemeriksaan->waktu_kedatangan ?? '-') }}</span></div>
+                                        <div class="field-row"><span class="field-label">Suhu Mobil</span><span class="field-value">{{ $pemeriksaan->suhu_mobil ?? '-' }}</span></div>
+                                        <div class="section-title">Alasan Return</div>
+                                        <div class="field-row"><span class="field-value">{{ $row['alasan_return'] ?? '-' }}</span></div>
+                                        <div class="section-title">Data Produk</div>
+                                        @if($row)
+                                            <div class="field-row"><span class="field-label">Produk</span><span class="field-value">{{ $produkNamaById[$row['id_produk']] ?? '-' }}</span></div>
+                                            <div class="field-row"><span class="field-label">Kondisi</span><span class="field-value">{{ $row['kondisi_produk'] ?? '-' }}</span></div>
+                                            <div class="field-row"><span class="field-label">Suhu</span><span class="field-value">{{ $row['suhu_produk'] ?? '-' }}</span></div>
+                                            <div class="field-row"><span class="field-label">Kode Prod.</span><span class="field-value">{{ $row['kode_produksi'] ?? '-' }}</span></div>
+                                            <div class="field-row"><span class="field-label">Best Before</span><span class="field-value">{{ !empty($row['expired_date']) ? \Carbon\Carbon::parse($row['expired_date'])->format('d/m/Y') : '-' }}</span></div>
+                                            <div class="field-row"><span class="field-label">Jumlah</span><span class="field-value">{{ $row['jumlah_barang'] ?? '-' }}</span></div>
+                                            <div class="field-row"><span class="field-label">Kemasan</span><span class="field-value">@if(isset($row['kondisi_kemasan'])){{ $row['kondisi_kemasan'] ? 'Baik' : 'Rusak' }}@else-@endif</span></div>
+                                            <div class="field-row"><span class="field-label">Rekomendasi</span><span class="field-value">{{ $row['rekomendasi'] ?? '-' }}</span></div>
+                                        @endif
+                                    </td>
+                                @endforeach
+                            </tr></table>
+                        </div>
+                        <div class="footer-note">QW 11/00</div>
+                        <div class="signature-section">
+                            @php $fRec = $pemeriksaans->first(); @endphp
+                            <table class="signature-table"><tr>
+                                <td class="signature-cell">
+                                    <div class="signature-header-item">Dibuat Oleh</div>
+                                    <div class="signature-space">
+                                        @if($fRec && $fRec->qcVerifier) @php $q=\SimpleSoftwareIO\QrCode\Facades\QrCode::size(55)->generate("Diverifikasi oleh {$fRec->qcVerifier->name} (QC)"); @endphp <img src="data:image/svg+xml;base64,{{ base64_encode($q) }}" class="qr-code-img">
+                                        @else <div class="signature-line-empty"></div> @endif
+                                    </div>
+                                    <div class="signature-name">{{ $fRec?->qcVerifier?->name ?? '-' }}</div>
+                                </td>
+                                <td class="signature-cell">
+                                    <div class="signature-header-item">Diketahui Oleh</div>
+                                    <div class="signature-space">
+                                        @if($fRec && $fRec->produksiVerifier) @php $q=\SimpleSoftwareIO\QrCode\Facades\QrCode::size(55)->generate("Diverifikasi oleh {$fRec->produksiVerifier->name} (Warehouse)"); @endphp <img src="data:image/svg+xml;base64,{{ base64_encode($q) }}" class="qr-code-img">
+                                        @else <div class="signature-line-empty"></div> @endif
+                                    </div>
+                                    <div class="signature-name">{{ $fRec?->produksiVerifier?->name ?? '-' }}</div>
+                                </td>
+                                <td class="signature-cell">
+                                    <div class="signature-header-item">Disetujui Oleh</div>
+                                    <div class="signature-space">
+                                        @if($fRec && $fRec->spvVerifier) @php $q=\SimpleSoftwareIO\QrCode\Facades\QrCode::size(55)->generate("Diverifikasi oleh {$fRec->spvVerifier->name} (SPV QC)"); @endphp <img src="data:image/svg+xml;base64,{{ base64_encode($q) }}" class="qr-code-img">
+                                        @else <div class="signature-line-empty"></div> @endif
+                                    </div>
+                                    <div class="signature-name">{{ $fRec?->spvVerifier?->name ?? '-' }}</div>
+                                </td>
+                            </tr></table>
+                        </div>
+                    </div>
+                    @if(!$loop->last)<div style="page-break-after:always;"></div>@endif
+                @endforeach
+
+                @if(!$loop->last)<div style="page-break-after:always;"></div>@endif
+            @endforeach
+        @endif
+
+        @else
+        {{-- ======= MODE: SHIFT TUNGGAL ======= --}}
         <div class="header">
             <div class="header-left">
                 <div class="logo-company">
@@ -381,159 +533,142 @@
             @endphp
 
             @foreach($chunks as $pageIndex => $pageRecords)
-                {{-- SUBHEADER (Setiap halaman) --}}
-                <div class="subheader">
-                    <table class="subheader-table">
-                        <tr>
-                            <td>
-                                <span class="subheader-label">Shift</span>
-                                <span class="subheader-value">: {{ $shift ? ($shift->shift ?? '-') : '-' }}</span>
-                            </td>
-                            <td class="subheader-divider"></td>
-                            <td>
-                                <span class="subheader-label">Tanggal</span>
-                                <span class="subheader-value">:
-                                    @if(!empty($tanggal_dari) || !empty($tanggal_sampai))
-                                        {{ $tanggal_dari ?? '-' }} s/d {{ $tanggal_sampai ?? '-' }}
-                                    @elseif(!empty($tanggal))
-                                        {{ $tanggal }}
-                                    @else
-                                        -
-                                    @endif
-                                </span>
-                            </td>
-                        </tr>
-                        <!-- <tr>
-                            <td>
-                                <span class="subheader-label">Total Data</span>
-                                <span class="subheader-value">: {{ $pemeriksaans ? $pemeriksaans->count() : 0 }}</span>
-                            </td>
-                            <td class="subheader-divider"></td>
-                            <td>
-                                <span class="subheader-label">Dicetak</span>
-                                <span class="subheader-value">: {{ now()->format('d/m/Y H:i') }}</span>
-                            </td>
-                        </tr> -->
-                    </table>
-                </div>
-
-                <div class="page-break">
-                    <table class="data-table">
-                        <tr>
-                            @foreach($pageRecords as $colIndex => $column)
-                                @php
-                                    $pemeriksaan = $column['record'];
-                                    $produkIndex = $column['produkIndex'];
-                                    $columnNumber = ($pageIndex * $columnsPerPage) + $loop->iteration;
-                                    $rows = is_array($pemeriksaan->produk_data) ? $pemeriksaan->produk_data : [];
-                                    $row = $rows[$produkIndex] ?? null;
-                                @endphp
-                                <td class="data-column" data-numbered="true">
-                                    <div class="column-header">PEMERIKSAAN #{{ $columnNumber }}</div>
-
-                                    <div class="section-title">Data Umum</div>
-                                    <!-- <div class="field-row"><span class="field-label">No</span><span class="field-value">{{ $columnNumber }}</span></div> -->
-                                    <!-- <div class="field-row"><span class="field-label">Tanggal</span><span class="field-value">{{ $pemeriksaan->tanggal ? $pemeriksaan->tanggal->format('d/m/Y') : '-' }}</span></div> -->
-                                    <!-- <div class="field-row"><span class="field-label">Shift</span><span class="field-value">{{ $pemeriksaan->shift->shift ?? '-' }}</span></div> -->
-                                    <!-- <div class="field-row"><span class="field-label">Plant</span><span class="field-value">{{ $pemeriksaan->user->plant->plant ?? '-' }}</span></div> -->
-                                    <div class="field-row"><span class="field-label">Customer</span><span class="field-value">{{ $row ? ($customerMap[$row['id_customer'] ?? null] ?? '-') : '-' }}</span></div>
-                                    <div class="field-row"><span class="field-label">Ekspedisi</span><span class="field-value">{{ $pemeriksaan->ekspedisi->nama_ekspedisi ?? '-' }}</span></div>
-
-                                    <div class="section-title">Kendaraan</div>
-                                    <div class="field-row"><span class="field-label">Nopol</span><span class="field-value">{{ $pemeriksaan->no_polisi ?? '-' }}</span></div>
-                                    <div class="field-row"><span class="field-label">Supir</span><span class="field-value">{{ $pemeriksaan->nama_supir ?? '-' }}</span></div>
-                                    <div class="field-row"><span class="field-label">Waktu Kedatangan</span><span class="field-value">{{ $pemeriksaan->waktu_kedatangan_display ?? ($pemeriksaan->waktu_kedatangan ?? '-') }}</span></div>
-                                    <div class="field-row"><span class="field-label">Suhu Produk</span><span class="field-value">{{ $pemeriksaan->suhu_mobil ?? '-' }}</span></div>
-
-                                    <div class="section-title">Alasan Return</div>
-                                    <div class="field-row"><span class="field-value">{{ $row['alasan_return'] ?? '-' }}</span></div>
-
-                                    <div class="section-title">Data Produk</div>
-                                    @if($row)
-                                        <div style="margin-top: 6px; padding-top: 6px; border-top: 1px solid #ddd; font-size: 8px;">
-                                            <!-- <div class="field-row"><span class="field-label">Produk</span><span class="field-value">#{{ $produkIndex + 1 }}</span></div> -->
-                                            <div class="field-row"><span class="field-label">Nama Produk</span><span class="field-value">{{ $produkNamaById[$row['id_produk']] ?? '-' }}</span></div>
-                                            <div class="field-row"><span class="field-label">Kondisi Produk</span><span class="field-value">{{ $row['kondisi_produk'] ?? '-' }}</span></div>
-                                            <div class="field-row"><span class="field-label">Suhu Produk</span><span class="field-value">{{ $row['suhu_produk'] ?? '-' }}</span></div>
-                                            <div class="field-row"><span class="field-label">Kode Produksi</span><span class="field-value">{{ $row['kode_produksi'] ?? '-' }}</span></div>
-                                            <div class="field-row"><span class="field-label">Best Before</span><span class="field-value">{{ !empty($row['expired_date']) ? \Carbon\Carbon::parse($row['expired_date'])->format('d/m/Y') : '-' }}</span></div>
-                                            <div class="field-row"><span class="field-label">Jumlah Barang</span><span class="field-value">{{ $row['jumlah_barang'] ?? '-' }}</span></div>
-                                            <div class="field-row"><span class="field-label">Kondisi Kemasan</span><span class="field-value">@if(isset($row['kondisi_kemasan'])){{ $row['kondisi_kemasan'] ? 'Baik' : 'Rusak' }}@else-@endif</span></div>
-                                            <div class="field-row"><span class="field-label">Kondisi Produk</span><span class="field-value">@if(isset($row['kondisi_produk_check'])){{ $row['kondisi_produk_check'] ? 'Baik' : 'Rusak' }}@else-@endif</span></div>
-                                            <div class="field-row"><span class="field-label">Rekomendasi</span><span class="field-value">{{ $row['rekomendasi'] ?? '-' }}</span></div>
-                                            @if(!empty($row['keterangan']))
-                                                <div class="field-row"><span class="field-label">Keterangan</span><span class="field-value">{{ $row['keterangan'] }}</span></div>
-                                            @endif
-                                        </div>
-                                    @else
-                                        <div class="field-row"><span class="field-value">Tidak ada data produk</span></div>
-                                    @endif
+                <div class="print-block">
+                    {{-- SUBHEADER (Setiap halaman) --}}
+                    <div class="subheader">
+                        <table class="subheader-table">
+                            <tr>
+                                <td>
+                                    <span class="subheader-label">Shift</span>
+                                    <span class="subheader-value">: {{ $shift ? ($shift->shift ?? '-') : '-' }}</span>
                                 </td>
-                            @endforeach
-                        </tr>
-                    </table>
-                </div>
-                <div style="text-align: right; padding-right: 10px; font-style: italic; font-size: 9px; color: #666; margin-top: 5px;">
-                    QW 11/00
-                </div>
+                                <td class="subheader-col-right">
+                                    <span class="subheader-label">Tanggal</span>
+                                    <span class="subheader-value">:
+                                        @if(!empty($tanggal_dari) || !empty($tanggal_sampai))
+                                            {{ $tanggal_dari ?? '-' }} s/d {{ $tanggal_sampai ?? '-' }}
+                                        @elseif(!empty($tanggal))
+                                            {{ $tanggal }}
+                                        @else
+                                            -
+                                        @endif
+                                    </span>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
 
-                <div class="signature-section">
-                    @php
-                        $firstColumn = $pageRecords->first();
-                        $firstRecord = is_array($firstColumn) ? ($firstColumn['record'] ?? null) : null;
-                    @endphp
-                    <table class="signature-table">
-                        <tr>
-                            <td class="signature-cell">
-                                <div class="signature-header-item">Dibuat Oleh</div>
-                                <div class="signature-space">
-                                    @if($firstRecord && $firstRecord->qcVerifier)
-                                        @php
-                                            $qcQrData = "Dokumen ini telah diverifikasi secara sistem oleh {$firstRecord->qcVerifier->name} (Tim QC)";
-                                            $qcQrCodeSvg = \SimpleSoftwareIO\QrCode\Facades\QrCode::size(55)->generate($qcQrData);
-                                            $base64QcSvg = "data:image/svg+xml;base64," . base64_encode($qcQrCodeSvg);
-                                        @endphp
-                                        <img src="{{ $base64QcSvg }}" class="qr-code-img" alt="QR Code QC">
-                                    @else
-                                        <div class="signature-line-empty"></div>
-                                    @endif
-                                </div>
-                                <div class="signature-name">{{ $firstRecord->qcVerifier->name ?? '-' }}</div>
-                            </td>
-                            <td class="signature-cell">
-                                <div class="signature-header-item">Diketahui Oleh</div>
-                                <div class="signature-space">
-                                    @if($firstRecord && $firstRecord->produksiVerifier)
-                                        @php
-                                            $prodQrData = "Dokumen ini telah diverifikasi secara sistem oleh {$firstRecord->produksiVerifier->name} (Tim Warehouse)";
-                                            $prodQrCodeSvg = \SimpleSoftwareIO\QrCode\Facades\QrCode::size(55)->generate($prodQrData);
-                                            $base64ProdSvg = "data:image/svg+xml;base64," . base64_encode($prodQrCodeSvg);
-                                        @endphp
-                                        <img src="{{ $base64ProdSvg }}" class="qr-code-img" alt="QR Code Warehouse">
-                                    @else
-                                        <div class="signature-line-empty"></div>
-                                    @endif
-                                </div>
-                                <div class="signature-name">{{ $firstRecord->produksiVerifier->name ?? '-' }}</div>
-                            </td>
-                            <td class="signature-cell">
-                                <div class="signature-header-item">Disetujui Oleh</div>
-                                <div class="signature-space">
-                                    @if($firstRecord && $firstRecord->spvVerifier)
-                                        @php
-                                            $spvQrData = "Dokumen ini telah diverifikasi secara sistem oleh {$firstRecord->spvVerifier->name} (Tim Supervisor QC)";
-                                            $spvQrCodeSvg = \SimpleSoftwareIO\QrCode\Facades\QrCode::size(55)->generate($spvQrData);
-                                            $base64SpvSvg = "data:image/svg+xml;base64," . base64_encode($spvQrCodeSvg);
-                                        @endphp
-                                        <img src="{{ $base64SpvSvg }}" class="qr-code-img" alt="QR Code SPV">
-                                    @else
-                                        <div class="signature-line-empty"></div>
-                                    @endif
-                                </div>
-                                <div class="signature-name">{{ $firstRecord->spvVerifier->name ?? '-' }}</div>
-                            </td>
-                        </tr>
-                    </table>
+                    <div class="page-break">
+                        <table class="data-table">
+                            <tr>
+                                @foreach($pageRecords as $colIndex => $column)
+                                    @php
+                                        $pemeriksaan = $column['record'];
+                                        $produkIndex = $column['produkIndex'];
+                                        $columnNumber = ($pageIndex * $columnsPerPage) + $loop->iteration;
+                                        $rows = is_array($pemeriksaan->produk_data) ? $pemeriksaan->produk_data : [];
+                                        $row = $rows[$produkIndex] ?? null;
+                                    @endphp
+                                    <td class="data-column" data-numbered="true">
+                                        <div class="column-header">PEMERIKSAAN #{{ $columnNumber }}</div>
+
+                                        <div class="section-title">Data Umum</div>
+                                        <div class="field-row"><span class="field-label">Customer</span><span class="field-value">{{ $row ? ($customerMap[$row['id_customer'] ?? null] ?? '-') : '-' }}</span></div>
+                                        <div class="field-row"><span class="field-label">Ekspedisi</span><span class="field-value">{{ $pemeriksaan->ekspedisi->nama_ekspedisi ?? '-' }}</span></div>
+
+                                        <div class="section-title">Kendaraan</div>
+                                        <div class="field-row"><span class="field-label">Nopol</span><span class="field-value">{{ $pemeriksaan->no_polisi ?? '-' }}</span></div>
+                                        <div class="field-row"><span class="field-label">Supir</span><span class="field-value">{{ $pemeriksaan->nama_supir ?? '-' }}</span></div>
+                                        <div class="field-row"><span class="field-label">Waktu Kedatangan</span><span class="field-value">{{ $pemeriksaan->waktu_kedatangan_display ?? ($pemeriksaan->waktu_kedatangan ?? '-') }}</span></div>
+                                        <div class="field-row"><span class="field-label">Suhu Produk</span><span class="field-value">{{ $pemeriksaan->suhu_mobil ?? '-' }}</span></div>
+
+                                        <div class="section-title">Alasan Return</div>
+                                        <div class="field-row"><span class="field-value">{{ $row['alasan_return'] ?? '-' }}</span></div>
+
+                                        <div class="section-title">Data Produk</div>
+                                        @if($row)
+                                            <div style="margin-top: 6px; padding-top: 6px; border-top: 1px solid #ddd; font-size: 8px;">
+                                                <div class="field-row"><span class="field-label">Nama Produk</span><span class="field-value">{{ $produkNamaById[$row['id_produk']] ?? '-' }}</span></div>
+                                                <div class="field-row"><span class="field-label">Kondisi Produk</span><span class="field-value">{{ $row['kondisi_produk'] ?? '-' }}</span></div>
+                                                <div class="field-row"><span class="field-label">Suhu Produk</span><span class="field-value">{{ $row['suhu_produk'] ?? '-' }}</span></div>
+                                                <div class="field-row"><span class="field-label">Kode Produksi</span><span class="field-value">{{ $row['kode_produksi'] ?? '-' }}</span></div>
+                                                <div class="field-row"><span class="field-label">Best Before</span><span class="field-value">{{ !empty($row['expired_date']) ? \Carbon\Carbon::parse($row['expired_date'])->format('d/m/Y') : '-' }}</span></div>
+                                                <div class="field-row"><span class="field-label">Jumlah Barang</span><span class="field-value">{{ $row['jumlah_barang'] ?? '-' }}</span></div>
+                                                <div class="field-row"><span class="field-label">Kondisi Kemasan</span><span class="field-value">@if(isset($row['kondisi_kemasan'])){{ $row['kondisi_kemasan'] ? 'Baik' : 'Rusak' }}@else-@endif</span></div>
+                                                <div class="field-row"><span class="field-label">Kondisi Produk</span><span class="field-value">@if(isset($row['kondisi_produk_check'])){{ $row['kondisi_produk_check'] ? 'Baik' : 'Rusak' }}@else-@endif</span></div>
+                                                <div class="field-row"><span class="field-label">Rekomendasi</span><span class="field-value">{{ $row['rekomendasi'] ?? '-' }}</span></div>
+                                                @if(!empty($row['keterangan']))
+                                                    <div class="field-row"><span class="field-label">Keterangan</span><span class="field-value">{{ $row['keterangan'] }}</span></div>
+                                                @endif
+                                            </div>
+                                        @else
+                                            <div class="field-row"><span class="field-value">Tidak ada data produk</span></div>
+                                        @endif
+                                    </td>
+                                @endforeach
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="footer-note">QW 11/00</div>
+
+                    <div class="signature-section">
+                        @php
+                            $firstColumn = $pageRecords->first();
+                            $firstRecord = is_array($firstColumn) ? ($firstColumn['record'] ?? null) : null;
+                        @endphp
+                        <table class="signature-table">
+                            <tr>
+                                <td class="signature-cell">
+                                    <div class="signature-header-item">Dibuat Oleh</div>
+                                    <div class="signature-space">
+                                        @if($firstRecord && $firstRecord->qcVerifier)
+                                            @php
+                                                $qcQrData = "Dokumen ini telah diverifikasi secara sistem oleh {$firstRecord->qcVerifier->name} (Tim QC)";
+                                                $qcQrCodeSvg = \SimpleSoftwareIO\QrCode\Facades\QrCode::size(55)->generate($qcQrData);
+                                                $base64QcSvg = "data:image/svg+xml;base64," . base64_encode($qcQrCodeSvg);
+                                            @endphp
+                                            <img src="{{ $base64QcSvg }}" class="qr-code-img" alt="QR Code QC">
+                                        @else
+                                            <div class="signature-line-empty"></div>
+                                        @endif
+                                    </div>
+                                    <div class="signature-name">{{ $firstRecord->qcVerifier->name ?? '-' }}</div>
+                                </td>
+                                <td class="signature-cell">
+                                    <div class="signature-header-item">Diketahui Oleh</div>
+                                    <div class="signature-space">
+                                        @if($firstRecord && $firstRecord->produksiVerifier)
+                                            @php
+                                                $prodQrData = "Dokumen ini telah diverifikasi secara sistem oleh {$firstRecord->produksiVerifier->name} (Tim Warehouse)";
+                                                $prodQrCodeSvg = \SimpleSoftwareIO\QrCode\Facades\QrCode::size(55)->generate($prodQrData);
+                                                $base64ProdSvg = "data:image/svg+xml;base64," . base64_encode($prodQrCodeSvg);
+                                            @endphp
+                                            <img src="{{ $base64ProdSvg }}" class="qr-code-img" alt="QR Code Warehouse">
+                                        @else
+                                            <div class="signature-line-empty"></div>
+                                        @endif
+                                    </div>
+                                    <div class="signature-name">{{ $firstRecord->produksiVerifier->name ?? '-' }}</div>
+                                </td>
+                                <td class="signature-cell">
+                                    <div class="signature-header-item">Disetujui Oleh</div>
+                                    <div class="signature-space">
+                                        @if($firstRecord && $firstRecord->spvVerifier)
+                                            @php
+                                                $spvQrData = "Dokumen ini telah diverifikasi secara sistem oleh {$firstRecord->spvVerifier->name} (Tim Supervisor QC)";
+                                                $spvQrCodeSvg = \SimpleSoftwareIO\QrCode\Facades\QrCode::size(55)->generate($spvQrData);
+                                                $base64SpvSvg = "data:image/svg+xml;base64," . base64_encode($spvQrCodeSvg);
+                                            @endphp
+                                            <img src="{{ $base64SpvSvg }}" class="qr-code-img" alt="QR Code SPV">
+                                        @else
+                                            <div class="signature-line-empty"></div>
+                                        @endif
+                                    </div>
+                                    <div class="signature-name">{{ $firstRecord->spvVerifier->name ?? '-' }}</div>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
                 </div>
 
                 @if(!$loop->last)
@@ -545,6 +680,7 @@
                 <p>Tidak ada data untuk filter yang dipilih.</p>
             </div>
         @endif
+        @endif {{-- end isAllShift --}}
     </div>
 </body>
 </html>

@@ -9,8 +9,8 @@
     @endphp
     <style>
         @page {
-            size: A4;
-            margin: 12mm;
+            size: A4 portrait;
+            margin: 10mm;
         }
         
         * {
@@ -20,115 +20,92 @@
         }
         
         body {
-            font-family: 'Segoe UI', Arial, sans-serif;
-            font-size: 9px;
-            line-height: 1.4;
+            font-family: Arial, sans-serif;
+            font-size: 8px;
+            line-height: 1.2;
             color: #1a1a1a;
             background: #fff;
         }
         
         .container {
             width: 100%;
-            max-width: 100%;
         }
         
-        /* HEADER */
-        .header {
-            display: table;
+        /* HEADER - Menggunakan Tabel Standar DomPDF */
+        .header-table {
             width: 100%;
-            margin-bottom: 15px;
-            border-bottom: 3px solid #c41e3a;
-            padding-bottom: 12px;
-            page-break-inside: avoid;
+            border-collapse: collapse;
+            border-bottom: 2px solid #c41e3a;
+            padding-bottom: 5px;
+            margin-bottom: 10px;
         }
         
-        .header-left {
-            display: table-cell;
-            width: 60%;
-            vertical-align: middle;
-        }
-        
-        .header-right {
-            display: table-cell;
-            width: 40%;
-            vertical-align: middle;
-            text-align: right;
-        }
-        
-        .logo-company {
-            display: table;
-            width: 100%;
-        }
-        
-        .header-logo {
-            display: table-cell;
+        .header-logo-td {
             width: 55px;
             vertical-align: middle;
         }
         
-        .header-logo img {
-            width: 50px;
-            height: 50px;
-            object-fit: contain;
+        .header-logo-td img {
+            width: 48px;
+            height: auto;
         }
         
-        .header-company {
-            display: table-cell;
+        .header-company-td {
             vertical-align: middle;
-            padding-left: 12px;
+            padding-left: 5px;
         }
         
-        .header-company h2 {
-            font-size: 12px;
+        .header-company-td h2 {
+            font-size: 11px;
             font-weight: bold;
             color: #c41e3a;
-            margin-bottom: 2px;
-            letter-spacing: 0.5px;
         }
         
-        .header-company p {
-            font-size: 8px;
+        .header-company-td p {
+            font-size: 7.5px;
             color: #444;
-            margin-bottom: 1px;
         }
         
-        .header-title h1 {
-            font-size: 13px;
+        .header-title-td {
+            vertical-align: middle;
+            text-align: right;
+            width: 45%;
+        }
+        
+        .header-title-box {
+            font-size: 11px;
             font-weight: bold;
             color: #1a1a1a;
-            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-            padding: 8px 15px;
-            border-radius: 4px;
+            background: #e9ecef;
+            padding: 6px 10px;
             border-left: 4px solid #c41e3a;
             display: inline-block;
+            text-align: right;
         }
-        
+
         /* SUBHEADER */
         .subheader {
-            margin-bottom: 15px;
-            page-break-inside: avoid;
+            width: 100%;
+            border: 1px solid #dee2e6;
+            margin-bottom: 10px;
+            background: #f8f9fa;
         }
         
         .subheader-table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 8px;
-        }
-        
-        .subheader-table tr {
-            border-bottom: 1px solid #dee2e6;
         }
         
         .subheader-table td {
             padding: 4px 6px;
-            vertical-align: middle;
+            font-size: 7.5px;
+            border-bottom: 1px solid #e9ecef;
+            vertical-align: top;
         }
         
         .subheader-label {
-            font-weight: 600;
+            font-weight: bold;
             color: #495057;
-            min-width: 70px;
-            display: inline-block;
         }
         
         .subheader-value {
@@ -138,120 +115,96 @@
         .subheader-divider {
             width: 1px;
             background: #dee2e6;
+            padding: 0;
         }
-        
-        /* DATA TABLE */
-        .page-break {
-            page-break-inside: avoid;
-            margin-bottom: 15px;
-        }
-        
-        .data-table {
+
+        /* DATA TABLE - 4 Kolom Menggunakan Tabel Murni */
+        .grid-table {
             width: 100%;
             border-collapse: collapse;
+            table-layout: fixed;
             margin-bottom: 10px;
-            page-break-inside: avoid;
-        }
-        
-        .data-table tr {
-            border: 1px solid #dee2e6;
-            page-break-inside: avoid;
         }
         
         .data-column {
             width: 25%;
             border: 1px solid #dee2e6;
-            padding: 8px;
+            padding: 5px;
             vertical-align: top;
             font-size: 7.5px;
             background: #fff;
-            page-break-inside: avoid;
         }
         
         .column-header {
             font-weight: bold;
-            font-size: 7.5px;
-            color: #8b1428;
-            background: #fff;
-            padding: 5px 7px;
-            margin: -8px -8px 6px -8px;
+            font-size: 8.5px;
+            color: #ffffff;
+            background: #8b1428;
+            padding: 4px;
+            margin: -5px -5px 6px -5px;
             text-align: center;
-            letter-spacing: 0.5px;
             text-transform: uppercase;
         }
         
         .section-title {
             font-weight: bold;
-            font-size: 8px;
+            font-size: 7.5px;
             color: #c41e3a;
-            border-bottom: 2px solid #c41e3a;
-            margin-top: 10px;
-            margin-bottom: 6px;
-            padding-bottom: 3px;
+            border-bottom: 1px solid #c41e3a;
+            margin-top: 6px;
+            margin-bottom: 4px;
+            padding-bottom: 2px;
             text-transform: uppercase;
-            letter-spacing: 0.3px;
         }
         
         .field-row {
-            margin-bottom: 4px;
-            display: table;
+            margin-bottom: 2px;
             width: 100%;
         }
         
         .field-label {
-            display: table-cell;
-            font-weight: 600;
+            font-weight: bold;
             color: #495057;
-            width: 45px;
-            padding-right: 5px;
+            display: inline-block;
+            width: 50px;
         }
         
         .field-value {
-            display: table-cell;
             color: #1a1a1a;
             word-wrap: break-word;
         }
         
         .check-item {
             color: #28a745;
-            font-weight: 500;
-        }
-        
-        .check-item::before {
-            content: "V ";
-            color: #28a745;
             font-weight: bold;
         }
 
         /* SIGNATURE SECTION */
         .signature-section {
-            margin-top: 15px;
-            padding: 15px;
+            margin-top: 8px;
+            padding: 8px;
             border: 1px solid #dee2e6;
-            border-radius: 6px;
             background: #f8f9fa;
-            page-break-inside: avoid;
         }
         
         .signature-note {
             font-size: 7px;
             color: #495057;
-            padding: 8px 12px;
+            padding: 4px 6px;
             background: #fff;
             border: 1px solid #e9ecef;
-            border-radius: 4px;
-            margin-bottom: 15px;
-            line-height: 1.5;
+            margin-bottom: 8px;
+            line-height: 1.3;
         }
         
         .signature-note .ok-text {
             color: #28a745;
-            font-weight: 600;
+            font-weight: bold;
         }
         
         .signature-note .not-ok-text {
             color: #dc3545;
-            font-weight: 600;
+            font-weight: bold;
         }
         
         .signature-table {
@@ -262,83 +215,49 @@
         .signature-cell {
             width: 33.33%;
             text-align: center;
-            padding: 0 15px;
             vertical-align: top;
+            padding: 0 5px;
         }
         
         .signature-header-item {
-            font-size: 8px;
-            font-weight: 600;
+            font-size: 7.5px;
+            font-weight: bold;
             color: #495057;
-            padding-bottom: 25px;
+            padding-bottom: 5px;
         }
         
         .signature-space {
-            height: 60px;
-            margin: 0 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            height: 50px;
+            text-align: center;
         }
 
         .signature-line-empty {
-            border-bottom: 2px solid #1a1a1a;
-            height: 40px;
-            width: 100%;
+            border-bottom: 1px solid #1a1a1a;
+            height: 35px;
+            width: 80%;
+            margin: 0 auto;
         }
         
         .qr-code-img {
-            max-height: 60px;
-            max-width: 60px;
+            max-height: 50px;
+            max-width: 50px;
         }
         
         .signature-name {
-            font-size: 8px;
+            font-size: 7.5px;
             font-weight: bold;
             color: #1a1a1a;
-            padding-top: 8px;
+            padding-top: 4px;
             text-transform: uppercase;
-            letter-spacing: 0.3px;
         }
 
-        /* FOOTER */
-        .footer {
-            margin-top: 15px;
-            padding: 10px 15px;
-            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
-            border-radius: 4px;
-            text-align: center;
-            page-break-inside: avoid;
-        }
-        
-        .footer p {
-            color: #fff;
-            font-size: 7px;
-            margin: 2px 0;
-        }
-        
-        .footer .footer-main {
-            font-weight: 600;
-            font-size: 8px;
-        }
-
-        .empty-message {
-            text-align: center;
-            padding: 40px 20px;
-            font-style: italic;
-            color: #6c757d;
-            background: #f8f9fa;
-            border-radius: 6px;
-            border: 1px dashed #dee2e6;
-        }
-        
-        /* Status badges */
+        /* STATUS BADGES */
         .status-badge {
             display: inline-block;
-            padding: 2px 8px;
-            border-radius: 3px;
+            padding: 1px 4px;
+            border-radius: 2px;
             font-size: 7px;
-            font-weight: 600;
+            font-weight: bold;
             text-transform: uppercase;
         }
         
@@ -351,15 +270,38 @@
             background: #fff3cd;
             color: #856404;
         }
-        
-        .status-reject {
-            background: #f8d7da;
-            color: #721c24;
+
+        .empty-message {
+            text-align: center;
+            padding: 20px;
+            font-style: italic;
+            color: #6c757d;
+            background: #f8f9fa;
+            border: 1px dashed #dee2e6;
         }
     </style>
 </head>
 <body>
     <div class="container">
+        @php
+            $isAllShift = $isAllShift ?? false;
+            $dataPerShift = $dataPerShift ?? [['pemeriksaans' => $pemeriksaans ?? collect()]];
+            $isFirstPage = true;
+        @endphp
+
+        @if(empty($dataPerShift))
+            <div class="empty-message">
+                <p>Tidak ada data pemeriksaan untuk semua shift pada periode yang dipilih.</p>
+            </div>
+        @else
+            @foreach($dataPerShift as $shiftGroupIndex => $shiftGroup)
+                @php
+                    $pemeriksaans   = $shiftGroup['pemeriksaans'];
+                    $qcUser         = $shiftGroup['qcUser'] ?? null;
+                    $produksiUser   = $shiftGroup['produksiUser'] ?? null;
+                    $spvQcUser      = $shiftGroup['spvQcUser'] ?? null;
+                @endphp
+
         @if($pemeriksaans->count() > 0)
             @php
                 $columnsPerPage = 4;
@@ -424,36 +366,42 @@
                 @php
                     $firstColumn = $pageRecords->first();
                     $firstRecord = $firstColumn ? $firstColumn['record'] : null;
-                    $plantName = $firstRecord && $firstRecord->user && $firstRecord->user->plant ? $firstRecord->user->plant->plant : 'MEDAN';
                 @endphp
 
-                <div class="header">
-                    <div class="header-left">
-                        <div class="logo-company">
-                            <div class="header-logo">
-                                <img src="{{ public_path('dist/images/logo/cpi-logo.png') }}" alt="Logo CPI">
-                            </div>
-                            <div class="header-company">
-                                <h2>PT. CHAROEN POKPHAND INDONESIA</h2>
-                                <p>FOOD DIVISION {{ strtoupper($plantName) }}</p>
-                                <p>{{ strtoupper($plantName) }} - INDONESIA</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="header-right">
-                        <div class="header-title">
-                            <h1>PEMERIKSAAN CHEMICAL</h1>
-                        </div>
-                    </div>
-                </div>
+                @if(!$isFirstPage)
+                    <div style="page-break-before: always;"></div>
+                @endif
+                @php $isFirstPage = false; @endphp
 
-                {{-- SUBHEADER (Setiap halaman) --}}
+                {{-- HEADER - DICETAK DI SETIAP HALAMAN --}}
+                <table class="header-table">
+                    <tr>
+                        <td class="header-logo-td">
+                            <img src="{{ public_path('dist/images/logo/cpi-logo.png') }}" alt="Logo CPI">
+                        </td>
+                        <td class="header-company-td">
+                            <h2>PT. CHAROEN POKPHAND INDONESIA</h2>
+                            @php
+                                $plantName = $firstRecord && $firstRecord->user && $firstRecord->user->plant ? $firstRecord->user->plant->plant : 'MEDAN';
+                            @endphp
+                            <p>FOOD DIVISION {{ strtoupper($plantName) }}</p>
+                            <p>{{ strtoupper($plantName) }} - INDONESIA</p>
+                        </td>
+                        <td class="header-title-td">
+                            <div class="header-title-box">
+                                PEMERIKSAAN KEDATANGAN BAHAN KIMIA
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+
+                {{-- SUBHEADER --}}
                 <div class="subheader">
                     <table class="subheader-table">
                         <tr>
                             <td>
                                 <span class="subheader-label">Hari/Tanggal:</span>
-                                <span class="subheader-value">{{ $firstRecord->tanggal ? (is_string($firstRecord->tanggal) ? $firstRecord->tanggal : $firstRecord->tanggal->format('d/m/Y')) : '-' }}</span>
+                                <span class="subheader-value">{{ $firstRecord && $firstRecord->tanggal ? (is_string($firstRecord->tanggal) ? $firstRecord->tanggal : $firstRecord->tanggal->format('d/m/Y')) : '-' }}</span>
                             </td>
                             <td class="subheader-divider"></td>
                             <td>
@@ -474,7 +422,7 @@
                         <tr>
                             <td>
                                 <span class="subheader-label">Segel/Gembok:</span>
-                                <span class="subheader-value">{{ $firstRecord->segel_gembok ? ucfirst($firstRecord->segel_gembok) : '-' }}</span>
+                                <span class="subheader-value">{{ $firstRecord && $firstRecord->segel_gembok ? ucfirst($firstRecord->segel_gembok) : '-' }}</span>
                             </td>
                             <td class="subheader-divider"></td>
                             <td>
@@ -490,174 +438,168 @@
                     </table>
                 </div>
 
-                {{-- DATA TABLE --}}
-                <div class="page-break">
-                    <table class="data-table">
-                        <tr>
-                            @foreach($pageRecords as $index => $column)
+                {{-- DATA UTAMA (4 Kolom Tabel Murni) --}}
+                <table class="grid-table">
+                    <tr>
+                        @foreach($pageRecords as $index => $column)
+                            @php
+                                $pemeriksaan = $column['record'];
+                                $rowIndex = $column['rowIndex'];
+                                $columnNumber = ($pageIndex * $columnsPerPage) + $loop->iteration;
+                            @endphp
+                            <td class="data-column">
+                                <div class="column-header">
+                                    PEMERIKSAAN #{{ $columnNumber }}
+                                </div>
+
+                                {{-- KONDISI MOBIL --}}
                                 @php
-                                    $pemeriksaan = $column['record'];
-                                    $rowIndex = $column['rowIndex'];
-                                    $columnNumber = ($pageIndex * $columnsPerPage) + $loop->iteration;
+                                    $kondisiMobil = $pemeriksaan->kondisi_mobil ?? [];
+                                    $checkedItems = array_filter($kondisiMobil);
                                 @endphp
-                                <td class="data-column" data-numbered="true">
-                                    <div class="column-header">
-                                        PEMERIKSAAN #{{ $columnNumber }}
-                                    </div>
-
-                                    {{-- KONDISI MOBIL --}}
-                                    @php
-                                        $kondisiMobil = $pemeriksaan->kondisi_mobil ?? [];
-                                        $checkedItems = array_filter($kondisiMobil);
-                                    @endphp
-                                    @if(count($checkedItems) > 0)
-                                        <div class="section-title">Kondisi Mobil</div>
-                                        @foreach($checkedItems as $key => $value)
-                                            @if($value)
-                                                <div class="field-row">
-                                                    <span class="check-item">{{ ucfirst(str_replace('_', ' ', $key)) }}</span>
-                                                </div>
-                                            @endif
-                                        @endforeach
-                                    @endif
-
-                                    {{-- DETAIL CHEMICALS (Single Row) --}}
-                                    @php
-                                        $detailChemicals = $pemeriksaan->detail_chemicals ?? [];
-                                        $chemicalDetail = $detailChemicals[$rowIndex] ?? [];
-                                    @endphp
-                                    @if(!empty($chemicalDetail))
-                                        {{-- CHEMICAL INFO --}}
-                                        <div class="section-title">Chemical</div>
-                                        <div style="margin-top: 6px; padding-top: 6px; border-top: 1px solid #ddd; font-size: 8px;">
-                                            @if(!empty($chemicalDetail['id_chemical']))
-                                                <div class="field-row">
-                                                    <span class="field-label">Nama:</span>
-                                                    <span class="field-value">{{ $chemicalMap[$chemicalDetail['id_chemical']] ?? 'N/A' }}</span>
-                                                </div>
-                                            @endif
-                                            @if(isset($chemicalDetail['kondisi_chemical']))
-                                                <div class="field-row">
-                                                    <span class="field-label">Kondisi:</span>
-                                                    <span class="field-value">{{ $chemicalDetail['kondisi_chemical'] ?? '-' }}</span>
-                                                </div>
-                                            @endif
-                                            @if(!empty($chemicalDetail['id_produsen']))
-                                                <div class="field-row">
-                                                    <span class="field-label">Produsen:</span>
-                                                    <span class="field-value">{{ $produsenMap[$chemicalDetail['id_produsen']] ?? 'N/A' }}</span>
-                                                </div>
-                                            @endif
-                                            @if(isset($chemicalDetail['negara_produsen']))
-                                                <div class="field-row">
-                                                    <span class="field-label">Negara:</span>
-                                                    <span class="field-value">{{ $chemicalDetail['negara_produsen'] ?? '-' }}</span>
-                                                </div>
-                                            @endif
-                                            @if(!empty($chemicalDetail['id_distributor']))
-                                                <div class="field-row">
-                                                    <span class="field-label">Dist:</span>
-                                                    <span class="field-value">{{ $distributorMap[$chemicalDetail['id_distributor']] ?? 'N/A' }}</span>
-                                                </div>
-                                            @endif
-                                            @if(isset($chemicalDetail['kode_produksi']))
-                                                <div class="field-row">
-                                                    <span class="field-label">Kode Produksi:</span>
-                                                    <span class="field-value">{{ $chemicalDetail['kode_produksi'] ?? '-' }}</span>
-                                                </div>
-                                            @endif
-                                            @if(!empty($chemicalDetail['expire_date']))
-                                                <div class="field-row">
-                                                    <span class="field-label">Expire:</span>
-                                                    <span class="field-value">{{ \Carbon\Carbon::parse($chemicalDetail['expire_date'])->format('d/m/Y') }}</span>
-                                                </div>
-                                            @endif
-                                            @if(isset($chemicalDetail['jumlah_datang']))
-                                                <div class="field-row">
-                                                    <span class="field-label">Jumlah Datang:</span>
-                                                    <span class="field-value">{{ $chemicalDetail['jumlah_datang'] ?? '-' }}</span>
-                                                </div>
-                                            @endif
-                                            @if(isset($chemicalDetail['jumlah_sampling']))
-                                                <div class="field-row">
-                                                    <span class="field-label">Jumlah Sampling:</span>
-                                                    <span class="field-value">{{ $chemicalDetail['jumlah_sampling'] ?? '-' }}</span>
-                                                </div>
-                                            @endif
-                                        </div>
-
-                                        {{-- KONDISI FISIK (Single Row) --}}
-                                        @php
-                                            $kondisiFisik = $chemicalDetail['kondisi_fisik'] ?? [];
-                                        @endphp
-                                        @if(!empty($kondisiFisik))
-                                            <div class="section-title">Kondisi Fisik</div>
-                                            <div style="margin-top: 6px; padding-top: 6px; border-top: 1px solid #ddd; font-size: 8px;">
-                                                @if(isset($kondisiFisik['kemasan']))
-                                                    <div class="field-row">
-                                                        <span class="field-label">Kemasan:</span>
-                                                        <span class="field-value">{{ ($kondisiFisik['kemasan'] ?? false) ? 'V' : 'X' }}</span>
-                                                    </div>
-                                                @endif
-                                                @if(isset($kondisiFisik['warna']))
-                                                    <div class="field-row">
-                                                        <span class="field-label">Warna:</span>
-                                                        <span class="field-value">{{ ($kondisiFisik['warna'] ?? false) ? 'V' : 'X' }}</span>
-                                                    </div>
-                                                @endif
+                                @if(count($checkedItems) > 0)
+                                    <div class="section-title">1. Kondisi Mobil</div>
+                                    @foreach($checkedItems as $key => $value)
+                                        @if($value)
+                                            <div class="field-row">
+                                                <span class="check-item">V {{ ucfirst(str_replace('_', ' ', $key)) }}</span>
                                             </div>
                                         @endif
+                                    @endforeach
+                                @endif
 
-                                        {{-- DOKUMEN (Single Row) --}}
-                                        <div class="section-title">Dokumen</div>
-                                        <div style="margin-top: 6px; padding-top: 6px; border-top: 1px solid #ddd; font-size: 8px;">
-                                            <div class="field-row">
-                                                <span class="field-label">Halal:</span>
-                                                <span class="field-value">{{ ($chemicalDetail['persyaratan_dokumen_halal'] ?? false) ? 'V' : 'X' }}</span>
-                                            </div>
-                                            <div class="field-row">
-                                                <span class="field-label">COA:</span>
-                                                <span class="field-value">{{ ($chemicalDetail['coa'] ?? false) ? 'V' : 'X' }}</span>
-                                            </div>
+                                {{-- DETAIL CHEMICALS --}}
+                                @php
+                                    $detailChemicals = $pemeriksaan->detail_chemicals ?? [];
+                                    $chemicalDetail = $detailChemicals[$rowIndex] ?? [];
+                                @endphp
+                                @if(!empty($chemicalDetail))
+                                    <div class="section-title">2. Chemical</div>
+                                    @if(!empty($chemicalDetail['id_chemical']))
+                                        <div class="field-row">
+                                            <span class="field-label">Nama:</span>
+                                            <span class="field-value">{{ $chemicalMap[$chemicalDetail['id_chemical']] ?? 'N/A' }}</span>
                                         </div>
-
-                                        {{-- STATUS (Single Row) --}}
-                                        <div class="section-title">Status</div>
-                                        <div style="margin-top: 6px; padding-top: 6px; border-top: 1px solid #ddd; font-size: 8px;">
-                                            <div class="field-row">
-                                                <span class="field-label">Status:</span>
-                                                <span class="field-value">
-                                                    @php
-                                                        $status = $chemicalDetail['status'] ?? null;
-                                                    @endphp
-                                                    @if(strtolower($status ?? '') == 'release')
-                                                        <span class="status-badge status-release">{{ $status ?? '-' }}</span>
-                                                    @elseif(strtolower($status ?? '') == 'hold')
-                                                        <span class="status-badge status-hold">{{ $status ?? '-' }}</span>
-                                                    @else
-                                                        {{ $status ?? '-' }}
-                                                    @endif
-                                                </span>
-                                            </div>
-                                            @if(isset($chemicalDetail['keterangan']))
-                                                <div class="field-row">
-                                                    <span class="field-label">Ket:</span>
-                                                    <span class="field-value">{{ $chemicalDetail['keterangan'] ?? '-' }}</span>
-                                                </div>
-                                            @endif
+                                    @endif
+                                    @if(isset($chemicalDetail['kondisi_chemical']))
+                                        <div class="field-row">
+                                            <span class="field-label">Kondisi:</span>
+                                            <span class="field-value">{{ $chemicalDetail['kondisi_chemical'] ?? '-' }}</span>
+                                        </div>
+                                    @endif
+                                    @if(!empty($chemicalDetail['id_produsen']))
+                                        <div class="field-row">
+                                            <span class="field-label">Produsen:</span>
+                                            <span class="field-value">{{ $produsenMap[$chemicalDetail['id_produsen']] ?? 'N/A' }}</span>
+                                        </div>
+                                    @endif
+                                    @if(isset($chemicalDetail['negara_produsen']))
+                                        <div class="field-row">
+                                            <span class="field-label">Negara:</span>
+                                            <span class="field-value">{{ $chemicalDetail['negara_produsen'] ?? '-' }}</span>
+                                        </div>
+                                    @endif
+                                    @if(!empty($chemicalDetail['id_distributor']))
+                                        <div class="field-row">
+                                            <span class="field-label">Dist:</span>
+                                            <span class="field-value">{{ $distributorMap[$chemicalDetail['id_distributor']] ?? 'N/A' }}</span>
+                                        </div>
+                                    @endif
+                                    @if(isset($chemicalDetail['kode_produksi']))
+                                        <div class="field-row">
+                                            <span class="field-label">Kode Prod:</span>
+                                            <span class="field-value">{{ $chemicalDetail['kode_produksi'] ?? '-' }}</span>
+                                        </div>
+                                    @endif
+                                    @if(!empty($chemicalDetail['expire_date']))
+                                        <div class="field-row">
+                                            <span class="field-label">Expire:</span>
+                                            <span class="field-value">{{ \Carbon\Carbon::parse($chemicalDetail['expire_date'])->format('d/m/Y') }}</span>
+                                        </div>
+                                    @endif
+                                    @if(isset($chemicalDetail['jumlah_datang']))
+                                        <div class="field-row">
+                                            <span class="field-label">Jml Datang:</span>
+                                            <span class="field-value">{{ $chemicalDetail['jumlah_datang'] ?? '-' }} @if(isset($chemicalDetail['unit_datang']) && is_array($chemicalDetail['unit_datang']) && isset($chemicalDetail['unit_datang'][0]))<strong>{{ $chemicalDetail['unit_datang'][0] }}</strong>@endif</span>
+                                        </div>
+                                    @endif
+                                    @if(isset($chemicalDetail['jumlah_sampling']))
+                                        <div class="field-row">
+                                            <span class="field-label">Jml Sampling:</span>
+                                            <span class="field-value">{{ $chemicalDetail['jumlah_sampling'] ?? '-' }} @if(isset($chemicalDetail['unit_sampling']) && is_array($chemicalDetail['unit_sampling']) && isset($chemicalDetail['unit_sampling'][0]))<strong>{{ $chemicalDetail['unit_sampling'][0] }}</strong>@endif</span>
                                         </div>
                                     @endif
 
-                                </td>
-                            @endforeach
-                        </tr>
-                    </table>
-                    <div style="text-align: right; padding-right: 10px; font-style: italic; font-size: 9px; color: #666; margin-top: 5px;">
-                        QW 03/00
-                    </div>
+                                    {{-- KONDISI FISIK --}}
+                                    @php
+                                        $kondisiFisik = $chemicalDetail['kondisi_fisik'] ?? [];
+                                    @endphp
+                                    @if(!empty($kondisiFisik))
+                                        <div class="section-title">3. Kondisi Fisik</div>
+                                        @if(isset($kondisiFisik['kemasan']))
+                                            <div class="field-row">
+                                                <span class="field-label">Kemasan:</span>
+                                                <span class="field-value">{{ ($kondisiFisik['kemasan'] ?? false) ? 'V' : 'X' }}</span>
+                                            </div>
+                                        @endif
+                                        @if(isset($kondisiFisik['warna']))
+                                            <div class="field-row">
+                                                <span class="field-label">Warna:</span>
+                                                <span class="field-value">{{ ($kondisiFisik['warna'] ?? false) ? 'V' : 'X' }}</span>
+                                            </div>
+                                        @endif
+                                    @endif
+
+                                    {{-- DOKUMEN --}}
+                                    <div class="section-title">4. Dokumen</div>
+                                    <div class="field-row">
+                                        <span class="field-label">Halal:</span>
+                                        <span class="field-value">{{ ($chemicalDetail['persyaratan_dokumen_halal'] ?? false) ? 'V' : 'X' }}</span>
+                                    </div>
+                                    <div class="field-row">
+                                        <span class="field-label">COA:</span>
+                                        <span class="field-value">{{ ($chemicalDetail['coa'] ?? false) ? 'V' : 'X' }}</span>
+                                    </div>
+
+                                    {{-- STATUS --}}
+                                    <div class="section-title">5. Status</div>
+                                    <div class="field-row">
+                                        <span class="field-label">Status:</span>
+                                        <span class="field-value">
+                                            @php
+                                                $status = $chemicalDetail['status'] ?? null;
+                                            @endphp
+                                            @if(strtolower($status ?? '') == 'release')
+                                                <span class="status-badge status-release">{{ $status ?? '-' }}</span>
+                                            @elseif(strtolower($status ?? '') == 'hold')
+                                                <span class="status-badge status-hold">{{ $status ?? '-' }}</span>
+                                            @else
+                                                {{ $status ?? '-' }}
+                                            @endif
+                                        </span>
+                                    </div>
+                                    @if(isset($chemicalDetail['keterangan']))
+                                        <div class="field-row">
+                                            <span class="field-label">Ket:</span>
+                                            <span class="field-value">{{ $chemicalDetail['keterangan'] ?? '-' }}</span>
+                                        </div>
+                                    @endif
+                                @endif
+                            </td>
+                        @endforeach
+                        
+                        {{-- Isi kolom kosong jika data kurang dari 4 --}}
+                        @for($i = $pageRecords->count(); $i < $columnsPerPage; $i++)
+                            <td class="data-column" style="background: #f8f9fa;"></td>
+                        @endfor
+                    </tr>
+                </table>
+
+                <div style="text-align: right; font-style: italic; font-size: 8px; color: #666; margin-bottom: 5px;">
+                    QW 03/00
                 </div>
 
-                {{-- SIGNATURE (Setiap halaman) --}}
+                {{-- SIGNATURE SECTION --}}
                 <div class="signature-section">
                     <div class="signature-note">
                         <span class="ok-text">V OK</span> (Kondisi Mobil, Kemasan, Warna, Benda Asing, Aroma: Sesuai Standar, Halal, COA: Tersedia)<br>
@@ -669,13 +611,14 @@
                     @endphp
                     <table class="signature-table">
                         <tr>
+                            <!-- 1. Dibuat Oleh (QC VERIFIER) -->
                             <td class="signature-cell">
                                 <div class="signature-header-item">Dibuat Oleh:</div>
                                 <div class="signature-space">
                                     @if($firstRecord && $firstRecord->qcVerifier)
                                         @php
                                             $qcQrData = "Dokumen #{$firstRecord->id} telah diverifikasi secara sistem oleh {$firstRecord->qcVerifier->name} (Tim QC)";
-                                            $qcQrCodeSvg = \SimpleSoftwareIO\QrCode\Facades\QrCode::size(55)->generate($qcQrData);
+                                            $qcQrCodeSvg = \SimpleSoftwareIO\QrCode\Facades\QrCode::size(45)->generate($qcQrData);
                                             $base64QcSvg = "data:image/svg+xml;base64," . base64_encode($qcQrCodeSvg);
                                         @endphp
                                         <img src="{{ $base64QcSvg }}" class="qr-code-img" alt="QR Code QC">
@@ -685,13 +628,15 @@
                                 </div>
                                 <div class="signature-name">{{ $firstRecord && $firstRecord->qcVerifier ? $firstRecord->qcVerifier->name : '-' }}</div>
                             </td>
+
+                            <!-- 2. Diketahui Oleh (PRODUKSI/WAREHOUSE VERIFIER) -->
                             <td class="signature-cell">
                                 <div class="signature-header-item">Diketahui Oleh:</div>
                                 <div class="signature-space">
                                     @if($firstRecord && $firstRecord->produksiVerifier)
                                         @php
                                             $prodQrData = "Dokumen #{$firstRecord->id} telah diverifikasi secara sistem oleh {$firstRecord->produksiVerifier->name} (Tim Warehouse)";
-                                            $prodQrCodeSvg = \SimpleSoftwareIO\QrCode\Facades\QrCode::size(55)->generate($prodQrData);
+                                            $prodQrCodeSvg = \SimpleSoftwareIO\QrCode\Facades\QrCode::size(45)->generate($prodQrData);
                                             $base64ProdSvg = "data:image/svg+xml;base64," . base64_encode($prodQrCodeSvg);
                                         @endphp
                                         <img src="{{ $base64ProdSvg }}" class="qr-code-img" alt="QR Code Warehouse">
@@ -701,13 +646,15 @@
                                 </div>
                                 <div class="signature-name">{{ $firstRecord && $firstRecord->produksiVerifier ? $firstRecord->produksiVerifier->name : '-' }}</div>
                             </td>
+
+                            <!-- 3. Disetujui Oleh (SPV VERIFIER) -->
                             <td class="signature-cell">
                                 <div class="signature-header-item">Disetujui Oleh:</div>
                                 <div class="signature-space">
                                     @if($firstRecord && $firstRecord->spvVerifier)
                                         @php
                                             $spvQrData = "Dokumen #{$firstRecord->id} telah diverifikasi secara sistem oleh {$firstRecord->spvVerifier->name} (Tim Supervisor QC)";
-                                            $spvQrCodeSvg = \SimpleSoftwareIO\QrCode\Facades\QrCode::size(55)->generate($spvQrData);
+                                            $spvQrCodeSvg = \SimpleSoftwareIO\QrCode\Facades\QrCode::size(45)->generate($spvQrData);
                                             $base64SpvSvg = "data:image/svg+xml;base64," . base64_encode($spvQrCodeSvg);
                                         @endphp
                                         <img src="{{ $base64SpvSvg }}" class="qr-code-img" alt="QR Code SPV">
@@ -721,15 +668,13 @@
                     </table>
                 </div>
 
-                {{-- PAGE BREAK (Hanya jika bukan halaman terakhir) --}}
-                @if(!$loop->last)
-                    <div style="page-break-after: always;"></div>
-                @endif
             @endforeach
         @else
             <div class="empty-message">
                 <p>Tidak ada data pemeriksaan yang sesuai dengan filter yang dipilih.</p>
             </div>
+        @endif
+            @endforeach
         @endif
     </div>
 </body>

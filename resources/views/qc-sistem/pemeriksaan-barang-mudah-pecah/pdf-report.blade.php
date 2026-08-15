@@ -189,6 +189,10 @@
         .signature-section {
             width: 100%;
             margin-top: 18px;
+            padding: 15px;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            background: #f8f9fa;
             page-break-inside: avoid;
         }
 
@@ -199,16 +203,16 @@
 
         .signature-cell {
             width: 33.3333%;
-            border: 1px solid #dee2e6;
-            padding: 10px 10px;
-            vertical-align: top;
             text-align: center;
+            padding: 0 15px;
+            vertical-align: top;
         }
 
         .signature-header-item {
             font-size: 9px;
             font-weight: bold;
             color: #495057;
+            padding-bottom: 25px;
         }
 
         .signature-space {
@@ -223,7 +227,7 @@
             height: 45px;
             width: 100%;
         }
-        
+
         .qr-code-img {
             max-height: 55px;
             max-width: 55px;
@@ -232,8 +236,9 @@
         .signature-name {
             font-size: 9px;
             font-weight: bold;
-            border-top: 1px solid #adb5bd;
-            padding-top: 6px;
+            color: #1a1a1a;
+            padding-top: 8px;
+            text-transform: uppercase;
         }
 
         .page-break {
@@ -243,6 +248,130 @@
 </head>
 <body>
 <div class="container">
+    @php $isAllShift = $isAllShift ?? false; @endphp
+
+    @if($isAllShift)
+    {{-- ======= MODE: SEMUA SHIFT ======= --}}
+    @if(empty($dataPerShift))
+        <div style="text-align:center;padding:40px;color:#6c757d;font-style:italic;">Tidak ada data untuk semua shift.</div>
+    @else
+        @foreach($dataPerShift as $shiftGroupIdx => $shiftGroup)
+            @php $pemeriksaans = $shiftGroup['pemeriksaans']; $currentShift = $shiftGroup['shift']; @endphp
+
+            {{-- CPI Header --}}
+            <div class="header">
+                <div class="header-left"><div class="logo-company"><div class="header-logo"><img src="{{ public_path('dist/images/logo/cpi-logo.png') }}" alt="Logo CPI"></div><div class="header-company"><h2>PT. CHAROEN POKPHAND INDONESIA</h2><p>FOOD DIVISION {{ strtoupper(auth()->user()->plant->plant ?? 'MEDAN') }}</p></div></div></div>
+                <div class="header-right"><div class="header-title"><h1>PEMERIKSAAN BARANG MUDAH PECAH</h1></div></div>
+            </div>
+
+            {{-- Shift Banner --}}
+            <div style="background:#c41e3a;color:#fff;padding:5px 10px;border-radius:3px;margin-bottom:8px;">
+                <strong>{{ strtoupper($currentShift->shift) }}</strong>
+                @if(!empty($tanggal_dari) && !empty($tanggal_sampai))<span style="font-size:9px;margin-left:10px;">{{ $tanggal_dari }} s/d {{ $tanggal_sampai }}</span>@endif
+                <span style="font-size:9px;margin-left:10px;">Total: {{ $pemeriksaans->count() }}</span>
+            </div>
+
+            {{-- Subheader --}}
+            @php
+                $firstAS = $pemeriksaans->first();
+                $plantNameAS = $firstAS && $firstAS->user && $firstAS->user->plant ? $firstAS->user->plant->plant : '-';
+                $dateInfoAS = (!empty($tanggal_dari) || !empty($tanggal_sampai)) ? (($tanggal_dari??'-').' s/d '.($tanggal_sampai??'-')) : ($tanggal ?? '-');
+            @endphp
+            <div class="subheader"><table class="subheader-table">
+                <tr><td class="subheader-label">Plant</td><td class="subheader-value">{{ $plantNameAS }}</td><td class="subheader-label">Shift</td><td class="subheader-value">{{ $currentShift->shift }}</td></tr>
+                <tr><td class="subheader-label">Tanggal</td><td class="subheader-value">{{ $dateInfoAS }}</td></tr>
+            </table></div>
+
+            <table class="table">
+                <thead><tr><th style="width:4%">No</th><th style="width:16%">Area</th><th style="width:12%">Sub Area</th><th style="width:18%">Nama Barang</th><th style="width:6%">Jml</th><th style="width:7%">Awal</th><th style="width:7%">Akhir</th><th style="width:14%">Temuan</th><th style="width:14%">Tindakan</th></tr></thead>
+                <tbody>
+                @php $rowNoAS = 1; @endphp
+                @forelse($pemeriksaans as $pemeriksaan)
+                    @foreach($pemeriksaan->details as $detail)
+                        @php
+                            $subArea = $detail->areaLocation ? $detail->areaLocation->lokasi_area : '-';
+                            $namaBarang = $detail->barang ? $detail->barang->nama_barang : ($detail->nama_barang_manual ?? '-');
+                            $awal = $detail->awal ?? '-'; $akhir = $detail->akhir ?? '-';
+                            $awalBadge = $awal==='baik'?'badge-success':($awal==='tidak-baik'?'badge-danger':'badge-secondary');
+                            $akhirBadge = $akhir==='baik'?'badge-success':($akhir==='tidak-baik'?'badge-danger':'badge-secondary');
+                        @endphp
+                        <tr>
+                            <td class="text-center">{{ $rowNoAS++ }}</td>
+                            <td class="text-left">{{ $pemeriksaan->area ? $pemeriksaan->area->nama_area : '-' }}</td>
+                            <td class="text-left">{{ $subArea }}</td>
+                            <td class="text-left">{{ $namaBarang }}</td>
+                            <td class="text-center">{{ $detail->jumlah_barang ?? '-' }}</td>
+                            <td class="text-center"><span class="badge {{ $awalBadge }}">{{ $awal }}</span></td>
+                            <td class="text-center"><span class="badge {{ $akhirBadge }}">{{ $akhir }}</span></td>
+                            <td class="text-left">{{ $detail->temuan_ketidaksesuaian ?: '-' }}</td>
+                            <td class="text-left">{{ $detail->tindakan_koreksi ?: '-' }}</td>
+                        </tr>
+                    @endforeach
+                @empty
+                    <tr><td colspan="9" class="text-center">Tidak ada data.</td></tr>
+                @endforelse
+                </tbody>
+            </table>
+
+            {{-- Signature --}}
+            @php
+                $qcNameAS = optional(optional($pemeriksaans->first())->qcVerifier)->name;
+                $prodNameAS = optional(optional($pemeriksaans->first())->produksiVerifier)->name;
+                $spvNameAS = optional(optional($pemeriksaans->first())->spvVerifier)->name;
+            @endphp
+            <div class="signature-section">
+                <table class="signature-table">
+                    <tr>
+                        <td class="signature-cell">
+                            <div class="signature-header-item">Dibuat Oleh (QC Inspector)</div>
+                            <div class="signature-space">
+                                @if($qcNameAS)
+                                    @php $q = \SimpleSoftwareIO\QrCode\Facades\QrCode::size(55)->generate("Diverifikasi oleh {$qcNameAS} (Tim QC)"); @endphp
+                                    <img src="data:image/svg+xml;base64,{{ base64_encode($q) }}" class="qr-code-img" alt="QR Code QC">
+                                @else
+                                    <div class="signature-line-empty" style="border-bottom: 2px solid #1a1a1a;"></div>
+                                @endif
+                            </div>
+                            <div class="signature-name">{{ $qcNameAS ?: '-' }}</div>
+                        </td>
+                        <td class="signature-cell">
+                            <div class="signature-header-item">Diketahui Oleh (Produksi)</div>
+                            <div class="signature-space">
+                                @if($prodNameAS)
+                                    @php $q = \SimpleSoftwareIO\QrCode\Facades\QrCode::size(55)->generate("Diverifikasi oleh {$prodNameAS} (Tim Warehouse)"); @endphp
+                                    <img src="data:image/svg+xml;base64,{{ base64_encode($q) }}" class="qr-code-img" alt="QR Code Warehouse">
+                                @else
+                                    <div class="signature-line-empty" style="border-bottom: 2px solid #1a1a1a;"></div>
+                                @endif
+                            </div>
+                            <div class="signature-name">{{ $prodNameAS ?: '-' }}</div>
+                        </td>
+                        <td class="signature-cell">
+                            <div class="signature-header-item">Disetujui Oleh (SPV QC)</div>
+                            <div class="signature-space">
+                                @if($spvNameAS)
+                                    @php $q = \SimpleSoftwareIO\QrCode\Facades\QrCode::size(55)->generate("Diverifikasi oleh {$spvNameAS} (Tim Supervisor QC)"); @endphp
+                                    <img src="data:image/svg+xml;base64,{{ base64_encode($q) }}" class="qr-code-img" alt="QR Code SPV">
+                                @else
+                                    <div class="signature-line-empty" style="border-bottom: 2px solid #1a1a1a;"></div>
+                                @endif
+                            </div>
+                            <div class="signature-name">{{ $spvNameAS ?: '-' }}</div>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+
+            <div style="text-align: right; padding-right: 10px; font-style: italic; font-size: 9px; color: #666; margin-top: 5px;">
+                QW 08/00
+            </div>
+
+            @if(!$loop->last)<div class="page-break"></div>@endif
+        @endforeach
+    @endif
+
+    @else
+    {{-- ======= MODE: SHIFT TUNGGAL ======= --}}
     <div class="header">
         <div class="header-left">
             <div class="logo-company">
@@ -300,12 +429,10 @@
         <thead>
         <tr>
             <th style="width:4%">No</th>
-            <!-- <th style="width:10%">Tanggal</th> -->
-            <!-- <th style="width:8%">Shift</th> -->
             <th style="width:16%">Area</th>
             <th style="width:12%">Sub Area</th>
             <th style="width:18%">Nama Barang</th>
-            <th style="width:6%">Jml</th>
+            <th style="width:6%">Jumlah</th>
             <th style="width:7%">Awal</th>
             <th style="width:7%">Akhir</th>
             <th style="width:14%">Temuan</th>
@@ -375,7 +502,7 @@
                             @endphp
                             <img src="{{ $base64QcSvg }}" class="qr-code-img" alt="QR Code QC">
                         @else
-                            <div class="signature-line-empty"></div>
+                            <div class="signature-line-empty" style="border-bottom: 2px solid #1a1a1a;"></div>
                         @endif
                     </div>
                     <div class="signature-name">{{ $qcName ?: '-' }}</div>
@@ -391,7 +518,7 @@
                             @endphp
                             <img src="{{ $base64ProdSvg }}" class="qr-code-img" alt="QR Code Warehouse">
                         @else
-                            <div class="signature-line-empty"></div>
+                            <div class="signature-line-empty" style="border-bottom: 2px solid #1a1a1a;"></div>
                         @endif
                     </div>
                     <div class="signature-name">{{ $produksiName ?: '-' }}</div>
@@ -407,7 +534,7 @@
                             @endphp
                             <img src="{{ $base64SpvSvg }}" class="qr-code-img" alt="QR Code SPV">
                         @else
-                            <div class="signature-line-empty"></div>
+                            <div class="signature-line-empty" style="border-bottom: 2px solid #1a1a1a;"></div>
                         @endif
                     </div>
                     <div class="signature-name">{{ $spvName ?: '-' }}</div>
@@ -420,5 +547,6 @@
         QW 08/00
     </div>
 </div>
+@endif {{-- end isAllShift --}}
 </body>
 </html>

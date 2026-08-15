@@ -498,6 +498,11 @@ class PemeriksaanLoadingKendaraanController extends Controller
         $tanggalSampai = $request->input('tanggal_sampai');
         $tanggal = $request->input('tanggal');
 
+        // === MODE: ALL SHIFT ===
+        if ($id_shift === 'all') {
+            return $this->exportPDFAllShift($request, $user, $tanggalDari, $tanggalSampai);
+        }
+
         $query = PemeriksaanLoadingKendaraan::with([
             'user.role',
             'user.plant',
@@ -560,11 +565,96 @@ class PemeriksaanLoadingKendaraanController extends Controller
             'tanggal_dari' => $tanggalDari,
             'tanggal_sampai' => $tanggalSampai,
             'shift' => $shift,
+            'isAllShift' => false,
+            'dataPerShift' => [[
+                'pemeriksaans' => $pemeriksaans,
+                'shift' => $shift,
+            ]],
         ]);
 
         $filenameDate = $tanggal ?? $tanggalDari ?? date('Y-m-d');
         $filename = 'laporan-pemeriksaan-loading-kendaraan-' . $filenameDate . '.pdf';
-        $filename = 'laporan-pemeriksaan-loading-kendaraan-' . $filenameDate . '.pdf';
+        return $pdf->download($filename);
+    }
+
+    private function exportPDFAllShift($request, $user, $tanggalDari, $tanggalSampai)
+    {
+        // Ambil semua shift yang accessible
+        if ($user->role && strtolower($user->role->role) === 'superadmin') {
+            $allShifts = Shift::all();
+        } else {
+            $allShifts = Shift::query()
+                ->when($user->id_plant, function ($q) use ($user) {
+                    $q->whereHas('user', function ($qu) use ($user) {
+                        $qu->where('id_plant', $user->id_plant);
+                    });
+                })
+                ->get();
+        }
+
+        // Kumpulkan data per shift
+        $dataPerShift = [];
+
+        foreach ($allShifts as $shift) {
+            $query = PemeriksaanLoadingKendaraan::with([
+                'user.role',
+                'user.plant',
+                'ekspedisi',
+                'kendaraan',
+                'tujuanPengiriman',
+                'stdPrecooling',
+                'shift',
+                'verifiedBy',
+                'qcVerifier',
+                'produksiVerifier',
+                'spvVerifier',
+            ]);
+
+            // Plant filter
+            if ($user->role && strtolower($user->role->role) !== 'superadmin') {
+                $query->whereHas('user', function ($q) use ($user) {
+                    $q->where('id_plant', $user->getEffectivePlantId());
+                });
+            }
+
+            // Filter shift
+            $query->where('id_shift', $shift->id);
+
+            // Filter tanggal (rentang)
+            if ($tanggalDari && $tanggalSampai) {
+                $query->whereBetween('tanggal', [$tanggalDari, $tanggalSampai]);
+            } elseif ($tanggalDari) {
+                $query->whereDate('tanggal', '>=', $tanggalDari);
+            } elseif ($tanggalSampai) {
+                $query->whereDate('tanggal', '<=', $tanggalSampai);
+            }
+
+            $records = $query->latest()->get();
+
+            // Hanya masukkan jika ada data
+            if ($records->isNotEmpty()) {
+                $dataPerShift[] = [
+                    'shift'        => $shift,
+                    'pemeriksaans' => $records,
+                ];
+            }
+        }
+
+        $pdf = PDF::loadView('qc-sistem.pemeriksaan-loading-kendaraan.pdf-report', [
+            'dataPerShift'   => $dataPerShift,
+            'tanggal'        => null,
+            'tanggal_dari'   => $tanggalDari,
+            'tanggal_sampai' => $tanggalSampai,
+            'shift'          => null,
+            'pemeriksaans'   => collect(),
+            'isAllShift'     => true,
+        ]);
+
+        $filename = 'laporan-semua-shift-loading-kendaraan-'
+            . ($tanggalDari ?? date('Y-m-d'))
+            . ($tanggalSampai ? '-to-' . $tanggalSampai : '')
+            . '.pdf';
+
         return $pdf->download($filename);
     }
 

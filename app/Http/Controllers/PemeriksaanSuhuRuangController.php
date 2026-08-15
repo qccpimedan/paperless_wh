@@ -9,6 +9,8 @@ use App\Models\Produk;
 use App\Traits\EditablePer2JamTrait;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\PemeriksaanSuhuRuangExport;
 
 class PemeriksaanSuhuRuangController extends Controller
 {
@@ -613,6 +615,11 @@ class PemeriksaanSuhuRuangController extends Controller
         $tanggalSampai = $request->input('tanggal_sampai');
         $tanggal = $request->input('tanggal');
 
+        // === MODE: ALL SHIFT ===
+        if ($id_shift === 'all') {
+            return $this->exportPDFAllShift($request, $user, $tanggalDari, $tanggalSampai);
+        }
+
         $query = PemeriksaanSuhuRuang::with([
             'user.role',
             'user.plant',
@@ -663,17 +670,158 @@ class PemeriksaanSuhuRuangController extends Controller
         $shift = $id_shift ? Shift::find($id_shift) : null;
 
         $pdf = \PDF::loadView('qc-sistem.pemeriksaan-suhu-ruang.pdf-report', [
-            'pemeriksaans' => $pemeriksaans,
-            'tanggal' => $tanggal,
-            'tanggal_dari' => $tanggalDari,
+            'pemeriksaans'   => $pemeriksaans,
+            'tanggal'        => $tanggal,
+            'tanggal_dari'   => $tanggalDari,
             'tanggal_sampai' => $tanggalSampai,
-            'shift' => $shift,
+            'shift'          => $shift,
+            'isAllShift'     => false,
+            'dataPerShift'   => [],
         ]);
 
         $filenameDate = $tanggal ?? $tanggalDari ?? date('Y-m-d');
         $filename = 'laporan-pemeriksaan-suhu-ruang-' . $filenameDate . '.pdf';
         $filename = 'laporan-pemeriksaan-suhu-ruang-' . $filenameDate . '.pdf';
         return $pdf->download($filename);
+    }
+
+    /**
+     * Export PDF semua shift dikelompokkan per shift
+     */
+    private function exportPDFAllShift($request, $user, $tanggalDari, $tanggalSampai)
+    {
+        if ($user->role && strtolower($user->role->role) === 'superadmin') {
+            $allShifts = Shift::all();
+        } else {
+            $allShifts = Shift::query()
+                ->when($user->id_plant, fn($q) => $q->whereHas('user', fn($qu) => $qu->where('id_plant', $user->id_plant)))
+                ->get();
+        }
+
+        $dataPerShift = [];
+
+        foreach ($allShifts as $shift) {
+            $query = PemeriksaanSuhuRuang::with([
+                'user.role', 'user.plant', 'produk', 'shift', 'histories',
+                'verifiedByQc.role', 'verifiedByProduksi.role', 'verifiedBySpv.role',
+            ]);
+
+            if ($user->role && strtolower($user->role->role) !== 'superadmin') {
+                $query->whereHas('user', fn($q) => $q->where('id_plant', $user->getEffectivePlantId()));
+            }
+
+            $query->where('id_shift', $shift->id);
+
+            if ($tanggalDari && $tanggalSampai) {
+                $query->whereBetween('tanggal', [$tanggalDari, $tanggalSampai]);
+            } elseif ($tanggalDari) {
+                $query->whereDate('tanggal', '>=', $tanggalDari);
+            } elseif ($tanggalSampai) {
+                $query->whereDate('tanggal', '<=', $tanggalSampai);
+            }
+
+            $records = $query->latest()->get();
+            if ($records->isEmpty()) continue;
+
+            $dataPerShift[] = [
+                'shift'       => $shift,
+                'pemeriksaans' => $records,
+            ];
+        }
+
+        $pdf = \PDF::loadView('qc-sistem.pemeriksaan-suhu-ruang.pdf-report', [
+            'pemeriksaans'   => collect(),
+            'tanggal'        => null,
+            'tanggal_dari'   => $tanggalDari,
+            'tanggal_sampai' => $tanggalSampai,
+            'shift'          => null,
+            'isAllShift'     => true,
+            'dataPerShift'   => $dataPerShift,
+        ]);
+
+        $filename = 'laporan-semua-shift-suhu-ruang-'
+            . ($tanggalDari ?? date('Y-m-d'))
+            . ($tanggalSampai ? '-to-' . $tanggalSampai : '')
+            . '.pdf';
+
+        return $pdf->download($filename);
+    }
+
+    /**
+     * Export Excel dengan filter
+     */
+    public function exportExcel(Request $request)
+    {
+        $user = Auth::user();
+        $id_shift = $request->input('id_shift');
+        $tanggalDari = $request->input('tanggal_dari');
+        $tanggalSampai = $request->input('tanggal_sampai');
+        $tanggal = $request->input('tanggal');
+
+        $query = PemeriksaanSuhuRuang::with([
+            'user.role',
+            'user.plant',
+            'produk',
+            'shift',
+            'histories',
+            'verifiedByQc.role',
+            'verifiedByProduksi.role',
+            'verifiedBySpv.role',
+        ]);
+
+        if ($user->role && strtolower($user->role->role) !== 'superadmin') {
+            $query->whereHas('user', function ($q) use ($user) {
+                $q->where('id_plant', $user->getEffectivePlantId());
+            });
+        }
+
+        if ($id_shift && $id_shift !== 'all') {
+            $query->where('id_shift', $id_shift);
+            $shift = Shift::find($id_shift);
+            $shiftName = $shift ? trim(strtolower((string) $shift->shift)) : null;
+            $isShift1 = $shift && $shift->is_date_range;
+
+            if ($isShift1) {
+                if ($tanggalDari && $tanggalSampai) {
+                    $query->whereBetween('tanggal', [$tanggalDari, $tanggalSampai]);
+                } elseif ($tanggalDari) {
+                    $query->whereDate('tanggal', '>=', $tanggalDari);
+                } elseif ($tanggalSampai) {
+                    $query->whereDate('tanggal', '<=', $tanggalSampai);
+                }
+            } else {
+                if ($tanggal) {
+                    $query->whereDate('tanggal', $tanggal);
+                }
+            }
+        } else {
+            // All shifts
+            if ($tanggalDari && $tanggalSampai) {
+                $query->whereBetween('tanggal', [$tanggalDari, $tanggalSampai]);
+            } elseif ($tanggalDari) {
+                $query->whereDate('tanggal', '>=', $tanggalDari);
+            } elseif ($tanggalSampai) {
+                $query->whereDate('tanggal', '<=', $tanggalSampai);
+            } elseif ($tanggal) {
+                $query->whereDate('tanggal', $tanggal);
+            }
+        }
+
+        $pemeriksaans = $query->latest()->get();
+        $shift = ($id_shift && $id_shift !== 'all') ? Shift::find($id_shift) : null;
+
+        $filenameDate = $tanggal ?? $tanggalDari ?? date('Y-m-d');
+        $filename = 'pemeriksaan-suhu-ruang-' . $filenameDate . '.xlsx';
+
+        return Excel::download(
+            new PemeriksaanSuhuRuangExport($pemeriksaans, [
+                'tanggal' => $tanggal,
+                'tanggal_dari' => $tanggalDari,
+                'tanggal_sampai' => $tanggalSampai,
+                'shift' => $shift,
+            ]),
+            $filename
+        );
     }
 
     public function batchVerify(Request $request)

@@ -134,6 +134,8 @@
                         $expireDateArray = json_decode($pemeriksaanBahanBaku->expire_date_array, true) ?? [];
                         $jumlahDatangArray = json_decode($pemeriksaanBahanBaku->jumlah_datang_array, true) ?? [];
                         $jumlahSamplingArray = json_decode($pemeriksaanBahanBaku->jumlah_sampling_array, true) ?? [];
+                        $unitDatangArray = json_decode($pemeriksaanBahanBaku->unit_datang_array, true) ?? [];
+                        $unitSamplingArray = json_decode($pemeriksaanBahanBaku->unit_sampling_array, true) ?? [];
                         $spesifikasiArray = json_decode($pemeriksaanBahanBaku->spesifikasi_array, true) ?? [];
                         $kondisiProdukArray = json_decode($pemeriksaanBahanBaku->kondisi_produk, true) ?? [];
                         $suhuProdukArray = json_decode($pemeriksaanBahanBaku->suhu_produk, true) ?? [];
@@ -405,8 +407,8 @@
                                                             -
                                                         @endif
                                                     </td></tr>
-                                                    <tr><td><strong>Jumlah Datang:</strong></td><td>{{ $jumlahDatangArray[$index] ?? '-' }}</td></tr>
-                                                    <tr><td><strong>Jumlah Sampling:</strong></td><td>{{ $jumlahSamplingArray[$index] ?? '-' }}</td></tr>
+                                                    <tr><td><strong>Jumlah Datang:</strong></td><td>{{ $jumlahDatangArray[$index] ?? '-' }} @if($unitDatangArray[$index] ?? null)<strong>{{ $unitDatangArray[$index] }}</strong>@endif</td></tr>
+                                                    <tr><td><strong>Jumlah Sampling:</strong></td><td>{{ $jumlahSamplingArray[$index] ?? '-' }} @if($unitSamplingArray[$index] ?? null)<strong>{{ $unitSamplingArray[$index] }}</strong>@endif</td></tr>
                                                 </table>
                                             </div>
                                             <div class="col-md-6">

@@ -25,6 +25,8 @@
     $coaArr = is_array($pemeriksaanProdukFinishGood->coa_array) ? $pemeriksaanProdukFinishGood->coa_array : [];
     $statusArr = is_array($pemeriksaanProdukFinishGood->status_array) ? $pemeriksaanProdukFinishGood->status_array : [];
     $ketArr = is_array($pemeriksaanProdukFinishGood->keterangan_array) ? $pemeriksaanProdukFinishGood->keterangan_array : [];
+    $unitDatangArr = is_array($pemeriksaanProdukFinishGood->unit_datang_array) ? $pemeriksaanProdukFinishGood->unit_datang_array : [];
+    $unitSamplingArr = is_array($pemeriksaanProdukFinishGood->unit_sampling_array) ? $pemeriksaanProdukFinishGood->unit_sampling_array : [];
 
     $rowCount = max(count($idProdukArr), count($kategoriArr), count($kodeArr), 1);
 
@@ -51,7 +53,9 @@
             'kode' => $kodeArr[$i] ?? null,
             'expire' => $expireArr[$i] ?? null,
             'jumlah_datang' => $jmlDatangArr[$i] ?? null,
+            'unit_datang' => $unitDatangArr[$i] ?? null,
             'jumlah_sampling' => $jmlSamplingArr[$i] ?? null,
+            'unit_sampling' => $unitSamplingArr[$i] ?? null,
             'kemasan' => $kemasanArr[$i] ?? null,
             'warna' => $warnaArr[$i] ?? null,
             'aroma' => $aromaArr[$i] ?? null,
@@ -576,13 +580,29 @@
                                                                 <div class="col-md-3">
                                                                     <div class="form-group">
                                                                         <label class="form-label">Jumlah Datang</label>
-                                                                        <input type="text" class="form-control" name="jumlah_datang[]" value="{{ old('jumlah_datang.'.$idx, $it['jumlah_datang'] ?? '') }}" placeholder="Jumlah Datang">
+                                                                        <div class="input-group">
+                                                                            <input type="text" class="form-control" name="jumlah_datang[]" value="{{ old('jumlah_datang.'.$idx, $it['jumlah_datang'] ?? '') }}" placeholder="Jumlah">
+                                                                            <select class="form-select" name="unit_datang[]" style="max-width: 120px;">
+                                                                                <option value="">Pilih Parameter</option>
+                                                                                @foreach(\App\Models\PemeriksaanProdukFinishGood::unitParameters() as $unitKey => $unitLabel)
+                                                                                    <option value="{{ $unitKey }}" {{ old('unit_datang.'.$idx, $it['unit_datang'] ?? '') == $unitKey ? 'selected' : '' }}>{{ $unitLabel }}</option>
+                                                                                @endforeach
+                                                                            </select>
+                                                                        </div>
                                                                     </div>
                                                                 </div>
                                                                 <div class="col-md-3">
                                                                     <div class="form-group">
                                                                         <label class="form-label">Jumlah Sampling</label>
-                                                                        <input type="text" class="form-control" name="jumlah_sampling[]" value="{{ old('jumlah_sampling.'.$idx, $it['jumlah_sampling'] ?? '') }}" placeholder="Jumlah Sampling">
+                                                                        <div class="input-group">
+                                                                            <input type="text" class="form-control" name="jumlah_sampling[]" value="{{ old('jumlah_sampling.'.$idx, $it['jumlah_sampling'] ?? '') }}" placeholder="Jumlah">
+                                                                            <select class="form-select" name="unit_sampling[]" style="max-width: 120px;">
+                                                                                <option value="">Pilih Parameter</option>
+                                                                                @foreach(\App\Models\PemeriksaanProdukFinishGood::unitParameters() as $unitKey => $unitLabel)
+                                                                                    <option value="{{ $unitKey }}" {{ old('unit_sampling.'.$idx, $it['unit_sampling'] ?? '') == $unitKey ? 'selected' : '' }}>{{ $unitLabel }}</option>
+                                                                                @endforeach
+                                                                            </select>
+                                                                        </div>
                                                                     </div>
                                                                 </div>
                                                             </div>

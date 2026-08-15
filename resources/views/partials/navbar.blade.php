@@ -237,11 +237,11 @@
                 <li class="sidebar-item has-sub {{ request()->routeIs('detail-komplain.*') ? 'active' : '' }}">
                     <a href="#" class='sidebar-link'>
                         <i class="bi bi-exclamation-circle-fill"></i>
-                        <span>Detail Komplain</span>
+                        <span>Komplain Suplier</span>
                     </a>
                     <ul class="submenu {{ request()->routeIs('detail-komplain.*') ? 'active' : '' }}">
                         <li class="submenu-item {{ request()->routeIs('detail-komplain.*') ? 'active' : '' }}">
-                            <a href="{{ route('detail-komplain.index') }}">Komplain Produk</a>
+                            <a href="{{ route('detail-komplain.index') }}">Sample Produk</a>
                         </li>
                     </ul>
                 </li>

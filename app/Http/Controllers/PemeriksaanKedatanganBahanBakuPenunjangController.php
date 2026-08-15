@@ -461,8 +461,12 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
             'expire_date.*' => 'nullable|date',
             'jumlah_datang' => 'nullable|array',
             'jumlah_datang.*' => 'nullable|string|max:255',
+            'unit_datang' => 'nullable|array',
+            'unit_datang.*' => 'nullable|string|in:kg,gram,pcs,roll,karung,box,lembar',
             'jumlah_sampling' => 'nullable|array',
             'jumlah_sampling.*' => 'nullable|string|max:255',
+            'unit_sampling' => 'nullable|array',
+            'unit_sampling.*' => 'nullable|string|in:kg,gram,pcs,roll,karung,box,lembar',
             'spesifikasi' => 'nullable|array',
             'spesifikasi.*' => 'nullable|string',
             'kondisi_produk' => 'nullable|array',
@@ -543,7 +547,9 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
             'kode_produksi' => 'kode_produksi_array',
             'expire_date' => 'expire_date_array',
             'jumlah_datang' => 'jumlah_datang_array',
+            'unit_datang' => 'unit_datang_array',
             'jumlah_sampling' => 'jumlah_sampling_array',
+            'unit_sampling' => 'unit_sampling_array',
             'spesifikasi' => 'spesifikasi_array',
             'suhu_mobil' => 'suhu_mobil_array',
             'suhu_mobil_type' => 'suhu_mobil_type_array',
@@ -853,8 +859,12 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
             'expire_date.*' => 'nullable|date',
             'jumlah_datang' => 'nullable|array',
             'jumlah_datang.*' => 'nullable|string|max:255',
+            'unit_datang' => 'nullable|array',
+            'unit_datang.*' => 'nullable|string|in:kg,gram,pcs,roll,karung,box,lembar',
             'jumlah_sampling' => 'nullable|array',
             'jumlah_sampling.*' => 'nullable|string|max:255',
+            'unit_sampling' => 'nullable|array',
+            'unit_sampling.*' => 'nullable|string|in:kg,gram,pcs,roll,karung,box,lembar',
             'spesifikasi' => 'nullable|array',
             'spesifikasi.*' => 'nullable|string',
             'kondisi_produk' => 'nullable|array',
@@ -935,7 +945,9 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
             'kode_produksi' => 'kode_produksi_array',
             'expire_date' => 'expire_date_array',
             'jumlah_datang' => 'jumlah_datang_array',
+            'unit_datang' => 'unit_datang_array',
             'jumlah_sampling' => 'jumlah_sampling_array',
+            'unit_sampling' => 'unit_sampling_array',
             'spesifikasi' => 'spesifikasi_array',
             'suhu_mobil' => 'suhu_mobil_array',
             'suhu_mobil_type' => 'suhu_mobil_type_array',
@@ -1453,6 +1465,11 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
         $id_produk = $request->input('id_produk');
         $kategori_code = $request->input('kategori_code');
 
+        // === MODE: ALL SHIFT ===
+        if ($id_shift === 'all') {
+            return $this->exportPDFAllShift($request, $user, $tanggal_dari, $tanggal_sampai, $id_produk, $kategori_code);
+        }
+
         // Build query
         $query = PemeriksaanKedatanganBahanBakuPenunjang::with([
             'user.role', 
@@ -1614,7 +1631,9 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
             'qcUser' => $qcUser,
             'produksiUser' => $produksiUser,
             'spvQcUser' => $spvQcUser,
-            'filterBahanIds' => ($id_produk || $kategori_code) ? $matchedBahanIds : null
+            'filterBahanIds' => ($id_produk || $kategori_code) ? $matchedBahanIds : null,
+            'isAllShift' => false,
+            'dataPerShift' => [],
         ]);
 
         // Generate filename berdasarkan filter
@@ -1624,6 +1643,150 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
             $filename = 'laporan-pemeriksaan-bahan-baku-' . ($tanggal ?? date('Y-m-d')) . '.pdf';
         }
         
+        return $pdf->download($filename);
+    }
+
+    /**
+     * Export PDF untuk semua shift, dikelompokkan per shift
+     */
+    private function exportPDFAllShift($request, $user, $tanggal_dari, $tanggal_sampai, $id_produk, $kategori_code)
+    {
+        // Ambil semua shift yang accessible
+        if ($user->role && strtolower($user->role->role) === 'superadmin') {
+            $allShifts = Shift::all();
+        } else {
+            $allShifts = Shift::query()
+                ->when($user->id_plant, function ($q) use ($user) {
+                    $q->whereHas('user', function ($qu) use ($user) {
+                        $qu->where('id_plant', $user->id_plant);
+                    });
+                })
+                ->get();
+        }
+
+        // Prepare bahan filter (sama seperti exportPDF)
+        $matchedBahanIds = [];
+        $safeFuzzyMatch = function ($normName, $bNorm) {
+            if (!$normName || !$bNorm) return false;
+            $shorter = min(strlen($bNorm), strlen($normName));
+            $longer  = max(strlen($bNorm), strlen($normName));
+            return $shorter >= 4 && $longer > 0 && ($shorter / $longer) >= 0.5
+                && (str_contains($bNorm, $normName) || str_contains($normName, $bNorm));
+        };
+
+        if ($id_produk) {
+            $produk = \App\Models\Produk::find($id_produk);
+            if ($produk) {
+                $normName = preg_replace('/[^a-z0-9]+/i', '', strtolower(trim((string) $produk->nama_produk)));
+                $bahans = \App\Models\Bahan::select('id', 'nama_bahan')->get();
+                foreach ($bahans as $b) {
+                    $bNorm = preg_replace('/[^a-z0-9]+/i', '', strtolower(trim((string) $b->nama_bahan)));
+                    if ($safeFuzzyMatch($normName, $bNorm)) $matchedBahanIds[] = $b->id;
+                }
+            }
+        } elseif ($kategori_code) {
+            $produks = \App\Models\Produk::where('kategori_code', $kategori_code)->get();
+            $bahans = \App\Models\Bahan::select('id', 'nama_bahan')->get();
+            foreach ($produks as $produk) {
+                $normName = preg_replace('/[^a-z0-9]+/i', '', strtolower(trim((string) $produk->nama_produk)));
+                foreach ($bahans as $b) {
+                    $bNorm = preg_replace('/[^a-z0-9]+/i', '', strtolower(trim((string) $b->nama_bahan)));
+                    if ($safeFuzzyMatch($normName, $bNorm)) $matchedBahanIds[] = $b->id;
+                }
+            }
+            $matchedBahanIds = array_unique($matchedBahanIds);
+        }
+
+        // Kumpulkan data per shift
+        $dataPerShift = [];
+
+        foreach ($allShifts as $shift) {
+            $query = PemeriksaanKedatanganBahanBakuPenunjang::with([
+                'user.role', 'user.plant', 'bahan', 'shift',
+                'qcVerifier'    => fn($q) => $q->select('id', 'name'),
+                'produksiVerifier' => fn($q) => $q->select('id', 'name'),
+                'spvVerifier'   => fn($q) => $q->select('id', 'name'),
+            ]);
+
+            // Plant filter
+            if ($user->role && strtolower($user->role->role) !== 'superadmin') {
+                $query->whereHas('user', function ($q) use ($user) {
+                    $q->where('id_plant', $user->getEffectivePlantId());
+                });
+            }
+
+            // Filter shift
+            $query->where('id_shift', $shift->id);
+
+            // Filter tanggal
+            if ($tanggal_dari && $tanggal_sampai) {
+                $query->whereBetween('tanggal', [$tanggal_dari, $tanggal_sampai]);
+            } elseif ($tanggal_dari) {
+                $query->whereDate('tanggal', '>=', $tanggal_dari);
+            } elseif ($tanggal_sampai) {
+                $query->whereDate('tanggal', '<=', $tanggal_sampai);
+            }
+
+            // Filter bahan/kategori
+            if ($id_produk || $kategori_code) {
+                if (!empty($matchedBahanIds)) {
+                    $query->where(function ($q) use ($matchedBahanIds) {
+                        foreach ($matchedBahanIds as $bid) {
+                            $q->orWhereRaw("JSON_CONTAINS(id_bahan_array, ?, '$')", [json_encode((int)$bid)])
+                              ->orWhereRaw("JSON_CONTAINS(id_bahan_array, ?, '$')", [json_encode((string)$bid)])
+                              ->orWhere('id_bahan_array', 'like', '%"' . $bid . '"%');
+                        }
+                    });
+                } else {
+                    $query->whereRaw('1 = 0');
+                }
+            }
+
+            $records = $query->latest()->get();
+
+            // Hanya masukkan jika ada data
+            if ($records->isNotEmpty()) {
+                // Kumpulkan verifier names
+                $qcUser = null; $produksiUser = null; $spvQcUser = null;
+                $qcId = $records->pluck('verified_by_qc')->filter()->unique()->first();
+                $prodId = $records->pluck('verified_by_produksi')->filter()->unique()->first();
+                $spvId = $records->pluck('verified_by_spv')->filter()->unique()->first();
+                if ($qcId) $qcUser = optional(User::find($qcId))->name;
+                if ($prodId) $produksiUser = optional(User::find($prodId))->name;
+                if ($spvId) $spvQcUser = optional(User::find($spvId))->name;
+
+                $dataPerShift[] = [
+                    'shift'         => $shift,
+                    'pemeriksaans'  => $records,
+                    'qcUser'        => $qcUser,
+                    'produksiUser'  => $produksiUser,
+                    'spvQcUser'     => $spvQcUser,
+                    'filterBahanIds' => ($id_produk || $kategori_code) ? $matchedBahanIds : null,
+                ];
+            }
+        }
+
+        $pdf = \PDF::loadView('qc-sistem.pemeriksaan-kedatangan-bahan-baku-penunjang.pdf-report', [
+            'dataPerShift'   => $dataPerShift,
+            'tanggal_dari'   => $tanggal_dari,
+            'tanggal_sampai' => $tanggal_sampai,
+            'allShifts'      => $allShifts,
+            // variabel dummy agar tidak error di view yang expect variabel ini
+            'pemeriksaans'   => collect(),
+            'tanggal'        => null,
+            'shift'          => null,
+            'qcUser'         => null,
+            'produksiUser'   => null,
+            'spvQcUser'      => null,
+            'filterBahanIds' => ($id_produk || $kategori_code) ? $matchedBahanIds : null,
+            'isAllShift'     => true,
+        ]);
+
+        $filename = 'laporan-semua-shift-bahan-baku-'
+            . ($tanggal_dari ?? date('Y-m-d'))
+            . ($tanggal_sampai ? '-to-' . $tanggal_sampai : '')
+            . '.pdf';
+
         return $pdf->download($filename);
     }
 

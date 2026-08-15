@@ -423,7 +423,9 @@
                                         $distributors_arr = json_decode($pemeriksaanKedatanganKemasan->distributor_array ?? '[]', true) ?? [];
                                         $kode_produksis = json_decode($pemeriksaanKedatanganKemasan->kode_produksi_array ?? '[]', true) ?? [];
                                         $jumlah_datangs = json_decode($pemeriksaanKedatanganKemasan->jumlah_datang_array ?? '[]', true) ?? [];
+                                        $unit_datangs = json_decode($pemeriksaanKedatanganKemasan->unit_datang_array ?? '[]', true) ?? [];
                                         $jumlah_samplings = json_decode($pemeriksaanKedatanganKemasan->jumlah_sampling_array ?? '[]', true) ?? [];
+                                        $unit_samplings = json_decode($pemeriksaanKedatanganKemasan->unit_sampling_array ?? '[]', true) ?? [];
                                         $spesifikasis = json_decode($pemeriksaanKedatanganKemasan->spesifikasi_array ?? '[]', true) ?? [];
                                         $penampakans = json_decode($pemeriksaanKedatanganKemasan->penampakan_array ?? '[]', true) ?? [];
                                         $sealings = json_decode($pemeriksaanKedatanganKemasan->sealing_array ?? '[]', true) ?? [];
@@ -584,13 +586,29 @@
                                                                 <div class="col-md-4">
                                                                     <div class="form-group">
                                                                         <label class="form-label">Jumlah Datang</label>
-                                                                        <input type="text" class="form-control" name="jumlah_datang[]" value="{{ $jumlah_datangs[$srcIndex] ?? '' }}" placeholder="Jumlah Datang">
+                                                                        <div class="input-group" style="max-width: 100%;">
+                                                                            <input type="text" class="form-control" name="jumlah_datang[]" value="{{ $jumlah_datangs[$srcIndex] ?? '' }}" placeholder="Jumlah" min="0" step="any">
+                                                                            <select class="form-select" name="unit_datang[]" style="max-width: 120px;">
+                                                                                <option value="">Pilih Parameter</option>
+                                                                                @foreach(\App\Models\PemeriksaanKedatanganKemasan::unitParameters() as $key => $label)
+                                                                                    <option value="{{ $key }}" {{ ($unit_datangs[$srcIndex] ?? '') == $key ? 'selected' : '' }}>{{ $label }}</option>
+                                                                                @endforeach
+                                                                            </select>
+                                                                        </div>
                                                                     </div>
                                                                 </div>
                                                                 <div class="col-md-4">
                                                                     <div class="form-group">
                                                                         <label class="form-label">Jumlah Sampling</label>
-                                                                        <input type="text" class="form-control" name="jumlah_sampling[]" value="{{ $jumlah_samplings[$srcIndex] ?? '' }}" placeholder="Jumlah Sampling">
+                                                                        <div class="input-group" style="max-width: 100%;">
+                                                                            <input type="text" class="form-control" name="jumlah_sampling[]" value="{{ $jumlah_samplings[$srcIndex] ?? '' }}" placeholder="Jumlah" min="0" step="any">
+                                                                            <select class="form-select" name="unit_sampling[]" style="max-width: 120px;">
+                                                                                <option value="">Pilih Parameter</option>
+                                                                                @foreach(\App\Models\PemeriksaanKedatanganKemasan::unitParameters() as $key => $label)
+                                                                                    <option value="{{ $key }}" {{ ($unit_samplings[$srcIndex] ?? '') == $key ? 'selected' : '' }}>{{ $label }}</option>
+                                                                                @endforeach
+                                                                            </select>
+                                                                        </div>
                                                                     </div>
                                                                 </div>
                                                             </div>
@@ -831,13 +849,29 @@
                                                     <div class="col-md-4">
                                                         <div class="form-group">
                                                             <label class="form-label">Jumlah Datang</label>
-                                                            <input type="text" class="form-control" name="jumlah_datang[]" placeholder="Jumlah Datang">
+                                                            <div class="input-group" style="max-width: 100%;">
+                                                                <input type="text" class="form-control" name="jumlah_datang[]" placeholder="Jumlah" min="0" step="any">
+                                                                <select class="form-select" name="unit_datang[]" style="max-width: 120px;">
+                                                                    <option value="">Pilih Parameter</option>
+                                                                    @foreach(\App\Models\PemeriksaanKedatanganKemasan::unitParameters() as $key => $label)
+                                                                        <option value="{{ $key }}">{{ $label }}</option>
+                                                                    @endforeach
+                                                                </select>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                     <div class="col-md-4">
                                                         <div class="form-group">
                                                             <label class="form-label">Jumlah Sampling</label>
-                                                            <input type="text" class="form-control" name="jumlah_sampling[]" placeholder="Jumlah Sampling">
+                                                            <div class="input-group" style="max-width: 100%;">
+                                                                <input type="text" class="form-control" name="jumlah_sampling[]" placeholder="Jumlah" min="0" step="any">
+                                                                <select class="form-select" name="unit_sampling[]" style="max-width: 120px;">
+                                                                    <option value="">Pilih Parameter</option>
+                                                                    @foreach(\App\Models\PemeriksaanKedatanganKemasan::unitParameters() as $key => $label)
+                                                                        <option value="{{ $key }}">{{ $label }}</option>
+                                                                    @endforeach
+                                                                </select>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                     <div class="col-md-4">
@@ -1095,7 +1129,9 @@
 
                                                     setArrayName(detailEl.querySelector('input[name^="kode_produksi"], input[name="kode_produksi[]"]'), 'kode_produksi');
                                                     setArrayName(detailEl.querySelector('input[name^="jumlah_datang"], input[name="jumlah_datang[]"]'), 'jumlah_datang');
+                                                    setArrayName(detailEl.querySelector('select[name^="unit_datang"], select[name="unit_datang[]"]'), 'unit_datang');
                                                     setArrayName(detailEl.querySelector('input[name^="jumlah_sampling"], input[name="jumlah_sampling[]"]'), 'jumlah_sampling');
+                                                    setArrayName(detailEl.querySelector('select[name^="unit_sampling"], select[name="unit_sampling[]"]'), 'unit_sampling');
                                                     setArrayName(detailEl.querySelector('textarea[name^="spesifikasi"], textarea[name="spesifikasi[]"]'), 'spesifikasi');
                                                     setArrayName(detailEl.querySelector('input[name^="ketebalan_micron"], input[name="ketebalan_micron[]"]'), 'ketebalan_micron');
                                                     setArrayName(detailEl.querySelector('input[name^="dimensi"], input[name="dimensi[]"]'), 'dimensi');

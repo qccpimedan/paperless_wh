@@ -91,4 +91,20 @@ class PemeriksaanSuhuRuang extends Model
     {
         return $this->belongsTo(User::class, 'verified_by_spv');
     }
+
+    // Accessor methods untuk konsistensi dengan V2 naming
+    public function qcVerifier()
+    {
+        return $this->verifiedByQc();
+    }
+
+    public function produksiVerifier()
+    {
+        return $this->verifiedByProduksi();
+    }
+
+    public function spvVerifier()
+    {
+        return $this->verifiedBySpv();
+    }
 }

@@ -49,7 +49,176 @@
 </head>
 <body>
     <div class="container">
+        @php $isAllShift = $isAllShift ?? false; @endphp
 
+        @if($isAllShift)
+        {{-- ======= MODE: SEMUA SHIFT ======= --}}
+        @if(empty($dataPerShift))
+            <div style="text-align:center;padding:40px;color:#6c757d;font-style:italic;">
+                Tidak ada data untuk semua shift pada periode yang dipilih.
+            </div>
+        @else
+            @foreach($dataPerShift as $shiftGroupIdx => $shiftGroup)
+                @php
+                    $pemeriksaans = $shiftGroup['pemeriksaans'];
+                    $currentShift = $shiftGroup['shift'];
+                @endphp
+
+                @foreach($pemeriksaans as $idx => $p)
+                    @php
+                        $plantName = $p->user && $p->user->plant ? ($p->user->plant->plant ?? '-') : '-';
+                        $shiftName = $p->shift ? ($p->shift->shift ?? '-') : '-';
+                        $produkName = $p->produk ? ($p->produk->nama_produk ?? '-') : '-';
+                        $kategori = $p->produk ? ($p->produk->kategori_code ?? null) : null;
+                        $suhu = is_array($p->suhu_data) ? $p->suhu_data : (json_decode($p->suhu_data ?? '[]', true) ?: []);
+                        $jamPukul = null;
+                        if (!empty($p->pukul)) {
+                            try { $jamPukul = \Carbon\Carbon::parse($p->pukul)->format('H:i'); } catch (\Throwable $e) { $jamPukul = (string) $p->pukul; }
+                        }
+                        $histories = $p->relationLoaded('histories') && $p->histories ? $p->histories : collect();
+                        $firstHistory = $histories->sortBy('created_at')->first();
+                        $initialData = $firstHistory ? (is_array($firstHistory->suhu_data_lama) ? $firstHistory->suhu_data_lama : (json_decode($firstHistory->suhu_data_lama ?? '[]', true) ?: [])) : $suhu;
+                        $initialPukul = '-';
+                        if ($firstHistory && isset($firstHistory->pukul_lama)) { $initialPukul = $firstHistory->pukul_lama; }
+                        elseif ($p->pukul) { $initialPukul = $p->pukul; }
+                        $histNo = 1;
+                        $sectionLabels = ['cold_storage'=>'Cold Storage','anteroom_loading'=>'Anteroom Loading','pre_loading'=>'Pre Loading','prestaging'=>'Prestaging','anteroom_ekspansi_further'=>'Anteroom Ekspansi Further','anteroom_ekspansi_sausage'=>'Anteroom Ekspansi Sausage'];
+                        $renderVal = function($val) { if ($val === null || $val === '' || $val === []) return '-'; if (is_array($val)) { $parts = []; if (isset($val['setting'])) $parts[] = 'setting: '.$val['setting']; if (isset($val['display'])) $parts[] = 'display: '.$val['display']; if (isset($val['actual'])) $parts[] = 'actual: '.$val['actual']; return !empty($parts) ? implode('; ', $parts) : '-'; } return (string) $val; };
+                        $findUnitRowFn = function ($rows, $unit) { if (!is_array($rows)) return null; foreach ($rows as $r) { if (!is_array($r)) continue; if ((string)($r['unit'] ?? '') === (string)$unit) return $r; } return null; };
+                    @endphp
+                    <div class="header">
+                        <div class="header-left">
+                            <div class="logo-company">
+                                <div class="header-logo"><img src="{{ public_path('dist/images/logo/cpi-logo.png') }}" alt="Logo"></div>
+                                <div class="header-company">
+                                    <h2>PT. CHAROEN POKPHAND INDONESIA</h2>
+                                    <p>FOOD DIVISION {{ strtoupper($plantName) }}</p>
+                                    <p>{{ strtoupper($plantName) }} - INDONESIA</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="header-right">
+                            <div class="header-title"><h1>PEMERIKSAAN SUHU PRODUK DAN SUHU RUANG PENYIMPANAN</h1></div>
+                        </div>
+                    </div>
+                    <div class="subheader">
+                        <table class="subheader-table">
+                            <tr>
+                                <td class="subheader-label">Tanggal</td><td>{{ $p->tanggal ? $p->tanggal->format('d/m/Y') : '-' }}</td>
+                                <td class="subheader-label">Shift</td><td>{{ $shiftName }}</td>
+                            </tr>
+                            <tr>
+                                <td class="subheader-label">Plant</td><td>{{ $plantName }}</td>
+                                <td class="subheader-label">&nbsp;</td><td>&nbsp;</td>
+                            </tr>
+                            <tr>
+                                <td class="subheader-label">Produk</td>
+                                <td>@if($kategori)<span style="font-weight:700;">{{ $kategori }}</span> - @endif{{ $produkName }}</td>
+                                <td class="subheader-label">Pukul</td><td>{{ $jamPukul ?? '-' }}</td>
+                            </tr>
+                            <tr>
+                                <td class="subheader-label">Suhu Produk</td><td>{{ $p->suhu_produk ?? '-' }}</td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="section-title">Data & Riwayat Pemeriksaan</div>
+                    <table class="data">
+                        <thead><tr><th style="width:5%">No</th><th style="width:25%">Lokasi</th><th style="width:35%">Sebelumnya</th><th style="width:35%">Sesudahnya</th></tr></thead>
+                        <tbody>
+                            <tr><td colspan="4" style="background:#f8f9fa;font-weight:bold;font-size:9px;color:#555;text-align:center;">--- INPUT DATA PERTAMA ---</td></tr>
+                            @if($initialPukul && $initialPukul !== '-')
+                                <tr><td></td><td>Pukul</td><td style="background:#fff3cd;text-align:center;">-</td><td style="background:#d4edda;">{{ $initialPukul }}</td></tr>
+                            @endif
+                            @foreach($sectionLabels as $secKey => $secLabel)
+                                @php $secData = $initialData[$secKey] ?? []; @endphp
+                                @if(!empty($secData))
+                                    @if(in_array($secKey, ['cold_storage','anteroom_loading']))
+                                        @foreach($secData as $item)
+                                            <tr><td style="text-align:center;">{{ $histNo++ }}</td><td>{{ $secLabel }} {{ $item['unit'] ?? '' }}</td><td style="background:#fff3cd;text-align:center;">-</td><td style="background:#d4edda;">{{ $renderVal($item) }}</td></tr>
+                                        @endforeach
+                                    @else
+                                        <tr><td style="text-align:center;">{{ $histNo++ }}</td><td>{{ $secLabel }}</td><td style="background:#fff3cd;text-align:center;">-</td><td style="background:#d4edda;">{{ $renderVal($secData) }}</td></tr>
+                                    @endif
+                                @endif
+                            @endforeach
+                            @if($histories->count() > 0)
+                                <tr><td colspan="4" style="background:#f8f9fa;font-weight:bold;font-size:9px;color:#c41e3a;text-align:center;border-top:2px solid #dee2e6;">--- RIWAYAT PERUBAHAN ---</td></tr>
+                                @foreach($histories->sortBy('created_at') as $history)
+                                    @php
+                                        $lama = is_array($history->suhu_data_lama) ? $history->suhu_data_lama : (json_decode($history->suhu_data_lama ?? '[]', true) ?: []);
+                                        $baru = is_array($history->suhu_data_baru) ? $history->suhu_data_baru : (json_decode($history->suhu_data_baru ?? '[]', true) ?: []);
+                                        $changes = [];
+                                        if (($history->keterangan_lama ?? null) != ($history->keterangan_baru ?? null)) $changes[] = ['lokasi'=>'Keterangan','lama'=>$history->keterangan_lama??'(Kosong)','baru'=>$history->keterangan_baru??'(Kosong)'];
+                                        if (($history->tindakan_koreksi_lama ?? null) != ($history->tindakan_koreksi_baru ?? null)) $changes[] = ['lokasi'=>'Tindakan Koreksi','lama'=>$history->tindakan_koreksi_lama??'(Kosong)','baru'=>$history->tindakan_koreksi_baru??'(Kosong)'];
+                                        foreach ($sectionLabels as $secKey => $secLabel) {
+                                            $os = $lama[$secKey] ?? []; $ns = $baru[$secKey] ?? [];
+                                            if (in_array($secKey, ['cold_storage','anteroom_loading'])) {
+                                                $aus = array_unique(array_merge(
+                                                    array_map(function($r){ return is_array($r) ? (string)($r['unit'] ?? '') : ''; }, (array)$os),
+                                                    array_map(function($r){ return is_array($r) ? (string)($r['unit'] ?? '') : ''; }, (array)$ns)
+                                                ));
+                                                foreach ($aus as $u) { $oi=$findUnitRowFn($os,$u); $ni=$findUnitRowFn($ns,$u); if (json_encode($oi)!==json_encode($ni)) $changes[]=['lokasi'=>$secLabel.' '.$u,'lama'=>$renderVal($oi),'baru'=>$renderVal($ni)]; }
+                                            } else { if (json_encode($os)!==json_encode($ns)) $changes[]=['lokasi'=>$secLabel,'lama'=>$renderVal($os),'baru'=>$renderVal($ns)]; }
+                                        }
+                                    @endphp
+                                    @foreach($changes as $change)
+                                        <tr><td style="text-align:center;">{{ strcasecmp($change['lokasi'],'pukul')===0?'':$histNo++ }}</td><td>{{ $change['lokasi'] }}</td><td style="background:#fff3cd;">{{ $change['lama'] }}</td><td style="background:#d4edda;">{{ $change['baru'] }}</td></tr>
+                                    @endforeach
+                                @endforeach
+                            @endif
+                        </tbody>
+                    </table>
+                    @if(!empty($p->keterangan)||!empty($p->tindakan_koreksi))
+                        <div class="section-title">Catatan</div>
+                        <table class="data"><tbody>
+                            @if(!empty($p->keterangan))<tr><td style="width:25%"><strong>Keterangan</strong></td><td>{{ $p->keterangan }}</td></tr>@endif
+                            @if(!empty($p->tindakan_koreksi))<tr><td style="width:25%"><strong>Tindakan Koreksi</strong></td><td>{{ $p->tindakan_koreksi }}</td></tr>@endif
+                        </tbody></table>
+                    @endif
+                    <div style="text-align:right;padding-right:10px;font-style:italic;font-size:9px;color:#666;margin-top:5px;">QW 06/00</div>
+                    <div class="signature">
+                        <table class="signature-table"><tr>
+                            <td class="signature-cell">
+                                <div class="signature-header-item">Dibuat Oleh</div>
+                                <div class="signature-space">
+                                    @if($p->verifiedByQc||$p->user) @php $n=$p->verifiedByQc->name??$p->user->name; $q=\SimpleSoftwareIO\QrCode\Facades\QrCode::size(55)->generate("Diverifikasi oleh {$n} (QC)"); @endphp <img src="data:image/svg+xml;base64,{{ base64_encode($q) }}" class="qr-code-img">
+                                    @else <div class="signature-line-empty"></div> @endif
+                                </div>
+                                <div class="signature-name">{{ $p->verifiedByQc->name??$p->user->name??'-' }}</div>
+                            </td>
+                            <td class="signature-cell">
+                                <div class="signature-header-item">Diketahui Oleh</div>
+                                <div class="signature-space">
+                                    @if($p->verifiedByProduksi) @php $q=\SimpleSoftwareIO\QrCode\Facades\QrCode::size(55)->generate("Diverifikasi oleh {$p->verifiedByProduksi->name} (Warehouse)"); @endphp <img src="data:image/svg+xml;base64,{{ base64_encode($q) }}" class="qr-code-img">
+                                    @else <div class="signature-line-empty"></div> @endif
+                                </div>
+                                <div class="signature-name">{{ $p->verifiedByProduksi->name??'-' }}</div>
+                            </td>
+                            <td class="signature-cell">
+                                <div class="signature-header-item">Disetujui Oleh</div>
+                                <div class="signature-space">
+                                    @if($p->verifiedBySpv) @php $q=\SimpleSoftwareIO\QrCode\Facades\QrCode::size(55)->generate("Diverifikasi oleh {$p->verifiedBySpv->name} (SPV QC)"); @endphp <img src="data:image/svg+xml;base64,{{ base64_encode($q) }}" class="qr-code-img">
+                                    @else <div class="signature-line-empty"></div> @endif
+                                </div>
+                                <div class="signature-name">{{ $p->verifiedBySpv->name??'-' }}</div>
+                            </td>
+                        </tr></table>
+                    </div>
+                    {{-- Page break antar record dalam shift, dan antar shift --}}
+                    @if(!$loop->last || !$loop->parent->last)
+                        <div class="page-break"></div>
+                    @endif
+                @endforeach
+
+                {{-- Page break antar shift --}}
+                @if(!$loop->last)
+                    <div class="page-break"></div>
+                @endif
+            @endforeach
+        @endif
+
+        @else
+        {{-- ======= MODE: SHIFT TUNGGAL (existing) ======= --}}
         @foreach(($pemeriksaans ?? []) as $idx => $p)
             <div class="header">
                 <div class="header-left">
@@ -417,7 +586,7 @@
             @endif
             
             <div style="text-align: right; padding-right: 10px; font-style: italic; font-size: 9px; color: #666; margin-top: 5px;">
-                QW 11/00
+                QW 06/00
             </div>
 
             <div class="signature">
@@ -480,6 +649,7 @@
                 <div class="page-break"></div>
             @endif
         @endforeach
+        @endif {{-- end isAllShift --}}
     </div>
 </body>
 </html>
