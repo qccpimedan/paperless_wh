@@ -35,7 +35,9 @@ class PemeriksaanKedatanganBahanBakuPenunjang extends Model
         'kode_produksi',
         'expire_date',
         'jumlah_datang',
+        'unit_datang',
         'jumlah_sampling',
+        'unit_sampling',
         'kondisi_fisik',
         'logo_halal',
         'hasil_uji_ffa',
@@ -62,7 +64,9 @@ class PemeriksaanKedatanganBahanBakuPenunjang extends Model
         'kode_produksi_array',
         'expire_date_array',
         'jumlah_datang_array',
+        'unit_datang_array',
         'jumlah_sampling_array',
+        'unit_sampling_array',
         'spesifikasi_array',
         'suhu_mobil_array',
         'suhu_mobil_type_array',
@@ -146,5 +150,21 @@ class PemeriksaanKedatanganBahanBakuPenunjang extends Model
     public function spvVerifier()
     {
         return $this->belongsTo(User::class, 'verified_by_spv');
+    }
+
+    /**
+     * Unit parameters for jumlah datang and jumlah sampling
+     */
+    public static function unitParameters(): array
+    {
+        return [
+            'kg' => 'kg',
+            'gram' => 'gram',
+            'pcs' => 'pcs',
+            'roll' => 'roll',
+            'karung' => 'karung',
+            'box' => 'box',
+            'lembar' => 'lembar',
+        ];
     }
 }

@@ -471,8 +471,16 @@
                                                         </div>
                                                         <div class="col-md-6">
                                                             <div class="form-group">
-                                                                <label class="form-label">Jumlah Datang (kg/liter/pail)</label>
-                                                                <input type="text" class="form-control" name="jumlah_datang[]" placeholder="Jumlah Datang (kg/liter/pail)">
+                                                                <label class="form-label">Jumlah Datang</label>
+                                                                <div class="input-group" style="max-width: 100%;">
+                                                                    <input type="text" class="form-control" name="jumlah_datang[]" placeholder="Jumlah">
+                                                                    <select class="form-select" name="unit_datang[]" style="max-width: 120px;">
+                                                                        <option value="">Pilih Parameter</option>
+                                                                        @foreach(\App\Models\PemeriksaanKedatanganChemical::unitParameters() as $key => $label)
+                                                                            <option value="{{ $key }}">{{ $label }}</option>
+                                                                        @endforeach
+                                                                    </select>
+                                                                </div>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -481,10 +489,17 @@
                                                         <div class="col-md-6">
                                                             <div class="form-group">
                                                                 <label class="form-label">Jumlah Sampling</label>
-                                                                <input type="text" class="form-control" name="jumlah_sampling[]" placeholder="Jumlah Sampling">
+                                                                <div class="input-group" style="max-width: 100%;">
+                                                                    <input type="text" class="form-control" name="jumlah_sampling[]" placeholder="Jumlah">
+                                                                    <select class="form-select" name="unit_sampling[]" style="max-width: 120px;">
+                                                                        <option value="">Pilih Parameter</option>
+                                                                        @foreach(\App\Models\PemeriksaanKedatanganChemical::unitParameters() as $key => $label)
+                                                                            <option value="{{ $key }}">{{ $label }}</option>
+                                                                        @endforeach
+                                                                    </select>
+                                                                </div>
                                                             </div>
                                                         </div>
-                                                    </div>
 
                                                     <!-- Kondisi Fisik -->
                                                     <div class="form-section mb-3">

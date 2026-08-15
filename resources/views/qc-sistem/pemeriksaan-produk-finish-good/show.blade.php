@@ -123,9 +123,10 @@
                         $kodeArr = is_array($pemeriksaanProdukFinishGood->kode_produksi_array) ? $pemeriksaanProdukFinishGood->kode_produksi_array : [];
                         $expireArr = is_array($pemeriksaanProdukFinishGood->expire_date_array) ? $pemeriksaanProdukFinishGood->expire_date_array : [];
                         $jmlDatangArr = is_array($pemeriksaanProdukFinishGood->jumlah_datang_array) ? $pemeriksaanProdukFinishGood->jumlah_datang_array : [];
+                        $unitDatangArr = is_array($pemeriksaanProdukFinishGood->unit_datang_array) ? $pemeriksaanProdukFinishGood->unit_datang_array : [];
                         $jmlSamplingArr = is_array($pemeriksaanProdukFinishGood->jumlah_sampling_array) ? $pemeriksaanProdukFinishGood->jumlah_sampling_array : [];
-                        $kemasanArr = is_array($pemeriksaanProdukFinishGood->kondisi_kemasan_array) ? $pemeriksaanProdukFinishGood->kondisi_kemasan_array : [];
-                        $warnaArr = is_array($pemeriksaanProdukFinishGood->kondisi_warna_array) ? $pemeriksaanProdukFinishGood->kondisi_warna_array : [];
+                        $unitSamplingArr = is_array($pemeriksaanProdukFinishGood->unit_sampling_array) ? $pemeriksaanProdukFinishGood->unit_sampling_array : [];
+                        $kemasanArr = is_array($pemeriksaanProdukFinishGood->kondisi_kemasan_array) ? $pemeriksaanProdukFinishGood->kondisi_kemasan_array : [];                        $warnaArr = is_array($pemeriksaanProdukFinishGood->kondisi_warna_array) ? $pemeriksaanProdukFinishGood->kondisi_warna_array : [];
                         $aromaArr = is_array($pemeriksaanProdukFinishGood->kondisi_aroma_array) ? $pemeriksaanProdukFinishGood->kondisi_aroma_array : [];
                         $logoArr = is_array($pemeriksaanProdukFinishGood->logo_halal_array) ? $pemeriksaanProdukFinishGood->logo_halal_array : [];
                         $dokArr = is_array($pemeriksaanProdukFinishGood->dokumen_halal_array) ? $pemeriksaanProdukFinishGood->dokumen_halal_array : [];
@@ -197,7 +198,9 @@
                                 'kode' => $kodeArr[$i] ?? null,
                                 'expire' => $expireArr[$i] ?? null,
                                 'jumlah_datang' => $jmlDatangArr[$i] ?? null,
+                                'unit_datang' => $unitDatangArr[$i] ?? null,
                                 'jumlah_sampling' => $jmlSamplingArr[$i] ?? null,
+                                'unit_sampling' => $unitSamplingArr[$i] ?? null,
                                 'kemasan' => $kemasanArr[$i] ?? null,
                                 'warna' => $warnaArr[$i] ?? null,
                                 'aroma' => $aromaArr[$i] ?? null,
@@ -333,8 +336,8 @@
                                                         <table class="table table-borderless table-sm mb-0">
                                                             <tr><td width="40%"><strong>Kode Produksi:</strong></td><td>{{ $it['kode'] ?? '-' }}</td></tr>
                                                             <tr><td><strong>Expire Date:</strong></td><td>{{ $fmtDate($it['expire'] ?? null) }}</td></tr>
-                                                            <tr><td><strong>Jumlah Datang:</strong></td><td>{{ $it['jumlah_datang'] ?? '-' }}</td></tr>
-                                                            <tr><td><strong>Jumlah Sampling:</strong></td><td>{{ $it['jumlah_sampling'] ?? '-' }}</td></tr>
+                                                            <tr><td><strong>Jumlah Datang:</strong></td><td>{{ $it['jumlah_datang'] ?? '-' }} @if(!empty($it['unit_datang']))<strong>{{ $it['unit_datang'] }}</strong>@endif</td></tr>
+                                                            <tr><td><strong>Jumlah Sampling:</strong></td><td>{{ $it['jumlah_sampling'] ?? '-' }} @if(!empty($it['unit_sampling']))<strong>{{ $it['unit_sampling'] }}</strong>@endif</td></tr>
                                                         </table>
                                                     </div>
                                                     <div class="col-md-6">

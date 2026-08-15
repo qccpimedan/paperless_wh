@@ -433,7 +433,9 @@ return view('qc-sistem.pemeriksaan-kedatangan-chemical.index', compact('pemeriks
                 'kode_produksi' => $request->input('kode_produksi.' . $index),
                 'expire_date' => $request->input('expire_date.' . $index),
                 'jumlah_datang' => $request->input('jumlah_datang.' . $index),
+                'unit_datang' => $request->input('unit_datang.' . $index),
                 'jumlah_sampling' => $request->input('jumlah_sampling.' . $index),
+                'unit_sampling' => $request->input('unit_sampling.' . $index),
                 'image_chemical' => $imagePath,
                 'kondisi_fisik' => [
                     'kemasan' => $request->input('kondisi_fisik_kemasan.' . $index) === '1',
@@ -1090,7 +1092,11 @@ return view('qc-sistem.pemeriksaan-kedatangan-chemical.index', compact('pemeriks
             'kode_produksi' => 'nullable|array',
             'expire_date' => 'nullable|array',
             'jumlah_datang' => 'nullable|array',
+            'unit_datang' => 'nullable|array',
+            'unit_datang.*' => 'nullable|string|in:kg,gram,pcs,roll,karung,box,lembar,liter,pail',
             'jumlah_sampling' => 'nullable|array',
+            'unit_sampling' => 'nullable|array',
+            'unit_sampling.*' => 'nullable|string|in:kg,gram,pcs,roll,karung,box,lembar,liter,pail',
             'kondisi_fisik_kemasan' => 'nullable|array',
             'kondisi_fisik_warna' => 'nullable|array',
             'persyaratan_dokumen_halal' => 'nullable|array',
@@ -1132,6 +1138,11 @@ return view('qc-sistem.pemeriksaan-kedatangan-chemical.index', compact('pemeriks
             $imagePath = $uploadedImage
                 ? $uploadedImage->storePublicly('pemeriksaan-chemical/images', 'public')
                 : $existingImage;
+            
+            // Extract unit parameters
+            $unitDatang = $request->input('unit_datang.' . $index);
+            $unitSampling = $request->input('unit_sampling.' . $index);
+            
             $detailChemicals[] = [
                 'id_chemical' => $idChemical,
                 'kondisi_chemical' => $request->input('kondisi_chemical.' . $index),
@@ -1141,7 +1152,9 @@ return view('qc-sistem.pemeriksaan-kedatangan-chemical.index', compact('pemeriks
                 'kode_produksi' => $request->input('kode_produksi.' . $index),
                 'expire_date' => $request->input('expire_date.' . $index),
                 'jumlah_datang' => $request->input('jumlah_datang.' . $index),
+                'unit_datang' => !empty($unitDatang) ? [$unitDatang] : [],
                 'jumlah_sampling' => $request->input('jumlah_sampling.' . $index),
+                'unit_sampling' => !empty($unitSampling) ? [$unitSampling] : [],
                 'image_chemical' => $imagePath,
                 'kondisi_fisik' => [
                     'kemasan' => $request->input('kondisi_fisik_kemasan.' . $index) === '1',

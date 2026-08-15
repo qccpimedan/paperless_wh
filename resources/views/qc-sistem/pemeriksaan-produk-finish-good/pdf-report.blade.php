@@ -329,7 +329,9 @@
                             $kodeProduksis = is_array($p->kode_produksi_array) ? $p->kode_produksi_array : [];
                             $expDates = is_array($p->expire_date_array) ? $p->expire_date_array : [];
                             $jmlDatangs = is_array($p->jumlah_datang_array) ? $p->jumlah_datang_array : [];
+                            $unitDatangs = is_array($p->unit_datang_array) ? $p->unit_datang_array : [];
                             $jmlSamplings = is_array($p->jumlah_sampling_array) ? $p->jumlah_sampling_array : [];
+                            $unitSamplings = is_array($p->unit_sampling_array) ? $p->unit_sampling_array : [];
                             $kategoriArr = is_array($p->kategori_code_array) ? $p->kategori_code_array : [];
                             $negaraArr = is_array($p->negara_produsen_array) ? $p->negara_produsen_array : [];
                             $kondisiProdukArr = is_array($p->kondisi_produk_array) ? $p->kondisi_produk_array : [];
@@ -472,7 +474,9 @@
                                         $kodeProduksi = (is_array($pemeriksaan->kode_produksi_array) ? ($pemeriksaan->kode_produksi_array[$rowIndex] ?? null) : null);
                                         $expireDate = (is_array($pemeriksaan->expire_date_array) ? ($pemeriksaan->expire_date_array[$rowIndex] ?? null) : null);
                                         $jumlahDatang = (is_array($pemeriksaan->jumlah_datang_array) ? ($pemeriksaan->jumlah_datang_array[$rowIndex] ?? null) : null);
+                                        $unitDatang = (is_array($pemeriksaan->unit_datang_array) ? ($pemeriksaan->unit_datang_array[$rowIndex] ?? null) : null);
                                         $jumlahSampling = (is_array($pemeriksaan->jumlah_sampling_array) ? ($pemeriksaan->jumlah_sampling_array[$rowIndex] ?? null) : null);
+                                        $unitSampling = (is_array($pemeriksaan->unit_sampling_array) ? ($pemeriksaan->unit_sampling_array[$rowIndex] ?? null) : null);
                                         $negara = (is_array($pemeriksaan->negara_produsen_array) ? ($pemeriksaan->negara_produsen_array[$rowIndex] ?? null) : null);
                                         $kondisiProduk = (is_array($pemeriksaan->kondisi_produk_array) ? ($pemeriksaan->kondisi_produk_array[$rowIndex] ?? null) : null);
                                         $kondisiProdukSuhu = (is_array($pemeriksaan->kondisi_produk_suhu_value_array) ? ($pemeriksaan->kondisi_produk_suhu_value_array[$rowIndex] ?? null) : null);
@@ -536,11 +540,11 @@
                                         </div>
                                         <div class="field-row">
                                             <span class="field-label">Jml Datang:</span>
-                                            <span class="field-value">{{ $jumlahDatang ?? '-' }}</span>
+                                            <span class="field-value">{{ $jumlahDatang ?? '-' }}{{ $unitDatang ? ' ' . $unitDatang : '' }}</span>
                                         </div>
                                         <div class="field-row">
-                                            <span class="field-label">Jml Sample:</span>
-                                            <span class="field-value">{{ $jumlahSampling ?? '-' }}</span>
+                                            <span class="field-label">Jml Sampling:</span>
+                                            <span class="field-value">{{ $jumlahSampling ?? '-' }}{{ $unitSampling ? ' ' . $unitSampling : '' }}</span>
                                         </div>
 
                                         <div class="section-title">Suhu</div>

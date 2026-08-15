@@ -520,13 +520,13 @@
                                     @if(isset($chemicalDetail['jumlah_datang']))
                                         <div class="field-row">
                                             <span class="field-label">Jml Datang:</span>
-                                            <span class="field-value">{{ $chemicalDetail['jumlah_datang'] ?? '-' }}</span>
+                                            <span class="field-value">{{ $chemicalDetail['jumlah_datang'] ?? '-' }} @if(isset($chemicalDetail['unit_datang']) && is_array($chemicalDetail['unit_datang']) && isset($chemicalDetail['unit_datang'][0]))<strong>{{ $chemicalDetail['unit_datang'][0] }}</strong>@endif</span>
                                         </div>
                                     @endif
                                     @if(isset($chemicalDetail['jumlah_sampling']))
                                         <div class="field-row">
-                                            <span class="field-label">Jml Sample:</span>
-                                            <span class="field-value">{{ $chemicalDetail['jumlah_sampling'] ?? '-' }}</span>
+                                            <span class="field-label">Jml Sampling:</span>
+                                            <span class="field-value">{{ $chemicalDetail['jumlah_sampling'] ?? '-' }} @if(isset($chemicalDetail['unit_sampling']) && is_array($chemicalDetail['unit_sampling']) && isset($chemicalDetail['unit_sampling'][0]))<strong>{{ $chemicalDetail['unit_sampling'][0] }}</strong>@endif</span>
                                         </div>
                                     @endif
 

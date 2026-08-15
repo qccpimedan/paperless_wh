@@ -523,19 +523,41 @@
                                                         </div>
                                                         <div class="col-md-4">
                                                             <div class="form-group">
-                                                                <label class="form-label">Jumlah Datang (Kg/pcs/roll)</label>
-                                                                <input type="text" class="form-control @error('jumlah_datang.0') is-invalid @enderror" name="jumlah_datang[]" value="{{ old('jumlah_datang.0') }}" placeholder="Jumlah Datang">
+                                                                <label class="form-label">Jumlah Datang</label>
+                                                                <div class="input-group" style="max-width: 100%;">
+                                                                    <input type="text" class="form-control @error('jumlah_datang.0') is-invalid @enderror" name="jumlah_datang[]" value="{{ old('jumlah_datang.0') }}" placeholder="Jumlah" min="0" step="any">
+                                                                    <select class="form-select @error('unit_datang.0') is-invalid @enderror" name="unit_datang[]" style="max-width: 120px;">
+                                                                        <option value="">Pilih Parameter</option>
+                                                                        @foreach(\App\Models\PemeriksaanKedatanganKemasan::unitParameters() as $key => $label)
+                                                                            <option value="{{ $key }}" {{ old('unit_datang.0') == $key ? 'selected' : '' }}>{{ $label }}</option>
+                                                                        @endforeach
+                                                                    </select>
+                                                                </div>
                                                                 @error('jumlah_datang.0')
-                                                                    <div class="invalid-feedback">{{ $message }}</div>
+                                                                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                                                                @enderror
+                                                                @error('unit_datang.0')
+                                                                    <div class="invalid-feedback d-block">{{ $message }}</div>
                                                                 @enderror
                                                             </div>
                                                         </div>
                                                         <div class="col-md-4">
                                                             <div class="form-group">
-                                                                <label class="form-label">Jumlah Sampling (pcs/kg/roll)</label>
-                                                                <input type="text" class="form-control @error('jumlah_sampling.0') is-invalid @enderror" name="jumlah_sampling[]" value="{{ old('jumlah_sampling.0') }}" placeholder="Jumlah Sampling">
+                                                                <label class="form-label">Jumlah Sampling</label>
+                                                                <div class="input-group" style="max-width: 100%;">
+                                                                    <input type="text" class="form-control @error('jumlah_sampling.0') is-invalid @enderror" name="jumlah_sampling[]" value="{{ old('jumlah_sampling.0') }}" placeholder="Jumlah" min="0" step="any">
+                                                                    <select class="form-select @error('unit_sampling.0') is-invalid @enderror" name="unit_sampling[]" style="max-width: 120px;">
+                                                                        <option value="">Pilih Parameter</option>
+                                                                        @foreach(\App\Models\PemeriksaanKedatanganKemasan::unitParameters() as $key => $label)
+                                                                            <option value="{{ $key }}" {{ old('unit_sampling.0') == $key ? 'selected' : '' }}>{{ $label }}</option>
+                                                                        @endforeach
+                                                                    </select>
+                                                                </div>
                                                                 @error('jumlah_sampling.0')
-                                                                    <div class="invalid-feedback">{{ $message }}</div>
+                                                                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                                                                @enderror
+                                                                @error('unit_sampling.0')
+                                                                    <div class="invalid-feedback d-block">{{ $message }}</div>
                                                                 @enderror
                                                             </div>
                                                         </div>
@@ -1157,14 +1179,38 @@ document.addEventListener('DOMContentLoaded', function() {
                             </div>
                             <div class="col-md-4">
                                 <div class="form-group">
-                                    <label class="form-label">Jumlah Datang (Kg/pcs/roll)</label>
-                                    <input type="text" class="form-control" name="jumlah_datang[]" placeholder="Jumlah Datang">
+                                    <label class="form-label">Jumlah Datang</label>
+                                    <div class="input-group" style="max-width: 100%;">
+                                        <input type="text" class="form-control" name="jumlah_datang[]" placeholder="Jumlah" min="0" step="any">
+                                        <select class="form-select" name="unit_datang[]" style="max-width: 120px;">
+                                            <option value="">Pilih Parameter</option>
+                                            <option value="kg">kg</option>
+                                            <option value="gram">gram</option>
+                                            <option value="pcs">pcs</option>
+                                            <option value="roll">roll</option>
+                                            <option value="karung">karung</option>
+                                            <option value="box">box</option>
+                                            <option value="lembar">lembar</option>
+                                        </select>
+                                    </div>
                                 </div>
                             </div>
                             <div class="col-md-4">
                                 <div class="form-group">
-                                    <label class="form-label">Jumlah Sampling (pcs/kg/roll)</label>
-                                    <input type="text" class="form-control" name="jumlah_sampling[]" placeholder="Jumlah Sampling">
+                                    <label class="form-label">Jumlah Sampling</label>
+                                    <div class="input-group" style="max-width: 100%;">
+                                        <input type="text" class="form-control" name="jumlah_sampling[]" placeholder="Jumlah" min="0" step="any">
+                                        <select class="form-select" name="unit_sampling[]" style="max-width: 120px;">
+                                            <option value="">Pilih Parameter</option>
+                                            <option value="kg">kg</option>
+                                            <option value="gram">gram</option>
+                                            <option value="pcs">pcs</option>
+                                            <option value="roll">roll</option>
+                                            <option value="karung">karung</option>
+                                            <option value="box">box</option>
+                                            <option value="lembar">lembar</option>
+                                        </select>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -1726,6 +1772,34 @@ document.addEventListener('DOMContentLoaded', function() {
             clone.querySelectorAll('input.penampakan-hidden, input.sealing-hidden, input.cetakan-hidden, input.logo-halal-hidden, input.dokumen-halal-hidden, input.coa-hidden').forEach((h) => {
                 h.value = '';
             });
+
+            // Ensure unit selects have all options available
+            const unitDatangSelect = clone.querySelector('select[name="unit_datang[]"]');
+            const unitSamplingSelect = clone.querySelector('select[name="unit_sampling[]"]');
+            
+            if (unitDatangSelect) {
+                // Ensure all options from first row are present
+                const firstUnitDatang = container.querySelector('select[name="unit_datang[]"]');
+                if (firstUnitDatang && unitDatangSelect.options.length <= 1) {
+                    // Clone options from first row
+                    Array.from(firstUnitDatang.options).forEach((opt) => {
+                        const newOpt = opt.cloneNode(true);
+                        unitDatangSelect.appendChild(newOpt);
+                    });
+                }
+            }
+            
+            if (unitSamplingSelect) {
+                // Ensure all options from first row are present
+                const firstUnitSampling = container.querySelector('select[name="unit_sampling[]"]');
+                if (firstUnitSampling && unitSamplingSelect.options.length <= 1) {
+                    // Clone options from first row
+                    Array.from(firstUnitSampling.options).forEach((opt) => {
+                        const newOpt = opt.cloneNode(true);
+                        unitSamplingSelect.appendChild(newOpt);
+                    });
+                }
+            }
 
             container.appendChild(clone);
             updateSectionLabels();

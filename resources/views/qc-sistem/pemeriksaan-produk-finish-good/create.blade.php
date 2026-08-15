@@ -453,13 +453,29 @@
                                                         <div class="col-md-3">
                                                             <div class="form-group">
                                                                 <label class="form-label">Jumlah Datang</label>
-                                                                <input type="text" class="form-control" name="jumlah_datang[]" value="{{ old('jumlah_datang.0') }}" placeholder="Jumlah Datang">
+                                                                <div class="input-group">
+                                                                    <input type="text" class="form-control" name="jumlah_datang[]" value="{{ old('jumlah_datang.0') }}" placeholder="Jumlah">
+                                                                    <select class="form-select" name="unit_datang[]" style="max-width: 120px;">
+                                                                        <option value="">Pilih Parameter</option>
+                                                                        @foreach(\App\Models\PemeriksaanProdukFinishGood::unitParameters() as $unitKey => $unitLabel)
+                                                                            <option value="{{ $unitKey }}">{{ $unitLabel }}</option>
+                                                                        @endforeach
+                                                                    </select>
+                                                                </div>
                                                             </div>
                                                         </div>
                                                         <div class="col-md-3">
                                                             <div class="form-group">
                                                                 <label class="form-label">Jumlah Sampling</label>
-                                                                <input type="text" class="form-control" name="jumlah_sampling[]" value="{{ old('jumlah_sampling.0') }}" placeholder="Jumlah Sampling">
+                                                                <div class="input-group">
+                                                                    <input type="text" class="form-control" name="jumlah_sampling[]" value="{{ old('jumlah_sampling.0') }}" placeholder="Jumlah">
+                                                                    <select class="form-select" name="unit_sampling[]" style="max-width: 120px;">
+                                                                        <option value="">Pilih Parameter</option>
+                                                                        @foreach(\App\Models\PemeriksaanProdukFinishGood::unitParameters() as $unitKey => $unitLabel)
+                                                                            <option value="{{ $unitKey }}">{{ $unitLabel }}</option>
+                                                                        @endforeach
+                                                                    </select>
+                                                                </div>
                                                             </div>
                                                         </div>
                                                     </div>

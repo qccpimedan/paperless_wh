@@ -283,7 +283,9 @@ return view('qc-sistem.pemeriksaan-kedatangan-kemasan.index', compact('pemeriksa
             'distributor.*.*' => 'nullable|string|max:255',
             'kode_produksi.*' => 'nullable|string|max:255',
             'jumlah_datang.*' => 'nullable|string|max:255',
+            'unit_datang.*' => 'nullable|string|in:kg,gram,pcs,roll,karung,box,lembar',
             'jumlah_sampling.*' => 'nullable|string|max:255',
+            'unit_sampling.*' => 'nullable|string|in:kg,gram,pcs,roll,karung,box,lembar',
             'spesifikasi.*' => 'nullable|string',
             'penampakan.*' => 'nullable|in:0,1',
             'sealing.*' => 'nullable|in:0,1',
@@ -320,7 +322,9 @@ return view('qc-sistem.pemeriksaan-kedatangan-kemasan.index', compact('pemeriksa
         $distributorInput = $request->input('distributor', []);
         $kode_produksis = $request->input('kode_produksi', []);
         $jumlah_datangs = $request->input('jumlah_datang', []);
+        $unit_datangs = $request->input('unit_datang', []);
         $jumlah_samplings = $request->input('jumlah_sampling', []);
+        $unit_samplings = $request->input('unit_sampling', []);
         $spesifikasis = $request->input('spesifikasi', []);
         $penampakans = array_values((array) $request->input('penampakan', []));
         $sealings = array_values((array) $request->input('sealing', []));
@@ -382,7 +386,9 @@ return view('qc-sistem.pemeriksaan-kedatangan-kemasan.index', compact('pemeriksa
             'distributor_array' => json_encode(is_array($distributors) ? $distributors : []),
             'kode_produksi_array' => json_encode(is_array($kode_produksis) ? $kode_produksis : []),
             'jumlah_datang_array' => json_encode(is_array($jumlah_datangs) ? $jumlah_datangs : []),
+            'unit_datang_array' => json_encode(is_array($unit_datangs) ? $unit_datangs : []),
             'jumlah_sampling_array' => json_encode(is_array($jumlah_samplings) ? $jumlah_samplings : []),
+            'unit_sampling_array' => json_encode(is_array($unit_samplings) ? $unit_samplings : []),
             'spesifikasi_array' => json_encode(is_array($spesifikasis) ? $spesifikasis : []),
             'penampakan_array' => json_encode(is_array($penampakans) ? $penampakans : []),
             'sealing_array' => json_encode(is_array($sealings) ? $sealings : []),
@@ -577,7 +583,9 @@ return view('qc-sistem.pemeriksaan-kedatangan-kemasan.index', compact('pemeriksa
             'distributor.*.*' => 'nullable|string|max:255',
             'kode_produksi.*' => 'nullable|string|max:255',
             'jumlah_datang.*' => 'nullable|string|max:255',
+            'unit_datang.*' => 'nullable|string|in:kg,gram,pcs,roll,karung,box,lembar',
             'jumlah_sampling.*' => 'nullable|string|max:255',
+            'unit_sampling.*' => 'nullable|string|in:kg,gram,pcs,roll,karung,box,lembar',
             'spesifikasi.*' => 'nullable|string',
             'penampakan.*' => 'nullable|in:0,1',
             'sealing.*' => 'nullable|in:0,1',
@@ -614,7 +622,9 @@ return view('qc-sistem.pemeriksaan-kedatangan-kemasan.index', compact('pemeriksa
         $distributorInput = $request->input('distributor', []);
         $kode_produksis = $request->input('kode_produksi', []);
         $jumlah_datangs = $request->input('jumlah_datang', []);
+        $unit_datangs = $request->input('unit_datang', []);
         $jumlah_samplings = $request->input('jumlah_sampling', []);
+        $unit_samplings = $request->input('unit_sampling', []);
         $spesifikasis = $request->input('spesifikasi', []);
         $penampakans = array_values((array) $request->input('penampakan', []));
         $sealings = array_values((array) $request->input('sealing', []));
@@ -682,7 +692,9 @@ return view('qc-sistem.pemeriksaan-kedatangan-kemasan.index', compact('pemeriksa
             'distributor_array' => json_encode(is_array($distributors) ? $distributors : []),
             'kode_produksi_array' => json_encode(is_array($kode_produksis) ? $kode_produksis : []),
             'jumlah_datang_array' => json_encode(is_array($jumlah_datangs) ? $jumlah_datangs : []),
+            'unit_datang_array' => json_encode(is_array($unit_datangs) ? $unit_datangs : []),
             'jumlah_sampling_array' => json_encode(is_array($jumlah_samplings) ? $jumlah_samplings : []),
+            'unit_sampling_array' => json_encode(is_array($unit_samplings) ? $unit_samplings : []),
             'spesifikasi_array' => json_encode(is_array($spesifikasis) ? $spesifikasis : []),
             'penampakan_array' => json_encode(is_array($penampakans) ? $penampakans : []),
             'sealing_array' => json_encode(is_array($sealings) ? $sealings : []),

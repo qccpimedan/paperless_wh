@@ -479,7 +479,9 @@
                                     $distributors_arr = json_decode($pemeriksaan->distributor_array ?? '[]', true) ?? [];
                                     $kode_produksis = json_decode($pemeriksaan->kode_produksi_array ?? '[]', true) ?? [];
                                     $jumlah_datangs = json_decode($pemeriksaan->jumlah_datang_array ?? '[]', true) ?? [];
+                                    $unit_datangs = json_decode($pemeriksaan->unit_datang_array ?? '[]', true) ?? [];
                                     $jumlah_samplings = json_decode($pemeriksaan->jumlah_sampling_array ?? '[]', true) ?? [];
+                                    $unit_samplings = json_decode($pemeriksaan->unit_sampling_array ?? '[]', true) ?? [];
                                     $spesifikasis = json_decode($pemeriksaan->spesifikasi_array ?? '[]', true) ?? [];
 
                                     $id_bahan = $id_bahans[$rowIndex] ?? null;
@@ -487,7 +489,9 @@
                                     $distributor_val = $distributors_arr[$rowIndex] ?? null;
                                     $kode_produksi_val = $kode_produksis[$rowIndex] ?? null;
                                     $jumlah_datang_val = $jumlah_datangs[$rowIndex] ?? null;
+                                    $unit_datang_val = $unit_datangs[$rowIndex] ?? null;
                                     $jumlah_sampling_val = $jumlah_samplings[$rowIndex] ?? null;
+                                    $unit_sampling_val = $unit_samplings[$rowIndex] ?? null;
                                     $spesifikasi_val = $spesifikasis[$rowIndex] ?? null;
 
                                     if (is_array($produsen_val)) {
@@ -532,13 +536,13 @@
                                     @if($jumlah_datang_val)
                                         <div class="field-row">
                                             <span class="field-label">Jml Datang:</span>
-                                            <span class="field-value">{{ $jumlah_datang_val }}</span>
+                                            <span class="field-value">{{ $jumlah_datang_val }} @if($unit_datang_val)<strong>{{ $unit_datang_val }}</strong>@endif</span>
                                         </div>
                                     @endif
                                     @if($jumlah_sampling_val)
                                         <div class="field-row">
-                                            <span class="field-label">Jml Sample:</span>
-                                            <span class="field-value">{{ $jumlah_sampling_val }}</span>
+                                            <span class="field-label">Jml Sampling:</span>
+                                            <span class="field-value">{{ $jumlah_sampling_val }} @if($unit_sampling_val)<strong>{{ $unit_sampling_val }}</strong>@endif</span>
                                         </div>
                                     @endif
                                     @if($spesifikasi_val)

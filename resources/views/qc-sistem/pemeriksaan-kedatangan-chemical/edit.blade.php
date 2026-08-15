@@ -333,6 +333,21 @@
                                         $detailChemicals = $pemeriksaanChemical->detail_chemicals ?? [];
                                         $rowCount = max(count($detailChemicals), 1);
 
+                                        // Decode unit arrays for editing
+                                        foreach ($detailChemicals as $index => $detail) {
+                                            if (isset($detail['unit_datang']) && is_string($detail['unit_datang'])) {
+                                                $detailChemicals[$index]['unit_datang'] = json_decode($detail['unit_datang'], true) ?? [];
+                                            } else {
+                                                $detailChemicals[$index]['unit_datang'] = $detail['unit_datang'] ?? [];
+                                            }
+                                            
+                                            if (isset($detail['unit_sampling']) && is_string($detail['unit_sampling'])) {
+                                                $detailChemicals[$index]['unit_sampling'] = json_decode($detail['unit_sampling'], true) ?? [];
+                                            } else {
+                                                $detailChemicals[$index]['unit_sampling'] = $detail['unit_sampling'] ?? [];
+                                            }
+                                        }
+
                                         $groupedDetailIdx = [];
                                         for ($i = 0; $i < $rowCount; $i++) {
                                             $detail = $detailChemicals[$i] ?? [];
@@ -481,8 +496,16 @@
                                                             </div>
                                                             <div class="col-md-6">
                                                                 <div class="form-group">
-                                                                    <label class="form-label">Jumlah Datang (kg/liter/pail)</label>
-                                                                    <input type="text" class="form-control" name="jumlah_datang[]" value="{{ $detail['jumlah_datang'] ?? '' }}" placeholder="Jumlah Datang (kg/liter/pail)">
+                                                                    <label class="form-label">Jumlah Datang</label>
+                                                                    <div class="input-group" style="max-width: 120px;">
+                                                                        <input type="text" class="form-control" name="jumlah_datang[]" value="{{ $detail['jumlah_datang'] ?? '' }}" placeholder="Jumlah">
+                                                                        <select class="form-select" name="unit_datang[]" style="flex: 0 0 60px;">
+                                                                            <option value="">Pilih Parameter</option>
+                                                                            @foreach(\App\Models\PemeriksaanKedatanganChemical::unitParameters() as $unitKey => $unitLabel)
+                                                                                <option value="{{ $unitKey }}" {{ (isset($detail['unit_datang']) && is_array($detail['unit_datang']) && $detail['unit_datang'][0] == $unitKey) ? 'selected' : '' }}>{{ $unitLabel }}</option>
+                                                                            @endforeach
+                                                                        </select>
+                                                                    </div>
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -491,7 +514,15 @@
                                                             <div class="col-md-6">
                                                                 <div class="form-group">
                                                                     <label class="form-label">Jumlah Sampling</label>
-                                                                    <input type="text" class="form-control" name="jumlah_sampling[]" value="{{ $detail['jumlah_sampling'] ?? '' }}" placeholder="Jumlah Sampling">
+                                                                    <div class="input-group" style="max-width: 120px;">
+                                                                        <input type="text" class="form-control" name="jumlah_sampling[]" value="{{ $detail['jumlah_sampling'] ?? '' }}" placeholder="Jumlah">
+                                                                        <select class="form-select" name="unit_sampling[]" style="flex: 0 0 60px;">
+                                                                            <option value="">Pilih Parameter</option>
+                                                                            @foreach(\App\Models\PemeriksaanKedatanganChemical::unitParameters() as $unitKey => $unitLabel)
+                                                                                <option value="{{ $unitKey }}" {{ (isset($detail['unit_sampling']) && is_array($detail['unit_sampling']) && $detail['unit_sampling'][0] == $unitKey) ? 'selected' : '' }}>{{ $unitLabel }}</option>
+                                                                            @endforeach
+                                                                        </select>
+                                                                    </div>
                                                                 </div>
                                                             </div>
                                                         </div>

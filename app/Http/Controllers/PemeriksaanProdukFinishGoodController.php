@@ -280,7 +280,9 @@ return view('qc-sistem.pemeriksaan-produk-finish-good.index', compact('pemeriksa
         $kodeArr = $request->input('kode_produksi', []);
         $expireArr = $request->input('expire_date', []);
         $jmlDatangArr = $request->input('jumlah_datang', []);
+        $unitDatangArr = $request->input('unit_datang', []);
         $jmlSamplingArr = $request->input('jumlah_sampling', []);
+        $unitSamplingArr = $request->input('unit_sampling', []);
         $kemasanArr = $request->input('kondisi_kemasan', []);
         $warnaArr = $request->input('kondisi_warna', []);
         $aromaArr = $request->input('kondisi_aroma', []);
@@ -372,7 +374,9 @@ return view('qc-sistem.pemeriksaan-produk-finish-good.index', compact('pemeriksa
             'kode_produksi_array' => $kodeArr,
             'expire_date_array' => $expireArr,
             'jumlah_datang_array' => $jmlDatangArr,
+            'unit_datang_array' => $unitDatangArr,
             'jumlah_sampling_array' => $jmlSamplingArr,
+            'unit_sampling_array' => $unitSamplingArr,
             'kondisi_kemasan_array' => $kemasanArr,
             'kondisi_warna_array' => $warnaArr,
             'kondisi_aroma_array' => $aromaArr,
@@ -562,7 +566,9 @@ return view('qc-sistem.pemeriksaan-produk-finish-good.index', compact('pemeriksa
         $kodeArr = $request->input('kode_produksi', []);
         $expireArr = $request->input('expire_date', []);
         $jmlDatangArr = $request->input('jumlah_datang', []);
+        $unitDatangArr = $request->input('unit_datang', []);
         $jmlSamplingArr = $request->input('jumlah_sampling', []);
+        $unitSamplingArr = $request->input('unit_sampling', []);
         $kemasanArr = $request->input('kondisi_kemasan', []);
         $warnaArr = $request->input('kondisi_warna', []);
         $aromaArr = $request->input('kondisi_aroma', []);
@@ -663,7 +669,9 @@ return view('qc-sistem.pemeriksaan-produk-finish-good.index', compact('pemeriksa
             'kode_produksi_array' => $kodeArr,
             'expire_date_array' => $expireArr,
             'jumlah_datang_array' => $jmlDatangArr,
+            'unit_datang_array' => $unitDatangArr,
             'jumlah_sampling_array' => $jmlSamplingArr,
+            'unit_sampling_array' => $unitSamplingArr,
             'kondisi_kemasan_array' => $kemasanArr,
             'kondisi_warna_array' => $warnaArr,
             'kondisi_aroma_array' => $aromaArr,

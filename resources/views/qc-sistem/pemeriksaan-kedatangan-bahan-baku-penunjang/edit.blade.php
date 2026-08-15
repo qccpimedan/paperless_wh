@@ -356,6 +356,8 @@
                                         $expireDateArray = json_decode($pemeriksaanBahanBaku->expire_date_array, true) ?? [];
                                         $jumlahDatangArray = json_decode($pemeriksaanBahanBaku->jumlah_datang_array, true) ?? [];
                                         $jumlahSamplingArray = json_decode($pemeriksaanBahanBaku->jumlah_sampling_array, true) ?? [];
+                                        $unitDatangArray = json_decode($pemeriksaanBahanBaku->unit_datang_array, true) ?? [];
+                                        $unitSamplingArray = json_decode($pemeriksaanBahanBaku->unit_sampling_array, true) ?? [];
                                         $spesifikasiArray = json_decode($pemeriksaanBahanBaku->spesifikasi_array, true) ?? [];
                                         $kondisiProdukArray = json_decode($pemeriksaanBahanBaku->kondisi_produk, true) ?? [];
                                         $suhuProdukArray = json_decode($pemeriksaanBahanBaku->suhu_produk, true) ?? [];
@@ -652,14 +654,30 @@
                                                         <div class="row">
                                                             <div class="col-md-6">
                                                                 <div class="form-group">
-                                                                    <label class="form-label">Jumlah Datang (kg)</label>
-                                                                    <input type="text" class="form-control" name="jumlah_datang[]" value="{{ $jumlahDatangArray[$i] ?? '' }}" placeholder="Jumlah Datang">
+                                                                    <label class="form-label">Jumlah Datang</label>
+                                                                    <div class="input-group" style="max-width: 100%;">
+                                                                        <input type="text" class="form-control" name="jumlah_datang[]" value="{{ $jumlahDatangArray[$i] ?? '' }}" placeholder="Jumlah" min="0" step="any">
+                                                                        <select class="form-select" name="unit_datang[]" style="max-width: 120px;">
+                                                                            <option value="">Pilih Parameter</option>
+                                                                            @foreach(\App\Models\PemeriksaanKedatanganBahanBakuPenunjang::unitParameters() as $key => $label)
+                                                                                <option value="{{ $key }}" {{ ($unitDatangArray[$i] ?? '') == $key ? 'selected' : '' }}>{{ $label }}</option>
+                                                                            @endforeach
+                                                                        </select>
+                                                                    </div>
                                                                 </div>
                                                             </div>
                                                             <div class="col-md-6">
                                                                 <div class="form-group">
                                                                     <label class="form-label">Jumlah Sampling</label>
-                                                                    <input type="text" class="form-control" name="jumlah_sampling[]" value="{{ $jumlahSamplingArray[$i] ?? '' }}" placeholder="Jumlah Sampling">
+                                                                    <div class="input-group" style="max-width: 100%;">
+                                                                        <input type="text" class="form-control" name="jumlah_sampling[]" value="{{ $jumlahSamplingArray[$i] ?? '' }}" placeholder="Jumlah" min="0" step="any">
+                                                                        <select class="form-select" name="unit_sampling[]" style="max-width: 120px;">
+                                                                            <option value="">Pilih Parameter</option>
+                                                                            @foreach(\App\Models\PemeriksaanKedatanganBahanBakuPenunjang::unitParameters() as $key => $label)
+                                                                                <option value="{{ $key }}" {{ ($unitSamplingArray[$i] ?? '') == $key ? 'selected' : '' }}>{{ $label }}</option>
+                                                                            @endforeach
+                                                                        </select>
+                                                                    </div>
                                                                 </div>
                                                             </div>
                                                         </div>

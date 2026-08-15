@@ -577,14 +577,30 @@
                                                     <div class="row">
                                                         <div class="col-md-6">
                                                             <div class="form-group">
-                                                                <label class="form-label">Jumlah Datang (kg)</label>
-                                                                <input type="text" class="form-control" name="jumlah_datang[]" placeholder="Jumlah Datang">
+                                                                <label class="form-label">Jumlah Datang</label>
+                                                                <div class="input-group" style="max-width: 100%;">
+                                                                    <input type="text" class="form-control" name="jumlah_datang[]" placeholder="Jumlah" min="0" step="any">
+                                                                    <select class="form-select" name="unit_datang[]" style="max-width: 120px;">
+                                                                        <option value="">Pilih Parameter</option>
+                                                                        @foreach(\App\Models\PemeriksaanKedatanganBahanBakuPenunjang::unitParameters() as $key => $label)
+                                                                            <option value="{{ $key }}">{{ $label }}</option>
+                                                                        @endforeach
+                                                                    </select>
+                                                                </div>
                                                             </div>
                                                         </div>
                                                         <div class="col-md-6">
                                                             <div class="form-group">
                                                                 <label class="form-label">Jumlah Sampling</label>
-                                                                <input type="text" class="form-control" name="jumlah_sampling[]" placeholder="Jumlah Sampling">
+                                                                <div class="input-group" style="max-width: 100%;">
+                                                                    <input type="text" class="form-control" name="jumlah_sampling[]" placeholder="Jumlah" min="0" step="any">
+                                                                    <select class="form-select" name="unit_sampling[]" style="max-width: 120px;">
+                                                                        <option value="">Pilih Parameter</option>
+                                                                        @foreach(\App\Models\PemeriksaanKedatanganBahanBakuPenunjang::unitParameters() as $key => $label)
+                                                                            <option value="{{ $key }}">{{ $label }}</option>
+                                                                        @endforeach
+                                                                    </select>
+                                                                </div>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -1838,14 +1854,38 @@ function addNewRow() {
         <div class="row">
             <div class="col-md-6">
                 <div class="form-group">
-                    <label class="form-label">Jumlah Datang (kg)</label>
-                    <input type="text" class="form-control" name="jumlah_datang[]" placeholder="Jumlah Datang">
+                    <label class="form-label">Jumlah Datang</label>
+                    <div class="input-group" style="max-width: 100%;">
+                        <input type="text" class="form-control" name="jumlah_datang[]" placeholder="Jumlah" min="0" step="any">
+                        <select class="form-select" name="unit_datang[]" style="max-width: 120px;">
+                            <option value="">Pilih Parameter</option>
+                            <option value="kg">kg</option>
+                            <option value="gram">gram</option>
+                            <option value="pcs">pcs</option>
+                            <option value="roll">roll</option>
+                            <option value="karung">karung</option>
+                            <option value="box">box</option>
+                            <option value="lembar">lembar</option>
+                        </select>
+                    </div>
                 </div>
             </div>
             <div class="col-md-6">
                 <div class="form-group">
                     <label class="form-label">Jumlah Sampling</label>
-                    <input type="text" class="form-control" name="jumlah_sampling[]" placeholder="Jumlah Sampling">
+                    <div class="input-group" style="max-width: 100%;">
+                        <input type="text" class="form-control" name="jumlah_sampling[]" placeholder="Jumlah" min="0" step="any">
+                        <select class="form-select" name="unit_sampling[]" style="max-width: 120px;">
+                            <option value="">Pilih Parameter</option>
+                            <option value="kg">kg</option>
+                            <option value="gram">gram</option>
+                            <option value="pcs">pcs</option>
+                            <option value="roll">roll</option>
+                            <option value="karung">karung</option>
+                            <option value="box">box</option>
+                            <option value="lembar">lembar</option>
+                        </select>
+                    </div>
                 </div>
             </div>
         </div>

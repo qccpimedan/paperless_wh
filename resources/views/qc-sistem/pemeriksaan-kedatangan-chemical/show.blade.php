@@ -248,8 +248,8 @@
                                                                 -
                                                             @endif
                                                         </td></tr>
-                                                        <tr><td><strong>Jumlah Datang:</strong></td><td>{{ $detail['jumlah_datang'] ?? '-' }}</td></tr>
-                                                        <tr><td><strong>Jumlah Sampling:</strong></td><td>{{ $detail['jumlah_sampling'] ?? '-' }}</td></tr>
+                                                        <tr><td><strong>Jumlah Datang:</strong></td><td>{{ $detail['jumlah_datang'] ?? '-' }} @if(isset($detail['unit_datang']) && is_array($detail['unit_datang']) && isset($detail['unit_datang'][0]))<strong>{{ $detail['unit_datang'][0] }}</strong>@endif</td></tr>
+                                                        <tr><td><strong>Jumlah Sampling:</strong></td><td>{{ $detail['jumlah_sampling'] ?? '-' }} @if(isset($detail['unit_sampling']) && is_array($detail['unit_sampling']) && isset($detail['unit_sampling'][0]))<strong>{{ $detail['unit_sampling'][0] }}</strong>@endif</td></tr>
                                                     </table>
                                                 </div>
                                             </div>

@@ -41,7 +41,9 @@ class PemeriksaanProdukFinishGood extends Model
         'kode_produksi_array',
         'expire_date_array',
         'jumlah_datang_array',
+        'unit_datang_array',
         'jumlah_sampling_array',
+        'unit_sampling_array',
         'kondisi_kemasan_array',
         'kondisi_warna_array',
         'kondisi_aroma_array',
@@ -78,7 +80,9 @@ class PemeriksaanProdukFinishGood extends Model
         'kode_produksi_array' => 'array',
         'expire_date_array' => 'array',
         'jumlah_datang_array' => 'array',
+        'unit_datang_array' => 'array',
         'jumlah_sampling_array' => 'array',
+        'unit_sampling_array' => 'array',
         'kondisi_kemasan_array' => 'array',
         'kondisi_warna_array' => 'array',
         'kondisi_aroma_array' => 'array',
@@ -135,5 +139,21 @@ class PemeriksaanProdukFinishGood extends Model
     public function spvVerifier()
     {
         return $this->belongsTo(User::class, 'verified_by_spv');
+    }
+
+    /**
+     * Unit parameters for jumlah datang and jumlah sampling
+     */
+    public static function unitParameters(): array
+    {
+        return [
+            'kg' => 'kg',
+            'gram' => 'gram',
+            'pcs' => 'pcs',
+            'roll' => 'roll',
+            'karung' => 'karung',
+            'box' => 'box',
+            'lembar' => 'lembar',
+        ];
     }
 }

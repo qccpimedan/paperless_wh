@@ -459,6 +459,14 @@
                                         <div class="sec-title">Bahan Baku Penunjang</div>
                                         @if($bahan_id)<div class="f-row"><span class="f-label">Nama:</span><span class="f-value">{{ $bahanMap[$bahan_id] ?? 'N/A' }}</span></div>@endif
                                         @if($negara_val)<div class="f-row"><span class="f-label">Negara:</span><span class="f-value">{{ $negara_val }}</span></div>@endif
+                                        @php
+                                            $jd_v = (json_decode($p->jumlah_datang_array ?? '[]', true) ?? [])[$ri] ?? null;
+                                            $ud_v = (json_decode($p->unit_datang_array ?? '[]', true) ?? [])[$ri] ?? null;
+                                            $js_v = (json_decode($p->jumlah_sampling_array ?? '[]', true) ?? [])[$ri] ?? null;
+                                            $us_v = (json_decode($p->unit_sampling_array ?? '[]', true) ?? [])[$ri] ?? null;
+                                        @endphp
+                                        @if($jd_v)<div class="f-row"><span class="f-label">Jml Datang:</span><span class="f-value">{{ $jd_v }} {{ $ud_v ?? '' }}</span></div>@endif
+                                        @if($js_v)<div class="f-row"><span class="f-label">Jml Sample:</span><span class="f-value">{{ $js_v }} {{ $us_v ?? '' }}</span></div>@endif
                                     @endif
                                     @php
                                         $sp_v  = (json_decode($p->suhu_produk ?? '[]', true) ?? [])[$ri] ?? null;
@@ -602,6 +610,8 @@
                     $expireDatesTmp = json_decode($p->expire_date_array ?? '[]', true) ?? [];
                     $jumlahDatangsTmp = json_decode($p->jumlah_datang_array ?? '[]', true) ?? [];
                     $jumlahSamplingsTmp = json_decode($p->jumlah_sampling_array ?? '[]', true) ?? [];
+                    $unitDatangsTmp = json_decode($p->unit_datang_array ?? '[]', true) ?? [];
+                    $unitSamplingsTmp = json_decode($p->unit_sampling_array ?? '[]', true) ?? [];
                     $spesifikasisTmp = json_decode($p->spesifikasi_array ?? '[]', true) ?? [];
                     $kondisiProduksTmp = json_decode($p->kondisi_produk ?? '[]', true) ?? [];
                     $suhuProduksTmp = json_decode($p->suhu_produk ?? '[]', true) ?? [];
@@ -744,6 +754,14 @@
                                 @if($negara_val)
                                     <div class="f-row"><span class="f-label">Negara:</span><span class="f-value">{{ $negara_val }}</span></div>
                                 @endif
+                                @php
+                                    $jd_v = (json_decode($p->jumlah_datang_array ?? '[]', true) ?? [])[$ri] ?? null;
+                                    $ud_v = (json_decode($p->unit_datang_array ?? '[]', true) ?? [])[$ri] ?? null;
+                                    $js_v = (json_decode($p->jumlah_sampling_array ?? '[]', true) ?? [])[$ri] ?? null;
+                                    $us_v = (json_decode($p->unit_sampling_array ?? '[]', true) ?? [])[$ri] ?? null;
+                                @endphp
+                                @if($jd_v)<div class="f-row"><span class="f-label">Jml Datang:</span><span class="f-value">{{ $jd_v }} {{ $ud_v ?? '' }}</span></div>@endif
+                                @if($js_v)<div class="f-row"><span class="f-label">Jml Sampling:</span><span class="f-value">{{ $js_v }} {{ $us_v ?? '' }}</span></div>@endif
                             @endif
 
                             @php
