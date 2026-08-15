@@ -853,11 +853,11 @@ class PemeriksaanSuhuRuangV2Controller extends Controller
             });
         }
 
-        if ($id_shift) {
+        if ($id_shift && $id_shift !== 'all') {
             $query->where('id_shift', $id_shift);
         }
 
-        if ($id_shift) {
+        if ($id_shift && $id_shift !== 'all') {
             $shift = Shift::find($id_shift);
             $shiftName = $shift ? trim(strtolower((string) $shift->shift)) : null;
 
@@ -877,14 +877,21 @@ class PemeriksaanSuhuRuangV2Controller extends Controller
                 }
             }
         } else {
-            if ($tanggal) {
+            // Semua Shift - handle both range tanggal dan single date
+            if ($tanggalDari && $tanggalSampai) {
+                $query->whereBetween('tanggal', [$tanggalDari, $tanggalSampai]);
+            } elseif ($tanggalDari) {
+                $query->whereDate('tanggal', '>=', $tanggalDari);
+            } elseif ($tanggalSampai) {
+                $query->whereDate('tanggal', '<=', $tanggalSampai);
+            } elseif ($tanggal) {
                 $query->whereDate('tanggal', $tanggal);
             }
         }
 
         $pemeriksaans = $query->latest()->get();
 
-        $shift = $id_shift ? Shift::find($id_shift) : null;
+        $shift = ($id_shift && $id_shift !== 'all') ? Shift::find($id_shift) : null;
 
         $qcUser = null;
         $produksiUser = null;

@@ -91,7 +91,7 @@
                     @endphp
                     <div class="header">
                         <div class="header-left"><div class="logo-company"><div class="header-logo"><img src="{{ public_path('dist/images/logo/cpi-logo.png') }}" alt="Logo"></div><div class="header-company"><h2>PT. CHAROEN POKPHAND INDONESIA</h2><p>FOOD DIVISION {{ strtoupper($plantName) }}</p><p>{{ strtoupper($plantName) }} - INDONESIA</p></div></div></div>
-                        <div class="header-right"><div class="header-title"><h1>PEMERIKSAAN SUHU RUANG CS MEAT</h1><div style="font-size:8px;color:#666;margin-top:3px;">{{ strtoupper($currentShift->shift) }}</div></div></div>
+                        <div class="header-right"><div class="header-title"><h1>PEMERIKSAAN SUHU PRODUK DAN SUHU RUANG PENYIMPANAN </h1><div style="font-size:8px;color:#666;margin-top:3px;">{{ strtoupper($currentShift->shift) }}</div></div></div>
                     </div>
                     <div class="subheader"><table class="subheader-table">
                         <tr><td class="subheader-label">Tanggal</td><td>{{ $p->tanggal ? $p->tanggal->format('d/m/Y') : '-' }}</td><td class="subheader-label">Shift</td><td>{{ $shiftNameAS }}</td></tr>

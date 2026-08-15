@@ -99,8 +99,9 @@
                                 <label class="form-label">Tanggal</label>
                                 <input type="date" name="tanggal" class="form-control" value="{{ request('tanggal') }}">
                             </div>
-                            <div class="col-md-3 d-flex align-items-end">
-                                <button type="submit" class="btn btn-success w-100"><i class="bi bi-file-pdf"></i> PDF</button>
+                            <div class="col-md-3 d-flex align-items-end gap-2">
+                                <button type="submit" formaction="{{ route('pemeriksaan-suhu-ruang.export-pdf') }}" class="btn btn-danger flex-fill"><i class="bi bi-file-pdf"></i> PDF</button>
+                                <button type="submit" formaction="{{ route('pemeriksaan-suhu-ruang.export-excel') }}" class="btn btn-success flex-fill"><i class="bi bi-file-earmark-excel"></i> Excel</button>
                             </div>
                         </form>
                     </div>

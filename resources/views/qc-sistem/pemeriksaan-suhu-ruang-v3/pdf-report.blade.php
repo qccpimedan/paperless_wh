@@ -71,7 +71,7 @@
                     {{-- Header CPI --}}
                     <div class="header">
                         <div class="header-left"><div class="logo-company"><div class="header-logo"><img src="{{ public_path('dist/images/logo/cpi-logo.png') }}" alt="Logo"></div><div class="header-company"><h2>PT. CHAROEN POKPHAND INDONESIA</h2><p>FOOD DIVISION {{ strtoupper($plantName) }}</p><p>{{ strtoupper($plantName) }} - INDONESIA</p></div></div></div>
-                        <div class="header-right"><div class="header-title"><h1>PEMERIKSAAN SUHU RUANG (GUDANG DRY)</h1></div></div>
+                        <div class="header-right"><div class="header-title"><h1>PEMERIKSAAN SUHU PRODUK DAN SUHU RUANG PENYIMPANAN</h1></div></div>
                     </div>
                     {{-- The body content for each record (same as single mode) --}}
                     @php

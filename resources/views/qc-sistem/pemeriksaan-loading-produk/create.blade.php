@@ -1811,9 +1811,6 @@ window._tujuanPengirimansJson = @json(
     .detail-chevron.rotated { transform: rotate(180deg); }
 </style>
 
-<!-- SheetJS for Excel Parsing -->
-<script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
-
 <!-- Validasi Front-End Form -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -2062,3 +2059,8 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 @endsection
+
+<!-- Validasi Frontend untuk Pemeriksaan Loading Produk -->
+<script src="{{ asset('js/validasi-loading-produk.js') }}"></script>
+<!-- SheetJS for Excel Parsing -->
+<script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>

@@ -9,6 +9,8 @@ use App\Models\Produk;
 use App\Traits\EditablePer2JamTrait;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\PemeriksaanSuhuRuangExport;
 
 class PemeriksaanSuhuRuangController extends Controller
 {
@@ -743,6 +745,83 @@ class PemeriksaanSuhuRuangController extends Controller
             . '.pdf';
 
         return $pdf->download($filename);
+    }
+
+    /**
+     * Export Excel dengan filter
+     */
+    public function exportExcel(Request $request)
+    {
+        $user = Auth::user();
+        $id_shift = $request->input('id_shift');
+        $tanggalDari = $request->input('tanggal_dari');
+        $tanggalSampai = $request->input('tanggal_sampai');
+        $tanggal = $request->input('tanggal');
+
+        $query = PemeriksaanSuhuRuang::with([
+            'user.role',
+            'user.plant',
+            'produk',
+            'shift',
+            'histories',
+            'verifiedByQc.role',
+            'verifiedByProduksi.role',
+            'verifiedBySpv.role',
+        ]);
+
+        if ($user->role && strtolower($user->role->role) !== 'superadmin') {
+            $query->whereHas('user', function ($q) use ($user) {
+                $q->where('id_plant', $user->getEffectivePlantId());
+            });
+        }
+
+        if ($id_shift && $id_shift !== 'all') {
+            $query->where('id_shift', $id_shift);
+            $shift = Shift::find($id_shift);
+            $shiftName = $shift ? trim(strtolower((string) $shift->shift)) : null;
+            $isShift1 = $shift && $shift->is_date_range;
+
+            if ($isShift1) {
+                if ($tanggalDari && $tanggalSampai) {
+                    $query->whereBetween('tanggal', [$tanggalDari, $tanggalSampai]);
+                } elseif ($tanggalDari) {
+                    $query->whereDate('tanggal', '>=', $tanggalDari);
+                } elseif ($tanggalSampai) {
+                    $query->whereDate('tanggal', '<=', $tanggalSampai);
+                }
+            } else {
+                if ($tanggal) {
+                    $query->whereDate('tanggal', $tanggal);
+                }
+            }
+        } else {
+            // All shifts
+            if ($tanggalDari && $tanggalSampai) {
+                $query->whereBetween('tanggal', [$tanggalDari, $tanggalSampai]);
+            } elseif ($tanggalDari) {
+                $query->whereDate('tanggal', '>=', $tanggalDari);
+            } elseif ($tanggalSampai) {
+                $query->whereDate('tanggal', '<=', $tanggalSampai);
+            } elseif ($tanggal) {
+                $query->whereDate('tanggal', $tanggal);
+            }
+        }
+
+        $pemeriksaans = $query->latest()->get();
+        $shift = ($id_shift && $id_shift !== 'all') ? Shift::find($id_shift) : null;
+
+        $filenameDate = $tanggal ?? $tanggalDari ?? date('Y-m-d');
+        $filename = 'pemeriksaan-suhu-ruang-' . $filenameDate . '.xlsx';
+
+        return Excel::download(
+            new PemeriksaanSuhuRuangExport($pemeriksaans, [
+                'tanggal' => $tanggal,
+                'tanggal_dari' => $tanggalDari,
+                'tanggal_sampai' => $tanggalSampai,
+                'shift' => $shift,
+            ]),
+            $filename
+        );
     }
 
     public function batchVerify(Request $request)
