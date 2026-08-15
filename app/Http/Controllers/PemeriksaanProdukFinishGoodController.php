@@ -389,7 +389,7 @@ return view('qc-sistem.pemeriksaan-produk-finish-good.index', compact('pemeriksa
             'upload_coa_array' => $coaPaths,
         ]);
 
-        return redirect()->route('pemeriksaan-produk-finish-good.show', $pemeriksaan->uuid)
+        return redirect()->route('pemeriksaan-produk-finish-good.index', $pemeriksaan->uuid)
             ->with('success', 'Data pemeriksaan Finish Good berhasil disimpan');
     }
 

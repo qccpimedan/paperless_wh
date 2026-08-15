@@ -502,7 +502,7 @@
                                                                         <select class="form-select" name="unit_datang[]" style="flex: 0 0 60px;">
                                                                             <option value="">Pilih Parameter</option>
                                                                             @foreach(\App\Models\PemeriksaanKedatanganChemical::unitParameters() as $unitKey => $unitLabel)
-                                                                                <option value="{{ $unitKey }}" {{ (isset($detail['unit_datang']) && is_array($detail['unit_datang']) && $detail['unit_datang'][0] == $unitKey) ? 'selected' : '' }}>{{ $unitLabel }}</option>
+                                                                                <option value="{{ $unitKey }}" {{ (!empty($detail['unit_datang']) && is_array($detail['unit_datang']) && ($detail['unit_datang'][0] ?? '') == $unitKey) ? 'selected' : '' }}>{{ $unitLabel }}</option>
                                                                             @endforeach
                                                                         </select>
                                                                     </div>
@@ -519,7 +519,7 @@
                                                                         <select class="form-select" name="unit_sampling[]" style="flex: 0 0 60px;">
                                                                             <option value="">Pilih Parameter</option>
                                                                             @foreach(\App\Models\PemeriksaanKedatanganChemical::unitParameters() as $unitKey => $unitLabel)
-                                                                                <option value="{{ $unitKey }}" {{ (isset($detail['unit_sampling']) && is_array($detail['unit_sampling']) && $detail['unit_sampling'][0] == $unitKey) ? 'selected' : '' }}>{{ $unitLabel }}</option>
+                                                                                <option value="{{ $unitKey }}" {{ (!empty($detail['unit_sampling']) && is_array($detail['unit_sampling']) && ($detail['unit_sampling'][0] ?? '') == $unitKey) ? 'selected' : '' }}>{{ $unitLabel }}</option>
                                                                             @endforeach
                                                                         </select>
                                                                     </div>
