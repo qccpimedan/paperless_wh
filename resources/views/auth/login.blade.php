@@ -315,7 +315,21 @@
                 </div>
             @endif
 
-            @if($errors->any())
+            {{-- Alert khusus SSO error --}}
+            @if($errors->has('sso'))
+                <div class="alert alert-warning alert-dismissible fade show" role="alert" style="border-left: 4px solid #f59e0b; border-radius: 12px;">
+                    <div class="d-flex align-items-start">
+                        <i class="bi bi-shield-exclamation me-2 mt-1" style="font-size: 1.1rem;"></i>
+                        <div>
+                            <strong>Login Otomatis Gagal</strong><br>
+                            <small>{{ $errors->first('sso') }}</small>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            @endif
+
+            @if($errors->any() && !$errors->has('sso'))
                 <div class="alert alert-danger alert-dismissible fade show" role="alert">
                     <i class="bi bi-exclamation-triangle me-2"></i>
                     @foreach($errors->all() as $error)
