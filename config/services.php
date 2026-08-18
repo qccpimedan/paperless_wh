@@ -31,4 +31,11 @@ return [
         ],
     ],
 
+
+    'employee_api' => [
+        'url'               => env('EMPLOYEE_API_URL'),
+        'sso_secret'        => env('API_TOKEN_SSO_VERIFY'),
+        'this_project_uuid' => env('THIS_PROJECT_UUID'),
+    ],
+
 ];

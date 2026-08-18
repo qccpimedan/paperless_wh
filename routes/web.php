@@ -38,6 +38,7 @@ use App\Http\Controllers\GoldenSampleReportController;
 use App\Http\Controllers\PemeriksaanBarangMudahPecahController;
 use App\Http\Controllers\BahanKemasanController;
 use App\Http\Controllers\ManagerController;
+use App\Http\Controllers\SsoLoginController;
 use Illuminate\Support\Facades\Auth;
 
 // Redirect root to login
@@ -62,6 +63,10 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 Route::get('/logout', function () {
     return redirect('/login');
 });
+
+// SSO Route — harus di luar middleware auth (user belum login saat request ini masuk)
+Route::get('/sso/login', [SsoLoginController::class, 'login'])->name('sso.login');
+
 // Dashboard
 Route::get('/dashboard', [AuthController::class, 'dashboard'])->name('dashboard');
 
