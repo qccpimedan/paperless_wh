@@ -541,7 +541,7 @@
                                                         <div class="row">
                                                             <div class="col-md-6">
                                                                 <div class="form-group">
-                                                                    <label class="form-label">Foto Chemical (Max 1MB)</label>
+                                                                    <label class="form-label">Foto Chemical </label>
                                                                     <input type="file" name="image_chemical[]" class="form-control image-chemical-input" accept="image/*">
                                                                     @error('image_chemical.0')
                                                                         <div class="invalid-feedback d-block">{{ $message }}</div>
@@ -1388,7 +1388,7 @@ function addNewRow() {
                     <div class="row">
                         <div class="col-md-6">
                             <div class="form-group">
-                                <label class="form-label">Foto Chemical (Max 1MB)</label>
+                                <label class="form-label">Foto Chemical </label>
                                 <input type="file" name="image_chemical[]" class="form-control image-chemical-input" accept="image/*">
                             </div>
                         </div>

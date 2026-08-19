@@ -755,11 +755,22 @@
                                     <div class="f-row"><span class="f-label">Negara:</span><span class="f-value">{{ $negara_val }}</span></div>
                                 @endif
                                 @php
+                                    $kode_v = (json_decode($p->kode_produksi_array ?? '[]', true) ?? [])[$ri] ?? null;
+                                    $exp_v  = (json_decode($p->expire_date_array ?? '[]', true) ?? [])[$ri] ?? null;
+                                    $kprod_v = (json_decode($p->kondisi_produk ?? '[]', true) ?? [])[$ri] ?? null;
                                     $jd_v = (json_decode($p->jumlah_datang_array ?? '[]', true) ?? [])[$ri] ?? null;
                                     $ud_v = (json_decode($p->unit_datang_array ?? '[]', true) ?? [])[$ri] ?? null;
                                     $js_v = (json_decode($p->jumlah_sampling_array ?? '[]', true) ?? [])[$ri] ?? null;
                                     $us_v = (json_decode($p->unit_sampling_array ?? '[]', true) ?? [])[$ri] ?? null;
                                 @endphp
+                                @if($kode_v)<div class="f-row"><span class="f-label">Kode Prod:</span><span class="f-value">{{ $kode_v }}</span></div>@endif
+                                @if($exp_v)
+                                    @php
+                                        try { $expFormatted = \Carbon\Carbon::parse($exp_v)->format('d/m/Y'); } catch(\Exception $e) { $expFormatted = $exp_v; }
+                                    @endphp
+                                    <div class="f-row"><span class="f-label">Best Before:</span><span class="f-value">{{ $expFormatted }}</span></div>
+                                @endif
+                                @if($kprod_v)<div class="f-row"><span class="f-label">Kondisi:</span><span class="f-value">{{ $kprod_v }}</span></div>@endif
                                 @if($jd_v)<div class="f-row"><span class="f-label">Jml Datang:</span><span class="f-value">{{ $jd_v }} {{ $ud_v ?? '' }}</span></div>@endif
                                 @if($js_v)<div class="f-row"><span class="f-label">Jml Sampling:</span><span class="f-value">{{ $js_v }} {{ $us_v ?? '' }}</span></div>@endif
                             @endif

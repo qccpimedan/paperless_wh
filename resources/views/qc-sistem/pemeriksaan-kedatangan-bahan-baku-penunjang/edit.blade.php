@@ -798,7 +798,7 @@
                                                                         </div>
                                                                     @endif
                                                                     <div class="form-group">
-                                                                        <label class="form-label">Ganti Foto Bahan Baku (Max 1MB)</label>
+                                                                        <label class="form-label">Ganti Foto Bahan Baku</label>
                                                                         <input type="file" name="image_bahan_baku[]" class="form-control image-bahan-baku-input" accept="image/*" capture="camera">
                                                                     </div>
                                                                 </div>
@@ -1375,7 +1375,12 @@ document.addEventListener('DOMContentLoaded', function() {
             const kategoriSelect = row.querySelector('select.kategori-produk-select');
             if (kategoriSelect) {
                 populateProdukOptionsForRow(row, kategoriSelect.value);
-                applyProdukMetaForRow(row);
+                // Saat edit mode: jangan timpa badges jika sudah terisi dari DB (ada hidden input)
+                const produsenInputs = row.querySelector('.produsen-hidden-inputs');
+                const hasExistingData = produsenInputs && produsenInputs.querySelectorAll('input[type="hidden"]').length > 0;
+                if (!hasExistingData) {
+                    applyProdukMetaForRow(row);
+                }
             }
             updateConditionalForRow(row);
         });

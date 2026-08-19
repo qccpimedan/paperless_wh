@@ -714,7 +714,7 @@
                                                                             </div>
                                                                         @endif
                                                                         <div class="form-group">
-                                                                            <label class="form-label">Ganti Gambar (Max 1MB)</label>
+                                                                            <label class="form-label">Ganti Gambar</label>
                                                                             <input type="file" name="image_kemasan[]" class="form-control image-kemasan-input" accept="image/*" capture="camera">
                                                                         </div>
                                                                     </div>
@@ -886,7 +886,7 @@
                                                     <div class="row">
                                                         <div class="col-md-6">
                                                             <div class="form-group">
-                                                                <label class="form-label">Ganti Gambar (Max 1MB)</label>
+                                                                <label class="form-label">Ganti Gambar</label>
                                                                 <input type="file" name="image_kemasan[]" class="form-control image-kemasan-input" accept="image/*" capture="camera">
                                                             </div>
                                                         </div>
@@ -1322,9 +1322,15 @@
                                                 syncHeaderToDetails(rowEl);
                                             }
 
-                                            function applyProdukMetaForRow(rowEl) {
+                                            function applyProdukMetaForRow(rowEl, forceOverride) {
                                                 const produkSelect = rowEl.querySelector('select.produk-select');
                                                 if (!produkSelect) return;
+                                                if (!forceOverride) {
+                                                    const produsenBadgesEl = rowEl.querySelector('.produsen-badges');
+                                                    if (produsenBadgesEl && produsenBadgesEl.querySelector('.badge')) {
+                                                        return;
+                                                    }
+                                                }
                                                 const produkId = (produkSelect.value || '').toString();
                                                 const meta = produkMeta ? produkMeta[produkId] : null;
                                                 if (!meta) return;
@@ -1338,7 +1344,7 @@
                                                 applyBadges(rowEl, normalizeMulti(meta.produsen), normalizeMulti(meta.distributor));
                                             }
 
-                                            function populateProdukOptionsForRow(rowEl) {
+                                            function populateProdukOptionsForRow(rowEl, forceOverride) {
                                                 const kategoriSelect = rowEl.querySelector('select.kategori-produk-select');
                                                 const produkSelect = rowEl.querySelector('select.produk-select');
                                                 if (!kategoriSelect || !produkSelect) return;
@@ -1365,7 +1371,7 @@
                                                 });
 
                                                 initProdukChoices(produkSelect);
-                                                setTimeout(() => applyProdukMetaForRow(rowEl), 0);
+                                                setTimeout(() => applyProdukMetaForRow(rowEl, forceOverride), 0);
 
                                                 syncHeaderToDetails(rowEl);
                                             }
@@ -1376,7 +1382,7 @@
                                                     const row = target.closest('.unified-row');
                                                     if (row && target.dataset) {
                                                         target.dataset.desiredProduk = '';
-                                                        populateProdukOptionsForRow(row);
+                                                        populateProdukOptionsForRow(row, true);
                                                     }
                                                 }
 
@@ -1387,7 +1393,7 @@
                                                         if (kategoriSelect && kategoriSelect.dataset) {
                                                             kategoriSelect.dataset.desiredProduk = (target.value || '').toString();
                                                         }
-                                                        applyProdukMetaForRow(row);
+                                                        applyProdukMetaForRow(row, true);
                                                         const idx = Array.from(document.querySelectorAll('#unified-container .unified-row')).indexOf(row);
                                                         updateProdukLabel(row, idx >= 0 ? idx : 0);
                                                     }

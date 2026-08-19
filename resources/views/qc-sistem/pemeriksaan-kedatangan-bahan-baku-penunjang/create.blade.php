@@ -2118,7 +2118,7 @@ function addNewRow() {
             <div class="row">
                 <div class="col-md-6">
                     <div class="form-group">
-                        <label class="form-label">Foto Bahan Baku (Max 1MB)</label>
+                        <label class="form-label">Foto Bahan Baku</label>
                         <input type="file" name="image_bahan_baku[]" class="form-control image-bahan-baku-input" accept="image/*" capture="camera">
                     </div>
                 </div>
