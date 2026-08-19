@@ -705,40 +705,7 @@
                                     </span>
 
                                 </td>
-
-
-                                <td class="subheader-divider"></td>
-
-
-                                <td>
-
-                                    <span class="subheader-label">
-                                        Tujuan:
-                                    </span>
-
-                                    <span class="subheader-value">
-
-                                        {{
-                                            $firstRecord && $firstRecord->tujuanPengiriman
-                                                ? (
-                                                    ($firstRecord->tujuanPengiriman->customer->nama_cust ?? '')
-                                                    .
-                                                    (
-                                                        $firstRecord->tujuanPengiriman->customer
-                                                            ? ' - '
-                                                            : ''
-                                                    )
-                                                    .
-                                                    ($firstRecord->tujuanPengiriman->nama_tujuan ?? '')
-                                                  )
-                                                : '-'
-                                        }}
-
-                                    </span>
-
-                                </td>
-
-
+                                
                                 <td class="subheader-divider"></td>
 
 

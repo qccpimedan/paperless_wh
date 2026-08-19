@@ -452,19 +452,43 @@
                                     PEMERIKSAAN #{{ $columnNumber }}
                                 </div>
 
-                                {{-- KONDISI MOBIL --}}
+                                {{-- KONDISI MOBIL PENGANGKUT --}}
                                 @php
-                                    $kondisiMobil = $pemeriksaan->kondisi_mobil ?? [];
-                                    $checkedItems = array_filter($kondisiMobil);
+                                    $kondisiMobilRaw = $pemeriksaan->kondisi_mobil ?? [];
+                                    if (is_string($kondisiMobilRaw)) {
+                                        $decoded = json_decode($kondisiMobilRaw, true);
+                                        $kondisiMobilArr = is_array($decoded) ? $decoded : [];
+                                    } elseif (is_array($kondisiMobilRaw)) {
+                                        $kondisiMobilArr = $kondisiMobilRaw;
+                                    } else {
+                                        $kondisiMobilArr = [];
+                                    }
+
+                                    $kondisiMobilLabels = [
+                                        'bersih'              => 'Bersih',
+                                        'bebas_hama'          => 'Bebas dari hama',
+                                        'tidak_kondensasi'    => 'Tidak Kondensasi',
+                                        'bebas_produk_halal'  => 'Bebas dari Produk Non Halal',
+                                        'tidak_berbau'        => 'Tidak Berbau',
+                                        'tidak_ada_sampah'    => 'Tidak ada sampah',
+                                        'tidak_ada_mikroba'   => 'Tidak ada mikroba',
+                                        'lampu_cover_utuh'    => 'Lampu Cover utuh',
+                                        'pallet_utuh'         => 'Pallet utuh',
+                                        'tertutup_rapat'      => 'Tertutup rapat',
+                                        'bebas_kontaminan'    => 'Bebas kontaminan',
+                                    ];
                                 @endphp
-                                @if(count($checkedItems) > 0)
-                                    <div class="section-title">1. Kondisi Mobil</div>
-                                    @foreach($checkedItems as $key => $value)
-                                        @if($value)
-                                            <div class="field-row">
-                                                <span class="check-item">V {{ ucfirst(str_replace('_', ' ', $key)) }}</span>
-                                            </div>
-                                        @endif
+                                @if(!empty($kondisiMobilArr))
+                                    <div class="section-title">1. Kondisi Mobil Pengangkut</div>
+                                    @foreach($kondisiMobilLabels as $key => $label)
+                                        <div class="field-row">
+                                            @if(!empty($kondisiMobilArr[$key]))
+                                                <span class="check-item">V</span>
+                                            @else
+                                                <span style="color:#dc3545;font-weight:bold;">X</span>
+                                            @endif
+                                            <span class="field-value"> {{ $label }}</span>
+                                        </div>
                                     @endforeach
                                 @endif
 
