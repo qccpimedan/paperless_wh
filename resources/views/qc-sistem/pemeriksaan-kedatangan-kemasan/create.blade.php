@@ -670,7 +670,7 @@
                                                         <div class="row">
                                                             <div class="col-md-6">
                                                                 <div class="form-group">
-                                                                    <label class="form-label">Gambar Kemasan (Max 1MB)</label>
+                                                                    <label class="form-label">Gambar Kemasan</label>
                                                                     <input type="file" name="image_kemasan[]" class="form-control image-kemasan-input" accept="image/*" capture="camera">
                                                                     @error('image_kemasan.0')
                                                                         <div class="invalid-feedback d-block">{{ $message }}</div>
@@ -1308,7 +1308,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="form-group">
-                                        <label class="form-label">Gambar Kemasan (Max 1MB)</label>
+                                        <label class="form-label">Gambar Kemasan</label>
                                         <input type="file" name="image_kemasan[]" class="form-control image-kemasan-input" accept="image/*" capture="camera">
                                     </div>
                                 </div>

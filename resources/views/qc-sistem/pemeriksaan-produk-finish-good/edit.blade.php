@@ -577,7 +577,7 @@
                                                                         <input type="date" class="form-control" name="expire_date[]" value="{{ old('expire_date.'.$idx, $it['expire'] ?? '') }}">
                                                                     </div>
                                                                 </div>
-                                                                <div class="col-md-3">
+                                                                <div class="col-md-6">
                                                                     <div class="form-group">
                                                                         <label class="form-label">Jumlah Datang</label>
                                                                         <div class="input-group">
@@ -591,7 +591,7 @@
                                                                         </div>
                                                                     </div>
                                                                 </div>
-                                                                <div class="col-md-3">
+                                                                <div class="col-md-6">
                                                                     <div class="form-group">
                                                                         <label class="form-label">Jumlah Sampling</label>
                                                                         <div class="input-group">
@@ -691,7 +691,7 @@
                                                                             </div>
                                                                         @endif
                                                                         <div class="form-group">
-                                                                            <label class="form-label">Ganti Foto Produk (Max 1MB)</label>
+                                                                            <label class="form-label">Ganti Foto Produk</label>
                                                                             <input type="file" name="image_finish_good[]" class="form-control" accept="image/*" capture="camera">
                                                                         </div>
                                                                     </div>
@@ -1314,13 +1314,21 @@ function updateRemoveButtons() {
     });
 }
 
-function applyProdukMetaForRow(rowEl) {
+function applyProdukMetaForRow(rowEl, forceOverride) {
     const produkSelect = rowEl.querySelector('select.produk-select');
     const produsenBadges = rowEl.querySelector('.produsen-badges');
     const distributorBadges = rowEl.querySelector('.distributor-badges');
     const produsenHidden = rowEl.querySelector('input.produsen-hidden');
     const distributorHidden = rowEl.querySelector('input.distributor-hidden');
     if (!produkSelect) return;
+
+    // Edit mode: jangan timpa data DB jika tidak ada perubahan user
+    if (!forceOverride) {
+        const existingVal = produsenHidden ? (produsenHidden.value || '').trim() : '';
+        if (existingVal && existingVal !== '[]' && existingVal !== '') {
+            return; // Data sudah ada dari DB, skip override
+        }
+    }
 
     const produkId = String(produkSelect.value || '');
     const meta = produkId && produkMeta ? produkMeta[produkId] : null;
@@ -1390,7 +1398,7 @@ function populateProdukOptionsForRow(rowEl) {
     }
     refreshChoices(produkSelect);
 
-    applyProdukMetaForRow(rowEl);
+    applyProdukMetaForRow(rowEl, true);
 }
 
 function setupProdukRowListeners(rowEl) {
@@ -1408,7 +1416,7 @@ function setupProdukRowListeners(rowEl) {
     }
     if (produkSelect) {
         produkSelect.addEventListener('change', function() {
-            applyProdukMetaForRow(rowEl);
+            applyProdukMetaForRow(rowEl, true);
             syncHeaderToDetails(rowEl);
         });
     }

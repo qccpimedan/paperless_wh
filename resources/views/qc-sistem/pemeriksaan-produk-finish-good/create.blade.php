@@ -450,7 +450,7 @@
                                                                 <input type="date" class="form-control" name="expire_date[]" value="{{ old('expire_date.0') }}">
                                                             </div>
                                                         </div>
-                                                        <div class="col-md-3">
+                                                        <div class="col-md-6">
                                                             <div class="form-group">
                                                                 <label class="form-label">Jumlah Datang</label>
                                                                 <div class="input-group">
@@ -464,7 +464,7 @@
                                                                 </div>
                                                             </div>
                                                         </div>
-                                                        <div class="col-md-3">
+                                                        <div class="col-md-6">
                                                             <div class="form-group">
                                                                 <label class="form-label">Jumlah Sampling</label>
                                                                 <div class="input-group">
@@ -555,7 +555,7 @@
                                                         <div class="row">
                                                             <div class="col-md-6">
                                                                 <div class="form-group">
-                                                                    <label class="form-label">Foto Produk (Max 1MB)</label>
+                                                                    <label class="form-label">Foto Produk</label>
                                                                     <input type="file" name="image_finish_good[]" class="form-control" accept="image/*" capture="camera">
                                                                     @error('image_finish_good.0')
                                                                         <div class="invalid-feedback d-block">{{ $message }}</div>

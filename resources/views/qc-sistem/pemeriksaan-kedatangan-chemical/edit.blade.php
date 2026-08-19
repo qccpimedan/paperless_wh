@@ -497,9 +497,9 @@
                                                             <div class="col-md-6">
                                                                 <div class="form-group">
                                                                     <label class="form-label">Jumlah Datang</label>
-                                                                    <div class="input-group" style="max-width: 120px;">
+                                                                    <div class="input-group">
                                                                         <input type="text" class="form-control" name="jumlah_datang[]" value="{{ $detail['jumlah_datang'] ?? '' }}" placeholder="Jumlah">
-                                                                        <select class="form-select" name="unit_datang[]" style="flex: 0 0 60px;">
+                                                                        <select class="form-select" name="unit_datang[]" style="max-width: 120px;">
                                                                             <option value="">Pilih Parameter</option>
                                                                             @foreach(\App\Models\PemeriksaanKedatanganChemical::unitParameters() as $unitKey => $unitLabel)
                                                                                 <option value="{{ $unitKey }}" {{ (!empty($detail['unit_datang']) && is_array($detail['unit_datang']) && ($detail['unit_datang'][0] ?? '') == $unitKey) ? 'selected' : '' }}>{{ $unitLabel }}</option>
@@ -514,9 +514,9 @@
                                                             <div class="col-md-6">
                                                                 <div class="form-group">
                                                                     <label class="form-label">Jumlah Sampling</label>
-                                                                    <div class="input-group" style="max-width: 120px;">
+                                                                    <div class="input-group">
                                                                         <input type="text" class="form-control" name="jumlah_sampling[]" value="{{ $detail['jumlah_sampling'] ?? '' }}" placeholder="Jumlah">
-                                                                        <select class="form-select" name="unit_sampling[]" style="flex: 0 0 60px;">
+                                                                        <select class="form-select" name="unit_sampling[]" style="max-width: 120px;">
                                                                             <option value="">Pilih Parameter</option>
                                                                             @foreach(\App\Models\PemeriksaanKedatanganChemical::unitParameters() as $unitKey => $unitLabel)
                                                                                 <option value="{{ $unitKey }}" {{ (!empty($detail['unit_sampling']) && is_array($detail['unit_sampling']) && ($detail['unit_sampling'][0] ?? '') == $unitKey) ? 'selected' : '' }}>{{ $unitLabel }}</option>
@@ -608,7 +608,7 @@
                                                                         </div>
                                                                     @endif
                                                                     <div class="form-group">
-                                                                        <label class="form-label">Ganti Foto Chemical (Max 1MB)</label>
+                                                                        <label class="form-label">Ganti Foto Chemical</label>
                                                                         <input type="file" name="image_chemical[]" class="form-control" accept="image/*" capture="camera">
                                                                     </div>
                                                                 </div>
@@ -734,7 +734,7 @@ document.addEventListener('DOMContentLoaded', function() {
         initProdukChoices(produkSelect);
     }
 
-    function applyProdukForRow(rowEl) {
+    function applyProdukForRow(rowEl, forceOverride) {
         const produkSelect = rowEl.querySelector('select.produk-select');
         const idChemicalHidden = rowEl.querySelector('.id-chemical-hidden');
         const idProdusenHidden = rowEl.querySelector('.id-produsen-hidden');
@@ -743,6 +743,12 @@ document.addEventListener('DOMContentLoaded', function() {
         const distributorBadges = rowEl.querySelector('.distributor-badges');
 
         if (!produkSelect || !idChemicalHidden || !idProdusenHidden || !idDistributorHidden || !produsenBadges || !distributorBadges) return;
+
+        if (!forceOverride) {
+            if (idProdusenHidden && idProdusenHidden.value !== '') {
+                return;
+            }
+        }
 
         const produkId = (produkSelect.value || '').toString();
         const selectedName = (produkSelect.selectedOptions && produkSelect.selectedOptions[0])
@@ -805,7 +811,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     produkSelect.innerHTML = '<option value="">Pilih Produk</option>';
                 }
                 populateProdukOptionsForRow(row);
-                applyProdukForRow(row);
+                applyProdukForRow(row, true);
             }
         }
         if (target && target.matches('select.produk-select')) {
@@ -815,7 +821,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (kategoriSelect && kategoriSelect.dataset) {
                     kategoriSelect.dataset.desiredProduk = (target.value || '').toString();
                 }
-                applyProdukForRow(row);
+                applyProdukForRow(row, true);
             }
         }
     });
