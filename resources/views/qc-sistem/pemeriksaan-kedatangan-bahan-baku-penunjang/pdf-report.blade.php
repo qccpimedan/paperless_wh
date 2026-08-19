@@ -445,25 +445,41 @@
                                 @endphp
                                 <div class="col" data-num="true">
                                     <div class="col-header">PEMERIKSAAN #{{ $cn }}</div>
-                                    @php $km = $p->kondisi_mobil ?? []; $ci = array_filter($km); @endphp
-                                    @if(count($ci) > 0)
+                                    @php
+                                        $kondisiMobilRaw = $p->kondisi_mobil ?? [];
+                                        if (is_string($kondisiMobilRaw)) {
+                                            $decoded = json_decode($kondisiMobilRaw, true);
+                                            $kondisiMobilArr = is_array($decoded) ? $decoded : [];
+                                        } elseif (is_array($kondisiMobilRaw)) {
+                                            $kondisiMobilArr = $kondisiMobilRaw;
+                                        } else {
+                                            $kondisiMobilArr = [];
+                                        }
+                                        $kondisiLabels = [
+                                            'bersih' => 'Bersih',
+                                            'bebas_hama' => 'Bebas hama',
+                                            'tidak_kondensasi' => 'Tidak kondensasi',
+                                            'bebas_produk_halal' => 'Bebas dari produk non halal',
+                                            'tidak_berbau' => 'Tidak berbau',
+                                            'tidak_ada_sampah' => 'Tidak ada sampah',
+                                            'tidak_ada_mikroba' => 'Tidak ada mikroba',
+                                            'lampu_cover_utuh' => 'Lampu cover utuh',
+                                            'pallet_utuh' => 'Pallet utuh',
+                                            'tertutup_rapat' => 'Tertutup rapat',
+                                            'bebas_kontaminan' => 'Bebas kontaminan',
+                                        ];
+                                    @endphp
+                                    @if(!empty($kondisiMobilArr))
                                         <div class="sec-title">Kondisi Mobil</div>
-                                        @php
-                                            $kondisiLabels = [
-                                                'bersih' => 'Bersih',
-                                                'bebas_hama' => 'Bebas hama',
-                                                'tidak_kondensasi' => 'Tidak kondensasi',
-                                                'bebas_produk_halal' => 'Bebas produk non halal',
-                                                'tidak_berbau' => 'Tidak berbau',
-                                                'tidak_ada_sampah' => 'Tidak ada sampah',
-                                                'tidak_ada_mikroba' => 'Tidak ada mikroba',
-                                                'lampu_cover_utuh' => 'Lampu cover utuh',
-                                                'pallet_utuh' => 'Pallet utuh',
-                                                'tertutup_rapat' => 'Tertutup rapat',
-                                                'bebas_kontaminan' => 'Bebas kontaminan',
-                                            ];
-                                        @endphp
-                                        @foreach($ci as $key => $v) @if($v)<div class="f-row"><span class="check-item">{{ $kondisiLabels[$key] ?? ucfirst(str_replace('_', ' ', $key)) }}</span></div>@endif @endforeach
+                                        @foreach($kondisiLabels as $key => $label)
+                                            <div class="f-row">
+                                                @if(!empty($kondisiMobilArr[$key]))
+                                                    <span class="check-item">{{ $label }}</span>
+                                                @else
+                                                    <span style="color:#dc3545;font-weight:bold;">X </span><span style="color:#1a1a1a;font-weight:500;">{{ $label }}</span>
+                                                @endif
+                                            </div>
+                                        @endforeach
                                     @endif
                                     @php
                                         $bahan_id  = (json_decode($p->id_bahan_array ?? '[]', true) ?? [])[$ri] ?? null;
@@ -740,19 +756,42 @@
                         @endphp
                         <div class="col" data-num="true">
                             <div class="col-header">PEMERIKSAAN #{{ $cn }}</div>
-
-                            @php
-                                $km = $p->kondisi_mobil ?? [];
-                                $ci = array_filter($km);
-                            @endphp
-                            @if(count($ci) > 0)
-                                <div class="sec-title">Kondisi Mobil</div>
-                                @foreach($ci as $key => $v)
-                                    @if($v)
-                                        <div class="f-row"><span class="check-item">{{ ucfirst(str_replace('_', ' ', $key)) }}</span></div>
-                                    @endif
-                                @endforeach
-                            @endif
+                                @php
+                                    $kondisiMobilRaw = $p->kondisi_mobil ?? [];
+                                    if (is_string($kondisiMobilRaw)) {
+                                        $decoded = json_decode($kondisiMobilRaw, true);
+                                        $kondisiMobilArr = is_array($decoded) ? $decoded : [];
+                                    } elseif (is_array($kondisiMobilRaw)) {
+                                        $kondisiMobilArr = $kondisiMobilRaw;
+                                    } else {
+                                        $kondisiMobilArr = [];
+                                    }
+                                    $kondisiLabels = [
+                                        'bersih' => 'Bersih',
+                                        'bebas_hama' => 'Bebas hama',
+                                        'tidak_kondensasi' => 'Tidak kondensasi',
+                                        'bebas_produk_halal' => 'Bebas dari produk non halal',
+                                        'tidak_berbau' => 'Tidak berbau',
+                                        'tidak_ada_sampah' => 'Tidak ada sampah',
+                                        'tidak_ada_mikroba' => 'Tidak ada mikroba',
+                                        'lampu_cover_utuh' => 'Lampu cover utuh',
+                                        'pallet_utuh' => 'Pallet utuh',
+                                        'tertutup_rapat' => 'Tertutup rapat',
+                                        'bebas_kontaminan' => 'Bebas kontaminan',
+                                    ];
+                                @endphp
+                                @if(!empty($kondisiMobilArr))
+                                    <div class="sec-title">Kondisi Mobil</div>
+                                    @foreach($kondisiLabels as $key => $label)
+                                        <div class="f-row">
+                                            @if(!empty($kondisiMobilArr[$key]))
+                                                <span class="check-item">{{ $label }}</span>
+                                            @else
+                                                <span style="color:#dc3545;font-weight:bold;">X </span><span style="color:#1a1a1a;font-weight:500;">{{ $label }}</span>
+                                            @endif
+                                        </div>
+                                    @endforeach
+                                @endif
 
                             @php
                                 $tempId = json_decode($p->id_bahan_array ?? '[]', true) ?? [];
