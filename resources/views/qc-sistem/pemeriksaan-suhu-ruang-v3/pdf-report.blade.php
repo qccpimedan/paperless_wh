@@ -360,12 +360,12 @@
                         <td class="subheader-label">&nbsp;</td>
                         <td>&nbsp;</td>
                     </tr>
-                    <tr>
+                    <!-- <tr>
                         <td class="subheader-label">Pukul</td>
                         <td>{{ $jamPukul ?? '-' }}</td>
                         <td class="subheader-label">Status</td>
                         <td>{{ $p->status_verifikasi ?? 'pending' }}</td>
-                    </tr>
+                    </tr> -->
                 </table>
             </div>
 

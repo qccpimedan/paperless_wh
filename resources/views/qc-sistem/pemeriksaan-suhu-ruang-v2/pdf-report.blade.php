@@ -95,7 +95,10 @@
                     </div>
                     <div class="subheader"><table class="subheader-table">
                         <tr><td class="subheader-label">Tanggal</td><td>{{ $p->tanggal ? $p->tanggal->format('d/m/Y') : '-' }}</td><td class="subheader-label">Shift</td><td>{{ $shiftNameAS }}</td></tr>
-                        <tr><td class="subheader-label">Plant</td><td>{{ $plantName }}</td><td class="subheader-label">Pukul</td><td>{{ $jamPukulAS ?? '-' }}</td></tr>
+                        <tr>
+                            <td class="subheader-label">Plant</td><td>{{ $plantName }}</td>
+                            <!-- <td class="subheader-label">Pukul</td><td>{{ $jamPukulAS ?? '-' }}</td> -->
+                        </tr>
                         <tr><td class="subheader-label">Produk</td><td>@if($kategoriAS)<span style="font-weight:700;">{{ $kategoriAS }}</span> - @endif{{ $produkNameAS }}</td><td class="subheader-label">Suhu Produk</td><td>{{ $p->suhu_produk ?? '-' }}</td></tr>
                     </table></div>
                     <div class="section-title">Data & Riwayat Pemeriksaan</div>

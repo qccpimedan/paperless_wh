@@ -485,10 +485,10 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
             'hasil_uji_ffa.*' => 'nullable|string|max:255',
             'keterangan' => 'nullable|array',
             'keterangan.*' => 'nullable|string',
-            'file_coa.*' => 'nullable|mimes:pdf,jpg,jpeg,png,webp,gif|max:5120',
-            'file_coa_img.*' => 'nullable|image|max:5120',
+            'file_coa.*' => 'nullable|mimes:pdf,jpg,jpeg,png,webp,gif|max:3072',
+            'file_coa_img.*' => 'nullable|image|max:3072',
             'image_bahan_baku' => 'nullable|array',
-            'image_bahan_baku.*' => 'nullable|image|max:5120',
+            'image_bahan_baku.*' => 'nullable|image|max:3072',
         ]);
 
         // Process kondisi mobil dan fisik dengan logic yang benar
@@ -883,10 +883,10 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
             'hasil_uji_ffa.*' => 'nullable|string|max:255',
             'keterangan' => 'nullable|array',
             'keterangan.*' => 'nullable|string',
-            'file_coa.*' => 'nullable|mimes:pdf,jpg,jpeg,png,webp,gif|max:5120',
-            'file_coa_img.*' => 'nullable|image|max:5120',
+            'file_coa.*' => 'nullable|mimes:pdf,jpg,jpeg,png,webp,gif|max:3072',
+            'file_coa_img.*' => 'nullable|image|max:3072',
             'image_bahan_baku' => 'nullable|array',
-            'image_bahan_baku.*' => 'nullable|image|max:5120',
+            'image_bahan_baku.*' => 'nullable|image|max:3072',
         ]);
 
         // Process kondisi mobil dan fisik dengan logic yang benar

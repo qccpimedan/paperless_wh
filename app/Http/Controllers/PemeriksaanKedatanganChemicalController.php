@@ -244,6 +244,76 @@ return view('qc-sistem.pemeriksaan-kedatangan-chemical.index', compact('pemeriks
         return view('qc-sistem.pemeriksaan-kedatangan-chemical.create', compact('shifts', 'chemicals', 'produsens', 'distributors', 'countries', 'produkKategoriOptions', 'produkByKategori', 'produkMeta', 'chemicalByName', 'chemicalByProdukId'));
     }
 
+    private function compressAndStoreCoa($file)
+    {
+        if (!$file) return null;
+
+        $mimeType = $file->getMimeType();
+
+        // 1. Jika PDF, langsung load & save apa adanya di memori / disk
+        if ($mimeType === 'application/pdf') {
+            return $file->storePublicly('kemasan-coa', 'public');
+        }
+
+        // 2. Jika bukan gambar (misal tipe lain), langsung simpan juga (meskipun fallback)
+        if (!str_starts_with($mimeType, 'image/')) {
+            return $file->storePublicly('kemasan-coa', 'public');
+        }
+
+        // 3. Masih gambar? Mari cek ukurannya (max: 1024KB dalam ukuran byte)
+        // Kita izinkan compress otomatis di server JIKA di bawah 3MB tapi di atas ideal. 
+        // Namun, script FE + PHP Post Max Size sering menangani < 1~3MB saja.
+        $maxSizeBytes = 1 * 1024 * 1024; // 1 MB (contoh agar aman)
+        $fileSize = $file->getSize();
+
+        // Jika ukuran sudah OKE (< 1MB) langsung store
+        if ($fileSize <= $maxSizeBytes) {
+            return $file->storePublicly('kemasan-coa', 'public');
+        }
+
+        // Jika ukuran > 1MB, kita turunkan quality menjadi 60% pakai GD bawaan PHP (tanpa package luar)
+        $path = $file->getRealPath();
+        
+        switch ($mimeType) {
+            case 'image/jpeg':
+            case 'image/jpg':
+                $image = @imagecreatefromjpeg($path);
+                break;
+            case 'image/png':
+                $image = @imagecreatefrompng($path);
+                break;
+            case 'image/webp':
+                $image = @imagecreatefromwebp($path);
+                break;
+            case 'image/gif':
+                $image = @imagecreatefromgif($path);
+                break;
+            default:
+                // Tipe gambar aneh, skip kompresi
+                return $file->storePublicly('kemasan-coa', 'public');
+        }
+
+        if (!$image) {
+            // Jika rusak? Simpan aja
+            return $file->storePublicly('kemasan-coa', 'public');
+        }
+
+        // Buat destinasi unik di storage public
+        $filename = 'coa_cmp_' . uniqid() . '.jpg'; 
+        // pastikan folder exists
+        $uploadDir = storage_path('app/public/kemasan-coa');
+        if (!is_dir($uploadDir)) {
+            mkdir($uploadDir, 0777, true);
+        }
+        $destinationPath = $uploadDir . '/' . $filename;
+
+        // Save 60% quality always as JPEG to reduce PDF mapping later/ukuran
+        imagejpeg($image, $destinationPath, 60);
+        imagedestroy($image);
+
+        return 'kemasan-coa/' . $filename;
+    }
+
     private function checkPlantAccess($pemeriksaan)
     {
         $user = Auth::user();
@@ -402,7 +472,11 @@ return view('qc-sistem.pemeriksaan-kedatangan-chemical.index', compact('pemeriks
             'status_baris.*' => 'required|in:Release,Hold',
             'keterangan' => 'nullable|array',
             'image_chemical' => 'nullable|array',
-            'image_chemical.*' => 'nullable|image|max:1024',
+            'image_chemical.*' => 'nullable|image|max:3072',
+            'file_coa' => 'nullable|array',
+            'file_coa.*' => 'nullable|mimes:pdf,jpg,jpeg,png,webp|max:3072',
+            'file_coa_img' => 'nullable|array',
+            'file_coa_img.*' => 'nullable|image|max:3072',
         ]);
 
         // Process kondisi mobil (11 items)
@@ -428,6 +502,11 @@ return view('qc-sistem.pemeriksaan-kedatangan-chemical.index', compact('pemeriks
         foreach ($idChemicals as $index => $idChemical) {
             $uploadedImage = $uploadedImages[$index] ?? null;
             $imagePath = $uploadedImage ? $uploadedImage->storePublicly('pemeriksaan-chemical/images', 'public') : null;
+
+            // Proses upload file COA per baris
+            $coaFile = $request->file("file_coa_img.{$index}") ?? $request->file("file_coa.{$index}");
+            $coaPath = $this->compressAndStoreCoa($coaFile);
+
             $detailChemicals[] = [
                 'id_chemical' => $idChemical,
                 'kondisi_chemical' => $request->input('kondisi_chemical.' . $index),
@@ -441,6 +520,7 @@ return view('qc-sistem.pemeriksaan-kedatangan-chemical.index', compact('pemeriks
                 'jumlah_sampling' => $request->input('jumlah_sampling.' . $index),
                 'unit_sampling' => !empty($request->input('unit_sampling.' . $index)) ? [$request->input('unit_sampling.' . $index)] : [],
                 'image_chemical' => $imagePath,
+                'file_coa' => $coaPath,
                 'kondisi_fisik' => [
                     'kemasan' => $request->input('kondisi_fisik_kemasan.' . $index) === '1',
                     'warna' => $request->input('kondisi_fisik_warna.' . $index) === '1',
@@ -923,6 +1003,9 @@ return view('qc-sistem.pemeriksaan-kedatangan-chemical.index', compact('pemeriks
             $detailChemicals = [];
         }
 
+        $uploadedCoa = $request->file('file_coa_img') ?? $request->file('file_coa');
+        $coaPath = $uploadedCoa ? $this->compressAndStoreCoa($uploadedCoa) : null;
+
         $newRow = [
             'id_chemical' => $request->input('id_chemical'),
             'kondisi_chemical' => $request->input('kondisi_chemical'),
@@ -936,6 +1019,7 @@ return view('qc-sistem.pemeriksaan-kedatangan-chemical.index', compact('pemeriks
             'image_chemical' => ($request->file('image_chemical'))
                 ? $request->file('image_chemical')->storePublicly('pemeriksaan-chemical/images', 'public')
                 : null,
+            'file_coa' => $coaPath,
             'kondisi_fisik' => [
                 'kemasan' => $request->input('kondisi_fisik_kemasan') === '1',
                 'warna' => $request->input('kondisi_fisik_warna') === '1',
@@ -1131,22 +1215,33 @@ return view('qc-sistem.pemeriksaan-kedatangan-chemical.index', compact('pemeriks
         $detailChemicals = [];
         $idChemicals = $request->input('id_chemical', []);
         $uploadedImages = (array) $request->file('image_chemical', []);
+        $uploadedCoas = (array) $request->file('file_coa', []);
+        $uploadedCoaImgs = (array) $request->file('file_coa_img', []);
+
         $existingDetails = $pemeriksaanChemical->detail_chemicals;
         if (!is_array($existingDetails)) {
             $existingDetails = [];
         }
-        
+
         foreach ($idChemicals as $index => $idChemical) {
-            $uploadedImage = $uploadedImages[$index] ?? null;
+            $uploadedImage = $request->file("image_chemical.{$index}") ?? ($uploadedImages[$index] ?? null);
             $existingImage = $existingDetails[$index]['image_chemical'] ?? null;
             $imagePath = $uploadedImage
                 ? $uploadedImage->storePublicly('pemeriksaan-chemical/images', 'public')
                 : $existingImage;
-            
+
+            $uploadedFile = $request->file("file_coa_img.{$index}") ?? $request->file("file_coa.{$index}") ?? ($uploadedCoaImgs[$index] ?? $uploadedCoas[$index] ?? null);
+            $existingCoa = $existingDetails[$index]['file_coa'] ?? null;
+            if ($uploadedFile) {
+                $coaPath = $this->compressAndStoreCoa($uploadedFile);
+            } else {
+                $coaPath = $existingCoa;
+            }
+
             // Extract unit parameters
             $unitDatang = $request->input('unit_datang.' . $index);
             $unitSampling = $request->input('unit_sampling.' . $index);
-            
+
             $detailChemicals[] = [
                 'id_chemical' => $idChemical,
                 'kondisi_chemical' => $request->input('kondisi_chemical.' . $index),
@@ -1160,6 +1255,7 @@ return view('qc-sistem.pemeriksaan-kedatangan-chemical.index', compact('pemeriks
                 'jumlah_sampling' => $request->input('jumlah_sampling.' . $index),
                 'unit_sampling' => !empty($unitSampling) ? [$unitSampling] : [],
                 'image_chemical' => $imagePath,
+                'file_coa' => $coaPath,
                 'kondisi_fisik' => [
                     'kemasan' => $request->input('kondisi_fisik_kemasan.' . $index) === '1',
                     'warna' => $request->input('kondisi_fisik_warna.' . $index) === '1',

@@ -597,6 +597,54 @@
                                                             </div>
                                                         </div>
 
+                                                        <!-- Upload COA -->
+                                                        <div class="form-section mb-3 coa-upload-section">
+                                                            <h6 class="text-primary mb-2">Upload COA</h6>
+                                                            @php
+                                                                $existingCoaArr = json_decode($pemeriksaanChemical->file_coa_array ?? '[]', true) ?? [];
+                                                                $existingCoaFile = $detail['file_coa'] ?? $existingCoaArr[$idx] ?? null;
+                                                            @endphp
+                                                            @if($existingCoaFile)
+                                                                <div class="mb-2">
+                                                                    <span class="badge bg-success">COA Tersimpan</span>
+                                                                    <a href="{{ asset('storage/' . $existingCoaFile) }}" target="_blank" class="btn btn-sm btn-outline-info ms-2">Lihat / Download</a>
+                                                                </div>
+                                                            @endif
+                                                            <div class="row mb-2">
+                                                                <div class="col-md-12">
+                                                                    <div class="form-group">
+                                                                        <label class="form-label d-block">Tipe File COA</label>
+                                                                        <div class="form-check form-check-inline">
+                                                                            <input class="form-check-input coa-type-pdf" type="radio" name="coa_file_type_{{ $idx }}" value="pdf" checked>
+                                                                            <label class="form-check-label">PDF</label>
+                                                                        </div>
+                                                                        <div class="form-check form-check-inline">
+                                                                            <input class="form-check-input coa-type-img" type="radio" name="coa_file_type_{{ $idx }}" value="gambar">
+                                                                            <label class="form-check-label">Gambar</label>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <div class="row coa-pdf-input">
+                                                                <div class="col-md-6">
+                                                                    <div class="form-group">
+                                                                        <label class="form-label">Ganti COA (PDF)</label>
+                                                                        <input type="file" name="file_coa[{{ $idx }}]" class="form-control" accept="application/pdf">
+                                                                        <small class="form-text text-muted">Format: PDF. Maksimal 3MB.</small>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <div class="row coa-img-input" style="display:none;">
+                                                                <div class="col-md-6">
+                                                                    <div class="form-group">
+                                                                        <label class="form-label">Ganti COA (Gambar)</label>
+                                                                        <input type="file" name="file_coa_img[{{ $idx }}]" class="form-control image-coa-input" accept="image/*" capture="environment">
+                                                                        <small class="form-text text-muted">Format: JPG, PNG, WEBP, GIF. Maksimal 3MB. Otomatis dikompres.</small>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
                                                         <div class="form-section mb-3">
                                                             <h6 class="text-primary mb-2">Upload Gambar</h6>
                                                             <div class="row">
@@ -907,6 +955,16 @@ document.addEventListener('DOMContentLoaded', function() {
                     el.className = `radio-value-coa-${globalDetail + 1}`;
                 });
 
+                detailEl.querySelectorAll('input[type="file"]').forEach((el) => {
+                    if (el.name.startsWith('file_coa_img')) {
+                        el.name = `file_coa_img[${globalDetail}]`;
+                    } else if (el.name.startsWith('file_coa')) {
+                        el.name = `file_coa[${globalDetail}]`;
+                    } else if (el.name.startsWith('image_chemical')) {
+                        el.name = `image_chemical[${globalDetail}]`;
+                    }
+                });
+
                 setupRowRadios(detailEl);
                 globalDetail += 1;
             });
@@ -929,6 +987,21 @@ document.addEventListener('DOMContentLoaded', function() {
             if (!last) return;
 
             const newItem = last.cloneNode(true);
+
+            // Clean up Choices.js in cloned element
+            newItem.querySelectorAll('select.choices').forEach((select) => {
+                delete select.choicesInstance;
+                delete select.dataset.choicesInitialized;
+                const choicesContainer = select.closest('.choices');
+                if (choicesContainer && choicesContainer.parentNode) {
+                    choicesContainer.parentNode.insertBefore(select, choicesContainer);
+                    choicesContainer.remove();
+                }
+            });
+
+            // Remove existing saved COA info badges/links from cloned detail
+            newItem.querySelectorAll('.coa-upload-section .badge, .coa-upload-section a').forEach(el => el.remove());
+
             newItem.querySelectorAll('input, textarea, select').forEach((el) => {
                 if (el.type === 'file') {
                     el.value = '';
@@ -942,9 +1015,23 @@ document.addEventListener('DOMContentLoaded', function() {
                 el.value = '';
             });
 
+            // Re-enable and reset COA upload section for new detail
+            const pdfRadio = newItem.querySelector('.coa-type-pdf');
+            const imgRadio = newItem.querySelector('.coa-type-img');
+            if (pdfRadio) pdfRadio.checked = true;
+            if (imgRadio) imgRadio.checked = false;
+
+            const pdfRow = newItem.querySelector('.coa-pdf-input');
+            const imgRow = newItem.querySelector('.coa-img-input');
+            if (pdfRow) pdfRow.style.display = '';
+            if (imgRow) imgRow.style.display = 'none';
+
+            newItem.querySelectorAll('.coa-upload-section input[type="file"]').forEach(f => f.value = '');
+
             container.appendChild(newItem);
             updateRowNumbers();
             updateDetailButtons();
+            initializeAllChoices();
         }
     });
 
@@ -1001,7 +1088,61 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
             }
         });
-    }, true);
+    // Pengecekan ukuran file (Frontend) max 3MB
+    document.addEventListener('change', function(e) {
+        if (e.target.type === 'file') {
+            const file = e.target.files[0];
+            if (file) {
+                const maxSize = 3 * 1024 * 1024;
+                if (file.size > maxSize) {
+                    alert('Ukuran file ' + file.name + ' terlalu besar (' + (file.size / 1024 / 1024).toFixed(2) + ' MB). Maksimal 3 MB.');
+                    e.target.value = '';
+                }
+            }
+        }
+    });
+
+    // COA type toggle: PDF / Gambar
+    document.addEventListener('change', function(e) {
+        if (e.target.classList.contains('coa-type-pdf') && e.target.checked) {
+            const section = e.target.closest('.coa-upload-section');
+            if (!section) return;
+            section.querySelector('.coa-pdf-input').style.display = '';
+            section.querySelector('.coa-img-input').style.display = 'none';
+            section.querySelector('.coa-img-input input[type="file"]').value = '';
+        }
+        if (e.target.classList.contains('coa-type-img') && e.target.checked) {
+            const section = e.target.closest('.coa-upload-section');
+            if (!section) return;
+            section.querySelector('.coa-pdf-input').style.display = 'none';
+            section.querySelector('.coa-img-input').style.display = '';
+            section.querySelector('.coa-pdf-input input[type="file"]').value = '';
+        }
+    });
+
+    // Fix COA radio name on clone (add detail)
+    const origAddDetailHandler = null;
+    document.addEventListener('click', function(e) {
+        const addBtn = e.target.closest('.add-detail-btn');
+        if (!addBtn) return;
+        // After cloneNode happens in existing handler, fix radio names in new items
+        setTimeout(() => {
+            document.querySelectorAll('.detail-item').forEach((item, idx) => {
+                const radios = item.querySelectorAll('.coa-type-pdf, .coa-type-img');
+                radios.forEach(r => {
+                    r.name = `coa_file_type_${idx}`;
+                });
+                // Hide any "COA Tersimpan" badge on cloned items
+                const coaBadges = item.querySelectorAll('.badge.bg-success');
+                coaBadges.forEach(b => {
+                    if (b.textContent.trim() === 'COA Tersimpan') {
+                        const wrap = b.closest('div');
+                        if (wrap) wrap.style.display = 'none';
+                    }
+                });
+            });
+        }, 50);
+    });
 });
 </script>
 @endsection

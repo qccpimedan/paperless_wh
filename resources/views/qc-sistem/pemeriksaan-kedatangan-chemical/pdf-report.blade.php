@@ -584,6 +584,14 @@
                                         <span class="field-label">COA:</span>
                                         <span class="field-value">{{ ($chemicalDetail['coa'] ?? false) ? 'V' : 'X' }}</span>
                                     </div>
+                                    @php
+                                        $pdfCoaArr = json_decode($pemeriksaan->file_coa_array ?? '[]', true) ?? [];
+                                        $pdfCoaFile = $chemicalDetail['file_coa'] ?? $pdfCoaArr[$rowIndex] ?? null;
+                                    @endphp
+                                    <div class="field-row">
+                                        <span class="field-label">File COA:</span>
+                                        <span class="field-value">{{ $pdfCoaFile ? 'Ada' : 'Tidak Ada' }}</span>
+                                    </div>
 
                                     {{-- STATUS --}}
                                     <div class="section-title">5. Status</div>

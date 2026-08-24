@@ -36,7 +36,7 @@
                             <table class="table table-borderless">
                                 <tr><td width="40%"><strong>Tanggal:</strong></td><td>{{ $pemeriksaanBahanBaku->tanggal->format('d/m/Y') }}</td></tr>
                                 <tr><td><strong>No. PO:</strong></td><td>{{ $pemeriksaanBahanBaku->no_po ?? '-' }}</td></tr>
-                                <tr><td><strong>Jenis Pemeriksaan:</strong></td><td>{{ $pemeriksaanBahanBaku->jenis_pemeriksaan ?? '-' }}</td></tr>
+                                <!-- <tr><td><strong>Jenis Pemeriksaan:</strong></td><td>{{ $pemeriksaanBahanBaku->jenis_pemeriksaan ?? '-' }}</td></tr> -->
                                 <!-- <tr><td><strong>Status Keseluruhan:</strong></td><td>
                                     @if($pemeriksaanBahanBaku->status === 'Release')
                                         <span class="badge bg-success">Release</span>
@@ -323,12 +323,6 @@
                                             </span>
                                         @endif
 
-                                        @if($kondisiProdukHeader !== '')
-                                            <span class="badge bg-light text-dark border d-inline-block text-start p-2">
-                                                <strong>Kondisi:</strong>
-                                                <span class="ms-1">{{ $kondisiProdukHeader }}</span>
-                                            </span>
-                                        @endif
 
                                         @if($suhuProdukHeader !== '')
                                             <span class="badge bg-light text-dark border d-inline-block text-start p-2">
@@ -337,10 +331,16 @@
                                             </span>
                                         @endif
 
-                                        @if($suhuKondisiProdukHeader !== '')
+                                        @if($kondisiProdukHeader !== '' || $suhuKondisiProdukHeader !== '')
                                             <span class="badge bg-light text-dark border d-inline-block text-start p-2">
-                                                <strong>Suhu Kondisi:</strong>
-                                                <span class="ms-1">{{ $suhuKondisiProdukHeader }}</span>
+                                                @if($kondisiProdukHeader !== '')
+                                                    <strong>Kondisi:</strong>
+                                                    <span class="ms-1 me-2">{{ $kondisiProdukHeader }}</span>
+                                                @endif
+                                                @if($suhuKondisiProdukHeader !== '')
+                                                    <strong>Suhu Kondisi:</strong>
+                                                    <span class="ms-1">{{ $suhuKondisiProdukHeader }}</span>
+                                                @endif
                                             </span>
                                         @endif
 
@@ -466,7 +466,7 @@
                                                 <div class="d-flex justify-content-end gap-2 mt-2">
                                                     @if($coaFilePath)
                                                         <a href="{{ asset('storage/' . $coaFilePath) }}" target="_blank" class="btn btn-sm btn-info">
-                                                            Lihat File COA <i class="bi bi-file-earmark-pdf"></i>
+                                                           <i class="bi bi-file-earmark-text"></i> Lihat File COA 
                                                         </a>
                                                     @endif
                                                     @if($imgPath)
