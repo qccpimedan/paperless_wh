@@ -529,7 +529,7 @@
                                                     </div>
 
                                                     <div class="form-section mb-3">
-                                                        <h6 class="text-primary mb-2">Upload File</h6>
+                                                        <h6 class="text-primary mb-2">Upload Gambar</h6>
                                                         <div class="row">
                                                             <div class="col-md-6">
                                                                 <div class="form-group">
