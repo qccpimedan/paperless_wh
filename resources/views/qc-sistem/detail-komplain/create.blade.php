@@ -191,9 +191,9 @@
                                 <div class="row">
                                     <div class="col-md-12">
                                         <div class="mb-3">
-                                            <label class="form-label">Dokumentasi Komplain <span class="text-muted">(Gambar, Max 1MB)</span></label>
-                                            <input type="file" class="form-control" name="dokumentasi[]" accept="image/*" capture="camera">
-                                            <small class="text-muted">Bukti komplain: foto, scan dokumen, dll</small>
+                                            <label class="form-label">Dokumentasi Komplain <span class="text-muted">(Gambar, Maks 3MB. Gambar &gt; 3MB dikompres otomatis)</span></label>
+                                            <input type="file" class="form-control dokumentasi-input" name="dokumentasi[]" accept="image/*" capture="camera" onchange="handleDokumentasiChange(this)">
+                                            <small class="text-muted img-compress-status"></small>
                                             @error('dokumentasi.0')
                                                 <div class="invalid-feedback d-block">{{ $message }}</div>
                                             @enderror
@@ -500,85 +500,99 @@ document.addEventListener('DOMContentLoaded', function() {
         updateProdukItemTitles();
     });
 
-    const MAX_SIZE = 1024 * 1024;
+    // ---- Auto-compress gambar dokumentasi ----
+    const DOKUMEN_MAX_BYTES = 3 * 1024 * 1024; // 3 MB
 
-    const isDokumentasiInput = (el) => {
-        return !!(el && el.tagName === 'INPUT' && el.type === 'file' && el.name === 'dokumentasi[]');
-    };
-
-    function fileToDataURL(file) {
+    function _fileToDataURL(file) {
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
-            reader.onload = () => resolve(reader.result);
+            reader.onload  = () => resolve(reader.result);
             reader.onerror = reject;
             reader.readAsDataURL(file);
         });
     }
 
-    function loadImage(src) {
+    function _loadImage(src) {
         return new Promise((resolve, reject) => {
             const img = new Image();
-            img.onload = () => resolve(img);
+            img.onload  = () => resolve(img);
             img.onerror = reject;
             img.src = src;
         });
     }
 
-    async function compressImage(file) {
-        const dataUrl = await fileToDataURL(file);
-        const img = await loadImage(dataUrl);
+    async function _compressDokumentasi(file) {
+        const dataUrl = await _fileToDataURL(file);
+        const img     = await _loadImage(dataUrl);
 
-        const maxDimension = 1920;
-        let width = img.width;
-        let height = img.height;
-        if (width > height && width > maxDimension) {
-            height = Math.round((height * maxDimension) / width);
-            width = maxDimension;
-        } else if (height >= width && height > maxDimension) {
-            width = Math.round((width * maxDimension) / height);
-            height = maxDimension;
-        }
+        const MAX_DIM = 1920;
+        let w = img.width, h = img.height;
+        if (w > h && w > MAX_DIM) { h = Math.round(h * MAX_DIM / w); w = MAX_DIM; }
+        else if (h >= w && h > MAX_DIM) { w = Math.round(w * MAX_DIM / h); h = MAX_DIM; }
 
         const canvas = document.createElement('canvas');
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0, width, height);
+        canvas.width  = w;
+        canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
 
         let quality = 0.85;
-        let blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', quality));
-        while (blob && blob.size > MAX_SIZE && quality > 0.4) {
+        let blob = await new Promise(r => canvas.toBlob(r, 'image/jpeg', quality));
+        while (blob && blob.size > DOKUMEN_MAX_BYTES && quality > 0.3) {
             quality -= 0.1;
-            blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', quality));
+            blob = await new Promise(r => canvas.toBlob(r, 'image/jpeg', quality));
         }
 
-        const newName = (file.name || 'image')
-            .replace(/\.[^/.]+$/, '') + '.jpg';
+        const newName = (file.name || 'image').replace(/\.[^/.]+$/, '') + '.jpg';
         return new File([blob], newName, { type: 'image/jpeg', lastModified: Date.now() });
     }
 
-    async function handleChange(inputEl) {
+    window.handleDokumentasiChange = async function(inputEl) {
         const file = inputEl.files && inputEl.files[0] ? inputEl.files[0] : null;
-        if (!file) return;
-        if (file.size <= MAX_SIZE) return;
+        const statusEl = inputEl.closest('.mb-3') ? inputEl.closest('.mb-3').querySelector('.img-compress-status') : null;
+
+        if (!file) {
+            if (statusEl) statusEl.textContent = '';
+            return;
+        }
+
+        const sizeMB = (file.size / 1024 / 1024).toFixed(2);
+
+        if (file.size <= DOKUMEN_MAX_BYTES) {
+            if (statusEl) {
+                statusEl.style.color = '#198754';
+                statusEl.textContent = `✓ Gambar siap (${sizeMB} MB)`;
+            }
+            return;
+        }
+
+        // Gambar > 3MB — kompres
+        if (statusEl) {
+            statusEl.style.color = '#fd7e14';
+            statusEl.textContent = '⏳ Mengkompres gambar, harap tunggu...';
+        }
+        inputEl.disabled = true;
 
         try {
-            const compressedFile = await compressImage(file);
+            const compressed = await _compressDokumentasi(file);
             const dt = new DataTransfer();
-            dt.items.add(compressedFile);
+            dt.items.add(compressed);
             inputEl.files = dt.files;
-        } catch (e) {
+
+            const newMB = (compressed.size / 1024 / 1024).toFixed(2);
+            if (statusEl) {
+                statusEl.style.color = '#198754';
+                statusEl.textContent = `✓ Dikompres: ${sizeMB} MB → ${newMB} MB`;
+            }
+        } catch (err) {
             inputEl.value = '';
-            alert('Gagal mengkompres gambar. Silakan coba lagi.');
+            if (statusEl) {
+                statusEl.style.color = '#dc3545';
+                statusEl.textContent = '✗ Gagal mengkompres. Coba gambar lain.';
+            }
+        } finally {
+            inputEl.disabled = false;
         }
-    }
-
-
-    document.addEventListener('change', function(e) {
-        const target = e.target;
-        if (!isDokumentasiInput(target)) return;
-        handleChange(target);
-    });
+    };
 });
 </script>
 <!-- done -->
