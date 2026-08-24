@@ -699,7 +699,7 @@
                                                                 <div class="form-group">
                                                                     <label class="form-label">File COA (PDF)</label>
                                                                     <input type="file" name="file_coa[]" class="form-control" accept="application/pdf">
-                                                                    <small class="form-text text-muted">Format: PDF. Maksimal 5MB.</small>
+                                                                    <small class="form-text text-muted">Format: PDF. Maksimal 3MB.</small>
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -1120,6 +1120,20 @@ document.addEventListener('DOMContentLoaded', function() {
             if (!ok) e.preventDefault();
         });
     });
+
+    // Pengecekan ukuran file (Frontend) agar sinkron dengan batasan max:3072 di Controller
+    document.addEventListener('change', function(e) {
+        if (e.target.type === 'file') {
+            const file = e.target.files[0];
+            if (file) {
+                const maxSize = 3 * 1024 * 1024; // 3 MB Maksimal
+                if (file.size > maxSize) {
+                    alert('Ukuran file ' + file.name + ' terlalu besar (' + (file.size / 1024 / 1024).toFixed(2) + ' MB). Maksimal ukuran file yang diizinkan adalah 3 MB.');
+                    e.target.value = ''; // Reset input agar file dibatalkan
+                }
+            }
+        }
+    });
     
     // Conditional logic (event delegation) for Suhu Produk / Suhu Mobil / Kondisi Produk
     document.addEventListener('change', function(e) {
@@ -1384,23 +1398,40 @@ function initializeDetailFlow() {
     });
 
     document.addEventListener('change', function(e) {
-        const radio = e.target.closest('.detail-item input[type="radio"]');
+        const radio = e.target.closest('input[type="radio"]');
         if (!radio) return;
-        const detailEl = radio.closest('.detail-item');
-        if (!detailEl) return;
 
         const name = radio.getAttribute('name') || '';
-        const map = {
+        const base = name.replace(/_\d+$/, '');
+
+        const detailMap = {
             kondisi_fisik_kemasan: 'kondisi_fisik_kemasan[]',
             kondisi_fisik_warna: 'kondisi_fisik_warna[]',
             kondisi_fisik_benda_asing: 'kondisi_fisik_benda_asing[]',
             kondisi_fisik_aroma: 'kondisi_fisik_aroma[]',
         };
-        const base = name.replace(/_\d+$/, '');
-        const hiddenName = map[base];
-        if (!hiddenName) return;
-        const hidden = detailEl.querySelector(`input[type="hidden"][name="${hiddenName}"]`);
-        if (hidden) hidden.value = radio.value;
+
+        const rowMap = {
+            logo_halal: 'logo_halal[]',
+            dokumen_halal: 'dokumen_halal[]',
+            coa: 'coa[]',
+        };
+
+        if (detailMap[base]) {
+            const detailEl = radio.closest('.detail-item');
+            if (detailEl) {
+                const hiddenName = detailMap[base];
+                const hidden = detailEl.querySelector(`input[type="hidden"][name="${hiddenName}"]`);
+                if (hidden) hidden.value = radio.value;
+            }
+        } else if (rowMap[base]) {
+            const rowEl = radio.closest('.unified-row');
+            if (rowEl) {
+                const hiddenName = rowMap[base];
+                const hidden = rowEl.querySelector(`input[type="hidden"][name="${hiddenName}"]`);
+                if (hidden) hidden.value = radio.value;
+            }
+        }
     });
 }
 
@@ -2098,7 +2129,7 @@ function addNewRow() {
                     <div class="form-group">
                         <label class="form-label">File COA (PDF)</label>
                         <input type="file" name="file_coa[]" class="form-control" accept="application/pdf">
-                        <small class="form-text text-muted">Format: PDF. Maksimal 1MB.</small>
+                        <small class="form-text text-muted">Format: PDF. Maksimal 3MB.</small>
                     </div>
                 </div>
             </div>
@@ -2107,7 +2138,7 @@ function addNewRow() {
                     <div class="form-group">
                         <label class="form-label">Foto COA</label>
                         <input type="file" name="file_coa_img[]" class="form-control" accept="image/*" capture="environment">
-                        <small class="form-text text-muted">Format: JPG, PNG, WEBP, GIF. Maksimal 1MB. Gambar &gt; 3MB akan dikompres otomatis.</small>
+                        <small class="form-text text-muted">Format: JPG, PNG, WEBP, GIF. Maksimal 3MB. Gambar &gt; 3MB akan dikompres otomatis.</small>
                     </div>
                 </div>
             </div>

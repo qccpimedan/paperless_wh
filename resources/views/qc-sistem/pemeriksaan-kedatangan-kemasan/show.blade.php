@@ -130,6 +130,7 @@
                         $logo_halals = json_decode($pemeriksaanKedatanganKemasan->logo_halal_array ?? '[]', true) ?? [];
                         $dokumen_halals = json_decode($pemeriksaanKedatanganKemasan->dokumen_halal_array ?? '[]', true) ?? [];
                         $coas = json_decode($pemeriksaanKedatanganKemasan->coa_array ?? '[]', true) ?? [];
+                        $file_coas = json_decode($pemeriksaanKedatanganKemasan->file_coa_array ?? '[]', true) ?? [];
                         $keterangans = json_decode($pemeriksaanKedatanganKemasan->keterangan_array ?? '[]', true) ?? [];
                         $image_kemasans = json_decode($pemeriksaanKedatanganKemasan->image_kemasan_array ?? '[]', true) ?? [];
 
@@ -317,7 +318,14 @@
 
                                         @php
                                             $imgPath = $image_kemasans[$index] ?? null;
+                                            $coaFile = $file_coas[$index] ?? null;
                                         @endphp
+                                        @if($coaFile)
+                                            <div class="mt-3 mb-2">
+                                                <!-- <strong>File COA:</strong> -->
+                                                <a href="{{ asset('storage/' . $coaFile) }}" target="_blank" class="btn btn-sm btn-info"><i class="bi bi-file-earmark-text"></i> Lihat File COA (PDF)</a>
+                                            </div>
+                                        @endif
                                         @if($imgPath)
                                             <div class="mt-3">
                                                 <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#modalFoto{{ $index }}">

@@ -665,6 +665,42 @@
                                                             </div>
                                                         </div>
                                                     </div>
+                                                    <div class="form-section mb-3 coa-upload-section">
+                                                        <h6 class="text-primary mb-2">Upload COA</h6>
+                                                        <div class="row mb-2">
+                                                            <div class="col-md-12">
+                                                                <div class="form-group">
+                                                                    <label class="form-label d-block">Tipe File</label>
+                                                                    <div class="form-check form-check-inline">
+                                                                        <input class="form-check-input coa-type-pdf" type="radio" name="coa_type_master_1" value="pdf" checked>
+                                                                        <label class="form-check-label">PDF</label>
+                                                                    </div>
+                                                                    <div class="form-check form-check-inline">
+                                                                        <input class="form-check-input coa-type-img" type="radio" name="coa_type_master_1" value="gambar">
+                                                                        <label class="form-check-label">Gambar</label>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="row coa-pdf-input">
+                                                            <div class="col-md-6">
+                                                                <div class="form-group">
+                                                                    <label class="form-label">File COA (PDF)</label>
+                                                                    <input type="file" name="file_coa[]" class="form-control" accept="application/pdf">
+                                                                    <small class="form-text text-muted">Format: PDF. Maksimal 3MB.</small>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="row coa-img-input" style="display:none;">
+                                                            <div class="col-md-6">
+                                                                <div class="form-group">
+                                                                    <label class="form-label">Foto COA</label>
+                                                                    <input type="file" name="file_coa_img[]" class="form-control" accept="image/*" capture="environment">
+                                                                    <small class="form-text text-muted">Format: JPG, PNG, WEBP, GIF. Maksimal 3MB.</small>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
                                                     <div class="form-section mb-3">
                                                         <h6 class="text-primary mb-2">Upload Gambar</h6>
                                                         <div class="row">
@@ -679,6 +715,8 @@
                                                             </div>
                                                         </div>
                                                     </div>
+
+                                                    
                                                 </div>
                                             </div>
 
@@ -1303,6 +1341,43 @@ document.addEventListener('DOMContentLoaded', function() {
                             </div>
                         </div>
 
+                        <div class="form-section mb-3 coa-upload-section">
+                            <h6 class="text-primary mb-2">Upload COA</h6>
+                            <div class="row mb-2">
+                                <div class="col-md-12">
+                                    <div class="form-group">
+                                        <label class="form-label d-block">Tipe File</label>
+                                        <div class="form-check form-check-inline">
+                                            <input class="form-check-input coa-type-pdf" type="radio" name="coa_type_master_1" value="pdf" checked>
+                                            <label class="form-check-label">PDF</label>
+                                        </div>
+                                        <div class="form-check form-check-inline">
+                                            <input class="form-check-input coa-type-img" type="radio" name="coa_type_master_1" value="gambar">
+                                            <label class="form-check-label">Gambar</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row coa-pdf-input">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="form-label">File COA (PDF)</label>
+                                        <input type="file" name="file_coa[]" class="form-control" accept="application/pdf">
+                                        <small class="form-text text-muted">Format: PDF. Maksimal 3MB.</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row coa-img-input" style="display:none;">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="form-label">Foto COA</label>
+                                        <input type="file" name="file_coa_img[]" class="form-control" accept="image/*" capture="environment">
+                                        <small class="form-text text-muted">Format: JPG, PNG, WEBP, GIF. Maksimal 3MB.</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="form-section mb-3">
                             <h6 class="text-primary mb-2">Upload Gambar</h6>
                             <div class="row">
@@ -1314,7 +1389,6 @@ document.addEventListener('DOMContentLoaded', function() {
                                 </div>
                             </div>
                         </div>
-
                     </div>
                 </div>
 
@@ -1696,7 +1770,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             const setArrayName = (el, base) => {
                 if (!el) return;
-                el.name = `${base}[]`;
+                el.name = `${base}[${idx}]`;
             };
 
             setArrayName(detailEl.querySelector('input[name^="kode_produksi"], input[name="kode_produksi[]"]'), 'kode_produksi');
@@ -1704,12 +1778,14 @@ document.addEventListener('DOMContentLoaded', function() {
             setArrayName(detailEl.querySelector('input[name^="jumlah_sampling"], input[name="jumlah_sampling[]"]'), 'jumlah_sampling');
             setArrayName(detailEl.querySelector('textarea[name^="spesifikasi"], textarea[name="spesifikasi[]"]'), 'spesifikasi');
             setArrayName(detailEl.querySelector('input[name^="ketebalan_micron"], input[name="ketebalan_micron[]"]'), 'ketebalan_micron');
-            setArrayName(detailEl.querySelector('input[name^="dimensi"], input[name="dimensi[]"]'), 'dimensi');
-            setArrayName(detailEl.querySelector('select[name^="status"], select[name="status[]"]'), 'status');
-            setArrayName(detailEl.querySelector('textarea[name^="keterangan"], textarea[name="keterangan[]"]'), 'keterangan');
-            setArrayName(detailEl.querySelector('input[type="file"][name^="image_kemasan"], input[type="file"][name="image_kemasan[]"]'), 'image_kemasan');
+            setArrayName(detailEl.querySelector('input[name^="dimensi"]'), 'dimensi');
+            setArrayName(detailEl.querySelector('select[name^="status"]'), 'status');
+            setArrayName(detailEl.querySelector('textarea[name^="keterangan"]'), 'keterangan');
+            setArrayName(detailEl.querySelector('input[type="file"][name^="image_kemasan"]'), 'image_kemasan');
+            setArrayName(detailEl.querySelector('input[type="file"][name^="file_coa"]'), 'file_coa');
+            setArrayName(detailEl.querySelector('input[type="file"][name^="file_coa_img"]'), 'file_coa_img');
 
-            const masterRadioGroups = ['penampakan', 'sealing', 'cetakan', 'logo_halal', 'dokumen_halal', 'coa'];
+            const masterRadioGroups = ['penampakan', 'sealing', 'cetakan', 'logo_halal', 'dokumen_halal', 'coa', 'coa_type'];
             masterRadioGroups.forEach((g) => {
                 detailEl.querySelectorAll(`input[type="radio"][name^="${g}_master_"]`).forEach((r) => {
                     r.name = `${g}_master_${idx}`;
@@ -2108,23 +2184,78 @@ document.addEventListener('DOMContentLoaded', function() {
         const file = input.files && input.files[0] ? input.files[0] : null;
         if (!file) return;
 
-        if (file.size <= MAX_SIZE) return;
+        // Compress if file > 500KB (more aggressive to prevent upload errors)
+        const COMPRESS_THRESHOLD = 512 * 1024; // 500KB
+        if (file.size <= COMPRESS_THRESHOLD) return;
+
+        // Show processing feedback
+        const formGroup = input.closest('.form-group');
+        const labelEl = formGroup ? formGroup.querySelector('.form-label') : null;
+        const originalLabel = labelEl ? labelEl.innerHTML : 'Foto';
+        
+        if (labelEl) {
+            labelEl.innerHTML = originalLabel + ' <span class="badge bg-primary"><i class="bi bi-hourglass-split"></i> Mengompres...</span>';
+        }
+        input.disabled = true;
 
         try {
             const compressedFile = await compressImage(file);
             const dt = new DataTransfer();
             dt.items.add(compressedFile);
             input.files = dt.files;
+            
+            if (labelEl) {
+                labelEl.innerHTML = originalLabel + ' <span class="badge bg-success"><i class="bi bi-check-circle"></i> Selesai (Auto-Compressed)</span>';
+            }
         } catch (e) {
-            input.value = '';
-            alert('Gagal mengkompres gambar. Silakan coba lagi.');
+            console.error('Compression error:', e);
+            if (labelEl) {
+                labelEl.innerHTML = originalLabel + ' <span class="badge bg-danger"><i class="bi bi-exclamation-triangle"></i> Kompresi Gagal</span>';
+            }
+        } finally {
+            input.disabled = false;
+            setTimeout(() => {
+                if (labelEl) labelEl.innerHTML = originalLabel;
+            }, 3000);
         }
     }
 
     document.addEventListener('change', function(e) {
         const input = e.target;
-        if (input && input.classList && input.classList.contains('image-kemasan-input')) {
+        if (input && input.classList && (input.classList.contains('image-kemasan-input') || input.name === 'file_coa_img[]')) {
             handleImageInputChange(input);
+        }
+    });
+
+    // Pengecekan ukuran file (Frontend) max 3MB
+    document.addEventListener('change', function(e) {
+        if (e.target.type === 'file') {
+            const file = e.target.files[0];
+            if (file) {
+                const maxSize = 3 * 1024 * 1024; // 3 MB
+                if (file.size > maxSize) {
+                    alert('Ukuran file ' + file.name + ' terlalu besar (' + (file.size / 1024 / 1024).toFixed(2) + ' MB). Maksimal ukuran file yang diizinkan adalah 3 MB.');
+                    e.target.value = '';
+                }
+            }
+        }
+    });
+
+    // COA type toggle: PDF / Gambar
+    document.addEventListener('change', function(e) {
+        if (e.target.classList.contains('coa-type-pdf') && e.target.checked) {
+            const section = e.target.closest('.coa-upload-section');
+            if (!section) return;
+            section.querySelector('.coa-pdf-input').style.display = '';
+            section.querySelector('.coa-img-input').style.display = 'none';
+            section.querySelector('.coa-img-input input[type="file"]').value = '';
+        }
+        if (e.target.classList.contains('coa-type-img') && e.target.checked) {
+            const section = e.target.closest('.coa-upload-section');
+            if (!section) return;
+            section.querySelector('.coa-pdf-input').style.display = 'none';
+            section.querySelector('.coa-img-input').style.display = '';
+            section.querySelector('.coa-pdf-input input[type="file"]').value = '';
         }
     });
 });
@@ -2231,7 +2362,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         // 2. Status (minimal satu item harus "Hold" atau "Release")
-        const statusSelects = document.querySelectorAll('select[name="status[]"]');
+        const statusSelects = document.querySelectorAll('select[name^="status"]');
         let hasValidStatus = false;
         let firstStatusField = null;
         

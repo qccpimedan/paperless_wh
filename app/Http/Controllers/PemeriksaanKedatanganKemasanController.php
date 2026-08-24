@@ -11,10 +11,51 @@ use App\Models\User;
 use App\Models\Distributor;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Barryvdh\DomPDF\Facade\Pdf as PDF;
+
 
 class PemeriksaanKedatanganKemasanController extends Controller
 {
+    /**
+     * Simpan file COA (PDF atau gambar).
+     * Jika gambar > 3MB, otomatis dikompres sebelum disimpan.
+     */
+    private function compressAndStoreCoa($uploadedFile, string $subDir = 'pemeriksaan-kedatangan-kemasan/coa'): ?string
+    {
+        if (!$uploadedFile) return null;
+
+        $mimeType  = $uploadedFile->getMimeType();
+        $sizeBytes = $uploadedFile->getSize();
+        $isImage   = in_array($mimeType, ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']);
+        $threshold = 3 * 1024 * 1024; // 3MB
+
+        if ($isImage && $sizeBytes > $threshold) {
+            $tmpPath = $uploadedFile->getRealPath();
+            $img = match ($mimeType) {
+                'image/jpeg', 'image/jpg' => @imagecreatefromjpeg($tmpPath),
+                'image/png'              => @imagecreatefrompng($tmpPath),
+                default                  => null,
+            };
+            if ($img) {
+                $tmpCompressed = tempnam(sys_get_temp_dir(), 'coa_');
+                imagejpeg($img, $tmpCompressed, 60);
+                imagedestroy($img);
+                if (filesize($tmpCompressed) < $sizeBytes) {
+                    $newFilename = pathinfo($uploadedFile->hashName(), PATHINFO_FILENAME) . '.jpg';
+                    $path = $subDir . '/' . $newFilename;
+                    Storage::disk('public')->put($path, file_get_contents($tmpCompressed));
+                    @unlink($tmpCompressed);
+                    return $path;
+                }
+                @unlink($tmpCompressed);
+            }
+        }
+
+        return $uploadedFile->storePublicly($subDir, 'public');
+    }
+
+
     /**
      * Display a listing of the resource.
      */
@@ -298,7 +339,9 @@ return view('qc-sistem.pemeriksaan-kedatangan-kemasan.index', compact('pemeriksa
             'coa.*' => 'nullable|in:0,1',
             'keterangan.*' => 'nullable|string',
             'id_shift' => 'nullable|exists:shifts,id',
-            'image_kemasan.*' => 'nullable|image|max:1024',
+            'image_kemasan.*' => 'nullable|image|max:3072',
+            'file_coa.*' => 'nullable|mimes:pdf,jpg,jpeg,png,webp|max:3072',
+            'file_coa_img.*' => 'nullable|image|max:3072',
         ]);
     
         // Process kondisi mobil dengan logic yang benar
@@ -337,15 +380,23 @@ return view('qc-sistem.pemeriksaan-kedatangan-kemasan.index', compact('pemeriksa
         $coas = array_values((array) $request->input('coa', []));
         $keterangans = $request->input('keterangan', []);
 
+        $rowCountForSupplier = max(count($id_produks), count($kode_produksis), count($jumlah_datangs), count($jumlah_samplings), count((array) $produsenInput), count((array) $distributorInput));
+        
         $imageKemasanPaths = [];
-        if ($request->hasFile('image_kemasan')) {
-            foreach ((array) $request->file('image_kemasan') as $uploadedFile) {
-                if ($uploadedFile) {
-                    $imageKemasanPaths[] = $uploadedFile->storePublicly('pemeriksaan-kedatangan-kemasan', 'public');
-                } else {
-                    $imageKemasanPaths[] = null;
-                }
+        for ($i = 0; $i < $rowCountForSupplier; $i++) {
+            $uploadedFile = $request->file("image_kemasan.{$i}");
+            if ($uploadedFile) {
+                $imageKemasanPaths[$i] = $uploadedFile->storePublicly('pemeriksaan-kedatangan-kemasan', 'public');
+            } else {
+                $imageKemasanPaths[$i] = null;
             }
+        }
+
+        // Proses upload file COA
+        $fileCoaPaths = [];
+        for ($i = 0; $i < $rowCountForSupplier; $i++) {
+            $uploadedFile = $request->file("file_coa_img.{$i}") ?? $request->file("file_coa.{$i}");
+            $fileCoaPaths[$i] = $this->compressAndStoreCoa($uploadedFile);
         }
     
         $normalizeMultiSelectRows = function ($input, int $rowCount) {
@@ -400,7 +451,8 @@ return view('qc-sistem.pemeriksaan-kedatangan-kemasan.index', compact('pemeriksa
             'dokumen_halal_array' => json_encode(is_array($dokumen_halals) ? $dokumen_halals : []),
             'coa_array' => json_encode(is_array($coas) ? $coas : []),
             'keterangan_array' => json_encode(is_array($keterangans) ? $keterangans : []),
-            'image_kemasan_array' => json_encode(is_array($imageKemasanPaths) ? $imageKemasanPaths : []),
+            'image_kemasan_array' => json_encode(is_array($imageKemasanPaths) ? array_values($imageKemasanPaths) : []),
+            'file_coa_array' => json_encode(is_array($fileCoaPaths) ? array_values($fileCoaPaths) : []),
         ];
     
         PemeriksaanKedatanganKemasan::create($data);
@@ -598,7 +650,9 @@ return view('qc-sistem.pemeriksaan-kedatangan-kemasan.index', compact('pemeriksa
             'coa.*' => 'nullable|in:0,1',
             'keterangan.*' => 'nullable|string',
             'id_shift' => 'nullable|exists:shifts,id',
-            'image_kemasan.*' => 'nullable|image|max:1024',
+            'image_kemasan.*' => 'nullable|image|max:3072',
+            'file_coa.*' => 'nullable|mimes:pdf,jpg,jpeg,png,webp|max:3072',
+            'file_coa_img.*' => 'nullable|image|max:3072',
         ]);
     
         // Process kondisi mobil dengan logic yang benar
@@ -655,6 +709,22 @@ return view('qc-sistem.pemeriksaan-kedatangan-kemasan.index', compact('pemeriksa
             }
         }
 
+        // Proses upload file COA (update: pertahankan yang lama jika tidak ada upload baru)
+        $existingFileCoa = json_decode($pemeriksaanKedatanganKemasan->file_coa_array ?? '[]', true);
+        if (!is_array($existingFileCoa)) $existingFileCoa = [];
+        $newFileCoa = [];
+        $uploadedCoas    = (array) $request->file('file_coa', []);
+        $uploadedCoaImgs = (array) $request->file('file_coa_img', []);
+        $rowCountCoa = max(count($id_produks), count($uploadedCoas), count($uploadedCoaImgs), count($existingFileCoa));
+        for ($i = 0; $i < $rowCountCoa; $i++) {
+            $uploadedFile = $uploadedCoaImgs[$i] ?? $uploadedCoas[$i] ?? null;
+            if ($uploadedFile) {
+                $newFileCoa[$i] = $this->compressAndStoreCoa($uploadedFile);
+            } else {
+                $newFileCoa[$i] = $existingFileCoa[$i] ?? null;
+            }
+        }
+
         $normalizeMultiSelectRows = function ($input, int $rowCount) {
             $out = [];
             for ($i = 0; $i < $rowCount; $i++) {
@@ -707,6 +777,7 @@ return view('qc-sistem.pemeriksaan-kedatangan-kemasan.index', compact('pemeriksa
             'coa_array' => json_encode(is_array($coas) ? $coas : []),
             'keterangan_array' => json_encode(is_array($keterangans) ? $keterangans : []),
             'image_kemasan_array' => json_encode(array_values($newImageKemasan)),
+            'file_coa_array' => json_encode(array_values($newFileCoa)),
         ];
     
         $pemeriksaanKedatanganKemasan->update($data);

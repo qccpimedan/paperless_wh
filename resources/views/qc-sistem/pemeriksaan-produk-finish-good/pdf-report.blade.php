@@ -185,6 +185,26 @@
             border: 1px solid #dee2e6;
             background: #f8f9fa;
         }
+        
+        .signature-note {
+            font-size: 7px;
+            color: #495057;
+            padding: 4px 6px;
+            background: #fff;
+            border: 1px solid #e9ecef;
+            margin-bottom: 8px;
+            line-height: 1.3;
+        }
+        
+        .signature-note .ok-text {
+            color: #28a745;
+            font-weight: bold;
+        }
+        
+        .signature-note .not-ok-text {
+            color: #dc3545;
+            font-weight: bold;
+        }
 
         .signature-table {
             width: 100%;
@@ -314,7 +334,7 @@
                             'bersih' => 'Bersih',
                             'bebas_hama' => 'Bebas dari hama',
                             'tidak_kondensasi' => 'Tidak Kondensasi',
-                            'bebas_produk_halal' => 'Bebas Produk Non Halal',
+                            'bebas_produk_halal' => 'Bebas dari Produk Non Halal',
                             'tidak_berbau' => 'Tidak Berbau Menyimpang',
                             'tidak_ada_sampah' => 'Tidak ada sampah',
                             'tidak_ada_mikroba' => 'Tidak ada mikroba',
@@ -494,6 +514,7 @@
                                         $coa = (is_array($pemeriksaan->coa_array) ? ($pemeriksaan->coa_array[$rowIndex] ?? null) : null);
                                         $statusBaris = (is_array($pemeriksaan->status_array) ? ($pemeriksaan->status_array[$rowIndex] ?? null) : null);
                                         $keterangan = (is_array($pemeriksaan->keterangan_array) ? ($pemeriksaan->keterangan_array[$rowIndex] ?? null) : null);
+                                        $imagePath = (is_array($pemeriksaan->image_finish_good_array) ? ($pemeriksaan->image_finish_good_array[$rowIndex] ?? null) : null);
 
                                         $kondisiMobilRaw = $pemeriksaan->kondisi_mobil;
                                         $kondisiMobil = is_array($kondisiMobilRaw) ? $kondisiMobilRaw : [];
@@ -563,39 +584,48 @@
 
                                         <div class="section-title">Kondisi Mobil</div>
                                         @foreach($kondisiMobilLabels as $key => $label)
-                                            @php $v = data_get($kondisiMobil, $key); @endphp
+                                            @php 
+                                                $v = data_get($kondisiMobil, $key); 
+                                                $isMobilOk = ($v === true || $v === 1 || $v === '1' || strtolower((string)$v) === 'ya' || $v === 'on');
+                                            @endphp
                                             <div class="field-row">
-                                                <span class="field-label">{{ $label }}:</span>
-                                                <span class="field-value">{{ $formatBool($v) }}</span>
+                                                <span style="color:{{ $isMobilOk ? '#28a745' : '#dc3545' }};font-weight:bold;display:inline-block;width:10px;">{{ $isMobilOk ? 'V' : 'X' }}</span>
+                                                <span class="field-value">{{ $label }}</span>
                                             </div>
                                         @endforeach
 
                                         <div class="section-title">Pemeriksaan</div>
                                         <div class="field-row">
-                                            <span class="field-label">Kemasan:</span>
-                                            <span class="field-value">{{ $formatBool($kondisiKemasan) }}</span>
+                                            @php $isKemasanOk = ($kondisiKemasan === true || $kondisiKemasan === 1 || $kondisiKemasan === '1' || strtolower((string)$kondisiKemasan) === 'ya'); @endphp
+                                            <span style="color:{{ $isKemasanOk ? '#28a745' : '#dc3545' }};font-weight:bold;display:inline-block;width:10px;">{{ $isKemasanOk ? 'V' : 'X' }}</span>
+                                            <span class="field-value">Kemasan</span>
                                         </div>
                                         <div class="field-row">
-                                            <span class="field-label">Warna:</span>
-                                            <span class="field-value">{{ $formatBool($kondisiWarna) }}</span>
+                                            @php $isWarnaOk = ($kondisiWarna === true || $kondisiWarna === 1 || $kondisiWarna === '1' || strtolower((string)$kondisiWarna) === 'ya'); @endphp
+                                            <span style="color:{{ $isWarnaOk ? '#28a745' : '#dc3545' }};font-weight:bold;display:inline-block;width:10px;">{{ $isWarnaOk ? 'V' : 'X' }}</span>
+                                            <span class="field-value">Warna</span>
                                         </div>
                                         <div class="field-row">
-                                            <span class="field-label">Aroma:</span>
-                                            <span class="field-value">{{ $formatBool($kondisiAroma) }}</span>
+                                            @php $isAromaOk = ($kondisiAroma === true || $kondisiAroma === 1 || $kondisiAroma === '1' || strtolower((string)$kondisiAroma) === 'ya'); @endphp
+                                            <span style="color:{{ $isAromaOk ? '#28a745' : '#dc3545' }};font-weight:bold;display:inline-block;width:10px;">{{ $isAromaOk ? 'V' : 'X' }}</span>
+                                            <span class="field-value">Aroma</span>
                                         </div>
 
                                         <div class="section-title">Dokumen</div>
                                         <div class="field-row">
-                                            <span class="field-label">Logo Halal:</span>
-                                            <span class="field-value">{{ $formatBool($logoHalal) }}</span>
+                                            @php $isLogoOk = ($logoHalal === true || $logoHalal === 1 || $logoHalal === '1' || strtolower((string)$logoHalal) === 'ya'); @endphp
+                                            <span style="color:{{ $isLogoOk ? '#28a745' : '#dc3545' }};font-weight:bold;display:inline-block;width:10px;">{{ $isLogoOk ? 'V' : 'X' }}</span>
+                                            <span class="field-value">Logo Halal</span>
                                         </div>
                                         <div class="field-row">
-                                            <span class="field-label">Dok. Halal:</span>
-                                            <span class="field-value">{{ $formatBool($dokumenHalal) }}</span>
+                                            @php $isDokOk = ($dokumenHalal === true || $dokumenHalal === 1 || $dokumenHalal === '1' || strtolower((string)$dokumenHalal) === 'ya'); @endphp
+                                            <span style="color:{{ $isDokOk ? '#28a745' : '#dc3545' }};font-weight:bold;display:inline-block;width:10px;">{{ $isDokOk ? 'V' : 'X' }}</span>
+                                            <span class="field-value">Dok. Halal</span>
                                         </div>
                                         <div class="field-row">
-                                            <span class="field-label">COA:</span>
-                                            <span class="field-value">{{ $formatBool($coa) }}</span>
+                                            @php $isCoaOk = ($coa === true || $coa === 1 || $coa === '1' || strtolower((string)$coa) === 'ya'); @endphp
+                                            <span style="color:{{ $isCoaOk ? '#28a745' : '#dc3545' }};font-weight:bold;display:inline-block;width:10px;">{{ $isCoaOk ? 'V' : 'X' }}</span>
+                                            <span class="field-value">COA</span>
                                         </div>
 
                                         <div class="section-title">Status</div>
@@ -606,6 +636,23 @@
                                         <div class="field-row">
                                             <span class="field-label">Ket:</span>
                                             <span class="field-value">{{ $keterangan ?? '-' }}</span>
+                                        </div>
+                                        <div class="field-row" style="margin-top: 5px;">
+                                            <span class="field-label">Foto:</span>
+                                            <div class="field-value">
+                                                @if($imagePath)
+                                                    @php
+                                                        $fullImagePath = storage_path('app/public/' . $imagePath);
+                                                    @endphp
+                                                    @if(file_exists($fullImagePath))
+                                                        <img src="{{ $fullImagePath }}" style="max-width: 100%; height: auto; max-height: 80px; display: block; border: 1px solid #dee2e6; padding: 2px;">
+                                                    @else
+                                                        (File tidak ditemukan)
+                                                    @endif
+                                                @else
+                                                    -
+                                                @endif
+                                            </div>
                                         </div>
                                     </td>
                                 @endforeach
@@ -622,6 +669,10 @@
 
                         {{-- SIGNATURE SECTION --}}
                         <div class="signature-section">
+                            <div class="signature-note">
+                                <span class="ok-text">V OK</span> (Sesuai Standar, Tersedia)<br>
+                                <span class="not-ok-text">X</span> : Parameter Tidak Sesuai
+                            </div>
                             <table class="signature-table">
                                 <tr>
                                     <td class="signature-cell">

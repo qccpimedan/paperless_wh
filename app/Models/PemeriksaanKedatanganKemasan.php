@@ -73,6 +73,7 @@ class PemeriksaanKedatanganKemasan extends Model
         'coa_array',
         'keterangan_array',
         'image_kemasan_array',
+        'file_coa_array',
     ];
 
     /**

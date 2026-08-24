@@ -529,6 +529,53 @@
                                                     </div>
 
                                                     <div class="form-section mb-3">
+                                                        <h6 class="text-primary mb-2">Upload File</h6>
+                                                        <div class="row">
+                                                            <div class="col-md-6">
+                                                                <div class="form-group">
+                                                                    <label class="form-label">Foto Produk</label>
+                                                                    <input type="file" name="image_finish_good[]" class="form-control" accept="image/*" capture="camera" onchange="handleImageInputChange(this)">
+                                                                    <small class="form-text text-muted">Maksimal 3MB. Gambar &gt; 3MB akan dikompres otomatis.</small>
+                                                                    @error('image_finish_good.0')
+                                                                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                                                                    @enderror
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-md-12 coa-upload-section mt-3">
+                                                                <div class="form-group mb-2">
+                                                                    <h6 class="text-primary mb-2">Upload COA</h6>
+                                                                    <label class="form-label d-block">Tipe File COA</label>
+                                                                    <div class="form-check form-check-inline">
+                                                                        <input class="form-check-input coa-type-pdf" type="radio" name="coa_type_master_0" value="pdf" checked>
+                                                                        <label class="form-check-label">PDF</label>
+                                                                    </div>
+                                                                    <div class="form-check form-check-inline">
+                                                                        <input class="form-check-input coa-type-img" type="radio" name="coa_type_master_0" value="gambar">
+                                                                        <label class="form-check-label">Gambar</label>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="row coa-pdf-input">
+                                                                    <div class="col-md-6">
+                                                                        <div class="form-group">
+                                                                            <label class="form-label">File COA (PDF)</label>
+                                                                            <input type="file" name="file_coa[]" class="form-control" accept="application/pdf">
+                                                                            <small class="form-text text-muted">Format: PDF. Maksimal 3MB.</small>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="row coa-img-input" style="display:none;">
+                                                                    <div class="col-md-6">
+                                                                        <div class="form-group">
+                                                                            <label class="form-label">Foto COA</label>
+                                                                            <input type="file" name="file_coa_img[]" class="form-control" accept="image/*" capture="environment" onchange="handleImageInputChange(this)">
+                                                                            <small class="form-text text-muted">Format: JPG, PNG, WEBP, GIF. Maksimal 3MB. Gambar &gt; 3MB akan dikompres otomatis.</small>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="form-section mb-3">
                                                         <h6 class="text-primary mb-2">Hasil Pemeriksaan</h6>
                                                         <div class="row">
                                                             <div class="col-md-6">
@@ -545,30 +592,6 @@
                                                                 <div class="form-group">
                                                                     <label class="form-label">Keterangan</label>
                                                                     <textarea class="form-control" name="keterangan[]" rows="2" placeholder="Keterangan hasil pemeriksaan">{{ old('keterangan.0') }}</textarea>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-
-                                                    <div class="form-section mb-3">
-                                                        <h6 class="text-primary mb-2">Upload File</h6>
-                                                        <div class="row">
-                                                            <div class="col-md-6">
-                                                                <div class="form-group">
-                                                                    <label class="form-label">Foto Produk</label>
-                                                                    <input type="file" name="image_finish_good[]" class="form-control" accept="image/*" capture="camera">
-                                                                    @error('image_finish_good.0')
-                                                                        <div class="invalid-feedback d-block">{{ $message }}</div>
-                                                                    @enderror
-                                                                </div>
-                                                            </div>
-                                                            <div class="col-md-6">
-                                                                <div class="form-group">
-                                                                    <label class="form-label">File COA (Max 2MB)</label>
-                                                                    <input type="file" name="upload_coa[]" class="form-control" accept=".pdf,.png,.jpeg,.jpg">
-                                                                    @error('upload_coa.0')
-                                                                        <div class="invalid-feedback d-block">{{ $message }}</div>
-                                                                    @enderror
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -697,6 +720,7 @@
 </style>
 
 @push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/browser-image-compression@2.0.1/dist/browser-image-compression.js"></script>
 <script>
 const produkByKategori = @json($produkByKategori ?? []);
 const produkMeta = @json($produkMeta ?? []);
@@ -975,7 +999,7 @@ function initChoicesForContainer(containerEl) {
                 el.style.display = '';
                 
                 // Ensure the select is visible and has proper structure
-                if (el.name === 'negara_produsen[]') {
+                if (el.name === 'negara_produsen[]' || el.getAttribute('data-role') === 'negara') {
                     // Keep all country options intact
                     el.value = '';
                 }
@@ -983,7 +1007,7 @@ function initChoicesForContainer(containerEl) {
 
             pristineRowTemplate.querySelectorAll('input, textarea, select').forEach((el) => {
                 if (el.tagName.toLowerCase() === 'select') {
-                    if (!el.classList.contains('choices') || el.name === 'negara_produsen[]') {
+                    if (!el.classList.contains('choices') || el.name === 'negara_produsen[]' || el.getAttribute('data-role') === 'negara') {
                         // Don't reset options for negara_produsen, just clear value
                         el.value = '';
                     } else if (el.classList.contains('produk-select')) {
@@ -1185,6 +1209,10 @@ function setupRowRadios(rowEl) {
         const radioName = `${key}_${globalIndex}`;
         rowEl.querySelectorAll(`input[type="radio"][name^="${key}_"]`).forEach((radio) => {
             radio.name = radioName;
+        });
+
+        rowEl.querySelectorAll('input[type="radio"][name^="coa_type_master_"]').forEach((radio) => {
+            radio.name = `coa_type_master_${globalIndex}`;
         });
 
         const hidden = rowEl.querySelector(`input[type="hidden"].radio-value-${hiddenPrefix}-${globalIndex}`)
@@ -1675,7 +1703,7 @@ document.addEventListener('DOMContentLoaded', function() {
             container.appendChild(newRow);
 
             // Ensure Negara Produsen keeps its options in dynamic rows
-            const negaraSelect = newRow.querySelector('select[name="negara_produsen[]"]');
+            const negaraSelect = newRow.querySelector('select[name="negara_produsen[]"], select[data-role="negara"]');
             if (negaraSelect) {
                 const optionCount = negaraSelect.querySelectorAll('option').length;
                 if (optionCount <= 1) {
@@ -1863,6 +1891,130 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
         // Jika validasi berhasil, form akan submit normalmente
+    });
+
+    const MAX_SIZE = 1024 * 1024; // 1 MB
+
+    function fileToDataURL(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+        });
+    }
+
+    function loadImage(src) {
+        return new Promise((resolve, reject) => {
+            const img = new Image();
+            img.onload = () => resolve(img);
+            img.onerror = reject;
+            img.src = src;
+        });
+    }
+
+    async function compressImage(file) {
+        const dataUrl = await fileToDataURL(file);
+        const img = await loadImage(dataUrl);
+
+        const maxDimension = 1920;
+        let { width, height } = img;
+        if (width > height && width > maxDimension) {
+            height = Math.round((height * maxDimension) / width);
+            width = maxDimension;
+        } else if (height >= width && height > maxDimension) {
+            width = Math.round((width * maxDimension) / height);
+            height = maxDimension;
+        }
+
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+
+        let quality = 0.85;
+        let blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', quality));
+        while (blob && blob.size > MAX_SIZE && quality > 0.4) {
+            quality -= 0.1;
+            blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', quality));
+        }
+
+        const newName = (file.name || 'image').replace(/\.[^/.]+$/, '') + '.jpg';
+        return new File([blob], newName, { type: 'image/jpeg', lastModified: Date.now() });
+    }
+
+    // Buat fungsi global agar bisa dipanggil dari inline onchange
+    window.handleImageInputChange = async function(input) {
+        const file = input.files && input.files[0] ? input.files[0] : null;
+        if (!file) return;
+
+        // Compress if file > 500KB (more aggressive to prevent upload errors)
+        const COMPRESS_THRESHOLD = 512 * 1024; // 500KB
+        if (file.size <= COMPRESS_THRESHOLD) return;
+
+        // Show processing feedback
+        const formGroup = input.closest('.form-group');
+        const labelEl = formGroup ? formGroup.querySelector('.form-label') : null;
+        const originalLabel = labelEl ? labelEl.innerHTML : 'Foto';
+        
+        if (labelEl) {
+            labelEl.innerHTML = originalLabel + ' <span class="badge bg-primary"><i class="bi bi-hourglass-split"></i> Mengompres...</span>';
+        }
+        input.disabled = true;
+
+        try {
+            const compressedFile = await compressImage(file);
+            const dt = new DataTransfer();
+            dt.items.add(compressedFile);
+            input.files = dt.files;
+            
+            if (labelEl) {
+                labelEl.innerHTML = originalLabel + ' <span class="badge bg-success"><i class="bi bi-check-circle"></i> Selesai (Auto-Compressed)</span>';
+            }
+        } catch (e) {
+            console.error('Compression error:', e);
+            if (labelEl) {
+                labelEl.innerHTML = originalLabel + ' <span class="badge bg-danger"><i class="bi bi-exclamation-triangle"></i> Kompresi Gagal</span>';
+            }
+        } finally {
+            input.disabled = false;
+            setTimeout(() => {
+                if (labelEl) labelEl.innerHTML = originalLabel;
+            }, 3000);
+        }
+    };
+
+    // Pengecekan ukuran file (Frontend) max 3MB
+    document.addEventListener('change', function(e) {
+        if (e.target.type === 'file') {
+            const file = e.target.files[0];
+            if (file) {
+                const maxSize = 3 * 1024 * 1024; // 3 MB
+                if (file.size > maxSize) {
+                    alert('Ukuran file ' + file.name + ' terlalu besar (' + (file.size / 1024 / 1024).toFixed(2) + ' MB). Maksimal ukuran file yang diizinkan adalah 3 MB.');
+                    e.target.value = '';
+                }
+            }
+        }
+    });
+
+    // COA type toggle: PDF / Gambar
+    document.addEventListener('change', function(e) {
+        if (e.target.classList.contains('coa-type-pdf') && e.target.checked) {
+            const section = e.target.closest('.coa-upload-section');
+            if (!section) return;
+            section.querySelector('.coa-pdf-input').style.display = '';
+            section.querySelector('.coa-img-input').style.display = 'none';
+            section.querySelector('.coa-img-input input[type="file"]').value = '';
+        }
+        if (e.target.classList.contains('coa-type-img') && e.target.checked) {
+            const section = e.target.closest('.coa-upload-section');
+            if (!section) return;
+            section.querySelector('.coa-pdf-input').style.display = 'none';
+            section.querySelector('.coa-img-input').style.display = '';
+            section.querySelector('.coa-pdf-input input[type="file"]').value = '';
+        }
     });
 });
 </script>

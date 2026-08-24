@@ -388,8 +388,8 @@
                             @endif
                             {{ $produkName }}
                         </td>
-                        <td class="subheader-label">Pukul</td>
-                        <td>{{ $jamPukul ?? '-' }}</td>
+                        <!-- <td class="subheader-label">Pukul</td>
+                        <td>{{ $jamPukul ?? '-' }}</td> -->
                     </tr>
                     <tr>
                         <td class="subheader-label">Suhu Produk</td>

@@ -660,6 +660,14 @@
                                         <span class="field-label">COA:</span>
                                         <span class="field-value">{{ $coa_val ? 'V' : 'X' }}</span>
                                     </div>
+                                    @php
+                                        $fileCoas = json_decode($pemeriksaan->file_coa_array ?? '[]', true) ?? [];
+                                        $fileCoaVal = $fileCoas[$rowIndex] ?? null;
+                                    @endphp
+                                    <div class="field-row">
+                                        <span class="field-label">File COA:</span>
+                                        <span class="field-value">{{ $fileCoaVal ? 'Ada' : 'Tidak Ada' }}</span>
+                                    </div>
                                     @if($keterangan_val)
                                         <div class="field-row">
                                             <span class="field-label">Keterangan:</span>

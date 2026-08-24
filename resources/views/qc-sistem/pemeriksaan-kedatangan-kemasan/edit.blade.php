@@ -436,6 +436,7 @@
                                         $logo_halals = json_decode($pemeriksaanKedatanganKemasan->logo_halal_array ?? '[]', true) ?? [];
                                         $dokumen_halals = json_decode($pemeriksaanKedatanganKemasan->dokumen_halal_array ?? '[]', true) ?? [];
                                         $coas = json_decode($pemeriksaanKedatanganKemasan->coa_array ?? '[]', true) ?? [];
+                                        $file_coas = json_decode($pemeriksaanKedatanganKemasan->file_coa_array ?? '[]', true) ?? [];
                                         $keterangans = json_decode($pemeriksaanKedatanganKemasan->keterangan_array ?? '[]', true) ?? [];
                                         $image_kemasans = json_decode($pemeriksaanKedatanganKemasan->image_kemasan_array ?? '[]', true) ?? [];
 
@@ -701,6 +702,52 @@
                                                                 </div>
                                                             </div>
 
+                                                            <div class="form-section mb-3 coa-upload-section">
+                                                                <h6 class="text-primary mb-2">Upload COA</h6>
+                                                                @php
+                                                                    $existingCoa = $file_coas[$srcIndex] ?? null;
+                                                                @endphp
+                                                                @if($existingCoa)
+                                                                    <div class="mb-2">
+                                                                        <span class="badge bg-success">COA Tersimpan</span>
+                                                                        <a href="{{ asset('storage/' . $existingCoa) }}" target="_blank" class="btn btn-sm btn-outline-info ms-2">Lihat / Download</a>
+                                                                    </div>
+                                                                @endif
+                                                                <div class="row mb-2">
+                                                                    <div class="col-md-12">
+                                                                        <div class="form-group">
+                                                                            <label class="form-label d-block">Tipe File</label>
+                                                                            <div class="form-check form-check-inline">
+                                                                                <input class="form-check-input coa-type-pdf" type="radio" name="coa_type_edit{{ $seq }}" value="pdf" checked>
+                                                                                <label class="form-check-label">PDF</label>
+                                                                            </div>
+                                                                            <div class="form-check form-check-inline">
+                                                                                <input class="form-check-input coa-type-img" type="radio" name="coa_type_edit{{ $seq }}" value="gambar">
+                                                                                <label class="form-check-label">Gambar</label>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="row coa-pdf-input">
+                                                                    <div class="col-md-6">
+                                                                        <div class="form-group">
+                                                                            <label class="form-label">Ganti COA (PDF)</label>
+                                                                            <input type="file" name="file_coa[]" class="form-control" accept="application/pdf">
+                                                                            <small class="form-text text-muted">Format: PDF. Maksimal 3MB.</small>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="row coa-img-input" style="display:none;">
+                                                                    <div class="col-md-6">
+                                                                        <div class="form-group">
+                                                                            <label class="form-label">Ganti COA (Gambar)</label>
+                                                                            <input type="file" name="file_coa_img[]" class="form-control" accept="image/*" capture="environment">
+                                                                            <small class="form-text text-muted">Format: JPG, PNG, WEBP, GIF. Maksimal 3MB.</small>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+
                                                             <div class="form-section mb-3">
                                                                 <h6 class="text-primary mb-2">Upload Gambar</h6>
                                                                 <div class="row">
@@ -881,6 +928,43 @@
                                                         </div>
                                                     </div>
                                                 </div>
+                                                <div class="form-section mb-3 coa-upload-section">
+                                                    <h6 class="text-primary mb-2">Upload COA</h6>
+                                                    <div class="row mb-2">
+                                                        <div class="col-md-12">
+                                                            <div class="form-group">
+                                                                <label class="form-label d-block">Tipe File</label>
+                                                                <div class="form-check form-check-inline">
+                                                                    <input class="form-check-input coa-type-pdf" type="radio" name="coa_type_edit0" value="pdf" checked>
+                                                                    <label class="form-check-label">PDF</label>
+                                                                </div>
+                                                                <div class="form-check form-check-inline">
+                                                                    <input class="form-check-input coa-type-img" type="radio" name="coa_type_edit0" value="gambar">
+                                                                    <label class="form-check-label">Gambar</label>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="row coa-pdf-input">
+                                                        <div class="col-md-6">
+                                                            <div class="form-group">
+                                                                <label class="form-label">File COA (PDF)</label>
+                                                                <input type="file" name="file_coa[]" class="form-control" accept="application/pdf">
+                                                                <small class="form-text text-muted">Format: PDF. Maksimal 3MB.</small>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="row coa-img-input" style="display:none;">
+                                                        <div class="col-md-6">
+                                                            <div class="form-group">
+                                                                <label class="form-label">Foto COA</label>
+                                                                <input type="file" name="file_coa_img[]" class="form-control" accept="image/*" capture="environment">
+                                                                <small class="form-text text-muted">Format: JPG, PNG, WEBP, GIF. Maksimal 3MB.</small>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
                                                 <div class="form-section mb-3">
                                                     <h6 class="text-primary mb-2">Upload Gambar</h6>
                                                     <div class="row">
@@ -1484,7 +1568,12 @@
                                                         } else if (el.type === 'file') {
                                                             el.value = '';
                                                         } else {
-                                                            el.value = '';
+                                                            if(el.name && (el.name.startsWith('file_coa') || el.name.startsWith('image_kemasan'))) {
+                                                                // preserve names, clear value
+                                                                el.value = '';
+                                                            } else {
+                                                                el.value = '';
+                                                            }
                                                         }
                                                     });
                                                     clone.querySelectorAll('select').forEach((el) => {
@@ -1504,6 +1593,20 @@
 
                                                     ensureDetailCollapsible(clone);
                                                     collapseOtherDetailsInRow(rowEl, clone);
+
+                                                    // Fix dummy name for COA type radio to avoid unchecking others
+                                                    const coaTypes = clone.querySelectorAll('.coa-type-pdf, .coa-type-img');
+                                                    const uniqueTime = new Date().getTime();
+                                                    coaTypes.forEach(rt => {
+                                                        rt.name = `coa_type_edit${uniqueTime}`;
+                                                    });
+                                                    
+                                                    // Hide existing file download buttons wrapper on clone
+                                                    clone.querySelectorAll('a').forEach(aEl => {
+                                                        if(aEl.href && aEl.href.includes('storage')) {
+                                                            aEl.closest('div').style.display = 'none';
+                                                        }
+                                                    });
                                                 }
 
                                                 const rmBtn = e.target.closest('.remove-detail-btn');
@@ -1612,8 +1715,47 @@
 
                                             document.addEventListener('change', function(e) {
                                                 const input = e.target;
-                                                if (input && input.classList && input.classList.contains('image-kemasan-input')) {
-                                                    handleImageInputChange(input);
+                                                if (input && input.classList && (input.classList.contains('image-kemasan-input') || input.name === 'file_coa_img[]')) {
+                                                    const lbl = document.createElement('small');
+                                                    lbl.className = 'text-warning d-block form-text compressing-label';
+                                                    lbl.innerText = 'Mengompres gambar...';
+                                                    input.parentNode.appendChild(lbl);
+                                                    handleImageInputChange(input).then(() => {
+                                                        const el = input.parentNode.querySelector('.compressing-label');
+                                                        if (el) el.innerText = 'Selesai ✓';
+                                                    });
+                                                }
+                                            });
+                                            
+                                            // Pengecekan ukuran file (Frontend) max 3MB
+                                            document.addEventListener('change', function(e) {
+                                                if (e.target.type === 'file') {
+                                                    const file = e.target.files[0];
+                                                    if (file) {
+                                                        const maxSize = 3 * 1024 * 1024; // 3 MB
+                                                        if (file.size > maxSize) {
+                                                            alert('Ukuran file ' + file.name + ' terlalu besar (' + (file.size / 1024 / 1024).toFixed(2) + ' MB). Maksimal ukuran file yang diizinkan adalah 3 MB.');
+                                                            e.target.value = '';
+                                                        }
+                                                    }
+                                                }
+                                            });
+
+                                            // COA type toggle: PDF / Gambar
+                                            document.addEventListener('change', function(e) {
+                                                if (e.target.classList.contains('coa-type-pdf') && e.target.checked) {
+                                                    const section = e.target.closest('.coa-upload-section');
+                                                    if (!section) return;
+                                                    section.querySelector('.coa-pdf-input').style.display = '';
+                                                    section.querySelector('.coa-img-input').style.display = 'none';
+                                                    section.querySelector('.coa-img-input input[type="file"]').value = '';
+                                                }
+                                                if (e.target.classList.contains('coa-type-img') && e.target.checked) {
+                                                    const section = e.target.closest('.coa-upload-section');
+                                                    if (!section) return;
+                                                    section.querySelector('.coa-pdf-input').style.display = 'none';
+                                                    section.querySelector('.coa-img-input').style.display = '';
+                                                    section.querySelector('.coa-pdf-input input[type="file"]').value = '';
                                                 }
                                             });
                                         });

@@ -11,7 +11,7 @@
                     <nav aria-label="breadcrumb" class="breadcrumb-header float-start float-lg-end">
                         <ol class="breadcrumb">
                             <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
-                            <li class="breadcrumb-item"><a href="{{ route('pemeriksaan-produk-finish-good.index') }}">Pemeriksaan</a></li>
+                            <li class="breadcrumb-item"><a href="{{ route('pemeriksaan-produk-finish-good.index') }}">Pemeriksaan Produk Finish Good</a></li>
                             <li class="breadcrumb-item active">Detail</li>
                         </ol>
                     </nav>
@@ -392,26 +392,42 @@
 
                                                 @php
                                                     $imgPath = $imgArr[$it['i'] ?? 0] ?? null;
-                                                @endphp
-                                                @if($imgPath)
-                                                    <div class="mt-3">
-                                                        <strong>Foto Produk:</strong>
-                                                        <div class="p-2 bg-white rounded">
-                                                            <a href="{{ asset('storage/' . $imgPath) }}" target="_blank">
-                                                                <img src="{{ asset('storage/' . $imgPath) }}" alt="Foto Produk" style="max-width: 260px; height: auto; border: 1px solid #ddd; padding: 4px;">
-                                                            </a>
-                                                        </div>
-                                                    </div>
-                                                @endif
-
-                                                @php
                                                     $coaPath = $coaFileArr[$it['i'] ?? 0] ?? null;
                                                 @endphp
-                                                @if($coaPath)
-                                                    <div class="mt-3">
-                                                        <strong>File COA:</strong>
-                                                        <div class="p-2 bg-white rounded">
-                                                            <a href="{{ asset('storage/' . $coaPath) }}" target="_blank" class="btn btn-sm btn-info">Lihat File COA</a>
+                                                @if($imgPath || $coaPath)
+                                                    <div class="row mt-2">
+                                                        <div class="col-md-6 offset-md-6">
+                                                            <div class="d-flex justify-content-end gap-2 mt-2">
+                                                                @if($coaPath)
+                                                                    <a href="{{ asset('storage/' . $coaPath) }}" target="_blank" class="btn btn-sm btn-info">
+                                                                        <i class="bi bi-file-earmark-text"></i> Lihat File COA
+                                                                    </a>
+                                                                @endif
+                                                                @if($imgPath)
+                                                                    <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#modalFotoFG{{ $gIndex }}_{{ $dIndex }}">
+                                                                        <i class="bi bi-image"></i> Lihat Foto Produk
+                                                                    </button>
+
+                                                                    <!-- Modal Foto -->
+                                                                    <div class="modal fade" id="modalFotoFG{{ $gIndex }}_{{ $dIndex }}" tabindex="-1" aria-labelledby="modalFotoFGLabel{{ $gIndex }}_{{ $dIndex }}" aria-hidden="true">
+                                                                        <div class="modal-dialog modal-dialog-centered modal-lg">
+                                                                            <div class="modal-content">
+                                                                                <div class="modal-header">
+                                                                                    <h5 class="modal-title" id="modalFotoFGLabel{{ $gIndex }}_{{ $dIndex }}">Foto Produk - Produk {{ $gIndex + 1 }} Detail #{{ $dIndex + 1 }}</h5>
+                                                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                                                </div>
+                                                                                <div class="modal-body text-center bg-light">
+                                                                                    <img src="{{ asset('storage/' . $imgPath) }}" alt="Foto Produk" class="img-fluid rounded shadow-sm border p-1" style="max-height: 80vh;">
+                                                                                </div>
+                                                                                <div class="modal-footer">
+                                                                                    <a href="{{ asset('storage/' . $imgPath) }}" target="_blank" class="btn btn-info btn-sm">Buka di Tab Baru</a>
+                                                                                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Tutup</button>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                @endif
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 @endif

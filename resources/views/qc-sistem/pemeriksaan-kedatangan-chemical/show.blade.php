@@ -205,10 +205,14 @@
                                         </div>
                                     </div>
 
+                                    @php
+                                        $file_coa_arr = json_decode($pemeriksaanChemical->file_coa_array ?? '[]', true) ?? [];
+                                    @endphp
                                     @foreach($detailIdxList as $detailNo => $i)
                                         @php
                                             $detail = $detailChemicals[$i] ?? [];
                                             $imgPath = $detail['image_chemical'] ?? null;
+                                            $coaFile = $detail['file_coa'] ?? $file_coa_arr[$i] ?? null;
                                         @endphp
 
                                         <div class="border rounded p-3 mb-3" style="background: #fff;">
@@ -287,6 +291,13 @@
                                                             </tr>
                                                         </table>
                                                     </div>
+                                                </div>
+                                            @endif
+
+                                            @if($coaFile)
+                                                <div class="mt-3 mb-2">
+                                                    <!-- <strong>File COA:</strong> -->
+                                                    <a href="{{ asset('storage/' . $coaFile) }}" target="_blank" class="btn btn-sm btn-info"><i class="bi bi-file-earmark-text"></i> Lihat File COA (PDF)</a>
                                                 </div>
                                             @endif
 
