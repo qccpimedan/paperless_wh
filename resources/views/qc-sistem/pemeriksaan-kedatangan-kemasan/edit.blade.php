@@ -99,6 +99,7 @@
                                                         <option value="">Pilih Status</option>
                                                         <option value="Hold" {{ old('status', $pemeriksaanKedatanganKemasan->status) == 'Hold' ? 'selected' : '' }}>Hold</option>
                                                         <option value="Release" {{ old('status', $pemeriksaanKedatanganKemasan->status) == 'Release' ? 'selected' : '' }}>Release</option>
+                                                        <option value="Retur" {{ old('status', $pemeriksaanKedatanganKemasan->status) == 'Retur' ? 'selected' : '' }}>Retur</option>
                                                     </select>
                                                     @error('status')
                                                         <div class="invalid-feedback">{{ $message }}</div>
@@ -690,6 +691,8 @@
                                                                                 <option value="">Pilih Status</option>
                                                                                 <option value="Hold" {{ ($statuses[$srcIndex] ?? '') == 'Hold' ? 'selected' : '' }}>Hold</option>
                                                                                 <option value="Release" {{ ($statuses[$srcIndex] ?? '') == 'Release' ? 'selected' : '' }}>Release</option>
+                                                                                <option value="Retur" {{ ($statuses[$srcIndex] ?? '') == 'Retur' ? 'selected' : '' }}>Retur</option>
+                                                                                <option value="Retur" {{ ($statuses[$srcIndex] ?? '') == 'Retur' ? 'selected' : '' }}>Retur</option>
                                                                             </select>
                                                                         </div>
                                                                     </div>

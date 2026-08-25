@@ -660,11 +660,12 @@
                                                                 <div class="row">
                                                                     <div class="col-md-6">
                                                                         <div class="form-group">
-                                                                            <label class="form-label">Status</label>
+                                                                            <label class="form-label">Status </label>
                                                                             <select class="form-control" name="status_baris[]">
                                                                                 <option value="">Pilih Status</option>
                                                                                 <option value="Hold" {{ old('status_baris.'.$idx, $it['status'] ?? '') == 'Hold' ? 'selected' : '' }}>Hold</option>
                                                                                 <option value="Release" {{ old('status_baris.'.$idx, $it['status'] ?? '') == 'Release' ? 'selected' : '' }}>Release</option>
+                                                                                <option value="Retur" {{ old('status_baris.'.$idx, $it['status'] ?? '') == 'Retur' ? 'selected' : '' }}>Retur</option>
                                                                             </select>
                                                                         </div>
                                                                     </div>

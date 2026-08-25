@@ -441,7 +441,7 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
             'no_po' => 'nullable|string|max:255',
             'id_shift' => 'nullable|exists:shifts,id',
             'status_baris' => 'required|array|min:1',
-            'status_baris.*' => 'required|in:Release,Hold',
+            'status_baris.*' => 'required|in:Release,Hold,Retur',
             // Validasi array fields dari dynamic rows
             'id_produk' => 'nullable|array',
             'id_produk.*' => 'nullable|exists:produks,id',
@@ -839,7 +839,7 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
             'no_po' => 'nullable|string|max:255',
             'id_shift' => 'nullable|exists:shifts,id',
             'status_baris' => 'required|array|min:1',
-            'status_baris.*' => 'required|in:Release,Hold',
+            'status_baris.*' => 'required|in:Release,Hold,Retur',
             // Validasi array fields dari dynamic rows
             'id_produk' => 'nullable|array',
             'id_produk.*' => 'nullable|exists:produks,id',
@@ -1210,7 +1210,7 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
         }
 
         $request->validate([
-            'status_baris' => 'required|in:Release,Hold',
+            'status_baris' => 'required|in:Release,Hold,Retur',
             'kategori_code' => 'nullable|string',
             'id_produk' => 'nullable|exists:produks,id',
             'id_bahan' => 'nullable|exists:bahans,id',

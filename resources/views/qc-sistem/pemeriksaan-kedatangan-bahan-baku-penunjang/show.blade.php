@@ -390,6 +390,8 @@
                                                     <span class="badge bg-success">Release</span>
                                                 @elseif($statusBarisArray[$index] === 'Hold')
                                                     <span class="badge bg-warning">Hold</span>
+                                                @elseif($statusBarisArray[$index] === 'Retur')
+                                                    <span class="badge bg-primary">Retur</span>
                                                 @else
                                                     <span class="badge bg-secondary">{{ $statusBarisArray[$index] ?? '-' }}</span>
                                                 @endif

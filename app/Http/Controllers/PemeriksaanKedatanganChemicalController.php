@@ -469,7 +469,7 @@ return view('qc-sistem.pemeriksaan-kedatangan-chemical.index', compact('pemeriks
             'persyaratan_dokumen_halal' => 'nullable|array',
             'coa' => 'nullable|array',
             'status_baris' => 'required|array',
-            'status_baris.*' => 'required|in:Release,Hold',
+            'status_baris.*' => 'required|in:Release,Hold,Retur',
             'keterangan' => 'nullable|array',
             'image_chemical' => 'nullable|array',
             'image_chemical.*' => 'nullable|image|max:3072',
@@ -978,7 +978,7 @@ return view('qc-sistem.pemeriksaan-kedatangan-chemical.index', compact('pemeriks
         }
 
         $request->validate([
-            'status_baris' => 'required|in:Release,Hold',
+            'status_baris' => 'required|in:Release,Hold,Retur',
             'kategori_code' => 'required|string',
             'id_produk' => 'required|exists:produks,id',
             'id_chemical' => 'required|exists:chemicals,id',
@@ -1190,7 +1190,7 @@ return view('qc-sistem.pemeriksaan-kedatangan-chemical.index', compact('pemeriks
             'persyaratan_dokumen_halal' => 'nullable|array',
             'coa' => 'nullable|array',
             'status_baris' => 'required|array',
-            'status_baris.*' => 'required|in:Release,Hold',
+            'status_baris.*' => 'required|in:Release,Hold,Retur',
             'keterangan' => 'nullable|array',
             'image_chemical' => 'nullable|array',
             'image_chemical.*' => 'nullable|image|max:1024',

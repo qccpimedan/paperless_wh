@@ -246,6 +246,8 @@
                                                     <span class="badge bg-success">Release</span>
                                                 @elseif($statuses[$index] === 'Hold')
                                                     <span class="badge bg-warning">Hold</span>
+                                                @elseif($statuses[$index] === 'Retur')
+                                                    <span class="badge bg-primary">Retur</span>
                                                 @else
                                                     <span class="badge bg-secondary">{{ $statuses[$index] ?? '-' }}</span>
                                                 @endif

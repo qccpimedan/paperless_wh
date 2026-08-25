@@ -601,6 +601,7 @@
                                                                         <option value="">Pilih Status</option>
                                                                         <option value="Hold">Hold</option>
                                                                         <option value="Release">Release</option>
+                                                                        <option value="Retur">Retur</option>
                                                                     </select>
                                                                     @error('status_baris')
                                                                         <div class="invalid-feedback">{{ $message }}</div>
@@ -665,6 +666,10 @@
                                                 </div>
                                             </div>
                                         </div>
+                                    </div>
+                                    <!-- FIX #2: tombol "Tambah Produk" dipindah ke LUAR #unified-container
+                                         supaya container.appendChild(newRow) di addNewRow() selalu menaruh
+                                         row baru di paling bawah (tidak lagi terjebak di atas tombol ini). -->
                                     <div class="row mt-3 pt-3 border-top">
                                         <div class="col-md-12">
                                             <button type="button" class="btn btn-success btn-sm add-unified-btn"><i class="bi bi-plus"></i> Tambah Produk</button>
@@ -822,6 +827,7 @@ const produkByKategori = @json($produkByKategori ?? []);
 const produkMeta = @json($produkMeta ?? []);
 const chemicalByName = @json($chemicalByName ?? []);
 const chemicalByProdukId = @json($chemicalByProdukId ?? []);
+const countriesData = @json($countries ?? []);
 
 document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.btn-kembali-confirm').forEach((el) => {
@@ -1046,31 +1052,90 @@ function setupDynamicFormListeners() {
 
             const newItem = last.cloneNode(true);
 
-            // Clean up Choices.js in cloned element so initializeAllChoices re-runs cleanly
-            newItem.querySelectorAll('select.choices').forEach((select) => {
-                delete select.choicesInstance;
-                delete select.dataset.choicesInitialized;
-                const choicesContainer = select.closest('.choices');
-                if (choicesContainer && choicesContainer.parentNode) {
-                    choicesContainer.parentNode.insertBefore(select, choicesContainer);
-                    choicesContainer.remove();
+            // Choices.js menyembunyikan <select> asli (aria-hidden) dan hanya menyimpan
+            // 1 option di dalamnya (yang dipilih). Seluruh list ada di .choices__list--dropdown
+            // sebagai <div>, bukan <option>. Saat cloneNode, <select> tersembunyi + wrapper ikut
+            // ter-clone — hasilnya select di clone hanya punya 1 pilihan (yang selected).
+            //
+            // Solusi: untuk select negara_produsen[], ganti seluruh wrapper .choices dengan
+            // <select> baru yang diisi dari countriesData (PHP $countries yang sudah di-json).
+            // Untuk select lain yang bukan negara, cukup ambil <select> dari dalam wrapper,
+            // bersihkan state Choices-nya, dan reset value-nya.
+            newItem.querySelectorAll('.choices').forEach((wrapper) => {
+                if (!wrapper.parentNode) return;
+
+                // Cari <select> di dalam wrapper
+                const hiddenSelect = wrapper.querySelector('select');
+                if (!hiddenSelect) { wrapper.remove(); return; }
+
+                const selectName = hiddenSelect.name || '';
+
+                if (selectName === 'negara_produsen[]') {
+                    // Rebuild dari countriesData supaya semua negara tersedia
+                    const newSelect = document.createElement('select');
+                    newSelect.name = 'negara_produsen[]';
+                    newSelect.className = 'choices form-control';
+
+                    const blankOpt = document.createElement('option');
+                    blankOpt.value = '';
+                    blankOpt.textContent = 'Pilih Negara';
+                    newSelect.appendChild(blankOpt);
+
+                    // countriesData adalah object {code: name} dari PHP $countries
+                    Object.entries(countriesData).forEach(([code, name]) => {
+                        const opt = document.createElement('option');
+                        opt.value = name;
+                        opt.textContent = name;
+                        newSelect.appendChild(opt);
+                    });
+
+                    wrapper.parentNode.insertBefore(newSelect, wrapper);
+                    wrapper.remove();
+                } else {
+                    // Untuk select lain: keluarkan <select> dari wrapper, bersihkan state Choices
+                    hiddenSelect.classList.remove('choices__input', 'choices__input--hidden');
+                    hiddenSelect.removeAttribute('style');
+                    hiddenSelect.removeAttribute('data-choice');
+                    hiddenSelect.removeAttribute('aria-hidden');
+                    hiddenSelect.tabIndex = 0;
+                    delete hiddenSelect.choicesInstance;
+                    delete hiddenSelect.dataset.choicesInitialized;
+                    // Reset value
+                    hiddenSelect.value = '';
+                    Array.from(hiddenSelect.options).forEach((opt) => {
+                        opt.selected = false;
+                        opt.removeAttribute('selected');
+                    });
+                    wrapper.parentNode.insertBefore(hiddenSelect, wrapper);
+                    wrapper.remove();
                 }
             });
 
+            // Reset semua input, textarea, select biasa di newItem
             newItem.querySelectorAll('input, textarea, select').forEach((el) => {
                 if (el.type === 'file') {
                     el.value = '';
                 } else if (el.type === 'radio') {
                     el.checked = false;
+                } else if (el.type === 'checkbox') {
+                    el.checked = false;
                 } else {
                     el.value = '';
+                    if (el.tagName.toLowerCase() === 'select') {
+                        Array.from(el.options).forEach((opt) => {
+                            opt.selected = false;
+                            opt.removeAttribute('selected');
+                        });
+                    }
                 }
             });
+
+            // Reset hidden radio values
             newItem.querySelectorAll('input[type="hidden"][name="kondisi_fisik_kemasan[]"], input[type="hidden"][name="kondisi_fisik_warna[]"], input[type="hidden"][name="persyaratan_dokumen_halal[]"], input[type="hidden"][name="coa[]"]').forEach((el) => {
                 el.value = '';
             });
 
-            // Re-enable and reset COA upload section for the new detail item
+            // Reset COA upload section
             const pdfRadio = newItem.querySelector('.coa-type-pdf');
             const imgRadio = newItem.querySelector('.coa-type-img');
             if (pdfRadio) pdfRadio.checked = true;
@@ -1506,6 +1571,7 @@ function addNewRow() {
                                     <option value="">Pilih Status</option>
                                     <option value="Hold">Hold</option>
                                     <option value="Release">Release</option>
+                                    <option value="Retur">Retur</option>
                                 </select>
                             </div>
                         </div>

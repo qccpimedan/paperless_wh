@@ -259,7 +259,7 @@ return view('qc-sistem.pemeriksaan-produk-finish-good.index', compact('pemeriksa
             'coa.*' => 'nullable|in:0,1',
 
             'status_baris' => 'nullable|array',
-            'status_baris.*' => 'nullable|in:Release,Hold',
+            'status_baris.*' => 'nullable|in:Release,Hold,Retur',
             'keterangan' => 'nullable|array',
             'keterangan.*' => 'nullable|string',
             'image_finish_good' => 'nullable|array',
@@ -548,7 +548,7 @@ return view('qc-sistem.pemeriksaan-produk-finish-good.index', compact('pemeriksa
             'coa.*' => 'nullable|in:0,1',
 
             'status_baris' => 'nullable|array',
-            'status_baris.*' => 'nullable|in:Release,Hold',
+            'status_baris.*' => 'nullable|in:Release,Hold,Retur',
             'keterangan' => 'nullable|array',
             'keterangan.*' => 'nullable|string',
             'image_finish_good' => 'nullable|array',
