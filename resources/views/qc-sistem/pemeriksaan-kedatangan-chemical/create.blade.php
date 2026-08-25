@@ -827,6 +827,7 @@ const produkByKategori = @json($produkByKategori ?? []);
 const produkMeta = @json($produkMeta ?? []);
 const chemicalByName = @json($chemicalByName ?? []);
 const chemicalByProdukId = @json($chemicalByProdukId ?? []);
+const countriesData = @json($countries ?? []);
 
 document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.btn-kembali-confirm').forEach((el) => {
@@ -1051,55 +1052,90 @@ function setupDynamicFormListeners() {
 
             const newItem = last.cloneNode(true);
 
-            // FIX #1: Clean up Choices.js sisa di elemen clone secara menyeluruh.
-            // Choices.js menambahkan class "choices__input" (dan atribut lain) langsung
-            // ke elemen <select> aslinya, bukan cuma ke wrapper-nya. Kalau class ini
-            // ikut ter-clone dan tidak dibersihkan, initializeAllChoices() akan
-            // menganggap select ini "sudah di-init" (lihat guard classList.contains
-            // ('choices__input')) padahal ini instance/elemen yang baru, sehingga
-            // Choices.js tidak pernah di-init ulang dan dropdown Negara Produsen
-            // tampil kosong / tidak berfungsi di detail tambahan.
-            newItem.querySelectorAll('select.choices').forEach((select) => {
-                delete select.choicesInstance;
-                delete select.dataset.choicesInitialized;
+            // Choices.js menyembunyikan <select> asli (aria-hidden) dan hanya menyimpan
+            // 1 option di dalamnya (yang dipilih). Seluruh list ada di .choices__list--dropdown
+            // sebagai <div>, bukan <option>. Saat cloneNode, <select> tersembunyi + wrapper ikut
+            // ter-clone — hasilnya select di clone hanya punya 1 pilihan (yang selected).
+            //
+            // Solusi: untuk select negara_produsen[], ganti seluruh wrapper .choices dengan
+            // <select> baru yang diisi dari countriesData (PHP $countries yang sudah di-json).
+            // Untuk select lain yang bukan negara, cukup ambil <select> dari dalam wrapper,
+            // bersihkan state Choices-nya, dan reset value-nya.
+            newItem.querySelectorAll('.choices').forEach((wrapper) => {
+                if (!wrapper.parentNode) return;
 
-                // Bersihkan sisa class & atribut yang ditambahkan Choices.js ke elemen asli
-                select.classList.remove('choices__input', 'choices__input--hidden');
-                select.removeAttribute('style');
-                select.removeAttribute('data-choice');
-                select.removeAttribute('aria-hidden');
-                select.tabIndex = 0;
+                // Cari <select> di dalam wrapper
+                const hiddenSelect = wrapper.querySelector('select');
+                if (!hiddenSelect) { wrapper.remove(); return; }
 
-                // Lepaskan select dari wrapper .choices lama (jika ada) sebelum di-init ulang
-                const choicesContainer = select.closest('.choices');
-                if (choicesContainer && choicesContainer.parentNode) {
-                    choicesContainer.parentNode.insertBefore(select, choicesContainer);
-                    choicesContainer.remove();
+                const selectName = hiddenSelect.name || '';
+
+                if (selectName === 'negara_produsen[]') {
+                    // Rebuild dari countriesData supaya semua negara tersedia
+                    const newSelect = document.createElement('select');
+                    newSelect.name = 'negara_produsen[]';
+                    newSelect.className = 'choices form-control';
+
+                    const blankOpt = document.createElement('option');
+                    blankOpt.value = '';
+                    blankOpt.textContent = 'Pilih Negara';
+                    newSelect.appendChild(blankOpt);
+
+                    // countriesData adalah object {code: name} dari PHP $countries
+                    Object.entries(countriesData).forEach(([code, name]) => {
+                        const opt = document.createElement('option');
+                        opt.value = name;
+                        opt.textContent = name;
+                        newSelect.appendChild(opt);
+                    });
+
+                    wrapper.parentNode.insertBefore(newSelect, wrapper);
+                    wrapper.remove();
+                } else {
+                    // Untuk select lain: keluarkan <select> dari wrapper, bersihkan state Choices
+                    hiddenSelect.classList.remove('choices__input', 'choices__input--hidden');
+                    hiddenSelect.removeAttribute('style');
+                    hiddenSelect.removeAttribute('data-choice');
+                    hiddenSelect.removeAttribute('aria-hidden');
+                    hiddenSelect.tabIndex = 0;
+                    delete hiddenSelect.choicesInstance;
+                    delete hiddenSelect.dataset.choicesInitialized;
+                    // Reset value
+                    hiddenSelect.value = '';
+                    Array.from(hiddenSelect.options).forEach((opt) => {
+                        opt.selected = false;
+                        opt.removeAttribute('selected');
+                    });
+                    wrapper.parentNode.insertBefore(hiddenSelect, wrapper);
+                    wrapper.remove();
                 }
             });
 
+            // Reset semua input, textarea, select biasa di newItem
             newItem.querySelectorAll('input, textarea, select').forEach((el) => {
                 if (el.type === 'file') {
                     el.value = '';
                 } else if (el.type === 'radio') {
                     el.checked = false;
+                } else if (el.type === 'checkbox') {
+                    el.checked = false;
                 } else {
                     el.value = '';
-                    // Jika ini select (termasuk Choices.js), hapus semua selected attribute
-                    // agar Choices.js tidak merender ulang pilihan lama saat re-init
                     if (el.tagName.toLowerCase() === 'select') {
-                        Array.from(el.options).forEach(function(opt) {
+                        Array.from(el.options).forEach((opt) => {
                             opt.selected = false;
                             opt.removeAttribute('selected');
                         });
                     }
                 }
             });
+
+            // Reset hidden radio values
             newItem.querySelectorAll('input[type="hidden"][name="kondisi_fisik_kemasan[]"], input[type="hidden"][name="kondisi_fisik_warna[]"], input[type="hidden"][name="persyaratan_dokumen_halal[]"], input[type="hidden"][name="coa[]"]').forEach((el) => {
                 el.value = '';
             });
 
-            // Re-enable and reset COA upload section for the new detail item
+            // Reset COA upload section
             const pdfRadio = newItem.querySelector('.coa-type-pdf');
             const imgRadio = newItem.querySelector('.coa-type-img');
             if (pdfRadio) pdfRadio.checked = true;
