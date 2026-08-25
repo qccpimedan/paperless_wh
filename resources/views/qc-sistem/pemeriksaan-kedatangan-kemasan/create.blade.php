@@ -643,11 +643,12 @@
                                                             </div>
                                                             <div class="col-md-4">
                                                                 <div class="form-group">
-                                                                    <label class="form-label">Status</label>
+                                                                    <label class="form-label">Status <span class="text-danger">*</span></label>
                                                                     <select class="form-control @error('status.0') is-invalid @enderror" name="status[]">
                                                                         <option value="">Pilih Status</option>
                                                                         <option value="Hold" {{ old('status.0') == 'Hold' ? 'selected' : '' }}>Hold</option>
                                                                         <option value="Release" {{ old('status.0') == 'Release' ? 'selected' : '' }}>Release</option>
+                                                                        <option value="Retur" {{ old('status.0') == 'Retur' ? 'selected' : '' }}>Retur</option>
                                                                     </select>
                                                                     @error('status.0')
                                                                         <div class="invalid-feedback">{{ $message }}</div>
@@ -1324,11 +1325,12 @@ document.addEventListener('DOMContentLoaded', function() {
                                 </div>
                                 <div class="col-md-4">
                                     <div class="form-group">
-                                        <label class="form-label">Status</label>
+                                        <label class="form-label">Status <span class="text-danger">*</span></label>
                                         <select class="form-control" name="status[]">
                                             <option value="">Pilih Status</option>
                                             <option value="Hold">Hold</option>
                                             <option value="Release">Release</option>
+                                            <option value="Retur">Retur</option>
                                         </select>
                                     </div>
                                 </div>
@@ -2370,7 +2372,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (!firstStatusField) firstStatusField = select;
             
             const value = select.value ? select.value.trim() : '';
-            if (value === 'Hold' || value === 'Release') {
+            if (value === 'Hold' || value === 'Release' || value === 'Retur') {
                 hasValidStatus = true;
                 removeHighlight(select);
             } else {
@@ -2379,7 +2381,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         
         if (!hasValidStatus) {
-            errors.push('Minimal satu item harus memilih Status "Hold" atau "Release"');
+            errors.push('Minimal satu item harus memilih Status "Hold", "Release", atau "Retur"');
             if (firstStatusField) {
                 highlightField(firstStatusField);
             }

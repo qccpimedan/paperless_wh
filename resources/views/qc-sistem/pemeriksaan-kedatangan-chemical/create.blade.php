@@ -601,6 +601,7 @@
                                                                         <option value="">Pilih Status</option>
                                                                         <option value="Hold">Hold</option>
                                                                         <option value="Release">Release</option>
+                                                                        <option value="Retur">Retur</option>
                                                                     </select>
                                                                     @error('status_baris')
                                                                         <div class="invalid-feedback">{{ $message }}</div>
@@ -665,6 +666,10 @@
                                                 </div>
                                             </div>
                                         </div>
+                                    </div>
+                                    <!-- FIX #2: tombol "Tambah Produk" dipindah ke LUAR #unified-container
+                                         supaya container.appendChild(newRow) di addNewRow() selalu menaruh
+                                         row baru di paling bawah (tidak lagi terjebak di atas tombol ini). -->
                                     <div class="row mt-3 pt-3 border-top">
                                         <div class="col-md-12">
                                             <button type="button" class="btn btn-success btn-sm add-unified-btn"><i class="bi bi-plus"></i> Tambah Produk</button>
@@ -1046,10 +1051,26 @@ function setupDynamicFormListeners() {
 
             const newItem = last.cloneNode(true);
 
-            // Clean up Choices.js in cloned element so initializeAllChoices re-runs cleanly
+            // FIX #1: Clean up Choices.js sisa di elemen clone secara menyeluruh.
+            // Choices.js menambahkan class "choices__input" (dan atribut lain) langsung
+            // ke elemen <select> aslinya, bukan cuma ke wrapper-nya. Kalau class ini
+            // ikut ter-clone dan tidak dibersihkan, initializeAllChoices() akan
+            // menganggap select ini "sudah di-init" (lihat guard classList.contains
+            // ('choices__input')) padahal ini instance/elemen yang baru, sehingga
+            // Choices.js tidak pernah di-init ulang dan dropdown Negara Produsen
+            // tampil kosong / tidak berfungsi di detail tambahan.
             newItem.querySelectorAll('select.choices').forEach((select) => {
                 delete select.choicesInstance;
                 delete select.dataset.choicesInitialized;
+
+                // Bersihkan sisa class & atribut yang ditambahkan Choices.js ke elemen asli
+                select.classList.remove('choices__input', 'choices__input--hidden');
+                select.removeAttribute('style');
+                select.removeAttribute('data-choice');
+                select.removeAttribute('aria-hidden');
+                select.tabIndex = 0;
+
+                // Lepaskan select dari wrapper .choices lama (jika ada) sebelum di-init ulang
                 const choicesContainer = select.closest('.choices');
                 if (choicesContainer && choicesContainer.parentNode) {
                     choicesContainer.parentNode.insertBefore(select, choicesContainer);
@@ -1064,6 +1085,14 @@ function setupDynamicFormListeners() {
                     el.checked = false;
                 } else {
                     el.value = '';
+                    // Jika ini select (termasuk Choices.js), hapus semua selected attribute
+                    // agar Choices.js tidak merender ulang pilihan lama saat re-init
+                    if (el.tagName.toLowerCase() === 'select') {
+                        Array.from(el.options).forEach(function(opt) {
+                            opt.selected = false;
+                            opt.removeAttribute('selected');
+                        });
+                    }
                 }
             });
             newItem.querySelectorAll('input[type="hidden"][name="kondisi_fisik_kemasan[]"], input[type="hidden"][name="kondisi_fisik_warna[]"], input[type="hidden"][name="persyaratan_dokumen_halal[]"], input[type="hidden"][name="coa[]"]').forEach((el) => {
@@ -1506,6 +1535,7 @@ function addNewRow() {
                                     <option value="">Pilih Status</option>
                                     <option value="Hold">Hold</option>
                                     <option value="Release">Release</option>
+                                    <option value="Retur">Retur</option>
                                 </select>
                             </div>
                         </div>

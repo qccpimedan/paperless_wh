@@ -221,8 +221,10 @@
                                                 @if(isset($detail['status']))
                                                     @if($detail['status'] === 'Release')
                                                         <span class="badge bg-success">Release</span>
-                                                    @else
+                                                    @elseif($detail['status'] === 'Hold')
                                                         <span class="badge bg-warning">Hold</span>
+                                                    @elseif($detail['status'] === 'Retur')
+                                                        <span class="badge bg-primary">Retur</span>
                                                     @endif
                                                 @endif
                                             </div>

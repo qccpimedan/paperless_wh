@@ -326,6 +326,8 @@
                                                         <span class="badge bg-success">Release</span>
                                                     @elseif($status === 'Hold')
                                                         <span class="badge bg-warning">Hold</span>
+                                                    @elseif($status === 'Retur')
+                                                        <span class="badge bg-primary">Retur</span>
                                                     @else
                                                         <span class="badge bg-secondary">-</span>
                                                     @endif

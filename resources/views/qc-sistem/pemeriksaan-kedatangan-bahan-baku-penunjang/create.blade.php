@@ -746,6 +746,7 @@
                                                                         <option value="">Pilih Status</option>
                                                                         <option value="Hold">Hold</option>
                                                                         <option value="Release">Release</option>
+                                                                        <option value="Retur">Retur</option>
                                                                     </select>
                                                                     @error('status_baris')
                                                                         <div class="invalid-feedback">{{ $message }}</div>
@@ -2173,6 +2174,7 @@ function addNewRow() {
                             <option value="">Pilih Status</option>
                             <option value="Hold">Hold</option>
                             <option value="Release">Release</option>
+                            <option value="Retur">Retur</option>
                         </select>
                         @error('status_baris')
                             <div class="invalid-feedback">{{ $message }}</div>
@@ -2726,7 +2728,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         statusBaris.forEach((select, index) => {
             const value = select.value ? select.value.trim() : '';
-            if (value === 'Hold' || value === 'Release') {
+            if (value === 'Hold' || value === 'Release' || value === 'Retur') {
                 hasValidStatus = true;
                 removeHighlight(select);
             } else {
@@ -2737,7 +2739,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         if (!hasValidStatus) {
             if (statusBaris.length === 0) {
-                errors.push('Minimal ada satu produk dengan Status yang harus dipilih (Hold atau Release)');
+                errors.push('Minimal ada satu produk dengan Status yang harus dipilih (Hold, Release, atau Retur)');
             } else {
                 errors.push(...statusErrors);
             }

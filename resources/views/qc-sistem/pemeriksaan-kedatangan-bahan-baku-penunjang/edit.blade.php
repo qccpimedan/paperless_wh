@@ -821,6 +821,7 @@
                                                                             <option value="">Pilih Status</option>
                                                                             <option value="Hold" {{ ($statusBarisArray[$i] ?? '') == 'Hold' ? 'selected' : '' }}>Hold</option>
                                                                             <option value="Release" {{ ($statusBarisArray[$i] ?? '') == 'Release' ? 'selected' : '' }}>Release</option>
+                                                                            <option value="Retur" {{ ($statusBarisArray[$i] ?? '') == 'Retur' ? 'selected' : '' }}>Retur</option>
                                                                         </select>
                                                                     </div>
                                                                 </div>

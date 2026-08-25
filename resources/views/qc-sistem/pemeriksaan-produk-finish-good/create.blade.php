@@ -580,11 +580,12 @@
                                                         <div class="row">
                                                             <div class="col-md-6">
                                                                 <div class="form-group">
-                                                                    <label class="form-label">Status</label>
+                                                                    <label class="form-label">Status <span class="text-danger">*</span></label>
                                                                     <select class="form-control" name="status_baris[]">
                                                                         <option value="">Pilih Status</option>
                                                                         <option value="Hold" {{ old('status_baris.0') == 'Hold' ? 'selected' : '' }}>Hold</option>
                                                                         <option value="Release" {{ old('status_baris.0') == 'Release' ? 'selected' : '' }}>Release</option>
+                                                                        <option value="Retur" {{ old('status_baris.0') == 'Retur' ? 'selected' : '' }}>Retur</option>
                                                                     </select>
                                                                 </div>
                                                             </div>
@@ -1815,7 +1816,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         statusBarisSelects.forEach((select, index) => {
             const value = select.value;
-            if (value === 'Hold' || value === 'Release') {
+            if (value === 'Hold' || value === 'Release' || value === 'Retur') {
                 hasValidStatus = true;
                 removeHighlight(select);
             } else {
@@ -1824,7 +1825,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
 
         if (!hasValidStatus) {
-            errors.push('Minimal satu baris harus memilih status "Hold" atau "Release"');
+            errors.push('Minimal satu item harus memilih Status "Hold", "Release", atau "Retur"');
         }
 
         return errors;

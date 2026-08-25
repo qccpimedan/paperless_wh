@@ -674,6 +674,7 @@
                                                                             <option value="">Pilih Status</option>
                                                                             <option value="Hold" {{ ($detail['status'] ?? '') == 'Hold' ? 'selected' : '' }}>Hold</option>
                                                                             <option value="Release" {{ ($detail['status'] ?? '') == 'Release' ? 'selected' : '' }}>Release</option>
+                                                                            <option value="Retur" {{ ($detail['status'] ?? '') == 'Retur' ? 'selected' : '' }}>Retur</option>
                                                                         </select>
                                                                     </div>
                                                                 </div>
