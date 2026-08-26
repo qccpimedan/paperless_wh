@@ -485,10 +485,24 @@
                                         $bahan_id  = (json_decode($p->id_bahan_array ?? '[]', true) ?? [])[$ri] ?? null;
                                         $negara_val = (json_decode($p->negara_produsen_array ?? '[]', true) ?? [])[$ri] ?? null;
                                         if (is_array($negara_val)) { $negara_val = implode(', ', array_filter($negara_val)); }
+                                        
+                                        $prod_val = (json_decode($p->produsen_array ?? '[]', true) ?? [])[$ri] ?? null;
+                                        $prod_text = is_array($prod_val) ? implode(', ', array_filter($prod_val, fn($v) => $v !== null && $v !== '')) : trim((string)$prod_val);
+                                        
+                                        $dist_val = (json_decode($p->distributor_array ?? '[]', true) ?? [])[$ri] ?? null;
+                                        $dist_text = is_array($dist_val) ? implode(', ', array_filter($dist_val, fn($v) => $v !== null && $v !== '')) : trim((string)$dist_val);
                                     @endphp
                                     @if($bahan_id || $negara_val)
                                         <div class="sec-title">Bahan Baku Penunjang</div>
-                                        @if($bahan_id)<div class="f-row"><span class="f-label">Nama:</span><span class="f-value">{{ $bahanMap[$bahan_id] ?? 'N/A' }}</span></div>@endif
+                                        @if($bahan_id)
+                                            <div class="f-row"><span class="f-label">Nama:</span><span class="f-value">{{ $bahanMap[$bahan_id] ?? 'N/A' }}</span></div>
+                                            @if(!empty($prod_text))
+                                                <div class="f-row"><span class="f-label" style="width:55px;">Produsen:</span><span class="f-value">{{ $prod_text }}</span></div>
+                                            @endif
+                                            @if(!empty($dist_text))
+                                                <div class="f-row"><span class="f-label" style="width:65px;">Distributor:</span><span class="f-value">{{ $dist_text }}</span></div>
+                                            @endif
+                                        @endif
                                         @if($negara_val)<div class="f-row"><span class="f-label">Negara:</span><span class="f-value">{{ $negara_val }}</span></div>@endif
                                         @php
                                             $jd_v = (json_decode($p->jumlah_datang_array ?? '[]', true) ?? [])[$ri] ?? null;
@@ -797,13 +811,26 @@
                                 $tempId = json_decode($p->id_bahan_array ?? '[]', true) ?? [];
                                 $tempArr = json_decode($p->negara_produsen_array ?? '[]', true) ?? [];
                                 $bahan_id = $tempId[$ri] ?? null;
+                                
                                 $negara_val = $tempArr[$ri] ?? null;
                                 if (is_array($negara_val)) { $negara_val = implode(', ', array_filter($negara_val)); }
+                                
+                                $prod_val = (json_decode($p->produsen_array ?? '[]', true) ?? [])[$ri] ?? null;
+                                $prod_text = is_array($prod_val) ? implode(', ', array_filter($prod_val, fn($v) => $v !== null && $v !== '')) : trim((string)$prod_val);
+                                
+                                $dist_val = (json_decode($p->distributor_array ?? '[]', true) ?? [])[$ri] ?? null;
+                                $dist_text = is_array($dist_val) ? implode(', ', array_filter($dist_val, fn($v) => $v !== null && $v !== '')) : trim((string)$dist_val);
                             @endphp
                             @if($bahan_id || $negara_val)
                                 <div class="sec-title">Bahan Baku Penunjang</div>
                                 @if($bahan_id)
                                     <div class="f-row"><span class="f-label">Nama:</span><span class="f-value">{{ $bahanMap[$bahan_id] ?? 'N/A' }}</span></div>
+                                    @if(!empty($prod_text))
+                                        <div class="f-row"><span class="f-label" style="width:55px;">Produsen:</span><span class="f-value">{{ $prod_text }}</span></div>
+                                    @endif
+                                    @if(!empty($dist_text))
+                                        <div class="f-row"><span class="f-label" style="width:65px;">Distributor:</span><span class="f-value">{{ $dist_text }}</span></div>
+                                    @endif
                                 @endif
                                 @if($negara_val)
                                     <div class="f-row"><span class="f-label">Negara:</span><span class="f-value">{{ $negara_val }}</span></div>
