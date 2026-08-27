@@ -385,7 +385,13 @@
                         if (!empty($allBahanIds)) {
                             $bahanMap = \App\Models\Bahan::whereIn('id', array_values(array_unique($allBahanIds)))->pluck('nama_bahan', 'id')->toArray();
                         }
-                        $chunks = $pdfColumns->groupBy(fn($col) => $col['record']->id)->flatMap(fn($cols) => $cols->chunk($columnsPerPage));
+                        $groupKeyFn = function($r) {
+                            if (!$r) return 'unknown';
+                            $tgl = is_string($r->tanggal) ? $r->tanggal : ($r->tanggal ? $r->tanggal->format('Y-m-d') : '');
+                            $shift = $r->shift->shift ?? ($r->id_shift ?? '');
+                            return strtolower(trim($tgl . '_' . $shift . '_' . ($r->no_mobil ?? '')));
+                        };
+                        $chunks = $pdfColumns->groupBy(fn($col) => $groupKeyFn($col['record']))->flatMap(fn($cols) => $cols->chunk($columnsPerPage));
                     @endphp
 
                     @foreach($chunks as $pageIndex => $pageRecords)
@@ -393,7 +399,7 @@
                             $firstColumn = $pageRecords->first();
                             $fRec = $firstColumn ? $firstColumn['record'] : null;
                             // Reset numbering per-record (per kedatangan)
-                            $thisRecId = $fRec ? $fRec->id : null;
+                            $thisRecId = $fRec ? $groupKeyFn($fRec) : null;
                             if (!isset($prevRecId_as) || $prevRecId_as !== $thisRecId) {
                                 $prevRecId_as = $thisRecId;
                                 $recPageIdx_as = 0;
@@ -717,7 +723,13 @@
                         ->toArray();
                 }
 
-                $chunks = $pdfColumns->groupBy(fn($col) => $col['record']->id)->flatMap(fn($cols) => $cols->chunk($columnsPerPage));
+                $groupKeyFn = function($r) {
+                    if (!$r) return 'unknown';
+                    $tgl = is_string($r->tanggal) ? $r->tanggal : ($r->tanggal ? $r->tanggal->format('Y-m-d') : '');
+                    $shift = $r->shift->shift ?? ($r->id_shift ?? '');
+                    return strtolower(trim($tgl . '_' . $shift . '_' . ($r->no_mobil ?? '')));
+                };
+                $chunks = $pdfColumns->groupBy(fn($col) => $groupKeyFn($col['record']))->flatMap(fn($cols) => $cols->chunk($columnsPerPage));
             @endphp
             
             @foreach($chunks as $pageIndex => $pageRecords)
@@ -725,7 +737,7 @@
                     $firstColumn = $pageRecords->first();
                     $fRec = $firstColumn ? $firstColumn['record'] : null;
                     // Reset numbering per-record (per kedatangan)
-                    $thisRecId = $fRec ? $fRec->id : null;
+                    $thisRecId = $fRec ? $groupKeyFn($fRec) : null;
                     if (!isset($prevRecId_ss) || $prevRecId_ss !== $thisRecId) {
                         $prevRecId_ss = $thisRecId;
                         $recPageIdx_ss = 0;

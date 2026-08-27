@@ -403,7 +403,13 @@
                             }
                         }
 
-                        $chunks = $pdfColumns->groupBy(fn($col) => $col['record']->id)->flatMap(fn($cols) => $cols->chunk($columnsPerPage));
+                        $groupKeyFn = function($r) {
+                            if (!$r) return 'unknown';
+                            $tgl = is_string($r->tanggal) ? $r->tanggal : ($r->tanggal ? $r->tanggal->format('Y-m-d') : '');
+                            $shift = $r->shift->shift ?? ($r->id_shift ?? '');
+                            return strtolower(trim($tgl . '_' . $shift . '_' . ($r->no_mobil ?? '')));
+                        };
+                        $chunks = $pdfColumns->groupBy(fn($col) => $groupKeyFn($col['record']))->flatMap(fn($cols) => $cols->chunk($columnsPerPage));
                     @endphp
 
                     @foreach($chunks as $pageIndex => $pageRecords)
@@ -412,7 +418,7 @@
                             $firstRecord = $firstColumn ? $firstColumn['record'] : null;
                             $plantName = $firstRecord && $firstRecord->user && $firstRecord->user->plant ? $firstRecord->user->plant->plant : 'MEDAN';
                             // Reset numbering per-record (per kedatangan)
-                            $thisRecId = $firstRecord ? $firstRecord->id : null;
+                            $thisRecId = $firstRecord ? $groupKeyFn($firstRecord) : null;
                             if (!isset($prevRecId_fg) || $prevRecId_fg !== $thisRecId) {
                                 $prevRecId_fg = $thisRecId;
                                 $recPageIdx_fg = 0;
