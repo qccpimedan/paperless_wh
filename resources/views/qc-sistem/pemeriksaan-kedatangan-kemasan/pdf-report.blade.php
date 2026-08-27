@@ -355,6 +355,14 @@
                         ->pluck('nama_produk', 'id')
                         ->toArray();
                 }
+
+                $groupKeyFn = function($r) {
+                    if (!$r) return 'unknown';
+                    $tgl = is_string($r->tanggal) ? $r->tanggal : ($r->tanggal ? $r->tanggal->format('Y-m-d') : '');
+                    $shift = $r->shift->shift ?? ($r->id_shift ?? '');
+                    return strtolower(trim($tgl . '_' . $shift . '_' . ($r->no_mobil ?? '')));
+                };
+                $chunks = $pdfColumns->groupBy(fn($col) => $groupKeyFn($col['record']))->flatMap(fn($cols) => $cols->chunk($columnsPerPage));
             @endphp
             
             @foreach($chunks as $pageIndex => $pageRecords)
@@ -362,7 +370,7 @@
                     $firstColumn = $pageRecords->first();
                     $firstRecord = $firstColumn ? $firstColumn['record'] : null;
                     // Reset numbering per-record (per kedatangan)
-                    $thisRecId = $firstRecord ? $firstRecord->id : null;
+                    $thisRecId = $firstRecord ? $groupKeyFn($firstRecord) : null;
                     if (!isset($prevRecId_kem) || $prevRecId_kem !== $thisRecId) {
                         $prevRecId_kem = $thisRecId;
                         $recPageIdx_kem = 0;
