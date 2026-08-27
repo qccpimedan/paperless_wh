@@ -866,6 +866,9 @@ class PemeriksaanLoadingProdukController extends Controller
 
     public function exportPDF(Request $request)
     {
+        ini_set('max_execution_time', '1800'); // 30 minutes
+        ini_set('memory_limit', '2048M'); // 2GB
+
         $user = Auth::user();
         $id_shift = $request->input('id_shift');
         $tanggalDari = $request->input('tanggal_dari');
@@ -1002,6 +1005,21 @@ class PemeriksaanLoadingProdukController extends Controller
             ->pluck('nama_produk', 'id')
             ->all();
 
+        $tujuanIds = $pemeriksaans
+            ->flatMap(function ($p) {
+                $rows = is_array($p->produk_data) ? $p->produk_data : [];
+                return collect($rows)->pluck('id_tujuan_pengiriman');
+            })
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+
+        $tujuanMap = \App\Models\TujuanPengiriman::with('customer')
+            ->whereIn('id', $tujuanIds)
+            ->get()
+            ->keyBy('id');
+
         $pdf = PDF::loadView('qc-sistem.pemeriksaan-loading-produk.pdf-report', [
             'pemeriksaans' => $pemeriksaans,
             'tanggal' => $tanggal,
@@ -1012,6 +1030,7 @@ class PemeriksaanLoadingProdukController extends Controller
             'produksiUser' => $produksiUser,
             'spvQcUser' => $spvQcUser,
             'produkMap' => $produkMap,
+            'tujuanMap' => $tujuanMap,
             'isAllShift' => false,
             'dataPerShift' => [[
                 'pemeriksaans' => $pemeriksaans,
@@ -1020,6 +1039,7 @@ class PemeriksaanLoadingProdukController extends Controller
                 'produksiUser' => $produksiUser,
                 'spvQcUser' => $spvQcUser,
                 'produkMap' => $produkMap,
+                'tujuanMap' => $tujuanMap,
             ]],
         ]);
 
@@ -1138,6 +1158,21 @@ class PemeriksaanLoadingProdukController extends Controller
                     ->pluck('nama_produk', 'id')
                     ->all();
 
+                $tujuanIds = $records
+                    ->flatMap(function ($p) {
+                        $rows = is_array($p->produk_data) ? $p->produk_data : [];
+                        return collect($rows)->pluck('id_tujuan_pengiriman');
+                    })
+                    ->filter()
+                    ->unique()
+                    ->values()
+                    ->all();
+
+                $tujuanMapAllShift = \App\Models\TujuanPengiriman::with('customer')
+                    ->whereIn('id', $tujuanIds)
+                    ->get()
+                    ->keyBy('id');
+
                 $dataPerShift[] = [
                     'shift'        => $shift,
                     'pemeriksaans' => $records,
@@ -1145,6 +1180,7 @@ class PemeriksaanLoadingProdukController extends Controller
                     'produksiUser' => $produksiUser,
                     'spvQcUser'    => $spvQcUser,
                     'produkMap'    => $produkMap,
+                    'tujuanMap'    => $tujuanMapAllShift,
                 ];
             }
         }
@@ -1160,6 +1196,7 @@ class PemeriksaanLoadingProdukController extends Controller
             'produksiUser'   => null,
             'spvQcUser'      => null,
             'produkMap'      => [],
+            'tujuanMap'      => [],
             'isAllShift'     => true,
         ]);
 

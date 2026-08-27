@@ -826,12 +826,11 @@
                                     */
 
                                     $tujuanPdfLabel = '-';
+                                    $tujuanMap = $shiftGroup['tujuanMap'] ?? [];
 
                                     if ($idTujuanProduk) {
 
-                                        $tObj =
-                                            \App\Models\TujuanPengiriman::with('customer')
-                                                ->find($idTujuanProduk);
+                                        $tObj = $tujuanMap[$idTujuanProduk] ?? null;
 
                                         if ($tObj) {
 
