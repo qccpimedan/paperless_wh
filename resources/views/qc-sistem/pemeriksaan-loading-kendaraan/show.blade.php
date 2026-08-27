@@ -38,7 +38,7 @@
                             <div class="row">
                                 <div class="col-md-4">
                                     <div class="mb-3">
-                                        <label class="form-label"><strong>Tanggal Pemeriksaan</strong></label>
+                                        <label class="form-label"><strong>Tanggal Loading Kendaraan</strong></label>
                                         <p class="text-muted">{{ \Carbon\Carbon::parse($pemeriksaanLoadingKendaraan->tanggal)->format('d/m/Y') }}</p>
                                     </div>
                                 </div>
@@ -54,12 +54,12 @@
                                         </p>
                                     </div>
                                 </div>
-                                <div class="col-md-4">
+                                <!-- <div class="col-md-4">
                                     <div class="mb-3">
                                         <label class="form-label"><strong>Dibuat Pada</strong></label>
                                            <p class="text-muted">{{ $pemeriksaanLoadingKendaraan->created_at ? $pemeriksaanLoadingKendaraan->created_at->format('d-M-Y H:i:s') : '-' }}</p>
                                     </div>
-                                </div>
+                                </div> -->
                             </div>
                         </div>
                     </div>

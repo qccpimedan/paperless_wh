@@ -251,10 +251,14 @@
                                                                 <label>Ekspedisi <span class="text-danger">*</span></label>
                                                                 <select class="form-select entry-ekspedisi" name="entries[0][id_ekspedisi]" required>
                                                                     <option value="">-- Pilih Ekspedisi --</option>
+                                                                    <option value="other">-- Lainnya (Input Manual) --</option>
                                                                     @foreach($ekspedisis as $ekspedisi)
                                                                         <option value="{{ $ekspedisi->id }}" {{ old('entries.0.id_ekspedisi') == $ekspedisi->id ? 'selected' : '' }}>{{ $ekspedisi->nama_ekspedisi }}</option>
                                                                     @endforeach
                                                                 </select>
+                                                                <div class="manual-ekspedisi-input mt-2" style="display:none;">
+                                                                    <input type="text" class="form-control" name="entries[0][nama_ekspedisi_manual]" placeholder="Masukkan nama ekspedisi">
+                                                                </div>
                                                             </div>
 
                                                             {{-- Kendaraan --}}
@@ -392,10 +396,14 @@
                     <label>Ekspedisi <span class="text-danger">*</span></label>
                     <select class="form-select entry-ekspedisi" name="entries[__IDX__][id_ekspedisi]" required>
                         <option value="">-- Pilih Ekspedisi --</option>
+                        <option value="other">-- Lainnya (Input Manual) --</option>
                         @foreach($ekspedisis as $ekspedisi)
                             <option value="{{ $ekspedisi->id }}">{{ $ekspedisi->nama_ekspedisi }}</option>
                         @endforeach
                     </select>
+                    <div class="manual-ekspedisi-input mt-2" style="display:none;">
+                        <input type="text" class="form-control" name="entries[__IDX__][nama_ekspedisi_manual]" placeholder="Masukkan nama ekspedisi">
+                    </div>
                 </div>
                 <div class="col-md-6">
                     <label>Jenis &amp; No Kendaraan</label>
@@ -527,6 +535,18 @@ document.addEventListener('DOMContentLoaded', function () {
         // Init Choices
         const ekspedisiSel = entryEl.querySelector('.entry-ekspedisi');
         if (ekspedisiSel) initChoicesSelect(ekspedisiSel, '-- Pilih Ekspedisi --');
+
+        // Toggle manual ekspedisi
+        const manualEkspedisi = entryEl.querySelector('.manual-ekspedisi-input');
+        if (ekspedisiSel && manualEkspedisi) {
+            ekspedisiSel.addEventListener('change', function () {
+                manualEkspedisi.style.display = this.value === 'other' ? 'block' : 'none';
+                if (this.value !== 'other') {
+                    const inp = manualEkspedisi.querySelector('input');
+                    if (inp) inp.value = '';
+                }
+            });
+        }
 
         const kendaraanSel = entryEl.querySelector('.entry-kendaraan');
         if (kendaraanSel) initChoicesSelect(kendaraanSel, '-- Pilih Kendaraan --');
