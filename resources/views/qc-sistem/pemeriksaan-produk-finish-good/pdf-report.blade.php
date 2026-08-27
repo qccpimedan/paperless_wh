@@ -411,6 +411,14 @@
                             $firstColumn = $pageRecords->first();
                             $firstRecord = $firstColumn ? $firstColumn['record'] : null;
                             $plantName = $firstRecord && $firstRecord->user && $firstRecord->user->plant ? $firstRecord->user->plant->plant : 'MEDAN';
+                            // Reset numbering per-record (per kedatangan)
+                            $thisRecId = $firstRecord ? $firstRecord->id : null;
+                            if (!isset($prevRecId_fg) || $prevRecId_fg !== $thisRecId) {
+                                $prevRecId_fg = $thisRecId;
+                                $recPageIdx_fg = 0;
+                            } else {
+                                $recPageIdx_fg++;
+                            }
                         @endphp
 
                         @if(!$isFirstPage)
@@ -487,7 +495,7 @@
                                     @php
                                         $pemeriksaan = $column['record'];
                                         $rowIndex = $column['rowIndex'];
-                                        $columnNumber = ($pageIndex * $columnsPerPage) + $loop->iteration;
+                                        $columnNumber = ($recPageIdx_fg * $columnsPerPage) + $loop->iteration;
 
                                         $idProduk = (is_array($pemeriksaan->id_produk_array) ? ($pemeriksaan->id_produk_array[$rowIndex] ?? null) : null);
                                         $kategori = (is_array($pemeriksaan->kategori_code_array) ? ($pemeriksaan->kategori_code_array[$rowIndex] ?? null) : null);
