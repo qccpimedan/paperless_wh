@@ -403,7 +403,7 @@
                             }
                         }
 
-                        $chunks = $pdfColumns->chunk($columnsPerPage);
+                        $chunks = $pdfColumns->groupBy(fn($col) => $col['record']->id)->flatMap(fn($cols) => $cols->chunk($columnsPerPage));
                     @endphp
 
                     @foreach($chunks as $pageIndex => $pageRecords)

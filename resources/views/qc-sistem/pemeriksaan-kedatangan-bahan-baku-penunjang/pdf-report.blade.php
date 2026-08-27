@@ -385,7 +385,7 @@
                         if (!empty($allBahanIds)) {
                             $bahanMap = \App\Models\Bahan::whereIn('id', array_values(array_unique($allBahanIds)))->pluck('nama_bahan', 'id')->toArray();
                         }
-                        $chunks = $pdfColumns->chunk($columnsPerPage);
+                        $chunks = $pdfColumns->groupBy(fn($col) => $col['record']->id)->flatMap(fn($cols) => $cols->chunk($columnsPerPage));
                     @endphp
 
                     @foreach($chunks as $pageIndex => $pageRecords)
@@ -709,7 +709,7 @@
                         ->toArray();
                 }
 
-                $chunks = $pdfColumns->chunk($columnsPerPage);
+                $chunks = $pdfColumns->groupBy(fn($col) => $col['record']->id)->flatMap(fn($cols) => $cols->chunk($columnsPerPage));
             @endphp
             
             @foreach($chunks as $pageIndex => $pageRecords)
