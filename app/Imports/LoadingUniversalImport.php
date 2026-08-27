@@ -123,12 +123,21 @@ class LoadingUniversalImport implements ToArray, WithHeadingRow, WithStartRow
                 $idTujuanPengiriman = $tujuan->id;
             }
 
+            $tujuanLabel = '';
+            if (!empty($customerName)) {
+                $tujuanLabel = $customerName;
+                if (!empty($tujuanResolvedName) && $tujuanResolvedName !== '-') {
+                    $tujuanLabel .= ' - ' . $tujuanResolvedName;
+                }
+            }
+
             // Add to produk data
             $this->produkData[] = [
                 'id_produk' => $idProduk,
                 'nama_produk' => $produk->nama_produk,
                 'kategori_code' => $produk->kategori_code,
                 'id_tujuan_pengiriman' => $idTujuanPengiriman,
+                'tujuan_label' => $tujuanLabel,
                 'kode_produksi' => $row['kode_produksi'] ?? null,
                 'best_before' => $bestBefore,
                 'jumlah_kemasan' => $row['jumlah_kemasan'] ?? null,

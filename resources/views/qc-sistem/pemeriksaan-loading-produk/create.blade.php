@@ -1657,10 +1657,25 @@ document.addEventListener('DOMContentLoaded', function() {
         const tujuanOptions = window._tujuanPengirimansJson || [];
         let optionsHtml = `<option value="">-- Pilih Tujuan --</option>`;
         optionsHtml += `<option value="other">✏️ Lainnya (Input Manual)</option>`;
+        
+        let foundTujuan = false;
+        
         tujuanOptions.forEach(t => {
             const selected = (data.id_tujuan_pengiriman && String(data.id_tujuan_pengiriman) === String(t.id)) ? 'selected' : '';
+            if (selected) foundTujuan = true;
             optionsHtml += `<option value="${t.id}" ${selected}>${t.label}</option>`;
         });
+
+        if (data.id_tujuan_pengiriman && !foundTujuan) {
+            const newLabel = data.tujuan_label ? data.tujuan_label : `Tujuan #${data.id_tujuan_pengiriman}`;
+            optionsHtml += `<option value="${data.id_tujuan_pengiriman}" selected>${newLabel}</option>`;
+            
+            // Tambahkan ke memori agar item berikutnya dengan tujuan yang sama tidak dianggap baru
+            window._tujuanPengirimansJson.push({
+                id: data.id_tujuan_pengiriman,
+                label: newLabel
+            });
+        }
         
         const groupHtml = `
             <div class="produk-group mb-4 p-3 border rounded" style="background-color: #ffffff;" data-group-index="${groupIndex}">
