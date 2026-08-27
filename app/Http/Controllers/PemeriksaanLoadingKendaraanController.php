@@ -129,7 +129,8 @@ class PemeriksaanLoadingKendaraanController extends Controller
             
             // Dynamic entries validations
             'entries' => 'required|array|min:1',
-            'entries.*.id_ekspedisi' => 'required|exists:ekspedisis,id',
+            'entries.*.id_ekspedisi' => 'required',
+            'entries.*.nama_ekspedisi_manual' => 'nullable|string|max:255',
             
             'entries.*.id_kendaraan' => 'required',
             'entries.*.jenis_kendaraan_manual' => 'nullable|required_if:entries.*.id_kendaraan,other|string|max:255',
@@ -171,6 +172,23 @@ class PemeriksaanLoadingKendaraanController extends Controller
 
         // Loop over entries and insert each record
         foreach ($request->entries as $entry) {
+            // Handle Ekspedisi Manual
+            $idEkspedisi = $entry['id_ekspedisi'];
+            if ($idEkspedisi === 'other') {
+                $namaEkspedisiManual = $entry['nama_ekspedisi_manual'] ?? null;
+                if ($namaEkspedisiManual) {
+                    $ekspedisiBaru = \App\Models\Ekspedisi::create([
+                        'nama_ekspedisi' => $namaEkspedisiManual,
+                        'id_user' => \Illuminate\Support\Facades\Auth::id(),
+                    ]);
+                    $idEkspedisi = $ekspedisiBaru->id;
+                } else {
+                    continue; // skip jika nama manual kosong
+                }
+            } elseif (!\App\Models\Ekspedisi::where('id', $idEkspedisi)->exists()) {
+                continue;
+            }
+
             // Handle Kendaraan Manual
             $idKendaraan = $entry['id_kendaraan'];
             $jenisKendaraanManual = null;
@@ -208,7 +226,7 @@ class PemeriksaanLoadingKendaraanController extends Controller
                 'kondisi_kebersihan_mobil' => $kondisiKebersihanJson,
                 'kondisi_mobil' => $kondisiMobilJson,
                 
-                'id_ekspedisi' => $entry['id_ekspedisi'],
+                'id_ekspedisi' => $idEkspedisi,
                 'id_kendaraan' => $idKendaraan,
                 'jenis_kendaraan_manual' => $jenisKendaraanManual,
                 'no_kendaraan_manual'    => $noKendaraanManual,

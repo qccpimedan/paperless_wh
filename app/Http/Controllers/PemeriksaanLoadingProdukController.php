@@ -370,56 +370,46 @@ class PemeriksaanLoadingProdukController extends Controller
         $validated['segel_gembok'] = $request->input('segel_gembok') === 'segel';
         $validated['temperature_produk'] = !empty($temperatureProduk) ? $temperatureProduk : null;
         
-        // Process product data - tujuan per group (1 grup = 1 tujuan, bisa banyak detail row)
+        // Process product data
         $produkData = [];
         if ($request->has('produk_data') && is_array($request->produk_data)) {
-            // Pass 1: Resolve tujuan per id_produk (karena dropdown tujuan ada di level group)
-            $tujuanByProdukId = [];
-            foreach ($request->produk_data as $produk) {
-                $rawTujuan = $produk['id_tujuan_pengiriman'] ?? null;
-                $idProduk  = $produk['id_produk'] ?? null;
-                if (!$idProduk || !$rawTujuan || isset($tujuanByProdukId[$idProduk])) continue;
-
-                $idTujuanResolved = null;
-                if ($rawTujuan === 'other') {
-                    $namaCustomer = $produk['nama_customer_manual'] ?? null;
-                    $namaTujuan   = $produk['nama_tujuan_manual'] ?? null;
-                    if ($namaCustomer && $namaTujuan) {
-                        $customer = Customer::firstOrCreate(['nama_cust' => $namaCustomer, 'id_user' => Auth::id()]);
-                        $tujuan   = TujuanPengiriman::firstOrCreate(
-                            ['id_customer' => $customer->id, 'nama_tujuan' => $namaTujuan],
-                            ['id_user' => Auth::id()]
-                        );
-                        $idTujuanResolved = $tujuan->id;
-                    }
-                } elseif (str_starts_with((string)$rawTujuan, 'customer_')) {
-                    $customerId = (int) str_replace('customer_', '', $rawTujuan);
-                    $cust = Customer::find($customerId);
-                    if ($cust) {
-                        $tujuan = TujuanPengiriman::firstOrCreate(
-                            ['id_customer' => $customerId, 'nama_tujuan' => '-'],
-                            ['id_user' => Auth::id()]
-                        );
-                        $idTujuanResolved = $tujuan->id;
-                    }
-                } else {
-                    $idTujuanResolved = (int) $rawTujuan ?: null;
-                }
-
-                if ($idTujuanResolved) {
-                    $tujuanByProdukId[$idProduk] = $idTujuanResolved;
-                }
-            }
-
-            // Pass 2: Build produk_data dengan tujuan di-propagate ke semua detail row
+            // Build produk_data dengan tujuan diselesaikan untuk masing-masing baris detail
             foreach ($request->produk_data as $produk) {
                 if (!empty($produk['id_produk'])) {
                     $idProduk = $produk['id_produk'];
-                    $idTujuanProduk = $tujuanByProdukId[$idProduk] ?? null;
+                    
+                    // Resolve tujuan untuk baris ini
+                    $rawTujuan = $produk['id_tujuan_pengiriman'] ?? null;
+                    $idTujuanResolved = null;
+
+                    if ($rawTujuan === 'other') {
+                        $namaCustomer = $produk['nama_customer_manual'] ?? null;
+                        $namaTujuan   = $produk['nama_tujuan_manual'] ?? null;
+                        if ($namaCustomer && $namaTujuan) {
+                            $customer = Customer::firstOrCreate(['nama_cust' => $namaCustomer, 'id_user' => Auth::id()]);
+                            $tujuan   = TujuanPengiriman::firstOrCreate(
+                                ['id_customer' => $customer->id, 'nama_tujuan' => $namaTujuan],
+                                ['id_user' => Auth::id()]
+                            );
+                            $idTujuanResolved = $tujuan->id;
+                        }
+                    } elseif (str_starts_with((string)$rawTujuan, 'customer_')) {
+                        $customerId = (int) str_replace('customer_', '', $rawTujuan);
+                        $cust = Customer::find($customerId);
+                        if ($cust) {
+                            $tujuan = TujuanPengiriman::firstOrCreate(
+                                ['id_customer' => $customerId, 'nama_tujuan' => '-'],
+                                ['id_user' => Auth::id()]
+                            );
+                            $idTujuanResolved = $tujuan->id;
+                        }
+                    } else {
+                        $idTujuanResolved = (int) $rawTujuan ?: null;
+                    }
 
                     $produkData[] = [
                         'id_produk'             => $idProduk,
-                        'id_tujuan_pengiriman'  => $idTujuanProduk,
+                        'id_tujuan_pengiriman'  => $idTujuanResolved,
                         'kode_produksi'         => $produk['kode_produksi'] ?? null,
                         'best_before'           => $produk['best_before'] ?? null,
                         'jumlah_kemasan'        => $produk['jumlah_kemasan'] ?? null,
@@ -663,56 +653,46 @@ class PemeriksaanLoadingProdukController extends Controller
         $validated['temperature_produk'] = !empty($temperatureProduk) ? $temperatureProduk : null;
         $validated['segel_gembok'] = $request->input('segel_gembok') === 'segel';
         
-        // Process produk_data array untuk multiple produk - tujuan per group
+        // Process produk_data array untuk multiple produk
         $produkData = [];
         if ($request->has('produk_data')) {
-            // Pass 1: Resolve tujuan per id_produk
-            $tujuanByProdukId = [];
-            foreach ($request->produk_data as $produk) {
-                $rawTujuan = $produk['id_tujuan_pengiriman'] ?? null;
-                $idProduk  = $produk['id_produk'] ?? null;
-                if (!$idProduk || !$rawTujuan || isset($tujuanByProdukId[$idProduk])) continue;
-
-                $idTujuanResolved = null;
-                if ($rawTujuan === 'other') {
-                    $namaCustomer = $produk['nama_customer_manual'] ?? null;
-                    $namaTujuan   = $produk['nama_tujuan_manual'] ?? null;
-                    if ($namaCustomer && $namaTujuan) {
-                        $customer = Customer::firstOrCreate(['nama_cust' => $namaCustomer, 'id_user' => Auth::id()]);
-                        $tujuan   = TujuanPengiriman::firstOrCreate(
-                            ['id_customer' => $customer->id, 'nama_tujuan' => $namaTujuan],
-                            ['id_user' => Auth::id()]
-                        );
-                        $idTujuanResolved = $tujuan->id;
-                    }
-                } elseif (str_starts_with((string)$rawTujuan, 'customer_')) {
-                    $customerId = (int) str_replace('customer_', '', $rawTujuan);
-                    $cust = Customer::find($customerId);
-                    if ($cust) {
-                        $tujuan = TujuanPengiriman::firstOrCreate(
-                            ['id_customer' => $customerId, 'nama_tujuan' => '-'],
-                            ['id_user' => Auth::id()]
-                        );
-                        $idTujuanResolved = $tujuan->id;
-                    }
-                } else {
-                    $idTujuanResolved = (int) $rawTujuan ?: null;
-                }
-
-                if ($idTujuanResolved) {
-                    $tujuanByProdukId[$idProduk] = $idTujuanResolved;
-                }
-            }
-
-            // Pass 2: Build produk_data dengan tujuan di-propagate ke semua detail row
+            // Build produk_data dengan tujuan diselesaikan untuk masing-masing baris detail
             foreach ($request->produk_data as $produk) {
                 if (!empty($produk['id_produk'])) {
                     $idProduk = $produk['id_produk'];
-                    $idTujuanProduk = $tujuanByProdukId[$idProduk] ?? null;
+                    
+                    // Resolve persis per baris
+                    $rawTujuan = $produk['id_tujuan_pengiriman'] ?? null;
+                    $idTujuanResolved = null;
+
+                    if ($rawTujuan === 'other') {
+                        $namaCustomer = $produk['nama_customer_manual'] ?? null;
+                        $namaTujuan   = $produk['nama_tujuan_manual'] ?? null;
+                        if ($namaCustomer && $namaTujuan) {
+                            $customer = Customer::firstOrCreate(['nama_cust' => $namaCustomer, 'id_user' => Auth::id()]);
+                            $tujuan   = TujuanPengiriman::firstOrCreate(
+                                ['id_customer' => $customer->id, 'nama_tujuan' => $namaTujuan],
+                                ['id_user' => Auth::id()]
+                            );
+                            $idTujuanResolved = $tujuan->id;
+                        }
+                    } elseif (str_starts_with((string)$rawTujuan, 'customer_')) {
+                        $customerId = (int) str_replace('customer_', '', $rawTujuan);
+                        $cust = Customer::find($customerId);
+                        if ($cust) {
+                            $tujuan = TujuanPengiriman::firstOrCreate(
+                                ['id_customer' => $customerId, 'nama_tujuan' => '-'],
+                                ['id_user' => Auth::id()]
+                            );
+                            $idTujuanResolved = $tujuan->id;
+                        }
+                    } else {
+                        $idTujuanResolved = (int) $rawTujuan ?: null;
+                    }
 
                     $produkData[] = [
                         'id_produk'             => $idProduk,
-                        'id_tujuan_pengiriman'  => $idTujuanProduk,
+                        'id_tujuan_pengiriman'  => $idTujuanResolved,
                         'kode_produksi'         => $produk['kode_produksi'] ?? null,
                         'best_before'           => $produk['best_before'] ?? null,
                         'jumlah_kemasan'        => $produk['jumlah_kemasan'] ?? null,
