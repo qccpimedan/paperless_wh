@@ -361,6 +361,14 @@
                 @php
                     $firstColumn = $pageRecords->first();
                     $firstRecord = $firstColumn ? $firstColumn['record'] : null;
+                    // Reset numbering per-record (per kedatangan)
+                    $thisRecId = $firstRecord ? $firstRecord->id : null;
+                    if (!isset($prevRecId_kem) || $prevRecId_kem !== $thisRecId) {
+                        $prevRecId_kem = $thisRecId;
+                        $recPageIdx_kem = 0;
+                    } else {
+                        $recPageIdx_kem++;
+                    }
                 @endphp
 
                 @if(!$isFirstPage)
@@ -440,7 +448,7 @@
                             @php
                                 $pemeriksaan = $column['record'];
                                 $rowIndex = $column['rowIndex'];
-                                $columnNumber = ($pageIndex * $columnsPerPage) + $loop->iteration;
+                                $columnNumber = ($recPageIdx_kem * $columnsPerPage) + $loop->iteration;
                             @endphp
                             <td class="data-column">
                                 <div class="column-header">

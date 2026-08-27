@@ -392,6 +392,14 @@
                         @php
                             $firstColumn = $pageRecords->first();
                             $fRec = $firstColumn ? $firstColumn['record'] : null;
+                            // Reset numbering per-record (per kedatangan)
+                            $thisRecId = $fRec ? $fRec->id : null;
+                            if (!isset($prevRecId_as) || $prevRecId_as !== $thisRecId) {
+                                $prevRecId_as = $thisRecId;
+                                $recPageIdx_as = 0;
+                            } else {
+                                $recPageIdx_as++;
+                            }
                         @endphp
                         <div class="page-section">
                         <div class="header">
@@ -441,7 +449,7 @@
                                 @php
                                     $p  = $column['record'];
                                     $ri = $column['rowIndex'];
-                                    $cn = ($pageIndex * $columnsPerPage) + $loop->iteration;
+                                    $cn = ($recPageIdx_as * $columnsPerPage) + $loop->iteration;
                                 @endphp
                                 <div class="col" data-num="true">
                                     <div class="col-header">PEMERIKSAAN #{{ $cn }}</div>
@@ -716,6 +724,14 @@
                 @php
                     $firstColumn = $pageRecords->first();
                     $fRec = $firstColumn ? $firstColumn['record'] : null;
+                    // Reset numbering per-record (per kedatangan)
+                    $thisRecId = $fRec ? $fRec->id : null;
+                    if (!isset($prevRecId_ss) || $prevRecId_ss !== $thisRecId) {
+                        $prevRecId_ss = $thisRecId;
+                        $recPageIdx_ss = 0;
+                    } else {
+                        $recPageIdx_ss++;
+                    }
                 @endphp
                 <div class="page-section">
                 <div class="header">
