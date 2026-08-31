@@ -28,6 +28,7 @@ class User extends Authenticatable
         'id_role',
         'id_plant',
         'active_plant_id',
+        'force_logout_after',
     ];
 
     /**
@@ -49,8 +50,9 @@ class User extends Authenticatable
     protected function casts(): array
     {
         return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
+            'email_verified_at'  => 'datetime',
+            'password'           => 'hashed',
+            'force_logout_after' => 'datetime',
         ];
     }
 

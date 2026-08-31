@@ -21,3 +21,6 @@ Route::get('/heartbeat', [AuthController::class, 'check']);
 Route::post('/password-change', [ApiController::class, 'passwordChange']); 
 Route::post('/activation', [ApiController::class, 'activation']);
 Route::post('/plant-sync', [ApiController::class, 'syncPlant']);
+
+// SSO Logout Webhook — dipanggil oleh Employee Central
+Route::post('/sso/logout', [\App\Http\Controllers\SsoLoginController::class, 'ssoLogout']);
