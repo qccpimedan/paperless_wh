@@ -86,4 +86,54 @@ class SsoLoginController extends Controller
 
         return redirect()->intended('/dashboard');
     }
+
+    /**
+     * Menerima webhook dari Employee Central ketika user logout dari mana pun.
+     * Central mengirim POST ke /api/sso/logout dengan Bearer token = sso_secret.
+     */
+    public function ssoLogout(Request $request)
+    {
+        $token    = $request->bearerToken();
+        $expected = config('services.employee_api.sso_secret');
+
+        if (! $token || ! $expected || ! hash_equals($expected, $token)) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
+        $request->validate(['user_uuid' => 'required|uuid']);
+
+        User::where('uuid', $request->user_uuid)
+            ->update(['force_logout_after' => now()]);
+
+        return response()->json(['status' => 'ok']);
+    }
+
+    /**
+     * Logout lokal: hapus sesi, laporkan ke Employee Central,
+     * lalu redirect ke portal PDQC (sumber SSO).
+     */
+    public function destroy(Request $request)
+    {
+        $user = $request->user();
+
+        Auth::guard('web')->logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        if ($user) {
+            try {
+                Http::withToken(config('services.employee_api.sso_secret'))
+                    ->timeout(5)
+                    ->post(config('services.employee_api.url') . '/sso/report-logout', [
+                        'user_uuid'    => $user->uuid,
+                        'project_uuid' => config('services.employee_api.this_project_uuid'),
+                    ]);
+            } catch (\Throwable $e) {
+                Log::warning('SSO: Laporan logout ke central gagal', ['error' => $e->getMessage()]);
+                // tetap lanjutkan logout lokal walau central tidak terjangkau
+            }
+        }
+
+        return redirect(config('services.employee_api.portal_url'));
+    }
 }

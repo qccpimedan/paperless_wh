@@ -218,7 +218,7 @@ class ApiController extends Controller
             ], 200);
         }
     }
-     public function activation(Request $request)
+    public function activation(Request $request)
     {
         try {
             $data = $request->json()->all();
@@ -261,7 +261,7 @@ class ApiController extends Controller
             ], 200);
         }
     }
-public function syncPlant(Request $request)
+    public function syncPlant(Request $request)
     {
         try {
             $data = $request->json()->all();
