@@ -65,10 +65,29 @@ class AuthController extends Controller
      */
     public function logout(Request $request)
     {
-        Auth::logout();
+        $user = $request->user();
 
+        Auth::guard('web')->logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
+
+        if ($user) {
+            try {
+                \Illuminate\Support\Facades\Http::withToken(config('services.employee_api.sso_secret'))
+                    ->timeout(5)
+                    ->post(config('services.employee_api.url') . '/sso/report-logout', [
+                        'user_uuid'    => $user->uuid,
+                        'project_uuid' => config('services.employee_api.this_project_uuid'),
+                    ]);
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning('SSO: Laporan logout ke central gagal', ['error' => $e->getMessage()]);
+            }
+        }
+
+        $portalUrl = config('services.employee_api.portal_url');
+        if (!empty($portalUrl)) {
+            return redirect($portalUrl);
+        }
 
         return redirect('/login')->with('success', 'Logout berhasil!');
     }

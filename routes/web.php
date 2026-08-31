@@ -59,10 +59,7 @@ Route::get('/csrf-token', function () {
 // Authentication Routes
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [AuthController::class, 'login']);
-Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
-Route::get('/logout', function () {
-    return redirect('/login');
-});
+Route::match(['get', 'post'], '/logout', [AuthController::class, 'logout'])->name('logout');
 
 // SSO Route — harus di luar middleware auth (user belum login saat request ini masuk)
 Route::get('/sso/login', [SsoLoginController::class, 'login'])->name('sso.login');
