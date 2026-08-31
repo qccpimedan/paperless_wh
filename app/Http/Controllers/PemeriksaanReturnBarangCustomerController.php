@@ -163,9 +163,7 @@ class PemeriksaanReturnBarangCustomerController extends Controller
                 $query->where('id_plant', $user->getEffectivePlantId());
             })->with(['user.plant'])->get();
 
-            $produks = Produk::whereHas('user', function ($query) use ($user) {
-                $query->where('id_plant', $user->getEffectivePlantId());
-            })->with(['user.plant'])->get();
+            $produks = Produk::with(['user.plant'])->get();
         }
 
         $produkKategoriOptions = Produk::query()
@@ -176,30 +174,10 @@ class PemeriksaanReturnBarangCustomerController extends Controller
             ->pluck('kategori_code')
             ->values();
 
-        if (!$isSuperAdmin) {
-            $produkKategoriOptions = Produk::query()
-                ->whereNotNull('kategori_code')
-                ->whereHas('user', function ($q) use ($user) {
-                    $q->where('id_plant', $user->getEffectivePlantId());
-                })
-                ->select('kategori_code')
-                ->distinct()
-                ->orderBy('kategori_code')
-                ->pluck('kategori_code')
-                ->values();
-        }
-
         $produkList = Produk::query()
             ->select(['id', 'nama_produk', 'kategori_code'])
-            ->orderBy('nama_produk');
-
-        if (!$isSuperAdmin) {
-            $produkList->whereHas('user', function ($q) use ($user) {
-                $q->where('id_plant', $user->getEffectivePlantId());
-            });
-        }
-
-        $produkList = $produkList->get();
+            ->orderBy('nama_produk')
+            ->get();
 
         $produkByKategori = $produkList
             ->groupBy('kategori_code')
@@ -366,9 +344,7 @@ class PemeriksaanReturnBarangCustomerController extends Controller
                 $query->where('id_plant', $user->getEffectivePlantId());
             })->with(['user.plant'])->get();
 
-            $produks = Produk::whereHas('user', function ($query) use ($user) {
-                $query->where('id_plant', $user->getEffectivePlantId());
-            })->with(['user.plant'])->get();
+            $produks = Produk::with(['user.plant'])->get();
         }
         $produkKategoriOptions = Produk::query()
             ->whereNotNull('kategori_code')
@@ -378,30 +354,10 @@ class PemeriksaanReturnBarangCustomerController extends Controller
             ->pluck('kategori_code')
             ->values();
 
-        if (!$isSuperAdmin) {
-            $produkKategoriOptions = Produk::query()
-                ->whereNotNull('kategori_code')
-                ->whereHas('user', function ($q) use ($user) {
-                    $q->where('id_plant', $user->getEffectivePlantId());
-                })
-                ->select('kategori_code')
-                ->distinct()
-                ->orderBy('kategori_code')
-                ->pluck('kategori_code')
-                ->values();
-        }
-
         $produkList = Produk::query()
             ->select(['id', 'nama_produk', 'kategori_code'])
-            ->orderBy('nama_produk');
-
-        if (!$isSuperAdmin) {
-            $produkList->whereHas('user', function ($q) use ($user) {
-                $q->where('id_plant', $user->getEffectivePlantId());
-            });
-        }
-
-        $produkList = $produkList->get();
+            ->orderBy('nama_produk')
+            ->get();
 
         $produkByKategori = $produkList
             ->groupBy('kategori_code')
