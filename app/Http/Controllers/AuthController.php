@@ -11,9 +11,30 @@ use Illuminate\Http\JsonResponse;
 class AuthController extends Controller
 {
     /**
-     * Show the login form
+     * Show the login form — redirect ke PDQC portal login jika SSO dikonfigurasi.
+     * Jika EMPLOYEE_PORTAL_URL tidak diset, fallback ke halaman login lokal.
      */
     public function showLoginForm()
+    {
+        if (Auth::check()) {
+            return redirect('/dashboard');
+        }
+
+        $portalLoginUrl = config('services.employee_api.portal_url');
+        if (!empty($portalLoginUrl)) {
+            // Redirect ke halaman login portal PDQC
+            return redirect($portalLoginUrl . '/login');
+        }
+
+        // Fallback: tampilkan form login lokal
+        return view('auth.login');
+    }
+
+    /**
+     * Show local login form — akses tersembunyi untuk Superadmin.
+     * Dapat diakses via /local-login jika SSO/central sedang bermasalah.
+     */
+    public function showLocalLoginForm()
     {
         if (Auth::check()) {
             return redirect('/dashboard');
