@@ -535,6 +535,22 @@ class PemeriksaanLoadingProdukController extends Controller
             ->pluck('kategori_code', 'id')
             ->all();
 
+        $customerIdsWithTujuan = $tujuanPengirimans
+            ->pluck('id_customer')
+            ->filter()
+            ->unique()
+            ->values();
+
+        $allCustomers = ($user->role && strtolower($user->role->role) === 'superadmin')
+            ? Customer::orderBy('nama_cust')->get()
+            : Customer::whereHas('user', function ($query) use ($plantId) {
+                $query->where('id_plant', $plantId);
+            })->orderBy('nama_cust')->get();
+
+        $customersWithoutTujuan = $allCustomers->filter(function ($c) use ($customerIdsWithTujuan) {
+            return !$customerIdsWithTujuan->contains($c->id);
+        });
+
         return view('qc-sistem.pemeriksaan-loading-produk.edit', [
             'pemeriksaanLoading' => $pemeriksaan_loading_produk,
             'shifts' => $shifts,
@@ -545,6 +561,7 @@ class PemeriksaanLoadingProdukController extends Controller
             'produkKategoriOptions' => $produkKategoriOptions,
             'produkByKategori' => $produkByKategori,
             'produkKategoriById' => $produkKategoriById,
+            'customersWithoutTujuan' => $customersWithoutTujuan,
         ]);
     }
     public function update(Request $request, PemeriksaanLoadingProduk $pemeriksaan_loading_produk)

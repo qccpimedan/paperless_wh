@@ -358,6 +358,11 @@
                                                                         @endphp
                                                                         <option value="{{ $tujuan->id }}" {{ $savedTujuanId == $tujuan->id ? 'selected' : '' }}>{{ $lbl }}</option>
                                                                     @endforeach
+                                                                    @if(!empty($customersWithoutTujuan) && $customersWithoutTujuan->count() > 0)
+                                                                        @foreach($customersWithoutTujuan as $cust)
+                                                                            <option value="customer_{{ $cust->id }}" {{ $savedTujuanId == ('customer_'.$cust->id) ? 'selected' : '' }}>{{ $cust->nama_cust }} (belum ada tujuan)</option>
+                                                                        @endforeach
+                                                                    @endif
                                                                 </select>
                                                                 <div class="produk-tujuan-manual mt-2" style="display:none;">
                                                                     <div class="row">
@@ -403,7 +408,10 @@
                                                                 $globalIndex++;
                                                             @endphp
                                                             <div class="produk-row mb-4 p-3 border rounded" style="background-color: #f8f9fa;">
-                                                                <h6 class="text-secondary mb-3">Detail #{{ $rowInGroupIndex + 1 }}</h6>
+                                                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                                                    <h6 class="text-secondary mb-0">Detail #{{ $rowInGroupIndex + 1 }}</h6>
+                                                                    <button type="button" class="btn btn-danger btn-sm remove-detail" style="display:{{ $detailRows->count() > 1 ? 'inline-block' : 'none' }};"><i class="bi bi-trash"></i> Hapus Detail</button>
+                                                                </div>
                                                                 <input type="hidden" class="produk-id-hidden" name="produk_data[{{ $flatIndex }}][id_produk]" value="{{ $row['id_produk'] ?? $groupProdukId }}">
                                                                 <div class="row">
                                                                     <div class="col-md-3">
@@ -443,19 +451,20 @@
                                                                         <textarea class="form-control" name="produk_data[{{ $flatIndex }}][keterangan]" rows="2" placeholder="Keterangan tambahan">{{ old('produk_data.'.$flatIndex.'.keterangan', $row['keterangan'] ?? '') }}</textarea>
                                                                     </div>
                                                                 </div>
-                                                                <div class="row mt-3">
-                                                                    <div class="col-md-12">
-                                                                        <button type="button" class="btn btn-sm btn-danger remove-detail" style="display:{{ $detailRows->count() > 1 ? 'inline-block' : 'none' }};">Hapus Detail</button>
-                                                                    </div>
-                                                                </div>
                                                             </div>
                                                         @endforeach
                                                     </div>
-                                                    <button type="button" class="btn btn-sm btn-primary mt-2 add-detail">+ Tambah Detail</button>
+                                                    <button type="button" class="btn btn-primary btn-sm mt-2 add-detail"><i class="bi bi-plus"></i> Tambah Detail</button>
+
+                                                    <div class="row mt-3 pt-3 border-top">
+                                                        <div class="col-md-12">
+                                                            <button type="button" class="btn btn-danger btn-sm remove-produk-group" style="display:{{ $groups->count() > 1 ? 'inline-block' : 'none' }};"><i class="bi bi-trash"></i> Hapus Produk</button>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             @endforeach
                                         </div>
-                                        <!-- <button type="button" id="add-produk-group" class="btn btn-sm btn-success mb-4">+ Tambah Produk</button> -->
+                                        <button type="button" class="btn btn-success btn-sm mt-2 mb-4" id="add-produk-group"><i class="bi bi-plus"></i> Tambah Produk</button>
 
                                         <!-- HASIL PEMERIKSAAN -->
                                         <!-- <h5 class="text-primary mb-3 mt-4">Hasil Pemeriksaan</h5>
@@ -489,9 +498,292 @@
     </div>
 </div>
 
+{{-- ===== MODAL KONFIRMASI CUSTOMER ===== --}}
+<div class="modal fade" id="modalSamaTujuan" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-warning">
+                <h5 class="modal-title"><i class="bi bi-people me-2"></i>Customer & Tujuan Pengiriman</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center py-4">
+                <div class="mb-3">
+                    <i class="bi bi-question-circle text-warning" style="font-size:3rem;"></i>
+                </div>
+                <h6 class="fw-bold mb-2">Apakah Customer & Tujuan Pengiriman sama dengan produk sebelumnya?</h6>
+                <p class="text-muted small mb-0" id="modal-tujuan-prev-label">—</p>
+            </div>
+            <div class="modal-footer justify-content-center gap-2">
+                <button type="button" class="btn btn-success" id="modal-tujuan-ya">
+                    <i class="bi bi-check-circle me-1"></i> Ya, Sama
+                </button>
+                <button type="button" class="btn btn-outline-secondary" id="modal-tujuan-tidak">
+                    <i class="bi bi-x-circle me-1"></i> Tidak, Berbeda
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.collapse-chevron, .detail-chevron {
+    transition: transform 0.2s ease-in-out;
+}
+.collapse-chevron.rotated, .detail-chevron.rotated {
+    transform: rotate(-90deg);
+}
+</style>
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Helper: inisialisasi Choices.js dengan konfigurasi search yang baik
+    const me = this;
+    const tujuanPengirimanOptions = [
+        { value: '', label: '-- Pilih Tujuan --' },
+        { value: 'other', label: '✏️ Lainnya (Input Manual)' },
+        @foreach($tujuanPengirimans as $tujuan)
+            @php
+                $nc = $tujuan->customer->nama_cust ?? null;
+                $nt = $tujuan->nama_tujuan ?? null;
+                if ($nc && $nt && $nt !== '-') $lbl = $nc . ' - ' . $nt;
+                elseif ($nc) $lbl = $nc;
+                elseif ($nt && $nt !== '-') $lbl = $nt;
+                else $lbl = 'Tujuan #' . $tujuan->id;
+            @endphp
+            { value: '{{ $tujuan->id }}', label: {!! json_encode($lbl) !!} },
+        @endforeach
+        @if(!empty($customersWithoutTujuan) && $customersWithoutTujuan->count() > 0)
+            @foreach($customersWithoutTujuan as $cust)
+                { value: 'customer_{{ $cust->id }}', label: {!! json_encode($cust->nama_cust . ' (belum ada tujuan)') !!} },
+            @endforeach
+        @endif
+    ];
+
+    function bsCollapse(el) {
+        if (!el || typeof bootstrap === 'undefined') return null;
+        return bootstrap.Collapse.getInstance(el) || new bootstrap.Collapse(el, { toggle: false });
+    }
+
+    function updateProdukLabel(groupEl, groupIdx) {
+        const span = groupEl ? groupEl.querySelector('.produk-collapse-label') : null;
+        if (!span) return;
+
+        const produkSelect = groupEl.querySelector('select.produk-select');
+        let selectedName = '';
+        if (produkSelect && produkSelect.value) {
+            const opt = produkSelect.options[produkSelect.selectedIndex];
+            if (opt && opt.text && !opt.text.includes('-- Pilih')) {
+                selectedName = opt.text.trim();
+            }
+        }
+        span.textContent = selectedName ? `Produk #${groupIdx + 1}: ${selectedName}` : `Produk #${groupIdx + 1}`;
+    }
+
+    function updateDetailLabel(rowEl, detailIdxWithinGroup) {
+        const span = rowEl ? rowEl.querySelector('.detail-collapse-label') : null;
+        if (!span) return;
+
+        const inputKode = rowEl.querySelector('input[name*="[kode_produksi]"]');
+        const val = inputKode ? (inputKode.value || '').trim() : '';
+        span.textContent = val ? `Detail #${detailIdxWithinGroup + 1}: ${val}` : `Detail #${detailIdxWithinGroup + 1}`;
+    }
+
+    function collapseAllProdukExcept(activeGroupEl) {
+        document.querySelectorAll('#produk-groups .produk-group').forEach((g) => {
+            const body = g.querySelector(':scope > .produk-collapse.collapse');
+            const icon = g.querySelector('.collapse-chevron');
+            if (!body) return;
+
+            const inst = bsCollapse(body);
+            if (g === activeGroupEl) {
+                if (inst) inst.show();
+                else body.classList.add('show');
+                if (icon) icon.classList.remove('rotated');
+            } else {
+                if (inst) inst.hide();
+                else body.classList.remove('show');
+                if (icon) icon.classList.add('rotated');
+            }
+        });
+    }
+
+    function collapseOtherDetailsInGroup(groupEl, activeRowEl) {
+        if (!groupEl) return;
+        groupEl.querySelectorAll('.produk-container .produk-row').forEach((r) => {
+            const body = r.querySelector(':scope > .detail-collapse.collapse');
+            const icon = r.querySelector('.detail-chevron');
+            if (!body) return;
+
+            const inst = bsCollapse(body);
+            if (r === activeRowEl) {
+                if (inst) inst.show();
+                else body.classList.add('show');
+                if (icon) icon.classList.remove('rotated');
+            } else {
+                if (inst) inst.hide();
+                else body.classList.remove('show');
+                if (icon) icon.classList.add('rotated');
+            }
+        });
+    }
+
+    function ensureDetailCollapsible(rowEl) {
+        if (!rowEl) return;
+        const collapseId = rowEl.id || `detail-collapse-${Math.random().toString(36).substring(2, 9)}`;
+        rowEl.id = collapseId;
+
+        const header = rowEl.querySelector(':scope > .d-flex');
+        if (!header) return;
+
+        const titleEl = header.querySelector('h6');
+        if (titleEl && !titleEl.querySelector('.detail-toggle-btn')) {
+            const existingText = (titleEl.textContent || '').trim();
+            titleEl.textContent = '';
+
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'btn btn-primary btn-sm d-flex align-items-center gap-2 detail-toggle-btn';
+
+            const span = document.createElement('span');
+            span.className = 'detail-collapse-label';
+            span.textContent = existingText || 'Detail';
+
+            const icon = document.createElement('i');
+            icon.className = 'bi bi-chevron-down detail-chevron';
+
+            btn.appendChild(span);
+            btn.appendChild(icon);
+            titleEl.appendChild(btn);
+        }
+
+        const groupEl = rowEl.closest('.produk-group');
+        const idxInGroup = groupEl ? Array.from(groupEl.querySelectorAll('.produk-container .produk-row')).indexOf(rowEl) : 0;
+        updateDetailLabel(rowEl, idxInGroup >= 0 ? idxInGroup : 0);
+
+        let body = rowEl.querySelector(`:scope > .detail-collapse.collapse`);
+        if (!body) {
+            body = document.createElement('div');
+            body.className = 'detail-collapse collapse show';
+
+            const nodesToMove = [];
+            let node = header.nextSibling;
+            while (node) {
+                const next = node.nextSibling;
+                nodesToMove.push(node);
+                node = next;
+            }
+            nodesToMove.forEach((n) => body.appendChild(n));
+            rowEl.appendChild(body);
+        }
+
+        const icon = header.querySelector('.detail-chevron');
+        const inst = bsCollapse(body);
+        if (inst && icon && !body.dataset.collapseEventsBound) {
+            body.dataset.collapseEventsBound = '1';
+            body.addEventListener('shown.bs.collapse', function() {
+                icon.classList.remove('rotated');
+            });
+            body.addEventListener('hidden.bs.collapse', function() {
+                icon.classList.add('rotated');
+            });
+        }
+
+        const toggleBtn = header.querySelector('.detail-toggle-btn');
+        if (toggleBtn && !toggleBtn.dataset.toggleBound) {
+            toggleBtn.dataset.toggleBound = '1';
+            toggleBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                const isShown = body.classList.contains('show');
+                if (isShown) {
+                    if (inst) inst.hide();
+                    else body.classList.remove('show');
+                } else {
+                    collapseOtherDetailsInGroup(groupEl, rowEl);
+                    if (inst) inst.show();
+                    else body.classList.add('show');
+                }
+            });
+        }
+    }
+
+    function ensureProdukCollapsible(groupEl, groupIdx) {
+        if (!groupEl) return;
+        const collapseId = groupEl.id || `produk-collapse-${groupIdx}-${Math.random().toString(36).substring(2, 7)}`;
+        groupEl.id = collapseId;
+
+        const header = groupEl.querySelector(':scope > .d-flex');
+        if (!header) return;
+
+        const titleEl = header.querySelector('h6');
+        if (titleEl && !titleEl.querySelector('.collapse-toggle-btn')) {
+            const existingText = (titleEl.textContent || '').trim();
+            titleEl.textContent = '';
+
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'btn btn-primary btn-sm d-flex align-items-center gap-2 collapse-toggle-btn';
+
+            const span = document.createElement('span');
+            span.className = 'produk-collapse-label';
+            span.textContent = existingText || `Produk #${groupIdx + 1}`;
+
+            const icon = document.createElement('i');
+            icon.className = 'bi bi-chevron-down collapse-chevron';
+
+            btn.appendChild(span);
+            btn.appendChild(icon);
+            titleEl.appendChild(btn);
+        }
+
+        updateProdukLabel(groupEl, groupIdx);
+
+        let body = groupEl.querySelector(`:scope > .produk-collapse.collapse`);
+        if (!body) {
+            body = document.createElement('div');
+            body.className = 'produk-collapse collapse show';
+
+            const nodesToMove = [];
+            let node = header.nextSibling;
+            while (node) {
+                const next = node.nextSibling;
+                nodesToMove.push(node);
+                node = next;
+            }
+            nodesToMove.forEach((n) => body.appendChild(n));
+            groupEl.appendChild(body);
+        }
+
+        const icon = header.querySelector('.collapse-chevron');
+        const inst = bsCollapse(body);
+        if (inst && icon && !body.dataset.collapseEventsBound) {
+            body.dataset.collapseEventsBound = '1';
+            body.addEventListener('shown.bs.collapse', function() {
+                icon.classList.remove('rotated');
+            });
+            body.addEventListener('hidden.bs.collapse', function() {
+                icon.classList.add('rotated');
+            });
+        }
+
+        const toggleBtn = header.querySelector('.collapse-toggle-btn');
+        if (toggleBtn && !toggleBtn.dataset.toggleBound) {
+            toggleBtn.dataset.toggleBound = '1';
+            toggleBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                const isShown = body.classList.contains('show');
+                if (isShown) {
+                    if (inst) inst.hide();
+                    else body.classList.remove('show');
+                } else {
+                    collapseAllProdukExcept(groupEl);
+                }
+            });
+        }
+
+        groupEl.querySelectorAll('.produk-container .produk-row').forEach((row) => {
+            ensureDetailCollapsible(row);
+        });
+    }
+
     function initChoicesSelect(selectEl, placeholderText) {
         if (!selectEl || typeof Choices === 'undefined') return null;
         Array.from(selectEl.options).forEach(function(opt) {
@@ -499,9 +791,8 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         return new Choices(selectEl, {
             searchResultLimit: 100,
-                    searchFuzziness: 0.000001,
-                    fuseOptions: { ignoreLocation: true, threshold: 0.2, matchAllTokens: false },
-                    searchEnabled: true,
+            fuseOptions: { ignoreLocation: true, threshold: 0.2, matchAllTokens: false, distance: 1000 },
+            searchEnabled: true,
             searchPlaceholderValue: 'Cari...',
             searchFields: ['label', 'value'],
             itemSelectText: '',
@@ -509,77 +800,14 @@ document.addEventListener('DOMContentLoaded', function() {
             noChoicesText: 'Tidak ada pilihan tersedia',
             shouldSort: false,
             placeholder: true,
-            placeholderValue: placeholderText || 'Pilih...',
-            fuseOptions: {
-                includeScore: true,
-                threshold: 0.4,
-                distance: 1000,
-                tokenize: true,
-                matchAllTokens: false
-            }
+            placeholderValue: placeholderText || 'Pilih...'
         });
     }
 
-    // Inisialisasi ketiga dropdown
-    const tujuanChoices = initChoicesSelect(document.getElementById('id_tujuan_pengiriman'), '-- Pilih Tujuan --');
-    const kendaraanChoices = initChoicesSelect(document.getElementById('id_kendaraan'), '-- Pilih Kendaraan --');
-    const supirChoices = initChoicesSelect(document.getElementById('id_supir'), 'Pilih Supir');
+    initChoicesSelect(document.getElementById('id_tujuan_pengiriman'), '-- Pilih Tujuan --');
+    initChoicesSelect(document.getElementById('id_kendaraan'), '-- Pilih Kendaraan --');
+    initChoicesSelect(document.getElementById('id_supir'), 'Pilih Supir');
 
-    // Toggle manual tujuan pengiriman input (legacy - kept for safety)
-    const tujuanSelect = document.getElementById('id_tujuan_pengiriman');
-    const manualTujuanDiv = document.getElementById('manual_tujuan_pengiriman_input');
-    if (tujuanSelect && manualTujuanDiv) {
-        tujuanSelect.addEventListener('change', function() {
-            manualTujuanDiv.style.display = this.value === 'other' ? 'block' : 'none';
-        });
-    }
-
-    // ======= TUJUAN PER PRODUK =======
-    function bindTujuanToggleEdit(groupEl) {
-        const sel = groupEl.querySelector('select.produk-tujuan-select');
-        const div = groupEl.querySelector('.produk-tujuan-manual');
-        if (!sel || !div) return;
-
-        // Init Choices.js dengan preserved selected value
-        const savedValue = sel.value; // Simpan value yang sudah di-set dari PHP
-        if (typeof Choices !== 'undefined' && !sel._choicesInstance) {
-            try {
-                const choicesInst = new Choices(sel, {
-                    searchResultLimit: 100,
-                    searchFuzziness: 0.000001,
-                    fuseOptions: { ignoreLocation: true, threshold: 0.2, matchAllTokens: false },
-                    searchEnabled: true,
-                    searchPlaceholderValue: 'Cari customer...',
-                    itemSelectText: '',
-                    noResultsText: 'Tidak ada hasil ditemukan',
-                    noChoicesText: 'Tidak ada pilihan tersedia',
-                    shouldSort: false,
-                    placeholder: true,
-                    placeholderValue: '-- Pilih Tujuan --'
-                });
-                sel._choicesInstance = choicesInst;
-
-                // Restore selected value setelah Choices.js init
-                if (savedValue) {
-                    try { choicesInst.setChoiceByValue(String(savedValue)); } catch(e) {}
-                }
-            } catch (e) {}
-        }
-
-        // Toggle manual input + sync hidden inputs
-        function checkToggle() {
-            div.style.display = sel.value === 'other' ? 'block' : 'none';
-            groupEl.querySelectorAll('.row-tujuan-hidden').forEach(h => { h.value = sel.value; });
-        }
-
-        sel.addEventListener('change', checkToggle);
-        checkToggle();
-    }
-
-    // Init untuk semua produk-group yang sudah ada di halaman edit
-    document.querySelectorAll('#produk-groups .produk-group').forEach(bindTujuanToggleEdit);
-
-    // Toggle manual kendaraan input
     const kendaraanSelect = document.getElementById('id_kendaraan');
     const manualKendaraanDiv = document.getElementById('manual_kendaraan_input');
     if (kendaraanSelect && manualKendaraanDiv) {
@@ -588,7 +816,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Toggle manual supir input
     const supirSelect = document.getElementById('id_supir');
     const manualSupirDiv = document.getElementById('manual_supir_input');
     if (supirSelect && manualSupirDiv) {
@@ -597,7 +824,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Tambah/hapus temperature field
     document.getElementById('add-temp')?.addEventListener('click', function() {
         const container = document.getElementById('temperature-fields');
         const newField = document.createElement('div');
@@ -618,7 +844,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Produk data from backend
     const produkByKategori = @json($produkByKategori ?? []);
     const choicesInstances = new WeakMap();
 
@@ -631,34 +856,18 @@ document.addEventListener('DOMContentLoaded', function() {
             try { choicesInstances.delete(produkSelect); } catch (e) {}
         }
 
-        if (typeof Choices === 'undefined') {
-            while (produkSelect.options.length > 0) {
-                produkSelect.remove(0);
-            }
-            produkSelect.add(new Option('-- Pilih Produk --', ''));
-            (choiceItems || []).forEach((it) => {
-                produkSelect.add(new Option(it.label, it.value));
-            });
-            if (desiredValue) {
-                produkSelect.value = desiredValue;
-            }
-            return;
-        }
-
         try {
             const instance = new Choices(produkSelect, {
                 searchResultLimit: 100,
-                    searchFuzziness: 0.000001,
-                    fuseOptions: { ignoreLocation: true, threshold: 0.2, matchAllTokens: false },
-                    searchEnabled: true,
+                fuseOptions: { ignoreLocation: true, threshold: 0.2, matchAllTokens: false, distance: 1000 },
+                searchEnabled: true,
                 searchPlaceholderValue: 'Cari...',
-                itemSelectText: 'Tekan untuk memilih',
+                itemSelectText: '',
                 noResultsText: 'Tidak ada hasil ditemukan',
                 noChoicesText: 'Tidak ada pilihan tersedia',
-                removeItemButton: true,
                 shouldSort: false,
                 placeholder: true,
-                placeholderValue: 'Pilih...'
+                placeholderValue: '-- Pilih Produk --'
             });
 
             instance.setChoices(choiceItems, 'value', 'label', true);
@@ -666,13 +875,11 @@ document.addEventListener('DOMContentLoaded', function() {
             if (desiredValue) {
                 try {
                     instance.setChoiceByValue(String(desiredValue));
-                } catch (e) {
-                }
+                } catch (e) {}
             }
 
             choicesInstances.set(produkSelect, instance);
-        } catch (e) {
-        }
+        } catch (e) {}
     };
 
     const populateProdukOptions = function(groupEl, kategoriCode) {
@@ -683,9 +890,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const rawOptions = (kategoriCode && produkByKategori && produkByKategori[kategoriCode]) ? produkByKategori[kategoriCode] : [];
         const options = Array.isArray(rawOptions) ? rawOptions : Object.values(rawOptions || {});
 
-        const choiceItems = [
-            { value: '', label: '-- Pilih Produk --', selected: false, disabled: false }
-        ];
+        const choiceItems = [{ value: '', label: '-- Pilih Produk --', selected: false, disabled: false }];
         options.forEach((p) => {
             choiceItems.push({
                 value: String(p.id),
@@ -696,23 +901,14 @@ document.addEventListener('DOMContentLoaded', function() {
         });
 
         rebuildProdukChoices(produkSelect, choiceItems, selectedFromAttr);
-
-        // Setelah rebuild selesai, sync hidden inputs.
-        // Gunakan setTimeout agar Choices.js selesai set nilai ke native select
-        const parentGroup = produkSelect.closest('.produk-group');
-        if (parentGroup) {
-            setTimeout(function() {
-                syncGroupHiddenProdukIds(parentGroup);
-            }, 50);
-        }
+        syncGroupHiddenProdukIds(groupEl);
     };
 
     function updateGroupTitles() {
-        const groups = Array.from(document.querySelectorAll('#produk-groups .produk-group'));
-        groups.forEach((g, i) => {
-            g.setAttribute('data-group-index', String(i));
-            const title = g.querySelector('h6.text-secondary');
-            if (title) title.textContent = `Produk #${i + 1}`;
+        const groups = document.querySelectorAll('#produk-groups .produk-group');
+        groups.forEach(function(g, idx) {
+            updateProdukLabel(g, idx);
+
             const removeBtn = g.querySelector('.remove-produk-group');
             if (removeBtn) {
                 removeBtn.style.display = groups.length > 1 ? 'inline-block' : 'none';
@@ -721,149 +917,151 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function syncGroupHiddenProdukIds(groupEl) {
-        const produkSelect = groupEl ? groupEl.querySelector('select.produk-select') : null;
-        let idProduk = produkSelect ? (produkSelect.value || '') : '';
+        if (!groupEl) return;
+        const produkSelect = groupEl.querySelector('select.produk-select');
+        const selectedId = produkSelect ? (produkSelect.value || '') : '';
 
-        // Jika native select value kosong, coba ambil dari Choices.js instance
-        if (!idProduk && produkSelect) {
-            const choicesInst = choicesInstances.get(produkSelect);
-            if (choicesInst && typeof choicesInst.getValue === 'function') {
-                try {
-                    const chosen = choicesInst.getValue(true);
-                    if (chosen) idProduk = String(chosen);
-                } catch(e) {}
+        groupEl.querySelectorAll('.produk-container .produk-row').forEach(function(row) {
+            let hiddenInput = row.querySelector('.produk-id-hidden');
+            if (!hiddenInput) {
+                hiddenInput = document.createElement('input');
+                hiddenInput.type = 'hidden';
+                hiddenInput.className = 'produk-id-hidden';
+                row.prepend(hiddenInput);
             }
-        }
-
-        // Hanya update hidden input jika kita punya nilai,
-        // ATAU jika hidden input sudah kosong dari awal
-        groupEl.querySelectorAll('.produk-id-hidden').forEach((el) => {
-            if (idProduk) {
-                el.value = idProduk;
-            }
-            // Jika idProduk kosong DAN hidden input sudah punya nilai (dari PHP),
-            // biarkan nilai yang ada — jangan ditimpa dengan kosong
-        });
-    }
-
-    // Paksa kosongkan hidden inputs id_produk (dipakai saat user memilih kategori baru)
-    function clearGroupHiddenProdukIds(groupEl) {
-        groupEl.querySelectorAll('.produk-id-hidden').forEach((el) => {
-            el.value = '';
+            hiddenInput.value = selectedId;
         });
     }
 
     function reindexAllDetails() {
-        const groups = Array.from(document.querySelectorAll('#produk-groups .produk-group'));
         let globalIndex = 0;
+        document.querySelectorAll('#produk-groups .produk-group').forEach(function(groupEl, groupIdx) {
+            const tujuanSelect = groupEl.querySelector('select.produk-tujuan-select');
+            const tujuanVal = tujuanSelect ? (tujuanSelect.value || '') : '';
+            const customerManualInput = groupEl.querySelector('.produk-customer-manual');
+            const tujuanManualInput = groupEl.querySelector('.produk-tujuan-manual-input');
+            const custManualVal = customerManualInput ? customerManualInput.value : '';
+            const tujManualVal = tujuanManualInput ? tujuanManualInput.value : '';
 
-        groups.forEach((groupEl) => {
-            const rows = Array.from(groupEl.querySelectorAll('.produk-container .produk-row'));
-            rows.forEach((row, idxInGroup) => {
-                const t = row.querySelector('h6');
-                if (t) t.textContent = `Detail #${idxInGroup + 1}`;
-
-                row.querySelectorAll('input, textarea').forEach((el) => {
-                    const name = el.getAttribute('name');
-                    if (!name) return;
-                    const updated = name.replace(/produk_data\[\d+\]/g, `produk_data[${globalIndex}]`);
-                    if (updated !== name) el.setAttribute('name', updated);
+            groupEl.querySelectorAll('.produk-container .produk-row').forEach(function(row, detailIdxInGroup) {
+                row.querySelectorAll('input, select, textarea').forEach(function(field) {
+                    const name = field.getAttribute('name');
+                    if (name && name.startsWith('produk_data[')) {
+                        const newName = name.replace(/^produk_data\[\d+\]/, 'produk_data[' + globalIndex + ']');
+                        field.setAttribute('name', newName);
+                    }
                 });
 
-                globalIndex += 1;
-            });
-
-            rows.forEach((row) => {
-                const removeBtn = row.querySelector('.remove-detail');
-                if (removeBtn) {
-                    removeBtn.style.display = rows.length > 1 ? 'inline-block' : 'none';
+                let hTujuan = row.querySelector('.row-tujuan-hidden');
+                if (!hTujuan) {
+                    hTujuan = document.createElement('input');
+                    hTujuan.type = 'hidden';
+                    hTujuan.className = 'row-tujuan-hidden';
+                    row.appendChild(hTujuan);
                 }
-            });
+                hTujuan.setAttribute('name', `produk_data[${globalIndex}][id_tujuan_pengiriman]`);
+                hTujuan.value = tujuanVal;
 
-            syncGroupHiddenProdukIds(groupEl);
+                let hCustMan = row.querySelector('.row-cust-manual-hidden');
+                if (!hCustMan) {
+                    hCustMan = document.createElement('input');
+                    hCustMan.type = 'hidden';
+                    hCustMan.className = 'row-cust-manual-hidden';
+                    row.appendChild(hCustMan);
+                }
+                hCustMan.setAttribute('name', `produk_data[${globalIndex}][nama_customer_manual]`);
+                hCustMan.value = custManualVal;
+
+                let hTujMan = row.querySelector('.row-tuj-manual-hidden');
+                if (!hTujMan) {
+                    hTujMan = document.createElement('input');
+                    hTujMan.type = 'hidden';
+                    hTujMan.className = 'row-tuj-manual-hidden';
+                    row.appendChild(hTujMan);
+                }
+                hTujMan.setAttribute('name', `produk_data[${globalIndex}][nama_tujuan_manual]`);
+                hTujMan.value = tujManualVal;
+
+                updateDetailLabel(row, detailIdxInGroup);
+
+                const removeDetailBtn = row.querySelector('.remove-detail');
+                if (removeDetailBtn) {
+                    removeDetailBtn.style.display = groupEl.querySelectorAll('.produk-container .produk-row').length > 1 ? 'inline-block' : 'none';
+                }
+
+                globalIndex++;
+            });
         });
     }
 
+    function bindTujuanToggle(groupEl, initialValue) {
+        const sel = groupEl.querySelector('select.produk-tujuan-select');
+        const div = groupEl.querySelector('.produk-tujuan-manual');
+        if (!sel || !div) return;
+
+        if (typeof Choices !== 'undefined' && !sel._choicesInstance && 
+            !(sel.dataset && sel.dataset.choicesInitialized === 'true')) {
+            try {
+                const choicesInst = new Choices(sel, {
+                    searchResultLimit: 100,
+                    fuseOptions: { ignoreLocation: true, threshold: 0.2, matchAllTokens: false, distance: 1000 },
+                    searchEnabled: true,
+                    searchPlaceholderValue: 'Cari customer...',
+                    itemSelectText: '',
+                    noResultsText: 'Tidak ada hasil ditemukan',
+                    noChoicesText: 'Tidak ada pilihan tersedia',
+                    shouldSort: false,
+                    placeholder: true,
+                    placeholderValue: '-- Pilih Tujuan --'
+                });
+                sel._choicesInstance = choicesInst;
+                if (sel.dataset) sel.dataset.choicesInitialized = 'true';
+
+                if (initialValue) {
+                    try { choicesInst.setChoiceByValue(String(initialValue)); } catch(e) {}
+                }
+            } catch (e) {}
+        }
+
+        function checkToggle() {
+            div.style.display = sel.value === 'other' ? 'block' : 'none';
+            reindexAllDetails();
+        }
+
+        sel.addEventListener('change', checkToggle);
+        const custManInput = groupEl.querySelector('.produk-customer-manual');
+        const tujManInput = groupEl.querySelector('.produk-tujuan-manual-input');
+        if (custManInput) custManInput.addEventListener('input', reindexAllDetails);
+        if (tujManInput) tujManInput.addEventListener('input', reindexAllDetails);
+
+        checkToggle();
+    }
+
     function bindGroupEvents(groupEl) {
-        const kategoriSelect = groupEl.querySelector('.kategori-produk-select');
-        const produkSelect = groupEl.querySelector('.produk-select');
+        const kategoriSelect = groupEl.querySelector('select.kategori-produk-select');
+        const produkSelect = groupEl.querySelector('select.produk-select');
 
         if (kategoriSelect) {
             kategoriSelect.addEventListener('change', function() {
                 if (produkSelect) {
                     produkSelect.setAttribute('data-selected', '');
                 }
-                // Eksplisit kosongkan hidden inputs karena produk akan berganti
-                clearGroupHiddenProdukIds(groupEl);
-                populateProdukOptions(groupEl, kategoriSelect.value);
+                populateProdukOptions(groupEl, this.value);
             });
         }
 
         if (produkSelect) {
             produkSelect.addEventListener('change', function() {
                 syncGroupHiddenProdukIds(groupEl);
+                const groupIdx = Array.from(document.querySelectorAll('#produk-groups .produk-group')).indexOf(groupEl);
+                updateProdukLabel(groupEl, groupIdx >= 0 ? groupIdx : 0);
             });
         }
 
         const addDetailBtn = groupEl.querySelector('.add-detail');
         if (addDetailBtn) {
             addDetailBtn.addEventListener('click', function() {
-                const container = groupEl.querySelector('.produk-container');
-                if (!container) return;
-
-                const newRow = document.createElement('div');
-                newRow.className = 'produk-row mb-4 p-3 border rounded';
-                newRow.style.backgroundColor = '#f8f9fa';
-                const tempIndex = 0;
-                newRow.innerHTML = `
-                    <h6 class="text-secondary mb-3">Detail</h6>
-                    <input type="hidden" class="produk-id-hidden" name="produk_data[${tempIndex}][id_produk]" value="">
-                    <div class="row">
-                        <div class="col-md-3">
-                            <label>Kode Produksi</label>
-                            <input type="text" class="form-control" name="produk_data[${tempIndex}][kode_produksi]" placeholder="Kode Produksi">
-                        </div>
-                        <div class="col-md-3">
-                            <label>Best Before</label>
-                            <input type="date" class="form-control" name="produk_data[${tempIndex}][best_before]">
-                        </div>
-                        <div class="col-md-3">
-                            <label>Jumlah Kemasan</label>
-                            <input type="text" class="form-control" name="produk_data[${tempIndex}][jumlah_kemasan]" placeholder="Contoh: 100 Karton">
-                        </div>
-                        <div class="col-md-3">
-                            <label>Jumlah Sampling</label>
-                            <input type="text" class="form-control" name="produk_data[${tempIndex}][jumlah_sampling]" placeholder="Contoh: 10 Karton">
-                        </div>
-                    </div>
-                    <div class="row mt-3">
-                        <div class="col-md-3">
-                            <label>Berat per Karung atau Box</label>
-                            <input type="text" class="form-control" name="produk_data[${tempIndex}][berat_perkarung]" placeholder="Contoh: 25 Kg">
-                        </div>
-                    </div>
-                    <div class="row mt-3">
-                        <div class="col-md-12">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="produk_data[${tempIndex}][kondisi_kemasan]" value="1" checked>
-                                <label class="form-check-label">Kondisi Kemasan Baik</label>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row mt-3">
-                        <div class="col-md-12">
-                            <label>Keterangan</label>
-                            <textarea class="form-control" name="produk_data[${tempIndex}][keterangan]" rows="2" placeholder="Keterangan tambahan"></textarea>
-                        </div>
-                    </div>
-                    <div class="row mt-3">
-                        <div class="col-md-12">
-                            <button type="button" class="btn btn-sm btn-danger remove-detail">Hapus Detail</button>
-                        </div>
-                    </div>
-                `;
-                container.appendChild(newRow);
-                reindexAllDetails();
+                addDetailRow(groupEl);
             });
         }
 
@@ -877,22 +1075,27 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         groupEl.addEventListener('click', function(e) {
-            if (e.target && e.target.classList && e.target.classList.contains('remove-detail')) {
+            if (e.target && e.target.closest('.remove-detail')) {
                 const row = e.target.closest('.produk-row');
                 if (row) row.remove();
                 reindexAllDetails();
             }
         });
 
+        groupEl.addEventListener('input', function(e) {
+            if (e.target && e.target.name && e.target.name.includes('[kode_produksi]')) {
+                const row = e.target.closest('.produk-row');
+                if (row) {
+                    const groupIdx = Array.from(groupEl.querySelectorAll('.produk-container .produk-row')).indexOf(row);
+                    updateDetailLabel(row, groupIdx >= 0 ? groupIdx : 0);
+                }
+            }
+        });
+
         if (kategoriSelect) {
-            // Gunakan setTimeout agar global Choices.js dari layout sudah selesai init
-            // sebelum kita populate pilihan produk berdasarkan kategori
             setTimeout(function() {
-                // Prioritas: data-kategori (di-set dari PHP), lalu nilai native select
                 const initialKategori = kategoriSelect.getAttribute('data-kategori') || kategoriSelect.value || '';
                 if (initialKategori) {
-                    // Jika Choices.js sudah mengambil alih select ini,
-                    // pastikan nilai terpilih sudah benar via Choices internal
                     if (kategoriSelect._choices && typeof kategoriSelect._choices.setChoiceByValue === 'function') {
                         try { kategoriSelect._choices.setChoiceByValue(initialKategori); } catch(e){}
                     }
@@ -903,101 +1106,254 @@ document.addEventListener('DOMContentLoaded', function() {
         reindexAllDetails();
     }
 
-    // Init produk options on load
-    document.querySelectorAll('#produk-groups .produk-group').forEach(function(g) {
+    function addDetailRow(groupEl) {
+        const container = groupEl.querySelector('.produk-container');
+        if (!container) return;
+
+        const newRow = document.createElement('div');
+        newRow.className = 'produk-row mb-4 p-3 border rounded';
+        newRow.style.backgroundColor = '#f8f9fa';
+        const tempIndex = 0;
+        newRow.innerHTML = `
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h6 class="text-secondary mb-0">Detail #1</h6>
+                <button type="button" class="btn btn-danger btn-sm remove-detail"><i class="bi bi-trash"></i> Hapus Detail</button>
+            </div>
+            <input type="hidden" class="produk-id-hidden" name="produk_data[${tempIndex}][id_produk]" value="">
+            <div class="row">
+                <div class="col-md-3">
+                    <label>Kode Produksi</label>
+                    <input type="text" class="form-control" name="produk_data[${tempIndex}][kode_produksi]" placeholder="Kode Produksi">
+                </div>
+                <div class="col-md-3">
+                    <label>Best Before</label>
+                    <input type="date" class="form-control" name="produk_data[${tempIndex}][best_before]">
+                </div>
+                <div class="col-md-3">
+                    <label>Jumlah Kemasan</label>
+                    <input type="text" class="form-control" name="produk_data[${tempIndex}][jumlah_kemasan]" placeholder="Contoh: 100 Karton">
+                </div>
+                <div class="col-md-3">
+                    <label>Jumlah Sampling</label>
+                    <input type="text" class="form-control" name="produk_data[${tempIndex}][jumlah_sampling]" placeholder="Contoh: 10 Karton">
+                </div>
+            </div>
+            <div class="row mt-3">
+                <div class="col-md-3">
+                    <label>Berat per Karung atau Box</label>
+                    <input type="text" class="form-control" name="produk_data[${tempIndex}][berat_perkarung]" placeholder="Contoh: 25 Kg">
+                </div>
+            </div>
+            <div class="row mt-3">
+                <div class="col-md-12">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="produk_data[${tempIndex}][kondisi_kemasan]" value="1" checked>
+                        <label class="form-check-label">Kondisi Kemasan Baik</label>
+                    </div>
+                </div>
+            </div>
+            <div class="row mt-3">
+                <div class="col-md-12">
+                    <label>Keterangan</label>
+                    <textarea class="form-control" name="produk_data[${tempIndex}][keterangan]" rows="2" placeholder="Keterangan tambahan"></textarea>
+                </div>
+            </div>
+        `;
+        container.appendChild(newRow);
+
+        ensureDetailCollapsible(newRow);
+        syncGroupHiddenProdukIds(groupEl);
+        reindexAllDetails();
+    }
+
+    const existingGroups = document.querySelectorAll('#produk-groups .produk-group');
+    existingGroups.forEach(function(g, idx) {
+        ensureProdukCollapsible(g, idx);
+        const sel = g.querySelector('select.produk-tujuan-select');
+        const savedVal = sel ? sel.value : null;
+        bindTujuanToggle(g, savedVal);
         bindGroupEvents(g);
     });
+
     updateGroupTitles();
+    if (existingGroups.length > 0) {
+        collapseAllProdukExcept(existingGroups[0]);
+    }
 
     document.getElementById('add-produk-group')?.addEventListener('click', function() {
         const groupsWrapper = document.getElementById('produk-groups');
         if (!groupsWrapper) return;
 
-        const newGroup = document.createElement('div');
-        newGroup.className = 'produk-group mb-4 p-3 border rounded';
-        newGroup.style.backgroundColor = '#ffffff';
-        newGroup.setAttribute('data-group-index', String(document.querySelectorAll('#produk-groups .produk-group').length));
+        const currentGroups = document.querySelectorAll('#produk-groups .produk-group');
+        const lastGroup = currentGroups[currentGroups.length - 1];
+        let prevTujuanValue = '';
+        let prevTujuanLabel = '—';
 
-        newGroup.innerHTML = `
-            <div class="d-flex justify-content-between align-items-center mb-2">
-                <h6 class="text-secondary mb-0">Produk</h6>
-                <button type="button" class="btn btn-sm btn-outline-danger remove-produk-group">Hapus Produk</button>
-            </div>
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="form-group">
-                        <label>Kategori <span class="text-danger">*</span></label>
-                        <select class="choices form-select kategori-produk-select">
-                            <option value="">-- Pilih Kategori --</option>
-                            ${Object.keys(produkByKategori || {}).map(function(k) { return '<option value="' + String(k) + '">' + String(k) + '</option>'; }).join('')}
-                        </select>
+        if (lastGroup) {
+            const prevSelect = lastGroup.querySelector('select.produk-tujuan-select');
+            if (prevSelect && prevSelect.value) {
+                prevTujuanValue = prevSelect.value;
+                const selOpt = prevSelect.options[prevSelect.selectedIndex];
+                prevTujuanLabel = selOpt ? selOpt.text.trim() : '—';
+            }
+        }
+
+        const tujuanOptionsHtml = tujuanPengirimanOptions
+            .map(opt => `<option value="${opt.value}">${opt.label}</option>`)
+            .join('');
+
+        function createNewGroup(copyTujuan) {
+            const newGroup = document.createElement('div');
+            newGroup.className = 'produk-group mb-4 p-3 border rounded';
+            newGroup.style.backgroundColor = '#ffffff';
+            newGroup.setAttribute('data-group-index', String(document.querySelectorAll('#produk-groups .produk-group').length));
+
+            newGroup.innerHTML = `
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h6 class="text-secondary mb-0">Produk</h6>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Kategori <span class="text-danger">*</span></label>
+                            <select class="choices form-select kategori-produk-select">
+                                <option value="">-- Pilih Kategori --</option>
+                                ${Object.keys(produkByKategori || {}).map((k) => `<option value="${String(k)}">${String(k)}</option>`).join('')}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Nama Produk <span class="text-danger">*</span></label>
+                            <select class="form-select produk-select" data-selected="">
+                                <option value="">-- Pilih Produk --</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
-                <div class="col-md-6">
-                    <div class="form-group">
-                        <label>Nama Produk <span class="text-danger">*</span></label>
-                        <select class="form-select produk-select" data-selected="">
-                            <option value="">-- Pilih Produk --</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-            <h6 class="text-secondary mt-3">Detail Produk</h6>
-            <div class="produk-container">
-                <div class="produk-row mb-4 p-3 border rounded" style="background-color: #f8f9fa;">
-                    <h6 class="text-secondary mb-3">Detail #1</h6>
-                    <input type="hidden" class="produk-id-hidden" name="produk_data[0][id_produk]" value="">
-                    <div class="row">
-                        <div class="col-md-3">
-                            <label>Kode Produksi</label>
-                            <input type="text" class="form-control" name="produk_data[0][kode_produksi]" placeholder="Kode Produksi">
-                        </div>
-                        <div class="col-md-3">
-                            <label>Best Before</label>
-                            <input type="date" class="form-control" name="produk_data[0][best_before]">
-                        </div>
-                        <div class="col-md-3">
-                            <label>Jumlah Kemasan</label>
-                            <input type="text" class="form-control" name="produk_data[0][jumlah_kemasan]" placeholder="Contoh: 100 Karton">
-                        </div>
-                        <div class="col-md-3">
-                            <label>Jumlah Sampling</label>
-                            <input type="text" class="form-control" name="produk_data[0][jumlah_sampling]" placeholder="Contoh: 10 Karton">
-                        </div>
-                    </div>
-                    <div class="row mt-3">
-                        <div class="col-md-3">
-                            <label>Berat per Karung atau Box</label>
-                            <input type="text" class="form-control" name="produk_data[0][berat_perkarung]" placeholder="Contoh: 25 Kg">
-                        </div>
-                    </div>
-                    <div class="row mt-3">
-                        <div class="col-md-12">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="produk_data[0][kondisi_kemasan]" value="1" checked>
-                                <label class="form-check-label">Kondisi Kemasan Baik</label>
+                <div class="row produk-tujuan-section">
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <label>Customer & Tujuan Pengiriman</label>
+                            <select class="form-select produk-tujuan-select" name="produk_data[0][id_tujuan_pengiriman]">
+                                ${tujuanOptionsHtml}
+                            </select>
+                            <div class="produk-tujuan-manual mt-2" style="display:none;">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <input type="text" class="form-control produk-customer-manual" name="produk_data[0][nama_customer_manual]" placeholder="Nama Customer">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <input type="text" class="form-control produk-tujuan-manual-input" name="produk_data[0][nama_tujuan_manual]" placeholder="Nama Tujuan Pengiriman">
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
-                    <div class="row mt-3">
-                        <div class="col-md-12">
-                            <label>Keterangan</label>
-                            <textarea class="form-control" name="produk_data[0][keterangan]" rows="2" placeholder="Keterangan tambahan"></textarea>
+                </div>
+                <div class="produk-container">
+                    <div class="produk-row mb-4 p-3 border rounded" style="background-color: #f8f9fa;">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6 class="text-secondary mb-0">Detail #1</h6>
+                            <button type="button" class="btn btn-danger btn-sm remove-detail" style="display:none;"><i class="bi bi-trash"></i> Hapus Detail</button>
                         </div>
-                    </div>
-                    <div class="row mt-3">
-                        <div class="col-md-12">
-                            <button type="button" class="btn btn-sm btn-danger remove-detail" style="display:none;">Hapus Detail</button>
+                        <input type="hidden" class="produk-id-hidden" name="produk_data[0][id_produk]" value="">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <label>Kode Produksi</label>
+                                <input type="text" class="form-control" name="produk_data[0][kode_produksi]" placeholder="Kode Produksi">
+                            </div>
+                            <div class="col-md-3">
+                                <label>Best Before</label>
+                                <input type="date" class="form-control" name="produk_data[0][best_before]">
+                            </div>
+                            <div class="col-md-3">
+                                <label>Jumlah Kemasan</label>
+                                <input type="text" class="form-control" name="produk_data[0][jumlah_kemasan]" placeholder="Contoh: 100 Karton">
+                            </div>
+                            <div class="col-md-3">
+                                <label>Jumlah Sampling</label>
+                                <input type="text" class="form-control" name="produk_data[0][jumlah_sampling]" placeholder="Contoh: 10 Karton">
+                            </div>
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col-md-3">
+                                <label>Berat per Karung atau Box</label>
+                                <input type="text" class="form-control" name="produk_data[0][berat_perkarung]" placeholder="Contoh: 25 Kg">
+                            </div>
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col-md-12">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="produk_data[0][kondisi_kemasan]" value="1" checked>
+                                    <label class="form-check-label">Kondisi Kemasan Baik</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col-md-12">
+                                <label>Keterangan</label>
+                                <textarea class="form-control" name="produk_data[0][keterangan]" rows="2" placeholder="Keterangan tambahan"></textarea>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-            <button type="button" class="btn btn-sm btn-primary mt-2 add-detail">+ Tambah Detail</button>
-        `;
+                <button type="button" class="btn btn-primary btn-sm mt-2 add-detail"><i class="bi bi-plus"></i> Tambah Detail</button>
 
-        groupsWrapper.appendChild(newGroup);
-        updateGroupTitles();
-        bindGroupEvents(newGroup);
+                <div class="row mt-3 pt-3 border-top">
+                    <div class="col-md-12">
+                        <button type="button" class="btn btn-danger btn-sm remove-produk-group"><i class="bi bi-trash"></i> Hapus Produk</button>
+                    </div>
+                </div>
+            `;
+
+            groupsWrapper.appendChild(newGroup);
+            bindTujuanToggle(newGroup, copyTujuan ? prevTujuanValue : null);
+
+            const newIdx = document.querySelectorAll('#produk-groups .produk-group').length - 1;
+            ensureProdukCollapsible(newGroup, newIdx);
+            updateGroupTitles();
+            bindGroupEvents(newGroup);
+
+            const body = newGroup.querySelector(':scope > .produk-collapse.collapse');
+            if (body) {
+                const inst = bsCollapse(body);
+                if (inst) inst.show();
+                else body.classList.add('show');
+            }
+            collapseAllProdukExcept(newGroup);
+        }
+
+        if (!prevTujuanValue) {
+            createNewGroup(false);
+            return;
+        }
+
+        const modalLabelEl = document.getElementById('modal-tujuan-prev-label');
+        if (modalLabelEl) modalLabelEl.textContent = prevTujuanLabel;
+
+        const modalEl = document.getElementById('modalSamaTujuan');
+        if (!modalEl || typeof bootstrap === 'undefined') {
+            createNewGroup(false);
+            return;
+        }
+
+        const modalInst = new bootstrap.Modal(modalEl);
+        modalInst.show();
+
+        const btnYa = document.getElementById('modal-tujuan-ya');
+        const btnTidak = document.getElementById('modal-tujuan-tidak');
+
+        function cleanup() {
+            if (btnYa) btnYa.removeEventListener('click', onYa);
+            if (btnTidak) btnTidak.removeEventListener('click', onTidak);
+        }
+        function onYa() { modalInst.hide(); createNewGroup(true); cleanup(); }
+        function onTidak() { modalInst.hide(); createNewGroup(false); cleanup(); }
+
+        if (btnYa) btnYa.addEventListener('click', onYa);
+        if (btnTidak) btnTidak.addEventListener('click', onTidak);
     });
 });
 </script>
