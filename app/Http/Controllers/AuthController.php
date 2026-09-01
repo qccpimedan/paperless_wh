@@ -20,10 +20,14 @@ class AuthController extends Controller
             return redirect('/dashboard');
         }
 
-        $portalLoginUrl = config('services.employee_api.portal_url');
+        $portalLoginUrl = config('services.employee_api.portal_login_url');
         if (!empty($portalLoginUrl)) {
-            // Redirect ke halaman login portal PDQC
-            return redirect($portalLoginUrl . '/login');
+            return redirect($portalLoginUrl);
+        }
+
+        $portalUrl = config('services.employee_api.portal_url');
+        if (!empty($portalUrl)) {
+            return redirect(rtrim($portalUrl, '/') . '/login');
         }
 
         // Fallback: tampilkan form login lokal
