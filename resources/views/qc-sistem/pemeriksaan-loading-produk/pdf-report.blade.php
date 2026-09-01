@@ -1177,14 +1177,9 @@
                     <!-- ========================================================= -->
                     <!-- DOCUMENT CODE -->
                     <!-- ========================================================= -->
-
                     <div class="document-code">
-
                         QW 10/00
-
                     </div>
-
-
                     <!-- ========================================================= -->
                     <!-- SIGNATURE -->
                     <!-- ========================================================= -->
@@ -1200,74 +1195,43 @@
                                 <!-- ================================================= -->
 
                                 <td class="signature-cell">
-
                                     <div class="signature-header-item">
-
                                         Dibuat Oleh
-
                                     </div>
-
-
                                     <div class="signature-space">
-
                                         @if($qcUser)
-
                                             @php
-
                                                 $qcQrData =
                                                     "Dokumen ini telah diverifikasi secara sistem oleh {$qcUser} (Tim QC)";
-
-
                                                 $qcQrCodeSvg =
                                                     \SimpleSoftwareIO\QrCode\Facades\QrCode
                                                         ::size(34)
                                                         ->generate($qcQrData);
-
-
                                                 $base64QcSvg =
                                                     "data:image/svg+xml;base64,"
                                                     . base64_encode($qcQrCodeSvg);
-
                                             @endphp
-
-
                                             <img
                                                 src="{{ $base64QcSvg }}"
                                                 class="qr-code-img"
                                                 alt="QR Code QC"
                                             >
-
                                         @else
-
                                             <div class="signature-line-empty"></div>
-
                                         @endif
-
                                     </div>
-
-
                                     <div class="signature-name">
 
                                         {{ $qcUser ?: '-' }}
-
                                     </div>
-
                                 </td>
-
-
                                 <!-- ================================================= -->
                                 <!-- DIKETAHUI OLEH -->
                                 <!-- ================================================= -->
-
                                 <td class="signature-cell">
-
                                     <div class="signature-header-item">
-
                                         Diketahui Oleh
-
                                     </div>
-
-
                                     <div class="signature-space">
 
                                         @if($produksiUser)
@@ -1289,103 +1253,60 @@
                                                     . base64_encode($prodQrCodeSvg);
 
                                             @endphp
-
-
                                             <img
                                                 src="{{ $base64ProdSvg }}"
                                                 class="qr-code-img"
                                                 alt="QR Code Warehouse"
                                             >
-
                                         @else
-
                                             <div class="signature-line-empty"></div>
-
                                         @endif
-
                                     </div>
-
-
                                     <div class="signature-name">
-
                                         {{ $produksiUser ?: '-' }}
-
                                     </div>
 
                                 </td>
-
-
                                 <!-- ================================================= -->
                                 <!-- DISETUJUI OLEH -->
                                 <!-- ================================================= -->
-
                                 <td class="signature-cell">
-
                                     <div class="signature-header-item">
-
                                         Disetujui Oleh
-
                                     </div>
-
-
                                     <div class="signature-space">
-
                                         @if($spvQcUser)
-
                                             @php
-
                                                 $spvQrData =
                                                     "Dokumen ini telah diverifikasi secara sistem oleh {$spvQcUser} (Tim Supervisor QC)";
-
-
                                                 $spvQrCodeSvg =
                                                     \SimpleSoftwareIO\QrCode\Facades\QrCode
                                                         ::size(34)
                                                         ->generate($spvQrData);
-
-
                                                 $base64SpvSvg =
                                                     "data:image/svg+xml;base64,"
                                                     . base64_encode($spvQrCodeSvg);
 
                                             @endphp
-
-
                                             <img
                                                 src="{{ $base64SpvSvg }}"
                                                 class="qr-code-img"
                                                 alt="QR Code SPV"
                                             >
-
                                         @else
-
                                             <div class="signature-line-empty"></div>
-
                                         @endif
-
                                     </div>
-
-
                                     <div class="signature-name">
 
                                         {{ $spvQcUser ?: '-' }}
-
                                     </div>
-
                                 </td>
-
                             </tr>
-
                         </table>
-
                     </div>
-
-
                 @endforeach
-
-
             @else
-
                 <div class="empty-message">
 
                     Tidak ada data untuk dicetak.

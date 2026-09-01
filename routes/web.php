@@ -61,6 +61,10 @@ Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [AuthController::class, 'login']);
 Route::match(['get', 'post'], '/logout', [AuthController::class, 'logout'])->name('logout');
 
+// Local Login (bypass SSO) — untuk Superadmin jika Employee Central tidak terjangkau
+Route::get('/local-login', [AuthController::class, 'showLocalLoginForm'])->name('local-login');
+Route::post('/local-login', [AuthController::class, 'login'])->name('local-login.post');
+
 // SSO Route — harus di luar middleware auth (user belum login saat request ini masuk)
 Route::get('/sso/login', [SsoLoginController::class, 'login'])->name('sso.login');
 

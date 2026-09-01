@@ -375,7 +375,7 @@
 
                 <!-- Version Info -->
                 <div class="text-center mt-4 version-text">
-                    <div><strong>Version 1.5.2</strong></div>
+                    <div><strong>Version 1.5.3</strong></div>
                     <div class="mt-1">Copyright © {{ date('Y') }} PT. Charoen Pokphand Indonesia</div>
                     <div class="mt-1">All rights reserved by Tim Industry 4.0</div>
                 </div>

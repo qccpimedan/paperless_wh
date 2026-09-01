@@ -707,7 +707,7 @@
                                                             <div class="col-md-6">
                                                                 <div class="form-group">
                                                                     <label class="form-label">Foto COA</label>
-                                                                    <input type="file" name="file_coa_img[]" class="form-control" accept="image/*" capture="environment">
+                                                                    <input type="file" name="file_coa_img[]" class="form-control" accept="image/*">
                                                                     <small class="form-text text-muted">Format: JPG, PNG, WEBP, GIF. Gambar &gt; 3MB akan dikompres otomatis.</small>
                                                                 </div>
                                                             </div>
@@ -2138,7 +2138,7 @@ function addNewRow() {
                 <div class="col-md-6">
                     <div class="form-group">
                         <label class="form-label">Foto COA</label>
-                        <input type="file" name="file_coa_img[]" class="form-control" accept="image/*" capture="environment">
+                        <input type="file" name="file_coa_img[]" class="form-control" accept="image/*">
                         <small class="form-text text-muted">Format: JPG, PNG, WEBP, GIF. Maksimal 3MB. Gambar &gt; 3MB akan dikompres otomatis.</small>
                     </div>
                 </div>

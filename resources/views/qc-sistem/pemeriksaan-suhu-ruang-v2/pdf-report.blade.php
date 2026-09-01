@@ -3,19 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <title>Pemeriksaan Suhu Ruang V2</title>
-    @php
-        $firstRecord = $pemeriksaans->first();
-        $plantName = $firstRecord && $firstRecord->user && $firstRecord->user->plant ? $firstRecord->user->plant->plant : 'MEDAN';
-    @endphp
     <style>
-        @page { 
-            size: A4;
-            margin: 12mm; 
-        }
+        @page { size: A4 landscape; margin: 12mm; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 9px; line-height: 1.4; color: #1a1a1a; }
 
-        .header { display: table; width: 100%; margin-bottom: 12px; border-bottom: 3px solid #c41e3a; padding-bottom: 10px; }
+        .header { display: table; width: 100%; margin-bottom: 10px; border-bottom: 3px solid #c41e3a; padding-bottom: 8px; }
         .header-left { display: table-cell; width: 60%; vertical-align: middle; }
         .header-right { display: table-cell; width: 40%; vertical-align: middle; text-align: right; }
         .logo-company { display: table; width: 100%; }
@@ -26,655 +19,303 @@
         .header-company p { font-size: 8px; color: #444; margin-bottom: 1px; }
         .header-title h1 { font-size: 13px; font-weight: bold; color: #1a1a1a; background: #f1f3f5; padding: 8px 15px; border-radius: 4px; border-left: 4px solid #c41e3a; display: inline-block; }
 
-        .subheader { width: 100%; border: 1px solid #dee2e6; border-radius: 6px; margin-bottom: 10px; background: #f8f9fa; }
+        .subheader { width: 100%; border: 1px solid #dee2e6; border-radius: 6px; margin-bottom: 8px; background: #f8f9fa; }
         .subheader-table { width: 100%; border-collapse: collapse; }
-        .subheader-table td { padding: 6px 10px; font-size: 8px; border-bottom: 1px solid #e9ecef; vertical-align: top; }
+        .subheader-table td { padding: 5px 10px; font-size: 8px; border-bottom: 1px solid #e9ecef; vertical-align: top; }
         .subheader-table tr:last-child td { border-bottom: none; }
-        .subheader-label { font-weight: 600; color: #495057; width: 100px; }
+        .subheader-label { font-weight: 600; color: #495057; width: 110px; }
 
-        .section-title { font-weight: bold; font-size: 9px; color: #c41e3a; margin: 10px 0 6px; }
-        table.data { width: 100%; border-collapse: collapse; border: 1px solid #dee2e6; }
-        table.data th { background: #f1f3f5; font-weight: 700; font-size: 8px; padding: 6px; border: 1px solid #dee2e6; text-align: left; }
-        table.data td { font-size: 8px; padding: 6px; border: 1px solid #dee2e6; vertical-align: top; }
-        .muted { color: #6c757d; }
+        .section-title { font-weight: bold; font-size: 9px; color: #c41e3a; margin: 6px 0 4px; }
 
-        .signature { width: 100%; margin-top: 16px; border-top: 1px solid #dee2e6; padding-top: 10px; }
+        /* ===== Tabel rekap data ===== */
+        table.data-simple { width: 100%; border-collapse: collapse; border: 1px solid #333; }
+        table.data-simple th { background: #f1f3f5; font-weight: 700; font-size: 8px; padding: 5px 6px; border: 1px solid #333; text-align: center; }
+        table.data-simple td { font-size: 8px; padding: 4.5px 6px; border: 1px solid #333; }
+        table.data-simple td.center { text-align: center; }
+        table.data-simple tbody tr:nth-child(even) { background: #fafafa; }
+
+        .empty-state { text-align: center; padding: 40px; color: #6c757d; font-style: italic; }
+
+        /* ===== Signature TTD tiap halaman ===== */
+        .signature { width: 100%; margin-top: 14px; border-top: 1px solid #dee2e6; padding-top: 8px; page-break-inside: avoid; }
         .signature-table { width: 100%; border-collapse: collapse; }
-        .signature-table td { width: 33.33%; text-align: center; font-size: 8px; padding: 6px 2px; }
-        .sig-name { margin-top: 28px; font-weight: 700; }
-        .signature-cell { width: 33.33%; text-align: center; font-size: 8px; padding: 6px 2px; }
-        .signature-header-item { font-weight: 600; }
-        .signature-space { height: 60px; margin: 0 10px; display: flex; align-items: center; justify-content: center; }
-        .signature-line-empty { border-bottom: 2px solid #1a1a1a; height: 28px; width: 100%; }
-        .qr-code-img { max-height: 55px; max-width: 55px; }
-        .signature-name { font-weight: 700; }
+        .signature-cell { width: 33.33%; text-align: center; font-size: 8px; padding: 4px 2px; vertical-align: top; }
+        .signature-header-item { font-weight: 600; margin-bottom: 4px; }
+        .signature-space { height: 55px; margin: 0 auto; text-align: center; }
+        .signature-line-empty { border-bottom: 2px solid #1a1a1a; height: 28px; width: 80%; margin: 0 auto; }
+        .qr-code-img { max-height: 50px; max-width: 50px; display: inline-block; }
+        .signature-name { font-weight: 700; text-transform: uppercase; margin-top: 4px; }
+
         .page-break { page-break-after: always; }
-        .page-break:last-child { page-break-after: auto; }
     </style>
 </head>
 <body>
-    <div class="container">
-        @php $isAllShift = $isAllShift ?? false; @endphp
+<div class="container">
 
-        @if($isAllShift)
-        {{-- ======= MODE: SEMUA SHIFT ======= --}}
-        @if(empty($dataPerShift))
-            <div style="text-align:center;padding:40px;color:#6c757d;font-style:italic;">
-                Tidak ada data untuk semua shift pada periode yang dipilih.
-            </div>
-        @else
-            @foreach($dataPerShift as $shiftGroupIdx => $shiftGroup)
-                @php
-                    $pemeriksaans = $shiftGroup['pemeriksaans'];
-                    $currentShift = $shiftGroup['shift'];
-                    $qcUser       = $shiftGroup['qcUser'];
-                    $produksiUser = $shiftGroup['produksiUser'];
-                    $spvQcUser    = $shiftGroup['spvQcUser'];
-                @endphp
+@php
+    $isAllShift = $isAllShift ?? false;
 
-                @foreach($pemeriksaans as $idx => $p)
-                    @php $plantName = $p->user && $p->user->plant ? $p->user->plant->plant : '-'; @endphp
-                    @php
-                        $shiftNameAS = $p->shift ? $p->shift->shift : $currentShift->shift;
-                        $produkNameAS = $p->produk ? $p->produk->nama_produk : '-';
-                        $kategoriAS = $p->produk ? $p->produk->kategori_code : null;
-                        $jamPukulAS = null;
-                        if (!empty($p->pukul)) { try { $jamPukulAS = \Carbon\Carbon::parse($p->pukul)->format('H:i'); } catch (\Throwable $e) { $jamPukulAS = (string)$p->pukul; } }
-                        $historiesAS = $p->relationLoaded('histories') && $p->histories ? $p->histories : collect();
-                        $firstHistoryAS = $historiesAS->sortBy('created_at')->first();
-                        $initialPukulAS = '-';
-                        if ($firstHistoryAS && isset($firstHistoryAS->pukul_lama)) { $initialPukulAS = $firstHistoryAS->pukul_lama; } elseif ($p->pukul) { $initialPukulAS = $p->pukul; }
-                        $histNoAS = 1;
-                        $sectionDefsAS = ['suhu_cold_storage'=>['label'=>'Cold Storage','type'=>'multi'],'suhu_anteroom_loading'=>['label'=>'Anteroom Loading','type'=>'multi'],'suhu_pre_loading'=>['label'=>'Pre Loading','type'=>'single'],'suhu_prestaging'=>['label'=>'Prestaging','type'=>'single'],'suhu_anteroom_ekspansi_abf'=>['label'=>'Anteroom Ekspansi ABF','type'=>'single'],'suhu_chillroom_rm'=>['label'=>'Chillroom RM','type'=>'single'],'suhu_chillroom_domestik'=>['label'=>'Chillroom Domestik','type'=>'single']];
-                        $renderValAS = function($val) { if ($val === null || $val === '' || $val === []) return '-'; if (is_array($val)) { $parts = []; if (isset($val['jam'])) $parts[] = 'jam: '.$val['jam']; if (isset($val['setting'])) $parts[] = 'setting: '.$val['setting']; if (isset($val['display'])) $parts[] = 'display: '.$val['display']; if (isset($val['actual'])) $parts[] = 'actual: '.$val['actual']; return !empty($parts) ? implode('; ', $parts) : '-'; } return (string)$val; };
-                        $findUnitAS = function($rows, $unit) { if (!is_array($rows)) return null; foreach ($rows as $r) { if (!is_array($r)) continue; if ((string)($r['unit']??'') === (string)$unit) return $r; } return null; };
-                    @endphp
-                    <div class="header">
-                        <div class="header-left"><div class="logo-company"><div class="header-logo"><img src="{{ public_path('dist/images/logo/cpi-logo.png') }}" alt="Logo"></div><div class="header-company"><h2>PT. CHAROEN POKPHAND INDONESIA</h2><p>FOOD DIVISION {{ strtoupper($plantName) }}</p><p>{{ strtoupper($plantName) }} - INDONESIA</p></div></div></div>
-                        <div class="header-right"><div class="header-title"><h1>PEMERIKSAAN SUHU PRODUK DAN SUHU RUANG PENYIMPANAN </h1><div style="font-size:8px;color:#666;margin-top:3px;">{{ strtoupper($currentShift->shift) }}</div></div></div>
-                    </div>
-                    <div class="subheader"><table class="subheader-table">
-                        <tr><td class="subheader-label">Tanggal</td><td>{{ $p->tanggal ? $p->tanggal->format('d/m/Y') : '-' }}</td><td class="subheader-label">Shift</td><td>{{ $shiftNameAS }}</td></tr>
-                        <tr>
-                            <td class="subheader-label">Plant</td><td>{{ $plantName }}</td>
-                            <!-- <td class="subheader-label">Pukul</td><td>{{ $jamPukulAS ?? '-' }}</td> -->
-                        </tr>
-                        <tr><td class="subheader-label">Produk</td><td>@if($kategoriAS)<span style="font-weight:700;">{{ $kategoriAS }}</span> - @endif{{ $produkNameAS }}</td><td class="subheader-label">Suhu Produk</td><td>{{ $p->suhu_produk ?? '-' }}</td></tr>
-                    </table></div>
-                    <div class="section-title">Data & Riwayat Pemeriksaan</div>
-                    <table class="data"><thead><tr><th style="width:5%">No</th><th style="width:25%">Lokasi</th><th style="width:35%">Sebelumnya</th><th style="width:35%">Sesudahnya</th></tr></thead><tbody>
-                        <tr><td colspan="4" style="background:#f8f9fa;font-weight:bold;font-size:9px;color:#555;text-align:center;">--- INPUT DATA PERTAMA ---</td></tr>
-                        @if($initialPukulAS && $initialPukulAS !== '-')<tr><td></td><td>Pukul</td><td style="background:#fff3cd;text-align:center;">-</td><td style="background:#d4edda;">{{ $initialPukulAS }}</td></tr>@endif
-                        @foreach($sectionDefsAS as $fieldBase => $secDef)
-                            @php $colData = $p->$fieldBase ?? null; @endphp
-                            @if($colData !== null && $colData !== '' && $colData !== [])
-                                @if($secDef['type'] === 'multi' && is_array($colData))
-                                    @foreach($colData as $item)<tr><td style="text-align:center;">{{ $histNoAS++ }}</td><td>{{ $secDef['label'] }} {{ $item['unit'] ?? '' }}</td><td style="background:#fff3cd;text-align:center;">-</td><td style="background:#d4edda;">{{ $renderValAS($item) }}</td></tr>@endforeach
-                                @else
-                                    <tr><td style="text-align:center;">{{ $histNoAS++ }}</td><td>{{ $secDef['label'] }}</td><td style="background:#fff3cd;text-align:center;">-</td><td style="background:#d4edda;">{{ $renderValAS($colData) }}</td></tr>
-                                @endif
-                            @endif
-                        @endforeach
-                        @if($historiesAS->count() > 0)
-                            <tr><td colspan="4" style="background:#f8f9fa;font-weight:bold;font-size:9px;color:#c41e3a;text-align:center;border-top:2px solid #dee2e6;">--- RIWAYAT PERUBAHAN ---</td></tr>
-                            @foreach($historiesAS->sortBy('created_at') as $histRec)
-                                @php
-                                    $changesAS = [];
-                                    if (($histRec->pukul_lama??null)!=($histRec->pukul_baru??null)) $changesAS[]=['lokasi'=>'Pukul','lama'=>$histRec->pukul_lama??'-','baru'=>$histRec->pukul_baru??'-'];
-                                    if (($histRec->suhu_produk_lama??null)!=($histRec->suhu_produk_baru??null)) $changesAS[]=['lokasi'=>'Suhu Produk','lama'=>$histRec->suhu_produk_lama??'-','baru'=>$histRec->suhu_produk_baru??'-'];
-                                    foreach ($sectionDefsAS as $fieldBase => $secDef) {
-                                        $lF=$fieldBase.'_lama'; $bF=$fieldBase.'_baru'; $lV=$histRec->$lF??null; $bV=$histRec->$bF??null;
-                                        if (json_encode($lV)!==json_encode($bV)) {
-                                            if ($secDef['type']==='multi' && (is_array($lV)||is_array($bV))) {
-                                                $aus=array_unique(array_merge(
-                                                    array_map(function($r){ return is_array($r) ? (string)($r['unit'] ?? '') : ''; }, (array)$lV),
-                                                    array_map(function($r){ return is_array($r) ? (string)($r['unit'] ?? '') : ''; }, (array)$bV)
-                                                ));
-                                                foreach ($aus as $u) { $oi=$findUnitAS($lV,$u); $ni=$findUnitAS($bV,$u); if (json_encode($oi)!==json_encode($ni)) $changesAS[]=['lokasi'=>$secDef['label'].' '.$u,'lama'=>$renderValAS($oi),'baru'=>$renderValAS($ni)]; }
-                                            } else { $changesAS[]=['lokasi'=>$secDef['label'],'lama'=>$renderValAS($lV),'baru'=>$renderValAS($bV)]; }
-                                        }
-                                    }
-                                @endphp
-                                @foreach($changesAS as $change)<tr><td style="text-align:center;">{{ strcasecmp($change['lokasi'],'pukul')===0?'':$histNoAS++ }}</td><td>{{ $change['lokasi'] }}</td><td style="background:#fff3cd;">{{ $change['lama'] }}</td><td style="background:#d4edda;">{{ $change['baru'] }}</td></tr>@endforeach
-                            @endforeach
-                        @endif
-                    </tbody></table>
-                    @if(!empty($p->keterangan)||!empty($p->tindakan_koreksi))
-                        <div class="section-title">Keterangan</div>
-                        <table class="data"><tbody>
-                            @if(!empty($p->keterangan))<tr><td style="width:25%"><strong>Keterangan</strong></td><td>{{ $p->keterangan }}</td></tr>@endif
-                            @if(!empty($p->tindakan_koreksi))<tr><td style="width:25%"><strong>Tindakan Koreksi</strong></td><td>{{ $p->tindakan_koreksi }}</td></tr>@endif
-                        </tbody></table>
-                    @endif
-                    <div style="text-align:right;padding-right:10px;font-style:italic;font-size:9px;color:#666;margin-top:5px;">QW 06/00</div>
-                    <div class="signature"><table class="signature-table"><tr>
-                        <td class="signature-cell"><div class="signature-header-item">Dibuat Oleh</div><div class="signature-space">@if($p->qcVerifier) @php $q=\SimpleSoftwareIO\QrCode\Facades\QrCode::size(55)->generate("Diverifikasi {$p->qcVerifier->name}"); @endphp <img src="data:image/svg+xml;base64,{{ base64_encode($q) }}" class="qr-code-img">@else<div class="signature-line-empty"></div>@endif</div><div class="signature-name">{{ $p->qcVerifier->name??'-' }}</div></td>
-                        <td class="signature-cell"><div class="signature-header-item">Diketahui Oleh</div><div class="signature-space">@if($p->produksiVerifier) @php $q=\SimpleSoftwareIO\QrCode\Facades\QrCode::size(55)->generate("Diverifikasi {$p->produksiVerifier->name}"); @endphp <img src="data:image/svg+xml;base64,{{ base64_encode($q) }}" class="qr-code-img">@else<div class="signature-line-empty"></div>@endif</div><div class="signature-name">{{ $p->produksiVerifier->name??'-' }}</div></td>
-                        <td class="signature-cell"><div class="signature-header-item">Disetujui Oleh</div><div class="signature-space">@if($p->spvVerifier) @php $q=\SimpleSoftwareIO\QrCode\Facades\QrCode::size(55)->generate("Diverifikasi {$p->spvVerifier->name}"); @endphp <img src="data:image/svg+xml;base64,{{ base64_encode($q) }}" class="qr-code-img">@else<div class="signature-line-empty"></div>@endif</div><div class="signature-name">{{ $p->spvVerifier->name??'-' }}</div></td>
-                    </tr></table></div>
-                    @if(!$loop->last || !$loop->parent->last)
-                        <div class="page-break"></div>
-                    @endif
-                @endforeach
+    // Satukan semua record V2
+    if ($isAllShift && !empty($dataPerShift)) {
+        $allRecords = collect();
+        foreach ($dataPerShift as $group) {
+            $allRecords = $allRecords->merge($group['pemeriksaans'] ?? []);
+        }
+    } else {
+        $allRecords = collect($pemeriksaans ?? []);
+    }
 
-                @if(!$loop->last)
-                    <div class="page-break"></div>
-                @endif
-            @endforeach
-        @endif
+    $firstRecord = $allRecords->first();
+    $plantName = ($firstRecord && $firstRecord->user && $firstRecord->user->plant)
+        ? ($firstRecord->user->plant->plant ?? 'MEDAN')
+        : 'MEDAN';
 
-        @else
-        {{-- ======= MODE: SHIFT TUNGGAL (existing) ======= --}}
-        @foreach(($pemeriksaans ?? []) as $idx => $p)
-            {{-- Header di setiap record (otomatis juga di page baru karena page-break) --}}
-            <div class="header">
-                <div class="header-left">
-                    <div class="logo-company">
-                        <div class="header-logo">
-                            <img src="{{ public_path('dist/images/logo/cpi-logo.png') }}" alt="Logo">
-                        </div>
-                        <div class="header-company">
-                            <h2>PT. CHAROEN POKPHAND INDONESIA</h2>
-                            <p>FOOD DIVISION {{ strtoupper($plantName) }}</p>
-                            <p>{{ strtoupper($plantName) }} - INDONESIA</p>
-                        </div>
-                    </div>
+    $tanggalMin = $allRecords->min(fn ($p) => $p->tanggal);
+    $tanggalMax = $allRecords->max(fn ($p) => $p->tanggal);
+    $periodeStr = $tanggalMin && $tanggalMax
+        ? ($tanggalMin->format('d/m/Y') . ' - ' . $tanggalMax->format('d/m/Y'))
+        : '-';
+
+    $sectionDefsV2 = [
+        'suhu_cold_storage'          => ['label' => 'Cold Storage', 'type' => 'multi'],
+        'suhu_anteroom_loading'      => ['label' => 'Anteroom Loading', 'type' => 'multi'],
+        'suhu_pre_loading'           => ['label' => 'Pre Loading', 'type' => 'single'],
+        'suhu_prestaging'            => ['label' => 'Prestaging', 'type' => 'single'],
+        'suhu_anteroom_ekspansi_abf' => ['label' => 'Anteroom Ekspansi ABF', 'type' => 'single'],
+        'suhu_chillroom_rm'          => ['label' => 'Chillroom RM', 'type' => 'single'],
+        'suhu_chillroom_domestik'    => ['label' => 'Chillroom Domestik', 'type' => 'single'],
+    ];
+
+    $pickValue = function ($val, $key) {
+        if ($val === null || $val === '' || $val === []) return '-';
+        if (is_array($val)) return $val[$key] ?? '-';
+        return (string) $val;
+    };
+
+    $rows = [];
+    $no = 1;
+
+    foreach ($allRecords as $p) {
+        $tanggalStr = $p->tanggal ? $p->tanggal->format('d/m/Y') : '-';
+        $shiftStr = $p->shift->shift ?? '-';
+        $qcStr = $p->qcVerifier->name ?? ($p->user->name ?? '-');
+        $groupStr = optional(optional($p->user)->group)->name ?? '-';
+
+        $defaultJam = null;
+        if (!empty($p->pukul)) {
+            try {
+                $defaultJam = \Carbon\Carbon::parse($p->pukul)->format('H:i');
+            } catch (\Throwable $e) {
+                $defaultJam = (string) $p->pukul;
+            }
+        } elseif ($p->created_at) {
+            $defaultJam = $p->created_at->format('H:i');
+        }
+
+        foreach ($sectionDefsV2 as $fieldKey => $secDef) {
+            $valData = $p->$fieldKey ?? null;
+            if (is_string($valData) && !empty($valData)) {
+                $valData = json_decode($valData, true);
+            }
+            if (empty($valData)) continue;
+
+            if ($secDef['type'] === 'multi' && is_array($valData)) {
+                foreach ($valData as $uKey => $item) {
+                    if (!is_array($item)) continue;
+                    $unitName = $item['unit'] ?? (is_string($uKey) ? $uKey : '');
+                    $rows[] = [
+                        'no' => $no++,
+                        'tanggal' => $tanggalStr,
+                        'shift' => $shiftStr,
+                        'time' => $defaultJam ?? '-',
+                        'qc' => $qcStr,
+                        'group' => $groupStr,
+                        'area' => trim($secDef['label'] . ' ' . $unitName),
+                        'setting' => $pickValue($item, 'setting'),
+                        'aktual' => $pickValue($item, 'actual'),
+                        'display' => $pickValue($item, 'display'),
+                    ];
+                }
+            } else {
+                $rows[] = [
+                    'no' => $no++,
+                    'tanggal' => $tanggalStr,
+                    'shift' => $shiftStr,
+                    'time' => $defaultJam ?? '-',
+                    'qc' => $qcStr,
+                    'group' => $groupStr,
+                    'area' => $secDef['label'],
+                    'setting' => $pickValue($valData, 'setting'),
+                    'aktual' => $pickValue($valData, 'actual'),
+                    'display' => $pickValue($valData, 'display'),
+                ];
+            }
+        }
+    }
+
+    $lastRecord = $allRecords->last();
+    $rowsPerChunk = 20;
+    $rowChunks = collect($rows)->chunk($rowsPerChunk);
+@endphp
+
+@if($rowChunks->isEmpty())
+    <div class="header">
+        <div class="header-left">
+            <div class="logo-company">
+                <div class="header-logo">
+                    <img src="{{ public_path('dist/images/logo/cpi-logo.png') }}" alt="Logo">
                 </div>
-                <div class="header-right">
-                    <div class="header-title">
-                        <h1>PEMERIKSAAN SUHU PRODUK DAN SUHU RUANG PENYIMPANAN</h1>
-                    </div>
+                <div class="header-company">
+                    <h2>PT. CHAROEN POKPHAND INDONESIA</h2>
+                    <p>FOOD DIVISION {{ strtoupper($plantName) }}</p>
+                    <p>{{ strtoupper($plantName) }} - INDONESIA</p>
                 </div>
             </div>
-            @php
-                $plantName = $p->user && $p->user->plant ? $p->user->plant->plant : '-';
-                $shiftName = $p->shift ? ($p->shift->shift ?? '-') : '-';
-                $produkName = $p->produk ? ($p->produk->nama_produk ?? '-') : '-';
-                $kategori = $p->produk ? ($p->produk->kategori_code ?? null) : null;
-
-                $cold = is_array($p->suhu_cold_storage) ? $p->suhu_cold_storage : (json_decode($p->suhu_cold_storage ?? '[]', true) ?: []);
-                $anteroom = is_array($p->suhu_anteroom_loading) ? $p->suhu_anteroom_loading : (json_decode($p->suhu_anteroom_loading ?? '[]', true) ?: []);
-
-                $pre = is_array($p->suhu_pre_loading) ? $p->suhu_pre_loading : (json_decode($p->suhu_pre_loading ?? '[]', true) ?: []);
-                $prestaging = is_array($p->suhu_prestaging) ? $p->suhu_prestaging : (json_decode($p->suhu_prestaging ?? '[]', true) ?: []);
-                $abf = is_array($p->suhu_anteroom_ekspansi_abf) ? $p->suhu_anteroom_ekspansi_abf : (json_decode($p->suhu_anteroom_ekspansi_abf ?? '[]', true) ?: []);
-                $rm = is_array($p->suhu_chillroom_rm) ? $p->suhu_chillroom_rm : (json_decode($p->suhu_chillroom_rm ?? '[]', true) ?: []);
-                $dom = is_array($p->suhu_chillroom_domestik) ? $p->suhu_chillroom_domestik : (json_decode($p->suhu_chillroom_domestik ?? '[]', true) ?: []);
-
-                $hasAny = false;
-            @endphp
-
-            <div class="subheader">
-                <table class="subheader-table">
-                    <tr>
-                        <td class="subheader-label">Tanggal</td>
-                        <td>{{ $p->tanggal ? $p->tanggal->format('d/m/Y') : '-' }}</td>
-                        
-                    </tr>
-                    <tr>
-                        <td class="subheader-label">Shift</td>
-                        <td>{{ $shiftName }}</td>
-                    </tr>
-                    <!-- <tr>
-                        <td class="subheader-label">Pukul</td>
-                        <td>{{ $p->pukul ?? '-' }}</td>
-                    </tr> -->
-                    <tr>
-                        <td class="subheader-label">Suhu Produk</td>
-                        <td style="font-weight: bold;">{{ $p->suhu_produk ?? '-' }}</td>
-                    </tr>
-                    <tr>
-                        <td class="subheader-label">Produk</td>
-                        <td>
-                            @if($kategori)
-                                <span>{{ $kategori }} - {{ $produkName }}</span>
-                            @else
-                                <span>{{ $produkName }}</span>
-                            @endif
-                        </td>
-                        <!-- <td class="subheader-label">Status</td>
-                        <td>{{ $p->status_verifikasi ?? 'pending' }}</td> -->
-                    </tr>
-                </table>
+        </div>
+        <div class="header-right">
+            <div class="header-title"><h1>PEMERIKSAAN SUHU PRODUK DAN SUHU RUANG PENYIMPANAN</h1></div>
+        </div>
+    </div>
+    <div class="empty-state">Tidak ada data untuk periode / filter yang dipilih.</div>
+@else
+    @foreach($rowChunks as $chunkIndex => $chunkRows)
+        {{-- Header KOP --}}
+        <div class="header">
+            <div class="header-left">
+                <div class="logo-company">
+                    <div class="header-logo">
+                        <img src="{{ public_path('dist/images/logo/cpi-logo.png') }}" alt="Logo">
+                    </div>
+                    <div class="header-company">
+                        <h2>PT. CHAROEN POKPHAND INDONESIA</h2>
+                        <p>FOOD DIVISION {{ strtoupper($plantName) }}</p>
+                        <p>{{ strtoupper($plantName) }} - INDONESIA</p>
+                    </div>
+                </div>
             </div>
+            <div class="header-right">
+                <div class="header-title"><h1>PEMERIKSAAN SUHU PRODUK DAN SUHU RUANG PENYIMPANAN</h1></div>
+            </div>
+        </div>
 
-            @php
-                $renderUnitTable = function ($title, $units, $defaultJam = null, $unitJamMap = []) use (&$hasAny) {
-                    $rows = [];
-                    $hasJam = false;
-                    $hasSetting = false;
-                    $hasDisplay = false;
-                    $hasActual = false;
-
-                    if (is_array($units)) {
-                        foreach ($units as $unitKey => $item) {
-                            $jam = null;
-                            if (is_array($item)) {
-                                $jam = $item['jam'] ?? null;
-                            }
-                            if (($jam === null || $jam === '') && is_array($unitJamMap) && array_key_exists((string) $unitKey, $unitJamMap)) {
-                                $jam = $unitJamMap[(string) $unitKey];
-                            }
-                            if (($jam === null || $jam === '') && ($defaultJam !== null && $defaultJam !== '')) {
-                                $jam = $defaultJam;
-                            }
-                            $setting = is_array($item) ? ($item['setting'] ?? null) : null;
-                            $display = is_array($item) ? ($item['display'] ?? null) : null;
-                            $actual = is_array($item) ? ($item['actual'] ?? null) : null;
-
-                            // Jam tidak boleh memicu tampilnya row/section.
-                            $isFilledTemp = !empty($setting) || !empty($display) || !empty($actual) || $setting === '0' || $display === '0' || $actual === '0';
-                            if (!$isFilledTemp) {
-                                continue;
-                            }
-
-                            $hasJam = $hasJam || ($jam !== null && $jam !== '');
-                            $hasSetting = $hasSetting || ($setting !== null && $setting !== '');
-                            $hasDisplay = $hasDisplay || ($display !== null && $display !== '');
-                            $hasActual = $hasActual || ($actual !== null && $actual !== '');
-
-                            $rows[] = [
-                                'unit' => $unitKey,
-                                'jam' => $jam,
-                                'setting' => $setting,
-                                'display' => $display,
-                                'actual' => $actual,
-                            ];
-                        }
-                    }
-
-                    if (count($rows) === 0) {
-                        return '';
-                    }
-
-                    $hasAny = true;
-
-                    ob_start();
-                    echo '<div class="section-title">' . e($title) . '</div>';
-                    echo '<table class="data">';
-                    echo '<thead><tr>';
-                    echo '<th style="width: 14%">Unit</th>';
-                    if ($hasJam) { echo '<th style="width: 16%">Jam</th>'; }
-                    if ($hasSetting) { echo '<th>Setting</th>'; }
-                    if ($hasDisplay) { echo '<th>Display</th>'; }
-                    if ($hasActual) { echo '<th>Actual</th>'; }
-                    echo '</tr></thead>';
-                    echo '<tbody>';
-                    foreach ($rows as $r) {
-                        echo '<tr>';
-                        echo '<td>' . e((string) $r['unit']) . '</td>';
-                        if ($hasJam) { echo '<td>' . e((string) ($r['jam'] ?? '')) . '</td>'; }
-                        if ($hasSetting) { echo '<td>' . e((string) ($r['setting'] ?? '')) . '</td>'; }
-                        if ($hasDisplay) { echo '<td>' . e((string) ($r['display'] ?? '')) . '</td>'; }
-                        if ($hasActual) { echo '<td>' . e((string) ($r['actual'] ?? '')) . '</td>'; }
-                        echo '</tr>';
-                    }
-                    echo '</tbody></table>';
-                    return ob_get_clean();
-                };
-
-                $render3Col = function ($title, $data, $defaultJam = null) use (&$hasAny) {
-                    $jam = is_array($data) ? ($data['jam'] ?? null) : null;
-                    if (($jam === null || $jam === '') && ($defaultJam !== null && $defaultJam !== '')) {
-                        $jam = $defaultJam;
-                    }
-                    $setting = is_array($data) ? ($data['setting'] ?? null) : null;
-                    $display = is_array($data) ? ($data['display'] ?? null) : null;
-                    $actual = is_array($data) ? ($data['actual'] ?? null) : null;
-
-                    // Jam tidak boleh memicu tampilnya section.
-                    $isFilledTemp = !empty($setting) || !empty($display) || !empty($actual) || $setting === '0' || $display === '0' || $actual === '0';
-                    if (!$isFilledTemp) {
-                        return '';
-                    }
-
-                    $hasAny = true;
-                    $hasJam = ($jam !== null && $jam !== '');
-                    $hasSetting = ($setting !== null && $setting !== '');
-                    $hasDisplay = ($display !== null && $display !== '');
-                    $hasActual = ($actual !== null && $actual !== '');
-
-                    ob_start();
-                    echo '<div class="section-title">' . e($title) . '</div>';
-                    echo '<table class="data">';
-                    echo '<thead><tr>';
-                    if ($hasJam) { echo '<th style="width: 16%">Jam</th>'; }
-                    if ($hasSetting) { echo '<th>Setting</th>'; }
-                    if ($hasDisplay) { echo '<th>Display</th>'; }
-                    if ($hasActual) { echo '<th>Actual</th>'; }
-                    echo '</tr></thead>';
-                    echo '<tbody><tr>';
-                    if ($hasJam) { echo '<td>' . e((string) ($jam ?? '')) . '</td>'; }
-                    if ($hasSetting) { echo '<td>' . e((string) ($setting ?? '')) . '</td>'; }
-                    if ($hasDisplay) { echo '<td>' . e((string) ($display ?? '')) . '</td>'; }
-                    if ($hasActual) { echo '<td>' . e((string) ($actual ?? '')) . '</td>'; }
-                    echo '</tr></tbody></table>';
-                    return ob_get_clean();
-                };
-            @endphp
-
-            @php
-                $defaultJam = $p->created_at ? $p->created_at->format('H:i') : null;
-
-                $unitJamCold = [];
-                $unitJamAnteroom = [];
-
-                $histories = [];
-                if ($p->relationLoaded('histories') && $p->histories) {
-                    $histories = $p->histories;
-                }
-
-                $isSame = function ($a, $b) {
-                    return json_encode($a) === json_encode($b);
-                };
-
-                foreach ($histories as $h) {
-                    $hJam = $h->created_at ? $h->created_at->format('H:i') : null;
-
-                    // Cold Storage per unit
-                    $coldLama = $h->suhu_cold_storage_lama ?? [];
-                    $coldBaru = $h->suhu_cold_storage_baru ?? [];
-                    $coldKeys = array_unique(array_merge(array_keys((array) $coldLama), array_keys((array) $coldBaru)));
-                    foreach ($coldKeys as $k) {
-                        $kk = (string) $k;
-                        if (array_key_exists($kk, $unitJamCold)) {
-                            continue;
-                        }
-                        $a = is_array($coldLama) ? ($coldLama[$k] ?? null) : null;
-                        $b = is_array($coldBaru) ? ($coldBaru[$k] ?? null) : null;
-                        if (!$isSame($a, $b) && $hJam) {
-                            $unitJamCold[$kk] = $hJam;
-                        }
-                    }
-
-                    // Anteroom Loading per unit
-                    $antLama = $h->suhu_anteroom_loading_lama ?? [];
-                    $antBaru = $h->suhu_anteroom_loading_baru ?? [];
-                    $antKeys = array_unique(array_merge(array_keys((array) $antLama), array_keys((array) $antBaru)));
-                    foreach ($antKeys as $k) {
-                        $kk = (string) $k;
-                        if (array_key_exists($kk, $unitJamAnteroom)) {
-                            continue;
-                        }
-                        $a = is_array($antLama) ? ($antLama[$k] ?? null) : null;
-                        $b = is_array($antBaru) ? ($antBaru[$k] ?? null) : null;
-                        if (!$isSame($a, $b) && $hJam) {
-                            $unitJamAnteroom[$kk] = $hJam;
-                        }
-                    }
-                }
-            @endphp
-            
-            {{-- Tabel per ruangan ditiadakan karena format riwayat di bawah sudah melengkappi data initial (input pertama) --}}
-
-            {{-- Data & Riwayat Pemeriksaan Table --}}
-            <div class="section-title">Data & Riwayat Pemeriksaan</div>
-            <table class="data">
-                <thead>
-                    <tr>
-                        <th style="width: 5%">No</th>
-                        <th style="width: 25%">Lokasi</th>
-                        <th style="width: 35%">Sebelumnya</th>
-                        <th style="width: 35%">Sesudahnya</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @php
-                        $histNo = 1;
-                        $suhuFieldsConfig = [
-                            'suhu_cold_storage' => 'Cold Storage',
-                            'suhu_anteroom_loading' => 'Anteroom Loading',
-                            'suhu_pre_loading' => 'Pre Loading',
-                            'suhu_prestaging' => 'Prestaging',
-                            'suhu_anteroom_ekspansi_abf' => 'Anteroom Ekspansi ABF',
-                            'suhu_chillroom_rm' => 'Chillroom RM',
-                            'suhu_chillroom_domestik' => 'Chillroom Domestik',
-                        ];
-
-                        $renderVal = function($val) {
-                            if ($val === null || $val === '' || $val === []) return '-';
-                            if (is_array($val)) {
-                                $parts = [];
-                                if (isset($val['setting'])) $parts[] = 'setting: ' . $val['setting'];
-                                if (isset($val['display'])) $parts[] = 'display: ' . $val['display'];
-                                if (isset($val['actual'])) $parts[] = 'actual: ' . $val['actual'];
-                                return !empty($parts) ? implode('; ', $parts) : '-';
-                            }
-                            return (string) $val;
-                        };
-
-                        $firstHistory = $p->histories->sortBy('created_at')->first();
-                        $initialTime = $p->created_at->format('d/m/Y H:i');
-
-                        $getInitialVal = function($field) use ($firstHistory, $p) {
-                            $oldField = $field . '_lama';
-                            if ($firstHistory) {
-                                $val = $firstHistory->$oldField;
-                                if (is_string($val) && !empty($val)) {
-                                    $decoded = json_decode($val, true);
-                                    return (json_last_error() === JSON_ERROR_NONE) ? $decoded : $val;
-                                }
-                                return $val;
-                            }
-                            return $p->$field;
-                        };
-                        
-                        // Ambil nilai Pukul dari history pertama
-                        $initialPukul = '-';
-                        if ($firstHistory && isset($firstHistory->pukul_lama)) {
-                            $initialPukul = $firstHistory->pukul_lama;
-                        } elseif ($p->pukul) {
-                            $initialPukul = $p->pukul;
-                        }
-                    @endphp
-
-                    {{-- 1. Tampilkan Data Input Pertama (Initial State) --}}
-                    <tr>
-                        <td colspan="4" style="background: #f8f9fa; font-weight: bold; font-size: 9px; color: #555; text-align: center; border-bottom: 1px solid #dee2e6;">
-                            --- INPUT DATA PERTAMA ---
-                        </td>
-                    </tr>
-                    {{-- Baris Pukul untuk Input Pertama --}}
-                    @if($initialPukul && $initialPukul !== '-')
-                        <tr>
-                            <td style="text-align: center;"></td>
-                            <td>Pukul</td>
-                            <td style="background: #fff3cd; text-align: center;">-</td>
-                            <td style="background: #d4edda;">{{ $initialPukul }}</td>
-                        </tr>
-                    @endif
-
-                    @foreach($suhuFieldsConfig as $field => $label)
-                        @php $secData = $getInitialVal($field); @endphp
-                        @if(!empty($secData))
-                            @if(in_array($field, ['suhu_cold_storage', 'suhu_anteroom_loading']))
-                                @foreach($secData as $uKey => $item)
-                                    <tr>
-                                        <td style="text-align: center;">{{ $histNo++ }}</td>
-                                        <td>{{ $label }} {{ $uKey }}</td>
-                                        <td style="background: #fff3cd; text-align: center;">-</td>
-                                        <td style="background: #d4edda;">{{ $renderVal($item) }}</td>
-                                    </tr>
-                                @endforeach
-                            @else
-                                <tr>
-                                    <td style="text-align: center;">{{ $histNo++ }}</td>
-                                    <td>{{ $label }}</td>
-                                    <td style="background: #fff3cd; text-align: center;">-</td>
-                                    <td style="background: #d4edda;">{{ $renderVal($secData) }}</td>
-                                </tr>
-                            @endif
-                        @endif
-                    @endforeach
-
-                    {{-- 2. Tampilkan Riwayat Perubahan (History) --}}
-                    @if($p->relationLoaded('histories') && $p->histories && $p->histories->count() > 0)
-                        <tr>
-                            <td colspan="4" style="background: #f8f9fa; font-weight: bold; font-size: 9px; color: #c41e3a; text-align: center; border-top: 2px solid #dee2e6; border-bottom: 1px solid #dee2e6;">
-                                --- RIWAYAT PERUBAHAN / UPDATE ---
-                            </td>
-                        </tr>
-                        @foreach($p->histories->sortBy('created_at') as $history)
-                            @php
-                                $hTime = $history->created_at ? $history->created_at->format('d/m/Y H:i') : '-';
-                                $changes = [];
-
-                                // Pukul
-                                if (($history->pukul_lama ?? null) != ($history->pukul_baru ?? null)) {
-                                    $changes[] = ['lokasi' => 'Pukul', 'lama' => $history->pukul_lama ?? '(Kosong)', 'baru' => $history->pukul_baru ?? '(Kosong)'];
-                                }
-
-                                // Keterangan
-                                if (($history->keterangan_lama ?? null) != ($history->keterangan_baru ?? null)) {
-                                    $changes[] = ['lokasi' => 'Keterangan', 'lama' => $history->keterangan_lama ?? '(Kosong)', 'baru' => $history->keterangan_baru ?? '(Kosong)'];
-                                }
-
-                                // Tindakan Koreksi
-                                if (($history->tindakan_koreksi_lama ?? null) != ($history->tindakan_koreksi_baru ?? null)) {
-                                    $changes[] = ['lokasi' => 'Tindakan Koreksi', 'lama' => $history->tindakan_koreksi_lama ?? '(Kosong)', 'baru' => $history->tindakan_koreksi_baru ?? '(Kosong)'];
-                                }
-
-                                // Suhu Fields
-                                foreach ($suhuFieldsConfig as $field => $label) {
-                                    $oldField = $field . '_lama';
-                                    $newField = $field . '_baru';
-                                    $oldValue = $history->$oldField ?? null;
-                                    $newValue = $history->$newField ?? null;
-
-                                    if (is_string($oldValue) && !empty($oldValue)) {
-                                        $decoded = json_decode($oldValue, true);
-                                        $oldValue = (json_last_error() === JSON_ERROR_NONE) ? $decoded : null;
-                                    }
-                                    if (is_string($newValue) && !empty($newValue)) {
-                                        $decoded = json_decode($newValue, true);
-                                        $newValue = (json_last_error() === JSON_ERROR_NONE) ? $decoded : null;
-                                    }
-                                    
-                                    if (is_object($oldValue)) { $oldValue = json_decode(json_encode($oldValue), true); }
-                                    if (is_object($newValue)) { $newValue = json_decode(json_encode($newValue), true); }
-
-                                    $oldArray = is_array($oldValue) ? $oldValue : [];
-                                    $newArray = is_array($newValue) ? $newValue : [];
-
-                                    if (empty($oldArray) && empty($newArray)) continue;
-
-                                    if (in_array($field, ['suhu_cold_storage', 'suhu_anteroom_loading'])) {
-                                        $allUnits = array_unique(array_merge(array_keys($oldArray), array_keys($newArray)));
-                                        foreach ($allUnits as $uKey) {
-                                            $oldItem = $oldArray[$uKey] ?? null;
-                                            $newItem = $newArray[$uKey] ?? null;
-                                            if (json_encode($oldItem) === json_encode($newItem)) continue;
-
-                                            $changes[] = ['lokasi' => $label . ' ' . $uKey, 'lama' => $renderVal($oldItem), 'baru' => $renderVal($newItem)];
-                                        }
-                                    } else {
-                                        if (json_encode($oldArray) !== json_encode($newArray)) {
-                                            $changes[] = ['lokasi' => $label, 'lama' => $renderVal($oldArray), 'baru' => $renderVal($newArray)];
-                                        }
-                                    }
-                                }
-                            @endphp
-
-                            @foreach($changes as $cIdx => $change)
-                                @php
-                                    $isPukul = (strcasecmp($change['lokasi'] ?? '', 'pukul') === 0);
-                                @endphp
-                                <tr>
-                                    <td style="text-align: center;">{{ $isPukul ? '' : $histNo++ }}</td>
-                                    <td>{{ $change['lokasi'] }}</td>
-                                    <td style="background: #fff3cd;">{{ $change['lama'] }}</td>
-                                    <td style="background: #d4edda;">{{ $change['baru'] }}</td>
-                                </tr>
-                            @endforeach
-                        @endforeach
-                    @endif
-                </tbody>
+        {{-- Subheader --}}
+        <div class="subheader">
+            <table class="subheader-table">
+                <tr>
+                    <td class="subheader-label">Plant</td>
+                    <td>{{ $plantName }}</td>
+                    <td class="subheader-label">Periode</td>
+                    <td>{{ $periodeStr }}</td>
+                </tr>
+                <tr>
+                    <td class="subheader-label">Total Baris</td>
+                    <td>{{ count($rows) }}</td>
+                    <td class="subheader-label">Halaman</td>
+                    <td>{{ $chunkIndex + 1 }} / {{ $rowChunks->count() }}</td>
+                </tr>
             </table>
+        </div>
 
-            @if(!empty($p->keterangan) || !empty($p->tindakan_koreksi))
-                <div class="section-title">Keterangan / Tindakan Koreksi</div>
-                <table class="data">
-                    <tbody>
-                        @if(!empty($p->keterangan))
-                            <tr>
-                                <td style="width: 25%"><strong>Keterangan</strong></td>
-                                <td>{{ $p->keterangan }}</td>
-                            </tr>
-                        @endif
-                        @if(!empty($p->tindakan_koreksi))
-                            <tr>
-                                <td style="width: 25%"><strong>Tindakan Koreksi</strong></td>
-                                <td>{{ $p->tindakan_koreksi }}</td>
-                            </tr>
-                        @endif
-                    </tbody>
-                </table>
-            @endif
-            
-            <div style="text-align: right; padding-right: 10px; font-style: italic; font-size: 9px; color: #666; margin-top: 5px;">
-                QW 06/00
-            </div>
+        <div class="section-title">Data Pemeriksaan Suhu Ruang</div>
 
+        {{-- Tabel Data Rekap --}}
+        <table class="data-simple">
+            <thead>
+                <tr>
+                    <th style="width:4%">No</th>
+                    <th style="width:9%">Tanggal</th>
+                    <th style="width:5%">Shift</th>
+                    <th style="width:6%">Time</th>
+                    <th style="width:13%">QC</th>
+                    <!-- <th style="width:5%">Group</th> -->
+                    <th style="width:16%">Area</th>
+                    <th style="width:14%">Setting Suhu Ruang (&deg;C)</th>
+                    <th style="width:14%">Aktual Suhu Ruang (&deg;C)</th>
+                    <th style="width:14%">Display Suhu Ruang (&deg;C)</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($chunkRows as $row)
+                    <tr>
+                        <td class="center">{{ $row['no'] }}</td>
+                        <td class="center">{{ $row['tanggal'] }}</td>
+                        <td class="center">{{ $row['shift'] }}</td>
+                        <td class="center">{{ $row['time'] }}</td>
+                        <td>{{ $row['qc'] }}</td>
+                        <!-- <td class="center">{{ $row['group'] }}</td> -->
+                        <td>{{ $row['area'] }}</td>
+                        <td class="center">{{ $row['setting'] }}</td>
+                        <td class="center">{{ $row['aktual'] }}</td>
+                        <td class="center">{{ $row['display'] }}</td>
+                    </tr>
+                @endforeach
+            </tbody>
+        </table>
+
+        <div style="text-align: right; padding-right: 10px; font-style: italic; font-size: 8.5px; color: #666; margin-top: 4px;">
+            QW 06/00
+        </div>
+
+        {{-- Blok TTD tiap halaman --}}
+        @if($lastRecord)
             <div class="signature">
                 <table class="signature-table">
                     <tr>
                         <td class="signature-cell">
                             <div class="signature-header-item">Dibuat Oleh</div>
                             <div class="signature-space">
-                                @if($p->qcVerifier)
+                                @if($lastRecord->qcVerifier || $lastRecord->user)
                                     @php
-                                        $qcQrData = "Dokumen ini telah diverifikasi secara sistem oleh {$p->qcVerifier->name} (Tim QC)";
-                                        $qcQrCodeSvg = \SimpleSoftwareIO\QrCode\Facades\QrCode::size(55)->generate($qcQrData);
-                                        $base64QcSvg = "data:image/svg+xml;base64," . base64_encode($qcQrCodeSvg);
+                                        $qcNameStr = $lastRecord->qcVerifier->name ?? $lastRecord->user->name;
+                                        $qcQrCodeSvg = \SimpleSoftwareIO\QrCode\Facades\QrCode::size(50)->generate("Diverifikasi oleh {$qcNameStr} (QC)");
                                     @endphp
-                                    <img src="{{ $base64QcSvg }}" class="qr-code-img" alt="QR Code QC">
+                                    <img src="data:image/svg+xml;base64,{{ base64_encode($qcQrCodeSvg) }}" class="qr-code-img" alt="QR Code QC">
                                 @else
                                     <div class="signature-line-empty"></div>
                                 @endif
                             </div>
-                            <div class="signature-name">{{ $p->qcVerifier->name ?? '-' }}</div>
+                            <div class="signature-name">{{ $lastRecord->qcVerifier->name ?? $lastRecord->user->name ?? '-' }}</div>
                         </td>
                         <td class="signature-cell">
                             <div class="signature-header-item">Diketahui Oleh</div>
                             <div class="signature-space">
-                                @if($p->produksiVerifier)
+                                @if($lastRecord->produksiVerifier)
                                     @php
-                                        $prodQrData = "Dokumen ini telah diverifikasi secara sistem oleh {$p->produksiVerifier->name} (Tim Warehouse)";
-                                        $prodQrCodeSvg = \SimpleSoftwareIO\QrCode\Facades\QrCode::size(55)->generate($prodQrData);
-                                        $base64ProdSvg = "data:image/svg+xml;base64," . base64_encode($prodQrCodeSvg);
+                                        $prodQrCodeSvg = \SimpleSoftwareIO\QrCode\Facades\QrCode::size(50)->generate("Diverifikasi oleh {$lastRecord->produksiVerifier->name} (Warehouse)");
                                     @endphp
-                                    <img src="{{ $base64ProdSvg }}" class="qr-code-img" alt="QR Code Warehouse">
+                                    <img src="data:image/svg+xml;base64,{{ base64_encode($prodQrCodeSvg) }}" class="qr-code-img" alt="QR Code Warehouse">
                                 @else
                                     <div class="signature-line-empty"></div>
                                 @endif
                             </div>
-                            <div class="signature-name">{{ $p->produksiVerifier->name ?? '-' }}</div>
+                            <div class="signature-name">{{ $lastRecord->produksiVerifier->name ?? '-' }}</div>
                         </td>
                         <td class="signature-cell">
                             <div class="signature-header-item">Disetujui Oleh</div>
                             <div class="signature-space">
-                                @if($p->spvVerifier)
+                                @if($lastRecord->spvVerifier)
                                     @php
-                                        $spvQrData = "Dokumen ini telah diverifikasi secara sistem oleh {$p->spvVerifier->name} (Tim Supervisor QC)";
-                                        $spvQrCodeSvg = \SimpleSoftwareIO\QrCode\Facades\QrCode::size(55)->generate($spvQrData);
-                                        $base64SpvSvg = "data:image/svg+xml;base64," . base64_encode($spvQrCodeSvg);
+                                        $spvQrCodeSvg = \SimpleSoftwareIO\QrCode\Facades\QrCode::size(50)->generate("Diverifikasi oleh {$lastRecord->spvVerifier->name} (SPV QC)");
                                     @endphp
-                                    <img src="{{ $base64SpvSvg }}" class="qr-code-img" alt="QR Code SPV">
+                                    <img src="data:image/svg+xml;base64,{{ base64_encode($spvQrCodeSvg) }}" class="qr-code-img" alt="QR Code SPV">
                                 @else
                                     <div class="signature-line-empty"></div>
                                 @endif
                             </div>
-                            <div class="signature-name">{{ $p->spvVerifier->name ?? '-' }}</div>
+                            <div class="signature-name">{{ $lastRecord->spvVerifier->name ?? '-' }}</div>
                         </td>
                     </tr>
                 </table>
             </div>
+        @endif
 
-            @if($idx < (count($pemeriksaans ?? []) - 1))
-                <div class="page-break"></div>
-            @endif
-        @endforeach
-        @endif {{-- end isAllShift --}}
-    </div>
+        {{-- Page break jika bukan halaman terakhir --}}
+        @if(!$loop->last)
+            <div class="page-break"></div>
+        @endif
+    @endforeach
+@endif
+
+</div>
 </body>
 </html>
