@@ -534,7 +534,7 @@
                                                             <div class="col-md-6">
                                                                 <div class="form-group">
                                                                     <label class="form-label">Foto Produk</label>
-                                                                    <input type="file" name="image_finish_good[]" class="form-control" accept="image/*" capture="camera" onchange="handleImageInputChange(this)">
+                                                                    <input type="file" name="image_finish_good[]" class="form-control" accept="image/*" onchange="handleImageInputChange(this)">
                                                                     <small class="form-text text-muted">Maksimal 3MB. Gambar &gt; 3MB akan dikompres otomatis.</small>
                                                                     @error('image_finish_good.0')
                                                                         <div class="invalid-feedback d-block">{{ $message }}</div>
