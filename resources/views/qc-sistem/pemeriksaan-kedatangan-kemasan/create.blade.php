@@ -708,7 +708,7 @@
                                                             <div class="col-md-6">
                                                                 <div class="form-group">
                                                                     <label class="form-label">Gambar Kemasan</label>
-                                                                    <input type="file" name="image_kemasan[]" class="form-control image-kemasan-input" accept="image/*" capture="camera">
+                                                                    <input type="file" name="image_kemasan[]" class="form-control image-kemasan-input" accept="image/*">
                                                                     @error('image_kemasan.0')
                                                                         <div class="invalid-feedback d-block">{{ $message }}</div>
                                                                     @enderror
@@ -1386,7 +1386,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                 <div class="col-md-6">
                                     <div class="form-group">
                                         <label class="form-label">Gambar Kemasan</label>
-                                        <input type="file" name="image_kemasan[]" class="form-control image-kemasan-input" accept="image/*" capture="camera">
+                                        <input type="file" name="image_kemasan[]" class="form-control image-kemasan-input" accept="image/*">
                                     </div>
                                 </div>
                             </div>
