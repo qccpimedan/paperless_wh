@@ -98,6 +98,7 @@
                                             </div>
                                         </div>
                                     </div>
+                                @endif
                                 <!-- Pukul Changes -->
                                 @if($history->pukul_lama !== $history->pukul_baru)
                                     <div class="mb-3">
