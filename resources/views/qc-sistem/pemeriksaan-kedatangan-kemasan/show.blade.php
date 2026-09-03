@@ -126,6 +126,7 @@
                         $cetakans = json_decode($pemeriksaanKedatanganKemasan->cetakan_array ?? '[]', true) ?? [];
                         $ketebalan_microns = json_decode($pemeriksaanKedatanganKemasan->ketebalan_micron_array ?? '[]', true) ?? [];
                         $dimensis = json_decode($pemeriksaanKedatanganKemasan->dimensi_array ?? '[]', true) ?? [];
+                        $berats = json_decode($pemeriksaanKedatanganKemasan->berat_array ?? '[]', true) ?? [];
                         $statuses = json_decode($pemeriksaanKedatanganKemasan->status_array ?? '[]', true) ?? [];
                         $logo_halals = json_decode($pemeriksaanKedatanganKemasan->logo_halal_array ?? '[]', true) ?? [];
                         $dokumen_halals = json_decode($pemeriksaanKedatanganKemasan->dokumen_halal_array ?? '[]', true) ?? [];
@@ -267,6 +268,7 @@
                                                     <tr><td width="40%"><strong>Spesifikasi:</strong></td><td>{{ $spesifikasis[$index] ?? '-' }}</td></tr>
                                                     <tr><td><strong>Ketebalan (Micron):</strong></td><td>{{ $ketebalan_microns[$index] ?? '-' }}</td></tr>
                                                     <tr><td><strong>Dimensi:</strong></td><td>{{ $dimensis[$index] ?? '-' }}</td></tr>
+                                                    <tr><td><strong>Berat:</strong></td><td>{{ $berats[$index] ?? '-' }}</td></tr>
                                                 </table>
                                             </div>
                                         </div>

@@ -333,6 +333,7 @@ return view('qc-sistem.pemeriksaan-kedatangan-kemasan.index', compact('pemeriksa
             'cetakan.*' => 'nullable|in:0,1',
             'ketebalan_micron.*' => 'nullable|numeric',
             'dimensi.*' => 'nullable|string|max:255',
+            'berat.*' => 'nullable|string|max:255',
             'status.*' => 'nullable|in:Release,Hold,Retur',
             'logo_halal.*' => 'nullable|in:0,1',
             'dokumen_halal.*' => 'nullable|in:0,1',
@@ -374,6 +375,7 @@ return view('qc-sistem.pemeriksaan-kedatangan-kemasan.index', compact('pemeriksa
         $cetakans = array_values((array) $request->input('cetakan', []));
         $ketebalan_microns = $request->input('ketebalan_micron', []);
         $dimensis = $request->input('dimensi', []);
+        $berats = $request->input('berat', []);
         $statuses = $request->input('status', []);
         $logo_halals = array_values((array) $request->input('logo_halal', []));
         $dokumen_halals = array_values((array) $request->input('dokumen_halal', []));
@@ -446,6 +448,7 @@ return view('qc-sistem.pemeriksaan-kedatangan-kemasan.index', compact('pemeriksa
             'cetakan_array' => json_encode(is_array($cetakans) ? $cetakans : []),
             'ketebalan_micron_array' => json_encode(is_array($ketebalan_microns) ? $ketebalan_microns : []),
             'dimensi_array' => json_encode(is_array($dimensis) ? $dimensis : []),
+            'berat_array' => json_encode(is_array($berats) ? $berats : []),
             'status_array' => json_encode(is_array($statuses) ? $statuses : []),
             'logo_halal_array' => json_encode(is_array($logo_halals) ? $logo_halals : []),
             'dokumen_halal_array' => json_encode(is_array($dokumen_halals) ? $dokumen_halals : []),
@@ -644,6 +647,7 @@ return view('qc-sistem.pemeriksaan-kedatangan-kemasan.index', compact('pemeriksa
             'cetakan.*' => 'nullable|in:0,1',
             'ketebalan_micron.*' => 'nullable|numeric',
             'dimensi.*' => 'nullable|string|max:255',
+            'berat.*' => 'nullable|string|max:255',
             'status.*' => 'nullable|in:Release,Hold,Retur',
             'logo_halal.*' => 'nullable|in:0,1',
             'dokumen_halal.*' => 'nullable|in:0,1',
@@ -685,6 +689,7 @@ return view('qc-sistem.pemeriksaan-kedatangan-kemasan.index', compact('pemeriksa
         $cetakans = array_values((array) $request->input('cetakan', []));
         $ketebalan_microns = $request->input('ketebalan_micron', []);
         $dimensis = $request->input('dimensi', []);
+        $berats = $request->input('berat', []);
         $statuses = $request->input('status', []);
         $logo_halals = array_values((array) $request->input('logo_halal', []));
         $dokumen_halals = array_values((array) $request->input('dokumen_halal', []));
@@ -771,6 +776,7 @@ return view('qc-sistem.pemeriksaan-kedatangan-kemasan.index', compact('pemeriksa
             'cetakan_array' => json_encode(is_array($cetakans) ? $cetakans : []),
             'ketebalan_micron_array' => json_encode(is_array($ketebalan_microns) ? $ketebalan_microns : []),
             'dimensi_array' => json_encode(is_array($dimensis) ? $dimensis : []),
+            'berat_array' => json_encode(is_array($berats) ? $berats : []),
             'status_array' => json_encode(is_array($statuses) ? $statuses : []),
             'logo_halal_array' => json_encode(is_array($logo_halals) ? $logo_halals : []),
             'dokumen_halal_array' => json_encode(is_array($dokumen_halals) ? $dokumen_halals : []),

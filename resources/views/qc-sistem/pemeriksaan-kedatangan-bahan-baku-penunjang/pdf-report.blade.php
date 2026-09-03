@@ -558,6 +558,7 @@
                                         @if(isset($kf_v['warna']))<div class="f-row"><span class="f-label">Warna:</span><span class="f-value">{{ $kf_v['warna'] ? 'V' : 'X' }}</span></div>@endif
                                         @if(isset($kf_v['benda_asing']))<div class="f-row"><span class="f-label">B.Asing:</span><span class="f-value">{{ $kf_v['benda_asing'] ? 'V' : 'X' }}</span></div>@endif
                                         @if(isset($kf_v['aroma']))<div class="f-row"><span class="f-label">Aroma:</span><span class="f-value">{{ $kf_v['aroma'] ? 'V' : 'X' }}</span></div>@endif
+                                        @if(!empty($kf_v['allergen']))<div class="f-row"><span class="f-label" style="width:60px;">Allergen:</span><span class="f-value" style="font-weight:bold;">{{ $kf_v['allergen'] }}</span></div>@endif
                                     @endif
                                     @php
                                         $lh_v = (json_decode($p->logo_halal_array ?? '[]', true) ?? [])[$ri] ?? null;
@@ -927,6 +928,7 @@
                                 @if(isset($kf_v['warna']))<div class="f-row"><span class="f-label">Warna:</span><span class="f-value">{{ $kf_v['warna'] ? 'V' : 'X' }}</span></div>@endif
                                 @if(isset($kf_v['benda_asing']))<div class="f-row"><span class="f-label">B.Asing:</span><span class="f-value">{{ $kf_v['benda_asing'] ? 'V' : 'X' }}</span></div>@endif
                                 @if(isset($kf_v['aroma']))<div class="f-row"><span class="f-label">Aroma:</span><span class="f-value">{{ $kf_v['aroma'] ? 'V' : 'X' }}</span></div>@endif
+                                @if(!empty($kf_v['allergen']))<div class="f-row"><span class="f-label" style="width:60px;">Allergen:</span><span class="f-value" style="font-weight:bold;">{{ $kf_v['allergen'] }}</span></div>@endif
                             @endif
 
                             @php
