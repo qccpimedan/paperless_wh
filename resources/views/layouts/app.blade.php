@@ -490,16 +490,12 @@
         <!-- Top Navbar -->
         <nav class="navbar navbar-expand-lg navbar-light bg-white bg-body-tertiary shadow-sm sticky-top" style="border-bottom: 1px solid #e3e6f0;">
             <div class="container-fluid">
-                <!-- Breadcrumb -->
+                <!-- Breadcrumb & Logo -->
                 <div class="d-flex align-items-center flex-grow-1">
-                        <div class="logo">
-                    <img src="{{ asset('dist/images/logo/logo7.png') }}" alt="Logo" style="width: 135px; height: auto;">
-                </div>
-                    <!-- <nav aria-label="breadcrumb">
-                        <ol class="breadcrumb mb-0 small">
-                            <li class="breadcrumb-item"><a href="{{ route('dashboard') }}" class="text-decoration-none">Dashboard</a></li>
-                        </ol>
-                    </nav> -->
+                    <div class="logo d-flex align-items-center gap-2">
+                        <img src="{{ asset('dist/images/logo/revisi_logo.png') }}" alt="Logo" style="width: 165px; height: auto;">
+                        <span class="badge bg-primary text-white rounded-pill px-2 py-1" style="font-size: 0.65rem; font-weight: 600; letter-spacing: 0.5px;">v1.5.3</span>
+                    </div>
                 </div>
 
                 <!-- Right Side Items -->

@@ -193,10 +193,10 @@
                                                         <i class="bi bi-clock-history"></i>
                                                     </a>
                                                     @endcan
-                                                    <a href="{{ route('pemeriksaan-suhu-ruang.print-pdf', $item->uuid) }}" 
+                                                    <!-- <a href="{{ route('pemeriksaan-suhu-ruang.print-pdf', $item->uuid) }}" 
                                                         class="btn btn-sm btn-danger" title="Cetak PDF" target="_blank">
                                                         <i class="bi bi-file-earmark-text"></i>
-                                                    </a>
+                                                    </a> -->
                                                 </div>
                                             </td>
                                         </tr>
