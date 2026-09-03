@@ -40,6 +40,15 @@
         'suhu_ruang_seasoning' => 'Ruang Seasoning',
     ];
 
+    $formatJam = function ($time) {
+        if (empty($time) || $time === '-') return '-';
+        try {
+            return \Carbon\Carbon::parse($time)->format('H:i');
+        } catch (\Throwable $e) {
+            return substr((string) $time, 0, 5);
+        }
+    };
+
     $pickValue = function ($val, $key) {
         if ($val === null || $val === '' || $val === []) return '-';
         if (is_array($val)) return $val[$key] ?? '-';
@@ -83,15 +92,11 @@
 
         $initialTime = '-';
         if ($firstHistory && isset($firstHistory->pukul_lama) && !empty($firstHistory->pukul_lama)) {
-            $initialTime = $firstHistory->pukul_lama;
+            $initialTime = $formatJam($firstHistory->pukul_lama);
         } elseif ($firstHistory && $firstHistory->created_at) {
             $initialTime = $firstHistory->created_at->format('H:i');
         } elseif (!empty($p->pukul)) {
-            try {
-                $initialTime = \Carbon\Carbon::parse($p->pukul)->format('H:i');
-            } catch (\Throwable $e) {
-                $initialTime = (string) $p->pukul;
-            }
+            $initialTime = $formatJam($p->pukul);
         } elseif ($p->created_at) {
             $initialTime = $p->created_at->format('H:i');
         }
@@ -136,9 +141,9 @@
         foreach ($histories as $history) {
             $hJam = '-';
             if (!empty($history->pukul_baru)) {
-                $hJam = $history->pukul_baru;
+                $hJam = $formatJam($history->pukul_baru);
             } elseif (!empty($history->pukul_lama)) {
-                $hJam = $history->pukul_lama;
+                $hJam = $formatJam($history->pukul_lama);
             } elseif ($history->created_at) {
                 $hJam = $history->created_at->format('H:i');
             }
