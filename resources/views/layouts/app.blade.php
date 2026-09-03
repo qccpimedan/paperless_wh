@@ -483,6 +483,33 @@
             margin-right: 8px;
             font-size: 0.8rem;
         }
+
+        /* ===== BADGE VERSION ANIMATION (Glow & Shimmer Lighting) ===== */
+        .badge-animated-version {
+            background: linear-gradient(135deg, #0d6efd 0%, #08b478ff 35%, #0fb3d3ff 70%, #0d6efd 100%);
+            background-size: 200% 200%;
+            animation: versionGlow 3s ease infinite, versionPulse 2s ease-in-out infinite alternate;
+            box-shadow: 0 0 8px rgba(13, 110, 253, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            display: inline-block;
+        }
+
+        @keyframes versionGlow {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+/* 
+        @keyframes versionPulse {
+            0% {
+                box-shadow: 0 0 4px rgba(13, 110, 253, 0.4), 0 0 8px rgba(111, 66, 193, 0.3);
+                transform: scale(1);
+            }
+            100% {
+                box-shadow: 0 0 10px rgba(13, 202, 240, 0.8), 0 0 16px rgba(13, 110, 253, 0.6);
+                transform: scale(1.05);
+            }
+        } */
     </style>
 </head>
 <body>
@@ -494,7 +521,7 @@
                 <div class="d-flex align-items-center flex-grow-1">
                     <div class="logo d-flex align-items-center gap-2">
                         <img src="{{ asset('dist/images/logo/revisi_logo.png') }}" alt="Logo" style="width: 165px; height: auto;">
-                        <span class="badge bg-primary text-white rounded-pill px-2 py-1" style="font-size: 0.65rem; font-weight: 600; letter-spacing: 0.5px;">v1.5.3</span>
+                        <span class="badge badge-animated-version text-white rounded-pill px-2 py-1" style="font-size: 0.65rem; font-weight: 700; letter-spacing: 0.5px;">v1.5.3</span>
                     </div>
                 </div>
 

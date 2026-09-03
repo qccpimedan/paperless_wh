@@ -9,7 +9,7 @@
         </div>
 
         <div class="sidebar-menu">
-            <ul class="menu pt-3" data-accordion="true">
+            <ul class="menu pt-2" data-accordion="true">
                 <li class="sidebar-title">Menu</li>
 
                 <li class="sidebar-item {{ request()->routeIs('dashboard') ? 'active' : '' }}">
@@ -141,7 +141,7 @@
                 </li>
                 @endif
 
-                <li class="sidebar-title">Forms QC SISTEM</li>
+                <!-- <li class="sidebar-title">Form QC SYSTEM</li> -->
 
                 {{-- Forms QC - For Superadmin, Admin, SPV QC, QC Inspector, Produksi, Manager --}}
                 @if($userRole === 'superadmin' || $userRole === 'admin' || $userRole === 'spv qc' || $userRole === 'qc inspector' || $userRole === 'produksi' || $isManagerUser)
