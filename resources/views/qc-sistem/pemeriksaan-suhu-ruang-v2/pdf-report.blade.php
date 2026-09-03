@@ -95,25 +95,58 @@
     $rows = [];
     $no = 1;
 
+    $isSameV2 = fn ($a, $b) => json_encode($a) === json_encode($b);
+
+    $findUnitRowV2 = function ($rowsData, $unit) {
+        if (!is_array($rowsData)) return null;
+        foreach ($rowsData as $uKey => $r) {
+            if (is_array($r) && ((string)($r['unit'] ?? '') === (string)$unit || (string)$uKey === (string)$unit)) {
+                return $r;
+            }
+        }
+        return null;
+    };
+
     foreach ($allRecords as $p) {
         $tanggalStr = $p->tanggal ? $p->tanggal->format('d/m/Y') : '-';
         $shiftStr = $p->shift->shift ?? '-';
         $qcStr = $p->qcVerifier->name ?? ($p->user->name ?? '-');
         $groupStr = optional(optional($p->user)->group)->name ?? '-';
 
-        $defaultJam = null;
-        if (!empty($p->pukul)) {
+        $produkName = $p->produk ? ($p->produk->nama_produk ?? '-') : '-';
+        $kategori = $p->produk ? ($p->produk->kategori_code ?? null) : null;
+        $produkStr = $kategori ? "{$kategori} - {$produkName}" : $produkName;
+        $suhuProdukStr = $p->suhu_produk ?? '-';
+
+        $histories = ($p->relationLoaded('histories') && $p->histories) ? $p->histories->sortBy('created_at') : collect();
+        $firstHistory = $histories->first();
+
+        // 1. Ambil Data Input Pertama (Initial State)
+        $initialSuhuProduk = ($firstHistory && !empty($firstHistory->suhu_produk_lama)) 
+            ? $firstHistory->suhu_produk_lama 
+            : $suhuProdukStr;
+
+        $initialTime = '-';
+        if ($firstHistory && isset($firstHistory->pukul_lama) && !empty($firstHistory->pukul_lama)) {
+            $initialTime = $firstHistory->pukul_lama;
+        } elseif ($firstHistory && $firstHistory->created_at) {
+            $initialTime = $firstHistory->created_at->format('H:i');
+        } elseif (!empty($p->pukul)) {
             try {
-                $defaultJam = \Carbon\Carbon::parse($p->pukul)->format('H:i');
+                $initialTime = \Carbon\Carbon::parse($p->pukul)->format('H:i');
             } catch (\Throwable $e) {
-                $defaultJam = (string) $p->pukul;
+                $initialTime = (string) $p->pukul;
             }
         } elseif ($p->created_at) {
-            $defaultJam = $p->created_at->format('H:i');
+            $initialTime = $p->created_at->format('H:i');
         }
 
         foreach ($sectionDefsV2 as $fieldKey => $secDef) {
-            $valData = $p->$fieldKey ?? null;
+            $initialFieldLamaKey = $fieldKey . '_lama';
+            $valData = ($firstHistory && isset($firstHistory->$initialFieldLamaKey)) 
+                ? $firstHistory->$initialFieldLamaKey 
+                : ($p->$fieldKey ?? null);
+
             if (is_string($valData) && !empty($valData)) {
                 $valData = json_decode($valData, true);
             }
@@ -127,9 +160,11 @@
                         'no' => $no++,
                         'tanggal' => $tanggalStr,
                         'shift' => $shiftStr,
-                        'time' => $defaultJam ?? '-',
+                        'time' => $initialTime,
                         'qc' => $qcStr,
                         'group' => $groupStr,
+                        'produk' => $produkStr,
+                        'suhu_produk' => $initialSuhuProduk,
                         'area' => trim($secDef['label'] . ' ' . $unitName),
                         'setting' => $pickValue($item, 'setting'),
                         'aktual' => $pickValue($item, 'actual'),
@@ -141,14 +176,92 @@
                     'no' => $no++,
                     'tanggal' => $tanggalStr,
                     'shift' => $shiftStr,
-                    'time' => $defaultJam ?? '-',
+                    'time' => $initialTime,
                     'qc' => $qcStr,
                     'group' => $groupStr,
+                    'produk' => $produkStr,
+                    'suhu_produk' => $initialSuhuProduk,
                     'area' => $secDef['label'],
                     'setting' => $pickValue($valData, 'setting'),
                     'aktual' => $pickValue($valData, 'actual'),
                     'display' => $pickValue($valData, 'display'),
                 ];
+            }
+        }
+
+        // 2. Render baris untuk Riwayat Perubahan (Edit Per 2 Jam) jika ada
+        foreach ($histories as $history) {
+            $hJam = '-';
+            if (!empty($history->pukul_baru)) {
+                $hJam = $history->pukul_baru;
+            } elseif (!empty($history->pukul_lama)) {
+                $hJam = $history->pukul_lama;
+            } elseif ($history->created_at) {
+                $hJam = $history->created_at->format('H:i');
+            }
+
+            $hSuhuProduk = !empty($history->suhu_produk_baru) ? $history->suhu_produk_baru : $suhuProdukStr;
+            $userQcName = $history->user ? $history->user->name : $qcStr;
+
+            foreach ($sectionDefsV2 as $fieldKey => $secDef) {
+                $lamaKey = $fieldKey . '_lama';
+                $baruKey = $fieldKey . '_baru';
+
+                $lama = $history->$lamaKey ?? [];
+                $baru = $history->$baruKey ?? [];
+
+                if (is_string($lama)) $lama = json_decode($lama, true) ?: [];
+                if (is_string($baru)) $baru = json_decode($baru, true) ?: [];
+
+                if ($secDef['type'] === 'multi') {
+                    $allUnits = [];
+                    foreach ((array) $lama as $uKey => $r) {
+                        if (is_array($r)) $allUnits[] = (string) ($r['unit'] ?? $uKey);
+                    }
+                    foreach ((array) $baru as $uKey => $r) {
+                        if (is_array($r)) $allUnits[] = (string) ($r['unit'] ?? $uKey);
+                    }
+                    $allUnits = array_unique($allUnits);
+
+                    foreach ($allUnits as $u) {
+                        $oldItem = $findUnitRowV2($lama, $u);
+                        $newItem = $findUnitRowV2($baru, $u);
+
+                        if (!$isSameV2($oldItem, $newItem) && !empty($newItem)) {
+                            $rows[] = [
+                                'no' => $no++,
+                                'tanggal' => $tanggalStr,
+                                'shift' => $shiftStr,
+                                'time' => $hJam,
+                                'qc' => $userQcName,
+                                'group' => $groupStr,
+                                'produk' => $produkStr,
+                                'suhu_produk' => $hSuhuProduk,
+                                'area' => trim($secDef['label'] . ' ' . $u),
+                                'setting' => $pickValue($newItem, 'setting'),
+                                'aktual' => $pickValue($newItem, 'actual'),
+                                'display' => $pickValue($newItem, 'display'),
+                            ];
+                        }
+                    }
+                } else {
+                    if (!$isSameV2($lama, $baru) && !empty($baru)) {
+                        $rows[] = [
+                            'no' => $no++,
+                            'tanggal' => $tanggalStr,
+                            'shift' => $shiftStr,
+                            'time' => $hJam,
+                            'qc' => $userQcName,
+                            'group' => $groupStr,
+                            'produk' => $produkStr,
+                            'suhu_produk' => $hSuhuProduk,
+                            'area' => $secDef['label'],
+                            'setting' => $pickValue($baru, 'setting'),
+                            'aktual' => $pickValue($baru, 'actual'),
+                            'display' => $pickValue($baru, 'display'),
+                        ];
+                    }
+                }
             }
         }
     }
@@ -223,15 +336,16 @@
             <thead>
                 <tr>
                     <th style="width:4%">No</th>
-                    <th style="width:9%">Tanggal</th>
+                    <th style="width:8%">Tanggal</th>
                     <th style="width:5%">Shift</th>
-                    <th style="width:6%">Time</th>
-                    <th style="width:13%">QC</th>
-                    <!-- <th style="width:5%">Group</th> -->
-                    <th style="width:16%">Area</th>
-                    <th style="width:14%">Setting Suhu Ruang (&deg;C)</th>
-                    <th style="width:14%">Aktual Suhu Ruang (&deg;C)</th>
-                    <th style="width:14%">Display Suhu Ruang (&deg;C)</th>
+                    <th style="width:5%">Time</th>
+                    <th style="width:10%">QC</th>
+                    <th style="width:18%">Produk</th>
+                    <th style="width:8%">Suhu Produk (&deg;C)</th>
+                    <th style="width:14%">Area</th>
+                    <th style="width:9.5%">Setting Suhu Ruang (&deg;C)</th>
+                    <th style="width:9.5%">Aktual Suhu Ruang (&deg;C)</th>
+                    <th style="width:9.5%">Display Suhu Ruang (&deg;C)</th>
                 </tr>
             </thead>
             <tbody>
@@ -242,7 +356,8 @@
                         <td class="center">{{ $row['shift'] }}</td>
                         <td class="center">{{ $row['time'] }}</td>
                         <td>{{ $row['qc'] }}</td>
-                        <!-- <td class="center">{{ $row['group'] }}</td> -->
+                        <td>{{ $row['produk'] }}</td>
+                        <td class="center">{{ $row['suhu_produk'] }}</td>
                         <td>{{ $row['area'] }}</td>
                         <td class="center">{{ $row['setting'] }}</td>
                         <td class="center">{{ $row['aktual'] }}</td>

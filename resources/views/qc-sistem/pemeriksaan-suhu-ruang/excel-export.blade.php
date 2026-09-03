@@ -65,57 +65,42 @@
         $qcStr = $p->verifiedByQc->name ?? ($p->user->name ?? '-');
         $groupStr = optional(optional($p->user)->group)->name ?? '-';
 
-        $defaultJam = null;
-        if (!empty($p->pukul)) {
-            try {
-                $defaultJam = \Carbon\Carbon::parse($p->pukul)->format('H:i');
-            } catch (\Throwable $e) {
-                $defaultJam = (string) $p->pukul;
-            }
-        } elseif ($p->created_at) {
-            $defaultJam = $p->created_at->format('H:i');
-        }
+        $produkName = $p->produk ? ($p->produk->nama_produk ?? '-') : '-';
+        $kategori = $p->produk ? ($p->produk->kategori_code ?? null) : null;
+        $produkStr = $kategori ? "{$kategori} - {$produkName}" : $produkName;
+        $suhuProdukStr = $p->suhu_produk ?? '-';
 
         $suhu = is_array($p->suhu_data) ? $p->suhu_data : (json_decode($p->suhu_data ?? '[]', true) ?: []);
-
-        // Jam terakhir tiap lokasi diubah, diambil dari riwayat (jika ada)
-        $unitJam = [];
-        $sectionJam = [];
-
         $histories = ($p->relationLoaded('histories') && $p->histories) ? $p->histories->sortBy('created_at') : collect();
-        foreach ($histories as $h) {
-            $hJam = $h->created_at ? $h->created_at->format('H:i') : null;
-            if (!$hJam) continue;
 
-            $lama = is_array($h->suhu_data_lama) ? $h->suhu_data_lama : (json_decode($h->suhu_data_lama ?? '[]', true) ?: []);
-            $baru = is_array($h->suhu_data_baru) ? $h->suhu_data_baru : (json_decode($h->suhu_data_baru ?? '[]', true) ?: []);
+        // 1. Ambil Data Input Pertama (Initial State)
+        $firstHistory = $histories->first();
+        $initialData = $firstHistory 
+            ? (is_array($firstHistory->suhu_data_lama) ? $firstHistory->suhu_data_lama : (json_decode($firstHistory->suhu_data_lama ?? '[]', true) ?: [])) 
+            : $suhu;
 
-            foreach (['cold_storage', 'anteroom_loading'] as $secKey) {
-                $oldArr = $lama[$secKey] ?? [];
-                $newArr = $baru[$secKey] ?? [];
-                $units = array_unique(array_merge(
-                    array_map(fn ($r) => is_array($r) ? (string) ($r['unit'] ?? '') : '', (array) $oldArr),
-                    array_map(fn ($r) => is_array($r) ? (string) ($r['unit'] ?? '') : '', (array) $newArr)
-                ));
-                foreach ($units as $u) {
-                    if ($u === '') continue;
-                    $a = $findUnitRow($oldArr, $u);
-                    $b = $findUnitRow($newArr, $u);
-                    if (!$isSame($a, $b)) {
-                        $unitJam[$secKey . ':' . $u] = $hJam;
-                    }
-                }
+        $initialSuhuProduk = ($firstHistory && !empty($firstHistory->suhu_produk_lama)) 
+            ? $firstHistory->suhu_produk_lama 
+            : $suhuProdukStr;
+
+        $initialTime = '-';
+        if ($firstHistory && isset($firstHistory->pukul_lama) && !empty($firstHistory->pukul_lama)) {
+            $initialTime = $firstHistory->pukul_lama;
+        } elseif ($firstHistory && $firstHistory->created_at) {
+            $initialTime = $firstHistory->created_at->format('H:i');
+        } elseif (!empty($p->pukul)) {
+            try {
+                $initialTime = \Carbon\Carbon::parse($p->pukul)->format('H:i');
+            } catch (\Throwable $e) {
+                $initialTime = (string) $p->pukul;
             }
-
-            foreach (['pre_loading', 'prestaging', 'anteroom_ekspansi_further', 'anteroom_ekspansi_sausage'] as $secKey) {
-                if (!$isSame($lama[$secKey] ?? null, $baru[$secKey] ?? null)) {
-                    $sectionJam[$secKey] = $hJam;
-                }
-            }
+        } elseif ($p->created_at) {
+            $initialTime = $p->created_at->format('H:i');
         }
 
+        // Render baris untuk Data Input Pertama
         foreach ($sectionLabels as $secKey => $secLabel) {
-            $secData = $suhu[$secKey] ?? [];
+            $secData = $initialData[$secKey] ?? [];
             if (empty($secData)) continue;
 
             if (in_array($secKey, ['cold_storage', 'anteroom_loading'])) {
@@ -125,9 +110,11 @@
                         'no' => $no++,
                         'tanggal' => $tanggalStr,
                         'shift' => $shiftStr,
-                        'time' => $unitJam[$secKey . ':' . $unit] ?? $defaultJam ?? '-',
+                        'time' => $initialTime,
                         'qc' => $qcStr,
                         'group' => $groupStr,
+                        'produk' => $produkStr,
+                        'suhu_produk' => $initialSuhuProduk,
                         'area' => trim($secLabel . ' ' . $unit),
                         'setting' => $pickValue($item, 'setting'),
                         'aktual' => $pickValue($item, 'actual'),
@@ -139,14 +126,87 @@
                     'no' => $no++,
                     'tanggal' => $tanggalStr,
                     'shift' => $shiftStr,
-                    'time' => $sectionJam[$secKey] ?? $defaultJam ?? '-',
+                    'time' => $initialTime,
                     'qc' => $qcStr,
                     'group' => $groupStr,
+                    'produk' => $produkStr,
+                    'suhu_produk' => $initialSuhuProduk,
                     'area' => $secLabel,
                     'setting' => $pickValue($secData, 'setting'),
                     'aktual' => $pickValue($secData, 'actual'),
                     'display' => $pickValue($secData, 'display'),
                 ];
+            }
+        }
+
+        // 2. Render baris untuk Riwayat Perubahan (Edit Per Jam) jika ada
+        foreach ($histories as $history) {
+            $hJam = '-';
+            if (!empty($history->pukul_baru)) {
+                $hJam = $history->pukul_baru;
+            } elseif (!empty($history->pukul_lama)) {
+                $hJam = $history->pukul_lama;
+            } elseif ($history->created_at) {
+                $hJam = $history->created_at->format('H:i');
+            }
+
+            $lama = is_array($history->suhu_data_lama) ? $history->suhu_data_lama : (json_decode($history->suhu_data_lama ?? '[]', true) ?: []);
+            $baru = is_array($history->suhu_data_baru) ? $history->suhu_data_baru : (json_decode($history->suhu_data_baru ?? '[]', true) ?: []);
+
+            $hSuhuProduk = !empty($history->suhu_produk_baru) ? $history->suhu_produk_baru : $suhuProdukStr;
+            $userQcName = $history->user ? $history->user->name : $qcStr;
+
+            foreach ($sectionLabels as $secKey => $secLabel) {
+                $oldSection = $lama[$secKey] ?? [];
+                $newSection = $baru[$secKey] ?? [];
+
+                if (in_array($secKey, ['cold_storage', 'anteroom_loading'])) {
+                    $allUnits = [];
+                    foreach ((array) $oldSection as $r) { if (is_array($r) && isset($r['unit'])) $allUnits[] = (string) $r['unit']; }
+                    foreach ((array) $newSection as $r) { if (is_array($r) && isset($r['unit'])) $allUnits[] = (string) $r['unit']; }
+                    $allUnits = array_unique($allUnits);
+
+                    foreach ($allUnits as $u) {
+                        $oldItem = $findUnitRow($oldSection, $u);
+                        $newItem = $findUnitRow($newSection, $u);
+
+                        // Masukkan ke tabel jika ada perubahan data pada unit ini
+                        if (!$isSame($oldItem, $newItem) && !empty($newItem)) {
+                            $rows[] = [
+                                'no' => $no++,
+                                'tanggal' => $tanggalStr,
+                                'shift' => $shiftStr,
+                                'time' => $hJam,
+                                'qc' => $userQcName,
+                                'group' => $groupStr,
+                                'produk' => $produkStr,
+                                'suhu_produk' => $hSuhuProduk,
+                                'area' => trim($secLabel . ' ' . $u),
+                                'setting' => $pickValue($newItem, 'setting'),
+                                'aktual' => $pickValue($newItem, 'actual'),
+                                'display' => $pickValue($newItem, 'display'),
+                            ];
+                        }
+                    }
+                } else {
+                    // Section tunggal
+                    if (!$isSame($oldSection, $newSection) && !empty($newSection)) {
+                        $rows[] = [
+                            'no' => $no++,
+                            'tanggal' => $tanggalStr,
+                            'shift' => $shiftStr,
+                            'time' => $hJam,
+                            'qc' => $userQcName,
+                            'group' => $groupStr,
+                            'produk' => $produkStr,
+                            'suhu_produk' => $hSuhuProduk,
+                            'area' => $secLabel,
+                            'setting' => $pickValue($newSection, 'setting'),
+                            'aktual' => $pickValue($newSection, 'actual'),
+                            'display' => $pickValue($newSection, 'display'),
+                        ];
+                    }
+                }
             }
         }
     }
@@ -164,12 +224,12 @@
                 <img src="{{ $logoPath }}" width="42" height="42" style="display:block; margin:0 auto;" alt="Logo CPI">
             </td>
             @endif
-            <td colspan="{{ $logoExists ? 4 : 5 }}" style="vertical-align:middle; border:1px solid #adb5bd; background-color:#ffffff; padding:10px 14px;">
+            <td colspan="{{ $logoExists ? 5 : 6 }}" style="vertical-align:middle; border:1px solid #adb5bd; background-color:#ffffff; padding:10px 14px;">
                 <span style="font-size:12pt; font-weight:bold; color:#c41e3a; letter-spacing:0.5px;">PT. CHAROEN POKPHAND INDONESIA</span><br>
                 <span style="font-size:9pt; color:#555555;">FOOD DIVISION {{ strtoupper($plantName) }}</span><br>
                 <span style="font-size:9pt; color:#555555;">{{ strtoupper($plantName) }} - INDONESIA</span>
             </td>
-            <td colspan="4" style="text-align:center; vertical-align:middle; border:1px solid #adb5bd; background-color:#ffffff; padding:10px 14px;">
+            <td colspan="5" style="text-align:center; vertical-align:middle; border:1px solid #adb5bd; background-color:#ffffff; padding:10px 14px;">
                 <span style="font-size:12pt; font-weight:bold; color:#1a1a1a; letter-spacing:0.5px;">PEMERIKSAAN SUHU PRODUK DAN SUHU RUANG PENYIMPANAN</span>
             </td>
         </tr>
@@ -180,13 +240,13 @@
         <tbody>
             <tr>
                 <td colspan="2" style="font-weight:600; background-color:#e9ecef; border:1px solid #adb5bd; padding:5px 8px; font-size:9pt;">Plant</td>
-                <td colspan="3" style="background-color:#ffffff; border:1px solid #adb5bd; padding:5px 8px; font-size:9pt;">{{ $plantName }}</td>
+                <td colspan="4" style="background-color:#ffffff; border:1px solid #adb5bd; padding:5px 8px; font-size:9pt;">{{ $plantName }}</td>
                 <td colspan="2" style="font-weight:600; background-color:#e9ecef; border:1px solid #adb5bd; padding:5px 8px; font-size:9pt;">Periode</td>
-                <td colspan="2" style="background-color:#ffffff; border:1px solid #adb5bd; padding:5px 8px; font-size:9pt;">{{ $periodeStr }}</td>
+                <td colspan="3" style="background-color:#ffffff; border:1px solid #adb5bd; padding:5px 8px; font-size:9pt;">{{ $periodeStr }}</td>
             </tr>
             <tr>
                 <td colspan="2" style="font-weight:600; background-color:#e9ecef; border:1px solid #adb5bd; padding:5px 8px; font-size:9pt;">Total Baris</td>
-                <td colspan="7" style="background-color:#ffffff; border:1px solid #adb5bd; padding:5px 8px; font-size:9pt;">{{ count($rows) }}</td>
+                <td colspan="9" style="background-color:#ffffff; border:1px solid #adb5bd; padding:5px 8px; font-size:9pt;">{{ count($rows) }}</td>
             </tr>
         </tbody>
     </table>
@@ -201,6 +261,8 @@
                 <th style="background-color:#f1f3f5; color:#1a1a1a; font-size:9pt; font-weight:bold; padding:6px 8px; border:1px solid #333333; text-align:center;">Shift</th>
                 <th style="background-color:#f1f3f5; color:#1a1a1a; font-size:9pt; font-weight:bold; padding:6px 8px; border:1px solid #333333; text-align:center;">Time</th>
                 <th style="background-color:#f1f3f5; color:#1a1a1a; font-size:9pt; font-weight:bold; padding:6px 8px; border:1px solid #333333; text-align:left;">QC</th>
+                <th style="background-color:#f1f3f5; color:#1a1a1a; font-size:9pt; font-weight:bold; padding:6px 8px; border:1px solid #333333; text-align:left;">Produk</th>
+                <th style="background-color:#f1f3f5; color:#1a1a1a; font-size:9pt; font-weight:bold; padding:6px 8px; border:1px solid #333333; text-align:center;">Suhu Produk (&deg;C)</th>
                 <th style="background-color:#f1f3f5; color:#1a1a1a; font-size:9pt; font-weight:bold; padding:6px 8px; border:1px solid #333333; text-align:left;">Area</th>
                 <th style="background-color:#f1f3f5; color:#1a1a1a; font-size:9pt; font-weight:bold; padding:6px 8px; border:1px solid #333333; text-align:center;">Setting Suhu Ruang (&deg;C)</th>
                 <th style="background-color:#f1f3f5; color:#1a1a1a; font-size:9pt; font-weight:bold; padding:6px 8px; border:1px solid #333333; text-align:center;">Aktual Suhu Ruang (&deg;C)</th>
@@ -210,7 +272,7 @@
         <tbody>
             @if(empty($rows))
                 <tr>
-                    <td colspan="9" style="text-align:center; padding:20px; color:#6c757d; font-style:italic;">Tidak ada data untuk periode / filter yang dipilih.</td>
+                    <td colspan="11" style="text-align:center; padding:20px; color:#6c757d; font-style:italic;">Tidak ada data untuk periode / filter yang dipilih.</td>
                 </tr>
             @else
                 @foreach($rows as $row)
@@ -220,6 +282,8 @@
                         <td style="text-align:center; padding:5px 8px; border:1px solid #333333; font-size:9pt;">{{ $row['shift'] }}</td>
                         <td style="text-align:center; padding:5px 8px; border:1px solid #333333; font-size:9pt;">{{ $row['time'] }}</td>
                         <td style="text-align:left; padding:5px 8px; border:1px solid #333333; font-size:9pt;">{{ $row['qc'] }}</td>
+                        <td style="text-align:left; padding:5px 8px; border:1px solid #333333; font-size:9pt;">{{ $row['produk'] }}</td>
+                        <td style="text-align:center; padding:5px 8px; border:1px solid #333333; font-size:9pt;">{{ $row['suhu_produk'] }}</td>
                         <td style="text-align:left; padding:5px 8px; border:1px solid #333333; font-size:9pt;">{{ $row['area'] }}</td>
                         <td style="text-align:center; padding:5px 8px; border:1px solid #333333; font-size:9pt;">{{ $row['setting'] }}</td>
                         <td style="text-align:center; padding:5px 8px; border:1px solid #333333; font-size:9pt;">{{ $row['aktual'] }}</td>

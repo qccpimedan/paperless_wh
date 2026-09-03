@@ -309,6 +309,10 @@ class PemeriksaanSuhuRuangV3Controller extends Controller
         $historyData = [
             'id_pemeriksaan_suhu_ruang_v3' => $pemeriksaan->id,
             'id_user' => Auth::id(),
+            'pukul_lama' => $pemeriksaan->pukul,
+            'pukul_baru' => $newData['pukul'] ?? null,
+            'suhu_produk_lama' => $pemeriksaan->suhu_produk,
+            'suhu_produk_baru' => $newData['suhu_produk'] ?? null,
             'keterangan_lama' => $pemeriksaan->keterangan,
             'keterangan_baru' => $newData['keterangan'] ?? null,
             'tindakan_koreksi_lama' => $pemeriksaan->tindakan_koreksi,

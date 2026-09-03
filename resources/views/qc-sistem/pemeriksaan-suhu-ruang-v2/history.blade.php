@@ -280,7 +280,9 @@
                                 </div>
 
                                 @if($history->keterangan_lama === $history->keterangan_baru && 
-                                    $history->tindakan_koreksi_lama === $history->tindakan_koreksi_baru)
+                                    $history->tindakan_koreksi_lama === $history->tindakan_koreksi_baru &&
+                                    $history->pukul_lama === $history->pukul_baru &&
+                                    $history->suhu_produk_lama === $history->suhu_produk_baru)
                                     <div class="alert alert-info">
                                         <i class="bi bi-info-circle"></i> Tidak ada perubahan data pada edit ini
                                     </div>

@@ -98,6 +98,46 @@
                                             </div>
                                         </div>
                                     </div>
+                                <!-- Pukul Changes -->
+                                @if($history->pukul_lama !== $history->pukul_baru)
+                                    <div class="mb-3">
+                                        <h6 class="text-warning"><i class="bi bi-exclamation-circle"></i> Perubahan Pukul</h6>
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <label class="form-label"><strong>Sebelumnya:</strong></label>
+                                                <div class="p-2 rounded" style="background-color: #ffe5e5;">
+                                                    <small>{{ $history->pukul_lama ?? '(Kosong)' }}</small>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="form-label"><strong>Sesudahnya:</strong></label>
+                                                <div class="p-2 rounded" style="background-color: #e5ffe5;">
+                                                    <small>{{ $history->pukul_baru ?? '(Kosong)' }}</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endif
+
+                                <!-- Suhu Produk Changes -->
+                                @if($history->suhu_produk_lama !== $history->suhu_produk_baru)
+                                    <div class="mb-3">
+                                        <h6 class="text-warning"><i class="bi bi-exclamation-circle"></i> Perubahan Suhu Produk</h6>
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <label class="form-label"><strong>Sebelumnya:</strong></label>
+                                                <div class="p-2 rounded" style="background-color: #ffe5e5;">
+                                                    <small>{{ $history->suhu_produk_lama ?? '(Kosong)' }}</small>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="form-label"><strong>Sesudahnya:</strong></label>
+                                                <div class="p-2 rounded" style="background-color: #e5ffe5;">
+                                                    <small>{{ $history->suhu_produk_baru ?? '(Kosong)' }}</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 @endif
 
                                 <!-- Suhu Data Changes -->
@@ -178,7 +218,9 @@
                                 </div>
 
                                 @if($history->keterangan_lama === $history->keterangan_baru && 
-                                    $history->tindakan_koreksi_lama === $history->tindakan_koreksi_baru)
+                                    $history->tindakan_koreksi_lama === $history->tindakan_koreksi_baru &&
+                                    $history->pukul_lama === $history->pukul_baru &&
+                                    $history->suhu_produk_lama === $history->suhu_produk_baru)
                                     <div class="alert alert-info">
                                         <i class="bi bi-info-circle"></i> Tidak ada perubahan data pada edit ini
                                     </div>

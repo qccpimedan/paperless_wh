@@ -246,6 +246,10 @@ class PemeriksaanSuhuRuangController extends Controller
         PemeriksaanSuhuRuangHistory::create([
             'id_pemeriksaan_suhu_ruang' => $pemeriksaanSuhuRuang->id,
             'id_user' => Auth::id(),
+            'pukul_lama' => $pemeriksaanSuhuRuang->pukul,
+            'pukul_baru' => $request->pukul,
+            'suhu_produk_lama' => $pemeriksaanSuhuRuang->suhu_produk,
+            'suhu_produk_baru' => $request->suhu_produk,
             'suhu_data_lama' => $pemeriksaanSuhuRuang->suhu_data,
             'suhu_data_baru' => $suhuData,
             'keterangan_lama' => $pemeriksaanSuhuRuang->keterangan,
