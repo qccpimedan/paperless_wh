@@ -165,6 +165,8 @@ class PemeriksaanKedatanganBahanBakuPenunjang extends Model
             'karung' => 'karung',
             'box' => 'box',
             'lembar' => 'lembar',
+            'liter' => 'liter',
+            'pail' => 'pail',
         ];
     }
 }
