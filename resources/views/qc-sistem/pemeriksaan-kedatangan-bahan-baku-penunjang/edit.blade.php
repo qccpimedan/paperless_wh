@@ -742,6 +742,28 @@
                                                                     </div>
                                                                 </div>
                                                             </div>
+                                                            <div class="row mt-2">
+                                                                <div class="col-md-6">
+                                                                    <div class="mb-3">
+                                                                        <label class="form-label"><strong>Status Allergen</strong></label>
+                                                                        <div class="form-check">
+                                                                            <input class="form-check-input allergen-radio" type="radio"
+                                                                                name="kondisi_fisik_allergen_{{ $produkNo }}_{{ $detailNo + 1 }}"
+                                                                                value="Allergen"
+                                                                                {{ ($kond['allergen'] ?? '') === 'Allergen' ? 'checked' : '' }}>
+                                                                            <label class="form-check-label">Allergen</label>
+                                                                        </div>
+                                                                        <div class="form-check">
+                                                                            <input class="form-check-input allergen-radio" type="radio"
+                                                                                name="kondisi_fisik_allergen_{{ $produkNo }}_{{ $detailNo + 1 }}"
+                                                                                value="Non-Allergen"
+                                                                                {{ ($kond['allergen'] ?? '') === 'Non-Allergen' ? 'checked' : '' }}>
+                                                                            <label class="form-check-label">Non-Allergen</label>
+                                                                        </div>
+                                                                        <input type="hidden" name="kondisi_fisik_allergen[]" value="{{ $kond['allergen'] ?? '' }}">
+                                                                    </div>
+                                                                </div>
+                                                            </div>
                                                         </div>
 
                                                         <div class="form-section mb-3 coa-upload-section">

@@ -675,6 +675,22 @@
                                                                 </div>
                                                             </div>
                                                         </div>
+                                                        <div class="row mt-2">
+                                                            <div class="col-md-6">
+                                                                <div class="mb-3">
+                                                                    <label class="form-label"><strong>Status Allergen</strong></label>
+                                                                    <div class="form-check">
+                                                                        <input class="form-check-input" type="radio" name="kondisi_fisik_allergen_${uniqueId}" id="allergen_ya_${uniqueId}" value="Allergen">
+                                                                        <label class="form-check-label" for="allergen_ya_${uniqueId}">Allergen</label>
+                                                                    </div>
+                                                                    <div class="form-check">
+                                                                        <input class="form-check-input" type="radio" name="kondisi_fisik_allergen_${uniqueId}" id="allergen_tidak_${uniqueId}" value="Non-Allergen">
+                                                                        <label class="form-check-label" for="allergen_tidak_${uniqueId}">Non-Allergen</label>
+                                                                    </div>
+                                                                    <input type="hidden" name="kondisi_fisik_allergen[]" class="radio-value-allergen-${uniqueId}">
+                                                                </div>
+                                                            </div>
+                                                        </div>
                                                     </div>
 
                                                     <div class="form-section mb-3 coa-upload-section">
@@ -2057,6 +2073,22 @@ function addNewRow() {
                     </div>
                 </div>
             </div>
+            <div class="row mt-2">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Status Allergen</strong></label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="kondisi_fisik_allergen_${uniqueId}" id="allergen_ya_${uniqueId}" value="Allergen">
+                            <label class="form-check-label" for="allergen_ya_${uniqueId}">Allergen</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="kondisi_fisik_allergen_${uniqueId}" id="allergen_tidak_${uniqueId}" value="Non-Allergen">
+                            <label class="form-check-label" for="allergen_tidak_${uniqueId}">Non-Allergen</label>
+                        </div>
+                        <input type="hidden" name="kondisi_fisik_allergen[]" class="radio-value-allergen-${uniqueId}">
+                    </div>
+                </div>
+            </div>
         </div>
         
         <!-- Dokumen -->
@@ -2353,6 +2385,15 @@ function setupRadioListeners(row, uniqueId) {
         radio.addEventListener('change', function() {
             if (this.checked) {
                 row.querySelector(`.radio-value-aroma-${uniqueId}`).value = this.value;
+            }
+        });
+    });
+
+    // Kondisi Fisik - Allergen
+    row.querySelectorAll(`input[name="kondisi_fisik_allergen_${uniqueId}"]`).forEach(radio => {
+        radio.addEventListener('change', function() {
+            if (this.checked) {
+                row.querySelector(`.radio-value-allergen-${uniqueId}`).value = this.value;
             }
         });
     });

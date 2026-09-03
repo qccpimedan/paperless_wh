@@ -433,6 +433,7 @@
                                         $cetakans = json_decode($pemeriksaanKedatanganKemasan->cetakan_array ?? '[]', true) ?? [];
                                         $ketebalan_microns = json_decode($pemeriksaanKedatanganKemasan->ketebalan_micron_array ?? '[]', true) ?? [];
                                         $dimensis = json_decode($pemeriksaanKedatanganKemasan->dimensi_array ?? '[]', true) ?? [];
+                                        $berats = json_decode($pemeriksaanKedatanganKemasan->berat_array ?? '[]', true) ?? [];
                                         $statuses = json_decode($pemeriksaanKedatanganKemasan->status_array ?? '[]', true) ?? [];
                                         $logo_halals = json_decode($pemeriksaanKedatanganKemasan->logo_halal_array ?? '[]', true) ?? [];
                                         $dokumen_halals = json_decode($pemeriksaanKedatanganKemasan->dokumen_halal_array ?? '[]', true) ?? [];
@@ -669,41 +670,46 @@
                                                                 </div>
                                                             </div>
 
-                                                            <div class="form-section mb-3">
-                                                                <h6 class="text-primary mb-2">Detail Tambahan</h6>
-                                                                <div class="row">
-                                                                    <div class="col-md-4">
-                                                                        <div class="form-group">
-                                                                            <label class="form-label">Ketebalan (Micron)</label>
-                                                                            <input type="number" step="0.01" class="form-control" name="ketebalan_micron[]" value="{{ $ketebalan_microns[$srcIndex] ?? '' }}" placeholder="Ketebalan">
+                                                                 <div class="form-section mb-3">
+                                                                    <h6 class="text-primary mb-2">Detail Tambahan</h6>
+                                                                    <div class="row">
+                                                                        <div class="col-md-3">
+                                                                            <div class="form-group">
+                                                                                <label class="form-label">Ketebalan (Micron)</label>
+                                                                                <input type="number" step="0.01" class="form-control" name="ketebalan_micron[]" value="{{ $ketebalan_microns[$srcIndex] ?? '' }}" placeholder="Ketebalan">
+                                                                            </div>
                                                                         </div>
-                                                                    </div>
-                                                                    <div class="col-md-4">
-                                                                        <div class="form-group">
-                                                                            <label class="form-label">Dimensi</label>
-                                                                            <input type="text" class="form-control" name="dimensi[]" value="{{ $dimensis[$srcIndex] ?? '' }}" placeholder="Dimensi">
+                                                                        <div class="col-md-3">
+                                                                            <div class="form-group">
+                                                                                <label class="form-label">Dimensi</label>
+                                                                                <input type="text" class="form-control" name="dimensi[]" value="{{ $dimensis[$srcIndex] ?? '' }}" placeholder="Dimensi">
+                                                                            </div>
                                                                         </div>
-                                                                    </div>
-                                                                    <div class="col-md-4">
-                                                                        <div class="form-group">
-                                                                            <label class="form-label">Status</label>
-                                                                            <select class="form-control" name="status[]">
-                                                                                <option value="">Pilih Status</option>
-                                                                                <option value="Hold" {{ ($statuses[$srcIndex] ?? '') == 'Hold' ? 'selected' : '' }}>Hold</option>
-                                                                                <option value="Release" {{ ($statuses[$srcIndex] ?? '') == 'Release' ? 'selected' : '' }}>Release</option>
-                                                                                <option value="Retur" {{ ($statuses[$srcIndex] ?? '') == 'Retur' ? 'selected' : '' }}>Retur</option>
-                                                                                <option value="Retur" {{ ($statuses[$srcIndex] ?? '') == 'Retur' ? 'selected' : '' }}>Retur</option>
-                                                                            </select>
+                                                                        <div class="col-md-3">
+                                                                            <div class="form-group">
+                                                                                <label class="form-label">Berat</label>
+                                                                                <input type="text" class="form-control" name="berat[]" value="{{ $berats[$srcIndex] ?? '' }}" placeholder="Berat (cth: 25 kg / 500 gr)">
+                                                                            </div>
                                                                         </div>
-                                                                    </div>
-                                                                    <div class="col-md-12">
-                                                                        <div class="form-group">
-                                                                            <label class="form-label">Keterangan</label>
-                                                                            <textarea class="form-control" name="keterangan[]" rows="2" placeholder="Keterangan tambahan">{{ $keterangans[$srcIndex] ?? '' }}</textarea>
+                                                                        <div class="col-md-3">
+                                                                            <div class="form-group">
+                                                                                <label class="form-label">Status</label>
+                                                                                <select class="form-control" name="status[]">
+                                                                                    <option value="">Pilih Status</option>
+                                                                                    <option value="Hold" {{ ($statuses[$srcIndex] ?? '') == 'Hold' ? 'selected' : '' }}>Hold</option>
+                                                                                    <option value="Release" {{ ($statuses[$srcIndex] ?? '') == 'Release' ? 'selected' : '' }}>Release</option>
+                                                                                    <option value="Retur" {{ ($statuses[$srcIndex] ?? '') == 'Retur' ? 'selected' : '' }}>Retur</option>
+                                                                                </select>
+                                                                            </div>
+                                                                        </div>
+                                                                        <div class="col-md-12">
+                                                                            <div class="form-group">
+                                                                                <label class="form-label">Keterangan</label>
+                                                                                <textarea class="form-control" name="keterangan[]" rows="2" placeholder="Keterangan tambahan">{{ $keterangans[$srcIndex] ?? '' }}</textarea>
+                                                                            </div>
                                                                         </div>
                                                                     </div>
                                                                 </div>
-                                                            </div>
 
                                                             <div class="form-section mb-3 coa-upload-section">
                                                                 <h6 class="text-primary mb-2">Upload COA</h6>

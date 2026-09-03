@@ -623,7 +623,7 @@
                                                     <div class="form-section mb-3">
                                                         <h6 class="text-primary mb-2">Detail Tambahan</h6>
                                                         <div class="row">
-                                                            <div class="col-md-4">
+                                                            <div class="col-md-3">
                                                                 <div class="form-group">
                                                                     <label class="form-label">Ketebalan (Micron)</label>
                                                                     <input type="number" step="0.01" class="form-control @error('ketebalan_micron.0') is-invalid @enderror" name="ketebalan_micron[]" value="{{ old('ketebalan_micron.0') }}" placeholder="Ketebalan">
@@ -632,7 +632,7 @@
                                                                     @enderror
                                                                 </div>
                                                             </div>
-                                                            <div class="col-md-4">
+                                                            <div class="col-md-3">
                                                                 <div class="form-group">
                                                                     <label class="form-label">Dimensi</label>
                                                                     <input type="text" class="form-control @error('dimensi.0') is-invalid @enderror" name="dimensi[]" value="{{ old('dimensi.0') }}" placeholder="Dimensi">
@@ -641,7 +641,16 @@
                                                                     @enderror
                                                                 </div>
                                                             </div>
-                                                            <div class="col-md-4">
+                                                            <div class="col-md-3">
+                                                                <div class="form-group">
+                                                                    <label class="form-label">Berat</label>
+                                                                    <input type="text" class="form-control @error('berat.0') is-invalid @enderror" name="berat[]" value="{{ old('berat.0') }}" placeholder="Berat (cth: 25 kg / 500 gr)">
+                                                                    @error('berat.0')
+                                                                        <div class="invalid-feedback">{{ $message }}</div>
+                                                                    @enderror
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-md-3">
                                                                 <div class="form-group">
                                                                     <label class="form-label">Status <span class="text-danger">*</span></label>
                                                                     <select class="form-control @error('status.0') is-invalid @enderror" name="status[]">

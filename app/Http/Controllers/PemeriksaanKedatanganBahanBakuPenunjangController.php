@@ -568,8 +568,9 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
             $warnaArray = $request->input('kondisi_fisik_warna', []);
             $bendaAsingArray = $request->input('kondisi_fisik_benda_asing', []);
             $aromaArray = $request->input('kondisi_fisik_aroma', []);
+            $allergenArray = $request->input('kondisi_fisik_allergen', []);
             
-            $rowCount = max(count($kemasanArray), count($warnaArray), count($bendaAsingArray), count($aromaArray));
+            $rowCount = max(count($kemasanArray), count($warnaArray), count($bendaAsingArray), count($aromaArray), count($allergenArray));
             
             for ($i = 0; $i < $rowCount; $i++) {
                 $kondisiFisikArray[] = [
@@ -577,6 +578,7 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
                     'warna' => (isset($warnaArray[$i]) && $warnaArray[$i] === '1') ? true : false,
                     'benda_asing' => (isset($bendaAsingArray[$i]) && $bendaAsingArray[$i] === '1') ? true : false,
                     'aroma' => (isset($aromaArray[$i]) && $aromaArray[$i] === '1') ? true : false,
+                    'allergen' => $allergenArray[$i] ?? null,
                 ];
             }
             $data['kondisi_fisik_array'] = json_encode($kondisiFisikArray);
@@ -632,6 +634,7 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
         unset($data['kondisi_fisik_warna']);
         unset($data['kondisi_fisik_benda_asing']);
         unset($data['kondisi_fisik_aroma']);
+        unset($data['kondisi_fisik_allergen']);
         unset($data['image_bahan_baku']);
         unset($data['file_coa']);
         unset($data['file_coa_img']);
@@ -966,8 +969,9 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
             $warnaArray = $request->input('kondisi_fisik_warna', []);
             $bendaAsingArray = $request->input('kondisi_fisik_benda_asing', []);
             $aromaArray = $request->input('kondisi_fisik_aroma', []);
+            $allergenArray = $request->input('kondisi_fisik_allergen', []);
             
-            $rowCount = max(count($kemasanArray), count($warnaArray), count($bendaAsingArray), count($aromaArray));
+            $rowCount = max(count($kemasanArray), count($warnaArray), count($bendaAsingArray), count($aromaArray), count($allergenArray));
             
             for ($i = 0; $i < $rowCount; $i++) {
                 $kondisiFisikArray[] = [
@@ -975,6 +979,7 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
                     'warna' => (isset($warnaArray[$i]) && $warnaArray[$i] === '1') ? true : false,
                     'benda_asing' => (isset($bendaAsingArray[$i]) && $bendaAsingArray[$i] === '1') ? true : false,
                     'aroma' => (isset($aromaArray[$i]) && $aromaArray[$i] === '1') ? true : false,
+                    'allergen' => $allergenArray[$i] ?? null,
                 ];
             }
             $data['kondisi_fisik_array'] = json_encode($kondisiFisikArray);
@@ -1054,6 +1059,7 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
         unset($data['kondisi_fisik_warna']);
         unset($data['kondisi_fisik_benda_asing']);
         unset($data['kondisi_fisik_aroma']);
+        unset($data['kondisi_fisik_allergen']);
         unset($data['image_bahan_baku']);
         unset($data['file_coa']);
         unset($data['file_coa_img']);

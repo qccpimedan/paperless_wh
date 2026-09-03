@@ -483,6 +483,33 @@
             margin-right: 8px;
             font-size: 0.8rem;
         }
+
+        /* ===== BADGE VERSION ANIMATION (Glow & Shimmer Lighting) ===== */
+        .badge-animated-version {
+            background: linear-gradient(135deg, #0d6efd 0%, #08b478ff 35%, #0fb3d3ff 70%, #0d6efd 100%);
+            background-size: 200% 200%;
+            animation: versionGlow 3s ease infinite, versionPulse 2s ease-in-out infinite alternate;
+            box-shadow: 0 0 8px rgba(13, 110, 253, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            display: inline-block;
+        }
+
+        @keyframes versionGlow {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+/* 
+        @keyframes versionPulse {
+            0% {
+                box-shadow: 0 0 4px rgba(13, 110, 253, 0.4), 0 0 8px rgba(111, 66, 193, 0.3);
+                transform: scale(1);
+            }
+            100% {
+                box-shadow: 0 0 10px rgba(13, 202, 240, 0.8), 0 0 16px rgba(13, 110, 253, 0.6);
+                transform: scale(1.05);
+            }
+        } */
     </style>
 </head>
 <body>
@@ -490,16 +517,12 @@
         <!-- Top Navbar -->
         <nav class="navbar navbar-expand-lg navbar-light bg-white bg-body-tertiary shadow-sm sticky-top" style="border-bottom: 1px solid #e3e6f0;">
             <div class="container-fluid">
-                <!-- Breadcrumb -->
+                <!-- Breadcrumb & Logo -->
                 <div class="d-flex align-items-center flex-grow-1">
-                        <div class="logo">
-                    <img src="{{ asset('dist/images/logo/logo7.png') }}" alt="Logo" style="width: 135px; height: auto;">
-                </div>
-                    <!-- <nav aria-label="breadcrumb">
-                        <ol class="breadcrumb mb-0 small">
-                            <li class="breadcrumb-item"><a href="{{ route('dashboard') }}" class="text-decoration-none">Dashboard</a></li>
-                        </ol>
-                    </nav> -->
+                    <div class="logo d-flex align-items-center gap-2">
+                        <img src="{{ asset('dist/images/logo/revisi_logo.png') }}" alt="Logo" style="width: 165px; height: auto;">
+                        <span class="badge badge-animated-version text-white rounded-pill px-2 py-1" style="font-size: 0.65rem; font-weight: 700; letter-spacing: 0.5px;">v1.5.3</span>
+                    </div>
                 </div>
 
                 <!-- Right Side Items -->
@@ -983,15 +1006,14 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
-@stack('scripts')
 
-<!-- ===== SESSION KEEP-ALIVE & WARNING POPUP (GLOBAL) ===== -->
+<!-- ===== SESSION KEEP-ALIVE & WARNING POPUP (GLOBAL + MULTI-TAB SYNC) ===== -->
 <script>
 (function() {
     // Konfigurasi (sinkron dengan config/session.php lifetime = 480 menit)
     const SESSION_LIFETIME_MS  = 480 * 60 * 1000; // 480 menit (8 jam) — PRODUCTION
     const WARN_BEFORE_MS       = 10  * 60 * 1000;  // Peringatkan 10 menit sebelum expired
-    const KEEPALIVE_INTERVAL   = 15 * 60 * 1000;  // Ping setiap 15 menit (background)
+    const KEEPALIVE_INTERVAL   = 5   * 60 * 1000;  // Ping setiap 5 menit (background)
     const KEEPALIVE_URL        = '{{ route("keep-alive") }}';
 
     let sessionExpiresAt = Date.now() + SESSION_LIFETIME_MS;
@@ -1001,18 +1023,18 @@ document.addEventListener('DOMContentLoaded', function() {
     let popupShown       = false;
     let activityDebounce = null;
 
+    // Multi-tab Broadcast Channel
+    const csrfChannel = typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel('csrf_token_sync_channel') : null;
+
     // ---------- Deteksi aktivitas user ----------
-    // Setiap kali user berinteraksi, reset timer session
     const ACTIVITY_EVENTS = ['mousedown', 'mousemove', 'keydown', 'touchstart', 'scroll', 'click', 'input'];
 
     function onUserActivity() {
-        // Debounce: jangan terlalu sering reset (max 1x per 10 detik)
         if (activityDebounce) return;
         activityDebounce = setTimeout(function() {
             activityDebounce = null;
         }, 10000);
 
-        // Jika popup belum muncul, reset timer
         if (!popupShown) {
             sessionExpiresAt = Date.now() + SESSION_LIFETIME_MS;
             scheduleWarning();
@@ -1039,7 +1061,6 @@ document.addEventListener('DOMContentLoaded', function() {
     `;
     document.body.appendChild(overlay);
 
-    // ---------- CSS inline agar tidak bergantung pada stylesheet ----------
     const style = document.createElement('style');
     style.textContent = `
         #session-warn-overlay {
@@ -1088,7 +1109,6 @@ document.addEventListener('DOMContentLoaded', function() {
     `;
     document.head.appendChild(style);
 
-    // ---------- Helpers ----------
     function formatTime(ms) {
         const total = Math.max(0, Math.floor(ms / 1000));
         const m = Math.floor(total / 60);
@@ -1096,13 +1116,62 @@ document.addEventListener('DOMContentLoaded', function() {
         return m + ':' + String(s).padStart(2, '0');
     }
 
-    function updateCsrfTokens(newToken) {
-        // Update semua input _token di semua form
+    function updateCsrfTokens(newToken, broadcast = true) {
+        if (!newToken) return;
+        
+        // Update semua input _token di halaman ini
         document.querySelectorAll('input[name="_token"]').forEach(el => el.value = newToken);
-        // Update meta tag csrf jika ada
+        
+        // Update meta tag csrf
         const meta = document.querySelector('meta[name="csrf-token"]');
         if (meta) meta.setAttribute('content', newToken);
+
+        if (broadcast) {
+            // Broadcast ke tab lain via BroadcastChannel
+            if (csrfChannel) {
+                try { csrfChannel.postMessage({ type: 'CSRF_REFRESH', token: newToken }); } catch(e){}
+            }
+            // Fallback via localStorage (memicu storage event di tab lain)
+            try {
+                localStorage.setItem('app_latest_csrf_token', newToken);
+                localStorage.setItem('app_csrf_timestamp', Date.now().toString());
+            } catch(e){}
+        }
     }
+
+    // Listen sync dari tab lain (BroadcastChannel)
+    if (csrfChannel) {
+        csrfChannel.onmessage = function(e) {
+            if (e.data && e.data.type === 'CSRF_REFRESH' && e.data.token) {
+                updateCsrfTokens(e.data.token, false);
+                sessionExpiresAt = Date.now() + SESSION_LIFETIME_MS;
+                scheduleWarning();
+            }
+        };
+    }
+
+    // Listen sync dari tab lain (window storage event fallback)
+    window.addEventListener('storage', function(e) {
+        if (e.key === 'app_latest_csrf_token' && e.newValue) {
+            updateCsrfTokens(e.newValue, false);
+            sessionExpiresAt = Date.now() + SESSION_LIFETIME_MS;
+            scheduleWarning();
+        }
+    });
+
+    // Intercept FORM SUBMIT: pastikan token yang dipakai adalah token paling baru sebelum dikirim!
+    document.addEventListener('submit', function(e) {
+        const form = e.target;
+        if (!form || (form.method && form.method.toUpperCase() === 'GET')) return;
+
+        const latestToken = localStorage.getItem('app_latest_csrf_token');
+        if (latestToken) {
+            const tokenInput = form.querySelector('input[name="_token"]');
+            if (tokenInput && tokenInput.value !== latestToken) {
+                tokenInput.value = latestToken;
+            }
+        }
+    }, true);
 
     function refreshSession() {
         fetch(KEEPALIVE_URL, {
@@ -1111,10 +1180,8 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .then(r => r.json())
         .then(data => {
-            if (data.status === 'ok') {
-                // Update CSRF token di seluruh halaman
-                updateCsrfTokens(data.csrf_token);
-                // Reset timer
+            if (data.status === 'ok' && data.csrf_token) {
+                updateCsrfTokens(data.csrf_token, true);
                 sessionExpiresAt = Date.now() + SESSION_LIFETIME_MS;
                 scheduleWarning();
             }
@@ -1126,9 +1193,7 @@ document.addEventListener('DOMContentLoaded', function() {
         popupShown = true;
         overlay.classList.add('show');
 
-        // Mulai countdown
         countdownInterval = setInterval(function() {
-            // Hentikan jika popup sudah ditutup (user klik "Ya")
             if (!popupShown) {
                 clearInterval(countdownInterval);
                 countdownInterval = null;
@@ -1140,7 +1205,6 @@ document.addEventListener('DOMContentLoaded', function() {
             if (remaining <= 0) {
                 clearInterval(countdownInterval);
                 countdownInterval = null;
-                // Session benar-benar expired — redirect ke login
                 window.location.href = '/login';
             }
         }, 1000);
@@ -1149,10 +1213,8 @@ document.addEventListener('DOMContentLoaded', function() {
     function hidePopup() {
         popupShown = false;
         overlay.classList.remove('show');
-        // Hentikan countdown interval
         clearInterval(countdownInterval);
         countdownInterval = null;
-        // PENTING: Cancel expireTimer agar tidak redirect setelah popup ditutup
         clearTimeout(warnTimer);
         clearTimeout(expireTimer);
         warnTimer = null;
@@ -1175,19 +1237,13 @@ document.addEventListener('DOMContentLoaded', function() {
         }, timeUntilExpire);
     }
 
-    // ---------- Tombol "Saya Masih Di Sini" ----------
     document.getElementById('session-stay-btn').addEventListener('click', function() {
-        // Reset waktu expired DULU sebelum apapun
         sessionExpiresAt = Date.now() + SESSION_LIFETIME_MS;
-        // Tutup popup dan hentikan countdown
         hidePopup();
-        // Refresh session di server (background)
         refreshSession();
     });
 
-    // ---------- Tombol "Keluar" ----------
     document.getElementById('session-logout-btn').addEventListener('click', function() {
-        // Submit form logout
         const logoutForm = document.querySelector('form[action*="logout"]');
         if (logoutForm) {
             logoutForm.submit();
@@ -1196,19 +1252,17 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // ---------- Background ping setiap 10 menit ----------
-    // Ini memastikan session tidak expired selama user aktif membuka halaman
+    // Background ping setiap 5 menit
     setInterval(function() {
         if (!popupShown) {
             refreshSession();
         }
     }, KEEPALIVE_INTERVAL);
 
-    // ---------- Mulai timer saat halaman dibuka ----------
     scheduleWarning();
 
 })();
 </script>
-
+@stack('scripts')
 </body>
 </html>

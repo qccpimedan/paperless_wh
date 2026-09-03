@@ -310,6 +310,7 @@
                     $cetakansTmp = json_decode($p->cetakan_array ?? '[]', true) ?? [];
                     $ketebalanMicronsTmp = json_decode($p->ketebalan_micron_array ?? '[]', true) ?? [];
                     $dimensisTmp = json_decode($p->dimensi_array ?? '[]', true) ?? [];
+                    $beratsTmp = json_decode($p->berat_array ?? '[]', true) ?? [];
                     $statusesTmp = json_decode($p->status_array ?? '[]', true) ?? [];
                     $logoHalalsTmp = json_decode($p->logo_halal_array ?? '[]', true) ?? [];
                     $dokumenHalalsTmp = json_decode($p->dokumen_halal_array ?? '[]', true) ?? [];
@@ -331,6 +332,7 @@
                         count($cetakansTmp),
                         count($ketebalanMicronsTmp),
                         count($dimensisTmp),
+                        count($beratsTmp),
                         count($statusesTmp),
                         count($logoHalalsTmp),
                         count($dokumenHalalsTmp),
@@ -620,13 +622,15 @@
                                 @php
                                     $ketebalan_microns = json_decode($pemeriksaan->ketebalan_micron_array ?? '[]', true) ?? [];
                                     $dimensis = json_decode($pemeriksaan->dimensi_array ?? '[]', true) ?? [];
+                                    $berats = json_decode($pemeriksaan->berat_array ?? '[]', true) ?? [];
                                     $statuses = json_decode($pemeriksaan->status_array ?? '[]', true) ?? [];
 
                                     $ketebalan_micron_val = $ketebalan_microns[$rowIndex] ?? null;
                                     $dimensi_val = $dimensis[$rowIndex] ?? null;
+                                    $berat_val = $berats[$rowIndex] ?? null;
                                     $status_val = $statuses[$rowIndex] ?? null;
                                 @endphp
-                                @if($ketebalan_micron_val !== null || $dimensi_val || $status_val)
+                                @if($ketebalan_micron_val !== null || $dimensi_val || $berat_val || $status_val)
                                     <div class="section-title">4. Detail Tambahan</div>
                                     @if($ketebalan_micron_val !== null && $ketebalan_micron_val !== '')
                                         <div class="field-row">
@@ -638,6 +642,12 @@
                                         <div class="field-row">
                                             <span class="field-label">Dimensi:</span>
                                             <span class="field-value">{{ $dimensi_val }}</span>
+                                        </div>
+                                    @endif
+                                    @if($berat_val)
+                                        <div class="field-row">
+                                            <span class="field-label">Berat:</span>
+                                            <span class="field-value">{{ $berat_val }}</span>
                                         </div>
                                     @endif
                                     @if($status_val)
