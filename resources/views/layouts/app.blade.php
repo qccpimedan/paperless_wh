@@ -1263,6 +1263,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 })();
 </script>
+<script src="{{ asset('js/csrf-refresh.js') }}"></script>
 @stack('scripts')
 </body>
 </html>
