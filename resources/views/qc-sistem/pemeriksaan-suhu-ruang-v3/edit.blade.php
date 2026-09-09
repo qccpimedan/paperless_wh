@@ -201,12 +201,213 @@
                                         </div>
                                     </div>
                                 </form>
+
+                                <!-- Riwayat Data Per Jam -->
+                                @php
+                                    $historiesV3 = $pemeriksaanSuhuRuangV3->histories->sortBy('id');
+                                    $timelineRowsV3 = [];
+                                    $noCounterV3 = 1;
+
+                                    $suhuSectionsV3 = [
+                                        'premix'          => ['label' => 'Suhu Premix', 'field' => 'suhu_premix'],
+                                        'seasoning'       => ['label' => 'Suhu Seasoning', 'field' => 'suhu_seasoning'],
+                                        'dry'             => ['label' => 'Suhu Dry', 'field' => 'suhu_dry'],
+                                        'cassing'         => ['label' => 'Suhu Cassing', 'field' => 'suhu_cassing'],
+                                        'beef'            => ['label' => 'Suhu Beef', 'field' => 'suhu_beef'],
+                                        'packaging'       => ['label' => 'Suhu Packaging', 'field' => 'suhu_packaging'],
+                                        'ruang_chemical'  => ['label' => 'Suhu Ruang Chemical', 'field' => 'suhu_ruang_chemical'],
+                                        'ruang_seasoning' => ['label' => 'Suhu Ruang Seasoning', 'field' => 'suhu_ruang_seasoning'],
+                                    ];
+
+                                    foreach ($suhuSectionsV3 as $secKey => $secConf) {
+                                        $fieldVal = $pemeriksaanSuhuRuangV3->{$secConf['field']};
+                                        if (!empty($fieldVal) && is_array($fieldVal)) {
+                                            foreach ($fieldVal as $unitKey => $itemData) {
+                                                if (is_array($itemData)) {
+                                                    $unitNum = str_replace('unit_', '', (string)$unitKey);
+                                                    $timelineRowsV3[] = [
+                                                        'no'           => $noCounterV3++,
+                                                        'waktu'        => $pemeriksaanSuhuRuangV3->pukul ?? '-',
+                                                        'area'         => $secConf['label'] . ' ' . $unitNum,
+                                                        'setting'      => $itemData['setting'] ?? '-',
+                                                        'aktual'       => $itemData['actual'] ?? '-',
+                                                        'display'      => $itemData['display'] ?? '-',
+                                                        'tipe'         => 'awal',
+                                                        'history_uuid' => null,
+                                                        'field_type'   => 'suhu_data',
+                                                        'section_key'  => $secKey,
+                                                        'unit_id'      => $unitNum,
+                                                    ];
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                    foreach ($historiesV3 as $hItem) {
+                                        $waktuRow = $hItem->pukul_baru ?? $hItem->pukul_lama ?? $hItem->created_at->format('H:i');
+
+                                        foreach ($suhuSectionsV3 as $secKey => $secConf) {
+                                            $columnBaru = 'suhu_' . $secKey . '_baru';
+                                            $valBaru    = $hItem->{$columnBaru};
+
+                                            if (!empty($valBaru)) {
+                                                $arrayBaru = is_array($valBaru)
+                                                    ? $valBaru
+                                                    : (json_decode($valBaru ?? '[]', true) ?: []);
+
+                                                if (is_array($arrayBaru)) {
+                                                    foreach ($arrayBaru as $unitKey => $itemData) {
+                                                        if (is_array($itemData)) {
+                                                            $unitNum = str_replace('unit_', '', (string)$unitKey);
+                                                            $timelineRowsV3[] = [
+                                                                'no'           => $noCounterV3++,
+                                                                'waktu'        => $waktuRow,
+                                                                'area'         => $secConf['label'] . ' ' . $unitNum,
+                                                                'setting'      => $itemData['setting'] ?? '-',
+                                                                'aktual'       => $itemData['actual'] ?? '-',
+                                                                'display'      => $itemData['display'] ?? '-',
+                                                                'tipe'         => 'update',
+                                                                'history_uuid' => $hItem->uuid,
+                                                                'field_type'   => 'suhu_data',
+                                                                'section_key'  => $secKey,
+                                                                'unit_id'      => $unitNum,
+                                                            ];
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                @endphp
+
+                                @if(!empty($timelineRowsV3))
+                                <div class="row mt-5 pt-4 border-top">
+                                    <div class="col-12 px-3">
+                                        <h5 class="mb-3 d-flex align-items-center gap-2">
+                                            <i class="bi bi-clock-history text-primary"></i>
+                                            <strong>Riwayat Data Per Jam</strong>
+                                            <span class="badge bg-primary ms-1">{{ count($timelineRowsV3) }} entri</span>
+                                        </h5>
+                                        <div class="alert alert-info py-2 px-3 mb-3" style="font-size:0.875rem;">
+                                            <i class="bi bi-info-circle me-1"></i>
+                                            Klik tombol <strong>Edit</strong> pada baris riwayat (status <span class="badge bg-warning text-dark">Update</span>) untuk mengoreksi data jam tersebut.
+                                        </div>
+                                        <div class="table-responsive">
+                                            <table class="table table-bordered table-hover table-sm align-middle mb-0">
+                                                <thead class="table-dark">
+                                                    <tr>
+                                                        <th class="text-center" style="width:4%">No</th>
+                                                        <th class="text-center" style="width:8%">Pukul</th>
+                                                        <th style="width:20%">Area</th>
+                                                        <th class="text-center">Setting (°C)</th>
+                                                        <th class="text-center">Actual (°C)</th>
+                                                        <th class="text-center">Display (°C)</th>
+                                                        <th class="text-center" style="width:8%">Status</th>
+                                                        <th class="text-center" style="width:8%">Aksi</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    @foreach($timelineRowsV3 as $tRow)
+                                                    <tr class="{{ $tRow['tipe'] === 'update' ? 'table-warning' : '' }}">
+                                                        <td class="text-center">{{ $tRow['no'] }}</td>
+                                                        <td class="text-center fw-semibold">{{ $tRow['waktu'] }}</td>
+                                                        <td>{{ $tRow['area'] }}</td>
+                                                        <td class="text-center">{{ $tRow['setting'] }}</td>
+                                                        <td class="text-center">{{ $tRow['aktual'] }}</td>
+                                                        <td class="text-center">{{ $tRow['display'] }}</td>
+                                                        <td class="text-center">
+                                                            @if($tRow['tipe'] === 'awal')
+                                                                <span class="badge bg-success">Input Awal</span>
+                                                            @else
+                                                                <span class="badge bg-warning text-dark">Update</span>
+                                                            @endif
+                                                        </td>
+                                                        <td class="text-center">
+                                                            @if($tRow['tipe'] === 'update' && !empty($tRow['history_uuid']))
+                                                                <button type="button"
+                                                                    class="btn btn-sm btn-primary btn-edit-history-v3"
+                                                                    data-history-uuid="{{ $tRow['history_uuid'] }}"
+                                                                    data-pukul="{{ $tRow['waktu'] !== '-' ? $tRow['waktu'] : '' }}"
+                                                                    data-area="{{ $tRow['area'] }}"
+                                                                    data-field-type="{{ $tRow['field_type'] }}"
+                                                                    data-section-key="{{ $tRow['section_key'] }}"
+                                                                    data-unit-id="{{ $tRow['unit_id'] }}"
+                                                                    data-setting="{{ $tRow['setting'] !== '-' ? $tRow['setting'] : '' }}"
+                                                                    data-aktual="{{ $tRow['aktual'] !== '-' ? $tRow['aktual'] : '' }}"
+                                                                    data-display="{{ $tRow['display'] !== '-' ? $tRow['display'] : '' }}">
+                                                                     Edit
+                                                                </button>
+                                                            @else
+                                                                <span class="text-muted" style="font-size:0.75rem">-</span>
+                                                            @endif
+                                                        </td>
+                                                    </tr>
+                                                    @endforeach
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                                @endif
+
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
         </section>
+    </div>
+</div>
+
+<!-- Modal Edit History V3 -->
+<div class="modal fade" id="editHistoryModalV3" tabindex="-1" aria-labelledby="editHistoryModalV3Label" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="editHistoryFormV3" method="POST" action="">
+                @csrf
+                @method('PUT')
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editHistoryModalV3Label">
+                        <i class="bi bi-pencil-square text-primary me-2"></i>Edit Data Riwayat
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="field_type" id="modalV3_field_type">
+                    <input type="hidden" name="section_key" id="modalV3_section_key">
+                    <input type="hidden" name="unit_id" id="modalV3_unit_id">
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Area / Parameter</label>
+                        <input type="text" class="form-control bg-light" id="modalV3_area_label" readonly>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="modalV3_pukul" class="form-label fw-bold">Pukul <span class="text-danger">*</span></label>
+                        <input type="time" class="form-control" name="pukul" id="modalV3_pukul" required>
+                    </div>
+
+                    <div id="modalV3_suhu_data_group">
+                        <div class="mb-3">
+                            <label for="modalV3_setting" class="form-label fw-bold">Setting (°C)</label>
+                            <input type="text" class="form-control" name="setting" id="modalV3_setting" placeholder="Contoh: Std ≤ 30°C">
+                        </div>
+                        <div class="mb-3">
+                            <label for="modalV3_display" class="form-label fw-bold">Display (°C)</label>
+                            <input type="text" class="form-control" name="display" id="modalV3_display" placeholder="Contoh: 28">
+                        </div>
+                        <div class="mb-3">
+                            <label for="modalV3_aktual" class="form-label fw-bold">Actual (°C)</label>
+                            <input type="text" class="form-control" name="aktual" id="modalV3_aktual" placeholder="Contoh: 27">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
 
@@ -237,6 +438,41 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     });
+
+    // JS Handler Modal Edit History V3
+    const editHistoryModalElementV3 = document.getElementById('editHistoryModalV3');
+    if (editHistoryModalElementV3) {
+        const editHistoryModalV3 = new bootstrap.Modal(editHistoryModalElementV3);
+        const editHistoryFormV3 = document.getElementById('editHistoryFormV3');
+        const updateRouteTemplateV3 = "{{ route('pemeriksaan-suhu-ruang-v3.history.update', [$pemeriksaanSuhuRuangV3->uuid, ':historyUuid']) }}";
+
+        document.querySelectorAll('.btn-edit-history-v3').forEach(button => {
+            button.addEventListener('click', function() {
+                const historyUuid = this.dataset.historyUuid;
+                const pukul       = this.dataset.pukul;
+                const area        = this.dataset.area;
+                const fieldType   = this.dataset.fieldType;
+                const sectionKey  = this.dataset.sectionKey;
+                const unitId      = this.dataset.unitId;
+                const setting     = this.dataset.setting;
+                const aktual      = this.dataset.aktual;
+                const display     = this.dataset.display;
+
+                editHistoryFormV3.action = updateRouteTemplateV3.replace(':historyUuid', historyUuid);
+
+                document.getElementById('modalV3_area_label').value = area;
+                document.getElementById('modalV3_pukul').value      = pukul;
+                document.getElementById('modalV3_field_type').value  = fieldType;
+                document.getElementById('modalV3_section_key').value = sectionKey || '';
+                document.getElementById('modalV3_unit_id').value     = unitId || '';
+                document.getElementById('modalV3_setting').value    = setting || '';
+                document.getElementById('modalV3_display').value    = display || '';
+                document.getElementById('modalV3_aktual').value     = aktual || '';
+
+                editHistoryModalV3.show();
+            });
+        });
+    }
 });
 </script>
 

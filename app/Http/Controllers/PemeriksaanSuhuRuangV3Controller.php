@@ -331,6 +331,81 @@ class PemeriksaanSuhuRuangV3Controller extends Controller
         PemeriksaanSuhuRuangV3History::create($historyData);
     }
     /**
+     * Update item history spesifik V3
+     */
+    public function updateHistory(Request $request, PemeriksaanSuhuRuangV3 $pemeriksaanSuhuRuangV3, PemeriksaanSuhuRuangV3History $history)
+    {
+        $this->checkPlantAccess($pemeriksaanSuhuRuangV3);
+
+        if ($history->id_pemeriksaan_suhu_ruang_v3 !== $pemeriksaanSuhuRuangV3->id) {
+            abort(403, 'History tidak sesuai dengan data pemeriksaan ini.');
+        }
+
+        $request->validate([
+            'pukul'       => 'nullable|date_format:H:i',
+            'suhu_produk' => 'nullable|string|max:50',
+            'field_type'  => 'required|in:suhu_produk,suhu_data',
+            'section_key' => 'nullable|string',
+            'unit_id'     => 'nullable|integer',
+            'setting'     => 'nullable|string|max:50',
+            'aktual'      => 'nullable|string|max:50',
+            'display'     => 'nullable|string|max:50',
+        ]);
+
+        $updateData = [];
+
+        if ($request->input('field_type') === 'suhu_produk') {
+            $updateData['suhu_produk_baru'] = $request->input('suhu_produk');
+            if ($request->filled('pukul')) {
+                $updateData['pukul_baru'] = $request->input('pukul');
+            }
+        } else {
+            $sectionKey = $request->input('section_key');
+            $unitId     = $request->input('unit_id');
+            $columnName = 'suhu_' . $sectionKey . '_baru';
+
+            $currentVal = $history->{$columnName};
+            $baruData   = is_array($currentVal)
+                ? $currentVal
+                : (json_decode($currentVal ?? '[]', true) ?: []);
+
+            if ($unitId) {
+                $unitKey = "unit_{$unitId}";
+                $baruData[$unitKey] = [
+                    'setting' => $request->input('setting'),
+                    'display' => $request->input('display'),
+                    'actual'  => $request->input('aktual'),
+                ];
+                if (isset($baruData[$unitId])) {
+                    $baruData[$unitId] = [
+                        'setting' => $request->input('setting'),
+                        'display' => $request->input('display'),
+                        'actual'  => $request->input('aktual'),
+                    ];
+                }
+            } else {
+                $baruData = [
+                    'setting' => $request->input('setting'),
+                    'display' => $request->input('display'),
+                    'actual'  => $request->input('aktual'),
+                ];
+            }
+
+            $updateData[$columnName] = $baruData;
+
+            if ($request->filled('pukul')) {
+                $updateData['pukul_baru'] = $request->input('pukul');
+            }
+        }
+
+        $history->update($updateData);
+
+        return redirect()
+            ->route('pemeriksaan-suhu-ruang-v3.edit', $pemeriksaanSuhuRuangV3->uuid)
+            ->with('success', 'Data riwayat per jam berhasil diperbarui.');
+    }
+
+    /**
      * Check plant access
      */
     private function checkPlantAccess($pemeriksaan)

@@ -18,5 +18,16 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->appendToGroup('api', \App\Http\Middleware\SetPlantTimezone::class);
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        //
+        $exceptions->render(function (\Illuminate\Session\TokenMismatchException $e, $request) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => 'CSRF token mismatch. Sesi telah diperbarui, silakan coba lagi.',
+                    'csrf_token' => csrf_token()
+                ], 419);
+            }
+
+            return redirect()->back()
+                ->withInput($request->except('_token'))
+                ->with('error', 'Halaman sempat tidak aktif (CSRF Expired). Data isian Anda telah kami selamatkan! Silakan tekan tombol Simpan sekali lagi.');
+        });
     })->create();

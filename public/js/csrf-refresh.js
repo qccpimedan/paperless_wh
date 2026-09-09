@@ -12,7 +12,7 @@
     }
     window.csrfRefreshInitialized = true;
 
-    const CSRF_REFRESH_INTERVAL = 3 * 60 * 1000; // Refresh tiap 3 menit di background
+    const CSRF_REFRESH_INTERVAL = 2 * 60 * 1000; // Refresh tiap 2 menit di background (Keep-Alive)
     const AUTOSAVE_INTERVAL = 1 * 60 * 1000;     // Auto-save draft tiap 1 menit
 
     let csrfRefreshTimer = null;
