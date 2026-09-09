@@ -752,13 +752,16 @@
                                                                     </div>
                                                                 </div>
                                                             </div>
+                                                        </div>
+                                                    @endforeach
+                                                </div>
 
-                                                            <div class="form-section mb-3">
-                                                                <h6 class="text-primary mb-2">Dokumen</h6>
-                                                                <input type="hidden" class="doc-master-logo" value="{{ $docLogo }}">
-                                                                <input type="hidden" class="doc-master-dokumen" value="{{ $docDokumen }}">
-                                                                <input type="hidden" class="doc-master-coa" value="{{ $docCoa }}">
-                                                                <div class="row">
+                                                <div class="form-section mb-3">
+                                                    <h6 class="text-primary mb-2">Dokumen</h6>
+                                                    <input type="hidden" class="doc-master-logo" value="{{ $docLogo }}">
+                                                    <input type="hidden" class="doc-master-dokumen" value="{{ $docDokumen }}">
+                                                    <input type="hidden" class="doc-master-coa" value="{{ $docCoa }}">
+                                                    <div class="row">
                                                         <div class="col-md-4">
                                                             <div class="mb-3">
                                                                 <label class="form-label"><strong>Logo Halal</strong></label>
@@ -799,7 +802,6 @@
                                                             </div>
                                                         </div>
                                                     </div>
-                                                    @endforeach
                                                 </div>
 
                                                 <div class="row mt-2">
@@ -817,11 +819,11 @@
                                         @endforeach
                                     </div>
 
-                                    <!-- <div class="row mt-3 pt-3 border-top">
+                                    <div class="row mt-3 pt-3 border-top">
                                         <div class="col-md-12">
-                                            <button type="button" class="btn btn-primary btn-sm add-unified-btn"><i class="bi bi-plus"></i> Tambah Produk</button>
+                                            <button type="button" class="btn btn-success btn-sm add-unified-btn"><i class="bi bi-plus"></i> Tambah Produk</button>
                                         </div>
-                                    </div> -->
+                                    </div>
                                 </div>
 
                                 <div class="col-md-12 d-flex justify-content-end mt-3">
@@ -860,6 +862,7 @@ const produkMeta = @json($produkMeta ?? []);
 const oldKategoriCodes = @json(old('kategori_code', $headerKategoriCodes ?? []));
 const oldProdukIds = @json(old('id_produk', $headerProdukIds ?? []));
 const countriesList = @json(array_values($countries ?? []));
+let pristineRowTemplate = null;
 
 const bsCollapse = (el) => {
     try {
@@ -945,7 +948,7 @@ const ensureProdukCollapsible = (rowEl, rowIdx) => {
     }
     const collapseId = rowEl.dataset.produkCollapseId;
 
-    const headerTitle = rowEl.querySelector(':scope > h6');
+    const headerTitle = rowEl.querySelector(':scope > h6, :scope > h5');
     if (!headerTitle) return;
 
     if (!headerTitle.querySelector('button[data-bs-toggle="collapse"]')) {
@@ -998,9 +1001,10 @@ const ensureDetailCollapsible = (detailEl) => {
 
     const hasDuplicateId = (id) => {
         if (!id) return true;
-        const el = document.getElementById(id);
-        if (!el) return false;
-        return !detailEl.contains(el);
+        const matches = document.querySelectorAll(`[id="${id}"]`);
+        if (matches.length > 1) return true;
+        if (matches.length === 1 && !detailEl.contains(matches[0])) return true;
+        return false;
     };
 
     if (hasDuplicateId(collapseId)) {
@@ -1540,6 +1544,72 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
+    // Capture pristine template BEFORE Choices.js initialization (just like create.blade.php)
+    try {
+        const firstRow = document.querySelector('#unified-container .unified-row');
+        if (firstRow) {
+            pristineRowTemplate = firstRow.cloneNode(true);
+
+            // Move select elements out of Choices wrappers then remove wrappers
+            pristineRowTemplate.querySelectorAll('.choices').forEach((el) => {
+                if (el.tagName.toLowerCase() !== 'select') {
+                    const selectInside = el.querySelector('select');
+                    if (selectInside && el.parentNode) {
+                        el.parentNode.insertBefore(selectInside, el);
+                    }
+                    el.remove();
+                }
+            });
+
+            pristineRowTemplate.querySelectorAll('select').forEach((el) => {
+                delete el.dataset.choicesInitialized;
+                delete el.__choicesInstance;
+                el.removeAttribute('hidden');
+                el.removeAttribute('data-choice');
+                el.removeAttribute('aria-hidden');
+                el.removeAttribute('tabindex');
+                el.removeAttribute('role');
+                el.removeAttribute('data-id');
+                el.removeAttribute('data-select-text');
+                el.removeAttribute('data-position');
+                el.style.display = '';
+
+                if (el.classList.contains('produk-select')) {
+                    el.innerHTML = '<option value="">Pilih Produk</option>';
+                    el.value = '';
+                } else {
+                    el.value = '';
+                }
+            });
+
+            pristineRowTemplate.querySelectorAll('input, textarea').forEach((el) => {
+                if (el.type === 'radio') { el.checked = false; }
+                else { el.value = ''; }
+            });
+            pristineRowTemplate.querySelectorAll('.produsen-badges, .distributor-badges').forEach((el) => {
+                el.innerHTML = '<span class="text-muted small">-</span>';
+            });
+            pristineRowTemplate.querySelectorAll('input.produsen-hidden, input.distributor-hidden').forEach((el) => {
+                el.value = '';
+            });
+            pristineRowTemplate.querySelectorAll('.suhu-mobil-input, .suhu-produk-input, .kondisi-suhu-input').forEach((el) => {
+                el.style.display = 'none';
+            });
+            // Keep only 1 detail-item in the template
+            const templateDetails = pristineRowTemplate.querySelectorAll('.detail-item');
+            templateDetails.forEach((el, idx) => { if (idx > 0) el.remove(); });
+            const firstTemplateDetail = pristineRowTemplate.querySelector('.detail-item');
+            if (firstTemplateDetail) {
+                firstTemplateDetail.querySelectorAll('input, textarea, select').forEach((el) => {
+                    if (el.type === 'radio') { el.checked = false; } else { el.value = ''; }
+                });
+            }
+            delete pristineRowTemplate.dataset.oldProdukId;
+        }
+    } catch (e) {
+        pristineRowTemplate = null;
+    }
+
     initChoicesForContainer(document);
     initializeProdukFlow();
     initFinishGoodCollapses();
@@ -1569,12 +1639,20 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
+function refreshChoicesForContainer(containerEl) {
+    if (!containerEl) return;
+    containerEl.querySelectorAll('select.choices').forEach((selectEl) => {
+        refreshChoices(selectEl);
+    });
+}
+
     document.addEventListener('click', function(e) {
         if (e.target.closest('.add-unified-btn')) {
             const container = document.getElementById('unified-container');
             const rows = container.querySelectorAll('.unified-row');
             const lastRow = rows[rows.length - 1];
-            const newRow = lastRow.cloneNode(true);
+            // Use pristine template (like create.blade.php) to avoid Choices.js artifacts
+            const newRow = pristineRowTemplate ? pristineRowTemplate.cloneNode(true) : lastRow.cloneNode(true);
 
             // Remove Choices DOM wrappers if cloning from a Choices-initialized row.
             newRow.querySelectorAll('.choices').forEach((el) => {
@@ -1583,10 +1661,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
 
-            // If this row was previously initialized by Choices.js, the original selects may be hidden.
-            newRow.querySelectorAll('select.choices').forEach((el) => {
+            // Clean hidden/initialized attributes on selects
+            newRow.querySelectorAll('select').forEach((el) => {
                 el.removeAttribute('hidden');
                 el.style.display = '';
+                delete el.__choicesInstance;
                 delete el.dataset.choicesInitialized;
                 el.removeAttribute('tabindex');
                 el.removeAttribute('aria-hidden');
@@ -1595,15 +1674,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 el.removeAttribute('data-id');
                 el.removeAttribute('data-select-text');
                 el.removeAttribute('data-position');
+
+                el.selectedIndex = 0;
+                el.querySelectorAll('option').forEach(opt => opt.removeAttribute('selected'));
+                el.value = '';
+                if (el.classList.contains('produk-select')) {
+                    el.innerHTML = '<option value="">Pilih Produk</option>';
+                }
             });
 
-            newRow.querySelectorAll('input, textarea, select').forEach((el) => {
-                if (el.tagName.toLowerCase() === 'select') {
-                    el.value = '';
-                    if (el.classList.contains('produk-select')) {
-                        el.innerHTML = '<option value="">Pilih Produk</option>';
-                    }
-                } else if (el.type === 'radio') {
+            newRow.querySelectorAll('input, textarea').forEach((el) => {
+                if (el.type === 'radio') {
                     el.checked = false;
                 } else {
                     el.value = '';
@@ -1620,13 +1701,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 el.innerHTML = '<span class="text-muted small">-</span>';
             });
 
-            newRow.querySelectorAll('.suhu-mobil-input, .suhu-produk-input').forEach((el) => {
+            newRow.querySelectorAll('.suhu-mobil-input, .suhu-produk-input, .kondisi-suhu-input').forEach((el) => {
                 el.style.display = 'none';
             });
 
+            delete newRow.dataset.oldProdukId;
+
             container.appendChild(newRow);
 
-            // Ensure Negara Produsen keeps its options in dynamic rows
+            // Rebuild Negara Produsen options (they may be stripped from pristine template)
             const negaraSelect = newRow.querySelector('select[data-role="negara"]') || newRow.querySelector('select[name="negara_produsen[]"]');
             if (negaraSelect) {
                 const optionCount = negaraSelect.querySelectorAll('option').length;
@@ -1659,14 +1742,18 @@ document.addEventListener('DOMContentLoaded', function() {
             if (docDok) docDok.value = '';
             if (docCoa) docCoa.value = '';
 
-            initChoicesForContainer(newRow);
             updateRowNumbers();
             updateRemoveButtons();
             setupProdukRowListeners(newRow);
+            populateProdukOptionsForRow(newRow);
+            refreshChoicesForContainer(newRow);
+            initFinishGoodCollapses();
             setupSuhuRow(newRow);
             setupKondisiProdukSuhuRow(newRow);
             syncHeaderToDetails(newRow);
             syncDokumenToDetails(newRow);
+
+            collapseAllProdukExcept(newRow);
         }
     });
 
@@ -1680,6 +1767,12 @@ document.addEventListener('DOMContentLoaded', function() {
             if (!container || !last) return;
 
             const newItem = last.cloneNode(true);
+            delete newItem.dataset.detailCollapseId;
+            const oldCollapse = newItem.querySelector(':scope > .detail-collapse');
+            if (oldCollapse) {
+                oldCollapse.removeAttribute('id');
+            }
+
             newItem.querySelectorAll('input, textarea, select').forEach((el) => {
                 if (el.type === 'radio') {
                     el.checked = false;
@@ -1698,6 +1791,19 @@ document.addEventListener('DOMContentLoaded', function() {
 
             ensureDetailCollapsible(newItem);
             collapseOtherDetailsInRow(rowEl, newItem);
+        }
+    });
+
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.remove-detail-btn')) {
+            const rowEl = e.target.closest('.unified-row');
+            const detailEl = e.target.closest('.detail-item');
+            if (!rowEl || !detailEl) return;
+            const items = rowEl.querySelectorAll('.detail-item');
+            if (items.length > 1) {
+                detailEl.remove();
+                updateRowNumbers();
+            }
         }
     });
 

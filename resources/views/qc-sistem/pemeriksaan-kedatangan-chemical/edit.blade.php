@@ -359,344 +359,357 @@
                                         }
                                     @endphp
 
-                                    @php $produkNo = 0; @endphp
-                                    @foreach($groupedDetailIdx as $produkKey => $detailIdxList)
-                                        @php
-                                            $produkNo++;
-                                            $firstIdx = $detailIdxList[0] ?? 0;
-                                            $firstDetail = $detailChemicals[$firstIdx] ?? [];
-                                            $existingChemicalId = $firstDetail['id_chemical'] ?? null;
-                                            $mappedKategori = $existingChemicalId ? ($produkByChemicalId[$existingChemicalId]['kategori_code'] ?? null) : null;
-                                            $mappedProdukId = $existingChemicalId ? ($produkByChemicalId[$existingChemicalId]['id_produk'] ?? null) : null;
-                                        @endphp
+                                    <div id="unified-container">
+                                        @php $produkNo = 0; @endphp
+                                        @foreach($groupedDetailIdx as $produkKey => $detailIdxList)
+                                            @php
+                                                $produkNo++;
+                                                $firstIdx = $detailIdxList[0] ?? 0;
+                                                $firstDetail = $detailChemicals[$firstIdx] ?? [];
+                                                $existingChemicalId = $firstDetail['id_chemical'] ?? null;
+                                                $mappedKategori = $existingChemicalId ? ($produkByChemicalId[$existingChemicalId]['kategori_code'] ?? null) : null;
+                                                $mappedProdukId = $existingChemicalId ? ($produkByChemicalId[$existingChemicalId]['id_produk'] ?? null) : null;
+                                            @endphp
 
-                                        <div class="unified-row mb-4 p-3 border rounded" style="background-color: #f8f9fa;">
-                                            <h6 class="text-primary mb-3">Produk {{ $produkNo }}</h6>
+                                            <div class="unified-row mb-4 p-3 border rounded" style="background-color: #f8f9fa;">
+                                                <h6 class="text-primary mb-3">Produk {{ $produkNo }}</h6>
 
-                                            <!-- Informasi Chemical (Header Produk) -->
-                                            <div class="row">
-                                                <div class="col-md-6">
-                                                    <div class="form-group">
-                                                        <label class="form-label">Kategori</label>
-                                                        <select class="choices form-control kategori-produk-select" name="kategori_code[]" data-desired-produk="{{ old('id_produk.' . $firstIdx, $mappedProdukId) }}">
-                                                            <option value="">Pilih Kategori</option>
-                                                            @foreach(($produkKategoriOptions ?? []) as $kategori)
-                                                                <option value="{{ $kategori }}" {{ old('kategori_code.' . $firstIdx, $mappedKategori) == $kategori ? 'selected' : '' }}>{{ $kategori }}</option>
-                                                            @endforeach
-                                                        </select>
+                                                <!-- Informasi Chemical (Header Produk) -->
+                                                <div class="row">
+                                                    <div class="col-md-6">
+                                                        <div class="form-group">
+                                                            <label class="form-label">Kategori</label>
+                                                            <select class="choices form-control kategori-produk-select" name="kategori_code[]" data-desired-produk="{{ old('id_produk.' . $firstIdx, $mappedProdukId) }}">
+                                                                <option value="">Pilih Kategori</option>
+                                                                @foreach(($produkKategoriOptions ?? []) as $kategori)
+                                                                    <option value="{{ $kategori }}" {{ old('kategori_code.' . $firstIdx, $mappedKategori) == $kategori ? 'selected' : '' }}>{{ $kategori }}</option>
+                                                                @endforeach
+                                                            </select>
+                                                        </div>
                                                     </div>
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <div class="form-group">
-                                                        <label class="form-label">Produk</label>
-                                                        <select class="form-control produk-select" name="id_produk[]">
-                                                            <option value="">Pilih Produk</option>
-                                                        </select>
-                                                        <input type="hidden" name="id_chemical[]" class="id-chemical-hidden" value="{{ old('id_chemical.' . $firstIdx, $firstDetail['id_chemical'] ?? '') }}" required>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <div class="row">
-                                                <div class="col-md-6">
-                                                    <div class="form-group">
-                                                        <label class="form-label">Kondisi Chemical</label>
-                                                        <select class="form-control" name="kondisi_chemical[]">
-                                                            <option value="">Pilih Kondisi</option>
-                                                            <option value="Cair" {{ ($firstDetail['kondisi_chemical'] ?? '') == 'Cair' ? 'selected' : '' }}>Cair</option>
-                                                            <option value="Serbuk" {{ ($firstDetail['kondisi_chemical'] ?? '') == 'Serbuk' ? 'selected' : '' }}>Serbuk</option>
-                                                        </select>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <!-- Produsen/Distributor (Header Produk) -->
-                                            <div class="row">
-                                                <div class="col-md-6">
-                                                    <div class="card border-0 shadow-sm mb-2">
-                                                        <div class="card-body p-3">
-                                                            <div class="fw-semibold">Produsen</div>
-                                                            <div class="small text-muted mb-2">Otomatis terisi sesuai Produk yang dipilih</div>
-                                                            <div class="produsen-badges d-flex flex-wrap gap-1">
-                                                                @php
-                                                                    $prodNames = $mappedProdukId ? ($produkMeta[$mappedProdukId]['produsen_names'] ?? []) : [];
-                                                                    $prodNames = is_array($prodNames) ? array_values(array_filter($prodNames, fn ($v) => $v !== null && $v !== '')) : [];
-                                                                @endphp
-                                                                @if(!empty($prodNames))
-                                                                    @foreach($prodNames as $name)
-                                                                        <span class="badge bg-primary">{{ $name }}</span>
-                                                                    @endforeach
-                                                                @else
-                                                                    <span class="text-muted small">-</span>
-                                                                @endif
-                                                            </div>
-                                                            <input type="hidden" name="id_produsen[]" class="id-produsen-hidden" value="{{ old('id_produsen.' . $firstIdx, $firstDetail['id_produsen'] ?? '') }}">
+                                                    <div class="col-md-6">
+                                                        <div class="form-group">
+                                                            <label class="form-label">Produk</label>
+                                                            <select class="form-control produk-select" name="id_produk[]">
+                                                                <option value="">Pilih Produk</option>
+                                                            </select>
+                                                            <input type="hidden" name="id_chemical[]" class="id-chemical-hidden" value="{{ old('id_chemical.' . $firstIdx, $firstDetail['id_chemical'] ?? '') }}" required>
                                                         </div>
                                                     </div>
                                                 </div>
-                                                <div class="col-md-6">
-                                                    <div class="card border-0 shadow-sm mb-2">
-                                                        <div class="card-body p-3">
-                                                            <div class="fw-semibold">Distributor</div>
-                                                            <div class="small text-muted mb-2">Otomatis terisi sesuai Produk yang dipilih</div>
-                                                            <div class="distributor-badges d-flex flex-wrap gap-1">
-                                                                @php
-                                                                    $distNames = $mappedProdukId ? ($produkMeta[$mappedProdukId]['distributor_names'] ?? []) : [];
-                                                                    $distNames = is_array($distNames) ? array_values(array_filter($distNames, fn ($v) => $v !== null && $v !== '')) : [];
-                                                                @endphp
-                                                                @if(!empty($distNames))
-                                                                    @foreach($distNames as $name)
-                                                                        <span class="badge bg-primary">{{ $name }}</span>
-                                                                    @endforeach
-                                                                @else
-                                                                    <span class="text-muted small">-</span>
-                                                                @endif
-                                                            </div>
-                                                            <input type="hidden" name="id_distributor[]" class="id-distributor-hidden" value="{{ old('id_distributor.' . $firstIdx, $firstDetail['id_distributor'] ?? '') }}">
+
+                                                <div class="row">
+                                                    <div class="col-md-6">
+                                                        <div class="form-group">
+                                                            <label class="form-label">Kondisi Chemical</label>
+                                                            <select class="form-control" name="kondisi_chemical[]">
+                                                                <option value="">Pilih Kondisi</option>
+                                                                <option value="Cair" {{ ($firstDetail['kondisi_chemical'] ?? '') == 'Cair' ? 'selected' : '' }}>Cair</option>
+                                                                <option value="Serbuk" {{ ($firstDetail['kondisi_chemical'] ?? '') == 'Serbuk' ? 'selected' : '' }}>Serbuk</option>
+                                                            </select>
                                                         </div>
                                                     </div>
                                                 </div>
-                                            </div>
 
-                                            <div class="detail-items">
-                                                @foreach($detailIdxList as $dNo => $idx)
-                                                    @php $detail = $detailChemicals[$idx] ?? []; @endphp
-                                                    <div class="detail-item border rounded p-3 mb-3" style="background: #fff;" data-detail-index="{{ $dNo }}" data-detail-global-index="{{ $idx }}">
-                                                        <div class="d-flex justify-content-between align-items-center mb-2">
-                                                            <strong>Detail {{ $dNo + 1 }}</strong>
-                                                            <button type="button" class="btn btn-danger btn-sm remove-detail-btn" style="display:none;"><i class="bi bi-trash"></i> Hapus Detail</button>
-                                                        </div>
-
-                                                        <div class="row">
-                                                            <div class="col-md-6">
-                                                                <div class="form-group">
-                                                                    <label class="form-label">Negara Produsen</label>
-                                                                    <select class="choices form-control" name="negara_produsen[]">
-                                                                        <option value="">Pilih Negara</option>
-                                                                        @foreach($countries as $code => $name)
-                                                                            <option value="{{ $name }}" {{ ($detail['negara_produsen'] ?? '') == $name ? 'selected' : '' }}>{{ $name }}</option>
+                                                <!-- Produsen/Distributor (Header Produk) -->
+                                                <div class="row">
+                                                    <div class="col-md-6">
+                                                        <div class="card border-0 shadow-sm mb-2">
+                                                            <div class="card-body p-3">
+                                                                <div class="fw-semibold">Produsen</div>
+                                                                <div class="small text-muted mb-2">Otomatis terisi sesuai Produk yang dipilih</div>
+                                                                <div class="produsen-badges d-flex flex-wrap gap-1">
+                                                                    @php
+                                                                        $prodNames = $mappedProdukId ? ($produkMeta[$mappedProdukId]['produsen_names'] ?? []) : [];
+                                                                        $prodNames = is_array($prodNames) ? array_values(array_filter($prodNames, fn ($v) => $v !== null && $v !== '')) : [];
+                                                                    @endphp
+                                                                    @if(!empty($prodNames))
+                                                                        @foreach($prodNames as $name)
+                                                                            <span class="badge bg-primary">{{ $name }}</span>
                                                                         @endforeach
-                                                                    </select>
-                                                                </div>
-                                                            </div>
-                                                            <div class="col-md-6">
-                                                                <div class="form-group">
-                                                                    <label class="form-label">Kode Produksi</label>
-                                                                    <input type="text" class="form-control" name="kode_produksi[]" value="{{ $detail['kode_produksi'] ?? '' }}" placeholder="Kode Produksi">
-                                                                </div>
-                                                            </div>
-                                                        </div>
-
-                                                        <div class="row">
-                                                            <div class="col-md-6">
-                                                                <div class="form-group">
-                                                                    <label class="form-label">Expire Date</label>
-                                                                    <input type="date" class="form-control" name="expire_date[]" value="{{ $detail['expire_date'] ?? '' }}">
-                                                                </div>
-                                                            </div>
-                                                            <div class="col-md-6">
-                                                                <div class="form-group">
-                                                                    <label class="form-label">Jumlah Datang</label>
-                                                                    <div class="input-group">
-                                                                        <input type="text" class="form-control" name="jumlah_datang[]" value="{{ $detail['jumlah_datang'] ?? '' }}" placeholder="Jumlah">
-                                                                        <select class="form-select" name="unit_datang[]" style="max-width: 120px;">
-                                                                            <option value="">Pilih Parameter</option>
-                                                                            @foreach(\App\Models\PemeriksaanKedatanganChemical::unitParameters() as $unitKey => $unitLabel)
-                                                                                <option value="{{ $unitKey }}" {{ (!empty($detail['unit_datang']) && is_array($detail['unit_datang']) && ($detail['unit_datang'][0] ?? '') == $unitKey) ? 'selected' : '' }}>{{ $unitLabel }}</option>
-                                                                            @endforeach
-                                                                        </select>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-
-                                                        <div class="row">
-                                                            <div class="col-md-6">
-                                                                <div class="form-group">
-                                                                    <label class="form-label">Jumlah Sampling</label>
-                                                                    <div class="input-group">
-                                                                        <input type="text" class="form-control" name="jumlah_sampling[]" value="{{ $detail['jumlah_sampling'] ?? '' }}" placeholder="Jumlah">
-                                                                        <select class="form-select" name="unit_sampling[]" style="max-width: 120px;">
-                                                                            <option value="">Pilih Parameter</option>
-                                                                            @foreach(\App\Models\PemeriksaanKedatanganChemical::unitParameters() as $unitKey => $unitLabel)
-                                                                                <option value="{{ $unitKey }}" {{ (!empty($detail['unit_sampling']) && is_array($detail['unit_sampling']) && ($detail['unit_sampling'][0] ?? '') == $unitKey) ? 'selected' : '' }}>{{ $unitLabel }}</option>
-                                                                            @endforeach
-                                                                        </select>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-
-                                                        <!-- Kondisi Fisik -->
-                                                        <div class="form-section mb-3">
-                                                            <h6 class="text-primary mb-2">Kondisi Fisik</h6>
-                                                            <div class="row">
-                                                                <div class="col-md-6">
-                                                                    <div class="mb-3">
-                                                                        <label class="form-label"><strong>Kemasan</strong></label>
-                                                                        <div class="form-check">
-                                                                            <input class="form-check-input" type="radio" name="kondisi_fisik_kemasan_1" value="1" {{ (($detail['kondisi_fisik']['kemasan'] ?? false) == true) ? 'checked' : '' }}>
-                                                                            <label class="form-check-label">Ya ✓</label>
-                                                                        </div>
-                                                                        <div class="form-check">
-                                                                            <input class="form-check-input" type="radio" name="kondisi_fisik_kemasan_1" value="0" {{ (($detail['kondisi_fisik']['kemasan'] ?? false) == false) ? 'checked' : '' }}>
-                                                                            <label class="form-check-label">Tidak ✗</label>
-                                                                        </div>
-                                                                        <input type="hidden" name="kondisi_fisik_kemasan[]" value="{{ ($detail['kondisi_fisik']['kemasan'] ?? false) ? '1' : '0' }}" class="radio-value-kemasan-1">
-                                                                    </div>
-                                                                </div>
-                                                                <div class="col-md-6">
-                                                                    <div class="mb-3">
-                                                                        <label class="form-label"><strong>Warna</strong></label>
-                                                                        <div class="form-check">
-                                                                            <input class="form-check-input" type="radio" name="kondisi_fisik_warna_1" value="1" {{ (($detail['kondisi_fisik']['warna'] ?? false) == true) ? 'checked' : '' }}>
-                                                                            <label class="form-check-label">Ya ✓</label>
-                                                                        </div>
-                                                                        <div class="form-check">
-                                                                            <input class="form-check-input" type="radio" name="kondisi_fisik_warna_1" value="0" {{ (($detail['kondisi_fisik']['warna'] ?? false) == false) ? 'checked' : '' }}>
-                                                                            <label class="form-check-label">Tidak ✗</label>
-                                                                        </div>
-                                                                        <input type="hidden" name="kondisi_fisik_warna[]" value="{{ ($detail['kondisi_fisik']['warna'] ?? false) ? '1' : '0' }}" class="radio-value-warna-1">
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-
-                                                        <!-- Dokumen -->
-                                                        <div class="form-section mb-3">
-                                                            <h6 class="text-primary mb-2">Dokumen & Sertifikasi</h6>
-                                                            <div class="row">
-                                                                <div class="col-md-6">
-                                                                    <div class="mb-3">
-                                                                        <label class="form-label"><strong>Halal (berlaku)</strong></label>
-                                                                        <div class="form-check">
-                                                                            <input class="form-check-input" type="radio" name="persyaratan_dokumen_halal_1" value="1" {{ (($detail['persyaratan_dokumen_halal'] ?? false) == true) ? 'checked' : '' }}>
-                                                                            <label class="form-check-label">Ya ✓</label>
-                                                                        </div>
-                                                                        <div class="form-check">
-                                                                            <input class="form-check-input" type="radio" name="persyaratan_dokumen_halal_1" value="0" {{ (($detail['persyaratan_dokumen_halal'] ?? false) == false) ? 'checked' : '' }}>
-                                                                            <label class="form-check-label">Tidak ✗</label>
-                                                                        </div>
-                                                                        <input type="hidden" name="persyaratan_dokumen_halal[]" value="{{ ($detail['persyaratan_dokumen_halal'] ?? false) ? '1' : '0' }}" class="radio-value-halal-1">
-                                                                    </div>
-                                                                </div>
-                                                                <div class="col-md-6">
-                                                                    <div class="mb-3">
-                                                                        <label class="form-label"><strong>COA</strong></label>
-                                                                        <div class="form-check">
-                                                                            <input class="form-check-input" type="radio" name="coa_1" value="1" {{ (($detail['coa'] ?? false) == true) ? 'checked' : '' }}>
-                                                                            <label class="form-check-label">Ya ✓</label>
-                                                                        </div>
-                                                                        <div class="form-check">
-                                                                            <input class="form-check-input" type="radio" name="coa_1" value="0" {{ (($detail['coa'] ?? false) == false) ? 'checked' : '' }}>
-                                                                            <label class="form-check-label">Tidak ✗</label>
-                                                                        </div>
-                                                                        <input type="hidden" name="coa[]" value="{{ ($detail['coa'] ?? false) ? '1' : '0' }}" class="radio-value-coa-1">
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-
-                                                        <!-- Upload COA -->
-                                                        <div class="form-section mb-3 coa-upload-section">
-                                                            <h6 class="text-primary mb-2">Upload COA</h6>
-                                                            @php
-                                                                $existingCoaArr = json_decode($pemeriksaanChemical->file_coa_array ?? '[]', true) ?? [];
-                                                                $existingCoaFile = $detail['file_coa'] ?? $existingCoaArr[$idx] ?? null;
-                                                            @endphp
-                                                            @if($existingCoaFile)
-                                                                <div class="mb-2">
-                                                                    <span class="badge bg-success">COA Tersimpan</span>
-                                                                    <a href="{{ asset('storage/' . $existingCoaFile) }}" target="_blank" class="btn btn-sm btn-outline-info ms-2">Lihat / Download</a>
-                                                                </div>
-                                                            @endif
-                                                            <div class="row mb-2">
-                                                                <div class="col-md-12">
-                                                                    <div class="form-group">
-                                                                        <label class="form-label d-block">Tipe File COA</label>
-                                                                        <div class="form-check form-check-inline">
-                                                                            <input class="form-check-input coa-type-pdf" type="radio" name="coa_file_type_{{ $idx }}" value="pdf" checked>
-                                                                            <label class="form-check-label">PDF</label>
-                                                                        </div>
-                                                                        <div class="form-check form-check-inline">
-                                                                            <input class="form-check-input coa-type-img" type="radio" name="coa_file_type_{{ $idx }}" value="gambar">
-                                                                            <label class="form-check-label">Gambar</label>
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                            <div class="row coa-pdf-input">
-                                                                <div class="col-md-6">
-                                                                    <div class="form-group">
-                                                                        <label class="form-label">Ganti COA (PDF)</label>
-                                                                        <input type="file" name="file_coa[{{ $idx }}]" class="form-control" accept="application/pdf">
-                                                                        <small class="form-text text-muted">Format: PDF. Maksimal 3MB.</small>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                            <div class="row coa-img-input" style="display:none;">
-                                                                <div class="col-md-6">
-                                                                    <div class="form-group">
-                                                                        <label class="form-label">Ganti COA (Gambar)</label>
-                                                                        <input type="file" name="file_coa_img[{{ $idx }}]" class="form-control image-coa-input" accept="image/*" capture="environment">
-                                                                        <small class="form-text text-muted">Format: JPG, PNG, WEBP, GIF. Maksimal 3MB. Otomatis dikompres.</small>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-
-                                                        <div class="form-section mb-3">
-                                                            <h6 class="text-primary mb-2">Upload Gambar</h6>
-                                                            <div class="row">
-                                                                <div class="col-md-6">
-                                                                    @php $imgPath = $detail['image_chemical'] ?? null; @endphp
-                                                                    @if($imgPath)
-                                                                        <div class="mb-2">
-                                                                            <a href="{{ asset('storage/' . $imgPath) }}" target="_blank" class="btn btn-sm btn-info">Lihat Foto</a>
-                                                                        </div>
+                                                                    @else
+                                                                        <span class="text-muted small">-</span>
                                                                     @endif
-                                                                    <div class="form-group">
-                                                                        <label class="form-label">Ganti Foto Chemical</label>
-                                                                        <input type="file" name="image_chemical[]" class="form-control" accept="image/*" capture="camera">
-                                                                    </div>
                                                                 </div>
-                                                            </div>
-                                                        </div>
-
-                                                        <!-- Hasil Pemeriksaan -->
-                                                        <div class="form-section mb-3">
-                                                            <h6 class="text-primary mb-2">Hasil Pemeriksaan</h6>
-                                                            <div class="row">
-                                                                <div class="col-md-6">
-                                                                    <div class="form-group">
-                                                                        <label for="status">Status <span class="text-danger">*</span></label>
-                                                                        <select class="form-control" name="status_baris[]" required>
-                                                                            <option value="">Pilih Status</option>
-                                                                            <option value="Hold" {{ ($detail['status'] ?? '') == 'Hold' ? 'selected' : '' }}>Hold</option>
-                                                                            <option value="Release" {{ ($detail['status'] ?? '') == 'Release' ? 'selected' : '' }}>Release</option>
-                                                                            <option value="Retur" {{ ($detail['status'] ?? '') == 'Retur' ? 'selected' : '' }}>Retur</option>
-                                                                        </select>
-                                                                    </div>
-                                                                </div>
-                                                                <div class="col-md-6">
-                                                                    <div class="form-group">
-                                                                        <label class="form-label">Keterangan</label>
-                                                                        <textarea class="form-control" name="keterangan[]" rows="3" placeholder="Keterangan">{{ $detail['keterangan'] ?? '' }}</textarea>
-                                                                    </div>
-                                                                </div>
+                                                                <input type="hidden" name="id_produsen[]" class="id-produsen-hidden" value="{{ old('id_produsen.' . $firstIdx, $firstDetail['id_produsen'] ?? '') }}">
                                                             </div>
                                                         </div>
                                                     </div>
-                                                @endforeach
-                                            </div>
+                                                    <div class="col-md-6">
+                                                        <div class="card border-0 shadow-sm mb-2">
+                                                            <div class="card-body p-3">
+                                                                <div class="fw-semibold">Distributor</div>
+                                                                <div class="small text-muted mb-2">Otomatis terisi sesuai Produk yang dipilih</div>
+                                                                <div class="distributor-badges d-flex flex-wrap gap-1">
+                                                                    @php
+                                                                        $distNames = $mappedProdukId ? ($produkMeta[$mappedProdukId]['distributor_names'] ?? []) : [];
+                                                                        $distNames = is_array($distNames) ? array_values(array_filter($distNames, fn ($v) => $v !== null && $v !== '')) : [];
+                                                                    @endphp
+                                                                    @if(!empty($distNames))
+                                                                        @foreach($distNames as $name)
+                                                                            <span class="badge bg-primary">{{ $name }}</span>
+                                                                        @endforeach
+                                                                    @else
+                                                                        <span class="text-muted small">-</span>
+                                                                    @endif
+                                                                </div>
+                                                                <input type="hidden" name="id_distributor[]" class="id-distributor-hidden" value="{{ old('id_distributor.' . $firstIdx, $firstDetail['id_distributor'] ?? '') }}">
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
 
-                                            <div class="row mt-2">
-                                                <div class="col-md-12">
-                                                    <button type="button" class="btn btn-primary btn-sm add-detail-btn"><i class="bi bi-plus"></i> Tambah Detail</button>
+                                                <div class="detail-items">
+                                                    @foreach($detailIdxList as $dNo => $idx)
+                                                        @php $detail = $detailChemicals[$idx] ?? []; @endphp
+                                                        <div class="detail-item border rounded p-3 mb-3" style="background: #fff;" data-detail-index="{{ $dNo }}" data-detail-global-index="{{ $idx }}">
+                                                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                                                <strong>Detail {{ $dNo + 1 }}</strong>
+                                                                <button type="button" class="btn btn-danger btn-sm remove-detail-btn" style="display:none;"><i class="bi bi-trash"></i> Hapus Detail</button>
+                                                            </div>
+
+                                                            <div class="row">
+                                                                <div class="col-md-6">
+                                                                    <div class="form-group">
+                                                                        <label class="form-label">Negara Produsen</label>
+                                                                        <select class="choices form-control" name="negara_produsen[]">
+                                                                            <option value="">Pilih Negara</option>
+                                                                            @foreach($countries as $code => $name)
+                                                                                <option value="{{ $name }}" {{ ($detail['negara_produsen'] ?? '') == $name ? 'selected' : '' }}>{{ $name }}</option>
+                                                                            @endforeach
+                                                                        </select>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="col-md-6">
+                                                                    <div class="form-group">
+                                                                        <label class="form-label">Kode Produksi</label>
+                                                                        <input type="text" class="form-control" name="kode_produksi[]" value="{{ $detail['kode_produksi'] ?? '' }}" placeholder="Kode Produksi">
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+
+                                                            <div class="row">
+                                                                <div class="col-md-6">
+                                                                    <div class="form-group">
+                                                                        <label class="form-label">Expire Date</label>
+                                                                        <input type="date" class="form-control" name="expire_date[]" value="{{ $detail['expire_date'] ?? '' }}">
+                                                                    </div>
+                                                                </div>
+                                                                <div class="col-md-6">
+                                                                    <div class="form-group">
+                                                                        <label class="form-label">Jumlah Datang</label>
+                                                                        <div class="input-group">
+                                                                            <input type="text" class="form-control" name="jumlah_datang[]" value="{{ $detail['jumlah_datang'] ?? '' }}" placeholder="Jumlah">
+                                                                            <select class="form-select" name="unit_datang[]" style="max-width: 120px;">
+                                                                                <option value="">Pilih Parameter</option>
+                                                                                @foreach(\App\Models\PemeriksaanKedatanganChemical::unitParameters() as $unitKey => $unitLabel)
+                                                                                    <option value="{{ $unitKey }}" {{ (!empty($detail['unit_datang']) && is_array($detail['unit_datang']) && ($detail['unit_datang'][0] ?? '') == $unitKey) ? 'selected' : '' }}>{{ $unitLabel }}</option>
+                                                                                @endforeach
+                                                                            </select>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+
+                                                            <div class="row">
+                                                                <div class="col-md-6">
+                                                                    <div class="form-group">
+                                                                        <label class="form-label">Jumlah Sampling</label>
+                                                                        <div class="input-group">
+                                                                            <input type="text" class="form-control" name="jumlah_sampling[]" value="{{ $detail['jumlah_sampling'] ?? '' }}" placeholder="Jumlah">
+                                                                            <select class="form-select" name="unit_sampling[]" style="max-width: 120px;">
+                                                                                <option value="">Pilih Parameter</option>
+                                                                                @foreach(\App\Models\PemeriksaanKedatanganChemical::unitParameters() as $unitKey => $unitLabel)
+                                                                                    <option value="{{ $unitKey }}" {{ (!empty($detail['unit_sampling']) && is_array($detail['unit_sampling']) && ($detail['unit_sampling'][0] ?? '') == $unitKey) ? 'selected' : '' }}>{{ $unitLabel }}</option>
+                                                                                @endforeach
+                                                                            </select>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+
+                                                            <!-- Kondisi Fisik -->
+                                                            <div class="form-section mb-3">
+                                                                <h6 class="text-primary mb-2">Kondisi Fisik</h6>
+                                                                <div class="row">
+                                                                    <div class="col-md-6">
+                                                                        <div class="mb-3">
+                                                                            <label class="form-label"><strong>Kemasan</strong></label>
+                                                                            <div class="form-check">
+                                                                                <input class="form-check-input" type="radio" name="kondisi_fisik_kemasan_1" value="1" {{ (($detail['kondisi_fisik']['kemasan'] ?? false) == true) ? 'checked' : '' }}>
+                                                                                <label class="form-check-label">Ya ✓</label>
+                                                                            </div>
+                                                                            <div class="form-check">
+                                                                                <input class="form-check-input" type="radio" name="kondisi_fisik_kemasan_1" value="0" {{ (($detail['kondisi_fisik']['kemasan'] ?? false) == false) ? 'checked' : '' }}>
+                                                                                <label class="form-check-label">Tidak ✗</label>
+                                                                            </div>
+                                                                            <input type="hidden" name="kondisi_fisik_kemasan[]" value="{{ ($detail['kondisi_fisik']['kemasan'] ?? false) ? '1' : '0' }}" class="radio-value-kemasan-1">
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="col-md-6">
+                                                                        <div class="mb-3">
+                                                                            <label class="form-label"><strong>Warna</strong></label>
+                                                                            <div class="form-check">
+                                                                                <input class="form-check-input" type="radio" name="kondisi_fisik_warna_1" value="1" {{ (($detail['kondisi_fisik']['warna'] ?? false) == true) ? 'checked' : '' }}>
+                                                                                <label class="form-check-label">Ya ✓</label>
+                                                                            </div>
+                                                                            <div class="form-check">
+                                                                                <input class="form-check-input" type="radio" name="kondisi_fisik_warna_1" value="0" {{ (($detail['kondisi_fisik']['warna'] ?? false) == false) ? 'checked' : '' }}>
+                                                                                <label class="form-check-label">Tidak ✗</label>
+                                                                            </div>
+                                                                            <input type="hidden" name="kondisi_fisik_warna[]" value="{{ ($detail['kondisi_fisik']['warna'] ?? false) ? '1' : '0' }}" class="radio-value-warna-1">
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+
+                                                            <!-- Dokumen -->
+                                                            <div class="form-section mb-3">
+                                                                <h6 class="text-primary mb-2">Dokumen & Sertifikasi</h6>
+                                                                <div class="row">
+                                                                    <div class="col-md-6">
+                                                                        <div class="mb-3">
+                                                                            <label class="form-label"><strong>Halal (berlaku)</strong></label>
+                                                                            <div class="form-check">
+                                                                                <input class="form-check-input" type="radio" name="persyaratan_dokumen_halal_1" value="1" {{ (($detail['persyaratan_dokumen_halal'] ?? false) == true) ? 'checked' : '' }}>
+                                                                                <label class="form-check-label">Ya ✓</label>
+                                                                            </div>
+                                                                            <div class="form-check">
+                                                                                <input class="form-check-input" type="radio" name="persyaratan_dokumen_halal_1" value="0" {{ (($detail['persyaratan_dokumen_halal'] ?? false) == false) ? 'checked' : '' }}>
+                                                                                <label class="form-check-label">Tidak ✗</label>
+                                                                            </div>
+                                                                            <input type="hidden" name="persyaratan_dokumen_halal[]" value="{{ ($detail['persyaratan_dokumen_halal'] ?? false) ? '1' : '0' }}" class="radio-value-halal-1">
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="col-md-6">
+                                                                        <div class="mb-3">
+                                                                            <label class="form-label"><strong>COA</strong></label>
+                                                                            <div class="form-check">
+                                                                                <input class="form-check-input" type="radio" name="coa_1" value="1" {{ (($detail['coa'] ?? false) == true) ? 'checked' : '' }}>
+                                                                                <label class="form-check-label">Ya ✓</label>
+                                                                            </div>
+                                                                            <div class="form-check">
+                                                                                <input class="form-check-input" type="radio" name="coa_1" value="0" {{ (($detail['coa'] ?? false) == false) ? 'checked' : '' }}>
+                                                                                <label class="form-check-label">Tidak ✗</label>
+                                                                            </div>
+                                                                            <input type="hidden" name="coa[]" value="{{ ($detail['coa'] ?? false) ? '1' : '0' }}" class="radio-value-coa-1">
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+
+                                                            <!-- Upload COA -->
+                                                            <div class="form-section mb-3 coa-upload-section">
+                                                                <h6 class="text-primary mb-2">Upload COA</h6>
+                                                                @php
+                                                                    $existingCoaArr = json_decode($pemeriksaanChemical->file_coa_array ?? '[]', true) ?? [];
+                                                                    $existingCoaFile = $detail['file_coa'] ?? $existingCoaArr[$idx] ?? null;
+                                                                @endphp
+                                                                @if($existingCoaFile)
+                                                                    <div class="mb-2">
+                                                                        <span class="badge bg-success">COA Tersimpan</span>
+                                                                        <a href="{{ asset('storage/' . $existingCoaFile) }}" target="_blank" class="btn btn-sm btn-outline-info ms-2">Lihat / Download</a>
+                                                                    </div>
+                                                                @endif
+                                                                <div class="row mb-2">
+                                                                    <div class="col-md-12">
+                                                                        <div class="form-group">
+                                                                            <label class="form-label d-block">Tipe File COA</label>
+                                                                            <div class="form-check form-check-inline">
+                                                                                <input class="form-check-input coa-type-pdf" type="radio" name="coa_file_type_{{ $idx }}" value="pdf" checked>
+                                                                                <label class="form-check-label">PDF</label>
+                                                                            </div>
+                                                                            <div class="form-check form-check-inline">
+                                                                                <input class="form-check-input coa-type-img" type="radio" name="coa_file_type_{{ $idx }}" value="gambar">
+                                                                                <label class="form-check-label">Gambar</label>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="row coa-pdf-input">
+                                                                    <div class="col-md-6">
+                                                                        <div class="form-group">
+                                                                            <label class="form-label">Ganti COA (PDF)</label>
+                                                                            <input type="file" name="file_coa[{{ $idx }}]" class="form-control" accept="application/pdf">
+                                                                            <small class="form-text text-muted">Format: PDF. Maksimal 3MB.</small>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="row coa-img-input" style="display:none;">
+                                                                    <div class="col-md-6">
+                                                                        <div class="form-group">
+                                                                            <label class="form-label">Ganti COA (Gambar)</label>
+                                                                            <input type="file" name="file_coa_img[{{ $idx }}]" class="form-control image-coa-input" accept="image/*" capture="environment">
+                                                                            <small class="form-text text-muted">Format: JPG, PNG, WEBP, GIF. Maksimal 3MB. Otomatis dikompres.</small>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+
+                                                            <div class="form-section mb-3">
+                                                                <h6 class="text-primary mb-2">Upload Gambar</h6>
+                                                                <div class="row">
+                                                                    <div class="col-md-6">
+                                                                        @php $imgPath = $detail['image_chemical'] ?? null; @endphp
+                                                                        @if($imgPath)
+                                                                            <div class="mb-2">
+                                                                                <a href="{{ asset('storage/' . $imgPath) }}" target="_blank" class="btn btn-sm btn-info">Lihat Foto</a>
+                                                                            </div>
+                                                                        @endif
+                                                                        <div class="form-group">
+                                                                            <label class="form-label">Ganti Foto Chemical</label>
+                                                                            <input type="file" name="image_chemical[]" class="form-control" accept="image/*" capture="camera">
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+
+                                                            <!-- Hasil Pemeriksaan -->
+                                                            <div class="form-section mb-3">
+                                                                <h6 class="text-primary mb-2">Hasil Pemeriksaan</h6>
+                                                                <div class="row">
+                                                                    <div class="col-md-6">
+                                                                        <div class="form-group">
+                                                                            <label for="status">Status <span class="text-danger">*</span></label>
+                                                                            <select class="form-control" name="status_baris[]" required>
+                                                                                <option value="">Pilih Status</option>
+                                                                                <option value="Hold" {{ ($detail['status'] ?? '') == 'Hold' ? 'selected' : '' }}>Hold</option>
+                                                                                <option value="Release" {{ ($detail['status'] ?? '') == 'Release' ? 'selected' : '' }}>Release</option>
+                                                                                <option value="Retur" {{ ($detail['status'] ?? '') == 'Retur' ? 'selected' : '' }}>Retur</option>
+                                                                            </select>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="col-md-6">
+                                                                        <div class="form-group">
+                                                                            <label class="form-label">Keterangan</label>
+                                                                            <textarea class="form-control" name="keterangan[]" rows="3" placeholder="Keterangan">{{ $detail['keterangan'] ?? '' }}</textarea>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    @endforeach
+                                                </div>
+
+                                                <div class="row mt-2">
+                                                    <div class="col-md-12">
+                                                        <button type="button" class="btn btn-primary btn-sm add-detail-btn"><i class="bi bi-plus"></i> Tambah Detail</button>
+                                                    </div>
+                                                </div>
+                                                <div class="row mt-3 pt-3 border-top">
+                                                    <div class="col-md-12">
+                                                        <button type="button" class="btn btn-danger btn-sm remove-unified-btn"><i class="bi bi-trash"></i> Hapus Produk</button>
+                                                    </div>
                                                 </div>
                                             </div>
+                                        @endforeach
+                                    </div>
+
+                                    <div class="row mt-3 pt-3 border-top">
+                                        <div class="col-md-12">
+                                            <button type="button" class="btn btn-success btn-sm add-unified-btn"><i class="bi bi-plus"></i> Tambah Produk</button>
                                         </div>
-                                    @endforeach
+                                    </div>
                                 </div>
 
                                 <!-- Submit Buttons -->
@@ -717,8 +730,664 @@
     </header>
 </div>
 
+<style>
+    .collapse-toggle-btn {
+        width: auto;
+        display: inline-flex;
+        align-items: center;
+        text-align: left;
+    }
+    .collapse-toggle-btn.full-width {
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+    }
+    .collapse-chevron { transition: transform .2s ease; }
+    .collapse-toggle-btn[aria-expanded="true"] .collapse-chevron { transform: rotate(180deg); }
+</style>
+
 <script>
-// Radio button synchronization for edit mode
+const bsCollapse = (el) => {
+    try {
+        if (!el || !window.bootstrap || !window.bootstrap.Collapse) return null;
+        return window.bootstrap.Collapse.getOrCreateInstance(el, { toggle: false });
+    } catch (e) {
+        return null;
+    }
+};
+
+const uniqueDomId = (prefix) => {
+    let id;
+    do {
+        id = `${prefix}_${Date.now()}_${Math.random().toString(16).slice(2)}`;
+    } while (document.getElementById(id));
+    return id;
+};
+
+const collapseAllProdukExcept = (activeRowEl) => {
+    const rows = Array.from(document.querySelectorAll('#unified-container .unified-row'));
+    rows.forEach((rowEl) => {
+        if (!rowEl || rowEl === activeRowEl) return;
+        const body = rowEl.querySelector(':scope > .produk-collapse.collapse');
+        if (!body) return;
+
+        const inst = bsCollapse(body);
+        if (inst) {
+            inst.hide();
+        } else {
+            body.classList.remove('show');
+        }
+
+        const btn = rowEl.querySelector('button[data-bs-toggle="collapse"]');
+        if (btn) btn.setAttribute('aria-expanded', 'false');
+    });
+};
+
+const collapseOtherDetailsInRow = (rowEl, activeDetailEl) => {
+    if (!rowEl) return;
+    const details = Array.from(rowEl.querySelectorAll('.detail-items .detail-item'));
+    details.forEach((detailEl) => {
+        if (!detailEl || detailEl === activeDetailEl) return;
+        const body = detailEl.querySelector(':scope > .detail-collapse.collapse');
+        if (!body) return;
+
+        const inst = bsCollapse(body);
+        if (inst) {
+            inst.hide();
+        } else {
+            body.classList.remove('show');
+        }
+        const btn = detailEl.querySelector('button.detail-title[data-bs-toggle="collapse"]');
+        if (btn) btn.setAttribute('aria-expanded', 'false');
+    });
+};
+
+const updateProdukLabel = (rowEl, rowIdx) => {
+    if (!rowEl) return;
+    const labelEl = rowEl.querySelector('.produk-collapse-label');
+    if (!labelEl) return;
+
+    const produkSelect = rowEl.querySelector('select.produk-select');
+    const selectedText = produkSelect && produkSelect.selectedOptions && produkSelect.selectedOptions[0]
+        ? (produkSelect.selectedOptions[0].textContent || '').trim()
+        : '';
+
+    labelEl.textContent = (selectedText && selectedText !== 'Pilih Produk') ? `Produk ${rowIdx + 1}: ${selectedText}` : `Produk ${rowIdx + 1}`;
+};
+
+const updateDetailLabel = (detailEl, dIdx) => {
+    if (!detailEl) return;
+    const labelEl = detailEl.querySelector('.detail-collapse-label');
+    if (!labelEl) return;
+
+    const kode = (detailEl.querySelector('input[name="kode_produksi[]"]')?.value || '').toString().trim();
+    labelEl.textContent = kode !== '' ? kode : `Detail ${dIdx + 1}`;
+};
+
+const ensureProdukCollapsible = (rowEl, rowIdx) => {
+    if (!rowEl) return;
+    if (!rowEl.dataset.produkCollapseId) {
+        rowEl.dataset.produkCollapseId = uniqueDomId('chem_produk_e');
+    }
+    const collapseId = rowEl.dataset.produkCollapseId;
+
+    const headerTitle = rowEl.querySelector(':scope > h6, :scope > h5');
+    if (!headerTitle) return;
+
+    if (!headerTitle.querySelector('button[data-bs-toggle="collapse"]')) {
+        const existingText = (headerTitle.textContent || '').trim();
+        headerTitle.textContent = '';
+
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'btn btn-primary btn-sm d-inline-flex align-items-center gap-2 collapse-toggle-btn';
+        btn.setAttribute('data-bs-toggle', 'collapse');
+        btn.setAttribute('data-bs-target', `#${collapseId}`);
+        btn.setAttribute('aria-expanded', 'true');
+        btn.setAttribute('aria-controls', collapseId);
+
+        const span = document.createElement('span');
+        span.className = 'produk-collapse-label text-white';
+        span.textContent = existingText || `Produk ${rowIdx + 1}`;
+
+        const icon = document.createElement('i');
+        icon.className = 'bi bi-chevron-down collapse-chevron text-white';
+
+        btn.appendChild(span);
+        btn.appendChild(icon);
+        headerTitle.appendChild(btn);
+    }
+
+    let body = rowEl.querySelector(':scope > .produk-collapse.collapse');
+    if (body) {
+        body.id = collapseId;
+    } else {
+        body = document.createElement('div');
+        body.className = 'produk-collapse collapse show';
+        body.id = collapseId;
+
+        const nodesToMove = [];
+        let node = headerTitle.nextSibling;
+        while (node) {
+            const next = node.nextSibling;
+            nodesToMove.push(node);
+            node = next;
+        }
+        nodesToMove.forEach((n) => body.appendChild(n));
+        rowEl.appendChild(body);
+    }
+};
+
+const ensureDetailCollapsible = (detailEl, dIdx) => {
+    if (!detailEl) return;
+    let collapseId = detailEl.dataset.detailCollapseId || '';
+
+    const hasDuplicateId = (id) => {
+        if (!id) return true;
+        const matches = document.querySelectorAll(`[id="${id}"]`);
+        if (matches.length > 1) return true;
+        if (matches.length === 1 && !detailEl.contains(matches[0])) return true;
+        return false;
+    };
+
+    if (hasDuplicateId(collapseId)) {
+        collapseId = uniqueDomId('chem_detail_e');
+        detailEl.dataset.detailCollapseId = collapseId;
+    }
+
+    const header = detailEl.querySelector(':scope > .d-flex');
+    if (!header) return;
+
+    const titleEl = header.querySelector('strong');
+    if (titleEl && titleEl.tagName.toLowerCase() !== 'button') {
+        const existingText = (titleEl.textContent || '').trim();
+
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'btn btn-primary btn-sm fw-bold d-inline-flex align-items-center gap-2 collapse-toggle-btn detail-title';
+        btn.setAttribute('data-bs-toggle', 'collapse');
+        btn.setAttribute('data-bs-target', `#${collapseId}`);
+        btn.setAttribute('aria-expanded', 'true');
+        btn.setAttribute('aria-controls', collapseId);
+
+        const span = document.createElement('span');
+        span.className = 'detail-collapse-label';
+        span.textContent = existingText || `Detail #${dIdx + 1}`;
+
+        const icon = document.createElement('i');
+        icon.className = 'bi bi-chevron-down collapse-chevron';
+
+        btn.appendChild(span);
+        btn.appendChild(icon);
+        titleEl.replaceWith(btn);
+    }
+
+    const existingBtn = header.querySelector('button.detail-title[data-bs-toggle="collapse"]');
+    if (existingBtn) {
+        existingBtn.setAttribute('data-bs-target', `#${collapseId}`);
+        existingBtn.setAttribute('aria-controls', collapseId);
+    }
+
+    let body = detailEl.querySelector(':scope > .detail-collapse.collapse');
+    if (body) {
+        body.id = collapseId;
+    } else {
+        body = document.createElement('div');
+        body.className = 'detail-collapse collapse show';
+        body.id = collapseId;
+
+        const nodesToMove = [];
+        let node = header.nextSibling;
+        while (node) {
+            const next = node.nextSibling;
+            nodesToMove.push(node);
+            node = next;
+        }
+        nodesToMove.forEach((n) => body.appendChild(n));
+        detailEl.appendChild(body);
+    }
+};
+function initializeAllChoices() {
+    const selectElements = document.querySelectorAll('select.choices');
+    selectElements.forEach(function(select) {
+        if (select.dataset.choicesInitialized === 'true' || select.classList.contains('choices__input')) {
+            return;
+        }
+        try {
+            const choicesInstance = new Choices(select, {
+                searchResultLimit: 100,
+                searchFuzziness: 0.000001,
+                fuseOptions: { ignoreLocation: true, threshold: 0.2, matchAllTokens: false },
+                searchEnabled: true,
+                removeItemButton: true,
+                placeholder: true,
+                placeholderValue: 'Pilih opsi',
+                noResultsText: 'Tidak ada hasil',
+                noChoicesText: 'Tidak ada pilihan',
+                searchPlaceholderValue: 'Cari...',
+                itemSelectText: 'Tekan untuk memilih'
+            });
+            select.choicesInstance = choicesInstance;
+            select.dataset.choicesInitialized = 'true';
+        } catch(err) {
+            console.error('Error initializing Choices:', err);
+        }
+    });
+}
+
+function updateRemoveButtons() {
+    const rows = document.querySelectorAll('#unified-container .unified-row');
+    rows.forEach(row => {
+        const removeBtn = row.querySelector('.remove-unified-btn');
+        if (removeBtn) {
+            removeBtn.style.display = rows.length > 1 ? '' : 'none';
+        }
+    });
+}
+
+function setupRowRadios(detailEl) {
+    const globalIndex = Number(detailEl.dataset.detailGlobalIndex || 0) + 1;
+    const mappings = [
+        { key: 'kondisi_fisik_kemasan', hiddenPrefix: 'kemasan' },
+        { key: 'kondisi_fisik_warna', hiddenPrefix: 'warna' },
+        { key: 'persyaratan_dokumen_halal', hiddenPrefix: 'halal' },
+        { key: 'coa', hiddenPrefix: 'coa' },
+    ];
+
+    mappings.forEach(({ key, hiddenPrefix }) => {
+        const radioName = `${key}_${globalIndex}`;
+        detailEl.querySelectorAll(`input[type="radio"][name^="${key}_"]`).forEach((radio, idx) => {
+            radio.name = radioName;
+            const uniqueRadioId = `${key}_${globalIndex}_${idx}`;
+            radio.id = uniqueRadioId;
+            const formCheck = radio.closest('.form-check');
+            const lbl = formCheck ? formCheck.querySelector('label.form-check-label') : null;
+            if (lbl) lbl.setAttribute('for', uniqueRadioId);
+        });
+
+        const hidden = detailEl.querySelector(`input[type="hidden"].radio-value-${hiddenPrefix}-${globalIndex}`)
+            || detailEl.querySelector(`input[type="hidden"][name="${key}[]"]`);
+
+        detailEl.querySelectorAll(`input[type="radio"][name="${radioName}"]`).forEach((radio) => {
+            radio.addEventListener('change', function () {
+                if (hidden) hidden.value = this.value;
+            });
+        });
+
+        const checked = detailEl.querySelector(`input[type="radio"][name="${radioName}"]:checked`);
+        if (checked && hidden && (hidden.value === '' || hidden.value === null)) {
+            hidden.value = checked.value;
+        }
+    });
+}
+
+function updateDetailButtons() {
+    document.querySelectorAll('.unified-row').forEach((row) => {
+        const detailItems = Array.from(row.querySelectorAll('.detail-items .detail-item'));
+        detailItems.forEach((detailEl) => {
+            const btn = detailEl.querySelector('.remove-detail-btn');
+            if (btn) btn.style.display = detailItems.length > 1 ? '' : 'none';
+        });
+    });
+}
+
+function updateRowNumbers() {
+    const rows = document.querySelectorAll('.unified-row');
+    let globalDetail = 0;
+    rows.forEach((row, index) => {
+        ensureProdukCollapsible(row, index);
+        updateProdukLabel(row, index);
+
+        const detailItems = Array.from(row.querySelectorAll('.detail-items .detail-item'));
+        detailItems.forEach((detailEl, dIdx) => {
+            detailEl.dataset.detailIndex = String(dIdx);
+            detailEl.dataset.detailGlobalIndex = String(globalDetail);
+            
+            ensureDetailCollapsible(detailEl, dIdx);
+            updateDetailLabel(detailEl, dIdx);
+
+            detailEl.querySelectorAll('input[type="hidden"][name="kondisi_fisik_kemasan[]"]').forEach((el) => {
+                el.className = `radio-value-kemasan-${globalDetail + 1}`;
+            });
+            detailEl.querySelectorAll('input[type="hidden"][name="kondisi_fisik_warna[]"]').forEach((el) => {
+                el.className = `radio-value-warna-${globalDetail + 1}`;
+            });
+            detailEl.querySelectorAll('input[type="hidden"][name="persyaratan_dokumen_halal[]"]').forEach((el) => {
+                el.className = `radio-value-halal-${globalDetail + 1}`;
+            });
+            detailEl.querySelectorAll('input[type="hidden"][name="coa[]"]').forEach((el) => {
+                el.className = `radio-value-coa-${globalDetail + 1}`;
+            });
+
+            detailEl.querySelectorAll('input[type="file"]').forEach((el) => {
+                if (el.name.startsWith('file_coa_img')) {
+                    el.name = `file_coa_img[${globalDetail}]`;
+                } else if (el.name.startsWith('file_coa')) {
+                    el.name = `file_coa[${globalDetail}]`;
+                } else if (el.name.startsWith('image_chemical')) {
+                    el.name = `image_chemical[${globalDetail}]`;
+                }
+            });
+
+            setupRowRadios(detailEl);
+            globalDetail += 1;
+        });
+    });
+}
+
+const countriesData = @json($countries ?? []);
+const produkKategoriOptionsData = @json($produkKategoriOptions ?? []);
+const unitParametersData = @json(\App\Models\PemeriksaanKedatanganChemical::unitParameters());
+
+function addNewRow() {
+    const container = document.getElementById('unified-container');
+    if (!container) return;
+    const rowCount = container.querySelectorAll('.unified-row').length + 1;
+    
+    const newRow = document.createElement('div');
+    newRow.className = 'unified-row mb-4 p-3 border rounded';
+    newRow.style.backgroundColor = '#f8f9fa';
+    
+    let kategoriOptionsHtml = '<option value="">Pilih Kategori</option>';
+    produkKategoriOptionsData.forEach(k => {
+        kategoriOptionsHtml += `<option value="${k}">${k}</option>`;
+    });
+
+    let negaraOptionsHtml = '<option value="">Pilih Negara</option>';
+    Object.entries(countriesData).forEach(([code, name]) => {
+        negaraOptionsHtml += `<option value="${name}">${name}</option>`;
+    });
+
+    let unitOptionsHtml = '<option value="">Pilih Parameter</option>';
+    Object.entries(unitParametersData).forEach(([uKey, uLabel]) => {
+        unitOptionsHtml += `<option value="${uKey}">${uLabel}</option>`;
+    });
+
+    newRow.innerHTML = `
+        <h6 class="text-primary mb-3">Produk ${rowCount}</h6>
+        
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label class="form-label">Kategori</label>
+                    <select class="choices form-control kategori-produk-select" name="kategori_code[]">
+                        ${kategoriOptionsHtml}
+                    </select>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label class="form-label">Produk</label>
+                    <select class="form-control produk-select" name="id_produk[]">
+                        <option value="">Pilih Produk</option>
+                    </select>
+                    <input type="hidden" name="id_chemical[]" class="id-chemical-hidden" required>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label class="form-label">Kondisi Chemical</label>
+                    <select class="form-control" name="kondisi_chemical[]">
+                        <option value="">Pilih Kondisi</option>
+                        <option value="Cair">Cair</option>
+                        <option value="Serbuk">Serbuk</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card border-0 shadow-sm mb-2">
+                    <div class="card-body p-3">
+                        <div class="fw-semibold">Produsen</div>
+                        <div class="small text-muted mb-2">Otomatis terisi sesuai Produk yang dipilih</div>
+                        <div class="produsen-badges d-flex flex-wrap gap-1">
+                            <span class="text-muted small">-</span>
+                        </div>
+                        <input type="hidden" name="id_produsen[]" class="id-produsen-hidden">
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card border-0 shadow-sm mb-2">
+                    <div class="card-body p-3">
+                        <div class="fw-semibold">Distributor</div>
+                        <div class="small text-muted mb-2">Otomatis terisi sesuai Produk yang dipilih</div>
+                        <div class="distributor-badges d-flex flex-wrap gap-1">
+                            <span class="text-muted small">-</span>
+                        </div>
+                        <input type="hidden" name="id_distributor[]" class="id-distributor-hidden">
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="detail-items">
+            <div class="detail-item border rounded p-3 mb-3" style="background: #fff;" data-detail-index="0" data-detail-global-index="0">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <strong>Detail 1</strong>
+                    <button type="button" class="btn btn-danger btn-sm remove-detail-btn" style="display:none;"><i class="bi bi-trash"></i> Hapus Detail</button>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">Negara Produsen</label>
+                            <select class="choices form-control" name="negara_produsen[]">
+                                ${negaraOptionsHtml}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">Kode Produksi</label>
+                            <input type="text" class="form-control" name="kode_produksi[]" placeholder="Kode Produksi">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">Expire Date</label>
+                            <input type="date" class="form-control" name="expire_date[]">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">Jumlah Datang</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" name="jumlah_datang[]" placeholder="Jumlah">
+                                <select class="form-select" name="unit_datang[]" style="max-width: 120px;">
+                                    ${unitOptionsHtml}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">Jumlah Sampling</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" name="jumlah_sampling[]" placeholder="Jumlah">
+                                <select class="form-select" name="unit_sampling[]" style="max-width: 120px;">
+                                    ${unitOptionsHtml}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section mb-3">
+                    <h6 class="text-primary mb-2">Kondisi Fisik</h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label"><strong>Kemasan</strong></label>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="kondisi_fisik_kemasan_1" value="1">
+                                    <label class="form-check-label">Ya ✓</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="kondisi_fisik_kemasan_1" value="0">
+                                    <label class="form-check-label">Tidak ✗</label>
+                                </div>
+                                <input type="hidden" name="kondisi_fisik_kemasan[]" class="radio-value-kemasan-1">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label"><strong>Warna</strong></label>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="kondisi_fisik_warna_1" value="1">
+                                    <label class="form-check-label">Ya ✓</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="kondisi_fisik_warna_1" value="0">
+                                    <label class="form-check-label">Tidak ✗</label>
+                                </div>
+                                <input type="hidden" name="kondisi_fisik_warna[]" class="radio-value-warna-1">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section mb-3">
+                    <h6 class="text-primary mb-2">Dokumen & Sertifikasi</h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label"><strong>Halal (berlaku)</strong></label>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="persyaratan_dokumen_halal_1" value="1">
+                                    <label class="form-check-label">Ya ✓</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="persyaratan_dokumen_halal_1" value="0">
+                                    <label class="form-check-label">Tidak ✗</label>
+                                </div>
+                                <input type="hidden" name="persyaratan_dokumen_halal[]" class="radio-value-halal-1">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label"><strong>COA</strong></label>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="coa_1" value="1">
+                                    <label class="form-check-label">Ya ✓</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="coa_1" value="0">
+                                    <label class="form-check-label">Tidak ✗</label>
+                                </div>
+                                <input type="hidden" name="coa[]" class="radio-value-coa-1">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section mb-3 coa-upload-section">
+                    <h6 class="text-primary mb-2">Upload COA</h6>
+                    <div class="row mb-2">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label class="form-label d-block">Tipe File COA</label>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input coa-type-pdf" type="radio" name="coa_file_type_0" value="pdf" checked>
+                                    <label class="form-check-label">PDF</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input coa-type-img" type="radio" name="coa_file_type_0" value="gambar">
+                                    <label class="form-check-label">Gambar</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row coa-pdf-input">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label">Ganti COA (PDF)</label>
+                                <input type="file" name="file_coa[]" class="form-control" accept="application/pdf">
+                                <small class="form-text text-muted">Format: PDF. Maksimal 3MB.</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row coa-img-input" style="display:none;">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label">Ganti COA (Gambar)</label>
+                                <input type="file" name="file_coa_img[]" class="form-control image-coa-input" accept="image/*" capture="environment">
+                                <small class="form-text text-muted">Format: JPG, PNG, WEBP, GIF. Maksimal 3MB. Otomatis dikompres.</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section mb-3">
+                    <h6 class="text-primary mb-2">Upload Gambar</h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label">Ganti Foto Chemical</label>
+                                <input type="file" name="image_chemical[]" class="form-control" accept="image/*" capture="camera">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section mb-3">
+                    <h6 class="text-primary mb-2">Hasil Pemeriksaan</h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="status">Status <span class="text-danger">*</span></label>
+                                <select class="form-control" name="status_baris[]" required>
+                                    <option value="">Pilih Status</option>
+                                    <option value="Hold">Hold</option>
+                                    <option value="Release">Release</option>
+                                    <option value="Retur">Retur</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label">Keterangan</label>
+                                <textarea class="form-control" name="keterangan[]" rows="3" placeholder="Keterangan"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-2">
+            <div class="col-md-12">
+                <button type="button" class="btn btn-primary btn-sm add-detail-btn"><i class="bi bi-plus"></i> Tambah Detail</button>
+            </div>
+        </div>
+        
+        <div class="row mt-3 pt-3 border-top">
+            <div class="col-md-12">
+                <button type="button" class="btn btn-danger btn-sm remove-unified-btn"><i class="bi bi-trash"></i> Hapus Produk</button>
+            </div>
+        </div>
+    `;
+    
+    container.appendChild(newRow);
+
+    initializeAllChoices();
+    updateRowNumbers();
+    collapseAllProdukExcept(newRow);
+    updateDetailButtons();
+    updateRemoveButtons();
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     const produkByKategori = @json($produkByKategori ?? []);
     const produkMeta = @json($produkMeta ?? []);
@@ -737,9 +1406,9 @@ document.addEventListener('DOMContentLoaded', function() {
         try {
             const instance = new Choices(selectEl, {
                 searchResultLimit: 100,
-                    searchFuzziness: 0.000001,
-                    fuseOptions: { ignoreLocation: true, threshold: 0.2, matchAllTokens: false },
-                    searchEnabled: true,
+                searchFuzziness: 0.000001,
+                fuseOptions: { ignoreLocation: true, threshold: 0.2, matchAllTokens: false },
+                searchEnabled: true,
                 searchPlaceholderValue: 'Cari...',
                 itemSelectText: 'Tekan untuk memilih',
                 noResultsText: 'Tidak ada hasil ditemukan',
@@ -847,7 +1516,6 @@ document.addEventListener('DOMContentLoaded', function() {
         if (target && target.matches('select.kategori-produk-select')) {
             const row = target.closest('.unified-row');
             if (row) {
-                // User changed category: drop the initial desired product so it won't keep reverting
                 if (target.dataset) {
                     target.dataset.desiredProduk = '';
                 }
@@ -861,6 +1529,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
                 populateProdukOptionsForRow(row);
                 applyProdukForRow(row, true);
+                const rIdx = Array.from(document.querySelectorAll('#main .unified-row')).indexOf(row);
+                updateProdukLabel(row, rIdx >= 0 ? rIdx : 0);
             }
         }
         if (target && target.matches('select.produk-select')) {
@@ -871,6 +1541,18 @@ document.addEventListener('DOMContentLoaded', function() {
                     kategoriSelect.dataset.desiredProduk = (target.value || '').toString();
                 }
                 applyProdukForRow(row, true);
+                const rIdx = Array.from(document.querySelectorAll('#main .unified-row')).indexOf(row);
+                updateProdukLabel(row, rIdx >= 0 ? rIdx : 0);
+            }
+        }
+    });
+
+    document.addEventListener('input', function(e) {
+        if (e.target && e.target.name === 'kode_produksi[]') {
+            const detailEl = e.target.closest('.detail-item');
+            if (detailEl) {
+                const dIdx = Number(detailEl.dataset.detailIndex || 0);
+                updateDetailLabel(detailEl, dIdx);
             }
         }
     });
@@ -883,101 +1565,33 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    function setupRowRadios(detailEl) {
-        const globalIndex = Number(detailEl.dataset.detailGlobalIndex || 0) + 1;
-        const mappings = [
-            { key: 'kondisi_fisik_kemasan', hiddenPrefix: 'kemasan' },
-            { key: 'kondisi_fisik_warna', hiddenPrefix: 'warna' },
-            { key: 'persyaratan_dokumen_halal', hiddenPrefix: 'halal' },
-            { key: 'coa', hiddenPrefix: 'coa' },
-        ];
-
-        mappings.forEach(({ key, hiddenPrefix }) => {
-            const radioName = `${key}_${globalIndex}`;
-            detailEl.querySelectorAll(`input[type="radio"][name^="${key}_"]`).forEach((radio, idx) => {
-                radio.name = radioName;
-                const uniqueRadioId = `${key}_${globalIndex}_${idx}`;
-                radio.id = uniqueRadioId;
-                const formCheck = radio.closest('.form-check');
-                const lbl = formCheck ? formCheck.querySelector('label.form-check-label') : null;
-                if (lbl) lbl.setAttribute('for', uniqueRadioId);
-            });
-
-            const hidden = detailEl.querySelector(`input[type="hidden"].radio-value-${hiddenPrefix}-${globalIndex}`)
-                || detailEl.querySelector(`input[type="hidden"][name="${key}[]"]`);
-
-            detailEl.querySelectorAll(`input[type="radio"][name="${radioName}"]`).forEach((radio) => {
-                radio.addEventListener('change', function () {
-                    if (hidden) hidden.value = this.value;
-                });
-            });
-
-            const checked = detailEl.querySelector(`input[type="radio"][name="${radioName}"]:checked`);
-            if (checked && hidden && (hidden.value === '' || hidden.value === null)) {
-                hidden.value = checked.value;
-            }
-        });
-    }
-
-    function updateDetailButtons() {
-        document.querySelectorAll('#main .unified-row').forEach((row) => {
-            const detailItems = Array.from(row.querySelectorAll('.detail-items .detail-item'));
-            detailItems.forEach((detailEl) => {
-                const btn = detailEl.querySelector('.remove-detail-btn');
-                if (btn) btn.style.display = detailItems.length > 1 ? '' : 'none';
-            });
-        });
-    }
-
-    function updateRowNumbers() {
-        const rows = document.querySelectorAll('#main .unified-row');
-        let globalDetail = 0;
-        rows.forEach((row, index) => {
-            const title = row.querySelector('h6');
-            if (title) title.textContent = `Produk ${index + 1}`;
-
-            const detailItems = Array.from(row.querySelectorAll('.detail-items .detail-item'));
-            detailItems.forEach((detailEl, dIdx) => {
-                detailEl.dataset.detailIndex = String(dIdx);
-                detailEl.dataset.detailGlobalIndex = String(globalDetail);
-                const t = detailEl.querySelector('strong');
-                if (t) t.textContent = `Detail ${dIdx + 1}`;
-
-                detailEl.querySelectorAll('input[type="hidden"][name="kondisi_fisik_kemasan[]"]').forEach((el) => {
-                    el.className = `radio-value-kemasan-${globalDetail + 1}`;
-                });
-                detailEl.querySelectorAll('input[type="hidden"][name="kondisi_fisik_warna[]"]').forEach((el) => {
-                    el.className = `radio-value-warna-${globalDetail + 1}`;
-                });
-                detailEl.querySelectorAll('input[type="hidden"][name="persyaratan_dokumen_halal[]"]').forEach((el) => {
-                    el.className = `radio-value-halal-${globalDetail + 1}`;
-                });
-                detailEl.querySelectorAll('input[type="hidden"][name="coa[]"]').forEach((el) => {
-                    el.className = `radio-value-coa-${globalDetail + 1}`;
-                });
-
-                detailEl.querySelectorAll('input[type="file"]').forEach((el) => {
-                    if (el.name.startsWith('file_coa_img')) {
-                        el.name = `file_coa_img[${globalDetail}]`;
-                    } else if (el.name.startsWith('file_coa')) {
-                        el.name = `file_coa[${globalDetail}]`;
-                    } else if (el.name.startsWith('image_chemical')) {
-                        el.name = `image_chemical[${globalDetail}]`;
-                    }
-                });
-
-                setupRowRadios(detailEl);
-                globalDetail += 1;
-            });
-        });
-    }
-
-    // Init indices/radio
+    // Init indices, buttons & choices
+    initializeAllChoices();
     updateRowNumbers();
     updateDetailButtons();
+    updateRemoveButtons();
 
-    // Add detail
+    // Event delegation for Tambah Produk & Hapus Produk & Tambah Detail & Hapus Detail
     document.addEventListener('click', function(e) {
+        if (e.target.closest('.add-unified-btn')) {
+            addNewRow();
+            return;
+        }
+
+        if (e.target.closest('.remove-unified-btn')) {
+            const rowEl = e.target.closest('.unified-row');
+            if (rowEl) {
+                const rows = document.querySelectorAll('#unified-container .unified-row');
+                if (rows.length > 1) {
+                    rowEl.remove();
+                    updateRowNumbers();
+                    updateDetailButtons();
+                    updateRemoveButtons();
+                }
+            }
+            return;
+        }
+
         if (e.target.closest('.add-detail-btn')) {
             const rowEl = e.target.closest('.unified-row');
             if (!rowEl) return;
@@ -988,6 +1602,8 @@ document.addEventListener('DOMContentLoaded', function() {
             if (!last) return;
 
             const newItem = last.cloneNode(true);
+            delete newItem.dataset.detailCollapseId;
+            newItem.removeAttribute('data-detail-collapse-id');
 
             // Clean up Choices.js in cloned element
             newItem.querySelectorAll('select.choices').forEach((select) => {
@@ -1031,13 +1647,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
             container.appendChild(newItem);
             updateRowNumbers();
+            collapseOtherDetailsInRow(rowEl, newItem);
             updateDetailButtons();
             initializeAllChoices();
+            return;
         }
-    });
 
-    // Remove detail
-    document.addEventListener('click', function(e) {
         if (e.target.closest('.remove-detail-btn')) {
             const rowEl = e.target.closest('.unified-row');
             const detailEl = e.target.closest('.detail-item');
@@ -1048,6 +1663,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 updateRowNumbers();
                 updateDetailButtons();
             }
+            return;
         }
     });
 
@@ -1089,6 +1705,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
             }
         });
+    });
+
     // Pengecekan ukuran file (Frontend) max 3MB
     document.addEventListener('change', function(e) {
         if (e.target.type === 'file') {
@@ -1122,18 +1740,15 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // Fix COA radio name on clone (add detail)
-    const origAddDetailHandler = null;
     document.addEventListener('click', function(e) {
         const addBtn = e.target.closest('.add-detail-btn');
         if (!addBtn) return;
-        // After cloneNode happens in existing handler, fix radio names in new items
         setTimeout(() => {
             document.querySelectorAll('.detail-item').forEach((item, idx) => {
                 const radios = item.querySelectorAll('.coa-type-pdf, .coa-type-img');
                 radios.forEach(r => {
                     r.name = `coa_file_type_${idx}`;
                 });
-                // Hide any "COA Tersimpan" badge on cloned items
                 const coaBadges = item.querySelectorAll('.badge.bg-success');
                 coaBadges.forEach(b => {
                     if (b.textContent.trim() === 'COA Tersimpan') {
