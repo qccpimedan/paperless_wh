@@ -994,6 +994,12 @@
                                         @endforelse
                                     </div>
 
+                                    <div class="row mt-3 pt-3 border-top">
+                                        <div class="col-md-12">
+                                            <button type="button" class="btn btn-success btn-sm add-unified-btn"><i class="bi bi-plus"></i> Tambah Produk</button>
+                                        </div>
+                                    </div>
+
                                     <script>
                                         document.addEventListener('DOMContentLoaded', function() {
                                             const choicesInstances = new WeakMap();
@@ -1641,6 +1647,358 @@
                                                         updateDeleteButtons();
                                                         updateDetailIndices();
                                                     }
+                                                }
+                                            });
+
+                                            // Event listener Tambah Produk
+                                            document.addEventListener('click', function(e) {
+                                                if (e.target.closest('.add-unified-btn')) {
+                                                    const container = document.getElementById('unified-container');
+                                                    const rowIndex = container.querySelectorAll('.unified-row').length;
+
+                                                    const newRow = document.createElement('div');
+                                                    newRow.className = 'unified-row mb-4 p-3 border rounded';
+                                                    newRow.style.backgroundColor = '#f8f9fa';
+                                                    newRow.dataset.rowIndex = String(rowIndex);
+
+                                                    const unitOptions = `
+                                                        <option value="">Pilih Parameter</option>
+                                                        @foreach(\App\Models\PemeriksaanKedatanganKemasan::unitParameters() as $key => $label)
+                                                            <option value="{{ $key }}">{{ $label }}</option>
+                                                        @endforeach
+                                                    `;
+
+                                                    newRow.innerHTML = `
+                                                        <div class="d-flex justify-content-between align-items-center mb-3">
+                                                            <h5 class="mb-0 bahan-title">Bahan #${rowIndex + 1}</h5>
+                                                        </div>
+                                                        <!-- Bahan Kemasan -->
+                                                        <div class="form-section mb-3">
+                                                            <h6 class="text-primary mb-2">Bahan Kemasan</h6>
+                                                            <div class="row">
+                                                                <div class="col-md-6">
+                                                                    <div class="form-group">
+                                                                        <label class="form-label">Kategori</label>
+                                                                        <select class="choices form-control kategori-produk-select" data-role="kategori_code">
+                                                                            <option value="">Pilih Kategori</option>
+                                                                            @foreach(($produkKategoriOptions ?? []) as $kategori)
+                                                                                <option value="{{ $kategori }}">{{ $kategori }}</option>
+                                                                            @endforeach
+                                                                        </select>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="col-md-6">
+                                                                    <div class="form-group">
+                                                                        <label class="form-label">Produk</label>
+                                                                        <select class="choices form-control produk-select" data-role="id_produk">
+                                                                            <option value="">Pilih Produk</option>
+                                                                        </select>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        <!-- Informasi Kemasan & Supplier -->
+                                                        <div class="form-section mb-3">
+                                                            <h6 class="text-primary mb-2">Informasi Kemasan & Supplier</h6>
+                                                            <div class="row">
+                                                                <div class="col-md-4">
+                                                                    <div class="card border-0 shadow-sm">
+                                                                        <div class="card-body p-3">
+                                                                            <div class="fw-semibold">Produsen</div>
+                                                                            <div class="small text-muted mb-2">Otomatis terisi sesuai Produk yang dipilih</div>
+                                                                            <div class="produsen-badges d-flex flex-wrap gap-1"><span class="text-muted small">-</span></div>
+                                                                            <div class="produsen-hidden-inputs"></div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="col-md-4">
+                                                                    <div class="card border-0 shadow-sm">
+                                                                        <div class="card-body p-3">
+                                                                            <div class="fw-semibold">Distributor</div>
+                                                                            <div class="small text-muted mb-2">Otomatis terisi sesuai Produk yang dipilih</div>
+                                                                            <div class="distributor-badges d-flex flex-wrap gap-1"><span class="text-muted small">-</span></div>
+                                                                            <div class="distributor-hidden-inputs"></div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="detail-items">
+                                                            <div class="detail-item mb-3 p-3 border rounded" data-detail-index="0" style="background-color:#ffffff;">
+                                                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                                                    <span class="fw-bold detail-title">Detail #1</span>
+                                                                    <button type="button" class="btn btn-danger btn-sm remove-detail-btn" style="display:none;"><i class="bi bi-trash"></i> Hapus Detail</button>
+                                                                </div>
+                                                                <input type="hidden" name="kategori_code[]" class="kategori-code-hidden" value="">
+                                                                <input type="hidden" name="id_produk[]" class="produk-id-hidden" value="">
+                                                                <div class="produsen-hidden-inputs"></div>
+                                                                <div class="distributor-hidden-inputs"></div>
+                                                                <input type="hidden" name="penampakan[]" class="penampakan-hidden" value="">
+                                                                <input type="hidden" name="sealing[]" class="sealing-hidden" value="">
+                                                                <input type="hidden" name="cetakan[]" class="cetakan-hidden" value="">
+                                                                <input type="hidden" name="logo_halal[]" class="logo-halal-hidden" value="">
+                                                                <input type="hidden" name="dokumen_halal[]" class="dokumen-halal-hidden" value="">
+                                                                <input type="hidden" name="coa[]" class="coa-hidden" value="">
+
+                                                                <div class="row">
+                                                                    <div class="col-md-4">
+                                                                        <div class="form-group">
+                                                                            <label class="form-label">Kode Produksi</label>
+                                                                            <input type="text" class="form-control" name="kode_produksi[]" placeholder="Kode Produksi">
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="col-md-4">
+                                                                        <div class="form-group">
+                                                                            <label class="form-label">Jumlah Datang</label>
+                                                                            <div class="input-group" style="max-width:100%;">
+                                                                                <input type="text" class="form-control" name="jumlah_datang[]" placeholder="Jumlah" min="0" step="any">
+                                                                                <select class="form-select" name="unit_datang[]" style="max-width:120px;">${unitOptions}</select>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="col-md-4">
+                                                                        <div class="form-group">
+                                                                            <label class="form-label">Jumlah Sampling</label>
+                                                                            <div class="input-group" style="max-width:100%;">
+                                                                                <input type="text" class="form-control" name="jumlah_sampling[]" placeholder="Jumlah" min="0" step="any">
+                                                                                <select class="form-select" name="unit_sampling[]" style="max-width:120px;">${unitOptions}</select>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+
+                                                                <div class="row">
+                                                                    <div class="col-md-12">
+                                                                        <div class="form-group">
+                                                                            <label class="form-label">Spesifikasi</label>
+                                                                            <textarea class="form-control" name="spesifikasi[]" rows="2" placeholder="Spesifikasi"></textarea>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+
+                                                                <div class="form-section mb-3 mt-3">
+                                                                    <h6 class="text-primary mb-2">Kondisi Fisik</h6>
+                                                                    <div class="row">
+                                                                        <div class="col-md-4">
+                                                                            <div class="mb-3">
+                                                                                <label class="form-label"><strong>Penampakan</strong></label>
+                                                                                <div class="form-check"><input class="form-check-input" type="radio" name="penampakan_master_new_${rowIndex}" value="1"><label class="form-check-label">Ya ✓</label></div>
+                                                                                <div class="form-check"><input class="form-check-input" type="radio" name="penampakan_master_new_${rowIndex}" value="0"><label class="form-check-label">Tidak ✗</label></div>
+                                                                            </div>
+                                                                        </div>
+                                                                        <div class="col-md-4">
+                                                                            <div class="mb-3">
+                                                                                <label class="form-label"><strong>Sealing</strong></label>
+                                                                                <div class="form-check"><input class="form-check-input" type="radio" name="sealing_master_new_${rowIndex}" value="1"><label class="form-check-label">Ya ✓</label></div>
+                                                                                <div class="form-check"><input class="form-check-input" type="radio" name="sealing_master_new_${rowIndex}" value="0"><label class="form-check-label">Tidak ✗</label></div>
+                                                                            </div>
+                                                                        </div>
+                                                                        <div class="col-md-4">
+                                                                            <div class="mb-3">
+                                                                                <label class="form-label"><strong>Cetakan</strong></label>
+                                                                                <div class="form-check"><input class="form-check-input" type="radio" name="cetakan_master_new_${rowIndex}" value="1"><label class="form-check-label">Ya ✓</label></div>
+                                                                                <div class="form-check"><input class="form-check-input" type="radio" name="cetakan_master_new_${rowIndex}" value="0"><label class="form-check-label">Tidak ✗</label></div>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+
+                                                                <div class="form-section mb-3">
+                                                                    <h6 class="text-primary mb-2">Detail Tambahan</h6>
+                                                                    <div class="row">
+                                                                        <div class="col-md-4">
+                                                                            <div class="form-group">
+                                                                                <label class="form-label">Ketebalan (Micron)</label>
+                                                                                <input type="number" step="0.01" class="form-control" name="ketebalan_micron[]" placeholder="Ketebalan">
+                                                                            </div>
+                                                                        </div>
+                                                                        <div class="col-md-4">
+                                                                            <div class="form-group">
+                                                                                <label class="form-label">Dimensi</label>
+                                                                                <input type="text" class="form-control" name="dimensi[]" placeholder="Dimensi">
+                                                                            </div>
+                                                                        </div>
+                                                                        <div class="col-md-4">
+                                                                            <div class="form-group">
+                                                                                <label class="form-label">Status <span class="text-danger">*</span></label>
+                                                                                <select class="form-control" name="status[]">
+                                                                                    <option value="">Pilih Status</option>
+                                                                                    <option value="Hold">Hold</option>
+                                                                                    <option value="Release">Release</option>
+                                                                                    <option value="Retur">Retur</option>
+                                                                                </select>
+                                                                            </div>
+                                                                        </div>
+                                                                        <div class="col-md-12">
+                                                                            <div class="form-group">
+                                                                                <label class="form-label">Keterangan</label>
+                                                                                <textarea class="form-control" name="keterangan[]" rows="2" placeholder="Keterangan tambahan"></textarea>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+
+                                                                <div class="form-section mb-3 coa-upload-section">
+                                                                    <h6 class="text-primary mb-2">Upload COA</h6>
+                                                                    <div class="row mb-2">
+                                                                        <div class="col-md-12">
+                                                                            <div class="form-group">
+                                                                                <label class="form-label d-block">Tipe File</label>
+                                                                                <div class="form-check form-check-inline">
+                                                                                    <input class="form-check-input coa-type-pdf" type="radio" name="coa_type_new_${rowIndex}" value="pdf" checked>
+                                                                                    <label class="form-check-label">PDF</label>
+                                                                                </div>
+                                                                                <div class="form-check form-check-inline">
+                                                                                    <input class="form-check-input coa-type-img" type="radio" name="coa_type_new_${rowIndex}" value="gambar">
+                                                                                    <label class="form-check-label">Gambar</label>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="row coa-pdf-input">
+                                                                        <div class="col-md-6">
+                                                                            <div class="form-group">
+                                                                                <label class="form-label">File COA (PDF)</label>
+                                                                                <input type="file" name="file_coa[]" class="form-control" accept="application/pdf">
+                                                                                <small class="form-text text-muted">Format: PDF. Maksimal 3MB.</small>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="row coa-img-input" style="display:none;">
+                                                                        <div class="col-md-6">
+                                                                            <div class="form-group">
+                                                                                <label class="form-label">Foto COA (Gambar)</label>
+                                                                                <input type="file" name="file_coa_img[]" class="form-control" accept="image/*" capture="environment">
+                                                                                <small class="form-text text-muted">Format: JPG, PNG, WEBP, GIF. Maksimal 3MB.</small>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+
+                                                                <div class="form-section mb-3">
+                                                                    <h6 class="text-primary mb-2">Upload Gambar</h6>
+                                                                    <div class="row">
+                                                                        <div class="col-md-6">
+                                                                            <div class="form-group">
+                                                                                <label class="form-label">Gambar Kemasan</label>
+                                                                                <input type="file" name="image_kemasan[]" class="form-control image-kemasan-input" accept="image/*" capture="camera">
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="form-section mb-3">
+                                                            <h6 class="text-primary mb-2">Dokumen</h6>
+                                                            <input type="hidden" class="doc-master-logo" value="">
+                                                            <input type="hidden" class="doc-master-dokumen" value="">
+                                                            <input type="hidden" class="doc-master-coa" value="">
+                                                            <div class="row">
+                                                                <div class="col-md-4">
+                                                                    <div class="mb-3">
+                                                                        <label class="form-label"><strong>Logo Halal</strong></label>
+                                                                        <div class="form-check"><input class="form-check-input" type="radio" name="logo_halal_master_new_${rowIndex}" value="1"><label class="form-check-label">Ya ✓</label></div>
+                                                                        <div class="form-check"><input class="form-check-input" type="radio" name="logo_halal_master_new_${rowIndex}" value="0"><label class="form-check-label">Tidak ✗</label></div>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="col-md-4">
+                                                                    <div class="mb-3">
+                                                                        <label class="form-label"><strong>Dokumen Halal</strong></label>
+                                                                        <div class="form-check"><input class="form-check-input" type="radio" name="dokumen_halal_master_new_${rowIndex}" value="1"><label class="form-check-label">Ya ✓</label></div>
+                                                                        <div class="form-check"><input class="form-check-input" type="radio" name="dokumen_halal_master_new_${rowIndex}" value="0"><label class="form-check-label">Tidak ✗</label></div>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="col-md-4">
+                                                                    <div class="mb-3">
+                                                                        <label class="form-label"><strong>COA</strong></label>
+                                                                        <div class="form-check"><input class="form-check-input" type="radio" name="coa_master_new_${rowIndex}" value="1"><label class="form-check-label">Ya ✓</label></div>
+                                                                        <div class="form-check"><input class="form-check-input" type="radio" name="coa_master_new_${rowIndex}" value="0"><label class="form-check-label">Tidak ✗</label></div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="row mt-2">
+                                                            <div class="col-md-12">
+                                                                <button type="button" class="btn btn-primary btn-sm add-detail-btn"><i class="bi bi-plus"></i> Tambah Detail</button>
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="row mt-3 pt-3 border-top">
+                                                            <div class="col-md-12">
+                                                                <button type="button" class="btn btn-danger btn-sm remove-unified-btn"><i class="bi bi-trash"></i> Hapus Produk</button>
+                                                            </div>
+                                                        </div>
+                                                    `;
+
+                                                    container.appendChild(newRow);
+
+                                                    // Initialize Choices.js for new row selects
+                                                    newRow.querySelectorAll('select.choices').forEach(select => {
+                                                        if (select.classList.contains('produk-select')) return;
+                                                        if (!choicesInstances.has(select)) {
+                                                            const instance = new Choices(select, {
+                                                                searchResultLimit: 100,
+                                                                searchFuzziness: 0.000001,
+                                                                fuseOptions: { ignoreLocation: true, threshold: 0.2, matchAllTokens: false },
+                                                                searchEnabled: true,
+                                                                searchPlaceholderValue: 'Cari...',
+                                                                itemSelectText: 'Tekan untuk memilih',
+                                                                noResultsText: 'Tidak ada hasil ditemukan',
+                                                                noChoicesText: 'Tidak ada pilihan tersedia',
+                                                                removeItemButton: true,
+                                                                shouldSort: false,
+                                                                placeholder: true,
+                                                                placeholderValue: 'Pilih...'
+                                                            });
+                                                            choicesInstances.set(select, instance);
+                                                        }
+                                                    });
+
+                                                    // Bind kategori & produk events
+                                                    const kategoriSel = newRow.querySelector('select.kategori-produk-select');
+                                                    const produkSel = newRow.querySelector('select.produk-select');
+                                                    if (kategoriSel) {
+                                                        kategoriSel.addEventListener('change', function() {
+                                                            populateProdukOptionsForRow(newRow, true);
+                                                        });
+                                                        kategoriSel.addEventListener('addItem', function() {
+                                                            setTimeout(() => populateProdukOptionsForRow(newRow, true), 0);
+                                                        });
+                                                    }
+                                                    if (produkSel) {
+                                                        produkSel.addEventListener('change', function() {
+                                                            applyProdukMetaForRow(newRow, true);
+                                                            const idx = Array.from(document.querySelectorAll('#unified-container .unified-row')).indexOf(newRow);
+                                                            updateProdukLabel(newRow, idx >= 0 ? idx : rowIndex);
+                                                        });
+                                                        produkSel.addEventListener('addItem', function() {
+                                                            applyProdukMetaForRow(newRow, true);
+                                                        });
+                                                    }
+
+                                                    // COA toggle inside new row
+                                                    newRow.querySelectorAll('.coa-upload-section').forEach(section => {
+                                                        section.addEventListener('change', function(e) {
+                                                            if (e.target.classList.contains('coa-type-pdf')) {
+                                                                section.querySelector('.coa-pdf-input').style.display = '';
+                                                                section.querySelector('.coa-img-input').style.display = 'none';
+                                                            } else if (e.target.classList.contains('coa-type-img')) {
+                                                                section.querySelector('.coa-pdf-input').style.display = 'none';
+                                                                section.querySelector('.coa-img-input').style.display = '';
+                                                            }
+                                                        });
+                                                    });
+
+                                                    initKemasanCollapses();
+                                                    collapseAllProdukExcept(newRow);
+                                                    updateDeleteButtons();
+                                                    updateDetailIndices();
+                                                    syncHeaderToDetails(newRow);
+                                                    syncDokumenToDetails(newRow);
                                                 }
                                             });
 

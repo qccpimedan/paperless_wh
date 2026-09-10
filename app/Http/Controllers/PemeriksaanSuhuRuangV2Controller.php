@@ -151,7 +151,7 @@ class PemeriksaanSuhuRuangV2Controller extends Controller
     public function show(PemeriksaanSuhuRuangV2 $pemeriksaanSuhuRuangV2)
     {
         $this->checkPlantAccess($pemeriksaanSuhuRuangV2);
-        $pemeriksaanSuhuRuangV2->load(['user', 'shift', 'produk']);
+        $pemeriksaanSuhuRuangV2->load(['user', 'shift', 'produk', 'histories']);
         
         return view('qc-sistem.pemeriksaan-suhu-ruang-v2.show', compact('pemeriksaanSuhuRuangV2'));
     }
@@ -159,7 +159,7 @@ class PemeriksaanSuhuRuangV2Controller extends Controller
     public function edit(PemeriksaanSuhuRuangV2 $pemeriksaanSuhuRuangV2)
     {
         $this->checkPlantAccess($pemeriksaanSuhuRuangV2);
-        $pemeriksaanSuhuRuangV2->load(['shift', 'produk']);
+        $pemeriksaanSuhuRuangV2->load(['shift', 'produk', 'histories']);
         
         $user = Auth::user();
         
@@ -285,6 +285,73 @@ class PemeriksaanSuhuRuangV2Controller extends Controller
         $histories = $pemeriksaanSuhuRuangV2->histories()->with('user')->latest()->get();
         
         return view('qc-sistem.pemeriksaan-suhu-ruang-v2.history', compact('pemeriksaanSuhuRuangV2', 'histories'));
+    }
+
+    public function updateHistory(Request $request, PemeriksaanSuhuRuangV2 $pemeriksaanSuhuRuangV2, PemeriksaanSuhuRuangV2History $history)
+    {
+        $this->checkPlantAccess($pemeriksaanSuhuRuangV2);
+
+        if ($history->id_pemeriksaan_suhu_ruang_v2 !== $pemeriksaanSuhuRuangV2->id) {
+            abort(403, 'History tidak sesuai dengan data pemeriksaan ini.');
+        }
+
+        $request->validate([
+            'pukul'       => 'nullable|date_format:H:i',
+            'suhu_produk' => 'nullable|string|max:50',
+            'field_type'  => 'required|in:suhu_produk,suhu_data',
+            'section_key' => 'nullable|string',
+            'unit_id'     => 'nullable|integer',
+            'setting'     => 'nullable|string|max:50',
+            'aktual'      => 'nullable|string|max:50',
+            'display'     => 'nullable|string|max:50',
+        ]);
+
+        $updateData = [];
+
+        if ($request->input('field_type') === 'suhu_produk') {
+            $updateData['suhu_produk_baru'] = $request->input('suhu_produk');
+            if ($request->filled('pukul')) {
+                $updateData['pukul_baru'] = $request->input('pukul');
+            }
+        } else {
+            $sectionKey = $request->input('section_key');
+            $unitId     = $request->input('unit_id');
+            $columnName = 'suhu_' . $sectionKey . '_baru';
+
+            $currentVal = $history->{$columnName};
+            $baruData   = is_array($currentVal)
+                ? $currentVal
+                : (json_decode($currentVal ?? '[]', true) ?: []);
+
+            if (in_array($sectionKey, ['cold_storage', 'anteroom_loading']) && $unitId) {
+                // Array indexed by unit ID or numeric index
+                if (isset($baruData[$unitId]) || is_array($baruData)) {
+                    $baruData[$unitId] = [
+                        'setting' => $request->input('setting'),
+                        'display' => $request->input('display'),
+                        'actual'  => $request->input('aktual'),
+                    ];
+                }
+            } else {
+                $baruData = [
+                    'setting' => $request->input('setting'),
+                    'display' => $request->input('display'),
+                    'actual'  => $request->input('aktual'),
+                ];
+            }
+
+            $updateData[$columnName] = $baruData;
+
+            if ($request->filled('pukul')) {
+                $updateData['pukul_baru'] = $request->input('pukul');
+            }
+        }
+
+        $history->update($updateData);
+
+        return redirect()
+            ->route('pemeriksaan-suhu-ruang-v2.edit', $pemeriksaanSuhuRuangV2->uuid)
+            ->with('success', 'Data riwayat per jam berhasil diperbarui.');
     }
 
     public function destroy(PemeriksaanSuhuRuangV2 $pemeriksaanSuhuRuangV2)

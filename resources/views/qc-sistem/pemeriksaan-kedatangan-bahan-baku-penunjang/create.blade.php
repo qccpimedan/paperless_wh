@@ -392,7 +392,7 @@
                                     <h5 class="text-primary mb-3">Detail Produk (Baris Dinamis)</h5>
                                     <div id="unified-container">
                                         <div class="unified-row mb-4 p-3 border rounded" style="background-color: #f8f9fa; border-left: 4px solid #435ebe;" data-row-index="0">
-                                            <h5 class="text-primary mb-3">Produk 1</h5>
+                                            <h6 class="text-primary mb-3">Produk 1</h6>
                                             
                                             <!-- Informasi Produk -->
                                             <div class="row">
@@ -1815,7 +1815,7 @@ function addNewRow() {
     
     // Set the HTML content - TEMPLATE LENGKAP DENGAN SUHU & KONDISI
     newRow.innerHTML = `
-        <h5 class="text-primary mb-3">Produk ${rowCount}</h5>
+        <h6 class="text-primary mb-3">Produk ${rowCount}</h6>
         
         <!-- Informasi Produk -->
         <div class="row">

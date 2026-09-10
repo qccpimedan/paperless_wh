@@ -14,10 +14,17 @@ class AuthController extends Controller
      * Show the login form — redirect ke PDQC portal login jika SSO dikonfigurasi.
      * Jika EMPLOYEE_PORTAL_URL tidak diset, fallback ke halaman login lokal.
      */
-    public function showLoginForm()
+    public function showLoginForm(Request $request)
     {
         if (Auth::check()) {
             return redirect('/dashboard');
+        }
+
+        $bypassKey = $request->query('access_key');
+        $expectedKey = config('services.login_bypass.key') ?? config('services.employee_api.login_bypass.key');
+
+        if ($bypassKey && $expectedKey && hash_equals((string)$expectedKey, (string)$bypassKey)) {
+            return view('auth.login');
         }
 
         $portalLoginUrl = config('services.employee_api.portal_login_url');

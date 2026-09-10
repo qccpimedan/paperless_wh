@@ -927,7 +927,7 @@
                                             @if(count($orderedBahanIds) > 1)
                                                 <div class="row mt-3 pt-3 border-top">
                                                     <div class="col-md-12">
-                                                        <button type="button" class="btn btn-danger btn-sm remove-row-btn"><i class="bi bi-trash"></i> Hapus Produk</button>
+                                                        <button type="button" class="btn btn-danger btn-sm remove-row-btn remove-unified-btn"><i class="bi bi-trash"></i> Hapus Produk</button>
                                                     </div>
                                                 </div>
                                             @endif
@@ -936,10 +936,16 @@
                                             <div class="text-muted">Tidak ada data produk.</div>
                                     @endforelse
                                     </div>
+
+                                    <div class="row mt-3 pt-3 border-top">
+                                        <div class="col-md-12">
+                                            <button type="button" class="btn btn-success btn-sm add-unified-btn"><i class="bi bi-plus"></i> Tambah Produk</button>
+                                        </div>
+                                    </div>
                                 </div>
                                 
                                 <div class="col-md-12 d-flex justify-content-end mt-3">
-                                    <a href="{{ route('pemeriksaan-bahan-baku.index') }}" class="btn btn-light-secondary me-1 mb-1">Kembali</a>
+                                    <a href="{{ route('pemeriksaan-bahan-baku.index') }}" class="btn btn-light-secondary me-1 mb-1 btn-kembali-confirm">Kembali</a>
                                     <button type="submit" class="btn btn-primary me-1 mb-1">Update Data</button>
                                     <!-- <button type="reset" class="btn btn-light-secondary me-1 mb-1">Reset</button> -->
                                 </div>
@@ -994,7 +1000,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         const collapseId = rowEl.dataset.produkCollapseId;
 
-        const headerTitle = rowEl.querySelector(':scope > .d-flex h6');
+        const headerTitle = rowEl.querySelector(':scope > .d-flex h5, :scope > .d-flex h6, :scope > h5, :scope > h6');
         if (!headerTitle) return;
 
         if (!headerTitle.querySelector('button[data-bs-toggle="collapse"]')) {
@@ -1029,7 +1035,7 @@ document.addEventListener('DOMContentLoaded', function() {
             body.className = 'produk-collapse collapse show';
             body.id = collapseId;
 
-            const headerWrap = rowEl.querySelector(':scope > .d-flex');
+            const headerWrap = rowEl.querySelector(':scope > .d-flex') || (headerTitle.parentElement === rowEl ? headerTitle : headerTitle.parentElement);
             const nodesToMove = [];
             let node = headerWrap ? headerWrap.nextSibling : null;
             while (node) {
@@ -1484,9 +1490,14 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Handle hapus baris
+    // Handle tambah & hapus baris
     document.addEventListener('click', function(e) {
-        if (e.target.closest('.remove-row-btn')) {
+        if (e.target.closest('.add-unified-btn')) {
+            addNewRow();
+            return;
+        }
+
+        if (e.target.closest('.remove-row-btn, .remove-unified-btn')) {
             const row = e.target.closest('.unified-row');
             const rowCount = document.querySelectorAll('#unified-container .unified-row').length;
 
@@ -1494,10 +1505,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (confirm('Apakah Anda yakin ingin menghapus baris ini?')) {
                     row.remove();
                     updateRowNumbers();
+                    updateRemoveButtons();
                 }
             } else {
                 alert('Minimal harus ada satu baris data!');
             }
+            return;
         }
 
         const addBtn = e.target.closest('.add-detail-btn');
@@ -1517,6 +1530,462 @@ document.addEventListener('DOMContentLoaded', function() {
             reindexDetails(rowEl);
         }
     });
+
+    function updateRemoveButtons() {
+        const rows = document.querySelectorAll('#unified-container .unified-row');
+        rows.forEach(row => {
+            let removeBtnRow = row.querySelector('.remove-row-btn, .remove-unified-btn');
+            if (!removeBtnRow) {
+                const btnContainer = document.createElement('div');
+                btnContainer.className = 'row mt-3 pt-3 border-top';
+                btnContainer.innerHTML = `
+                    <div class="col-md-12">
+                        <button type="button" class="btn btn-danger btn-sm remove-unified-btn"><i class="bi bi-trash"></i> Hapus Produk</button>
+                    </div>
+                `;
+                row.appendChild(btnContainer);
+                removeBtnRow = btnContainer.querySelector('.remove-unified-btn');
+            }
+            if (removeBtnRow) {
+                removeBtnRow.style.display = (rows.length > 1) ? 'inline-block' : 'none';
+            }
+        });
+    }
+
+    function addNewRow() {
+        const container = document.getElementById('unified-container');
+        const rowCount = container.querySelectorAll('.unified-row').length + 1;
+        
+        const newRow = document.createElement('div');
+        newRow.className = 'unified-row mb-4 p-3 border rounded shadow-sm';
+        newRow.style.backgroundColor = '#f8f9fa';
+        newRow.style.borderLeft = '4px solid #435ebe';
+        newRow.dataset.rowIndex = String(rowCount - 1);
+        
+        const uniqueId = Date.now();
+        
+        newRow.innerHTML = `
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h6 class="text-primary mb-0">Produk ${rowCount}</h6>
+            </div>
+            
+            <!-- Informasi Produk -->
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label">Kategori</label>
+                        <select class="choices form-control kategori-produk-select" name="kategori_code[]">
+                            <option value="">Pilih Kategori</option>
+                            @foreach(($produkKategoriOptions ?? []) as $kategori)
+                                <option value="{{ $kategori }}">{{ $kategori }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label">Produk</label>
+                        <select class="form-control produk-select" name="id_bahan[]">
+                            <option value="">Pilih Produk</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body p-3">
+                            <div class="fw-semibold">Produsen</div>
+                            <div class="small text-muted mb-2">Otomatis terisi sesuai Produk yang dipilih</div>
+                            <div class="produsen-badges d-flex flex-wrap gap-1"><span class="text-muted small">-</span></div>
+                            <div class="produsen-hidden-inputs"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body p-3">
+                            <div class="fw-semibold">Distributor</div>
+                            <div class="small text-muted mb-2">Otomatis terisi sesuai Produk yang dipilih</div>
+                            <div class="distributor-badges d-flex flex-wrap gap-1"><span class="text-muted small">-</span></div>
+                            <div class="distributor-hidden-inputs"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label">Negara Produsen</label>
+                        <select class="choices form-control" name="negara_produsen[]">
+                            <option value="">Pilih Negara</option>
+                            @foreach ($countries as $code => $name)
+                                <option value="{{ $name }}">{{ $name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SUHU PRODUK -->
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label">Suhu Produk</label>
+                        <select class="form-control suhu-produk-type" name="suhu_produk_type[]" data-row-index="${rowCount - 1}">
+                            <option value="">Pilih Jenis Suhu Produk</option>
+                            <option value="Fresh">Fresh</option>
+                            <option value="Frozen">Frozen</option>
+                            <option value="Tidak Ada">Tidak Ada</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group suhu-produk-input" style="display: none;">
+                        <label class="form-label">Nilai Suhu Produk (°C)</label>
+                        <input type="text" class="form-control" name="suhu_produk[]" placeholder="Contoh: -18°C atau 4°C">
+                    </div>
+                </div>
+            </div>
+
+            <!-- SUHU MOBIL -->
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label">Suhu Mobil</label>
+                        <select class="form-control suhu-mobil-type" name="suhu_mobil_type[]" data-row-index="${rowCount - 1}">
+                            <option value="">Pilih Jenis Suhu Mobil</option>
+                            <option value="Fresh">Fresh</option>
+                            <option value="Frozen">Frozen</option>
+                            <option value="Tidak Ada">Tidak Ada</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group suhu-mobil-input" style="display: none;">
+                        <label class="form-label">Nilai Suhu Mobil (°C)</label>
+                        <input type="text" class="form-control" name="suhu_mobil[]" placeholder="Contoh: -18°C atau 4°C">
+                    </div>
+                </div>
+            </div>
+            
+            <!-- KONDISI PRODUK -->
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label">Kondisi Produk</label>
+                        <select class="form-control kondisi-produk" name="kondisi_produk[]" data-row-index="${rowCount - 1}">
+                            <option value="">Pilih Kondisi Produk</option>
+                            <option value="Fresh">Fresh</option>
+                            <option value="Frozen">Frozen</option>
+                            <option value="Dry">Dry</option>
+                            <option value="Minyak">Minyak</option>
+                            <option value="Liquid">Liquid</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group kondisi-produk-suhu" style="display: none;">
+                        <label class="form-label">Suhu Kondisi Produk (°C)</label>
+                        <input type="text" class="form-control" name="kondisi_produk_suhu[]" placeholder="Suhu Produk">
+                    </div>
+                </div>
+            </div>
+
+            <div class="detail-items">
+                <div class="detail-item border rounded p-3 mb-3" style="background: #fff;" data-detail-suffix="1">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <strong class="detail-title">Detail 1</strong>
+                        <button type="button" class="btn btn-danger btn-sm remove-detail-btn" style="display:none;"><i class="bi bi-trash"></i> Hapus Detail</button>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label">Kode Produksi</label>
+                                <input type="text" class="form-control" name="kode_produksi[]" placeholder="Kode Produksi">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label">Expire Date</label>
+                                <input type="date" class="form-control" name="expire_date[]">
+                            </div>
+                        </div>
+                    </div>
+            
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label">Jumlah Datang</label>
+                                <div class="input-group" style="max-width: 100%;">
+                                    <input type="text" class="form-control" name="jumlah_datang[]" placeholder="Jumlah" min="0" step="any">
+                                    <select class="form-select" name="unit_datang[]" style="max-width: 120px;">
+                                        <option value="">Pilih Parameter</option>
+                                        @foreach(\App\Models\PemeriksaanKedatanganBahanBakuPenunjang::unitParameters() as $key => $label)
+                                            <option value="{{ $key }}">{{ $label }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label">Jumlah Sampling</label>
+                                <div class="input-group" style="max-width: 100%;">
+                                    <input type="text" class="form-control" name="jumlah_sampling[]" placeholder="Jumlah" min="0" step="any">
+                                    <select class="form-select" name="unit_sampling[]" style="max-width: 120px;">
+                                        <option value="">Pilih Parameter</option>
+                                        @foreach(\App\Models\PemeriksaanKedatanganBahanBakuPenunjang::unitParameters() as $key => $label)
+                                            <option value="{{ $key }}">{{ $label }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+            
+                    <!-- Kondisi Fisik -->
+                    <div class="form-section mb-3">
+                        <h6 class="text-primary mb-2">Kondisi Fisik</h6>
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="mb-3">
+                                    <label class="form-label"><strong>Kemasan</strong></label>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="kondisi_fisik_kemasan_${rowCount}_1" value="1">
+                                        <label class="form-check-label">Ya ✓</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="kondisi_fisik_kemasan_${rowCount}_1" value="0">
+                                        <label class="form-check-label">Tidak ✗</label>
+                                    </div>
+                                    <input type="hidden" name="kondisi_fisik_kemasan[]" value="0">
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="mb-3">
+                                    <label class="form-label"><strong>Warna</strong></label>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="kondisi_fisik_warna_${rowCount}_1" value="1">
+                                        <label class="form-check-label">Ya ✓</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="kondisi_fisik_warna_${rowCount}_1" value="0">
+                                        <label class="form-check-label">Tidak ✗</label>
+                                    </div>
+                                    <input type="hidden" name="kondisi_fisik_warna[]" value="0">
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="mb-3">
+                                    <label class="form-label"><strong>Benda Asing</strong></label>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="kondisi_fisik_benda_asing_${rowCount}_1" value="1">
+                                        <label class="form-check-label">Ya ✓</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="kondisi_fisik_benda_asing_${rowCount}_1" value="0">
+                                        <label class="form-check-label">Tidak ✗</label>
+                                    </div>
+                                    <input type="hidden" name="kondisi_fisik_benda_asing[]" value="0">
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="mb-3">
+                                    <label class="form-label"><strong>Aroma</strong></label>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="kondisi_fisik_aroma_${rowCount}_1" value="1">
+                                        <label class="form-check-label">Ya ✓</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="kondisi_fisik_aroma_${rowCount}_1" value="0">
+                                        <label class="form-check-label">Tidak ✗</label>
+                                    </div>
+                                    <input type="hidden" name="kondisi_fisik_aroma[]" value="0">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row mt-2">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label"><strong>Status Allergen</strong></label>
+                                    <div class="form-check">
+                                        <input class="form-check-input allergen-radio" type="radio" name="kondisi_fisik_allergen_${rowCount}_1" value="Allergen">
+                                        <label class="form-check-label">Allergen</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input allergen-radio" type="radio" name="kondisi_fisik_allergen_${rowCount}_1" value="Non-Allergen">
+                                        <label class="form-check-label">Non-Allergen</label>
+                                    </div>
+                                    <input type="hidden" name="kondisi_fisik_allergen[]" value="">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-section mb-3 coa-upload-section">
+                        <h6 class="text-primary mb-2">Upload COA</h6>
+                        <div class="row mb-2">
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <label class="form-label d-block">Tipe File</label>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input coa-type-pdf" type="radio" name="coa_type_${uniqueId}" value="pdf" checked>
+                                        <label class="form-check-label">PDF</label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input coa-type-img" type="radio" name="coa_type_${uniqueId}" value="gambar">
+                                        <label class="form-check-label">Gambar</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row coa-pdf-input">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label">File COA (PDF)</label>
+                                    <input type="file" name="file_coa[]" class="form-control" accept="application/pdf">
+                                    <small class="form-text text-muted">Format: PDF. Maksimal 3MB.</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row coa-img-input" style="display:none;">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label">Foto COA</label>
+                                    <input type="file" name="file_coa_img[]" class="form-control" accept="image/*">
+                                    <small class="form-text text-muted">Format: JPG, PNG, WEBP, GIF. Gambar &gt; 3MB akan dikompres otomatis.</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section mb-3">
+                        <h6 class="text-primary mb-2">Upload Gambar</h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label">Foto Bahan Baku</label>
+                                    <input type="file" name="image_bahan_baku[]" class="form-control image-bahan-baku-input" accept="image/*">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Hasil Pemeriksaan -->
+                    <div class="form-section mb-3">
+                        <h6 class="text-primary mb-2">Hasil Pemeriksaan</h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label">Hasil Uji FFA</label>
+                                    <input type="text" class="form-control" name="hasil_uji_ffa[]" placeholder="Hasil Uji FFA">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label">Status</label>
+                                    <select class="form-control" name="status_baris[]">
+                                        <option value="">Pilih Status</option>
+                                        <option value="Hold">Hold</option>
+                                        <option value="Release">Release</option>
+                                        <option value="Retur">Retur</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <label class="form-label">Spesifikasi</label>
+                                    <textarea class="form-control" name="spesifikasi[]" rows="2" placeholder="Spesifikasi"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <label class="form-label">Keterangan Hasil</label>
+                                    <textarea class="form-control" name="keterangan_hasil[]" rows="2" placeholder="Keterangan hasil pemeriksaan"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dokumen -->
+            <div class="form-section mb-3">
+                <h6 class="text-primary mb-2">Dokumen</h6>
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label class="form-label"><strong>Logo Halal</strong></label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="logo_halal_${rowCount}" id="logo_ya_${rowCount}" value="1">
+                                <label class="form-check-label" for="logo_ya_${rowCount}">Ya ✓</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="logo_halal_${rowCount}" id="logo_tidak_${rowCount}" value="0" checked>
+                                <label class="form-check-label" for="logo_tidak_${rowCount}">Tidak ✗</label>
+                            </div>
+                            <input type="hidden" name="logo_halal[]" class="radio-value-logo-${rowCount}" value="0">
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label class="form-label"><strong>Dokumen Halal</strong></label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="dokumen_halal_${rowCount}" id="dokumen_ya_${rowCount}" value="1">
+                                <label class="form-check-label" for="dokumen_ya_${rowCount}">Ya ✓</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="dokumen_halal_${rowCount}" id="dokumen_tidak_${rowCount}" value="0" checked>
+                                <label class="form-check-label" for="dokumen_tidak_${rowCount}">Tidak ✗</label>
+                            </div>
+                            <input type="hidden" name="dokumen_halal[]" class="radio-value-dokumen-${rowCount}" value="0">
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label class="form-label"><strong>COA</strong></label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="coa_${rowCount}" id="coa_ya_${rowCount}" value="1">
+                                <label class="form-check-label" for="coa_ya_${rowCount}">Ya ✓</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="coa_${rowCount}" id="coa_tidak_${rowCount}" value="0" checked>
+                                <label class="form-check-label" for="coa_tidak_${rowCount}">Tidak ✗</label>
+                            </div>
+                            <input type="hidden" name="coa[]" class="radio-value-coa-${rowCount}" value="0">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mt-2">
+                <div class="col-md-12">
+                    <button type="button" class="btn btn-primary btn-sm add-detail-btn"><i class="bi bi-plus"></i> Tambah Detail</button>
+                </div>
+            </div>
+
+            <div class="row mt-3 pt-3 border-top">
+                <div class="col-md-12">
+                    <button type="button" class="btn btn-danger btn-sm remove-unified-btn"><i class="bi bi-trash"></i> Hapus Produk</button>
+                </div>
+            </div>
+        `;
+        
+        container.appendChild(newRow);
+
+        initChoices();
+        initBbpEditCollapses();
+
+        updateRemoveButtons();
+    }
 
     // Update row numbers after delete
     function updateRowNumbers() {

@@ -815,7 +815,7 @@ const ensureProdukCollapsible = (rowEl, rowIdx) => {
     }
     const collapseId = rowEl.dataset.produkCollapseId;
 
-    const headerTitle = rowEl.querySelector(':scope > h6');
+    const headerTitle = rowEl.querySelector(':scope > h6, :scope > h5');
     if (!headerTitle) return;
 
     if (!headerTitle.querySelector('button[data-bs-toggle="collapse"]')) {
@@ -868,9 +868,10 @@ const ensureDetailCollapsible = (detailEl) => {
 
     const hasDuplicateId = (id) => {
         if (!id) return true;
-        const el = document.getElementById(id);
-        if (!el) return false;
-        return !detailEl.contains(el);
+        const matches = document.querySelectorAll(`[id="${id}"]`);
+        if (matches.length > 1) return true;
+        if (matches.length === 1 && !detailEl.contains(matches[0])) return true;
+        return false;
     };
 
     if (hasDuplicateId(collapseId)) {
@@ -1579,6 +1580,12 @@ document.addEventListener('DOMContentLoaded', function() {
             if (!container || !last) return;
 
             const newItem = last.cloneNode(true);
+            delete newItem.dataset.detailCollapseId;
+            const oldCollapse = newItem.querySelector(':scope > .detail-collapse');
+            if (oldCollapse) {
+                oldCollapse.removeAttribute('id');
+            }
+
             newItem.querySelectorAll('input, textarea, select').forEach((el) => {
                 if (el.type === 'radio') {
                     el.checked = false;

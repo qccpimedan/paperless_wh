@@ -340,6 +340,200 @@
                                     </div>
                                 @endif
 
+                                <!-- Riwayat Data Per Jam -->
+                                @php
+                                    $historiesV2 = $pemeriksaanSuhuRuangV2->histories->sortBy('id');
+                                    $timelineRowsV2 = [];
+                                    $noV2 = 1;
+
+                                    $initJamV2 = $pemeriksaanSuhuRuangV2->pukul ? \Carbon\Carbon::parse($pemeriksaanSuhuRuangV2->pukul)->format('H:i') : '-';
+                                    $initCreatedV2 = $pemeriksaanSuhuRuangV2->created_at ? $pemeriksaanSuhuRuangV2->created_at->format('d/m/Y H:i') : '-';
+
+                                    $sectionLabelsV2 = [
+                                        'cold_storage'          => 'Cold Storage',
+                                        'anteroom_loading'      => 'Anteroom Loading',
+                                        'pre_loading'           => 'Pre Loading',
+                                        'prestaging'            => 'Prestaging',
+                                        'anteroom_ekspansi_abf' => 'Anteroom Ekspansi ABF',
+                                        'chillroom_rm'          => 'Chillroom RM',
+                                        'chillroom_domestik'    => 'Chillroom Domestik',
+                                    ];
+
+                                    // Input Awal Cold Storage
+                                    if (!empty($pemeriksaanSuhuRuangV2->suhu_cold_storage)) {
+                                        foreach ((array)$pemeriksaanSuhuRuangV2->suhu_cold_storage as $uId => $uVal) {
+                                            $timelineRowsV2[] = [
+                                                'no'     => $noV2++,
+                                                'waktu'  => $initJamV2,
+                                                'edited' => $initCreatedV2,
+                                                'area'   => 'Cold Storage ' . $uId,
+                                                'setting'=> $uVal['setting'] ?? '-',
+                                                'aktual' => $uVal['actual'] ?? '-',
+                                                'display'=> $uVal['display'] ?? '-',
+                                                'tipe'   => 'awal',
+                                            ];
+                                        }
+                                    }
+
+                                    // Input Awal Anteroom Loading
+                                    if (!empty($pemeriksaanSuhuRuangV2->suhu_anteroom_loading)) {
+                                        foreach ((array)$pemeriksaanSuhuRuangV2->suhu_anteroom_loading as $uId => $uVal) {
+                                            $timelineRowsV2[] = [
+                                                'no'     => $noV2++,
+                                                'waktu'  => $initJamV2,
+                                                'edited' => $initCreatedV2,
+                                                'area'   => 'Anteroom Loading ' . $uId,
+                                                'setting'=> $uVal['setting'] ?? '-',
+                                                'aktual' => $uVal['actual'] ?? '-',
+                                                'display'=> $uVal['display'] ?? '-',
+                                                'tipe'   => 'awal',
+                                            ];
+                                        }
+                                    }
+
+                                    // Input Awal Single Sections
+                                    foreach (['pre_loading', 'prestaging', 'anteroom_ekspansi_abf', 'chillroom_rm', 'chillroom_domestik'] as $sKey) {
+                                        $attr = 'suhu_' . $sKey;
+                                        $val = $pemeriksaanSuhuRuangV2->{$attr};
+                                        if (!empty($val) && (!empty($val['setting']) || !empty($val['display']) || !empty($val['actual']))) {
+                                            $timelineRowsV2[] = [
+                                                'no'     => $noV2++,
+                                                'waktu'  => $initJamV2,
+                                                'edited' => $initCreatedV2,
+                                                'area'   => $sectionLabelsV2[$sKey],
+                                                'setting'=> $val['setting'] ?? '-',
+                                                'aktual' => $val['actual'] ?? '-',
+                                                'display'=> $val['display'] ?? '-',
+                                                'tipe'   => 'awal',
+                                            ];
+                                        }
+                                    }
+
+                                    // Input Awal Suhu Produk
+                                    if (!empty($pemeriksaanSuhuRuangV2->suhu_produk)) {
+                                        $timelineRowsV2[] = [
+                                            'no'     => $noV2++,
+                                            'waktu'  => $initJamV2,
+                                            'edited' => $initCreatedV2,
+                                            'area'   => 'Suhu Produk',
+                                            'setting'=> '-',
+                                            'aktual' => $pemeriksaanSuhuRuangV2->suhu_produk,
+                                            'display'=> '-',
+                                            'tipe'   => 'awal',
+                                        ];
+                                    }
+
+                                    // Iterasi History Updates
+                                    foreach ($historiesV2 as $h) {
+                                        $editedAtV2 = $h->created_at ? $h->created_at->format('d/m/Y H:i') : '-';
+                                        $pukulH = $h->pukul_baru ?? $h->pukul_lama ?? null;
+                                        $jamH = $pukulH ? \Carbon\Carbon::parse($pukulH)->format('H:i') : '-';
+
+                                        foreach ($sectionLabelsV2 as $secKey => $secLabel) {
+                                            $colLama = 'suhu_' . $secKey . '_lama';
+                                            $colBaru = 'suhu_' . $secKey . '_baru';
+
+                                            $lamaData = is_array($h->{$colLama}) ? $h->{$colLama} : (json_decode($h->{$colLama} ?? '[]', true) ?: []);
+                                            $baruData = is_array($h->{$colBaru}) ? $h->{$colBaru} : (json_decode($h->{$colBaru} ?? '[]', true) ?: []);
+
+                                            if (json_encode($lamaData) === json_encode($baruData)) continue;
+
+                                            if (in_array($secKey, ['cold_storage', 'anteroom_loading'])) {
+                                                $allUnits = array_unique(array_merge(array_keys((array)$lamaData), array_keys((array)$baruData)));
+                                                foreach ($allUnits as $uId) {
+                                                    $lItem = $lamaData[$uId] ?? [];
+                                                    $bItem = $baruData[$uId] ?? [];
+                                                    if (json_encode($lItem) === json_encode($bItem)) continue;
+                                                    if (empty($bItem['setting']) && empty($bItem['display']) && empty($bItem['actual'])) continue;
+
+                                                    $timelineRowsV2[] = [
+                                                        'no'     => $noV2++,
+                                                        'waktu'  => $jamH,
+                                                        'edited' => $editedAtV2,
+                                                        'area'   => $secLabel . ' ' . $uId,
+                                                        'setting'=> $bItem['setting'] ?? '-',
+                                                        'aktual' => $bItem['actual'] ?? '-',
+                                                        'display'=> $bItem['display'] ?? '-',
+                                                        'tipe'   => 'update',
+                                                    ];
+                                                }
+                                            } else {
+                                                if (empty($baruData['setting']) && empty($baruData['display']) && empty($baruData['actual'])) continue;
+                                                $timelineRowsV2[] = [
+                                                    'no'     => $noV2++,
+                                                    'waktu'  => $jamH,
+                                                    'edited' => $editedAtV2,
+                                                    'area'   => $secLabel,
+                                                    'setting'=> $baruData['setting'] ?? '-',
+                                                    'aktual' => $baruData['actual'] ?? '-',
+                                                    'display'=> $baruData['display'] ?? '-',
+                                                    'tipe'   => 'update',
+                                                ];
+                                            }
+                                        }
+
+                                        // Update Suhu Produk
+                                        if (($h->suhu_produk_lama ?? null) !== ($h->suhu_produk_baru ?? null) && !empty($h->suhu_produk_baru)) {
+                                            $timelineRowsV2[] = [
+                                                'no'     => $noV2++,
+                                                'waktu'  => $jamH,
+                                                'edited' => $editedAtV2,
+                                                'area'   => 'Suhu Produk',
+                                                'setting'=> '-',
+                                                'aktual' => $h->suhu_produk_baru,
+                                                'display'=> '-',
+                                                'tipe'   => 'update',
+                                            ];
+                                        }
+                                    }
+                                @endphp
+
+                                @if(!empty($timelineRowsV2))
+                                <div class="row mt-5 pt-3 border-top">
+                                    <div class="col-md-12">
+                                        <h5 class="mb-3 d-flex align-items-center gap-2">
+                                            <i class="bi bi-clock-history text-primary"></i>
+                                            <strong>Riwayat Data Per Jam</strong>
+                                            <span class="badge bg-primary ms-1">{{ count($timelineRowsV2) }} entri</span>
+                                        </h5>
+                                        <div class="table-responsive">
+                                            <table class="table table-bordered table-hover table-sm align-middle">
+                                                <thead class="table-dark">
+                                                    <tr>
+                                                        <th class="text-center" style="width:4%">No</th>
+                                                        <th class="text-center" style="width:8%">Pukul</th>
+                                                        <th style="width:22%">Area</th>
+                                                        <th class="text-center">Setting (°C)</th>
+                                                        <th class="text-center">Actual (°C)</th>
+                                                        <th class="text-center">Display (°C)</th>
+                                                        <th class="text-center" style="width:8%">Status</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    @foreach($timelineRowsV2 as $tRow)
+                                                    <tr class="{{ $tRow['tipe'] === 'update' ? 'table-warning' : '' }}">
+                                                        <td class="text-center">{{ $tRow['no'] }}</td>
+                                                        <td class="text-center fw-semibold">{{ $tRow['waktu'] }}</td>
+                                                        <td>{{ $tRow['area'] }}</td>
+                                                        <td class="text-center">{{ $tRow['setting'] }}</td>
+                                                        <td class="text-center">{{ $tRow['aktual'] }}</td>
+                                                        <td class="text-center">{{ $tRow['display'] }}</td>
+                                                        <td class="text-center">
+                                                            @if($tRow['tipe'] === 'awal')
+                                                                <span class="badge bg-success">Input Awal</span>
+                                                            @else
+                                                                <span class="badge bg-warning text-dark">Update</span>
+                                                            @endif
+                                                        </td>
+                                                    </tr>
+                                                    @endforeach
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                                @endif
+
                                 <div class="col-md-12 d-flex justify-content-end mt-4">
                                     <a href="{{ route('pemeriksaan-suhu-ruang-v2.index') }}" class="btn btn-light-secondary me-1 mb-1">Kembali</a>
                                     <a href="{{ route('pemeriksaan-suhu-ruang-v2.edit', $pemeriksaanSuhuRuangV2->uuid) }}" class="btn btn-primary me-1 mb-1">Edit</a>

@@ -719,6 +719,19 @@
         color: #fff;
         background: #dc3545;
     }
+    .collapse-toggle-btn {
+        width: auto;
+        display: inline-flex;
+        align-items: center;
+        text-align: left;
+    }
+    .collapse-toggle-btn.full-width {
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+    }
+    .collapse-chevron { transition: transform .2s ease; }
+    .collapse-toggle-btn[aria-expanded="true"] .collapse-chevron { transform: rotate(180deg); }
 </style>
 
 <!-- Validasi Front-End Form -->
@@ -815,7 +828,208 @@ document.addEventListener('DOMContentLoaded', function() {
 
 @push('scripts')
 <script>
-    // Global variable to store select options
+const bsCollapse = (el) => {
+    try {
+        if (!el || !window.bootstrap || !window.bootstrap.Collapse) return null;
+        return window.bootstrap.Collapse.getOrCreateInstance(el, { toggle: false });
+    } catch (e) {
+        return null;
+    }
+};
+
+const uniqueDomId = (prefix) => {
+    let id;
+    do {
+        id = `${prefix}_${Date.now()}_${Math.random().toString(16).slice(2)}`;
+    } while (document.getElementById(id));
+    return id;
+};
+
+const collapseAllProdukExcept = (activeRowEl) => {
+    const rows = Array.from(document.querySelectorAll('#unified-container .unified-row'));
+    rows.forEach((rowEl) => {
+        if (!rowEl || rowEl === activeRowEl) return;
+        const body = rowEl.querySelector(':scope > .produk-collapse.collapse');
+        if (!body) return;
+
+        const inst = bsCollapse(body);
+        if (inst) {
+            inst.hide();
+        } else {
+            body.classList.remove('show');
+        }
+
+        const btn = rowEl.querySelector('button[data-bs-toggle="collapse"]');
+        if (btn) btn.setAttribute('aria-expanded', 'false');
+    });
+};
+
+const collapseOtherDetailsInRow = (rowEl, activeDetailEl) => {
+    if (!rowEl) return;
+    const details = Array.from(rowEl.querySelectorAll('.detail-items .detail-item'));
+    details.forEach((detailEl) => {
+        if (!detailEl || detailEl === activeDetailEl) return;
+        const body = detailEl.querySelector(':scope > .detail-collapse.collapse');
+        if (!body) return;
+
+        const inst = bsCollapse(body);
+        if (inst) {
+            inst.hide();
+        } else {
+            body.classList.remove('show');
+        }
+        const btn = detailEl.querySelector('button.detail-title[data-bs-toggle="collapse"]');
+        if (btn) btn.setAttribute('aria-expanded', 'false');
+    });
+};
+
+const updateProdukLabel = (rowEl, rowIdx) => {
+    if (!rowEl) return;
+    const labelEl = rowEl.querySelector('.produk-collapse-label');
+    if (!labelEl) return;
+
+    const produkSelect = rowEl.querySelector('select.produk-select');
+    const selectedText = produkSelect && produkSelect.selectedOptions && produkSelect.selectedOptions[0]
+        ? (produkSelect.selectedOptions[0].textContent || '').trim()
+        : '';
+
+    labelEl.textContent = (selectedText && selectedText !== 'Pilih Produk') ? `Produk ${rowIdx + 1}: ${selectedText}` : `Produk ${rowIdx + 1}`;
+};
+
+const updateDetailLabel = (detailEl, dIdx) => {
+    if (!detailEl) return;
+    const labelEl = detailEl.querySelector('.detail-collapse-label');
+    if (!labelEl) return;
+
+    const kode = (detailEl.querySelector('input[name="kode_produksi[]"]')?.value || '').toString().trim();
+    labelEl.textContent = kode !== '' ? kode : `Detail ${dIdx + 1}`;
+};
+
+const ensureProdukCollapsible = (rowEl, rowIdx) => {
+    if (!rowEl) return;
+    if (!rowEl.dataset.produkCollapseId) {
+        rowEl.dataset.produkCollapseId = uniqueDomId('chem_produk_c');
+    }
+    const collapseId = rowEl.dataset.produkCollapseId;
+
+    const headerTitle = rowEl.querySelector(':scope > h6, :scope > h5');
+    if (!headerTitle) return;
+
+    if (!headerTitle.querySelector('button[data-bs-toggle="collapse"]')) {
+        const existingText = (headerTitle.textContent || '').trim();
+        headerTitle.textContent = '';
+
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'btn btn-primary btn-sm d-inline-flex align-items-center gap-2 collapse-toggle-btn';
+        btn.setAttribute('data-bs-toggle', 'collapse');
+        btn.setAttribute('data-bs-target', `#${collapseId}`);
+        btn.setAttribute('aria-expanded', 'true');
+        btn.setAttribute('aria-controls', collapseId);
+
+        const span = document.createElement('span');
+        span.className = 'produk-collapse-label text-white';
+        span.textContent = existingText || `Produk ${rowIdx + 1}`;
+
+        const icon = document.createElement('i');
+        icon.className = 'bi bi-chevron-down collapse-chevron text-white';
+
+        btn.appendChild(span);
+        btn.appendChild(icon);
+        headerTitle.appendChild(btn);
+    }
+
+    let body = rowEl.querySelector(':scope > .produk-collapse.collapse');
+    if (body) {
+        body.id = collapseId;
+    } else {
+        body = document.createElement('div');
+        body.className = 'produk-collapse collapse show';
+        body.id = collapseId;
+
+        const nodesToMove = [];
+        let node = headerTitle.nextSibling;
+        while (node) {
+            const next = node.nextSibling;
+            nodesToMove.push(node);
+            node = next;
+        }
+        nodesToMove.forEach((n) => body.appendChild(n));
+        rowEl.appendChild(body);
+    }
+};
+
+const ensureDetailCollapsible = (detailEl, dIdx) => {
+    if (!detailEl) return;
+    let collapseId = detailEl.dataset.detailCollapseId || '';
+
+    const hasDuplicateId = (id) => {
+        if (!id) return true;
+        const matches = document.querySelectorAll(`[id="${id}"]`);
+        if (matches.length > 1) return true;
+        if (matches.length === 1 && !detailEl.contains(matches[0])) return true;
+        return false;
+    };
+
+    if (hasDuplicateId(collapseId)) {
+        collapseId = uniqueDomId('chem_detail_c');
+        detailEl.dataset.detailCollapseId = collapseId;
+    }
+
+    const header = detailEl.querySelector(':scope > .d-flex');
+    if (!header) return;
+
+    const titleEl = header.querySelector('strong');
+    if (titleEl && titleEl.tagName.toLowerCase() !== 'button') {
+        const existingText = (titleEl.textContent || '').trim();
+
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'btn btn-primary btn-sm fw-bold d-inline-flex align-items-center gap-2 collapse-toggle-btn detail-title';
+        btn.setAttribute('data-bs-toggle', 'collapse');
+        btn.setAttribute('data-bs-target', `#${collapseId}`);
+        btn.setAttribute('aria-expanded', 'true');
+        btn.setAttribute('aria-controls', collapseId);
+
+        const span = document.createElement('span');
+        span.className = 'detail-collapse-label';
+        span.textContent = existingText || `Detail #${dIdx + 1}`;
+
+        const icon = document.createElement('i');
+        icon.className = 'bi bi-chevron-down collapse-chevron';
+
+        btn.appendChild(span);
+        btn.appendChild(icon);
+        titleEl.replaceWith(btn);
+    }
+
+    const existingBtn = header.querySelector('button.detail-title[data-bs-toggle="collapse"]');
+    if (existingBtn) {
+        existingBtn.setAttribute('data-bs-target', `#${collapseId}`);
+        existingBtn.setAttribute('aria-controls', collapseId);
+    }
+
+    let body = detailEl.querySelector(':scope > .detail-collapse.collapse');
+    if (body) {
+        body.id = collapseId;
+    } else {
+        body = document.createElement('div');
+        body.className = 'detail-collapse collapse show';
+        body.id = collapseId;
+
+        const nodesToMove = [];
+        let node = header.nextSibling;
+        while (node) {
+            const next = node.nextSibling;
+            nodesToMove.push(node);
+            node = next;
+        }
+        nodesToMove.forEach((n) => body.appendChild(n));
+        detailEl.appendChild(body);
+    }
+};
+
+// Global variable to store select options
 let selectOptionsCache = {
     chemical: [],
     produsen: [],
@@ -1148,10 +1362,38 @@ function setupDynamicFormListeners() {
 
             newItem.querySelectorAll('.coa-upload-section input[type="file"]').forEach(f => f.value = '');
 
+            delete newItem.dataset.detailCollapseId;
+            newItem.removeAttribute('data-detail-collapse-id');
+
             container.appendChild(newItem);
             updateRowNumbers();
+            collapseOtherDetailsInRow(rowEl, newItem);
             updateDetailButtons();
             initializeAllChoices();
+        }
+    });
+
+    // Live update label kode produksi & produk select
+    document.addEventListener('input', function(e) {
+        if (e.target && e.target.name === 'kode_produksi[]') {
+            const detailEl = e.target.closest('.detail-item');
+            if (detailEl) {
+                const dIdx = Number(detailEl.dataset.detailIndex || 0);
+                updateDetailLabel(detailEl, dIdx);
+            }
+        }
+    });
+
+    document.addEventListener('change', function(e) {
+        if (e.target && e.target.classList.contains('produk-select')) {
+            const rowEl = e.target.closest('.unified-row');
+            if (rowEl) {
+                const rows = Array.from(document.querySelectorAll('#unified-container .unified-row'));
+                const rowIdx = rows.indexOf(rowEl);
+                if (rowIdx !== -1) {
+                    updateProdukLabel(rowEl, rowIdx);
+                }
+            }
         }
     });
 
@@ -1639,6 +1881,7 @@ function addNewRow() {
 
     initializeAllChoices();
     updateRowNumbers();
+    collapseAllProdukExcept(newRow);
     updateDetailButtons();
     
     const kategoriSelect = newRow.querySelector('select.kategori-produk-select');
@@ -1833,17 +2076,16 @@ function updateRowNumbers() {
     const rows = document.querySelectorAll('#unified-container .unified-row');
     let globalDetail = 0;
     rows.forEach((row, index) => {
-        const title = row.querySelector('h6');
-        if (title) {
-            title.textContent = `Produk ${index + 1}`;
-        }
+        ensureProdukCollapsible(row, index);
+        updateProdukLabel(row, index);
 
         const detailItems = Array.from(row.querySelectorAll('.detail-items .detail-item'));
         detailItems.forEach((detailEl, dIdx) => {
             detailEl.dataset.detailIndex = String(dIdx);
             detailEl.dataset.detailGlobalIndex = String(globalDetail);
-            const t = detailEl.querySelector('strong');
-            if (t) t.textContent = `Detail ${dIdx + 1}`;
+
+            ensureDetailCollapsible(detailEl, dIdx);
+            updateDetailLabel(detailEl, dIdx);
 
             detailEl.querySelectorAll('input[type="hidden"][name="kondisi_fisik_kemasan[]"]').forEach((el) => {
                 el.className = `radio-value-kemasan-${globalDetail + 1}`;

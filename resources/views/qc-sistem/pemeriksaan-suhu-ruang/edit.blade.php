@@ -417,6 +417,288 @@
                                         </div>
                                     </div>
                                 </form>
+
+                                {{-- ===== RIWAYAT DATA PER JAM (di luar form) ===== --}}
+                                @php
+                                    $sectionLabelsEdit = [
+                                        'cold_storage'               => 'Cold Storage',
+                                        'anteroom_loading'           => 'Anteroom Loading',
+                                        'pre_loading'                => 'Pre Loading',
+                                        'prestaging'                 => 'Prestaging',
+                                        'anteroom_ekspansi_further'  => 'Anteroom Ekspansi Further',
+                                        'anteroom_ekspansi_sausage'  => 'Anteroom Ekspansi Sausage',
+                                    ];
+
+                                    $currentSuhuEdit = is_array($pemeriksaanSuhuRuang->suhu_data)
+                                        ? $pemeriksaanSuhuRuang->suhu_data
+                                        : (json_decode($pemeriksaanSuhuRuang->suhu_data ?? '[]', true) ?: []);
+
+                                    $historiesEdit = $pemeriksaanSuhuRuang->relationLoaded('histories') && $pemeriksaanSuhuRuang->histories
+                                        ? $pemeriksaanSuhuRuang->histories->sortBy('created_at')
+                                        : collect();
+
+                                    $timelineRowsEdit = [];
+                                    $noEdit = 1;
+
+                                    $firstHistoryEdit = $historiesEdit->first();
+                                    $initSuhuEdit = $firstHistoryEdit
+                                        ? (is_array($firstHistoryEdit->suhu_data_lama) ? $firstHistoryEdit->suhu_data_lama : (json_decode($firstHistoryEdit->suhu_data_lama ?? '[]', true) ?: []))
+                                        : $currentSuhuEdit;
+                                    $initPukulEdit = $firstHistoryEdit ? ($firstHistoryEdit->pukul_lama ?? $pemeriksaanSuhuRuang->pukul) : $pemeriksaanSuhuRuang->pukul;
+
+                                    foreach ($sectionLabelsEdit as $secKey => $secLabel) {
+                                        $secData = $initSuhuEdit[$secKey] ?? [];
+                                        if (empty($secData)) continue;
+
+                                        if (in_array($secKey, ['cold_storage', 'anteroom_loading'])) {
+                                            foreach ((array) $secData as $item) {
+                                                if (!is_array($item) || (empty($item['setting']) && empty($item['display']) && empty($item['actual']))) continue;
+                                                $timelineRowsEdit[] = [
+                                                    'no'     => $noEdit++,
+                                                    'waktu'  => $initPukulEdit ? \Carbon\Carbon::parse($initPukulEdit)->format('H:i') : '-',
+                                                    'edited' => $pemeriksaanSuhuRuang->created_at ? $pemeriksaanSuhuRuang->created_at->format('d/m/Y H:i') : '-',
+                                                    'area'   => $secLabel . ' ' . ($item['unit'] ?? ''),
+                                                    'setting'=> $item['setting'] ?? '-',
+                                                    'aktual' => $item['actual'] ?? '-',
+                                                    'display'=> $item['display'] ?? '-',
+                                                    'tipe'   => 'awal',
+                                                ];
+                                            }
+                                        } else {
+                                            if (empty($secData['setting']) && empty($secData['display']) && empty($secData['actual'])) continue;
+                                            $timelineRowsEdit[] = [
+                                                'no'     => $noEdit++,
+                                                'waktu'  => $initPukulEdit ? \Carbon\Carbon::parse($initPukulEdit)->format('H:i') : '-',
+                                                'edited' => $pemeriksaanSuhuRuang->created_at ? $pemeriksaanSuhuRuang->created_at->format('d/m/Y H:i') : '-',
+                                                'area'   => $secLabel,
+                                                'setting'=> $secData['setting'] ?? '-',
+                                                'aktual' => $secData['actual'] ?? '-',
+                                                'display'=> $secData['display'] ?? '-',
+                                                'tipe'   => 'awal',
+                                            ];
+                                        }
+                                    }
+
+                                    // === Suhu Produk - Input Awal ===
+                                    $initSuhuProdukE = $firstHistoryEdit ? ($firstHistoryEdit->suhu_produk_lama ?? $pemeriksaanSuhuRuang->suhu_produk) : $pemeriksaanSuhuRuang->suhu_produk;
+                                    if (!empty($initSuhuProdukE)) {
+                                        $timelineRowsEdit[] = [
+                                            'no'     => $noEdit++,
+                                            'waktu'  => $initPukulEdit ? \Carbon\Carbon::parse($initPukulEdit)->format('H:i') : '-',
+                                            'edited' => $pemeriksaanSuhuRuang->created_at ? $pemeriksaanSuhuRuang->created_at->format('d/m/Y H:i') : '-',
+                                            'area'   => 'Suhu Produk',
+                                            'setting'=> '-',
+                                            'aktual' => $initSuhuProdukE,
+                                            'display'=> '-',
+                                            'tipe'   => 'awal',
+                                        ];
+                                    }
+
+                                    foreach ($historiesEdit as $h) {
+                                        $lamaSuhuE = is_array($h->suhu_data_lama) ? $h->suhu_data_lama : (json_decode($h->suhu_data_lama ?? '[]', true) ?: []);
+                                        $baruSuhuE = is_array($h->suhu_data_baru) ? $h->suhu_data_baru : (json_decode($h->suhu_data_baru ?? '[]', true) ?: []);
+                                        $editedAtE = $h->created_at ? $h->created_at->format('d/m/Y H:i') : '-';
+                                        $pukulE = $h->pukul_baru ?? $h->pukul_lama ?? null;
+                                        $jamE = $pukulE ? \Carbon\Carbon::parse($pukulE)->format('H:i') : '-';
+
+                                        foreach ($sectionLabelsEdit as $secKey => $secLabel) {
+                                            $lamaDataE = $lamaSuhuE[$secKey] ?? [];
+                                            $baruDataE = $baruSuhuE[$secKey] ?? [];
+                                            if (json_encode($lamaDataE) === json_encode($baruDataE)) continue;
+
+                                            if (in_array($secKey, ['cold_storage', 'anteroom_loading'])) {
+                                                $allItemsE = array_unique(array_merge(
+                                                    array_map(fn($r) => $r['unit'] ?? '', (array) $lamaDataE),
+                                                    array_map(fn($r) => $r['unit'] ?? '', (array) $baruDataE)
+                                                ));
+                                                foreach ($allItemsE as $unitId) {
+                                                    $bItemE = collect((array) $baruDataE)->firstWhere('unit', $unitId) ?? [];
+                                                    $lItemE = collect((array) $lamaDataE)->firstWhere('unit', $unitId) ?? [];
+                                                    if (json_encode($lItemE) === json_encode($bItemE)) continue;
+                                                    if (empty($bItemE['setting']) && empty($bItemE['display']) && empty($bItemE['actual'])) continue;
+                                                    $timelineRowsEdit[] = [
+                                                        'no'          => $noEdit++,
+                                                        'waktu'       => $jamE,
+                                                        'edited'      => $editedAtE,
+                                                        'area'        => $secLabel . ' ' . $unitId,
+                                                        'setting'     => $bItemE['setting'] ?? '-',
+                                                        'aktual'      => $bItemE['actual'] ?? '-',
+                                                        'display'     => $bItemE['display'] ?? '-',
+                                                        'tipe'        => 'update',
+                                                        'history_uuid'=> $h->uuid,
+                                                        'field_type'  => 'suhu_data',
+                                                        'section_key' => $secKey,
+                                                        'unit_id'     => $unitId,
+                                                        'pukul_raw'   => $pukulE ? \Carbon\Carbon::parse($pukulE)->format('H:i') : '',
+                                                    ];
+                                                }
+                                            } else {
+                                                if (empty($baruDataE['setting']) && empty($baruDataE['display']) && empty($baruDataE['actual'])) continue;
+                                                $timelineRowsEdit[] = [
+                                                    'no'          => $noEdit++,
+                                                    'waktu'       => $jamE,
+                                                    'edited'      => $editedAtE,
+                                                    'area'        => $secLabel,
+                                                    'setting'     => $baruDataE['setting'] ?? '-',
+                                                    'aktual'      => $baruDataE['actual'] ?? '-',
+                                                    'display'     => $baruDataE['display'] ?? '-',
+                                                    'tipe'        => 'update',
+                                                    'history_uuid'=> $h->uuid,
+                                                    'field_type'  => 'suhu_data',
+                                                    'section_key' => $secKey,
+                                                    'unit_id'     => null,
+                                                    'pukul_raw'   => $pukulE ? \Carbon\Carbon::parse($pukulE)->format('H:i') : '',
+                                                ];
+                                            }
+                                        }
+
+                                        // === Suhu Produk - Update ===
+                                        if (($h->suhu_produk_lama ?? null) !== ($h->suhu_produk_baru ?? null) && !empty($h->suhu_produk_baru)) {
+                                            $timelineRowsEdit[] = [
+                                                'no'          => $noEdit++,
+                                                'waktu'       => $jamE,
+                                                'edited'      => $editedAtE,
+                                                'area'        => 'Suhu Produk',
+                                                'setting'     => '-',
+                                                'aktual'      => $h->suhu_produk_baru,
+                                                'display'     => '-',
+                                                'tipe'        => 'update',
+                                                'history_uuid'=> $h->uuid,
+                                                'field_type'  => 'suhu_produk',
+                                                'section_key' => null,
+                                                'unit_id'     => null,
+                                                'pukul_raw'   => $pukulE ? \Carbon\Carbon::parse($pukulE)->format('H:i') : '',
+                                            ];
+                                        }
+                                    }
+                                @endphp
+
+                                @if(!empty($timelineRowsEdit))
+                                <div class="row mt-4 mb-2">
+                                    <div class="col-md-12">
+                                        <h5 class="mb-3 d-flex align-items-center gap-2">
+                                            <i class="bi bi-clock-history text-primary"></i>
+                                            <strong>Riwayat Data Per Jam</strong>
+                                            <span class="badge bg-primary ms-1">{{ count($timelineRowsEdit) }} entri</span>
+                                        </h5>
+                                        <div class="alert alert-info py-2 px-3 mb-3" style="font-size:0.875rem;">
+                                            <i class="bi bi-info-circle me-1"></i>
+                                            Klik tombol <strong>Edit</strong> pada baris riwayat (status <span class="badge bg-warning text-dark">Update</span>) untuk mengoreksi data jam tersebut.
+                                        </div>
+                                        <div class="table-responsive">
+                                            <table class="table table-bordered table-hover table-sm align-middle">
+                                                <thead class="table-dark">
+                                                    <tr>
+                                                        <th class="text-center" style="width:4%">No</th>
+                                                        <th class="text-center" style="width:8%">Pukul</th>
+                                                        <!-- <th class="text-center" style="width:13%">Diedit Pada</th> -->
+                                                        <th style="width:20%">Area</th>
+                                                        <th class="text-center">Setting (°C)</th>
+                                                        <th class="text-center">Aktual (°C)</th>
+                                                        <th class="text-center">Display (°C)</th>
+                                                        <th class="text-center" style="width:8%">Status</th>
+                                                        <th class="text-center" style="width:7%">Aksi</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    @foreach($timelineRowsEdit as $tRow)
+                                                    <tr class="{{ $tRow['tipe'] === 'update' ? 'table-warning' : '' }}">
+                                                        <td class="text-center">{{ $tRow['no'] }}</td>
+                                                        <td class="text-center fw-semibold">{{ $tRow['waktu'] }}</td>
+                                                        <!-- <td class="text-center text-muted" style="font-size:0.8rem">{{ $tRow['edited'] }}</td> -->
+                                                        <td>{{ $tRow['area'] }}</td>
+                                                        <td class="text-center">{{ $tRow['setting'] }}</td>
+                                                        <td class="text-center">{{ $tRow['aktual'] }}</td>
+                                                        <td class="text-center">{{ $tRow['display'] }}</td>
+                                                        <td class="text-center">
+                                                            @if($tRow['tipe'] === 'awal')
+                                                                <span class="badge bg-success">Input Awal</span>
+                                                            @else
+                                                                <span class="badge bg-warning text-dark">Update</span>
+                                                            @endif
+                                                        </td>
+                                                        <td class="text-center">
+                                                            @if($tRow['tipe'] === 'update' && !empty($tRow['history_uuid']))
+                                                                <button type="button" class="btn btn-sm btn-primary btn-edit-riwayat"
+                                                                    data-history-uuid="{{ $tRow['history_uuid'] }}"
+                                                                    data-field-type="{{ $tRow['field_type'] }}"
+                                                                    data-section-key="{{ $tRow['section_key'] ?? '' }}"
+                                                                    data-unit-id="{{ $tRow['unit_id'] ?? '' }}"
+                                                                    data-area="{{ $tRow['area'] }}"
+                                                                    data-pukul="{{ $tRow['pukul_raw'] ?? $tRow['waktu'] }}"
+                                                                    data-setting="{{ $tRow['setting'] }}"
+                                                                    data-aktual="{{ $tRow['aktual'] }}"
+                                                                    data-display="{{ $tRow['display'] }}"
+                                                                    data-pemeriksaan-uuid="{{ $pemeriksaanSuhuRuang->uuid }}">
+                                                                     Edit
+                                                                </button>
+                                                            @else
+                                                                <span class="text-muted">-</span>
+                                                            @endif
+                                                        </td>
+                                                    </tr>
+                                                    @endforeach
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {{-- Modal Edit Riwayat --}}
+                                <div class="modal fade" id="modalEditRiwayat" tabindex="-1" aria-labelledby="modalEditRiwayatLabel" aria-hidden="true">
+                                    <div class="modal-dialog modal-md">
+                                        <div class="modal-content">
+                                            <div class="modal-header bg-primary text-white">
+                                                <h5 class="modal-title" id="modalEditRiwayatLabel">
+                                                    <i class="bi bi-pencil-square me-2"></i>Edit Riwayat Per Jam
+                                                </h5>
+                                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <form id="formEditRiwayat" method="POST" action="">
+                                                @csrf
+                                                @method('PUT')
+                                                <input type="hidden" name="field_type" id="modal_field_type">
+                                                <input type="hidden" name="section_key" id="modal_section_key">
+                                                <input type="hidden" name="unit_id" id="modal_unit_id">
+                                                <div class="modal-body">
+                                                    <div class="alert alert-warning py-2 mb-3" style="font-size:0.85rem">
+                                                        <i class="bi bi-exclamation-triangle me-1"></i>
+                                                        Mengedit data: <strong id="modal_area_label"></strong>
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label class="form-label fw-semibold">Pukul</label>
+                                                        <input type="time" name="pukul" id="modal_pukul" class="form-control form-control-sm">
+                                                    </div>
+                                                    <div id="modal_suhu_produk_section">
+                                                        <div class="mb-3">
+                                                            <label class="form-label fw-semibold">Suhu Produk</label>
+                                                            <input type="text" name="suhu_produk" id="modal_suhu_produk" class="form-control form-control-sm" placeholder="Nilai suhu produk">
+                                                        </div>
+                                                    </div>
+                                                    <div id="modal_suhu_data_section">
+                                                        <div class="mb-3">
+                                                            <label class="form-label fw-semibold">Setting (°C)</label>
+                                                            <input type="text" name="setting" id="modal_setting" class="form-control form-control-sm" placeholder="-">
+                                                        </div>
+                                                        <div class="mb-3">
+                                                            <label class="form-label fw-semibold">Aktual (°C)</label>
+                                                            <input type="text" name="aktual" id="modal_aktual" class="form-control form-control-sm" placeholder="-">
+                                                        </div>
+                                                        <div class="mb-3">
+                                                            <label class="form-label fw-semibold">Display (°C)</label>
+                                                            <input type="text" name="display" id="modal_display" class="form-control form-control-sm" placeholder="-">
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                                                    <button type="submit" class="btn btn-primary"><i class="bi bi-save me-1"></i>Simpan Perubahan</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                                @endif
                             </div>
                         </div>
                     </div>
@@ -512,6 +794,63 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             // Notifikasi akan otomatis refresh saat page load di halaman berikutnya
             // karena checkEditableRecords() dipanggil di DOMContentLoaded di navbar.blade.php
+        });
+    }
+
+    // Handler for Edit Riwayat Per Jam Modal
+    const editRiwayatButtons = document.querySelectorAll('.btn-edit-riwayat');
+    const modalEditRiwayat = document.getElementById('modalEditRiwayat');
+    if (editRiwayatButtons.length > 0 && modalEditRiwayat) {
+        const bsModal = new bootstrap.Modal(modalEditRiwayat);
+        const formEditRiwayat = document.getElementById('formEditRiwayat');
+        const modalAreaLabel = document.getElementById('modal_area_label');
+        const modalFieldType = document.getElementById('modal_field_type');
+        const modalSectionKey = document.getElementById('modal_section_key');
+        const modalUnitId = document.getElementById('modal_unit_id');
+        const modalPukul = document.getElementById('modal_pukul');
+        const modalSuhuProduk = document.getElementById('modal_suhu_produk');
+        const modalSetting = document.getElementById('modal_setting');
+        const modalAktual = document.getElementById('modal_aktual');
+        const modalDisplay = document.getElementById('modal_display');
+        const sectionSuhuProduk = document.getElementById('modal_suhu_produk_section');
+        const sectionSuhuData = document.getElementById('modal_suhu_data_section');
+
+        editRiwayatButtons.forEach(btn => {
+            btn.addEventListener('click', function() {
+                const historyUuid = this.dataset.historyUuid;
+                const pemeriksaanUuid = this.dataset.pemeriksaanUuid;
+                const fieldType = this.dataset.fieldType;
+                const sectionKey = this.dataset.sectionKey;
+                const unitId = this.dataset.unitId;
+                const area = this.dataset.area;
+                const pukul = this.dataset.pukul;
+                const setting = this.dataset.setting;
+                const aktual = this.dataset.aktual;
+                const display = this.dataset.display;
+
+                // Build Form Action URL
+                formEditRiwayat.action = `/qc-sistem/pemeriksaan-suhu-ruang/${pemeriksaanUuid}/history/${historyUuid}`;
+
+                modalAreaLabel.textContent = area;
+                modalFieldType.value = fieldType;
+                modalSectionKey.value = sectionKey;
+                modalUnitId.value = unitId;
+                modalPukul.value = pukul !== '-' ? pukul : '';
+
+                if (fieldType === 'suhu_produk') {
+                    sectionSuhuProduk.style.display = 'block';
+                    sectionSuhuData.style.display = 'none';
+                    modalSuhuProduk.value = aktual !== '-' ? aktual : '';
+                } else {
+                    sectionSuhuProduk.style.display = 'none';
+                    sectionSuhuData.style.display = 'block';
+                    modalSetting.value = setting !== '-' ? setting : '';
+                    modalAktual.value = aktual !== '-' ? aktual : '';
+                    modalDisplay.value = display !== '-' ? display : '';
+                }
+
+                bsModal.show();
+            });
         });
     }
 });

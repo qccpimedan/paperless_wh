@@ -521,7 +521,7 @@
                 <div class="d-flex align-items-center flex-grow-1">
                     <div class="logo d-flex align-items-center gap-2">
                         <img src="{{ asset('dist/images/logo/revisi_logo.png') }}" alt="Logo" style="width: 165px; height: auto;">
-                        <span class="badge badge-animated-version text-white rounded-pill px-2 py-1" style="font-size: 0.65rem; font-weight: 700; letter-spacing: 0.5px;">v1.5.3</span>
+                        <span class="badge badge-animated-version text-white rounded-pill px-2 py-1" style="font-size: 0.65rem; font-weight: 700; letter-spacing: 0.5px;">v1.5.4</span>
                     </div>
                 </div>
 
