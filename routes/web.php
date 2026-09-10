@@ -42,11 +42,12 @@ use App\Http\Controllers\SsoLoginController;
 use Illuminate\Support\Facades\Auth;
 
 // Redirect root to login
-Route::match(['get', 'post'], '/', function () {
+Route::match(['get', 'post'], '/', function (\Illuminate\Http\Request $request) {
     if (Auth::check()) {
         return redirect('/dashboard');
     }
-    return redirect('/login');
+    $queryString = $request->getQueryString();
+    return redirect('/login' . ($queryString ? '?' . $queryString : ''));
 });
 
 // CSRF Token Refresh Route & Session Keep-Alive
