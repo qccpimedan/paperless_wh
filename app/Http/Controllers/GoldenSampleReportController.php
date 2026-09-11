@@ -60,6 +60,8 @@ class GoldenSampleReportController extends Controller
         }
 
 
+        $query->filterSubArea($request->sub_area);
+
         $reports = $query->latest()->paginate(25);
 
         return view('qc-sistem.golden-sample-retort.index', compact('reports'));

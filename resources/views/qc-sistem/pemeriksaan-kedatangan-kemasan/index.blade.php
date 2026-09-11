@@ -125,7 +125,17 @@
                     </div>
 
                     <form action="{{ route('pemeriksaan-kedatangan-kemasan.index') }}" method="GET" class="row g-3 mb-3">
-                        <div class="col-md-9"><input type="text" name="search" class="form-control" placeholder="Cari Bahan atau Kode Produksi..." value="{{ request('search') }}"></div>
+                        <div class="col-md-6"><input type="text" name="search" class="form-control" placeholder="Cari Bahan atau Kode Produksi..." value="{{ request('search') }}"></div>
+                        @php $isPlantMedan = auth()->user() && auth()->user()->plant && stripos(auth()->user()->plant->plant ?? '', 'medan') !== false; @endphp
+                        @if($isPlantMedan || (auth()->user()->role && strtolower(auth()->user()->role->role) === 'superadmin'))
+                        <div class="col-md-3">
+                            <select name="sub_area" class="form-select form-select-sm">
+                                <option value="">Semua Area</option>
+                                <option value="Medan KIM 1" {{ request('sub_area') === 'Medan KIM 1' ? 'selected' : '' }}>Medan KIM 1</option>
+                                <option value="Medan KIM 2" {{ request('sub_area') === 'Medan KIM 2' ? 'selected' : '' }}>Medan KIM 2</option>
+                            </select>
+                        </div>
+                        @endif
                         <div class="col-md-3 d-flex align-items-end gap-2">
                             <button type="submit" class="btn btn-primary btn-sm">Cari Data</button>
                             <a href="{{ route('pemeriksaan-kedatangan-kemasan.index') }}" class="btn btn-secondary btn-sm">Reset</a>
@@ -137,6 +147,7 @@
                         <div class="table-responsive">
                             <table class="table table-striped text-center" style="white-space: nowrap;">
                                 <thead>
+                                    @php $isPlantMedanHeader = auth()->user() && auth()->user()->plant && stripos(auth()->user()->plant->plant ?? '', 'medan') !== false; $isSuperadminHeader = auth()->user()->role && strtolower(auth()->user()->role->role) === 'superadmin'; @endphp
                                     <tr>
                                         <th>
                                             @if($canVerify)
@@ -149,6 +160,9 @@
                                         <th>Tanggal</th>
                                         <th>Shift</th>
                                         <th>Plant</th>
+                                        @if($isPlantMedanHeader || $isSuperadminHeader)
+                                        <th>Sub Area</th>
+                                        @endif
                                         <th>Bahan Kemasan</th>
                                         <th>Kode Produksi</th>
                                         <th>Verifikasi</th>
@@ -177,6 +191,19 @@
                                             <td><strong>{{ $pemeriksaan->tanggal->format('d/m/Y') }}</strong></td>
                                             <td><span class="badge bg-primary">{{ $pemeriksaan->shift->shift ?? 'No Shift' }}</span></td>
                                             <td><span class="badge bg-primary">{{ $pemeriksaan->user->plant->plant ?? 'No Plant' }}</span></td>
+                                            @if($isPlantMedanHeader || $isSuperadminHeader)
+                                            <td>
+                                                @if($pemeriksaan->sub_area === 'Medan KIM 1')
+                                                    <span class="badge bg-primary">KIM 1</span>
+                                                @elseif($pemeriksaan->sub_area === 'Medan KIM 2')
+                                                    <span class="badge bg-success">KIM 2</span>
+                                                @elseif($pemeriksaan->sub_area)
+                                                    <span class="badge bg-info text-white">{{ $pemeriksaan->sub_area }}</span>
+                                                @else
+                                                    <span class="badge bg-light text-muted">-</span>
+                                                @endif
+                                            </td>
+                                            @endif
                                             <td>
                                                 @if($pemeriksaan->bahan) <span class="badge bg-info">{{ $pemeriksaan->bahan->nama_bahan }}</span>
                                                 @else

@@ -62,6 +62,8 @@ class PemeriksaanSuhuRuangV2Controller extends Controller
         }
 
 
+        $query->filterSubArea($request->sub_area);
+
         $pemeriksaans = $query->latest()->paginate(25);
         
         return view('qc-sistem.pemeriksaan-suhu-ruang-v2.index', compact('pemeriksaans'));

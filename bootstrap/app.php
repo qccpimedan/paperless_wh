@@ -15,6 +15,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->appendToGroup('web', \App\Http\Middleware\SetPlantTimezone::class);
         $middleware->appendToGroup('web', \App\Http\Middleware\CheckForceLogout::class);
+        $middleware->appendToGroup('web', \App\Http\Middleware\CheckMedanSubArea::class);
         $middleware->appendToGroup('api', \App\Http\Middleware\SetPlantTimezone::class);
     })
     ->withExceptions(function (Exceptions $exceptions) {

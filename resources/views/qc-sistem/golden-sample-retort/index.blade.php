@@ -105,7 +105,17 @@
                     </div>
                     
                     <form action="{{ route('golden-sample-reports.index') }}" method="GET" class="row g-3 mb-3">
-                        <div class="col-md-9"><input type="text" name="search" class="form-control" placeholder="Cari Sample Type..." value="{{ request('search') }}"></div>
+                        <div class="col-md-6"><input type="text" name="search" class="form-control" placeholder="Cari Sample Type..." value="{{ request('search') }}"></div>
+                        @php $isPlantMedan = auth()->user() && auth()->user()->plant && stripos(auth()->user()->plant->plant ?? '', 'medan') !== false; @endphp
+                        @if($isPlantMedan || (auth()->user()->role && strtolower(auth()->user()->role->role) === 'superadmin'))
+                        <div class="col-md-3">
+                            <select name="sub_area" class="form-select form-select-sm">
+                                <option value="">Semua Area</option>
+                                <option value="Medan KIM 1" {{ request('sub_area') === 'Medan KIM 1' ? 'selected' : '' }}>Medan KIM 1</option>
+                                <option value="Medan KIM 2" {{ request('sub_area') === 'Medan KIM 2' ? 'selected' : '' }}>Medan KIM 2</option>
+                            </select>
+                        </div>
+                        @endif
                         <div class="col-md-3 d-flex align-items-end gap-2">
                             <button type="submit" class="btn btn-primary btn-sm">Cari Data</button>
                             <a href="{{ route('golden-sample-reports.index') }}" class="btn btn-secondary btn-sm">Reset</a>
@@ -117,6 +127,7 @@
                         <div class="table-responsive">
                             <table class="table table-striped text-center" style="white-space: nowrap;">
                                 <thead>
+                                    @php $isPlantMedanHeader = auth()->user() && auth()->user()->plant && stripos(auth()->user()->plant->plant ?? '', 'medan') !== false; $isSuperadminHeader = auth()->user()->role && strtolower(auth()->user()->role->role) === 'superadmin'; @endphp
                                     <tr>
                                         <th>
                                             @if($canVerify) <input type="checkbox" id="selectAll" class="form-check-input">
@@ -126,6 +137,9 @@
                                         <th>Tanggal</th>
                                         <th>Shift</th>
                                         <th>Plant</th>
+                                        @if($isPlantMedanHeader || $isSuperadminHeader)
+                                        <th>Sub Area</th>
+                                        @endif
                                         <th>Sample Type</th>
                                         <th>Masa Penyimpanan</th>
                                         <th>Jumlah Sampel</th>
@@ -152,6 +166,19 @@
                                             <td><strong>{{ \Carbon\Carbon::parse($item->tanggal)->format('d/m/Y') }}</strong></td>
                                             <td><span class="badge bg-primary">{{ $item->shift->shift ?? 'Shift tidak ditemukan' }}</span></td>
                                             <td><span class="badge bg-secondary">{{ $item->plant->plant ?? $item->plant_manual ?? '-' }}</span></td>
+                                            @if($isPlantMedanHeader || $isSuperadminHeader)
+                                            <td>
+                                                @if($item->sub_area === 'Medan KIM 1')
+                                                    <span class="badge bg-primary">KIM 1</span>
+                                                @elseif($item->sub_area === 'Medan KIM 2')
+                                                    <span class="badge bg-success">KIM 2</span>
+                                                @elseif($item->sub_area)
+                                                    <span class="badge bg-info text-white">{{ $item->sub_area }}</span>
+                                                @else
+                                                    <span class="badge bg-light text-muted">-</span>
+                                                @endif
+                                            </td>
+                                            @endif
                                             <td>{{ $item->sample_type ?? '-' }}</td>
                                             <td>{{ $item->masa_penyimpanan ?? '-' }}</td>
                                             <td>
@@ -194,7 +221,7 @@
                                             </td>
                                         </tr>
                                     @empty
-                                        <tr><td colspan="10" class="text-center py-4">Belum ada data</td></tr>
+                                        <tr><td colspan="{{ ($isPlantMedanHeader || $isSuperadminHeader) ? 12 : 11 }}" class="text-center py-4">Belum ada data</td></tr>
                                     @endforelse
                                 </tbody>
                             </table>

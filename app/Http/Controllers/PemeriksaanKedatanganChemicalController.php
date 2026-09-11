@@ -89,6 +89,8 @@ class PemeriksaanKedatanganChemicalController extends Controller
             });
         }
 
+        $query->filterSubArea($request->sub_area);
+
         $pemeriksaans = $query->latest()->paginate(25);
 
         
