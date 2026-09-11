@@ -59,16 +59,7 @@
                                         @endif
                                     </td>
                                 </tr>
-                                <tr>
-                                    <td><strong>Jenis dan No. Kendaraan:</strong></td>
-                                    <td>
-                                        @if($pemeriksaanLoading->kendaraan)
-                                            {{ $pemeriksaanLoading->kendaraan->jenis_kendaraan }} - {{ $pemeriksaanLoading->kendaraan->no_kendaraan }}
-                                        @else
-                                            -
-                                        @endif
-                                    </td>
-                                </tr>
+                                
                             </table>
                         </div>
                         <div class="col-md-6">
@@ -78,6 +69,16 @@
                                     <td>
                                         @if($pemeriksaanLoading->supir)
                                             {{ $pemeriksaanLoading->supir->nama_supir }}
+                                        @else
+                                            -
+                                        @endif
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Jenis dan No. Kendaraan:</strong></td>
+                                    <td>
+                                        @if($pemeriksaanLoading->kendaraan)
+                                            {{ $pemeriksaanLoading->kendaraan->jenis_kendaraan }} - {{ $pemeriksaanLoading->kendaraan->no_kendaraan }}
                                         @else
                                             -
                                         @endif
@@ -93,10 +94,10 @@
                                         @endif
                                     </td>
                                 </tr> -->
-                                <tr>
+                                <!-- <tr>
                                     <td><strong>Dibuat Oleh:</strong></td>
                                     <td>{{ $pemeriksaanLoading->user->name ?? '-' }}</td>
-                                </tr>
+                                </tr> -->
                             </table>
                         </div>
                     </div>

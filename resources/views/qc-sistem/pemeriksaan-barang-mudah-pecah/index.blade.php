@@ -168,7 +168,7 @@
                                                         <button type="submit" class="btn btn-sm btn-primary" formaction="{{ route('pemeriksaan-barang-mudah-pecah.send-to-produksi', $item->uuid) }}"><i class="bi bi-send"></i> Kirim</button>
                                                     @else <span class="badge bg-secondary">Pending</span> @endif
                                                 @elseif($st === 'sent_to_produksi')
-                                                    <span class="badge bg-warning text-dark">Menunggu Produksi</span>
+                                                    <span class="badge bg-warning text-dark">Menunggu Warehouse</span>
                                                     @if($userRole === 'produksi' || $userRole === 'warehouse' || $userRole === 'produksi/warehouse')
                                                         <div class="mt-1">
                                                             <button type="button" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#appProduksi{{ $item->id }}"><i class="bi bi-check-circle"></i> Verifikasi</button>
@@ -176,7 +176,7 @@
                                                         </div>
                                                     @endif
                                                 @elseif($st === 'approved_produksi')
-                                                    <span class="badge bg-info text-white">Disetujui Produksi</span>
+                                                    <span class="badge bg-info text-white">Disetujui Warehouse</span>
                                                     @if($userRole === 'spv qc' || $userRole === 'superadmin')
                                                         <div class="mt-1">
                                                             <button type="button" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#appSPV{{ $item->id }}"><i class="bi bi-check-circle"></i> Verifikasi</button>
