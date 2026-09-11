@@ -86,7 +86,7 @@
                                                     <label for="id_kendaraan">Jenis & No Kendaraan</label>
                                                     <select id="id_kendaraan" class="form-select @error('id_kendaraan') is-invalid @enderror" name="id_kendaraan">
                                                         <option value="">-- Pilih Kendaraan --</option>
-                                                        <option value="other" {{ old('id_kendaraan', $pemeriksaanLoading->jenis_kendaraan_manual ? 'other' : '') == 'other' ? 'selected' : '' }}>-- Lainnya (Input Manual) --</option>
+                                                        <option value="other" {{ old('id_kendaraan') == 'other' ? 'selected' : '' }}>-- Lainnya (Input Manual) --</option>
                                                         @foreach($kendaraans as $kendaraan)
                                                             <option value="{{ $kendaraan->id }}" {{ old('id_kendaraan', $pemeriksaanLoading->id_kendaraan) == $kendaraan->id ? 'selected' : '' }}>{{ $kendaraan->jenis_kendaraan }} - {{ $kendaraan->no_kendaraan }}</option>
                                                         @endforeach
@@ -96,13 +96,13 @@
                                                     @enderror
 
                                                     <!-- Input manual yang awalnya disembunyikan -->
-                                                    <div id="manual_kendaraan_input" class="mt-2" style="display: {{ old('id_kendaraan', $pemeriksaanLoading->jenis_kendaraan_manual ? 'other' : '') == 'other' ? 'block' : 'none' }};">
+                                                    <div id="manual_kendaraan_input" class="mt-2" style="display: {{ old('id_kendaraan') == 'other' ? 'block' : 'none' }};">
                                                         <div class="row">
                                                             <div class="col-md-6">
                                                                 <div class="form-group">
                                                                     <label for="jenis_kendaraan_manual">Jenis Kendaraan</label>
                                                                     <input type="text" id="jenis_kendaraan_manual" class="form-control @error('jenis_kendaraan_manual') is-invalid @enderror" 
-                                                                        name="jenis_kendaraan_manual" value="{{ old('jenis_kendaraan_manual', $pemeriksaanLoading->jenis_kendaraan_manual) }}" placeholder="Masukkan jenis kendaraan">
+                                                                        name="jenis_kendaraan_manual" value="{{ old('jenis_kendaraan_manual') }}" placeholder="Masukkan jenis kendaraan">
                                                                     @error('jenis_kendaraan_manual')
                                                                         <div class="invalid-feedback">{{ $message }}</div>
                                                                     @enderror
@@ -112,7 +112,7 @@
                                                                 <div class="form-group">
                                                                     <label for="no_kendaraan_manual">No Kendaraan</label>
                                                                     <input type="text" id="no_kendaraan_manual" class="form-control @error('no_kendaraan_manual') is-invalid @enderror" 
-                                                                        name="no_kendaraan_manual" value="{{ old('no_kendaraan_manual', $pemeriksaanLoading->no_kendaraan_manual) }}" placeholder="Masukkan nomor kendaraan">
+                                                                        name="no_kendaraan_manual" value="{{ old('no_kendaraan_manual') }}" placeholder="Masukkan nomor kendaraan">
                                                                     @error('no_kendaraan_manual')
                                                                         <div class="invalid-feedback">{{ $message }}</div>
                                                                     @enderror
@@ -127,7 +127,7 @@
                                                     <label for="id_supir">Nama Supir</label>
                                                     <select id="id_supir" class="form-control @error('id_supir') is-invalid @enderror" name="id_supir">
                                                         <option value="">Pilih Supir</option>
-                                                        <option valuex="other" {{ old('id_supir', $pemeriksaanLoading->nama_supir_manual ? 'other' : '') == 'other' ? 'selected' : '' }}>-- Lainnya (Input Manual) --</option>
+                                                        <option value="other" {{ old('id_supir') == 'other' ? 'selected' : '' }}>-- Lainnya (Input Manual) --</option>
                                                         @foreach($supirs as $supir)
                                                             <option value="{{ $supir->id }}" {{ old('id_supir', $pemeriksaanLoading->id_supir) == $supir->id ? 'selected' : '' }}>{{ $supir->nama_supir }}</option>
                                                         @endforeach
@@ -136,11 +136,11 @@
                                                         <div class="invalid-feedback">{{ $message }}</div>
                                                     @enderror
 
-                                                    <div id="manual_supir_input" class="mt-2" style="display: {{ old('id_supir', $pemeriksaanLoading->nama_supir_manual ? 'other' : '') == 'other' ? 'block' : 'none' }};">
+                                                    <div id="manual_supir_input" class="mt-2" style="display: {{ old('id_supir') == 'other' ? 'block' : 'none' }};">
                                                         <div class="form-group">
                                                             <label for="nama_supir_manual">Nama Supir</label>
                                                             <input type="text" id="nama_supir_manual" class="form-control @error('nama_supir_manual') is-invalid @enderror"
-                                                                name="nama_supir_manual" value="{{ old('nama_supir_manual', $pemeriksaanLoading->nama_supir_manual) }}" placeholder="Masukkan nama supir">
+                                                                name="nama_supir_manual" value="{{ old('nama_supir_manual') }}" placeholder="Masukkan nama supir">
                                                             @error('nama_supir_manual')
                                                                 <div class="invalid-feedback">{{ $message }}</div>
                                                             @enderror
@@ -786,9 +786,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function initChoicesSelect(selectEl, placeholderText) {
         if (!selectEl || typeof Choices === 'undefined') return null;
-        Array.from(selectEl.options).forEach(function(opt) {
-            opt.text = opt.text.trim();
-        });
         return new Choices(selectEl, {
             searchResultLimit: 100,
             fuseOptions: { ignoreLocation: true, threshold: 0.2, matchAllTokens: false, distance: 1000 },
@@ -811,6 +808,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const kendaraanSelect = document.getElementById('id_kendaraan');
     const manualKendaraanDiv = document.getElementById('manual_kendaraan_input');
     if (kendaraanSelect && manualKendaraanDiv) {
+        manualKendaraanDiv.style.display = kendaraanSelect.value === 'other' ? 'block' : 'none';
         kendaraanSelect.addEventListener('change', function() {
             manualKendaraanDiv.style.display = this.value === 'other' ? 'block' : 'none';
         });
@@ -819,6 +817,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const supirSelect = document.getElementById('id_supir');
     const manualSupirDiv = document.getElementById('manual_supir_input');
     if (supirSelect && manualSupirDiv) {
+        manualSupirDiv.style.display = supirSelect.value === 'other' ? 'block' : 'none';
         supirSelect.addEventListener('change', function() {
             manualSupirDiv.style.display = this.value === 'other' ? 'block' : 'none';
         });

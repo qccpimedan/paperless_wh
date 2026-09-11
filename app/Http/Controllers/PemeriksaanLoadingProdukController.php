@@ -502,6 +502,35 @@ class PemeriksaanLoadingProdukController extends Controller
             })->with(['user.plant'])->get();
         }
 
+        // Ensure saved items are present in collections even if filtered out by plant
+        if ($pemeriksaan_loading_produk->id_kendaraan && !$kendaraans->contains('id', $pemeriksaan_loading_produk->id_kendaraan)) {
+            $savedKendaraan = JenisKendaraan::with(['user.plant'])->find($pemeriksaan_loading_produk->id_kendaraan);
+            if ($savedKendaraan) {
+                $kendaraans->push($savedKendaraan);
+            }
+        }
+
+        if ($pemeriksaan_loading_produk->id_supir && !$supirs->contains('id', $pemeriksaan_loading_produk->id_supir)) {
+            $savedSupir = Supir::with(['user.plant'])->find($pemeriksaan_loading_produk->id_supir);
+            if ($savedSupir) {
+                $supirs->push($savedSupir);
+            }
+        }
+
+        if ($pemeriksaan_loading_produk->id_tujuan_pengiriman && !$tujuanPengirimans->contains('id', $pemeriksaan_loading_produk->id_tujuan_pengiriman)) {
+            $savedTujuan = TujuanPengiriman::with(['user.plant', 'customer'])->find($pemeriksaan_loading_produk->id_tujuan_pengiriman);
+            if ($savedTujuan) {
+                $tujuanPengirimans->push($savedTujuan);
+            }
+        }
+
+        if ($pemeriksaan_loading_produk->id_shift && !$shifts->contains('id', $pemeriksaan_loading_produk->id_shift)) {
+            $savedShift = Shift::with(['user.plant'])->find($pemeriksaan_loading_produk->id_shift);
+            if ($savedShift) {
+                $shifts->push($savedShift);
+            }
+        }
+
         $produkList = Produk::query()
             ->select(['id', 'nama_produk', 'kategori_code'])
             ->orderBy('nama_produk')
