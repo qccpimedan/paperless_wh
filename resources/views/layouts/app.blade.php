@@ -113,7 +113,58 @@
             transform: scale(0.95) !important;
         }
 
-        /* ===== FIX SIDEBAR SCROLL TABLET & PC ===== */
+        /* ===== FIX SELECT / DROPDOWN TEXT COLOR ===== */
+        /* Mencegah teks option menjadi putih karena dark theme */
+        select.form-select,
+        select.form-select option,
+        select.form-select-sm,
+        select.form-select-sm option {
+            color: #333333 !important;
+            background-color: #ffffff !important;
+        }
+        select.form-select:focus,
+        select.form-select-sm:focus {
+            color: #333333 !important;
+            background-color: #ffffff !important;
+            border-color: #86b7fe !important;
+        }
+        /* Khusus dropdown filter sub_area KIM 1 / KIM 2 */
+        select[name="sub_area"] {
+            color: #333333 !important;
+            background-color: #ffffff !important;
+        }
+        select[name="sub_area"] option {
+            color: #333333 !important;
+            background-color: #ffffff !important;
+        }
+
+        /* ===== FIX SUB-AREA BUTTON NAVBAR HOVER ===== */
+        /* Tombol "Medan KIM 1 / KIM 2" di navbar: teks selalu terlihat saat hover */
+        #subAreaToggleBtn {
+            background: #f0f4ff !important;
+            color: #435ebe !important;
+            border: 1.5px solid #435ebe !important;
+            transition: background 0.2s, color 0.2s;
+        }
+        #subAreaToggleBtn:hover,
+        #subAreaToggleBtn:focus,
+        #subAreaToggleBtn.show {
+            background: #435ebe !important;
+            color: #ffffff !important;
+            border-color: #435ebe !important;
+        }
+        #subAreaToggleBtn:hover span,
+        #subAreaToggleBtn:focus span,
+        #subAreaToggleBtn.show span {
+            color: #ffffff !important;
+        }
+        #subAreaToggleBtn:hover .bi-geo-alt-fill,
+        #subAreaToggleBtn:focus .bi-geo-alt-fill,
+        #subAreaToggleBtn.show .bi-geo-alt-fill {
+            color: #ffcdd2 !important;
+        }
+
+
         .sidebar-wrapper {
             overflow-y: auto !important;
             padding-bottom: 80px !important;
@@ -533,11 +584,50 @@
                         $isManager = $authUser && $authUser->isManager();
                         $effectivePlant = $authUser ? $authUser->getEffectivePlant() : null;
                         $originalPlant = $authUser ? $authUser->plant : null;
+                        $isMedanPlantUser = $effectivePlant && str_contains(strtolower($effectivePlant->plant), 'medan');
+                        $currentSubArea = session('active_sub_area', 'Medan KIM 1');
                         // ✅ Hanya tampilkan plant yang diizinkan oleh Superadmin
                         $allPlants = $isManager
                             ? $authUser->allowedPlants()->orderBy('plant')->get()
                             : collect();
                     @endphp
+
+                    {{-- ===== SUB-AREA SELECTOR (Medan Plant Users) ===== --}}
+                    @if($isMedanPlantUser)
+                    <div class="dropdown" id="subAreaDropdown">
+                        <button class="btn btn-sm dropdown-toggle d-flex align-items-center gap-1 shadow-sm" 
+                                id="subAreaToggleBtn"
+                                type="button" data-bs-toggle="dropdown" aria-expanded="false" 
+                                style="border-radius: 20px; font-weight: 600; font-size: 0.82rem; padding: 0.4rem 0.9rem; background: #f0f4ff; color: #435ebe; border: 1.5px solid #435ebe;"
+                                title="Klik untuk mengganti area aktif Medan">
+                            <i class="bi bi-geo-alt-fill text-danger"></i>
+                            <span style="color: #435ebe;">{{ $currentSubArea }}</span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow-lg" style="border-radius: 12px; min-width: 220px; border: 1px solid #e3e6f0;">
+                            <li><h6 class="dropdown-header text-uppercase fw-bold" style="font-size: 0.72rem; color: #435ebe;"><i class="bi bi-pin-map me-1"></i>Pilih Area Medan</h6></li>
+                            <li>
+                                <form method="POST" action="{{ route('sub-area.switch') }}">
+                                    @csrf
+                                    <input type="hidden" name="sub_area" value="Medan KIM 1">
+                                    <button type="submit" class="dropdown-item d-flex align-items-center justify-content-between py-2 {{ $currentSubArea === 'Medan KIM 1' ? 'fw-bold active' : '' }}">
+                                        <span><i class="bi bi-geo-alt me-2 text-primary"></i>Medan KIM 1</span>
+                                        @if($currentSubArea === 'Medan KIM 1') <i class="bi bi-check-circle-fill text-success ms-2"></i> @endif
+                                    </button>
+                                </form>
+                            </li>
+                            <li>
+                                <form method="POST" action="{{ route('sub-area.switch') }}">
+                                    @csrf
+                                    <input type="hidden" name="sub_area" value="Medan KIM 2">
+                                    <button type="submit" class="dropdown-item d-flex align-items-center justify-content-between py-2 {{ $currentSubArea === 'Medan KIM 2' ? 'fw-bold active' : '' }}">
+                                        <span><i class="bi bi-geo-alt me-2 text-success"></i>Medan KIM 2</span>
+                                        @if($currentSubArea === 'Medan KIM 2') <i class="bi bi-check-circle-fill text-success ms-2"></i> @endif
+                                    </button>
+                                </form>
+                            </li>
+                        </ul>
+                    </div>
+                    @endif
 
                     {{-- ===== SWITCH PLANT (Manager Only) ===== --}}
                     @if($isManager)
@@ -1264,6 +1354,55 @@ document.addEventListener('DOMContentLoaded', function() {
 })();
 </script>
 <script src="{{ asset('js/csrf-refresh.js') }}"></script>
+@if(auth()->check() && session()->pull('show_sub_area_modal'))
+<div class="modal fade" id="subAreaSelectionModal" tabindex="-1" aria-labelledby="subAreaModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow-lg" style="border-radius: 16px; border: none;">
+            <div class="modal-header text-white" style="background: linear-gradient(135deg, #0d6efd 0%, #0b5ed7 100%); border-top-left-radius: 16px; border-top-right-radius: 16px;">
+                <h5 class="modal-title fw-bold text-white mb-0" id="subAreaModalLabel">
+                    <i class="bi bi-geo-alt-fill me-2"></i>Pilih Area Kerja Medan
+                </h5>
+            </div>
+            <div class="modal-body p-4 text-center">
+                <p class="text-muted mb-4 fs-6">
+                    Selamat datang! Anda terdaftar di <strong>Plant Medan</strong>. Silakan pilih lokasi area tugas Anda hari ini:
+                </p>
+                <div class="row g-3">
+                    <div class="col-6">
+                        <form method="POST" action="{{ route('sub-area.switch') }}">
+                            @csrf
+                            <input type="hidden" name="sub_area" value="Medan KIM 1">
+                            <button type="submit" class="btn btn-outline-primary w-100 py-3 d-flex flex-column align-items-center justify-content-center h-100 shadow-sm" style="border-radius: 12px; border-width: 2px;">
+                                <!-- <i class="bi bi-building fs-1 mb-2"></i> -->
+                                <span class="fw-bold fs-6">Medan KIM 1</span>
+                            </button>
+                        </form>
+                    </div>
+                    <div class="col-6">
+                        <form method="POST" action="{{ route('sub-area.switch') }}">
+                            @csrf
+                            <input type="hidden" name="sub_area" value="Medan KIM 2">
+                            <button type="submit" class="btn btn-outline-success w-100 py-3 d-flex flex-column align-items-center justify-content-center h-100 shadow-sm" style="border-radius: 12px; border-width: 2px;">
+                                <!-- <i class="bi bi-building-check fs-1 mb-2"></i> -->
+                                <span class="fw-bold fs-6">Medan KIM 2</span>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var subAreaModalEl = document.getElementById('subAreaSelectionModal');
+    if (subAreaModalEl) {
+        var subAreaModal = new bootstrap.Modal(subAreaModalEl);
+        subAreaModal.show();
+    }
+});
+</script>
+@endif
 @stack('scripts')
 </body>
 </html>

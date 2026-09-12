@@ -1232,13 +1232,9 @@ document.addEventListener('DOMContentLoaded', function() {
                                         <input type="text" class="form-control" name="jumlah_datang[]" placeholder="Jumlah" min="0" step="any">
                                         <select class="form-select" name="unit_datang[]" style="max-width: 120px;">
                                             <option value="">Pilih Parameter</option>
-                                            <option value="kg">kg</option>
-                                            <option value="gram">gram</option>
-                                            <option value="pcs">pcs</option>
-                                            <option value="roll">roll</option>
-                                            <option value="karung">karung</option>
-                                            <option value="box">box</option>
-                                            <option value="lembar">lembar</option>
+                                            @foreach(\App\Models\PemeriksaanKedatanganKemasan::unitParameters() as $key => $label)
+                                                <option value="{{ $key }}">{{ $label }}</option>
+                                            @endforeach
                                         </select>
                                     </div>
                                 </div>
@@ -1250,13 +1246,9 @@ document.addEventListener('DOMContentLoaded', function() {
                                         <input type="text" class="form-control" name="jumlah_sampling[]" placeholder="Jumlah" min="0" step="any">
                                         <select class="form-select" name="unit_sampling[]" style="max-width: 120px;">
                                             <option value="">Pilih Parameter</option>
-                                            <option value="kg">kg</option>
-                                            <option value="gram">gram</option>
-                                            <option value="pcs">pcs</option>
-                                            <option value="roll">roll</option>
-                                            <option value="karung">karung</option>
-                                            <option value="box">box</option>
-                                            <option value="lembar">lembar</option>
+                                            @foreach(\App\Models\PemeriksaanKedatanganKemasan::unitParameters() as $key => $label)
+                                                <option value="{{ $key }}">{{ $label }}</option>
+                                            @endforeach
                                         </select>
                                     </div>
                                 </div>
@@ -2195,9 +2187,29 @@ document.addEventListener('DOMContentLoaded', function() {
         const file = input.files && input.files[0] ? input.files[0] : null;
         if (!file) return;
 
+        // Read file immediately into memory to prevent ERR_UPLOAD_FILE_CHANGED on Android
+        // (Android camera app may modify/move the file after browser gets reference)
+        let fileToProcess = file;
+        try {
+            // Force-read the file into a Blob right away to detach from filesystem reference
+            const arrayBuffer = await file.arrayBuffer();
+            fileToProcess = new File([arrayBuffer], file.name, { type: file.type, lastModified: Date.now() });
+        } catch (e) {
+            // fallback: use original file
+            fileToProcess = file;
+        }
+
         // Compress if file > 500KB (more aggressive to prevent upload errors)
         const COMPRESS_THRESHOLD = 512 * 1024; // 500KB
-        if (file.size <= COMPRESS_THRESHOLD) return;
+        if (fileToProcess.size <= COMPRESS_THRESHOLD) {
+            // Still replace input.files to use in-memory copy (prevents ERR_UPLOAD_FILE_CHANGED)
+            try {
+                const dt = new DataTransfer();
+                dt.items.add(fileToProcess);
+                input.files = dt.files;
+            } catch (e) { /* ignore if DataTransfer not supported */ }
+            return;
+        }
 
         // Show processing feedback
         const formGroup = input.closest('.form-group');
@@ -2210,7 +2222,7 @@ document.addEventListener('DOMContentLoaded', function() {
         input.disabled = true;
 
         try {
-            const compressedFile = await compressImage(file);
+            const compressedFile = await compressImage(fileToProcess);
             const dt = new DataTransfer();
             dt.items.add(compressedFile);
             input.files = dt.files;

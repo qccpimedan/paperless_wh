@@ -6,16 +6,18 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 use App\Traits\HasPlantTimezoneTimestamps;
+use App\Traits\HasSubAreaSession;
 
 class PemeriksaanReturnBarangCustomer extends Model
 {
-    use HasFactory, HasPlantTimezoneTimestamps;
+    use HasFactory, HasPlantTimezoneTimestamps, HasSubAreaSession;
 
     protected $table = 'pemeriksaan_return_barang_customers';
 
     protected $fillable = [
         'uuid',
         'id_user',
+        'sub_area',
         'id_shift',
         'tanggal',
         'id_ekspedisi',

@@ -139,6 +139,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('manager/switch-plant', [ManagerController::class, 'switchPlant'])->name('manager.switch-plant');
     Route::post('manager/reset-plant', [ManagerController::class, 'resetPlant'])->name('manager.reset-plant');
     
+    // Sub-Area Medan - Switch Area Route
+    Route::post('sub-area/switch', function (\Illuminate\Http\Request $request) {
+        $request->validate([
+            'sub_area' => 'required|string|in:Medan KIM 1,Medan KIM 2',
+        ]);
+        session(['active_sub_area' => $request->sub_area]);
+        return back()->with('success', 'Area Medan aktif berhasil diubah ke ' . $request->sub_area);
+    })->name('sub-area.switch');
+    
     // Data Master Routes (Super Admin)
     Route::prefix('super-admin')->group(function () {
         // Download template excel

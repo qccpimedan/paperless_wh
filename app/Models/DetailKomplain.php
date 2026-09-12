@@ -5,14 +5,16 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 use App\Traits\HasPlantTimezoneTimestamps;
+use App\Traits\HasSubAreaSession;
 
 class DetailKomplain extends Model
 {
-    use HasPlantTimezoneTimestamps;
+    use HasPlantTimezoneTimestamps, HasSubAreaSession;
     protected $table = 'detail_komplains';
 
     protected $fillable = [
         'uuid',
+        'sub_area',
         'nama_supplier',
         'tanggal_kedatangan',
         'no_po',

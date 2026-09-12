@@ -2067,10 +2067,27 @@
                                             async function handleImageInputChange(input) {
                                                 const file = input.files && input.files[0] ? input.files[0] : null;
                                                 if (!file) return;
-                                                if (file.size <= MAX_SIZE) return;
+
+                                                // Read file immediately into memory to prevent ERR_UPLOAD_FILE_CHANGED on Android
+                                                let fileToProcess = file;
+                                                try {
+                                                    const arrayBuffer = await file.arrayBuffer();
+                                                    fileToProcess = new File([arrayBuffer], file.name, { type: file.type, lastModified: Date.now() });
+                                                } catch (e) {
+                                                    fileToProcess = file;
+                                                }
+
+                                                if (fileToProcess.size <= MAX_SIZE) {
+                                                    try {
+                                                        const dt = new DataTransfer();
+                                                        dt.items.add(fileToProcess);
+                                                        input.files = dt.files;
+                                                    } catch (e) { /* ignore */ }
+                                                    return;
+                                                }
 
                                                 try {
-                                                    const compressedFile = await compressImage(file);
+                                                    const compressedFile = await compressImage(fileToProcess);
                                                     const dt = new DataTransfer();
                                                     dt.items.add(compressedFile);
                                                     input.files = dt.files;

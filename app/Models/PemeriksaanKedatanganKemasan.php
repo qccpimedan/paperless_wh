@@ -6,10 +6,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 use App\Traits\HasPlantTimezoneTimestamps;
+use App\Traits\HasSubAreaSession;
 
 class PemeriksaanKedatanganKemasan extends Model
 {
-    use HasFactory, HasPlantTimezoneTimestamps;
+    use HasFactory, HasPlantTimezoneTimestamps, HasSubAreaSession;
 
     /**
      * The attributes that are mass assignable.
@@ -18,6 +19,7 @@ class PemeriksaanKedatanganKemasan extends Model
      */
     protected $fillable = [
         'uuid',
+        'sub_area',
         'tanggal',
         'jenis_mobil',
         'no_mobil',
