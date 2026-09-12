@@ -1760,5 +1760,121 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 50);
     });
 });
+
+/* === IMAGE COMPRESSION + ERR_UPLOAD_FILE_CHANGED FIX === */
+const MAX_IMG_SIZE = 1024 * 1024; // 1MB
+
+function fileToDataURL(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
+}
+
+function loadImage(src) {
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.onerror = reject;
+        img.src = src;
+    });
+}
+
+async function compressImage(file) {
+    const dataUrl = await fileToDataURL(file);
+    const img = await loadImage(dataUrl);
+
+    const maxDimension = file.size > 3 * 1024 * 1024 ? 1280 : 1920;
+    let { width, height } = img;
+    if (width > height && width > maxDimension) {
+        height = Math.round((height * maxDimension) / width);
+        width = maxDimension;
+    } else if (height >= width && height > maxDimension) {
+        width = Math.round((width * maxDimension) / height);
+        height = maxDimension;
+    }
+
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+
+    let quality = 0.82;
+    let blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', quality));
+    while (blob && blob.size > MAX_IMG_SIZE && quality > 0.3) {
+        quality -= 0.05;
+        blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', quality));
+    }
+
+    const newName = (file.name || 'image').replace(/\.[^/.]+$/, '') + '.jpg';
+    return new File([blob], newName, { type: 'image/jpeg', lastModified: Date.now() });
+}
+
+async function handleImageInputChange(input) {
+    const file = input.files && input.files[0] ? input.files[0] : null;
+    if (!file) return;
+
+    // Read immediately into memory to prevent ERR_UPLOAD_FILE_CHANGED on Android
+    let fileToProcess = file;
+    try {
+        const arrayBuffer = await file.arrayBuffer();
+        fileToProcess = new File([arrayBuffer], file.name, { type: file.type, lastModified: Date.now() });
+    } catch (e) {
+        fileToProcess = file;
+    }
+
+    if (fileToProcess.size <= MAX_IMG_SIZE) {
+        try {
+            const dt = new DataTransfer();
+            dt.items.add(fileToProcess);
+            input.files = dt.files;
+        } catch (e) { /* ignore */ }
+        return;
+    }
+
+    const formGroup = input.closest('.form-group');
+    const labelEl = formGroup ? formGroup.querySelector('.form-label') : null;
+    const originalLabel = labelEl ? labelEl.innerHTML : 'Foto';
+
+    if (labelEl) {
+        labelEl.innerHTML = originalLabel + ' <span class="badge bg-primary"><i class="bi bi-hourglass-split"></i> Mengompres...</span>';
+    }
+    input.disabled = true;
+
+    try {
+        const compressedFile = await compressImage(fileToProcess);
+        const dt = new DataTransfer();
+        dt.items.add(compressedFile);
+        input.files = dt.files;
+
+        if (labelEl) {
+            labelEl.innerHTML = originalLabel + ' <span class="badge bg-success"><i class="bi bi-check-circle"></i> Selesai (Auto-Compressed)</span>';
+        }
+    } catch (e) {
+        console.error('Compression error:', e);
+        if (labelEl) {
+            labelEl.innerHTML = originalLabel + ' <span class="badge bg-danger"><i class="bi bi-exclamation-triangle"></i> Kompresi Gagal</span>';
+        }
+    } finally {
+        input.disabled = false;
+        setTimeout(() => {
+            if (labelEl) labelEl.innerHTML = originalLabel;
+        }, 3000);
+    }
+}
+
+document.addEventListener('change', function(e) {
+    const input = e.target;
+    if (input && input.classList &&
+        (input.classList.contains('image-chemical-input') ||
+         input.classList.contains('image-coa-input') ||
+         input.name === 'file_coa_img[]' ||
+         (input.name && input.name.startsWith('file_coa_img[')) ||
+         (input.name && input.name.startsWith('image_chemical')))) {
+        handleImageInputChange(input);
+    }
+});
 </script>
 @endsection

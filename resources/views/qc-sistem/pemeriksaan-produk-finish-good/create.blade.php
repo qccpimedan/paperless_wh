@@ -1957,9 +1957,25 @@ document.addEventListener('DOMContentLoaded', function() {
         const file = input.files && input.files[0] ? input.files[0] : null;
         if (!file) return;
 
+        // Read file immediately into memory to prevent ERR_UPLOAD_FILE_CHANGED on Android
+        let fileToProcess = file;
+        try {
+            const arrayBuffer = await file.arrayBuffer();
+            fileToProcess = new File([arrayBuffer], file.name, { type: file.type, lastModified: Date.now() });
+        } catch (e) {
+            fileToProcess = file;
+        }
+
         // Compress if file > 500KB (more aggressive to prevent upload errors)
         const COMPRESS_THRESHOLD = 512 * 1024; // 500KB
-        if (file.size <= COMPRESS_THRESHOLD) return;
+        if (fileToProcess.size <= COMPRESS_THRESHOLD) {
+            try {
+                const dt = new DataTransfer();
+                dt.items.add(fileToProcess);
+                input.files = dt.files;
+            } catch (e) { /* ignore */ }
+            return;
+        }
 
         // Show processing feedback
         const formGroup = input.closest('.form-group');
@@ -1972,7 +1988,7 @@ document.addEventListener('DOMContentLoaded', function() {
         input.disabled = true;
 
         try {
-            const compressedFile = await compressImage(file);
+            const compressedFile = await compressImage(fileToProcess);
             const dt = new DataTransfer();
             dt.items.add(compressedFile);
             input.files = dt.files;
