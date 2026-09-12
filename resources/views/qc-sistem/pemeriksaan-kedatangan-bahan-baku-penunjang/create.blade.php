@@ -1907,13 +1907,9 @@ function addNewRow() {
                         <input type="text" class="form-control" name="jumlah_datang[]" placeholder="Jumlah" min="0" step="any">
                         <select class="form-select" name="unit_datang[]" style="max-width: 120px;">
                             <option value="">Pilih Parameter</option>
-                            <option value="kg">kg</option>
-                            <option value="gram">gram</option>
-                            <option value="pcs">pcs</option>
-                            <option value="roll">roll</option>
-                            <option value="karung">karung</option>
-                            <option value="box">box</option>
-                            <option value="lembar">lembar</option>
+                            @foreach(\App\Models\PemeriksaanKedatanganBahanBakuPenunjang::unitParameters() as $key => $label)
+                                <option value="{{ $key }}">{{ $label }}</option>
+                            @endforeach
                         </select>
                     </div>
                 </div>
@@ -1925,13 +1921,9 @@ function addNewRow() {
                         <input type="text" class="form-control" name="jumlah_sampling[]" placeholder="Jumlah" min="0" step="any">
                         <select class="form-select" name="unit_sampling[]" style="max-width: 120px;">
                             <option value="">Pilih Parameter</option>
-                            <option value="kg">kg</option>
-                            <option value="gram">gram</option>
-                            <option value="pcs">pcs</option>
-                            <option value="roll">roll</option>
-                            <option value="karung">karung</option>
-                            <option value="box">box</option>
-                            <option value="lembar">lembar</option>
+                            @foreach(\App\Models\PemeriksaanKedatanganBahanBakuPenunjang::unitParameters() as $key => $label)
+                                <option value="{{ $key }}">{{ $label }}</option>
+                            @endforeach
                         </select>
                     </div>
                 </div>
