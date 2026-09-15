@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PlantController;
 use App\Http\Controllers\RoleController;
+use App\Http\Controllers\TraceabilityController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AccessControlController;
 use App\Http\Controllers\UserController;
@@ -276,6 +277,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::resource('detail-komplain', DetailKomplainController::class)->parameters(['detail-komplain' => 'detailKomplain:uuid']);
         Route::resource('golden-sample-reports', GoldenSampleReportController::class);
         Route::resource('pemeriksaan-barang-mudah-pecah', PemeriksaanBarangMudahPecahController::class);
+        
+        // Traceability Routes
+        Route::prefix('traceability')->name('traceability.')->group(function () {
+            Route::get('/', [TraceabilityController::class, 'index'])->name('index');
+            Route::get('/search', [TraceabilityController::class, 'search'])->name('search');
+        });
         
         
         // Routes untuk verifikasi pemeriksaan barang mudah pecah

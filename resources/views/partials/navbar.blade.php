@@ -141,6 +141,14 @@
                 </li>
                 @endif
 
+                {{-- Traceability - For all authenticated users --}}
+                <li class="sidebar-item {{ request()->routeIs('traceability.*') ? 'active' : '' }}">
+                    <a href="{{ route('traceability.index') }}" class='sidebar-link'>
+                        <i class="bi bi-search"></i>
+                        <span>Traceability</span>
+                    </a>
+                </li>
+
                 <!-- <li class="sidebar-title">Form QC SYSTEM</li> -->
 
                 {{-- Forms QC - For Superadmin, Admin, SPV QC, QC Inspector, Produksi, Manager --}}
