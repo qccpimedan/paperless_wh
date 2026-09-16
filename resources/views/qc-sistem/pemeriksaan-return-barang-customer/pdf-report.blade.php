@@ -398,7 +398,8 @@
                                     @php
                                         $pemeriksaan  = $column['record'];
                                         $produkIndex  = $column['produkIndex'];
-                                        $columnNumber = ($pageIndex * $columnsPerPage) + $loop->iteration;
+                                        // Nomor kolom reset setiap halaman (1, 2, 3, 4)
+                                        $columnNumber = $loop->iteration;
                                         $rows         = is_array($pemeriksaan->produk_data) ? $pemeriksaan->produk_data : [];
                                         $row          = $rows[$produkIndex] ?? null;
                                         $allCustIds   = collect($rows)->pluck('id_customer')->filter()->unique()->values()->toArray();
@@ -565,7 +566,8 @@
                                     @php
                                         $pemeriksaan = $column['record'];
                                         $produkIndex = $column['produkIndex'];
-                                        $columnNumber = ($pageIndex * $columnsPerPage) + $loop->iteration;
+                                        // Nomor kolom reset setiap halaman (1, 2, 3, 4)
+                                        $columnNumber = $loop->iteration;
                                         $rows = is_array($pemeriksaan->produk_data) ? $pemeriksaan->produk_data : [];
                                         $row = $rows[$produkIndex] ?? null;
                                     @endphp

@@ -846,7 +846,69 @@ return view('qc-sistem.pemeriksaan-produk-finish-good.index', compact('pemeriksa
     public function exportPDF(Request $request)
     {
         $user = Auth::user();
-
+        $uuid = $request->input('uuid'); // UUID for single record export from traceability
+        
+        // === MODE: SINGLE RECORD (from Traceability) ===
+        if ($uuid) {
+            $pemeriksaan = PemeriksaanProdukFinishGood::where('uuid', $uuid)
+                ->with([
+                    'user.role',
+                    'user.plant',
+                    'shift',
+                    'qcVerifier' => function($q) { $q->select('id', 'name'); },
+                    'produksiVerifier' => function($q) { $q->select('id', 'name'); },
+                    'spvVerifier' => function($q) { $q->select('id', 'name'); },
+                ])
+                ->firstOrFail();
+            
+            // Check permission
+            if ($user->role && strtolower($user->role->role) !== 'superadmin') {
+                if ($user->getEffectivePlantId() !== $pemeriksaan->user->id_plant) {
+                    abort(403, 'Unauthorized');
+                }
+            }
+            
+            // Get verifier names
+            $qcUser = $pemeriksaan->qcVerifier ? $pemeriksaan->qcVerifier->name : null;
+            $produksiUser = $pemeriksaan->produksiVerifier ? $pemeriksaan->produksiVerifier->name : null;
+            $spvQcUser = $pemeriksaan->spvVerifier ? $pemeriksaan->spvVerifier->name : null;
+            
+            // Build produkMap for PDF view
+            $produkIds = $pemeriksaan->id_produk_array ?? [];
+            $produkIds = array_filter($produkIds);
+            
+            $produkMap = \App\Models\Produk::whereIn('id', $produkIds)
+                ->pluck('nama_produk', 'id')
+                ->all();
+            
+            // Prepare data in same format as filter mode for view compatibility
+            $dataPerShift = [[
+                'shift' => $pemeriksaan->shift,
+                'pemeriksaans' => collect([$pemeriksaan]),
+                'qcUser' => $qcUser,
+                'produksiUser' => $produksiUser,
+                'spvQcUser' => $spvQcUser,
+                'filterProdukIds' => null,
+                'produkMap' => $produkMap,
+            ]];
+            
+            $pdf = \PDF::loadView('qc-sistem.pemeriksaan-produk-finish-good.pdf-report', [
+                'pemeriksaans' => collect([$pemeriksaan]),
+                'tanggal' => $pemeriksaan->tanggal,
+                'shift' => $pemeriksaan->shift,
+                'qcUser' => $qcUser,
+                'produksiUser' => $produksiUser,
+                'spvQcUser' => $spvQcUser,
+                'filterProdukIds' => null,
+                'isAllShift' => false,
+                'dataPerShift' => $dataPerShift,
+                'produkMap' => $produkMap,
+            ]);
+            
+            return $pdf->download('produk-finish-good-' . $pemeriksaan->uuid . '.pdf');
+        }
+        
+        // === MODE: FILTER (original functionality) ===
         $id_shift = $request->input('id_shift');
         $tanggalDari = $request->input('tanggal_dari');
         $tanggalSampai = $request->input('tanggal_sampai');

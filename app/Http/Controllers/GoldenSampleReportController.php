@@ -420,7 +420,47 @@ class GoldenSampleReportController extends Controller
     public function exportPDF(Request $request)
     {
         $user = Auth::user();
-
+        $uuid = $request->input('uuid'); // UUID for single record export from traceability
+        
+        // === MODE: SINGLE RECORD (from Traceability) ===
+        if ($uuid) {
+            $report = GoldenSampleReport::where('uuid', $uuid)
+                ->with([
+                    'user.role',
+                    'user.plant',
+                    'plant',
+                    'shift',
+                    'qcVerifier',
+                    'produksiVerifier',
+                    'spvVerifier',
+                ])
+                ->firstOrFail();
+            
+            // Check permission
+            if ($user->role && strtolower($user->role->role) !== 'superadmin') {
+                if ($user->getEffectivePlantId() !== $report->user->id_plant) {
+                    abort(403, 'Unauthorized');
+                }
+            }
+            
+            // Get verifier names
+            $qcUser = $report->qcVerifier ? $report->qcVerifier->name : null;
+            $produksiUser = $report->produksiVerifier ? $report->produksiVerifier->name : null;
+            $spvQcUser = $report->spvVerifier ? $report->spvVerifier->name : null;
+            
+            $pdf = \PDF::loadView('qc-sistem.golden-sample-retort.pdf-report', [
+                'reports' => collect([$report]),
+                'tanggal' => $report->tanggal,
+                'shift' => $report->shift,
+                'qcUser' => $qcUser,
+                'produksiUser' => $produksiUser,
+                'spvQcUser' => $spvQcUser,
+            ]);
+            
+            return $pdf->download('golden-sample-' . $report->uuid . '.pdf');
+        }
+        
+        // === MODE: FILTER (original functionality) ===
         $id_shift = $request->input('id_shift');
         $tanggalDari = $request->input('tanggal_dari');
         $tanggalSampai = $request->input('tanggal_sampai');

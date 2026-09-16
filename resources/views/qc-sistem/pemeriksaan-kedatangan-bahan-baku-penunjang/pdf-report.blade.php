@@ -455,7 +455,8 @@
                                 @php
                                     $p  = $column['record'];
                                     $ri = $column['rowIndex'];
-                                    $cn = ($recPageIdx_as * $columnsPerPage) + $loop->iteration;
+                                    // Nomor kolom reset setiap halaman (1, 2, 3, 4)
+                                    $cn = $loop->iteration;
                                 @endphp
                                 <div class="col" data-num="true">
                                     <div class="col-header">PEMERIKSAAN #{{ $cn }}</div>
@@ -795,7 +796,8 @@
                         @php
                             $p = $column['record'];
                             $ri = $column['rowIndex'];
-                            $cn = ($pageIndex * $columnsPerPage) + $loop->iteration;
+                            // Nomor kolom reset setiap halaman (1, 2, 3, 4)
+                            $cn = $loop->iteration;
                         @endphp
                         <div class="col" data-num="true">
                             <div class="col-header">PEMERIKSAAN #{{ $cn }}</div>

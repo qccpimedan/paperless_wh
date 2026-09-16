@@ -501,7 +501,8 @@
                                     @php
                                         $pemeriksaan = $column['record'];
                                         $rowIndex = $column['rowIndex'];
-                                        $columnNumber = ($recPageIdx_fg * $columnsPerPage) + $loop->iteration;
+                                        // Nomor kolom reset setiap halaman (1, 2, 3, 4)
+                                        $columnNumber = $loop->iteration;
 
                                         $idProduk = (is_array($pemeriksaan->id_produk_array) ? ($pemeriksaan->id_produk_array[$rowIndex] ?? null) : null);
                                         $kategori = (is_array($pemeriksaan->kategori_code_array) ? ($pemeriksaan->kategori_code_array[$rowIndex] ?? null) : null);

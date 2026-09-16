@@ -9,6 +9,7 @@ class TraceabilityService
 {
     /**
      * Trace batch code across all configured modules
+     * Support multi-keyword search: "fiesta 2026" will search both nama produk and kode produksi
      *
      * @param string $batchCode
      * @return Collection
@@ -19,8 +20,11 @@ class TraceabilityService
         $plantUuid = $user->getEffectivePlantId();
         $isSuperAdmin = $user->role && strtolower($user->role->role) === 'superadmin';
 
+        // Split search keywords by space or comma
+        $keywords = $this->parseSearchKeywords($batchCode);
+
         return collect(config('traceability.modules'))
-            ->map(function (array $cfg, string $key) use ($batchCode, $plantUuid, $isSuperAdmin) {
+            ->map(function (array $cfg, string $key) use ($batchCode, $keywords, $plantUuid, $isSuperAdmin) {
                 $model = $cfg['model'];
                 $routeKey = $cfg['route_key'] ?? 'uuid';
 
@@ -167,6 +171,14 @@ class TraceabilityService
                 $records = $query->orderByDesc($cfg['date_column'] ?? 'tanggal')
                     ->get();
 
+                // MULTI-KEYWORD FILTERING (AND logic)
+                // If multiple keywords, filter records to match ALL keywords
+                if (count($keywords) > 1) {
+                    $records = $records->filter(function($record) use ($keywords, $cfg) {
+                        return $this->recordMatchesAllKeywords($record, $keywords, $cfg);
+                    });
+                }
+
                 if ($records->isEmpty()) {
                     return null;
                 }
@@ -181,11 +193,51 @@ class TraceabilityService
                         $fields = $cfg['display_fields']($record, $batchCode);
                     }
 
+                    // Generate PDF export URL (for exporting single record PDF)
+                    $pdfExportUrl = null;
+                    if (isset($cfg['pdf_export_route'])) {
+                        // Modules that accept UUID parameter in route
+                        $uuidBasedExport = ['detail-komplain.export-pdf', 'pemeriksaan-kebersihan-area.export-pdf'];
+                        
+                        if (in_array($cfg['pdf_export_route'], $uuidBasedExport)) {
+                            // Pass UUID as route parameter
+                            $pdfExportUrl = route($cfg['pdf_export_route'], $record->{$routeKey});
+                        } else {
+                            // For filter-based exports, pass UUID + date and shift as query params
+                            $dateColumn = $cfg['date_column'] ?? 'tanggal';
+                            $shiftId = $record->id_shift ?? null;
+                            $recordDate = $record->{$dateColumn};
+                            
+                            // Always include UUID for single record export
+                            $params = ['uuid' => $record->{$routeKey}];
+                            
+                            // Add shift and date params
+                            if ($shiftId) {
+                                $params['id_shift'] = $shiftId;
+                                $shift = \App\Models\Shift::find($shiftId);
+                                if ($shift && $shift->is_date_range) {
+                                    // Shift 1: use date range (same date for both)
+                                    $params['tanggal_dari'] = $recordDate instanceof \Carbon\Carbon ? $recordDate->format('Y-m-d') : $recordDate;
+                                    $params['tanggal_sampai'] = $recordDate instanceof \Carbon\Carbon ? $recordDate->format('Y-m-d') : $recordDate;
+                                } else {
+                                    // Shift 2/3: use single date
+                                    $params['tanggal'] = $recordDate instanceof \Carbon\Carbon ? $recordDate->format('Y-m-d') : $recordDate;
+                                }
+                            } else {
+                                // No shift info, use single date
+                                $params['tanggal'] = $recordDate instanceof \Carbon\Carbon ? $recordDate->format('Y-m-d') : $recordDate;
+                            }
+                            
+                            $pdfExportUrl = route($cfg['pdf_export_route'], $params);
+                        }
+                    }
+                    
                     return [
                         'record_key' => $record->{$routeKey},
                         'date' => $record->{$dateColumn},
                         'shift' => $record->shift ? $record->shift->shift : null,
                         'pdf_url' => route($cfg['pdf_route'], $record->{$routeKey}),
+                        'pdf_export_url' => $pdfExportUrl,
                         'fields' => $fields,
                     ];
                 });
@@ -240,6 +292,255 @@ class TraceabilityService
             }
         }
 
+        return false;
+    }
+
+    /**
+     * Parse search keywords from input string
+     * Examples:
+     *  - "fiesta 2026" => ['fiesta', '2026'] (2 keywords, AND logic)
+     *  - "Fiesta Tepung Bumbu Bakwan Renceng" => ['Fiesta Tepung Bumbu Bakwan Renceng'] (1 phrase)
+     *  - '"Fiesta Tepung" 2026' => ['Fiesta Tepung', '2026'] (phrase + keyword)
+     *  - "ADA lombok" => ['ADA', 'lombok']
+     *
+     * SMART PARSING RULES:
+     * - If input has 4+ words WITHOUT comma/special chars → treat as SINGLE phrase (product name)
+     * - If input has comma or explicit quotes → split properly
+     * - If input has 1-3 words → split for multi-keyword search
+     *
+     * @param string $searchString
+     * @return array
+     */
+    protected function parseSearchKeywords(string $searchString): array
+    {
+        $searchString = trim($searchString);
+        
+        // Rule 1: Check for quotes (explicit phrases)
+        if (preg_match_all('/"([^"]+)"/', $searchString, $matches)) {
+            // Has quoted phrases, extract them
+            $phrases = $matches[1];
+            
+            // Remove quoted parts from string
+            $remaining = preg_replace('/"[^"]+"/', '', $searchString);
+            
+            // Get remaining keywords
+            $remainingKeywords = array_values(array_filter(array_map('trim', preg_split('/[\s,]+/', $remaining))));
+            
+            // Merge phrases and keywords
+            return array_merge($phrases, $remainingKeywords);
+        }
+        
+        // Rule 2: Check for comma (explicit multi-keyword)
+        if (str_contains($searchString, ',')) {
+            $keywords = preg_split('/[\s,]+/', $searchString);
+            return array_values(array_filter(array_map('trim', $keywords)));
+        }
+        
+        // Rule 3: Smart detection - check if last word is likely a production code
+        $words = preg_split('/\s+/', $searchString);
+        $wordCount = count($words);
+        
+        if ($wordCount >= 5) {
+            $lastWord = end($words);
+            
+            // Check if last word looks like production code (contains number or is short alphanumeric)
+            $lastWordIsCode = preg_match('/\d/', $lastWord) || (strlen($lastWord) <= 6 && ctype_alnum($lastWord));
+            
+            if ($lastWordIsCode) {
+                // Likely: "Product Name Long" + "Code"
+                // Split into name (all words except last) + code (last word)
+                $productName = implode(' ', array_slice($words, 0, -1));
+                $productionCode = $lastWord;
+                return [$productName, $productionCode];
+            }
+            
+            // No code-like ending, treat as single phrase
+            return [$searchString];
+        }
+        
+        // If 1-4 words → split for multi-keyword search (nama + kode, dll)
+        return array_values(array_filter($words));
+    }
+
+    /**
+     * Check if record matches ALL keywords (AND logic)
+     * Used for multi-keyword filtering
+     *
+     * @param mixed $record
+     * @param array $keywords
+     * @param array $cfg Module config
+     * @return bool
+     */
+    protected function recordMatchesAllKeywords($record, array $keywords, array $cfg): bool
+    {
+        // If only 1 keyword, already matched by main query
+        if (count($keywords) <= 1) {
+            return true;
+        }
+
+        // Check if ALL keywords exist in this record's searchable fields
+        foreach ($keywords as $keyword) {
+            if (!$this->recordMatchesKeyword($record, $keyword, $cfg)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Check if record matches a single keyword
+     * For long keywords (product names), use partial word matching
+     *
+     * @param mixed $record
+     * @param string $keyword
+     * @param array $cfg
+     * @return bool
+     */
+    protected function recordMatchesKeyword($record, string $keyword, array $cfg): bool
+    {
+        $keywordLower = strtolower($keyword);
+        
+        // For long keywords (likely product names), split into words and check if most words match
+        $keywordWords = preg_split('/\s+/', $keyword);
+        $isLongKeyword = count($keywordWords) >= 3;
+        
+        // Check in search columns (kode_produksi, etc)
+        $searchColumns = $cfg['search_columns'] ?? [$cfg['column']];
+        
+        foreach ($searchColumns as $column) {
+            $columnCfg = is_array($column) ? $column : ['name' => $column, 'is_json' => $cfg['is_json'] ?? false];
+            $colName = $columnCfg['name'];
+            $isJson = $columnCfg['is_json'] ?? false;
+            
+            if ($isJson) {
+                // Check in JSON field
+                $jsonData = is_array($record->{$colName}) ? $record->{$colName} : json_decode($record->{$colName} ?? '[]', true);
+                
+                if ($this->jsonContainsKeyword($jsonData, $keyword, $columnCfg, $cfg)) {
+                    return true;
+                }
+            } else {
+                // Check in direct column
+                $value = $record->{$colName} ?? '';
+                $valueLower = strtolower($value);
+                
+                // Simple match for short keywords or exact contains
+                if (str_contains($valueLower, $keywordLower)) {
+                    return true;
+                }
+            }
+        }
+        
+        // Check in nama produk/bahan/chemical (if enabled)
+        if ($cfg['enable_nama_search'] ?? false) {
+            $namaConfig = $cfg['nama_search_config'] ?? [];
+            $relation = $namaConfig['relation'] ?? null;
+            $nameField = $namaConfig['name_field'] ?? 'nama_produk';
+            
+            if ($relation && $record->{$relation}) {
+                // Single relation
+                if (is_object($record->{$relation})) {
+                    $nama = $record->{$relation}->{$nameField} ?? '';
+                    
+                    if ($this->nameMatchesKeyword($nama, $keyword, $isLongKeyword, $keywordWords)) {
+                        return true;
+                    }
+                }
+                // Collection relation
+                elseif ($record->{$relation} instanceof \Illuminate\Support\Collection) {
+                    foreach ($record->{$relation} as $relatedItem) {
+                        $nama = $relatedItem->{$nameField} ?? '';
+                        
+                        if ($this->nameMatchesKeyword($nama, $keyword, $isLongKeyword, $keywordWords)) {
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+        
+        return false;
+    }
+
+    /**
+     * Check if name matches keyword (with fuzzy matching for long names)
+     *
+     * @param string $nama
+     * @param string $keyword
+     * @param bool $isLongKeyword
+     * @param array $keywordWords
+     * @return bool
+     */
+    protected function nameMatchesKeyword(string $nama, string $keyword, bool $isLongKeyword, array $keywordWords): bool
+    {
+        $namaLower = strtolower($nama);
+        $keywordLower = strtolower($keyword);
+        
+        // Simple exact contains check
+        if (str_contains($namaLower, $keywordLower)) {
+            return true;
+        }
+        
+        // For long keywords (product names), check if most words match
+        if ($isLongKeyword) {
+            $matchedWords = 0;
+            $totalWords = count($keywordWords);
+            
+            foreach ($keywordWords as $word) {
+                if (str_contains($namaLower, strtolower($word))) {
+                    $matchedWords++;
+                }
+            }
+            
+            // Match if at least 70% of words are found
+            $matchPercentage = $matchedWords / $totalWords;
+            if ($matchPercentage >= 0.7) {
+                return true;
+            }
+        }
+        
+        return false;
+    }
+
+    /**
+     * Check if JSON data contains keyword
+     *
+     * @param array|null $jsonData
+     * @param string $keyword
+     * @param array $columnCfg
+     * @param array $cfg
+     * @return bool
+     */
+    protected function jsonContainsKeyword(?array $jsonData, string $keyword, array $columnCfg, array $cfg): bool
+    {
+        if (!$jsonData) {
+            return false;
+        }
+
+        $keywordLower = strtolower($keyword);
+        $jsonIsArray = $columnCfg['json_is_array'] ?? ($cfg['json_is_array'] ?? false);
+        
+        if ($jsonIsArray) {
+            // Simple array of values
+            foreach ($jsonData as $value) {
+                if (str_contains(strtolower($value ?? ''), $keywordLower)) {
+                    return true;
+                }
+            }
+        } else {
+            // Array of objects with nested keys
+            $jsonPath = $columnCfg['json_path'] ?? ($cfg['json_path'] ?? 'kode_produksi');
+            
+            foreach ($jsonData as $item) {
+                if (is_array($item) && isset($item[$jsonPath])) {
+                    if (str_contains(strtolower($item[$jsonPath] ?? ''), $keywordLower)) {
+                        return true;
+                    }
+                }
+            }
+        }
+        
         return false;
     }
 }

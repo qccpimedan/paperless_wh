@@ -76,9 +76,6 @@
                                                     @foreach($shifts as $shift)
                                                         <option value="{{ $shift->id }}" {{ old('id_shift', $pemeriksaanChemical->id_shift) == $shift->id ? 'selected' : '' }}>
                                                             {{ $shift->shift }}
-                                                            @if($shift->user && $shift->user->plant)
-                                                                - {{ $shift->user->plant->plant }}
-                                                            @endif
                                                         </option>
                                                     @endforeach
                                                 </select>

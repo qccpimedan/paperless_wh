@@ -93,10 +93,13 @@
                                     {{-- Search hint --}}
                                     <div class="search-hint">
                                         <i class="bi bi-info-circle me-1"></i>
-                                        Masukkan nama produk, kode produksi, atau beberapa kata sekaligus.
-                                        <span class="search-example">
-                                            Contoh: <strong>ADA</strong>, <strong>AMPela</strong>, <strong>ADA 2026</strong>
-                                        </span>
+                                        <strong>Tips pencarian:</strong>
+                                        <br>
+                                        • <strong>Rekomendasi:</strong> Cari kode produksi saja → <code>QE19601AA0</code>
+                                        <br>
+                                        • Alternatif: Cari nama produk → <code>Fiesta Tepung Bumbu Bakwan Renceng</code>
+                                        <br>
+                                        <!-- • Multi-keyword (1-3 kata): <code>fiesta QE19601AA0</code> -->
                                     </div>
                                 </form>
                             </div>
@@ -303,11 +306,13 @@
                                                     $collapseId = 'trace-collapse-' . $groupIndex . '-' . $formIndex;
                                                 @endphp
 
-                                                <div class="col-md-6 col-lg-4 trace-result-item" data-module="{{ $moduleId }}" data-shift="{{ $shiftValue }}" data-date="{{ $dateValue }}" data-index="{{ $formIndex }}">
-                                                    <div class="trace-result-card">
+                                                <div class="col-md-6 col-lg-4 trace-result-item lazy-card" data-module="{{ $moduleId }}" data-shift="{{ $shiftValue }}" data-date="{{ $dateValue }}" data-index="{{ $formIndex }}">
+                                                    <div class="trace-result-card" style="min-height: 200px;">
+                                                        {{-- Content will be loaded by lazy loading --}}
+                                                        <div class="lazy-card-content" style="display: none;">
                                                         {{-- CARD HEADER --}}
                                                         <div class="trace-card-header">
-                                                            <button type="button" class="trace-card-toggle collapsed" data-bs-toggle="collapse" data-bs-target="#{{ $collapseId }}" aria-expanded="false" aria-controls="{{ $collapseId }}">
+                                                            <div class="trace-card-title">
                                                                 <div class="trace-date">
                                                                     <i class="bi bi-calendar3"></i>
                                                                     @if(!empty($form['date']))
@@ -322,14 +327,23 @@
                                                                         <i class="bi bi-clock"></i> Shift {{ $shiftValue }}
                                                                     </div>
                                                                 @endif
-                                                            </button>
+                                                            </div>
 
-                                                            {{-- DETAIL BUTTON --}}
-                                                            @if(!empty($form['pdf_url']))
-                                                                <a href="{{ $form['pdf_url'] }}" class="btn btn-sm btn-primary trace-detail-btn" target="_blank" title="Buka detail">
-                                                                    <i class="bi bi-box-arrow-up-right me-1"></i> Detail
-                                                                </a>
-                                                            @endif
+                                                            <div class="trace-card-actions">
+                                                                {{-- PDF EXPORT BUTTON --}}
+                                                                @if(!empty($form['pdf_export_url']))
+                                                                    <a href="{{ $form['pdf_export_url'] }}" class="btn btn-sm btn-danger trace-pdf-btn" target="_blank" title="Cetak PDF">
+                                                                        <i class="bi bi-file-earmark-break"></i>
+                                                                    </a>
+                                                                @endif
+                                                                
+                                                                {{-- DETAIL BUTTON --}}
+                                                                @if(!empty($form['pdf_url']))
+                                                                    <a href="{{ $form['pdf_url'] }}" class="btn btn-sm btn-primary trace-detail-btn" target="_blank" title="Buka detail">
+                                                                        <i class="bi bi-box-arrow-up-right"></i>
+                                                                    </a>
+                                                                @endif
+                                                            </div>
                                                         </div>
 
                                                         {{-- QUICK INFO --}}
@@ -346,11 +360,12 @@
                                                                     <span class="trace-value">
                                                                         {{-- KODE PRODUKSI --}}
                                                                         @if($isProductionCode)
-                                                                            <mark class="match-value">{{ $value }}</mark>
+                                                                            <mark class="match-value">{{ is_array($value) ? implode(', ', $value) : $value }}</mark>
                                                                         {{-- STATUS --}}
                                                                         @elseif($isStatus && !empty($value))
                                                                             @php
-                                                                                $statusLower = strtolower(trim((string) $value));
+                                                                                $statusValue = is_array($value) ? implode(', ', $value) : $value;
+                                                                                $statusLower = strtolower(trim((string) $statusValue));
                                                                                 $statusClass = 'status-default';
 
                                                                                 if (str_contains($statusLower, 'release') || str_contains($statusLower, 'approve') || str_contains($statusLower, 'pass')) {
@@ -362,53 +377,24 @@
                                                                                 }
                                                                             @endphp
 
-                                                                            <span class="status-badge {{ $statusClass }}">{{ $value }}</span>
+                                                                            <span class="status-badge {{ $statusClass }}">{{ $statusValue }}</span>
                                                                         @else
-                                                                            {{ $value }}
+                                                                            {{ is_array($value) ? implode(', ', $value) : $value }}
                                                                         @endif
                                                                     </span>
                                                                 </div>
                                                             @endforeach
                                                         </div>
-
-                                                        {{-- COLLAPSE DETAIL --}}
-                                                        <div id="{{ $collapseId }}" class="collapse trace-collapse">
-                                                            <div class="trace-collapse-inner">
-                                                                <div class="detail-heading">
-                                                                    <div>
-                                                                        <i class="bi bi-info-circle me-1"></i> Informasi Detail
-                                                                    </div>
-                                                                    <span class="match-indicator" data-match-container>
-                                                                        <i class="bi bi-check-circle"></i> Match ditemukan
-                                                                    </span>
-                                                                </div>
-
-                                                                <div class="detail-fields">
-                                                                    @foreach($form['fields'] as $label => $value)
-                                                                        @php
-                                                                            $searchText = strtolower(($label ?? '') . ' ' . ($value ?? ''));
-                                                                        @endphp
-
-                                                                        <div class="detail-field-row" data-search-text="{{ $searchText }}">
-                                                                            <div class="detail-field-label">{{ $label }}</div>
-                                                                            <div class="detail-field-value">
-                                                                                @if(stripos($label, 'kode produksi') !== false)
-                                                                                    <mark class="match-value">{{ $value }}</mark>
-                                                                                @else
-                                                                                    {{ $value }}
-                                                                                @endif
-                                                                            </div>
-                                                                        </div>
-                                                                    @endforeach
-                                                                </div>
-
-                                                                @if(!empty($form['pdf_url']))
-                                                                    <div class="detail-footer">
-                                                                        <a href="{{ $form['pdf_url'] }}" target="_blank" class="btn btn-primary btn-sm">
-                                                                            <i class="bi bi-file-earmark-text me-1"></i> Buka Form Lengkap
-                                                                        </a>
-                                                                    </div>
-                                                                @endif
+                                                        </div>{{-- END lazy-card-content --}}
+                                                        
+                                                        {{-- LOADING PLACEHOLDER / SKELETON --}}
+                                                        <div class="lazy-card-placeholder">
+                                                            <div class="skeleton-wrapper">
+                                                                <div class="skeleton skeleton-header"></div>
+                                                                <div class="skeleton skeleton-line"></div>
+                                                                <div class="skeleton skeleton-line short"></div>
+                                                                <div class="skeleton skeleton-line"></div>
+                                                                <div class="skeleton skeleton-button"></div>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -494,11 +480,13 @@
 
     /* CARD HEADER */
     .trace-card-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; padding: 12px; border-bottom: 1px solid #eef1f5; }
-    .trace-card-toggle { flex: 1; padding: 0; border: 0; background: transparent; text-align: left; cursor: pointer; }
+    .trace-card-title { flex: 1; }
+    .trace-card-actions { display: flex; align-items: center; gap: 6px; }
     .trace-date { color: #435ebe; font-size: 11px; font-weight: 600; }
     .trace-date i { margin-right: 3px; }
     .trace-shift { margin-top: 3px; color: #98a2b3; font-size: 10px; }
-    .trace-detail-btn { flex-shrink: 0; padding: 4px 8px; font-size: 10px; }
+    .trace-detail-btn, .trace-pdf-btn { flex-shrink: 0; padding: 4px 8px; font-size: 10px; }
+
 
     /* QUICK INFO */
     .trace-quick-info { padding: 12px; }
@@ -509,7 +497,6 @@
 
     /* MATCH */
     .match-value { display: inline-block; padding: 2px 5px; border-radius: 3px; background: #fff3cd; color: #664d03; font-weight: 700; }
-    .match-indicator { display: inline-flex; align-items: center; gap: 4px; padding: 3px 7px; border-radius: 20px; background: #ecfdf3; color: #027a48; font-size: 9px; font-weight: 600; }
 
     /* STATUS */
     .status-badge { display: inline-flex; align-items: center; justify-content: center; padding: 3px 7px; border-radius: 20px; font-size: 9px; font-weight: 700; text-transform: uppercase; }
@@ -517,17 +504,6 @@
     .status-warning { background: #fffaeb; color: #b54708; }
     .status-danger { background: #fef3f2; color: #b42318; }
     .status-default { background: #f2f4f7; color: #475467; }
-
-    /* COLLAPSE DETAIL */
-    .trace-collapse { border-top: 1px solid #eef1f5; }
-    .trace-collapse-inner { padding: 12px; background: #fafbfc; }
-    .detail-heading { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; font-size: 11px; font-weight: 600; color: #475467; }
-    .detail-fields { border: 1px solid #e7ebf0; border-radius: 6px; overflow: hidden; background: #fff; }
-    .detail-field-row { display: grid; grid-template-columns: 42% 58%; padding: 7px 9px; border-bottom: 1px solid #eef1f5; font-size: 10px; }
-    .detail-field-row:last-child { border-bottom: 0; }
-    .detail-field-label { color: #98a2b3; }
-    .detail-field-value { color: #344054; font-weight: 500; text-align: right; word-break: break-word; }
-    .detail-footer { display: flex; justify-content: flex-end; margin-top: 10px; }
 
     /* EMPTY */
     .trace-empty-state { padding: 60px 20px; text-align: center; }
@@ -560,6 +536,78 @@
         .trace-result-card { break-inside: avoid; box-shadow: none !important; }
         .collapse { display: block !important; height: auto !important; }
     }
+
+    /* LAZY LOADING */
+    .lazy-card-placeholder {
+        display: block;
+        padding: 15px;
+        min-height: 180px;
+    }
+
+    .lazy-card.loaded .lazy-card-placeholder {
+        display: none;
+    }
+
+    .lazy-card.loaded .lazy-card-content {
+        display: block !important;
+    }
+
+    .lazy-card-content {
+        animation: fadeIn 0.3s ease-in;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* SKELETON LOADING */
+    .skeleton-wrapper {
+        width: 100%;
+    }
+
+    .skeleton {
+        background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+        background-size: 200% 100%;
+        animation: shimmer 1.5s infinite;
+        border-radius: 6px;
+        margin-bottom: 12px;
+    }
+
+    .skeleton-header {
+        height: 24px;
+        width: 70%;
+        margin-bottom: 16px;
+    }
+
+    .skeleton-line {
+        height: 16px;
+        width: 100%;
+    }
+
+    .skeleton-line.short {
+        width: 60%;
+    }
+
+    .skeleton-button {
+        height: 32px;
+        width: 40%;
+        margin-top: 16px;
+        border-radius: 8px;
+    }
+
+    @keyframes shimmer {
+        0% { background-position: -200% 0; }
+        100% { background-position: 200% 0; }
+    }
+
+    /* Dark mode skeleton */
+    @media (prefers-color-scheme: dark) {
+        .skeleton {
+            background: linear-gradient(90deg, #2a2a2a 25%, #3a3a3a 50%, #2a2a2a 75%);
+            background-size: 200% 100%;
+        }
+    }
 </style>
 
 {{-- =============================================================
@@ -568,6 +616,51 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+    /* ========================================
+       LAZY LOADING SETUP
+    ======================================== */
+    const lazyCards = document.querySelectorAll('.lazy-card');
+    let loadedCount = 0;
+    const INITIAL_LOAD = 12; // Load first 12 cards immediately
+    
+    // Intersection Observer untuk lazy loading
+    const observerOptions = {
+        root: null,
+        rootMargin: '100px', // Mulai load 100px sebelum card terlihat
+        threshold: 0.01
+    };
+
+    const cardObserver = new IntersectionObserver(function(entries, observer) {
+        entries.forEach(function(entry) {
+            if (entry.isIntersecting) {
+                const card = entry.target;
+                loadCard(card);
+                observer.unobserve(card);
+            }
+        });
+    }, observerOptions);
+
+    function loadCard(card) {
+        // Tampilkan content yang sudah ada di HTML
+        const content = card.querySelector('.lazy-card-content');
+        if (content) {
+            // Tambahkan sedikit delay agar skeleton terlihat (opsional, bisa dihapus untuk production)
+            setTimeout(function() {
+                card.classList.add('loaded');
+            }, 100); // 100ms delay untuk transisi smooth
+        }
+    }
+
+    // Load card awal langsung (12 pertama)
+    lazyCards.forEach(function(card, index) {
+        if (index < INITIAL_LOAD) {
+            loadCard(card);
+        } else {
+            // Card sisanya diobserve untuk lazy loading
+            cardObserver.observe(card);
+        }
+    });
+
     /* ELEMENTS */
     const resetBtn = document.getElementById('resetBtn');
     const emptyResetBtn = document.getElementById('emptyResetBtn');
