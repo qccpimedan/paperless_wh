@@ -241,24 +241,15 @@ return [
                 $produkIds = collect($produkData)->pluck('id_produk')->filter()->unique()->toArray();
                 $produks = !empty($produkIds) ? \App\Models\Produk::whereIn('id', $produkIds)->pluck('nama_produk', 'id')->toArray() : [];
                 
-                $matchingProducts = collect($produkData)->filter(function ($item) use ($batchCode, $produks) {
-                    $kodeProduksi = $item['kode_produksi'] ?? '';
-                    $namaProduk = $item['nama_produk'] ?? '';
-                    $produkId = $item['id_produk'] ?? null;
-                    $namaProdukFromDb = $produkId && isset($produks[$produkId]) ? $produks[$produkId] : '';
-                    
-                    return str_contains(strtolower($kodeProduksi), strtolower($batchCode)) ||
-                           str_contains(strtolower($namaProduk), strtolower($batchCode)) ||
-                           str_contains(strtolower($namaProdukFromDb), strtolower($batchCode));
-                });
-
+                // TAMPILKAN SEMUA PRODUK, bukan hanya yang match
+                // Karena record sudah terfilter di main query
                 $fields = [
                     'Tujuan' => $record->tujuanPengiriman ? $record->tujuanPengiriman->tujuan_pengiriman : '-',
                     'Kendaraan' => $record->kendaraan ? $record->kendaraan->jenis_kendaraan : '-',
                     'Kondisi' => $record->kondisi_produk ?? '-',
                 ];
 
-                foreach ($matchingProducts as $idx => $produk) {
+                foreach ($produkData as $idx => $produk) {
                     $produkId = $produk['id_produk'] ?? null;
                     $namaProduk = $produk['nama_produk'] ?? ($produkId && isset($produks[$produkId]) ? $produks[$produkId] : '-');
                     
@@ -358,24 +349,14 @@ return [
                 $produkIds = collect($produkData)->pluck('id_produk')->filter()->unique()->toArray();
                 $produks = !empty($produkIds) ? \App\Models\Produk::whereIn('id', $produkIds)->pluck('nama_produk', 'id')->toArray() : [];
                 
-                $matchingProducts = collect($produkData)->filter(function ($item) use ($batchCode, $produks) {
-                    $kodeProduksi = $item['kode_produksi'] ?? '';
-                    $namaProduk = $item['nama_produk'] ?? '';
-                    $produkId = $item['id_produk'] ?? null;
-                    $namaProdukFromDb = $produkId && isset($produks[$produkId]) ? $produks[$produkId] : '';
-                    
-                    return str_contains(strtolower($kodeProduksi), strtolower($batchCode)) ||
-                           str_contains(strtolower($namaProduk), strtolower($batchCode)) ||
-                           str_contains(strtolower($namaProdukFromDb), strtolower($batchCode));
-                });
-
+                // TAMPILKAN SEMUA PRODUK, bukan hanya yang match
                 $fields = [
                     'Customer' => $record->customer ? $record->customer->customer : '-',
                     'Alasan Return' => $record->alasan_return ?? '-',
                     'Suhu Mobil' => $record->suhu_mobil ?? '-',
                 ];
 
-                foreach ($matchingProducts as $idx => $produk) {
+                foreach ($produkData as $idx => $produk) {
                     $produkId = $produk['id_produk'] ?? null;
                     $namaProduk = $produk['nama_produk'] ?? ($produkId && isset($produks[$produkId]) ? $produks[$produkId] : '-');
                     

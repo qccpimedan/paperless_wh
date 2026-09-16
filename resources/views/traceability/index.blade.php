@@ -95,11 +95,11 @@
                                         <i class="bi bi-info-circle me-1"></i>
                                         <strong>Tips pencarian:</strong>
                                         <br>
-                                        • <strong>Rekomendasi:</strong> Cari kode produksi saja → <code>QE19601AA0</code>
+                                        • <strong>Kode produksi:</strong> <code>QE19601AA0</code> atau <code>1231</code>
                                         <br>
-                                        • Alternatif: Cari nama produk → <code>Fiesta Tepung Bumbu Bakwan Renceng</code>
+                                        • <strong>Nama produk:</strong> <code>Fiesta Tepung Bumbu Bakwan Renceng</code> (lengkap/sebagian)
                                         <br>
-                                        <!-- • Multi-keyword (1-3 kata): <code>fiesta QE19601AA0</code> -->
+                                        • <strong>Gabungan nama + kode:</strong> <code>Fiesta Tepung Bumbu Bakwan Renceng 1231</code>
                                     </div>
                                 </form>
                             </div>

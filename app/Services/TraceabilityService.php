@@ -34,34 +34,40 @@ class TraceabilityService
                 // Support multiple search columns (for tables with both VARCHAR and array columns)
                 $searchColumns = $cfg['search_columns'] ?? [$cfg['column']];
                 
-                $query->where(function($q) use ($searchColumns, $batchCode, $cfg, $model) {
-                    foreach ($searchColumns as $column) {
-                        $columnCfg = is_array($column) ? $column : ['name' => $column, 'is_json' => $cfg['is_json'] ?? false];
-                        
-                        $q->orWhere(function($subQ) use ($columnCfg, $batchCode, $cfg) {
-                            $colName = $columnCfg['name'];
-                            $isJson = $columnCfg['is_json'] ?? false;
+                // Use keywords for main query if multi-keyword, otherwise use original batchCode
+                $searchTerms = count($keywords) > 1 ? $keywords : [$batchCode];
+                
+                $query->where(function($q) use ($searchColumns, $batchCode, $searchTerms, $cfg, $model) {
+                    // Search across all search terms with OR logic
+                    foreach ($searchTerms as $searchTerm) {
+                        foreach ($searchColumns as $column) {
+                            $columnCfg = is_array($column) ? $column : ['name' => $column, 'is_json' => $cfg['is_json'] ?? false];
                             
-                            if ($isJson) {
-                                // For JSON columns, use JSON search
-                                $jsonIsArray = $columnCfg['json_is_array'] ?? ($cfg['json_is_array'] ?? false);
+                            $q->orWhere(function($subQ) use ($columnCfg, $searchTerm, $cfg) {
+                                $colName = $columnCfg['name'];
+                                $isJson = $columnCfg['is_json'] ?? false;
                                 
-                                if ($jsonIsArray) {
-                                    // Search in JSON array (e.g., kode_produksi_array)
-                                    $subQ->whereRaw("JSON_SEARCH({$colName}, 'one', ?) IS NOT NULL", ["%{$batchCode}%"]);
+                                if ($isJson) {
+                                    // For JSON columns, use JSON search
+                                    $jsonIsArray = $columnCfg['json_is_array'] ?? ($cfg['json_is_array'] ?? false);
+                                    
+                                    if ($jsonIsArray) {
+                                        // Search in JSON array (e.g., kode_produksi_array)
+                                        $subQ->whereRaw("JSON_SEARCH({$colName}, 'one', ?) IS NOT NULL", ["%{$searchTerm}%"]);
+                                    } else {
+                                        // Search in nested JSON structure (e.g., produk_data[*].kode_produksi)
+                                        $jsonPath = $columnCfg['json_path'] ?? ($cfg['json_path'] ?? 'kode_produksi');
+                                        $subQ->whereRaw("JSON_SEARCH({$colName}, 'one', ?, NULL, '$[*].{$jsonPath}') IS NOT NULL", ["%{$searchTerm}%"]);
+                                    }
                                 } else {
-                                    // Search in nested JSON structure (e.g., produk_data[*].kode_produksi)
-                                    $jsonPath = $columnCfg['json_path'] ?? ($cfg['json_path'] ?? 'kode_produksi');
-                                    $subQ->whereRaw("JSON_SEARCH({$colName}, 'one', ?, NULL, '$[*].{$jsonPath}') IS NOT NULL", ["%{$batchCode}%"]);
+                                    // Direct column search
+                                    $subQ->where($colName, 'like', "%{$searchTerm}%");
                                 }
-                            } else {
-                                // Direct column search
-                                $subQ->where($colName, 'like', "%{$batchCode}%");
-                            }
-                        });
+                            });
+                        }
                     }
                     
-                    // FEATURE: Search by nama produk via relation
+                    // FEATURE: Search by nama produk via relation (using all search terms)
                     if ($cfg['enable_nama_search'] ?? false) {
                         $namaConfig = $cfg['nama_search_config'] ?? [];
                         $relation = $namaConfig['relation'] ?? null;
@@ -70,85 +76,88 @@ class TraceabilityService
                         $jsonField = $namaConfig['json_field'] ?? null;
                         $jsonIdKey = $namaConfig['json_id_key'] ?? null;
                         
-                        if ($relation) {
-                            // Get matching IDs from related table
-                            $relatedModel = $model::query()->first()->{$relation}();
-                            $relatedClass = get_class($relatedModel->getRelated());
-                            
-                            $matchingIds = $relatedClass::where($nameField, 'like', "%{$batchCode}%")
-                                ->pluck('id')
-                                ->toArray();
-                            
-                            if (!empty($matchingIds)) {
-                                // Search by single ID field or JSON array field
-                                if ($idFieldArray) {
-                                    // Search in JSON array (e.g., id_bahan_array, id_produk_array)
-                                    $q->orWhere(function($arrQ) use ($idFieldArray, $matchingIds) {
-                                        foreach ($matchingIds as $matchId) {
-                                            $arrQ->orWhereRaw("JSON_SEARCH({$idFieldArray}, 'one', ?) IS NOT NULL", [(string)$matchId]);
-                                        }
-                                    });
-                                }
+                        // Search by nama using all search terms
+                        foreach ($searchTerms as $searchTerm) {
+                            if ($relation) {
+                                // Get matching IDs from related table
+                                $relatedModel = $model::query()->first()->{$relation}();
+                                $relatedClass = get_class($relatedModel->getRelated());
                                 
-                                // Also search single ID field if exists
-                                if ($namaConfig['id_field_single'] ?? null) {
-                                    $q->orWhereIn($namaConfig['id_field_single'], $matchingIds);
-                                }
-                            }
-                        } elseif ($idFieldArray && !$jsonField) {
-                            // For cases where we don't have direct relation but need to search by nama
-                            // Example: Finish Good with id_produk_array
-                            $relatedClass = null;
-                            
-                            // Determine related class based on field name
-                            if (str_contains($idFieldArray, 'id_produk')) {
-                                $relatedClass = \App\Models\Produk::class;
-                            } elseif (str_contains($idFieldArray, 'id_bahan')) {
-                                $relatedClass = \App\Models\Bahan::class;
-                            }
-                            
-                            if ($relatedClass) {
-                                $matchingIds = $relatedClass::where($nameField, 'like', "%{$batchCode}%")
+                                $matchingIds = $relatedClass::where($nameField, 'like', "%{$searchTerm}%")
                                     ->pluck('id')
                                     ->toArray();
                                 
                                 if (!empty($matchingIds)) {
-                                    $q->orWhere(function($arrQ) use ($idFieldArray, $matchingIds) {
-                                        foreach ($matchingIds as $matchId) {
-                                            $arrQ->orWhereRaw("JSON_SEARCH({$idFieldArray}, 'one', ?) IS NOT NULL", [(string)$matchId]);
-                                        }
-                                    });
+                                    // Search by single ID field or JSON array field
+                                    if ($idFieldArray) {
+                                        // Search in JSON array (e.g., id_bahan_array, id_produk_array)
+                                        $q->orWhere(function($arrQ) use ($idFieldArray, $matchingIds) {
+                                            foreach ($matchingIds as $matchId) {
+                                                $arrQ->orWhereRaw("JSON_SEARCH({$idFieldArray}, 'one', ?) IS NOT NULL", [(string)$matchId]);
+                                            }
+                                        });
+                                    }
+                                    
+                                    // Also search single ID field if exists
+                                    if ($namaConfig['id_field_single'] ?? null) {
+                                        $q->orWhereIn($namaConfig['id_field_single'], $matchingIds);
+                                    }
                                 }
-                            }
-                        } elseif ($jsonField && $jsonIdKey) {
-                            // For JSON fields like detail_chemicals with id_chemical
-                            // We need to get related model class differently
-                            $modelClass = $cfg['model'];
-                            
-                            // Determine related model based on json_id_key name
-                            if ($jsonIdKey === 'id_chemical') {
-                                $relatedClass = \App\Models\Chemical::class;
-                            } elseif ($jsonIdKey === 'id_produk') {
-                                $relatedClass = \App\Models\Produk::class;
-                            } else {
+                            } elseif ($idFieldArray && !$jsonField) {
+                                // For cases where we don't have direct relation but need to search by nama
+                                // Example: Finish Good with id_produk_array
                                 $relatedClass = null;
-                            }
-                            
-                            if ($relatedClass) {
-                                $matchingIds = $relatedClass::where($nameField, 'like', "%{$batchCode}%")
-                                    ->pluck('id')
-                                    ->toArray();
                                 
-                                if (!empty($matchingIds)) {
-                                    // Search in JSON structure using JSON_SEARCH for id_chemical
-                                    $q->orWhere(function($jsonQ) use ($jsonField, $jsonIdKey, $matchingIds) {
-                                        foreach ($matchingIds as $matchId) {
-                                            $jsonQ->orWhereRaw(
-                                                "JSON_SEARCH({$jsonField}, 'one', ?, NULL, '$[*].{$jsonIdKey}') IS NOT NULL",
-                                                [(string)$matchId]
-                                            );
-                                        }
-                                    });
+                                // Determine related class based on field name
+                                if (str_contains($idFieldArray, 'id_produk')) {
+                                    $relatedClass = \App\Models\Produk::class;
+                                } elseif (str_contains($idFieldArray, 'id_bahan')) {
+                                    $relatedClass = \App\Models\Bahan::class;
+                                }
+                                
+                                if ($relatedClass) {
+                                    $matchingIds = $relatedClass::where($nameField, 'like', "%{$searchTerm}%")
+                                        ->pluck('id')
+                                        ->toArray();
+                                    
+                                    if (!empty($matchingIds)) {
+                                        $q->orWhere(function($arrQ) use ($idFieldArray, $matchingIds) {
+                                            foreach ($matchingIds as $matchId) {
+                                                $arrQ->orWhereRaw("JSON_SEARCH({$idFieldArray}, 'one', ?) IS NOT NULL", [(string)$matchId]);
+                                            }
+                                        });
+                                    }
+                                }
+                            } elseif ($jsonField && $jsonIdKey) {
+                                // For JSON fields like detail_chemicals with id_chemical
+                                // We need to get related model class differently
+                                $modelClass = $cfg['model'];
+                                
+                                // Determine related model based on json_id_key name
+                                if ($jsonIdKey === 'id_chemical') {
+                                    $relatedClass = \App\Models\Chemical::class;
+                                } elseif ($jsonIdKey === 'id_produk') {
+                                    $relatedClass = \App\Models\Produk::class;
+                                } else {
+                                    $relatedClass = null;
+                                }
+                                
+                                if ($relatedClass) {
+                                    $matchingIds = $relatedClass::where($nameField, 'like', "%{$searchTerm}%")
+                                        ->pluck('id')
+                                        ->toArray();
+                                    
+                                    if (!empty($matchingIds)) {
+                                        // Search in JSON structure using JSON_SEARCH for id_chemical
+                                        $q->orWhere(function($jsonQ) use ($jsonField, $jsonIdKey, $matchingIds) {
+                                            foreach ($matchingIds as $matchId) {
+                                                $jsonQ->orWhereRaw(
+                                                    "JSON_SEARCH({$jsonField}, 'one', ?, NULL, '$[*].{$jsonIdKey}') IS NOT NULL",
+                                                    [(string)$matchId]
+                                                );
+                                            }
+                                        });
+                                    }
                                 }
                             }
                         }
@@ -171,13 +180,12 @@ class TraceabilityService
                 $records = $query->orderByDesc($cfg['date_column'] ?? 'tanggal')
                     ->get();
 
-                // MULTI-KEYWORD FILTERING (AND logic)
-                // If multiple keywords, filter records to match ALL keywords
-                if (count($keywords) > 1) {
-                    $records = $records->filter(function($record) use ($keywords, $cfg) {
-                        return $this->recordMatchesAllKeywords($record, $keywords, $cfg);
-                    });
-                }
+                // KEYWORD FILTERING
+                // Filter records to ensure they actually contain the searched keywords
+                // This is necessary because main query uses broad OR logic
+                $records = $records->filter(function($record) use ($keywords, $cfg) {
+                    return $this->recordMatchesAllKeywords($record, $keywords, $cfg);
+                });
 
                 if ($records->isEmpty()) {
                     return null;
@@ -340,31 +348,37 @@ class TraceabilityService
         $words = preg_split('/\s+/', $searchString);
         $wordCount = count($words);
         
-        if ($wordCount >= 5) {
+        if ($wordCount >= 3) {
             $lastWord = end($words);
             
-            // Check if last word looks like production code (contains number or is short alphanumeric)
-            $lastWordIsCode = preg_match('/\d/', $lastWord) || (strlen($lastWord) <= 6 && ctype_alnum($lastWord));
+            // Check if last word looks like production code (contains number or is SHORT alphanumeric <=4 chars)
+            // Reduced from 6 to 4 to avoid matching words like "Nugget" (6 chars)
+            $lastWordIsCode = preg_match('/\d/', $lastWord) || (strlen($lastWord) <= 4 && ctype_alnum($lastWord));
             
             if ($lastWordIsCode) {
-                // Likely: "Product Name Long" + "Code"
+                // Likely: "Product Name" + "Code"
                 // Split into name (all words except last) + code (last word)
                 $productName = implode(' ', array_slice($words, 0, -1));
                 $productionCode = $lastWord;
                 return [$productName, $productionCode];
             }
             
-            // No code-like ending, treat as single phrase
+            // No code-like ending, treat as single phrase (nama produk partial/lengkap)
             return [$searchString];
         }
         
-        // If 1-4 words → split for multi-keyword search (nama + kode, dll)
+        // If 1-2 words → split for multi-keyword search (nama pendek + kode)
         return array_values(array_filter($words));
     }
 
     /**
      * Check if record matches ALL keywords (AND logic)
      * Used for multi-keyword filtering
+     * 
+     * IMPORTANT: For multi-keyword search (nama + kode), we want:
+     * - Keyword 1 to match in nama_produk field
+     * - Keyword 2 to match in kode_produksi field
+     * - Both in SAME record (not requiring both in same field)
      *
      * @param mixed $record
      * @param array $keywords
@@ -373,14 +387,21 @@ class TraceabilityService
      */
     protected function recordMatchesAllKeywords($record, array $keywords, array $cfg): bool
     {
-        // If only 1 keyword, already matched by main query
-        if (count($keywords) <= 1) {
-            return true;
-        }
-
-        // Check if ALL keywords exist in this record's searchable fields
+        // Check if ALL keywords exist somewhere in this record's searchable fields
+        // Each keyword can match in different fields (nama OR kode)
         foreach ($keywords as $keyword) {
-            if (!$this->recordMatchesKeyword($record, $keyword, $cfg)) {
+            $matched = $this->recordMatchesKeyword($record, $keyword, $cfg);
+            
+            // DEBUG: Log if not matched
+            if (!$matched) {
+                \Log::debug('Record does not match keyword', [
+                    'keyword' => $keyword,
+                    'record_id' => $record->uuid ?? $record->id ?? 'unknown',
+                    'module' => $cfg['label'] ?? 'unknown',
+                ]);
+            }
+            
+            if (!$matched) {
                 return false;
             }
         }
@@ -437,8 +458,13 @@ class TraceabilityService
             $namaConfig = $cfg['nama_search_config'] ?? [];
             $relation = $namaConfig['relation'] ?? null;
             $nameField = $namaConfig['name_field'] ?? 'nama_produk';
+            $jsonField = $namaConfig['json_field'] ?? null;
+            $jsonIdKey = $namaConfig['json_id_key'] ?? null;
+            $idFieldArray = $namaConfig['id_field_array'] ?? null;
+            $idFieldSingle = $namaConfig['id_field_single'] ?? null;
             
-            if ($relation && $record->{$relation}) {
+            // Strategy 1: Check loaded relation (for single relation records)
+            if ($relation && isset($record->{$relation})) {
                 // Single relation
                 if (is_object($record->{$relation})) {
                     $nama = $record->{$relation}->{$nameField} ?? '';
@@ -454,6 +480,106 @@ class TraceabilityService
                         
                         if ($this->nameMatchesKeyword($nama, $keyword, $isLongKeyword, $keywordWords)) {
                             return true;
+                        }
+                    }
+                }
+            }
+            
+            // Strategy 2: Check JSON field with product/chemical IDs (for JSON structure records)
+            if ($jsonField && $jsonIdKey && isset($record->{$jsonField})) {
+                $jsonData = is_array($record->{$jsonField}) ? $record->{$jsonField} : json_decode($record->{$jsonField} ?? '[]', true);
+                
+                if (!empty($jsonData)) {
+                    // Determine model class
+                    $modelClass = null;
+                    $nameField = 'nama_produk';
+                    if ($jsonIdKey === 'id_chemical') {
+                        $modelClass = \App\Models\Chemical::class;
+                        $nameField = 'nama_chemical';
+                    } elseif ($jsonIdKey === 'id_produk') {
+                        $modelClass = \App\Models\Produk::class;
+                        $nameField = 'nama_produk';
+                    }
+                    
+                    if ($modelClass) {
+                        // Extract IDs from JSON
+                        $ids = collect($jsonData)->pluck($jsonIdKey)->filter()->unique()->toArray();
+                        
+                        if (!empty($ids)) {
+                            // Load names and check
+                            $names = $modelClass::whereIn('id', $ids)->pluck($nameField, 'id')->toArray();
+                            
+                            foreach ($names as $nama) {
+                                if ($this->nameMatchesKeyword($nama, $keyword, $isLongKeyword, $keywordWords)) {
+                                    return true;
+                                }
+                            }
+                        }
+                        
+                        // ALSO check nama_produk in JSON directly (for modules that store it)
+                        foreach ($jsonData as $item) {
+                            if (is_array($item) && isset($item[$nameField])) {
+                                $namaInJson = $item[$nameField];
+                                if ($this->nameMatchesKeyword($namaInJson, $keyword, $isLongKeyword, $keywordWords)) {
+                                    return true;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // Strategy 3: Check ID arrays (for array-based records)
+            if ($idFieldArray && isset($record->{$idFieldArray})) {
+                $idArray = is_array($record->{$idFieldArray}) ? $record->{$idFieldArray} : json_decode($record->{$idFieldArray} ?? '[]', true);
+                
+                if (!empty($idArray)) {
+                    // Determine model class
+                    $modelClass = null;
+                    $nameField = 'nama_produk';
+                    if (str_contains($idFieldArray, 'id_produk')) {
+                        $modelClass = \App\Models\Produk::class;
+                        $nameField = 'nama_produk';
+                    } elseif (str_contains($idFieldArray, 'id_bahan')) {
+                        $modelClass = \App\Models\Bahan::class;
+                        $nameField = 'nama_bahan';
+                    }
+                    
+                    if ($modelClass) {
+                        $names = $modelClass::whereIn('id', array_filter($idArray))->pluck($nameField)->toArray();
+                        
+                        foreach ($names as $nama) {
+                            if ($this->nameMatchesKeyword($nama, $keyword, $isLongKeyword, $keywordWords)) {
+                                return true;
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // Strategy 4: Check single ID field (for single record with ID)
+            if ($idFieldSingle && isset($record->{$idFieldSingle})) {
+                $id = $record->{$idFieldSingle};
+                
+                if ($id) {
+                    // Determine model class
+                    $modelClass = null;
+                    $nameField = 'nama_produk';
+                    if (str_contains($idFieldSingle, 'id_produk')) {
+                        $modelClass = \App\Models\Produk::class;
+                        $nameField = 'nama_produk';
+                    } elseif (str_contains($idFieldSingle, 'id_bahan')) {
+                        $modelClass = \App\Models\Bahan::class;
+                        $nameField = 'nama_bahan';
+                    }
+                    
+                    if ($modelClass) {
+                        $model = $modelClass::find($id);
+                        if ($model) {
+                            $nama = $model->{$nameField} ?? '';
+                            if ($this->nameMatchesKeyword($nama, $keyword, $isLongKeyword, $keywordWords)) {
+                                return true;
+                            }
                         }
                     }
                 }
@@ -477,30 +603,9 @@ class TraceabilityService
         $namaLower = strtolower($nama);
         $keywordLower = strtolower($keyword);
         
-        // Simple exact contains check
-        if (str_contains($namaLower, $keywordLower)) {
-            return true;
-        }
-        
-        // For long keywords (product names), check if most words match
-        if ($isLongKeyword) {
-            $matchedWords = 0;
-            $totalWords = count($keywordWords);
-            
-            foreach ($keywordWords as $word) {
-                if (str_contains($namaLower, strtolower($word))) {
-                    $matchedWords++;
-                }
-            }
-            
-            // Match if at least 70% of words are found
-            $matchPercentage = $matchedWords / $totalWords;
-            if ($matchPercentage >= 0.7) {
-                return true;
-            }
-        }
-        
-        return false;
+        // ONLY exact contains check - NO fuzzy matching
+        // This prevents false positives like "Fiesta Chicken Nugget" matching "Fiesta French F"
+        return str_contains($namaLower, $keywordLower);
     }
 
     /**
