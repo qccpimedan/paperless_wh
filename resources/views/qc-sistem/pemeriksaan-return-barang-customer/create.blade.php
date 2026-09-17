@@ -1,4 +1,45 @@
 @extends('layouts.app')
+
+<style>
+    /* Fix Choices.js dropdown z-index overlap issue */
+    .choices__list--dropdown {
+        z-index: 9999 !important;
+    }
+    
+    .choices__list--dropdown.is-active {
+        z-index: 9999 !important;
+    }
+    
+    /* Ensure dropdown container has proper positioning */
+    .choices {
+        position: relative;
+        z-index: 1;
+    }
+    
+    .choices.is-open {
+        z-index: 1000 !important;
+    }
+    
+    /* Produk row positioning */
+    .produk-row {
+        position: relative;
+        z-index: 1;
+    }
+    
+    .produk-row.dropdown-active {
+        z-index: 1001 !important;
+    }
+    
+    /* Ensure parent containers don't clip dropdown */
+    .card-body {
+        overflow: visible !important;
+    }
+    
+    .form-body {
+        overflow: visible !important;
+    }
+</style>
+
 @section('container')
 <div id="main">
     <header class="mb-3">
@@ -88,10 +129,10 @@
                                                 <select id="id_ekspedisi" class="form-select @error('id_ekspedisi') is-invalid @enderror"
                                                     name="id_ekspedisi">
                                                     <option value="">-- Pilih Ekspedisi --</option>
+                                                    <option value="other" {{ old('id_ekspedisi') == 'other' ? 'selected' : '' }}>-- Lainnya (Input Manual) --</option>
                                                     @foreach($ekspedisis as $ekspedisi)
                                                         <option value="{{ $ekspedisi->id }}" {{ old('id_ekspedisi') == $ekspedisi->id ? 'selected' : '' }}>{{ $ekspedisi->nama_ekspedisi }}</option>
                                                     @endforeach
-                                                    <option value="other" {{ old('id_ekspedisi') == 'other' ? 'selected' : '' }}>-- Lainnya (Input Manual) --</option>
                                                 </select>
                                                 @error('id_ekspedisi')
                                                     <div class="invalid-feedback">{{ $message }}</div>
@@ -359,6 +400,56 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // ===== FIX Z-INDEX DROPDOWN OVERLAP =====
+    // Monitor all Choices.js dropdowns and adjust parent z-index
+    const observeChoicesDropdown = () => {
+        document.querySelectorAll('.choices').forEach(choicesEl => {
+            choicesEl.addEventListener('showDropdown', () => {
+                const produkRow = choicesEl.closest('.produk-row');
+                if (produkRow) {
+                    produkRow.classList.add('dropdown-active');
+                }
+            });
+            
+            choicesEl.addEventListener('hideDropdown', () => {
+                const produkRow = choicesEl.closest('.produk-row');
+                if (produkRow) {
+                    produkRow.classList.remove('dropdown-active');
+                }
+            });
+        });
+        
+        // Alternative: Use MutationObserver to detect is-open class
+        const observer = new MutationObserver(mutations => {
+            mutations.forEach(mutation => {
+                if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+                    const target = mutation.target;
+                    if (target.classList.contains('choices')) {
+                        const produkRow = target.closest('.produk-row');
+                        if (produkRow) {
+                            if (target.classList.contains('is-open')) {
+                                produkRow.classList.add('dropdown-active');
+                            } else {
+                                produkRow.classList.remove('dropdown-active');
+                            }
+                        }
+                    }
+                }
+            });
+        });
+        
+        document.querySelectorAll('.choices').forEach(choicesEl => {
+            observer.observe(choicesEl, {
+                attributes: true,
+                attributeFilter: ['class']
+            });
+        });
+    };
+    
+    // Initialize observer after a short delay
+    setTimeout(observeChoicesDropdown, 500);
+    
+    // ===== ORIGINAL CODE =====
     const form = document.getElementById('return-barang-form');
     const submitBtn = document.getElementById('btn-submit-return');
 
@@ -373,9 +464,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const instance = new Choices(selectEl, {
             searchResultLimit: 100,
-                    searchFuzziness: 0.000001,
-                    fuseOptions: { ignoreLocation: true, threshold: 0.2, matchAllTokens: false },
-                    searchEnabled: true,
+            searchFuzziness: 0.000001,
+            fuseOptions: { ignoreLocation: true, threshold: 0.2, matchAllTokens: false },
+            searchEnabled: true,
             searchPlaceholderValue: 'Cari...',
             searchFields: ['label', 'value'],
             itemSelectText: '',
