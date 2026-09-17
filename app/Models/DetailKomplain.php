@@ -86,4 +86,9 @@ class DetailKomplain extends Model
     {
         return $this->belongsTo(User::class, 'verified_by');
     }
+
+    public function getRouteKeyName()
+    {
+        return 'uuid';
+    }
 }

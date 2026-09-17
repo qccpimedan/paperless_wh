@@ -141,13 +141,15 @@
                 </li>
                 @endif
 
-                {{-- Traceability - For all authenticated users --}}
+                {{-- Traceability - Hidden from Produksi and QC Inspector --}}
+                @if(!in_array($userRole, ['produksi', 'qc inspector']))
                 <li class="sidebar-item {{ request()->routeIs('traceability.*') ? 'active' : '' }}">
                     <a href="{{ route('traceability.index') }}" class='sidebar-link'>
                         <i class="bi bi-search"></i>
                         <span>Traceability</span>
                     </a>
                 </li>
+                @endif
 
                 <!-- <li class="sidebar-title">Form QC SYSTEM</li> -->
 

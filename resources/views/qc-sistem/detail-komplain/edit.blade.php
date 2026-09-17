@@ -66,6 +66,28 @@
 
                         <div class="row">
                             <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="id_shift">Shift <span class="text-danger">*</span></label>
+                                    <select class="form-select @error('id_shift') is-invalid @enderror" 
+                                            id="id_shift" 
+                                            name="id_shift" 
+                                            required>
+                                        <option value="">Pilih Shift</option>
+                                        @foreach($shifts as $shift)
+                                            <option value="{{ $shift->id }}" {{ old('id_shift', $detailKomplain->id_shift) == $shift->id ? 'selected' : '' }}>
+                                                {{ $shift->shift }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    @error('id_shift')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
                                 <div class="mb-3">
                                     <label for="no_po" class="form-label">No. PO <span class="text-danger">*</span></label>
                                     <input type="text" class="form-control @error('no_po') is-invalid @enderror" 

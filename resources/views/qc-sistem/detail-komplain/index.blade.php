@@ -237,10 +237,7 @@
                                                     </a>
                                                     @can('edit_detail_komplain') <a href="{{ route('detail-komplain.edit', $item->uuid) }}" class="btn btn-sm btn-warning text-white"><i class="bi bi-pencil"></i></a> @endcan
                                                     @can('delete_detail_komplain')
-                                                        <form action="{{ route('detail-komplain.destroy', $item->uuid) }}" method="POST" onsubmit="return confirm('Hapus data ini?')" style="display:inline;">
-                                                            @csrf @method('DELETE')
-                                                            <button type="submit" class="btn btn-sm btn-danger"><i class="bi bi-trash"></i></button>
-                                                        </form>
+                                                        <button type="button" class="btn btn-sm btn-danger" onclick="if(confirm('Hapus data ini?')) document.getElementById('del-{{ $item->uuid }}').submit();"><i class="bi bi-trash"></i></button>
                                                     @endcan
                                                 </div>
                                             </td>
@@ -333,6 +330,16 @@
                     </div>
                 </div>
             </div>
+        @endforeach
+
+        {{-- Forms Hapus di luar agar tidak nested --}}
+        @foreach($komplains as $item)
+            @can('delete_detail_komplain')
+                <form id="del-{{ $item->uuid }}" action="{{ route('detail-komplain.destroy', $item->uuid) }}" method="POST" style="display:none;">
+                    @csrf
+                    @method('DELETE')
+                </form>
+            @endcan
         @endforeach
     </div>
 </div>
