@@ -407,10 +407,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
         // route history per 2 jam
         Route::get('pemeriksaan-suhu-ruang/{pemeriksaanSuhuRuang}/history', [PemeriksaanSuhuRuangController::class, 'history'])->name('pemeriksaan-suhu-ruang.history');
         Route::put('pemeriksaan-suhu-ruang/{pemeriksaanSuhuRuang:uuid}/history/{history:uuid}', [PemeriksaanSuhuRuangController::class, 'updateHistory'])->name('pemeriksaan-suhu-ruang.history.update');
+        Route::delete('pemeriksaan-suhu-ruang/{pemeriksaanSuhuRuang:uuid}/history/{history:uuid}', [PemeriksaanSuhuRuangController::class, 'destroyHistory'])->name('pemeriksaan-suhu-ruang.history.destroy');
+
         Route::get('pemeriksaan-suhu-ruang-v2/{pemeriksaanSuhuRuangV2}/history', [PemeriksaanSuhuRuangV2Controller::class, 'history'])->name('pemeriksaan-suhu-ruang-v2.history');
         Route::put('pemeriksaan-suhu-ruang-v2/{pemeriksaanSuhuRuangV2:uuid}/history/{history:uuid}', [PemeriksaanSuhuRuangV2Controller::class, 'updateHistory'])->name('pemeriksaan-suhu-ruang-v2.history.update');
+        Route::delete('pemeriksaan-suhu-ruang-v2/{pemeriksaanSuhuRuangV2:uuid}/history/{history:uuid}', [PemeriksaanSuhuRuangV2Controller::class, 'destroyHistory'])->name('pemeriksaan-suhu-ruang-v2.history.destroy');
+
         Route::get('pemeriksaan-suhu-ruang-v3/{pemeriksaanSuhuRuangV3}/history', [PemeriksaanSuhuRuangV3Controller::class, 'history'])->name('pemeriksaan-suhu-ruang-v3.history');
         Route::put('pemeriksaan-suhu-ruang-v3/{pemeriksaanSuhuRuangV3:uuid}/history/{history:uuid}', [PemeriksaanSuhuRuangV3Controller::class, 'updateHistory'])->name('pemeriksaan-suhu-ruang-v3.history.update');
+        Route::delete('pemeriksaan-suhu-ruang-v3/{pemeriksaanSuhuRuangV3:uuid}/history/{history:uuid}', [PemeriksaanSuhuRuangV3Controller::class, 'destroyHistory'])->name('pemeriksaan-suhu-ruang-v3.history.destroy');
         
         // API routes untuk check editable records
         Route::get('api/check-editable-records', [PemeriksaanSuhuRuangController::class, 'checkEditableRecords'])->name('api.check-editable-records');

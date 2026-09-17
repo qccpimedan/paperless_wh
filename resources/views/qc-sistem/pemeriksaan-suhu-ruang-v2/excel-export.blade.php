@@ -84,24 +84,24 @@
         $firstHistory = $histories->first();
 
         // 1. Ambil Data Input Pertama (Initial State)
-        $initialSuhuProduk = ($firstHistory && !empty($firstHistory->suhu_produk_lama)) 
+        $initialSuhuProduk = ($firstHistory && $firstHistory->suhu_produk_lama !== null) 
             ? $firstHistory->suhu_produk_lama 
             : $suhuProdukStr;
 
         $initialTime = '-';
-        if ($firstHistory && isset($firstHistory->pukul_lama) && !empty($firstHistory->pukul_lama)) {
+        if ($firstHistory && !empty($firstHistory->pukul_lama)) {
             $initialTime = $formatJam($firstHistory->pukul_lama);
-        } elseif ($firstHistory && $firstHistory->created_at) {
-            $initialTime = $firstHistory->created_at->format('H:i');
         } elseif (!empty($p->pukul)) {
             $initialTime = $formatJam($p->pukul);
+        } elseif ($firstHistory && $firstHistory->created_at) {
+            $initialTime = $firstHistory->created_at->format('H:i');
         } elseif ($p->created_at) {
             $initialTime = $p->created_at->format('H:i');
         }
 
         foreach ($sectionDefsV2 as $fieldKey => $secDef) {
             $initialFieldLamaKey = $fieldKey . '_lama';
-            $valData = ($firstHistory && isset($firstHistory->$initialFieldLamaKey)) 
+            $valData = ($firstHistory && $firstHistory->$initialFieldLamaKey !== null) 
                 ? $firstHistory->$initialFieldLamaKey 
                 : ($p->$fieldKey ?? null);
 

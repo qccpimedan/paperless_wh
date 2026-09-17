@@ -144,8 +144,11 @@
                                 <!-- Riwayat Data Per Jam -->
                                 @php
                                     $historiesV3 = $pemeriksaanSuhuRuangV3->histories->sortBy('id');
+                                    $firstHistory = $historiesV3->first();
                                     $timelineRowsV3 = [];
                                     $noCounterV3 = 1;
+
+                                    $initWaktuV3 = $firstHistory && $firstHistory->pukul_lama ? $firstHistory->pukul_lama : ($pemeriksaanSuhuRuangV3->pukul ?? '-');
 
                                     $suhuSectionsV3 = [
                                         'premix'          => ['label' => 'Suhu Premix', 'field' => 'suhu_premix'],
@@ -159,14 +162,18 @@
                                     ];
 
                                     foreach ($suhuSectionsV3 as $secKey => $secConf) {
-                                        $fieldVal = $pemeriksaanSuhuRuangV3->{$secConf['field']};
+                                        $colLama = 'suhu_' . $secKey . '_lama';
+                                        $fieldVal = ($firstHistory && $firstHistory->{$colLama} !== null)
+                                            ? (is_array($firstHistory->{$colLama}) ? $firstHistory->{$colLama} : (json_decode($firstHistory->{$colLama}, true) ?: []))
+                                            : $pemeriksaanSuhuRuangV3->{$secConf['field']};
+
                                         if (!empty($fieldVal) && is_array($fieldVal)) {
                                             foreach ($fieldVal as $unitKey => $itemData) {
                                                 if (is_array($itemData)) {
                                                     $unitNum = str_replace('unit_', '', (string)$unitKey);
                                                     $timelineRowsV3[] = [
                                                         'no'           => $noCounterV3++,
-                                                        'waktu'        => $pemeriksaanSuhuRuangV3->pukul ?? '-',
+                                                        'waktu'        => $initWaktuV3,
                                                         'area'         => $secConf['label'] . ' ' . $unitNum,
                                                         'setting'      => $itemData['setting'] ?? '-',
                                                         'aktual'       => $itemData['actual'] ?? '-',

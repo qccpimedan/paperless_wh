@@ -205,8 +205,11 @@
                                 <!-- Riwayat Data Per Jam -->
                                 @php
                                     $historiesV3 = $pemeriksaanSuhuRuangV3->histories->sortBy('id');
+                                    $firstHistory = $historiesV3->first();
                                     $timelineRowsV3 = [];
                                     $noCounterV3 = 1;
+
+                                    $initWaktuV3 = $firstHistory && $firstHistory->pukul_lama ? $firstHistory->pukul_lama : ($pemeriksaanSuhuRuangV3->pukul ?? '-');
 
                                     $suhuSectionsV3 = [
                                         'premix'          => ['label' => 'Suhu Premix', 'field' => 'suhu_premix'],
@@ -220,14 +223,18 @@
                                     ];
 
                                     foreach ($suhuSectionsV3 as $secKey => $secConf) {
-                                        $fieldVal = $pemeriksaanSuhuRuangV3->{$secConf['field']};
+                                        $colLama = 'suhu_' . $secKey . '_lama';
+                                        $fieldVal = ($firstHistory && $firstHistory->{$colLama} !== null)
+                                            ? (is_array($firstHistory->{$colLama}) ? $firstHistory->{$colLama} : (json_decode($firstHistory->{$colLama}, true) ?: []))
+                                            : $pemeriksaanSuhuRuangV3->{$secConf['field']};
+
                                         if (!empty($fieldVal) && is_array($fieldVal)) {
                                             foreach ($fieldVal as $unitKey => $itemData) {
                                                 if (is_array($itemData)) {
                                                     $unitNum = str_replace('unit_', '', (string)$unitKey);
                                                     $timelineRowsV3[] = [
                                                         'no'           => $noCounterV3++,
-                                                        'waktu'        => $pemeriksaanSuhuRuangV3->pukul ?? '-',
+                                                        'waktu'        => $initWaktuV3,
                                                         'area'         => $secConf['label'] . ' ' . $unitNum,
                                                         'setting'      => $itemData['setting'] ?? '-',
                                                         'aktual'       => $itemData['actual'] ?? '-',
@@ -324,19 +331,29 @@
                                                         </td>
                                                         <td class="text-center">
                                                             @if($tRow['tipe'] === 'update' && !empty($tRow['history_uuid']))
-                                                                <button type="button"
-                                                                    class="btn btn-sm btn-primary btn-edit-history-v3"
-                                                                    data-history-uuid="{{ $tRow['history_uuid'] }}"
-                                                                    data-pukul="{{ $tRow['waktu'] !== '-' ? $tRow['waktu'] : '' }}"
-                                                                    data-area="{{ $tRow['area'] }}"
-                                                                    data-field-type="{{ $tRow['field_type'] }}"
-                                                                    data-section-key="{{ $tRow['section_key'] }}"
-                                                                    data-unit-id="{{ $tRow['unit_id'] }}"
-                                                                    data-setting="{{ $tRow['setting'] !== '-' ? $tRow['setting'] : '' }}"
-                                                                    data-aktual="{{ $tRow['aktual'] !== '-' ? $tRow['aktual'] : '' }}"
-                                                                    data-display="{{ $tRow['display'] !== '-' ? $tRow['display'] : '' }}">
-                                                                     Edit
-                                                                </button>
+                                                                <div class="d-flex justify-content-center gap-1">
+                                                                    <button type="button"
+                                                                        class="btn btn-sm btn-primary btn-edit-history-v3"
+                                                                        data-history-uuid="{{ $tRow['history_uuid'] }}"
+                                                                        data-pukul="{{ $tRow['waktu'] !== '-' ? $tRow['waktu'] : '' }}"
+                                                                        data-area="{{ $tRow['area'] }}"
+                                                                        data-field-type="{{ $tRow['field_type'] }}"
+                                                                        data-section-key="{{ $tRow['section_key'] }}"
+                                                                        data-unit-id="{{ $tRow['unit_id'] }}"
+                                                                        data-setting="{{ $tRow['setting'] !== '-' ? $tRow['setting'] : '' }}"
+                                                                        data-aktual="{{ $tRow['aktual'] !== '-' ? $tRow['aktual'] : '' }}"
+                                                                        data-display="{{ $tRow['display'] !== '-' ? $tRow['display'] : '' }}">
+                                                                         Edit
+                                                                    </button>
+                                                                    <form action="{{ route('pemeriksaan-suhu-ruang-v3.history.destroy', [$pemeriksaanSuhuRuangV3->uuid, $tRow['history_uuid']]) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus area ini dari riwayat per jam?');" style="display:inline;">
+                                                                        @csrf
+                                                                        @method('DELETE')
+                                                                        <input type="hidden" name="field_type" value="{{ $tRow['field_type'] }}">
+                                                                        <input type="hidden" name="section_key" value="{{ $tRow['section_key'] ?? '' }}">
+                                                                        <input type="hidden" name="unit_id" value="{{ $tRow['unit_id'] ?? '' }}">
+                                                                        <button type="submit" class="btn btn-sm btn-danger">Hapus</button>
+                                                                    </form>
+                                                                </div>
                                                             @else
                                                                 <span class="text-muted" style="font-size:0.75rem">-</span>
                                                             @endif
