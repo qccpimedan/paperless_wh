@@ -304,6 +304,11 @@
                                                     }
 
                                                     $collapseId = 'trace-collapse-' . $groupIndex . '-' . $formIndex;
+                                                    
+                                                    $fieldsForCard = collect($form['fields']);
+                                                    $visibleFieldsLimit = 4;
+                                                    $visibleFieldsForCard = $fieldsForCard->take($visibleFieldsLimit);
+                                                    $hiddenFieldsForCard = $fieldsForCard->slice($visibleFieldsLimit);
                                                 @endphp
 
                                                 <div class="col-md-6 col-lg-4 trace-result-item lazy-card" data-module="{{ $moduleId }}" data-shift="{{ $shiftValue }}" data-date="{{ $dateValue }}" data-index="{{ $formIndex }}">
@@ -343,15 +348,20 @@
                                                                         <i class="bi bi-box-arrow-up-right"></i>
                                                                     </a>
                                                                 @endif
+
+                                                                {{-- LIHAT DATA LAINNYA BUTTON --}}
+                                                                @if($hiddenFieldsForCard->isNotEmpty())
+                                                                    <button type="button" class="btn btn-sm btn-outline-primary trace-show-more-btn" data-bs-toggle="collapse" data-bs-target="#{{ $collapseId }}" aria-expanded="false" aria-controls="{{ $collapseId }}" title="Lihat data lainnya">
+                                                                        <i class="bi bi-chevron-down"></i>
+                                                                    </button>
+                                                                @endif
                                                             </div>
                                                         </div>
 
-                                                        {{-- QUICK INFO --}}
                                                         <div class="trace-quick-info">
-                                                            @foreach($form['fields'] as $label => $value)
+                                                            @foreach($visibleFieldsForCard as $label => $value)
                                                                 @php
                                                                     $isProductionCode = stripos($label, 'kode produksi') !== false;
-                                                                    $isProduct = stripos($label, 'produk') !== false || stripos($label, 'product') !== false;
                                                                     $isStatus = stripos($label, 'status') !== false;
                                                                 @endphp
 
@@ -385,6 +395,49 @@
                                                                 </div>
                                                             @endforeach
                                                         </div>
+
+                                                        {{-- QUICK INFO (SISANYA - BISA DI-COLLAPSE) --}}
+                                                        @if($hiddenFieldsForCard->isNotEmpty())
+                                                            <div class="collapse" id="{{ $collapseId }}">
+                                                                <div class="trace-quick-info trace-quick-info-extra">
+                                                                @foreach($hiddenFieldsForCard as $label => $value)
+                                                                    @php
+                                                                        $isProductionCode = stripos($label, 'kode produksi') !== false;
+                                                                        $isStatus = stripos($label, 'status') !== false;
+                                                                    @endphp
+
+                                                                    <div class="trace-field">
+                                                                        <span class="trace-label">{{ $label }}</span>
+                                                                        <span class="trace-value">
+                                                                            {{-- KODE PRODUKSI --}}
+                                                                            @if($isProductionCode)
+                                                                                <mark class="match-value">{{ is_array($value) ? implode(', ', $value) : $value }}</mark>
+                                                                            {{-- STATUS --}}
+                                                                            @elseif($isStatus && !empty($value))
+                                                                                @php
+                                                                                    $statusValue = is_array($value) ? implode(', ', $value) : $value;
+                                                                                    $statusLower = strtolower(trim((string) $statusValue));
+                                                                                    $statusClass = 'status-default';
+
+                                                                                    if (str_contains($statusLower, 'release') || str_contains($statusLower, 'approve') || str_contains($statusLower, 'pass')) {
+                                                                                        $statusClass = 'status-success';
+                                                                                    } elseif (str_contains($statusLower, 'hold') || str_contains($statusLower, 'pending')) {
+                                                                                        $statusClass = 'status-warning';
+                                                                                    } elseif (str_contains($statusLower, 'reject') || str_contains($statusLower, 'fail')) {
+                                                                                        $statusClass = 'status-danger';
+                                                                                    }
+                                                                                @endphp
+
+                                                                                <span class="status-badge {{ $statusClass }}">{{ $statusValue }}</span>
+                                                                            @else
+                                                                                {{ is_array($value) ? implode(', ', $value) : $value }}
+                                                                            @endif
+                                                                        </span>
+                                                                    </div>
+                                                                @endforeach
+                                                                </div>
+                                                            </div>
+                                                        @endif
                                                         </div>{{-- END lazy-card-content --}}
                                                         
                                                         {{-- LOADING PLACEHOLDER / SKELETON --}}
@@ -472,34 +525,49 @@
     .module-title-wrapper { display: flex; align-items: center; gap: 7px; }
     .module-title-wrapper > i { color: #435ebe; font-size: 14px; }
     .module-title-wrapper h5 { font-size: 14px; font-weight: 600; color: #344054; }
-    .module-count { display: inline-flex; align-items: center; padding: 3px 8px; border-radius: 20px; background: #435ebe; color: #fff; font-size: 10px; font-weight: 600; }
+    .module-count { display: inline-flex; align-items: center; padding: 3px 8px; border-radius: 20px; background: #435ebe; color: #fff; font-size: 11px; font-weight: 600; }
 
     /* RESULT CARD */
-    .trace-result-card { height: 100%; overflow: hidden; background: #fff; border: 1px solid #e7ebf2; border-left: 3px solid #435ebe; border-radius: 8px; box-shadow: 0 2px 7px rgba(16, 24, 40, .04); transition: all .2s ease; }
+    .trace-result-card { height: 100%; overflow: hidden; background: #fff; border: 1px solid #e7ebf2; border-left: 3px solid #435ebe; border-radius: 8px; box-shadow: 0 2px 7px rgba(16, 24, 40, .04); transition: all .2s ease; display: flex; flex-direction: column; }
     .trace-result-card:hover { transform: translateY(-2px); box-shadow: 0 7px 20px rgba(16, 24, 40, .08); }
 
+    /* TRACE RESULT ITEM */
+    .trace-result-item { align-self: start; }
+
+    /* LAZY CARD CONTENT */
+    .lazy-card-content { display: flex; flex-direction: column; height: 100%; }
+
     /* CARD HEADER */
-    .trace-card-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; padding: 12px; border-bottom: 1px solid #eef1f5; }
+    .trace-card-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; padding: 12px; border-bottom: 1px solid #eef1f5; flex-shrink: 0; }
     .trace-card-title { flex: 1; }
     .trace-card-actions { display: flex; align-items: center; gap: 6px; }
-    .trace-date { color: #435ebe; font-size: 11px; font-weight: 600; }
+    .trace-date { color: #435ebe; font-size: 13px; font-weight: 600; }
     .trace-date i { margin-right: 3px; }
-    .trace-shift { margin-top: 3px; color: #98a2b3; font-size: 10px; }
-    .trace-detail-btn, .trace-pdf-btn { flex-shrink: 0; padding: 4px 8px; font-size: 10px; }
+    .trace-shift { margin-top: 3px; color: #98a2b3; font-size: 12px; }
+    .trace-detail-btn, .trace-pdf-btn { flex-shrink: 0; padding: 4px 8px; font-size: 12px; }
+    .trace-show-more-btn { flex-shrink: 0; padding: 4px 8px; font-size: 12px; margin-left: auto; }
 
 
     /* QUICK INFO */
-    .trace-quick-info { padding: 12px; }
-    .trace-field { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 7px; font-size: 10px; }
+    .trace-quick-info { padding: 12px; flex-grow: 1; overflow-y: auto; }
+    .trace-field { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 8px; font-size: 12.5px; }
     .trace-field:last-child { margin-bottom: 0; }
     .trace-label { flex: 0 0 42%; color: #8b95a7; }
     .trace-value { max-width: 58%; color: #475467; font-weight: 500; text-align: right; word-break: break-word; }
+
+    /* QUICK INFO - EXTRA FIELDS (DI DALAM COLLAPSE) */
+    .trace-quick-info-extra { padding-top: 4px; border-top: 1px dashed #eef1f5; }
+
+    /* COLLAPSE STYLING */
+    .collapse { transition: all 0.3s ease; }
+    .trace-result-card .collapse { display: none; }
+    .trace-result-card .collapse.show { display: block; }
 
     /* MATCH */
     .match-value { display: inline-block; padding: 2px 5px; border-radius: 3px; background: #fff3cd; color: #664d03; font-weight: 700; }
 
     /* STATUS */
-    .status-badge { display: inline-flex; align-items: center; justify-content: center; padding: 3px 7px; border-radius: 20px; font-size: 9px; font-weight: 700; text-transform: uppercase; }
+    .status-badge { display: inline-flex; align-items: center; justify-content: center; padding: 3px 7px; border-radius: 20px; font-size: 10.5px; font-weight: 700; text-transform: uppercase; }
     .status-success { background: #ecfdf3; color: #027a48; }
     .status-warning { background: #fffaeb; color: #b54708; }
     .status-danger { background: #fef3f2; color: #b42318; }
@@ -526,7 +594,7 @@
         .trace-global-action button { flex: 1; }
         .trace-card-header { padding: 10px; }
         .trace-quick-info { padding: 10px; }
-        .trace-detail-btn { font-size: 9px; }
+        .trace-detail-btn { font-size: 10px; }
         .search-example { display: block; margin-top: 4px; margin-left: 0; }
     }
 
