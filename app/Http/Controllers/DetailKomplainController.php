@@ -272,6 +272,15 @@ class DetailKomplainController extends Controller
             abort(403, 'Unauthorized');
         }
 
+        // Get shifts based on user's plant
+        $shifts = Shift::query();
+        if ($user->role->role !== 'SuperAdmin') {
+            $shifts->whereHas('user', function($q) use ($user) {
+                $q->where('id_plant', $user->getEffectivePlantId());
+            });
+        }
+        $shifts = $shifts->get();
+
         $query = Produk::query();
         if ($user->role->role !== 'SuperAdmin') {
             $query->whereHas('user', function ($q) use ($user) {
@@ -307,7 +316,7 @@ class DetailKomplainController extends Controller
                 })->values();
             });
 
-        return view('qc-sistem.detail-komplain.edit', compact('detailKomplain', 'produks', 'produkKategoriOptions', 'produkByKategori'));
+        return view('qc-sistem.detail-komplain.edit', compact('detailKomplain', 'produks', 'produkKategoriOptions', 'produkByKategori', 'shifts'));
     }
 
     public function update(Request $request, DetailKomplain $detailKomplain)

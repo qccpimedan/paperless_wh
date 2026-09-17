@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PlantController;
 use App\Http\Controllers\RoleController;
+use App\Http\Controllers\TraceabilityController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AccessControlController;
 use App\Http\Controllers\UserController;
@@ -231,6 +232,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('pemeriksaan-loading-produk/export-excel', [PemeriksaanLoadingProdukController::class, 'exportExcel'])->name('pemeriksaan-loading-produk.export-excel');
         Route::get('pemeriksaan-loading-kendaraan/export-pdf', [PemeriksaanLoadingKendaraanController::class, 'exportPDF'])->name('pemeriksaan-loading-kendaraan.export-pdf');
         Route::get('return-barang/export-pdf', [PemeriksaanReturnBarangCustomerController::class, 'exportPDF'])->name('return-barang.export-pdf');
+        Route::get('return-barang/export-excel', [PemeriksaanReturnBarangCustomerController::class, 'exportExcel'])->name('return-barang.export-excel');
         Route::get('pemeriksaan-kebersihan-area/export-pdf/{uuid?}', [PemeriksaanKebersihanAreaController::class, 'exportPDF'])->name('pemeriksaan-kebersihan-area.export-pdf');
         Route::get('golden-sample-reports/export-pdf', [GoldenSampleReportController::class, 'exportPDF'])->name('golden-sample-reports.export-pdf');
         Route::get('pemeriksaan-barang-mudah-pecah/export-pdf', [PemeriksaanBarangMudahPecahController::class, 'exportPDF'])->name('pemeriksaan-barang-mudah-pecah.export-pdf');
@@ -276,6 +278,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::resource('detail-komplain', DetailKomplainController::class)->parameters(['detail-komplain' => 'detailKomplain:uuid']);
         Route::resource('golden-sample-reports', GoldenSampleReportController::class);
         Route::resource('pemeriksaan-barang-mudah-pecah', PemeriksaanBarangMudahPecahController::class);
+        
+        // Traceability Routes
+        Route::prefix('traceability')->name('traceability.')->group(function () {
+            Route::get('/', [TraceabilityController::class, 'index'])->name('index');
+            Route::get('/search', [TraceabilityController::class, 'search'])->name('search');
+        });
         
         
         // Routes untuk verifikasi pemeriksaan barang mudah pecah
@@ -400,10 +408,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
         // route history per 2 jam
         Route::get('pemeriksaan-suhu-ruang/{pemeriksaanSuhuRuang}/history', [PemeriksaanSuhuRuangController::class, 'history'])->name('pemeriksaan-suhu-ruang.history');
         Route::put('pemeriksaan-suhu-ruang/{pemeriksaanSuhuRuang:uuid}/history/{history:uuid}', [PemeriksaanSuhuRuangController::class, 'updateHistory'])->name('pemeriksaan-suhu-ruang.history.update');
+        Route::delete('pemeriksaan-suhu-ruang/{pemeriksaanSuhuRuang:uuid}/history/{history:uuid}', [PemeriksaanSuhuRuangController::class, 'destroyHistory'])->name('pemeriksaan-suhu-ruang.history.destroy');
+
         Route::get('pemeriksaan-suhu-ruang-v2/{pemeriksaanSuhuRuangV2}/history', [PemeriksaanSuhuRuangV2Controller::class, 'history'])->name('pemeriksaan-suhu-ruang-v2.history');
         Route::put('pemeriksaan-suhu-ruang-v2/{pemeriksaanSuhuRuangV2:uuid}/history/{history:uuid}', [PemeriksaanSuhuRuangV2Controller::class, 'updateHistory'])->name('pemeriksaan-suhu-ruang-v2.history.update');
+        Route::delete('pemeriksaan-suhu-ruang-v2/{pemeriksaanSuhuRuangV2:uuid}/history/{history:uuid}', [PemeriksaanSuhuRuangV2Controller::class, 'destroyHistory'])->name('pemeriksaan-suhu-ruang-v2.history.destroy');
+
         Route::get('pemeriksaan-suhu-ruang-v3/{pemeriksaanSuhuRuangV3}/history', [PemeriksaanSuhuRuangV3Controller::class, 'history'])->name('pemeriksaan-suhu-ruang-v3.history');
         Route::put('pemeriksaan-suhu-ruang-v3/{pemeriksaanSuhuRuangV3:uuid}/history/{history:uuid}', [PemeriksaanSuhuRuangV3Controller::class, 'updateHistory'])->name('pemeriksaan-suhu-ruang-v3.history.update');
+        Route::delete('pemeriksaan-suhu-ruang-v3/{pemeriksaanSuhuRuangV3:uuid}/history/{history:uuid}', [PemeriksaanSuhuRuangV3Controller::class, 'destroyHistory'])->name('pemeriksaan-suhu-ruang-v3.history.destroy');
         
         // API routes untuk check editable records
         Route::get('api/check-editable-records', [PemeriksaanSuhuRuangController::class, 'checkEditableRecords'])->name('api.check-editable-records');

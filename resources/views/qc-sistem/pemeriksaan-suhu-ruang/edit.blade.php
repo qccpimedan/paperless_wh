@@ -619,19 +619,29 @@
                                                         </td>
                                                         <td class="text-center">
                                                             @if($tRow['tipe'] === 'update' && !empty($tRow['history_uuid']))
-                                                                <button type="button" class="btn btn-sm btn-primary btn-edit-riwayat"
-                                                                    data-history-uuid="{{ $tRow['history_uuid'] }}"
-                                                                    data-field-type="{{ $tRow['field_type'] }}"
-                                                                    data-section-key="{{ $tRow['section_key'] ?? '' }}"
-                                                                    data-unit-id="{{ $tRow['unit_id'] ?? '' }}"
-                                                                    data-area="{{ $tRow['area'] }}"
-                                                                    data-pukul="{{ $tRow['pukul_raw'] ?? $tRow['waktu'] }}"
-                                                                    data-setting="{{ $tRow['setting'] }}"
-                                                                    data-aktual="{{ $tRow['aktual'] }}"
-                                                                    data-display="{{ $tRow['display'] }}"
-                                                                    data-pemeriksaan-uuid="{{ $pemeriksaanSuhuRuang->uuid }}">
-                                                                     Edit
-                                                                </button>
+                                                                <div class="d-flex justify-content-center gap-1">
+                                                                    <button type="button" class="btn btn-sm btn-primary btn-edit-riwayat"
+                                                                        data-history-uuid="{{ $tRow['history_uuid'] }}"
+                                                                        data-field-type="{{ $tRow['field_type'] }}"
+                                                                        data-section-key="{{ $tRow['section_key'] ?? '' }}"
+                                                                        data-unit-id="{{ $tRow['unit_id'] ?? '' }}"
+                                                                        data-area="{{ $tRow['area'] }}"
+                                                                        data-pukul="{{ $tRow['pukul_raw'] ?? $tRow['waktu'] }}"
+                                                                        data-setting="{{ $tRow['setting'] }}"
+                                                                        data-aktual="{{ $tRow['aktual'] }}"
+                                                                        data-display="{{ $tRow['display'] }}"
+                                                                        data-pemeriksaan-uuid="{{ $pemeriksaanSuhuRuang->uuid }}">
+                                                                         Edit
+                                                                    </button>
+                                                                    <form action="{{ route('pemeriksaan-suhu-ruang.history.destroy', [$pemeriksaanSuhuRuang->uuid, $tRow['history_uuid']]) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus area ini dari riwayat per jam?');" style="display:inline;">
+                                                                        @csrf
+                                                                        @method('DELETE')
+                                                                        <input type="hidden" name="field_type" value="{{ $tRow['field_type'] }}">
+                                                                        <input type="hidden" name="section_key" value="{{ $tRow['section_key'] ?? '' }}">
+                                                                        <input type="hidden" name="unit_id" value="{{ $tRow['unit_id'] ?? '' }}">
+                                                                        <button type="submit" class="btn btn-sm btn-danger">Hapus</button>
+                                                                    </form>
+                                                                </div>
                                                             @else
                                                                 <span class="text-muted">-</span>
                                                             @endif

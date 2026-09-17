@@ -362,7 +362,8 @@
                                 <tr>
                                     @foreach($pageRecords as $colIndex => $pemeriksaan)
                                         @php
-                                            $columnNumber = ($pageIndex * $columnsPerPage) + $loop->iteration;
+                                            // Nomor kolom reset setiap halaman (1, 2, 3, 4)
+                                            $columnNumber = $loop->iteration;
 
                                             $kebersihanMobil = is_array($pemeriksaan->kondisi_kebersihan_mobil) ? $pemeriksaan->kondisi_kebersihan_mobil : (json_decode($pemeriksaan->kondisi_kebersihan_mobil ?? '[]', true) ?? []);
                                             $kondisiMobil = is_array($pemeriksaan->kondisi_mobil) ? $pemeriksaan->kondisi_mobil : (json_decode($pemeriksaan->kondisi_mobil ?? '[]', true) ?? []);

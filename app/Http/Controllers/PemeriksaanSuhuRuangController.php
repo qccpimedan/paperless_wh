@@ -459,6 +459,55 @@ class PemeriksaanSuhuRuangController extends Controller
             ->with('success', 'Data riwayat per jam berhasil diperbarui.');
     }
 
+    public function destroyHistory(Request $request, PemeriksaanSuhuRuang $pemeriksaanSuhuRuang, PemeriksaanSuhuRuangHistory $history)
+    {
+        $this->checkPlantAccess($pemeriksaanSuhuRuang);
+
+        if ($history->id_pemeriksaan_suhu_ruang !== $pemeriksaanSuhuRuang->id) {
+            abort(403, 'History tidak sesuai dengan data pemeriksaan ini.');
+        }
+
+        $fieldType  = $request->input('field_type');
+        $sectionKey = $request->input('section_key');
+        $unitId     = $request->input('unit_id');
+
+        if ($fieldType === 'suhu_produk') {
+            $history->suhu_produk_baru = null;
+        } elseif ($sectionKey) {
+            $baruSuhu = is_array($history->suhu_data_baru)
+                ? $history->suhu_data_baru
+                : (json_decode($history->suhu_data_baru ?? '[]', true) ?: []);
+
+            if (in_array($sectionKey, ['cold_storage', 'anteroom_loading']) && $unitId) {
+                $items = $baruSuhu[$sectionKey] ?? [];
+                $items = array_filter($items, function ($item) use ($unitId) {
+                    return ($item['unit'] ?? null) != $unitId;
+                });
+                $baruSuhu[$sectionKey] = array_values($items);
+                if (empty($baruSuhu[$sectionKey])) {
+                    unset($baruSuhu[$sectionKey]);
+                }
+            } else {
+                unset($baruSuhu[$sectionKey]);
+            }
+
+            $history->suhu_data_baru = !empty($baruSuhu) ? $baruSuhu : null;
+        }
+
+        // Cek apakah masih ada data baru yang tersimpan dalam record history ini
+        $hasDataBaru = !empty($history->suhu_produk_baru) || !empty($history->suhu_data_baru);
+
+        if ($hasDataBaru) {
+            $history->save();
+        } else {
+            $history->delete();
+        }
+
+        return redirect()
+            ->route('pemeriksaan-suhu-ruang.edit', $pemeriksaanSuhuRuang->uuid)
+            ->with('success', 'Area riwayat berhasil dihapus!');
+    }
+
     private function checkPlantAccess(PemeriksaanSuhuRuang $pemeriksaanSuhuRuang)
     {
         $user = Auth::user();

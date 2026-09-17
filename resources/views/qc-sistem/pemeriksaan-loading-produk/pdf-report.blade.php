@@ -461,60 +461,96 @@
 
                     /*
                     |--------------------------------------------------------------------------
-                    | FLATTEN PRODUK DATA
+                    | GROUP BY KENDARAAN TERLEBIH DAHULU
+                    |--------------------------------------------------------------------------
+                    | Setiap kendaraan yang berbeda harus di halaman terpisah
                     |--------------------------------------------------------------------------
                     */
 
-                    $items = collect();
+                    $groupedByKendaraan = collect();
 
                     foreach ($pemeriksaans as $p) {
-
-                        $rows = is_array($p->produk_data)
-                            ? $p->produk_data
-                            : [];
-
-                        /*
-                        |--------------------------------------------------------------------------
-                        | Jika tidak ada produk_data
-                        |--------------------------------------------------------------------------
-                        */
-
-                        if (count($rows) === 0) {
-
-                            $items->push([
-                                'record' => $p,
-                                'rowIndex' => null
-                            ]);
-
-                            continue;
+                        // Tentukan kunci unik untuk kendaraan
+                        $kendaraanKey = $p->id_kendaraan 
+                            ? 'kendaraan_' . $p->id_kendaraan 
+                            : 'manual_' . ($p->jenis_kendaraan_manual ?? 'unknown') . '_' . ($p->no_kendaraan_manual ?? 'unknown');
+                        
+                        if (!$groupedByKendaraan->has($kendaraanKey)) {
+                            $groupedByKendaraan->put($kendaraanKey, collect());
                         }
-
-
-                        /*
-                        |--------------------------------------------------------------------------
-                        | Jika memiliki beberapa produk
-                        |--------------------------------------------------------------------------
-                        */
-
-                        foreach (array_values($rows) as $i => $row) {
-
-                            $items->push([
-                                'record' => $p,
-                                'rowIndex' => $i
-                            ]);
-                        }
+                        
+                        $groupedByKendaraan->get($kendaraanKey)->push($p);
                     }
 
 
                     /*
                     |--------------------------------------------------------------------------
-                    | MAKSIMAL 4 PEMERIKSAAN PER HALAMAN
+                    | FLATTEN PRODUK DATA PER KENDARAAN
                     |--------------------------------------------------------------------------
                     */
 
-                    $columnsPerPage = 4;
+                    $allChunks = collect();
 
-                    $chunks = $items->chunk($columnsPerPage);
+                    foreach ($groupedByKendaraan as $kendaraanRecords) {
+                        
+                        $items = collect();
+
+                        foreach ($kendaraanRecords as $p) {
+
+                            $rows = is_array($p->produk_data)
+                                ? $p->produk_data
+                                : [];
+
+                            /*
+                            |--------------------------------------------------------------------------
+                            | Jika tidak ada produk_data
+                            |--------------------------------------------------------------------------
+                            */
+
+                            if (count($rows) === 0) {
+
+                                $items->push([
+                                    'record' => $p,
+                                    'rowIndex' => null
+                                ]);
+
+                                continue;
+                            }
+
+
+                            /*
+                            |--------------------------------------------------------------------------
+                            | Jika memiliki beberapa produk
+                            |--------------------------------------------------------------------------
+                            */
+
+                            foreach (array_values($rows) as $i => $row) {
+
+                                $items->push([
+                                    'record' => $p,
+                                    'rowIndex' => $i
+                                ]);
+                            }
+                        }
+
+
+                        /*
+                        |--------------------------------------------------------------------------
+                        | MAKSIMAL 4 PEMERIKSAAN PER HALAMAN (PER KENDARAAN)
+                        |--------------------------------------------------------------------------
+                        */
+
+                        $columnsPerPage = 4;
+
+                        $kendaraanChunks = $items->chunk($columnsPerPage);
+                        
+                        // Tambahkan semua chunk dari kendaraan ini ke allChunks
+                        foreach ($kendaraanChunks as $chunk) {
+                            $allChunks->push($chunk);
+                        }
+                    }
+
+                    $chunks = $allChunks;
 
                 @endphp
 
@@ -764,9 +800,8 @@
 
                                     $rowIndex = $column['rowIndex'];
 
-                                    $columnNumber =
-                                        ($pageIndex * $columnsPerPage)
-                                        + $loop->iteration;
+                                    // Nomor kolom reset setiap halaman (1, 2, 3, 4)
+                                    $columnNumber = $loop->iteration;
 
 
                                     /*

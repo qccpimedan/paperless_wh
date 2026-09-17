@@ -89,12 +89,12 @@
                                                 <select id="id_ekspedisi" class="form-select @error('id_ekspedisi') is-invalid @enderror"
                                                     name="id_ekspedisi">
                                                     <option value="">-- Pilih Ekspedisi --</option>
+                                                    <option value="other" {{ old('id_ekspedisi') == 'other' ? 'selected' : '' }}>-- Lainnya (Input Manual) --</option>
                                                     @foreach($ekspedisis as $ekspedisi)
                                                         <option value="{{ $ekspedisi->id }}" {{ old('id_ekspedisi', $pemeriksaanReturnBarangCustomer->id_ekspedisi) == $ekspedisi->id ? 'selected' : '' }}>
                                                             {{ $ekspedisi->nama_ekspedisi }}
                                                         </option>
                                                     @endforeach
-                                                    <option value="other" {{ old('id_ekspedisi') == 'other' ? 'selected' : '' }}>-- Lainnya (Input Manual) --</option>
                                                 </select>
                                                 @error('id_ekspedisi')
                                                     <div class="invalid-feedback">{{ $message }}</div>
@@ -103,8 +103,8 @@
                                                 <!-- Input manual yang awalnya disembunyikan -->
                                                 <div id="manual_ekspedisi_input" class="mt-2" style="display: none;">
                                                     <label for="nama_ekspedisi_manual">Nama Ekspedisi <span class="text-danger">*</span></label>
-                                                    <input type="text" id="nama_ekspedisi_manual" class="choices form-control @error('nama_ekspedisi_manual') is-invalid @enderror" 
-                                                        name="nama_ekspedisi_manual" value="{{ old('nama_ekspedisi_manual') }}" placeholder="Masukkan nama ekspedisi" required>
+                                                    <input type="text" id="nama_ekspedisi_manual" class="form-control @error('nama_ekspedisi_manual') is-invalid @enderror" 
+                                                        name="nama_ekspedisi_manual" value="{{ old('nama_ekspedisi_manual') }}" placeholder="Masukkan nama ekspedisi">
                                                     @error('nama_ekspedisi_manual')
                                                         <div class="invalid-feedback">{{ $message }}</div>
                                                     @enderror
@@ -163,7 +163,7 @@
                                                             <div class="row">
                                                                 <div class="col-md-6">
                                                                     <label>Customer <span class="text-danger">*</span></label>
-                                                                    <select class="form-select @error('produk_data.' . $index . '.id_customer') is-invalid @enderror" name="produk_data[{{ $index }}][id_customer]" required>
+                                                                    <select class="choices form-select @error('produk_data.' . $index . '.id_customer') is-invalid @enderror" name="produk_data[{{ $index }}][id_customer]" required>
                                                                         <option value="">-- Pilih Customer --</option>
                                                                         @foreach($customers as $customer)
                                                                             <option value="{{ $customer->id }}" {{ old('produk_data.' . $index . '.id_customer', $produk['id_customer'] ?? '') == $customer->id ? 'selected' : '' }}>
@@ -407,6 +407,19 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Initialize Choices.js for Ekspedisi with shouldSort: false to maintain order
+    const ekspedisiSelectElement = document.getElementById('id_ekspedisi');
+    if (ekspedisiSelectElement) {
+        new Choices(ekspedisiSelectElement, {
+            searchEnabled: true,
+            shouldSort: false, // IMPORTANT: Don't sort options, keep original order
+            itemSelectText: 'Tekan untuk memilih',
+            noResultsText: 'Tidak ada hasil ditemukan',
+            noChoicesText: 'Tidak ada pilihan tersedia',
+            placeholderValue: '-- Pilih Ekspedisi --'
+        });
+    }
+
     const ekspedisiSelect = document.getElementById('id_ekspedisi');
     const manualInput = document.getElementById('manual_ekspedisi_input');
 

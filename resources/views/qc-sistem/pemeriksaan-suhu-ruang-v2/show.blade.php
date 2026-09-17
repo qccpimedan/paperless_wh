@@ -343,10 +343,12 @@
                                 <!-- Riwayat Data Per Jam -->
                                 @php
                                     $historiesV2 = $pemeriksaanSuhuRuangV2->histories->sortBy('id');
+                                    $firstHistory = $historiesV2->first();
                                     $timelineRowsV2 = [];
                                     $noV2 = 1;
 
-                                    $initJamV2 = $pemeriksaanSuhuRuangV2->pukul ? \Carbon\Carbon::parse($pemeriksaanSuhuRuangV2->pukul)->format('H:i') : '-';
+                                    $rawInitPukul = $firstHistory && $firstHistory->pukul_lama ? $firstHistory->pukul_lama : $pemeriksaanSuhuRuangV2->pukul;
+                                    $initJamV2 = $rawInitPukul ? \Carbon\Carbon::parse($rawInitPukul)->format('H:i') : '-';
                                     $initCreatedV2 = $pemeriksaanSuhuRuangV2->created_at ? $pemeriksaanSuhuRuangV2->created_at->format('d/m/Y H:i') : '-';
 
                                     $sectionLabelsV2 = [
@@ -359,9 +361,22 @@
                                         'chillroom_domestik'    => 'Chillroom Domestik',
                                     ];
 
+                                    // Mengambil nilai data awal (jika pernah di-edit/update, gunakan *_lama dari history pertama)
+                                    $initColdStorageData = $firstHistory && $firstHistory->suhu_cold_storage_lama !== null
+                                        ? (is_array($firstHistory->suhu_cold_storage_lama) ? $firstHistory->suhu_cold_storage_lama : (json_decode($firstHistory->suhu_cold_storage_lama, true) ?: []))
+                                        : $pemeriksaanSuhuRuangV2->suhu_cold_storage;
+
+                                    $initAnteroomLoadingData = $firstHistory && $firstHistory->suhu_anteroom_loading_lama !== null
+                                        ? (is_array($firstHistory->suhu_anteroom_loading_lama) ? $firstHistory->suhu_anteroom_loading_lama : (json_decode($firstHistory->suhu_anteroom_loading_lama, true) ?: []))
+                                        : $pemeriksaanSuhuRuangV2->suhu_anteroom_loading;
+
+                                    $initSuhuProdukVal = $firstHistory && $firstHistory->suhu_produk_lama !== null
+                                        ? $firstHistory->suhu_produk_lama
+                                        : $pemeriksaanSuhuRuangV2->suhu_produk;
+
                                     // Input Awal Cold Storage
-                                    if (!empty($pemeriksaanSuhuRuangV2->suhu_cold_storage)) {
-                                        foreach ((array)$pemeriksaanSuhuRuangV2->suhu_cold_storage as $uId => $uVal) {
+                                    if (!empty($initColdStorageData)) {
+                                        foreach ((array)$initColdStorageData as $uId => $uVal) {
                                             $timelineRowsV2[] = [
                                                 'no'     => $noV2++,
                                                 'waktu'  => $initJamV2,
@@ -376,8 +391,8 @@
                                     }
 
                                     // Input Awal Anteroom Loading
-                                    if (!empty($pemeriksaanSuhuRuangV2->suhu_anteroom_loading)) {
-                                        foreach ((array)$pemeriksaanSuhuRuangV2->suhu_anteroom_loading as $uId => $uVal) {
+                                    if (!empty($initAnteroomLoadingData)) {
+                                        foreach ((array)$initAnteroomLoadingData as $uId => $uVal) {
                                             $timelineRowsV2[] = [
                                                 'no'     => $noV2++,
                                                 'waktu'  => $initJamV2,
@@ -393,8 +408,12 @@
 
                                     // Input Awal Single Sections
                                     foreach (['pre_loading', 'prestaging', 'anteroom_ekspansi_abf', 'chillroom_rm', 'chillroom_domestik'] as $sKey) {
+                                        $attrLama = 'suhu_' . $sKey . '_lama';
                                         $attr = 'suhu_' . $sKey;
-                                        $val = $pemeriksaanSuhuRuangV2->{$attr};
+                                        $val = ($firstHistory && $firstHistory->{$attrLama} !== null)
+                                            ? (is_array($firstHistory->{$attrLama}) ? $firstHistory->{$attrLama} : (json_decode($firstHistory->{$attrLama}, true) ?: []))
+                                            : $pemeriksaanSuhuRuangV2->{$attr};
+
                                         if (!empty($val) && (!empty($val['setting']) || !empty($val['display']) || !empty($val['actual']))) {
                                             $timelineRowsV2[] = [
                                                 'no'     => $noV2++,
@@ -410,14 +429,14 @@
                                     }
 
                                     // Input Awal Suhu Produk
-                                    if (!empty($pemeriksaanSuhuRuangV2->suhu_produk)) {
+                                    if (!empty($initSuhuProdukVal)) {
                                         $timelineRowsV2[] = [
                                             'no'     => $noV2++,
                                             'waktu'  => $initJamV2,
                                             'edited' => $initCreatedV2,
                                             'area'   => 'Suhu Produk',
                                             'setting'=> '-',
-                                            'aktual' => $pemeriksaanSuhuRuangV2->suhu_produk,
+                                            'aktual' => $initSuhuProdukVal,
                                             'display'=> '-',
                                             'tipe'   => 'awal',
                                         ];

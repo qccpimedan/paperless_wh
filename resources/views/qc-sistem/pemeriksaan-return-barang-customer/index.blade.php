@@ -17,12 +17,6 @@
     $canVerify = in_array($userRole, ['qc inspector', 'warehouse', 'produksi', 'spv qc', 'superadmin', 'produksi/warehouse']);
 @endphp
 <div id="main">
-    <header class="mb-3">
-        <a href="#" class="burger-btn d-block d-xl-none">
-            <i class="bi bi-justify fs-3"></i>
-        </a>
-    </header>
-
     <div class="page-heading">
         <div class="page-title">
             <div class="row">
@@ -114,8 +108,9 @@
                                     <option value="">-- Semua Produk --</option>
                                 </select>
                             </div>
-                            <div class="col-md-3 d-flex align-items-end">
-                                <button type="submit" class="btn btn-success w-100"><i class="bi bi-file-pdf"></i> PDF</button>
+                            <div class="col-md-3 d-flex align-items-end gap-2">
+                                <button type="submit" formaction="{{ route('return-barang.export-pdf') }}" class="btn btn-danger flex-fill"><i class="bi bi-file-pdf"></i> PDF</button>
+                                <button type="submit" formaction="{{ route('return-barang.export-excel') }}" class="btn btn-success flex-fill"><i class="bi bi-file-earmark-excel"></i> Excel</button>
                             </div>
                         </form>
                     </div>

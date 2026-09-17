@@ -77,7 +77,7 @@
                                             <div class="col-md-6 mt-3">
                                                 <label for="pukul">Pukul <span class="text-danger">*</span></label>
                                                 <input type="time" id="pukul" class="form-control @error('pukul') is-invalid @enderror"
-                                                    name="pukul" value="{{ old('pukul', date('H:i')) }}" required>
+                                                    name="pukul" value="" required>
                                                 @error('pukul')
                                                     <div class="invalid-feedback">{{ $message }}</div>
                                                 @enderror

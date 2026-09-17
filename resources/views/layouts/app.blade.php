@@ -21,73 +21,8 @@
     <link rel="stylesheet" href="{{asset('dist/vendors/datatables/dataTables.bootstrap5.min.css')}}">
     <link rel="icon" href="{{asset('dist/images/logo/logo5.png')}}" type="image/x-icon">
     
-    <!-- Suppress browser extension console errors -->
-    <!-- <script>
-        // Suppress noisy browser extension warnings in console (Production Mode)
-        if (!window.location.hostname.includes('localhost') || true) {
-            (function() {
-                const originalError = console.error;
-                const originalWarn = console.warn;
-                
-                console.error = function(...args) {
-                    const message = JSON.stringify(args);
-                    // Filter out browser extension errors
-                    if (message.includes('contentscript') || 
-                        message.includes('chrome-extension') ||
-                        message.includes('moz-extension') ||
-                        message.includes('ObjectMultiplex') || 
-                        message.includes('orphaned data') ||
-                        message.includes('app-init-liveness') ||
-                        message.includes('background-liveness')) {
-                        return; // Suppress these errors
-                    }
-                    originalError.apply(console, args);
-                };
-                
-                console.warn = function(...args) {
-                    const message = JSON.stringify(args);
-                    // Filter out MaxListeners and extension warnings
-                    if (message.includes('MaxListenersExceededWarning') ||
-                        message.includes('Possible EventEmitter memory leak') ||
-                        message.includes('contentscript') ||
-                        message.includes('chrome-extension') ||
-                        message.includes('moz-extension')) {
-                        return; // Suppress these warnings
-                    }
-                    originalWarn.apply(console, args);
-                };
-
-                // Global error handler untuk suppress extension errors
-                window.addEventListener('error', function(e) {
-                    const message = e.message || '';
-                    const filename = e.filename || '';
-                    if (filename.includes('contentscript') || 
-                        filename.includes('chrome-extension') ||
-                        filename.includes('moz-extension') ||
-                        message.includes('ObjectMultiplex')) {
-                        e.stopImmediatePropagation();
-                        e.preventDefault();
-                        return false;
-                    }
-                }, true);
-
-                // Unhandled promise rejection handler
-                window.addEventListener('unhandledrejection', function(e) {
-                    const message = e.reason?.message || '';
-                    if (message.includes('ObjectMultiplex') ||
-                        message.includes('contentscript') ||
-                        message.includes('orphaned data')) {
-                        e.stopImmediatePropagation();
-                        e.preventDefault();
-                        return false;
-                    }
-                }, true);
-            })();
-        }
-    </script> -->
-    
     <style>
-        /* ===== Navbar & Sidebar Z-Index ===== */
+        /* ===== Navbar & Sidebar Z-Index & Mobile Fixes ===== */
         .navbar.sticky-top {
             z-index: 1050 !important;
             position: sticky !important;
@@ -95,6 +30,22 @@
         
         #sidebar {
             z-index: 1000 !important;
+        }
+
+        @media (max-width: 576px) {
+            .navbar {
+                padding-left: 0.75rem !important;
+                padding-right: 0.75rem !important;
+            }
+            .burger-btn i {
+                font-size: 1.6rem !important;
+            }
+            /* Menjaga dropdown menu agar tidak terpotong di layar HP */
+            .dropdown-menu {
+                position: absolute !important;
+                right: 0 !important;
+                left: auto !important;
+            }
         }
 
         /* ===== SIDEBAR CLOSE BUTTON (Mobile/Tablet) ===== */
@@ -550,34 +501,26 @@
             50% { background-position: 100% 50%; }
             100% { background-position: 0% 50%; }
         }
-/* 
-        @keyframes versionPulse {
-            0% {
-                box-shadow: 0 0 4px rgba(13, 110, 253, 0.4), 0 0 8px rgba(111, 66, 193, 0.3);
-                transform: scale(1);
-            }
-            100% {
-                box-shadow: 0 0 10px rgba(13, 202, 240, 0.8), 0 0 16px rgba(13, 110, 253, 0.6);
-                transform: scale(1.05);
-            }
-        } */
     </style>
 </head>
 <body>
     <div id="app">
         <!-- Top Navbar -->
-        <nav class="navbar navbar-expand-lg navbar-light bg-white bg-body-tertiary shadow-sm sticky-top" style="border-bottom: 1px solid #e3e6f0;">
-            <div class="container-fluid">
-                <!-- Breadcrumb & Logo -->
-                <div class="d-flex align-items-center flex-grow-1">
+        <nav class="navbar navbar-light bg-white bg-body-tertiary shadow-sm sticky-top py-2 px-3" style="border-bottom: 1px solid #e3e6f0; min-height: 65px; height: auto;">
+            <div class="container-fluid px-0 d-flex align-items-center justify-content-between flex-nowrap">
+                <!-- Left: Burger Toggle & Logo -->
+                <div class="d-flex align-items-center gap-2 flex-shrink-0">
+                    <a href="#" class="burger-btn d-inline-flex align-items-center justify-content-center d-xl-none me-1 text-primary" style="height: 32px; width: 32px; text-decoration: none; padding: 0;">
+                        <i class="bi bi-justify" style="font-size: 1.7rem; line-height: 1; display: inline-block; transform: translateY(-2px);"></i>
+                    </a>
                     <div class="logo d-flex align-items-center gap-2">
-                        <img src="{{ asset('dist/images/logo/revisi_logo.png') }}" alt="Logo" style="width: 165px; height: auto;">
-                        <span class="badge badge-animated-version text-white rounded-pill px-2 py-1" style="font-size: 0.65rem; font-weight: 700; letter-spacing: 0.5px;">v1.5.4</span>
+                        <img src="{{ asset('dist/images/logo/revisi_logo.png') }}" alt="Logo" style="max-width: 140px; width: 100%; height: auto; display: block;">
+                        <span class="badge badge-animated-version text-white rounded-pill px-2 py-1 d-none d-sm-inline-block" style="font-size: 0.65rem; font-weight: 700; letter-spacing: 0.5px; line-height: 1;">v1.6</span>
                     </div>
                 </div>
 
                 <!-- Right Side Items -->
-                <div class="d-flex align-items-center gap-3">
+                <div class="d-flex align-items-center gap-2 gap-sm-3 flex-shrink-0">
 
                     @php
                         $authUser = auth()->user();
@@ -595,15 +538,16 @@
                     {{-- ===== SUB-AREA SELECTOR (Medan Plant Users) ===== --}}
                     @if($isMedanPlantUser)
                     <div class="dropdown" id="subAreaDropdown">
-                        <button class="btn btn-sm dropdown-toggle d-flex align-items-center gap-1 shadow-sm" 
+                        <button class="btn btn-sm dropdown-toggle d-flex align-items-center gap-1 shadow-sm px-2 px-sm-3" 
                                 id="subAreaToggleBtn"
                                 type="button" data-bs-toggle="dropdown" aria-expanded="false" 
-                                style="border-radius: 20px; font-weight: 600; font-size: 0.82rem; padding: 0.4rem 0.9rem; background: #f0f4ff; color: #435ebe; border: 1.5px solid #435ebe;"
+                                style="border-radius: 20px; font-weight: 600; font-size: 0.8rem; padding-top: 0.35rem; padding-bottom: 0.35rem; background: #f0f4ff; color: #435ebe; border: 1.5px solid #435ebe;"
                                 title="Klik untuk mengganti area aktif Medan">
                             <i class="bi bi-geo-alt-fill text-danger"></i>
-                            <span style="color: #435ebe;">{{ $currentSubArea }}</span>
+                            <span class="d-none d-sm-inline" style="color: #435ebe;">{{ $currentSubArea }}</span>
+                            <span class="d-inline d-sm-none" style="color: #435ebe;">{{ str_replace('Medan ', '', $currentSubArea) }}</span>
                         </button>
-                        <ul class="dropdown-menu dropdown-menu-end shadow-lg" style="border-radius: 12px; min-width: 220px; border: 1px solid #e3e6f0;">
+                        <ul class="dropdown-menu dropdown-menu-end shadow-lg" style="border-radius: 12px; min-width: 180px; max-width: calc(100vw - 20px); border: 1px solid #e3e6f0; right: 0; left: auto;">
                             <li><h6 class="dropdown-header text-uppercase fw-bold" style="font-size: 0.72rem; color: #435ebe;"><i class="bi bi-pin-map me-1"></i>Pilih Area Medan</h6></li>
                             <li>
                                 <form method="POST" action="{{ route('sub-area.switch') }}">
@@ -689,8 +633,8 @@
                     @endif
 
                     <!-- Notifications -->
-                        <div class="position-relative">
-                            <button class="btn btn-link position-relative" id="notification-bell" style="color: #333; font-size: 1.5rem; border: none; padding: 0; outline: none; box-shadow: none;">
+                        <!-- <div class="position-relative">
+                            <button class="btn btn-link position-relative p-0 text-decoration-none d-flex align-items-center justify-content-center" id="notification-bell" style="color: #333; font-size: 1.3rem; border: none; outline: none; box-shadow: none; width: 32px; height: 32px;">
                                 <i class="bi bi-bell"></i>
                                 <span id="notification-badge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="display: none; font-size: 0.55rem; padding: 0.25rem 0.4rem;">
                                     <span id="notification-count">0</span>
@@ -703,7 +647,7 @@
                                 <div id="notification-dropdown-list" class="p-3">
                                 </div>
                             </div>
-                        </div>
+                        </div> -->
 
                     <!-- User Profile Dropdown -->
                     <div class="dropdown">

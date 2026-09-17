@@ -356,6 +356,63 @@ class PemeriksaanSuhuRuangV2Controller extends Controller
             ->with('success', 'Data riwayat per jam berhasil diperbarui.');
     }
 
+    public function destroyHistory(Request $request, PemeriksaanSuhuRuangV2 $pemeriksaanSuhuRuangV2, PemeriksaanSuhuRuangV2History $history)
+    {
+        $this->checkPlantAccess($pemeriksaanSuhuRuangV2);
+
+        if ($history->id_pemeriksaan_suhu_ruang_v2 !== $pemeriksaanSuhuRuangV2->id) {
+            abort(403, 'History tidak sesuai dengan data pemeriksaan ini.');
+        }
+
+        $fieldType  = $request->input('field_type');
+        $sectionKey = $request->input('section_key');
+        $unitId     = $request->input('unit_id');
+
+        if ($fieldType === 'suhu_produk') {
+            $history->suhu_produk_baru = null;
+        } elseif ($sectionKey) {
+            $columnName = 'suhu_' . $sectionKey . '_baru';
+
+            if (in_array($sectionKey, ['cold_storage', 'anteroom_loading']) && $unitId) {
+                $currentData = is_array($history->{$columnName})
+                    ? $history->{$columnName}
+                    : (json_decode($history->{$columnName} ?? '[]', true) ?: []);
+
+                if (isset($currentData[$unitId])) {
+                    unset($currentData[$unitId]);
+                }
+                foreach ($currentData as $k => $item) {
+                    if (is_array($item) && ($item['unit'] ?? null) == $unitId) {
+                        unset($currentData[$k]);
+                    }
+                }
+                $history->{$columnName} = !empty($currentData) ? array_values($currentData) : null;
+            } else {
+                $history->{$columnName} = null;
+            }
+        }
+
+        // Cek apakah masih ada data baru yang tersimpan dalam record history ini
+        $hasDataBaru = !empty($history->suhu_produk_baru) ||
+                       !empty($history->suhu_cold_storage_baru) ||
+                       !empty($history->suhu_anteroom_loading_baru) ||
+                       !empty($history->suhu_pre_loading_baru) ||
+                       !empty($history->suhu_prestaging_baru) ||
+                       !empty($history->suhu_anteroom_ekspansi_abf_baru) ||
+                       !empty($history->suhu_chillroom_rm_baru) ||
+                       !empty($history->suhu_chillroom_domestik_baru);
+
+        if ($hasDataBaru) {
+            $history->save();
+        } else {
+            $history->delete();
+        }
+
+        return redirect()
+            ->route('pemeriksaan-suhu-ruang-v2.edit', $pemeriksaanSuhuRuangV2->uuid)
+            ->with('success', 'Area riwayat berhasil dihapus!');
+    }
+
     public function destroy(PemeriksaanSuhuRuangV2 $pemeriksaanSuhuRuangV2)
     {
         $this->checkPlantAccess($pemeriksaanSuhuRuangV2);

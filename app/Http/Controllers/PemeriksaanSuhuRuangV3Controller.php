@@ -407,6 +407,64 @@ class PemeriksaanSuhuRuangV3Controller extends Controller
             ->with('success', 'Data riwayat per jam berhasil diperbarui.');
     }
 
+    public function destroyHistory(Request $request, PemeriksaanSuhuRuangV3 $pemeriksaanSuhuRuangV3, PemeriksaanSuhuRuangV3History $history)
+    {
+        $this->checkPlantAccess($pemeriksaanSuhuRuangV3);
+
+        if ($history->id_pemeriksaan_suhu_ruang_v3 !== $pemeriksaanSuhuRuangV3->id) {
+            abort(403, 'History tidak sesuai dengan data pemeriksaan ini.');
+        }
+
+        $fieldType  = $request->input('field_type');
+        $sectionKey = $request->input('section_key'); // e.g. premix, seasoning, dry, dst.
+        $unitId     = $request->input('unit_id');     // e.g. 1, 2, 3, 4
+
+        if ($fieldType === 'suhu_produk') {
+            $history->suhu_produk_baru = null;
+        } elseif ($sectionKey) {
+            $columnName = 'suhu_' . $sectionKey . '_baru';
+
+            if (property_exists($history, $columnName) || isset($history->$columnName)) {
+                $currentData = is_array($history->{$columnName})
+                    ? $history->{$columnName}
+                    : (json_decode($history->{$columnName} ?? '[]', true) ?: []);
+
+                if ($unitId) {
+                    $unitKey = "unit_{$unitId}";
+                    unset($currentData[$unitKey]);
+                    // Juga cek format numerik langsung
+                    unset($currentData[$unitId]);
+                    $history->{$columnName} = !empty($currentData) ? $currentData : null;
+                } else {
+                    $history->{$columnName} = null;
+                }
+            }
+        }
+
+        // Cek apakah masih ada data baru yang tersisa dalam record history ini
+        $suhuFields = ['suhu_premix', 'suhu_seasoning', 'suhu_dry', 'suhu_cassing',
+                       'suhu_beef', 'suhu_packaging', 'suhu_ruang_chemical', 'suhu_ruang_seasoning'];
+
+        $hasDataBaru = !empty($history->suhu_produk_baru);
+        foreach ($suhuFields as $field) {
+            $col = $field . '_baru';
+            if (!empty($history->{$col})) {
+                $hasDataBaru = true;
+                break;
+            }
+        }
+
+        if ($hasDataBaru) {
+            $history->save();
+        } else {
+            $history->delete();
+        }
+
+        return redirect()
+            ->route('pemeriksaan-suhu-ruang-v3.edit', $pemeriksaanSuhuRuangV3->uuid)
+            ->with('success', 'Area riwayat berhasil dihapus!');
+    }
+
     /**
      * Check plant access
      */

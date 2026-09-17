@@ -458,7 +458,8 @@
                             @php
                                 $pemeriksaan = $column['record'];
                                 $rowIndex = $column['rowIndex'];
-                                $columnNumber = ($recPageIdx_kem * $columnsPerPage) + $loop->iteration;
+                                // Nomor kolom reset setiap halaman (1, 2, 3, 4)
+                                $columnNumber = $loop->iteration;
                             @endphp
                             <td class="data-column">
                                 <div class="column-header">
