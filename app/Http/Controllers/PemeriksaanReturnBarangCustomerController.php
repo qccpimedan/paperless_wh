@@ -992,4 +992,149 @@ class PemeriksaanReturnBarangCustomerController extends Controller
 
         return back()->with('info', 'Tidak ada data yang memenuhi syarat untuk diverifikasi pada filter tersebut.');
     }
+
+    /**
+     * Export data to Excel based on filters
+     */
+    public function exportExcel(Request $request)
+    {
+        $user = Auth::user();
+        $id_shift = $request->input('id_shift');
+        $tanggalDari = $request->input('tanggal_dari');
+        $tanggalSampai = $request->input('tanggal_sampai');
+        $tanggal = $request->input('tanggal');
+        $id_produk = $request->input('id_produk');
+        $kategori_code = $request->input('kategori_code');
+
+        $query = PemeriksaanReturnBarangCustomer::with([
+            'user.role',
+            'user.plant',
+            'shift',
+            'ekspedisi',
+            'customer',
+            'verifiedBy.role'
+        ])->with([
+            'qcVerifier' => function ($q) {
+                $q->select('id', 'name');
+            },
+            'produksiVerifier' => function ($q) {
+                $q->select('id', 'name');
+            },
+            'spvVerifier' => function ($q) {
+                $q->select('id', 'name');
+            },
+        ]);
+
+        if ($user->role && strtolower($user->role->role) !== 'superadmin') {
+            $query->whereHas('user', function ($q) use ($user) {
+                $q->where('id_plant', $user->getEffectivePlantId());
+            });
+        }
+
+        if ($id_produk) {
+            $query->where(function ($q) use ($id_produk) {
+                $q->whereRaw("JSON_CONTAINS(produk_data, ?, '$')", [json_encode(['id_produk' => (int)$id_produk])])
+                  ->orWhereRaw("JSON_CONTAINS(produk_data, ?, '$')", [json_encode(['id_produk' => (string)$id_produk])])
+                  ->orWhere('produk_data', 'like', '%"id_produk":' . $id_produk . '%')
+                  ->orWhere('produk_data', 'like', '%"id_produk":"' . $id_produk . '"%');
+            });
+        } elseif ($kategori_code) {
+             $query->where(function ($q) use ($kategori_code) {
+                $q->whereRaw("JSON_CONTAINS(produk_data, ?, '$')", [json_encode(['kategori_code' => $kategori_code])])
+                  ->orWhere('produk_data', 'like', '%"kategori_code":"' . $kategori_code . '"%');
+            });
+        }
+
+        if ($id_shift && $id_shift !== 'all') {
+            $query->where('id_shift', $id_shift);
+        }
+
+        if ($id_shift && $id_shift !== 'all') {
+            $shift = Shift::find($id_shift);
+            $isShift1 = $shift && $shift->is_date_range;
+
+            if ($isShift1) {
+                if ($tanggalDari && $tanggalSampai) {
+                    $query->whereBetween('tanggal', [$tanggalDari, $tanggalSampai]);
+                } elseif ($tanggalDari) {
+                    $query->whereDate('tanggal', '>=', $tanggalDari);
+                } elseif ($tanggalSampai) {
+                    $query->whereDate('tanggal', '<=', $tanggalSampai);
+                }
+            } else {
+                if ($tanggal) {
+                    $query->whereDate('tanggal', $tanggal);
+                }
+            }
+        } else {
+            if ($tanggalDari && $tanggalSampai) {
+                $query->whereBetween('tanggal', [$tanggalDari, $tanggalSampai]);
+            } elseif ($tanggalDari) {
+                $query->whereDate('tanggal', '>=', $tanggalDari);
+            } elseif ($tanggalSampai) {
+                $query->whereDate('tanggal', '<=', $tanggalSampai);
+            } elseif ($tanggal) {
+                $query->whereDate('tanggal', $tanggal);
+            }
+        }
+
+        $pemeriksaans = $query->latest()->get();
+
+        $produkIds = $pemeriksaans
+            ->flatMap(function ($p) {
+                $rows = is_array($p->produk_data) ? $p->produk_data : [];
+                return collect($rows)
+                    ->pluck('id_produk')
+                    ->filter(fn ($id) => !empty($id));
+            })
+            ->unique()
+            ->values();
+
+        $produkNamaById = $produkIds->isNotEmpty()
+            ? Produk::whereIn('id', $produkIds)->pluck('nama_produk', 'id')->toArray()
+            : [];
+
+        $qcUser = null;
+        $produksiUser = null;
+        $spvQcUser = null;
+
+        $allQcIds = $pemeriksaans->pluck('verified_by_qc')->filter()->unique();
+        $allProduksiIds = $pemeriksaans->pluck('verified_by_produksi')->filter()->unique();
+        $allSpvIds = $pemeriksaans->pluck('verified_by_spv')->filter()->unique();
+
+        if ($allQcIds->count() > 0) {
+            $qcUserData = User::with('role')->whereIn('id', $allQcIds->toArray())->first();
+            if ($qcUserData) {
+                $qcUser = $qcUserData->name;
+            }
+        }
+
+        if ($allProduksiIds->count() > 0) {
+            $produksiUserData = User::with('role')->whereIn('id', $allProduksiIds->toArray())->first();
+            if ($produksiUserData) {
+                $produksiUser = $produksiUserData->name;
+            }
+        }
+
+        if ($allSpvIds->count() > 0) {
+            $spvUserData = User::with('role')->whereIn('id', $allSpvIds->toArray())->first();
+            if ($spvUserData) {
+                $spvQcUser = $spvUserData->name;
+            }
+        }
+
+        $filenameDate = $tanggal ?? $tanggalDari ?? date('Y-m-d');
+        $filename = 'laporan-return-barang-' . $filenameDate . '.xlsx';
+
+        return \Excel::download(
+            new \App\Exports\PemeriksaanReturnBarangCustomerExport(
+                $pemeriksaans,
+                $produkNamaById,
+                $qcUser,
+                $produksiUser,
+                $spvQcUser
+            ),
+            $filename
+        );
+    }
 }
