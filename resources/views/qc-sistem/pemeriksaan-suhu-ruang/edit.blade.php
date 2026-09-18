@@ -1,11 +1,7 @@
 @extends('layouts.app')
 @section('container')
 <div id="main">
-    <header class="mb-3">
-        <a href="#" class="burger-btn d-block d-xl-none">
-            <i class="bi bi-justify fs-3"></i>
-        </a>
-    </header>
+
 
     <div class="page-heading">
         <div class="page-title">
@@ -454,43 +450,55 @@
                                             foreach ((array) $secData as $item) {
                                                 if (!is_array($item) || (empty($item['setting']) && empty($item['display']) && empty($item['actual']))) continue;
                                                 $timelineRowsEdit[] = [
-                                                    'no'     => $noEdit++,
-                                                    'waktu'  => $initPukulEdit ? \Carbon\Carbon::parse($initPukulEdit)->format('H:i') : '-',
-                                                    'edited' => $pemeriksaanSuhuRuang->created_at ? $pemeriksaanSuhuRuang->created_at->format('d/m/Y H:i') : '-',
-                                                    'area'   => $secLabel . ' ' . ($item['unit'] ?? ''),
-                                                    'setting'=> $item['setting'] ?? '-',
-                                                    'aktual' => $item['actual'] ?? '-',
-                                                    'display'=> $item['display'] ?? '-',
-                                                    'tipe'   => 'awal',
+                                                    'no'          => $noEdit++,
+                                                    'waktu'       => $initPukulEdit ? \Carbon\Carbon::parse($initPukulEdit)->format('H:i') : '-',
+                                                    'edited'      => $pemeriksaanSuhuRuang->created_at ? $pemeriksaanSuhuRuang->created_at->format('d/m/Y H:i') : '-',
+                                                    'area'        => $secLabel . ' ' . ($item['unit'] ?? ''),
+                                                    'setting'     => $item['setting'] ?? '-',
+                                                    'aktual'      => $item['actual'] ?? '-',
+                                                    'display'     => $item['display'] ?? '-',
+                                                    'tipe'        => 'awal',
+                                                    'field_type'  => 'suhu_data',
+                                                    'section_key' => $secKey,
+                                                    'unit_id'     => $item['unit'] ?? null,
+                                                    'pukul_raw'   => $initPukulEdit ? \Carbon\Carbon::parse($initPukulEdit)->format('H:i') : '',
                                                 ];
                                             }
                                         } else {
                                             if (empty($secData['setting']) && empty($secData['display']) && empty($secData['actual'])) continue;
                                             $timelineRowsEdit[] = [
-                                                'no'     => $noEdit++,
-                                                'waktu'  => $initPukulEdit ? \Carbon\Carbon::parse($initPukulEdit)->format('H:i') : '-',
-                                                'edited' => $pemeriksaanSuhuRuang->created_at ? $pemeriksaanSuhuRuang->created_at->format('d/m/Y H:i') : '-',
-                                                'area'   => $secLabel,
-                                                'setting'=> $secData['setting'] ?? '-',
-                                                'aktual' => $secData['actual'] ?? '-',
-                                                'display'=> $secData['display'] ?? '-',
-                                                'tipe'   => 'awal',
+                                                'no'          => $noEdit++,
+                                                'waktu'       => $initPukulEdit ? \Carbon\Carbon::parse($initPukulEdit)->format('H:i') : '-',
+                                                'edited'      => $pemeriksaanSuhuRuang->created_at ? $pemeriksaanSuhuRuang->created_at->format('d/m/Y H:i') : '-',
+                                                'area'        => $secLabel,
+                                                'setting'     => $secData['setting'] ?? '-',
+                                                'aktual'      => $secData['actual'] ?? '-',
+                                                'display'     => $secData['display'] ?? '-',
+                                                'tipe'        => 'awal',
+                                                'field_type'  => 'suhu_data',
+                                                'section_key' => $secKey,
+                                                'unit_id'     => null,
+                                                'pukul_raw'   => $initPukulEdit ? \Carbon\Carbon::parse($initPukulEdit)->format('H:i') : '',
                                             ];
                                         }
                                     }
 
                                     // === Suhu Produk - Input Awal ===
-                                    $initSuhuProdukE = $firstHistoryEdit ? ($firstHistoryEdit->suhu_produk_lama ?? $pemeriksaanSuhuRuang->suhu_produk) : $pemeriksaanSuhuRuang->suhu_produk;
+                                    $initSuhuProdukE = $firstHistoryEdit ? $firstHistoryEdit->suhu_produk_lama : $pemeriksaanSuhuRuang->suhu_produk;
                                     if (!empty($initSuhuProdukE)) {
                                         $timelineRowsEdit[] = [
-                                            'no'     => $noEdit++,
-                                            'waktu'  => $initPukulEdit ? \Carbon\Carbon::parse($initPukulEdit)->format('H:i') : '-',
-                                            'edited' => $pemeriksaanSuhuRuang->created_at ? $pemeriksaanSuhuRuang->created_at->format('d/m/Y H:i') : '-',
-                                            'area'   => 'Suhu Produk',
-                                            'setting'=> '-',
-                                            'aktual' => $initSuhuProdukE,
-                                            'display'=> '-',
-                                            'tipe'   => 'awal',
+                                            'no'          => $noEdit++,
+                                            'waktu'       => $initPukulEdit ? \Carbon\Carbon::parse($initPukulEdit)->format('H:i') : '-',
+                                            'edited'      => $pemeriksaanSuhuRuang->created_at ? $pemeriksaanSuhuRuang->created_at->format('d/m/Y H:i') : '-',
+                                            'area'        => 'Suhu Produk',
+                                            'setting'     => '-',
+                                            'aktual'      => $initSuhuProdukE,
+                                            'display'     => '-',
+                                            'tipe'        => 'awal',
+                                            'field_type'  => 'suhu_produk',
+                                            'section_key' => null,
+                                            'unit_id'     => null,
+                                            'pukul_raw'   => $initPukulEdit ? \Carbon\Carbon::parse($initPukulEdit)->format('H:i') : '',
                                         ];
                                     }
 
@@ -573,7 +581,7 @@
                                     }
                                 @endphp
 
-                                @if(!empty($timelineRowsEdit))
+                                @if(!empty($timelineRowsEdit) && !request()->query('edit_per_2jam'))
                                 <div class="row mt-4 mb-2">
                                     <div class="col-md-12">
                                         <h5 class="mb-3 d-flex align-items-center gap-2">
@@ -583,7 +591,7 @@
                                         </h5>
                                         <div class="alert alert-info py-2 px-3 mb-3" style="font-size:0.875rem;">
                                             <i class="bi bi-info-circle me-1"></i>
-                                            Klik tombol <strong>Edit</strong> pada baris riwayat (status <span class="badge bg-warning text-dark">Update</span>) untuk mengoreksi data jam tersebut.
+                                            Klik tombol <strong>Edit</strong> atau <strong>Hapus</strong> pada baris tabel (status <span class="badge bg-success">Input Awal</span> maupun <span class="badge bg-warning text-dark">Update</span>) untuk mengoreksi atau menghapus data area tersebut.
                                         </div>
                                         <div class="table-responsive">
                                             <table class="table table-bordered table-hover table-sm align-middle">
@@ -597,7 +605,7 @@
                                                         <th class="text-center">Aktual (°C)</th>
                                                         <th class="text-center">Display (°C)</th>
                                                         <th class="text-center" style="width:8%">Status</th>
-                                                        <th class="text-center" style="width:7%">Aksi</th>
+                                                        <th class="text-center" style="width:12%">Aksi</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
@@ -621,6 +629,7 @@
                                                             @if($tRow['tipe'] === 'update' && !empty($tRow['history_uuid']))
                                                                 <div class="d-flex justify-content-center gap-1">
                                                                     <button type="button" class="btn btn-sm btn-primary btn-edit-riwayat"
+                                                                        data-is-initial="0"
                                                                         data-history-uuid="{{ $tRow['history_uuid'] }}"
                                                                         data-field-type="{{ $tRow['field_type'] }}"
                                                                         data-section-key="{{ $tRow['section_key'] ?? '' }}"
@@ -634,6 +643,30 @@
                                                                          Edit
                                                                     </button>
                                                                     <form action="{{ route('pemeriksaan-suhu-ruang.history.destroy', [$pemeriksaanSuhuRuang->uuid, $tRow['history_uuid']]) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus area ini dari riwayat per jam?');" style="display:inline;">
+                                                                        @csrf
+                                                                        @method('DELETE')
+                                                                        <input type="hidden" name="field_type" value="{{ $tRow['field_type'] }}">
+                                                                        <input type="hidden" name="section_key" value="{{ $tRow['section_key'] ?? '' }}">
+                                                                        <input type="hidden" name="unit_id" value="{{ $tRow['unit_id'] ?? '' }}">
+                                                                        <button type="submit" class="btn btn-sm btn-danger">Hapus</button>
+                                                                    </form>
+                                                                </div>
+                                                            @elseif($tRow['tipe'] === 'awal')
+                                                                <div class="d-flex justify-content-center gap-1">
+                                                                    <button type="button" class="btn btn-sm btn-primary btn-edit-riwayat"
+                                                                        data-is-initial="1"
+                                                                        data-field-type="{{ $tRow['field_type'] }}"
+                                                                        data-section-key="{{ $tRow['section_key'] ?? '' }}"
+                                                                        data-unit-id="{{ $tRow['unit_id'] ?? '' }}"
+                                                                        data-area="{{ $tRow['area'] }}"
+                                                                        data-pukul="{{ $tRow['pukul_raw'] ?? $tRow['waktu'] }}"
+                                                                        data-setting="{{ $tRow['setting'] }}"
+                                                                        data-aktual="{{ $tRow['aktual'] }}"
+                                                                        data-display="{{ $tRow['display'] }}"
+                                                                        data-pemeriksaan-uuid="{{ $pemeriksaanSuhuRuang->uuid }}">
+                                                                         Edit
+                                                                    </button>
+                                                                    <form action="{{ route('pemeriksaan-suhu-ruang.initial.destroy', $pemeriksaanSuhuRuang->uuid) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus area ini dari input awal?');" style="display:inline;">
                                                                         @csrf
                                                                         @method('DELETE')
                                                                         <input type="hidden" name="field_type" value="{{ $tRow['field_type'] }}">
@@ -807,7 +840,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Handler for Edit Riwayat Per Jam Modal
+    // Handler for Edit Riwayat Per Jam / Input Awal Modal
     const editRiwayatButtons = document.querySelectorAll('.btn-edit-riwayat');
     const modalEditRiwayat = document.getElementById('modalEditRiwayat');
     if (editRiwayatButtons.length > 0 && modalEditRiwayat) {
@@ -827,6 +860,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         editRiwayatButtons.forEach(btn => {
             btn.addEventListener('click', function() {
+                const isInitial = this.dataset.isInitial === '1';
                 const historyUuid = this.dataset.historyUuid;
                 const pemeriksaanUuid = this.dataset.pemeriksaanUuid;
                 const fieldType = this.dataset.fieldType;
@@ -839,9 +873,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 const display = this.dataset.display;
 
                 // Build Form Action URL
-                formEditRiwayat.action = `/qc-sistem/pemeriksaan-suhu-ruang/${pemeriksaanUuid}/history/${historyUuid}`;
+                if (isInitial) {
+                    formEditRiwayat.action = `/qc-sistem/pemeriksaan-suhu-ruang/${pemeriksaanUuid}/initial`;
+                } else {
+                    formEditRiwayat.action = `/qc-sistem/pemeriksaan-suhu-ruang/${pemeriksaanUuid}/history/${historyUuid}`;
+                }
 
-                modalAreaLabel.textContent = area;
+                modalAreaLabel.textContent = area + (isInitial ? ' (Input Awal)' : '');
                 modalFieldType.value = fieldType;
                 modalSectionKey.value = sectionKey;
                 modalUnitId.value = unitId;

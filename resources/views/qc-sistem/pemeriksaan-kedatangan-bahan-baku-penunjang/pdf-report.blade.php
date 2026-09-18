@@ -766,7 +766,7 @@
                     </div>
                     <div class="header-right">
                         <div class="header-title">
-                            <h1>PEMERIKSAAN BAHAN BAKU PENUNJANG</h1>
+                            <h1>PEMERIKSAAN BAHAN BAKU dan BAHAN PENUNJANG</h1>
                         </div>
                     </div>
                 </div>

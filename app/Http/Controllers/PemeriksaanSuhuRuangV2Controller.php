@@ -413,6 +413,151 @@ class PemeriksaanSuhuRuangV2Controller extends Controller
             ->with('success', 'Area riwayat berhasil dihapus!');
     }
 
+    public function updateInitial(Request $request, PemeriksaanSuhuRuangV2 $pemeriksaanSuhuRuangV2)
+    {
+        $this->checkPlantAccess($pemeriksaanSuhuRuangV2);
+
+        $request->validate([
+            'pukul'         => 'nullable|date_format:H:i',
+            'suhu_produk'   => 'nullable|string|max:50',
+            'field_type'    => 'required|in:suhu_produk,suhu_data',
+            'section_key'   => 'nullable|string',
+            'unit_id'       => 'nullable|integer',
+            'setting'       => 'nullable|string|max:50',
+            'aktual'        => 'nullable|string|max:50',
+            'display'       => 'nullable|string|max:50',
+        ]);
+
+        $firstHistory = $pemeriksaanSuhuRuangV2->histories()->orderBy('created_at', 'asc')->first();
+
+        if ($request->input('field_type') === 'suhu_produk') {
+            $newVal = $request->input('suhu_produk');
+            if ($firstHistory) {
+                $firstHistory->suhu_produk_lama = $newVal;
+                if ($request->filled('pukul')) {
+                    $firstHistory->pukul_lama = $request->input('pukul');
+                }
+                $firstHistory->save();
+            }
+            $pemeriksaanSuhuRuangV2->suhu_produk = $newVal;
+            if ($request->filled('pukul')) {
+                $pemeriksaanSuhuRuangV2->pukul = $request->input('pukul');
+            }
+            $pemeriksaanSuhuRuangV2->save();
+        } else {
+            $sectionKey = $request->input('section_key');
+            $unitId     = $request->input('unit_id');
+            $columnName = 'suhu_' . $sectionKey;
+            $columnLama = 'suhu_' . $sectionKey . '_lama';
+
+            if (in_array($sectionKey, ['cold_storage', 'anteroom_loading']) && $unitId) {
+                if ($firstHistory) {
+                    $lamaData = is_array($firstHistory->{$columnLama})
+                        ? $firstHistory->{$columnLama}
+                        : (json_decode($firstHistory->{$columnLama} ?? '[]', true) ?: []);
+                    $lamaData[$unitId] = [
+                        'setting' => $request->input('setting'),
+                        'display' => $request->input('display'),
+                        'actual'  => $request->input('aktual'),
+                    ];
+                    $firstHistory->{$columnLama} = $lamaData;
+                    if ($request->filled('pukul')) {
+                        $firstHistory->pukul_lama = $request->input('pukul');
+                    }
+                    $firstHistory->save();
+                }
+
+                $mainData = is_array($pemeriksaanSuhuRuangV2->{$columnName})
+                    ? $pemeriksaanSuhuRuangV2->{$columnName}
+                    : (json_decode($pemeriksaanSuhuRuangV2->{$columnName} ?? '[]', true) ?: []);
+                $mainData[$unitId] = [
+                    'setting' => $request->input('setting'),
+                    'display' => $request->input('display'),
+                    'actual'  => $request->input('aktual'),
+                ];
+                $pemeriksaanSuhuRuangV2->{$columnName} = $mainData;
+                if ($request->filled('pukul')) {
+                    $pemeriksaanSuhuRuangV2->pukul = $request->input('pukul');
+                }
+                $pemeriksaanSuhuRuangV2->save();
+            } else {
+                $newData = [
+                    'setting' => $request->input('setting'),
+                    'display' => $request->input('display'),
+                    'actual'  => $request->input('aktual'),
+                ];
+                if ($firstHistory) {
+                    $firstHistory->{$columnLama} = $newData;
+                    if ($request->filled('pukul')) {
+                        $firstHistory->pukul_lama = $request->input('pukul');
+                    }
+                    $firstHistory->save();
+                }
+                $pemeriksaanSuhuRuangV2->{$columnName} = $newData;
+                if ($request->filled('pukul')) {
+                    $pemeriksaanSuhuRuangV2->pukul = $request->input('pukul');
+                }
+                $pemeriksaanSuhuRuangV2->save();
+            }
+        }
+
+        return redirect()
+            ->route('pemeriksaan-suhu-ruang-v2.edit', $pemeriksaanSuhuRuangV2->uuid)
+            ->with('success', 'Data input awal berhasil diperbarui.');
+    }
+
+    public function destroyInitial(Request $request, PemeriksaanSuhuRuangV2 $pemeriksaanSuhuRuangV2)
+    {
+        $this->checkPlantAccess($pemeriksaanSuhuRuangV2);
+
+        $fieldType  = $request->input('field_type');
+        $sectionKey = $request->input('section_key');
+        $unitId     = $request->input('unit_id');
+
+        $firstHistory = $pemeriksaanSuhuRuangV2->histories()->orderBy('created_at', 'asc')->first();
+
+        if ($fieldType === 'suhu_produk') {
+            if ($firstHistory) {
+                $firstHistory->suhu_produk_lama = null;
+                $firstHistory->save();
+            }
+            $pemeriksaanSuhuRuangV2->suhu_produk = null;
+            $pemeriksaanSuhuRuangV2->save();
+        } elseif ($sectionKey) {
+            $columnName = 'suhu_' . $sectionKey;
+            $columnLama = 'suhu_' . $sectionKey . '_lama';
+
+            if (in_array($sectionKey, ['cold_storage', 'anteroom_loading']) && $unitId) {
+                if ($firstHistory) {
+                    $lamaData = is_array($firstHistory->{$columnLama})
+                        ? $firstHistory->{$columnLama}
+                        : (json_decode($firstHistory->{$columnLama} ?? '[]', true) ?: []);
+                    unset($lamaData[$unitId]);
+                    $firstHistory->{$columnLama} = !empty($lamaData) ? $lamaData : null;
+                    $firstHistory->save();
+                }
+
+                $mainData = is_array($pemeriksaanSuhuRuangV2->{$columnName})
+                    ? $pemeriksaanSuhuRuangV2->{$columnName}
+                    : (json_decode($pemeriksaanSuhuRuangV2->{$columnName} ?? '[]', true) ?: []);
+                unset($mainData[$unitId]);
+                $pemeriksaanSuhuRuangV2->{$columnName} = !empty($mainData) ? $mainData : null;
+                $pemeriksaanSuhuRuangV2->save();
+            } else {
+                if ($firstHistory) {
+                    $firstHistory->{$columnLama} = null;
+                    $firstHistory->save();
+                }
+                $pemeriksaanSuhuRuangV2->{$columnName} = null;
+                $pemeriksaanSuhuRuangV2->save();
+            }
+        }
+
+        return redirect()
+            ->route('pemeriksaan-suhu-ruang-v2.edit', $pemeriksaanSuhuRuangV2->uuid)
+            ->with('success', 'Area input awal berhasil dihapus!');
+    }
+
     public function destroy(PemeriksaanSuhuRuangV2 $pemeriksaanSuhuRuangV2)
     {
         $this->checkPlantAccess($pemeriksaanSuhuRuangV2);

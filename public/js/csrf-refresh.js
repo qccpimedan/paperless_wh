@@ -27,7 +27,8 @@
         isRefreshingToken = true;
 
         try {
-            const response = await fetch('/csrf-token', {
+            const endpoint = window.CSRF_TOKEN_URL || '/csrf-token';
+            const response = await fetch(endpoint, {
                 method: 'GET',
                 headers: {
                     'X-Requested-With': 'XMLHttpRequest',
