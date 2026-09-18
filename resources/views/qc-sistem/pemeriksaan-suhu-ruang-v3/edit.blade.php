@@ -1,11 +1,7 @@
 @extends('layouts.app')
 @section('container')
 <div id="main">
-    <header class="mb-3">
-        <a href="#" class="burger-btn d-block d-xl-none">
-            <i class="bi bi-justify fs-3"></i>
-        </a>
-    </header>
+
 
     <div class="page-heading">
         <div class="page-title">
@@ -210,6 +206,7 @@
                                     $noCounterV3 = 1;
 
                                     $initWaktuV3 = $firstHistory && $firstHistory->pukul_lama ? $firstHistory->pukul_lama : ($pemeriksaanSuhuRuangV3->pukul ?? '-');
+                                    $initPukulRawV3 = $initWaktuV3 !== '-' ? $initWaktuV3 : '';
 
                                     $suhuSectionsV3 = [
                                         'premix'          => ['label' => 'Suhu Premix', 'field' => 'suhu_premix'],
@@ -224,7 +221,7 @@
 
                                     foreach ($suhuSectionsV3 as $secKey => $secConf) {
                                         $colLama = 'suhu_' . $secKey . '_lama';
-                                        $fieldVal = ($firstHistory && $firstHistory->{$colLama} !== null)
+                                        $fieldVal = $firstHistory
                                             ? (is_array($firstHistory->{$colLama}) ? $firstHistory->{$colLama} : (json_decode($firstHistory->{$colLama}, true) ?: []))
                                             : $pemeriksaanSuhuRuangV3->{$secConf['field']};
 
@@ -244,6 +241,7 @@
                                                         'field_type'   => 'suhu_data',
                                                         'section_key'  => $secKey,
                                                         'unit_id'      => $unitNum,
+                                                        'pukul_raw'    => $initPukulRawV3,
                                                     ];
                                                 }
                                             }
@@ -287,7 +285,7 @@
                                     }
                                 @endphp
 
-                                @if(!empty($timelineRowsV3))
+                                @if(!empty($timelineRowsV3) && !request()->query('edit_per_2jam'))
                                 <div class="row mt-5 pt-4 border-top">
                                     <div class="col-12 px-3">
                                         <h5 class="mb-3 d-flex align-items-center gap-2">
@@ -355,7 +353,29 @@
                                                                     </form>
                                                                 </div>
                                                             @else
-                                                                <span class="text-muted" style="font-size:0.75rem">-</span>
+                                                                <div class="d-flex justify-content-center gap-1">
+                                                                    <button type="button"
+                                                                        class="btn btn-sm btn-primary btn-edit-history-v3"
+                                                                        data-is-initial="1"
+                                                                        data-pukul="{{ !empty($tRow['pukul_raw']) ? $tRow['pukul_raw'] : ($tRow['waktu'] !== '-' ? $tRow['waktu'] : '') }}"
+                                                                        data-area="{{ $tRow['area'] }}"
+                                                                        data-field-type="{{ $tRow['field_type'] ?? '' }}"
+                                                                        data-section-key="{{ $tRow['section_key'] ?? '' }}"
+                                                                        data-unit-id="{{ $tRow['unit_id'] ?? '' }}"
+                                                                        data-setting="{{ $tRow['setting'] !== '-' ? $tRow['setting'] : '' }}"
+                                                                        data-aktual="{{ $tRow['aktual'] !== '-' ? $tRow['aktual'] : '' }}"
+                                                                        data-display="{{ $tRow['display'] !== '-' ? $tRow['display'] : '' }}">
+                                                                         Edit
+                                                                    </button>
+                                                                    <form action="{{ route('pemeriksaan-suhu-ruang-v3.initial.destroy', $pemeriksaanSuhuRuangV3->uuid) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus area ini dari input awal?');" style="display:inline;">
+                                                                        @csrf
+                                                                        @method('DELETE')
+                                                                        <input type="hidden" name="field_type" value="{{ $tRow['field_type'] ?? '' }}">
+                                                                        <input type="hidden" name="section_key" value="{{ $tRow['section_key'] ?? '' }}">
+                                                                        <input type="hidden" name="unit_id" value="{{ $tRow['unit_id'] ?? '' }}">
+                                                                        <button type="submit" class="btn btn-sm btn-danger">Hapus</button>
+                                                                    </form>
+                                                                </div>
                                                             @endif
                                                         </td>
                                                     </tr>
@@ -466,6 +486,7 @@ document.addEventListener('DOMContentLoaded', function() {
         document.querySelectorAll('.btn-edit-history-v3').forEach(button => {
             button.addEventListener('click', function() {
                 const historyUuid = this.dataset.historyUuid;
+                const isInitial   = this.dataset.isInitial === '1';
                 const pukul       = this.dataset.pukul;
                 const area        = this.dataset.area;
                 const fieldType   = this.dataset.fieldType;
@@ -475,16 +496,20 @@ document.addEventListener('DOMContentLoaded', function() {
                 const aktual      = this.dataset.aktual;
                 const display     = this.dataset.display;
 
-                editHistoryFormV3.action = updateRouteTemplateV3.replace(':historyUuid', historyUuid);
+                if (isInitial) {
+                    editHistoryFormV3.action = "{{ route('pemeriksaan-suhu-ruang-v3.initial.update', $pemeriksaanSuhuRuangV3->uuid) }}";
+                } else {
+                    editHistoryFormV3.action = updateRouteTemplateV3.replace(':historyUuid', historyUuid);
+                }
 
-                document.getElementById('modalV3_area_label').value = area;
-                document.getElementById('modalV3_pukul').value      = pukul;
+                document.getElementById('modalV3_area_label').value  = area;
+                document.getElementById('modalV3_pukul').value       = pukul;
                 document.getElementById('modalV3_field_type').value  = fieldType;
                 document.getElementById('modalV3_section_key').value = sectionKey || '';
                 document.getElementById('modalV3_unit_id').value     = unitId || '';
-                document.getElementById('modalV3_setting').value    = setting || '';
-                document.getElementById('modalV3_display').value    = display || '';
-                document.getElementById('modalV3_aktual').value     = aktual || '';
+                document.getElementById('modalV3_setting').value     = setting || '';
+                document.getElementById('modalV3_display').value     = display || '';
+                document.getElementById('modalV3_aktual').value      = aktual || '';
 
                 editHistoryModalV3.show();
             });

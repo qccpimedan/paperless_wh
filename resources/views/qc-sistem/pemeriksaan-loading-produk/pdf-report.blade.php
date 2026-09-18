@@ -632,7 +632,7 @@
 
                                 <div class="header-title-box">
 
-                                    PEMERIKSAAN LOADING
+                                    PEMERIKSAAN LOADING PRODUK
 
                                 </div>
 

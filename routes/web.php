@@ -409,14 +409,20 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('pemeriksaan-suhu-ruang/{pemeriksaanSuhuRuang}/history', [PemeriksaanSuhuRuangController::class, 'history'])->name('pemeriksaan-suhu-ruang.history');
         Route::put('pemeriksaan-suhu-ruang/{pemeriksaanSuhuRuang:uuid}/history/{history:uuid}', [PemeriksaanSuhuRuangController::class, 'updateHistory'])->name('pemeriksaan-suhu-ruang.history.update');
         Route::delete('pemeriksaan-suhu-ruang/{pemeriksaanSuhuRuang:uuid}/history/{history:uuid}', [PemeriksaanSuhuRuangController::class, 'destroyHistory'])->name('pemeriksaan-suhu-ruang.history.destroy');
+        Route::put('pemeriksaan-suhu-ruang/{pemeriksaanSuhuRuang:uuid}/initial', [PemeriksaanSuhuRuangController::class, 'updateInitial'])->name('pemeriksaan-suhu-ruang.initial.update');
+        Route::delete('pemeriksaan-suhu-ruang/{pemeriksaanSuhuRuang:uuid}/initial', [PemeriksaanSuhuRuangController::class, 'destroyInitial'])->name('pemeriksaan-suhu-ruang.initial.destroy');
 
         Route::get('pemeriksaan-suhu-ruang-v2/{pemeriksaanSuhuRuangV2}/history', [PemeriksaanSuhuRuangV2Controller::class, 'history'])->name('pemeriksaan-suhu-ruang-v2.history');
         Route::put('pemeriksaan-suhu-ruang-v2/{pemeriksaanSuhuRuangV2:uuid}/history/{history:uuid}', [PemeriksaanSuhuRuangV2Controller::class, 'updateHistory'])->name('pemeriksaan-suhu-ruang-v2.history.update');
         Route::delete('pemeriksaan-suhu-ruang-v2/{pemeriksaanSuhuRuangV2:uuid}/history/{history:uuid}', [PemeriksaanSuhuRuangV2Controller::class, 'destroyHistory'])->name('pemeriksaan-suhu-ruang-v2.history.destroy');
+        Route::put('pemeriksaan-suhu-ruang-v2/{pemeriksaanSuhuRuangV2:uuid}/initial', [PemeriksaanSuhuRuangV2Controller::class, 'updateInitial'])->name('pemeriksaan-suhu-ruang-v2.initial.update');
+        Route::delete('pemeriksaan-suhu-ruang-v2/{pemeriksaanSuhuRuangV2:uuid}/initial', [PemeriksaanSuhuRuangV2Controller::class, 'destroyInitial'])->name('pemeriksaan-suhu-ruang-v2.initial.destroy');
 
         Route::get('pemeriksaan-suhu-ruang-v3/{pemeriksaanSuhuRuangV3}/history', [PemeriksaanSuhuRuangV3Controller::class, 'history'])->name('pemeriksaan-suhu-ruang-v3.history');
         Route::put('pemeriksaan-suhu-ruang-v3/{pemeriksaanSuhuRuangV3:uuid}/history/{history:uuid}', [PemeriksaanSuhuRuangV3Controller::class, 'updateHistory'])->name('pemeriksaan-suhu-ruang-v3.history.update');
         Route::delete('pemeriksaan-suhu-ruang-v3/{pemeriksaanSuhuRuangV3:uuid}/history/{history:uuid}', [PemeriksaanSuhuRuangV3Controller::class, 'destroyHistory'])->name('pemeriksaan-suhu-ruang-v3.history.destroy');
+        Route::put('pemeriksaan-suhu-ruang-v3/{pemeriksaanSuhuRuangV3:uuid}/initial', [PemeriksaanSuhuRuangV3Controller::class, 'updateInitial'])->name('pemeriksaan-suhu-ruang-v3.initial.update');
+        Route::delete('pemeriksaan-suhu-ruang-v3/{pemeriksaanSuhuRuangV3:uuid}/initial', [PemeriksaanSuhuRuangV3Controller::class, 'destroyInitial'])->name('pemeriksaan-suhu-ruang-v3.initial.destroy');
         
         // API routes untuk check editable records
         Route::get('api/check-editable-records', [PemeriksaanSuhuRuangController::class, 'checkEditableRecords'])->name('api.check-editable-records');

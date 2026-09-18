@@ -17,11 +17,6 @@
     $canVerify = in_array($userRole, ['qc inspector', 'qc_inspector', 'warehouse', 'produksi', 'spv qc', 'spv_qc', 'superadmin', 'produksi/warehouse']);
 @endphp
 <div id="main">
-    <header class="mb-3">
-        <a href="#" class="burger-btn d-block d-xl-none">
-            <i class="bi bi-justify fs-3"></i>
-        </a>
-    </header>
 
     <div class="page-heading">
         <div class="page-title">

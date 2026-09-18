@@ -1,11 +1,7 @@
 @extends('layouts.app')
 @section('container')
 <div id="main">
-    <header class="mb-3">
-        <a href="#" class="burger-btn d-block d-xl-none">
-            <i class="bi bi-justify fs-3"></i>
-        </a>
-    </header>
+
 
     <div class="page-heading">
         <div class="page-title">
@@ -518,18 +514,14 @@
                                         'chillroom_domestik'    => 'Chillroom Domestik',
                                     ];
 
+                                    $initPukulEditV2 = $firstHistory ? $firstHistory->pukul_lama : $pemeriksaanSuhuRuangV2->pukul;
+
                                     // Mengambil nilai data awal (jika pernah di-edit/update, gunakan *_lama dari history pertama)
-                                    $initColdStorageData = $firstHistory && $firstHistory->suhu_cold_storage_lama !== null
-                                        ? (is_array($firstHistory->suhu_cold_storage_lama) ? $firstHistory->suhu_cold_storage_lama : (json_decode($firstHistory->suhu_cold_storage_lama, true) ?: []))
-                                        : $pemeriksaanSuhuRuangV2->suhu_cold_storage;
+                                    $initColdStorageData = $firstHistory ? (is_array($firstHistory->suhu_cold_storage_lama) ? $firstHistory->suhu_cold_storage_lama : (json_decode($firstHistory->suhu_cold_storage_lama, true) ?: [])) : $pemeriksaanSuhuRuangV2->suhu_cold_storage;
 
-                                    $initAnteroomLoadingData = $firstHistory && $firstHistory->suhu_anteroom_loading_lama !== null
-                                        ? (is_array($firstHistory->suhu_anteroom_loading_lama) ? $firstHistory->suhu_anteroom_loading_lama : (json_decode($firstHistory->suhu_anteroom_loading_lama, true) ?: []))
-                                        : $pemeriksaanSuhuRuangV2->suhu_anteroom_loading;
+                                    $initAnteroomLoadingData = $firstHistory ? (is_array($firstHistory->suhu_anteroom_loading_lama) ? $firstHistory->suhu_anteroom_loading_lama : (json_decode($firstHistory->suhu_anteroom_loading_lama, true) ?: [])) : $pemeriksaanSuhuRuangV2->suhu_anteroom_loading;
 
-                                    $initSuhuProdukVal = $firstHistory && $firstHistory->suhu_produk_lama !== null
-                                        ? $firstHistory->suhu_produk_lama
-                                        : $pemeriksaanSuhuRuangV2->suhu_produk;
+                                    $initSuhuProdukVal = $firstHistory ? $firstHistory->suhu_produk_lama : $pemeriksaanSuhuRuangV2->suhu_produk;
 
                                     // Input Awal Cold Storage
                                     if (!empty($initColdStorageData)) {
@@ -543,6 +535,10 @@
                                                 'aktual'      => $uVal['actual'] ?? '-',
                                                 'display'     => $uVal['display'] ?? '-',
                                                 'tipe'        => 'awal',
+                                                'field_type'  => 'suhu_data',
+                                                'section_key' => 'cold_storage',
+                                                'unit_id'     => $uId,
+                                                'pukul_raw'   => $initPukulEditV2 ? \Carbon\Carbon::parse($initPukulEditV2)->format('H:i') : '',
                                                 'history_uuid'=> null,
                                             ];
                                         }
@@ -560,6 +556,10 @@
                                                 'aktual'      => $uVal['actual'] ?? '-',
                                                 'display'     => $uVal['display'] ?? '-',
                                                 'tipe'        => 'awal',
+                                                'field_type'  => 'suhu_data',
+                                                'section_key' => 'anteroom_loading',
+                                                'unit_id'     => $uId,
+                                                'pukul_raw'   => $initPukulEditV2 ? \Carbon\Carbon::parse($initPukulEditV2)->format('H:i') : '',
                                                 'history_uuid'=> null,
                                             ];
                                         }
@@ -569,7 +569,7 @@
                                     foreach (['pre_loading', 'prestaging', 'anteroom_ekspansi_abf', 'chillroom_rm', 'chillroom_domestik'] as $sKey) {
                                         $attrLama = 'suhu_' . $sKey . '_lama';
                                         $attr = 'suhu_' . $sKey;
-                                        $val = ($firstHistory && $firstHistory->{$attrLama} !== null)
+                                        $val = $firstHistory
                                             ? (is_array($firstHistory->{$attrLama}) ? $firstHistory->{$attrLama} : (json_decode($firstHistory->{$attrLama}, true) ?: []))
                                             : $pemeriksaanSuhuRuangV2->{$attr};
 
@@ -583,6 +583,10 @@
                                                 'aktual'      => $val['actual'] ?? '-',
                                                 'display'     => $val['display'] ?? '-',
                                                 'tipe'        => 'awal',
+                                                'field_type'  => 'suhu_data',
+                                                'section_key' => $sKey,
+                                                'unit_id'     => null,
+                                                'pukul_raw'   => $initPukulEditV2 ? \Carbon\Carbon::parse($initPukulEditV2)->format('H:i') : '',
                                                 'history_uuid'=> null,
                                             ];
                                         }
@@ -599,6 +603,10 @@
                                             'aktual'      => $initSuhuProdukVal,
                                             'display'     => '-',
                                             'tipe'        => 'awal',
+                                            'field_type'  => 'suhu_produk',
+                                            'section_key' => null,
+                                            'unit_id'     => null,
+                                            'pukul_raw'   => $initPukulEditV2 ? \Carbon\Carbon::parse($initPukulEditV2)->format('H:i') : '',
                                             'history_uuid'=> null,
                                         ];
                                     }
@@ -680,7 +688,7 @@
                                      }
                                 @endphp
 
-                                @if(!empty($timelineRowsV2))
+                                @if(!empty($timelineRowsV2) && !request()->query('edit_per_2jam'))
                                 <div class="col-12 mt-5 pt-4 border-top">
                                     <h5 class="mb-3 d-flex align-items-center gap-2">
                                         <i class="bi bi-clock-history text-primary"></i>
@@ -689,7 +697,7 @@
                                     </h5>
                                     <div class="alert alert-info py-2 px-3 mb-3" style="font-size:0.875rem;">
                                         <i class="bi bi-info-circle me-1"></i>
-                                        Klik tombol <strong>Edit</strong> pada baris riwayat (status <span class="badge bg-warning text-dark">Update</span>) untuk mengoreksi data jam tersebut.
+                                        Klik tombol <strong>Edit</strong> atau <strong>Hapus</strong> pada baris tabel (status <span class="badge bg-success">Input Awal</span> maupun <span class="badge bg-warning text-dark">Update</span>) untuk mengoreksi atau menghapus data area tersebut.
                                     </div>
                                     <div class="table-responsive">
                                         <table class="table table-bordered table-hover table-sm align-middle">
@@ -747,7 +755,29 @@
                                                                 </form>
                                                             </div>
                                                         @else
-                                                            <span class="text-muted" style="font-size:0.75rem">-</span>
+                                                            <div class="d-flex justify-content-center gap-1">
+                                                                <button type="button"
+                                                                    class="btn btn-sm btn-primary btn-edit-history-v2"
+                                                                    data-is-initial="1"
+                                                                    data-pukul="{{ !empty($tRow['pukul_raw']) ? $tRow['pukul_raw'] : ($tRow['waktu'] !== '-' ? $tRow['waktu'] : '') }}"
+                                                                    data-area="{{ $tRow['area'] }}"
+                                                                    data-field-type="{{ $tRow['field_type'] ?? '' }}"
+                                                                    data-section-key="{{ $tRow['section_key'] ?? '' }}"
+                                                                    data-unit-id="{{ $tRow['unit_id'] ?? '' }}"
+                                                                    data-setting="{{ $tRow['setting'] !== '-' ? $tRow['setting'] : '' }}"
+                                                                    data-aktual="{{ $tRow['aktual'] !== '-' ? $tRow['aktual'] : '' }}"
+                                                                    data-display="{{ $tRow['display'] !== '-' ? $tRow['display'] : '' }}">
+                                                                     Edit
+                                                                </button>
+                                                                <form action="{{ route('pemeriksaan-suhu-ruang-v2.initial.destroy', $pemeriksaanSuhuRuangV2->uuid) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus area ini dari input awal?');" style="display:inline;">
+                                                                    @csrf
+                                                                    @method('DELETE')
+                                                                    <input type="hidden" name="field_type" value="{{ $tRow['field_type'] ?? '' }}">
+                                                                    <input type="hidden" name="section_key" value="{{ $tRow['section_key'] ?? '' }}">
+                                                                    <input type="hidden" name="unit_id" value="{{ $tRow['unit_id'] ?? '' }}">
+                                                                    <button type="submit" class="btn btn-sm btn-danger">Hapus</button>
+                                                                </form>
+                                                            </div>
                                                         @endif
                                                     </td>
                                                 </tr>
@@ -942,6 +972,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.btn-edit-history-v2').forEach(btn => {
         btn.addEventListener('click', function() {
             const historyUuid = this.getAttribute('data-history-uuid');
+            const isInitial   = this.getAttribute('data-is-initial') === '1';
             const pukul       = this.getAttribute('data-pukul');
             const area        = this.getAttribute('data-area');
             const fieldType   = this.getAttribute('data-field-type');
@@ -951,11 +982,15 @@ document.addEventListener('DOMContentLoaded', function() {
             const aktual      = this.getAttribute('data-aktual');
             const display     = this.getAttribute('data-display');
 
-            editHistoryFormV2.action = `${baseUrlV2}/${historyUuid}`;
+            if (isInitial) {
+                editHistoryFormV2.action = "{{ route('pemeriksaan-suhu-ruang-v2.initial.update', $pemeriksaanSuhuRuangV2->uuid) }}";
+            } else {
+                editHistoryFormV2.action = `${baseUrlV2}/${historyUuid}`;
+            }
 
-            document.getElementById('modalAreaLabelV2').value = area;
-            document.getElementById('modalPukulV2').value     = pukul;
-            document.getElementById('modalFieldTypeV2').value = fieldType;
+            document.getElementById('modalAreaLabelV2').value  = area;
+            document.getElementById('modalPukulV2').value      = pukul;
+            document.getElementById('modalFieldTypeV2').value  = fieldType;
             document.getElementById('modalSectionKeyV2').value = sectionKey || '';
             document.getElementById('modalUnitIdV2').value     = unitId || '';
 

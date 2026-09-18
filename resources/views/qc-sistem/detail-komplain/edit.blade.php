@@ -2,11 +2,6 @@
 @section('container')
 
 <div id="main">
-    <header class="mb-3">
-        <a href="#" class="burger-btn d-block d-xl-none">
-            <i class="bi bi-justify fs-3"></i>
-        </a>
-    </header>
 
     <div class="page-heading">
         <div class="page-title">
@@ -180,11 +175,9 @@
                                         <div class="col-md-6">
                                             <div class="form-group">
                                                 <label class="form-label">Nama Produk <span class="text-danger">*</span></label>
-                                                <select class="form-control produk-select" name="id_produk[]" required>
-                                                    <option value="">Pilih Produk</option>
-                                                    @foreach($produks as $produk)
-                                                        <option value="{{ $produk->id }}" {{ (string) $idProdukVal === (string) $produk->id ? 'selected' : '' }}>{{ $produk->nama_produk }}</option>
-                                                    @endforeach
+                                                <select class="form-control produk-select" name="id_produk[]" required
+                                                    data-selected="{{ $idProdukVal }}">
+                                                    <option value="">-- Pilih Produk --</option>
                                                 </select>
                                                 @error('id_produk.' . $i)
                                                     <div class="invalid-feedback d-block">{{ $message }}</div>
@@ -430,6 +423,7 @@ document.addEventListener('DOMContentLoaded', function() {
     };
 
     const produkByKategori = @json($produkByKategori ?? []);
+    const produkKategoriOptions = @json($produkKategoriOptions ?? []);
 
     const flattenAllProduk = () => {
         const all = [];
@@ -487,24 +481,60 @@ document.addEventListener('DOMContentLoaded', function() {
         return selectEl._choices;
     };
 
+    const rebuildProdukChoices = (produkSelect, choiceItems, desiredValue) => {
+        if (!produkSelect) return;
+
+        // Hancurkan instance Choices.js lama jika ada
+        if (produkSelect._choices && typeof produkSelect._choices.destroy === 'function') {
+            try { produkSelect._choices.destroy(); } catch (e) {}
+        }
+        produkSelect._choices = null;
+        if (produkSelect.dataset) delete produkSelect.dataset.choicesInitialized;
+
+        try {
+            const instance = new Choices(produkSelect, {
+                searchResultLimit: 100,
+                fuseOptions: { ignoreLocation: true, threshold: 0.2, matchAllTokens: false, distance: 1000 },
+                searchEnabled: true,
+                searchPlaceholderValue: 'Cari...',
+                itemSelectText: 'Tekan untuk memilih',
+                noResultsText: 'Tidak ada hasil ditemukan',
+                noChoicesText: 'Tidak ada pilihan tersedia',
+                shouldSort: false,
+                placeholder: true,
+                placeholderValue: '-- Pilih Produk --'
+            });
+
+            instance.setChoices(choiceItems, 'value', 'label', true);
+
+            if (desiredValue) {
+                try { instance.setChoiceByValue(String(desiredValue)); } catch (e) {}
+            }
+
+            produkSelect._choices = instance;
+            if (produkSelect.dataset) produkSelect.dataset.choicesInitialized = 'true';
+        } catch (e) {}
+    };
+
     const populateProdukForItem = (itemEl) => {
         if (!itemEl) return;
         const kategoriSelect = itemEl.querySelector('select.kategori-produk-select, select[name="kategori_code[]"]');
         const produkSelect = itemEl.querySelector('select.produk-select, select[name="id_produk[]"]');
         if (!produkSelect) return;
 
-        const current = String(produkSelect.value || '');
+        // Ambil nilai awal dari data-selected (set saat render Blade)
+        const selectedFromAttr = produkSelect.getAttribute('data-selected') || produkSelect.value || '';
         const kategori = kategoriSelect ? String(kategoriSelect.value || '') : '';
 
         let options = [];
         if (kategori && produkByKategori && produkByKategori[kategori]) {
             const raw = produkByKategori[kategori];
             options = Array.isArray(raw) ? raw : Object.values(raw || {});
-        } else {
+        } else if (!kategori) {
             options = flattenAllProduk();
         }
 
-        const choiceItems = [{ value: '', label: '-- Pilih Produk --', selected: true, disabled: false }].concat(
+        const choiceItems = [{ value: '', label: '-- Pilih Produk --', selected: false, disabled: false }].concat(
             options.map((p) => {
                 const id = p && p.id !== undefined ? String(p.id) : '';
                 const nama = p && p.nama !== undefined ? String(p.nama) : '';
@@ -512,29 +542,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }).filter((it) => it.value !== '' && it.label !== '')
         );
 
-        const produkChoices = produkSelect._choices || ensureChoices(produkSelect);
-        if (produkChoices && typeof produkChoices.setChoices === 'function') {
-            try {
-                produkChoices.clearChoices();
-                produkChoices.setChoices(choiceItems, 'value', 'label', true);
-                if (current) {
-                    try { produkChoices.setChoiceByValue(current); } catch (e) {}
-                }
-                return;
-            } catch (e) {
-            }
-        }
-
-        while (produkSelect.options.length > 0) {
-            produkSelect.remove(0);
-        }
-        produkSelect.add(new Option('-- Pilih Produk --', ''));
-        choiceItems.slice(1).forEach((it) => {
-            produkSelect.add(new Option(it.label, it.value));
-        });
-        if (current) {
-            produkSelect.value = current;
-        }
+        rebuildProdukChoices(produkSelect, choiceItems, selectedFromAttr);
     };
 
     const updateProdukItemTitles = () => {
@@ -625,6 +633,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 sel.style.display = '';
                 
                 // Reset value
+                sel.removeAttribute('data-selected');
                 sel.value = '';
             });
             
@@ -645,14 +654,15 @@ document.addEventListener('DOMContentLoaded', function() {
             if (kategoriSelect) {
                 while (kategoriSelect.options.length > 0) kategoriSelect.remove(0);
                 kategoriSelect.add(new Option('Pilih Kategori', ''));
-                @foreach(($produkKategoriOptions ?? []) as $kategori)
-                    kategoriSelect.add(new Option('{{ $kategori }}', '{{ $kategori }}'));
-                @endforeach
+                (produkKategoriOptions || []).forEach((kategori) => {
+                    kategoriSelect.add(new Option(kategori, kategori));
+                });
             }
             
             // Reset produk select
             const produkSelect = clone.querySelector('select.produk-select, select[name="id_produk[]"]');
             if (produkSelect) {
+                produkSelect.removeAttribute('data-selected');
                 while (produkSelect.options.length > 0) produkSelect.remove(0);
                 produkSelect.add(new Option('Pilih Produk', ''));
             }

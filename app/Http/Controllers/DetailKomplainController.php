@@ -74,14 +74,8 @@ class DetailKomplainController extends Controller
         }
         $shifts = $shifts->get();
         
-        // Get products based on user's plant
-        $query = Produk::query();
-        if ($user->role->role !== 'SuperAdmin') {
-            $query->whereHas('user', function ($q) use ($user) {
-                $q->where('id_plant', $user->getEffectivePlantId());
-            });
-        }
-        $produks = $query->latest()->get();
+        // Data Master Produk bersifat global (digunakan di seluruh plant)
+        $produks = Produk::orderBy('nama_produk')->get();
 
         $produkList = Produk::query()
             ->select(['id', 'nama_produk', 'kategori_code'])
@@ -281,21 +275,10 @@ class DetailKomplainController extends Controller
         }
         $shifts = $shifts->get();
 
-        $query = Produk::query();
-        if ($user->role->role !== 'SuperAdmin') {
-            $query->whereHas('user', function ($q) use ($user) {
-                $q->where('id_plant', $user->getEffectivePlantId());
-            });
-        }
+        // Data Master Produk bersifat global (digunakan di seluruh plant)
+        $produks = Produk::orderBy('nama_produk')->get();
 
-        $produks = $query->latest()->get();
-
-        $produkList = Produk::query()
-            ->select(['id', 'nama_produk', 'kategori_code'])
-            ->orderBy('nama_produk')
-            ->get();
-
-        $produkKategoriOptions = $produkList
+        $produkKategoriOptions = $produks
             ->whereNotNull('kategori_code')
             ->pluck('kategori_code')
             ->filter()
@@ -303,7 +286,7 @@ class DetailKomplainController extends Controller
             ->sort()
             ->values();
 
-        $produkByKategori = $produkList
+        $produkByKategori = $produks
             ->whereNotNull('kategori_code')
             ->groupBy('kategori_code')
             ->map(function ($items) {

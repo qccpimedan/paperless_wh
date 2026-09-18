@@ -2,11 +2,6 @@
 @section('container')
 
 <div id="main">
-    <header class="mb-3">
-        <a href="#" class="burger-btn d-block d-xl-none">
-            <i class="bi bi-justify fs-3"></i>
-        </a>
-    </header>
 
     <div class="page-heading">
         <div class="page-title">
@@ -270,6 +265,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     const produkByKategori = @json($produkByKategori ?? []);
+    const produkKategoriOptions = @json($produkKategoriOptions ?? []);
 
     const flattenAllProduk = () => {
         const all = [];
@@ -467,9 +463,9 @@ document.addEventListener('DOMContentLoaded', function() {
             if (kategoriSelect) {
                 while (kategoriSelect.options.length > 0) kategoriSelect.remove(0);
                 kategoriSelect.add(new Option('Pilih Kategori', ''));
-                @foreach(($produkKategoriOptions ?? []) as $kategori)
-                    kategoriSelect.add(new Option('{{ $kategori }}', '{{ $kategori }}'));
-                @endforeach
+                (produkKategoriOptions || []).forEach((kategori) => {
+                    kategoriSelect.add(new Option(kategori, kategori));
+                });
             }
             
             // Reset produk select
