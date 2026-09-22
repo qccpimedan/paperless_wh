@@ -11,6 +11,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Barryvdh\DomPDF\Facade\Pdf as PDF;
+use Maatwebsite\Excel\Facades\Excel;
 
 class PemeriksaanReturnBarangCustomerController extends Controller
 {
@@ -1136,5 +1137,49 @@ class PemeriksaanReturnBarangCustomerController extends Controller
             ),
             $filename
         );
+    }
+    /**
+     * Download Template Universal Excel
+     */
+    public function downloadTemplateUniversal()
+    {
+        return Excel::download(new \App\Exports\ReturnBarangTemplateUniversalExport, 'template-return-barang-universal.xlsx');
+    }
+
+    /**
+     * Import Universal Excel
+     */
+    public function importUniversal(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|mimes:xlsx,xls|max:5120', // Max 5MB
+        ]);
+
+        try {
+            $sheetImport = new \App\Imports\ReturnBarangUniversalSheetImport();
+            Excel::import($sheetImport, $request->file('file'));
+            $import = $sheetImport->getImportInstance();
+
+            $response = [
+                'success' => true,
+                'message' => "Import berhasil! {$import->validRows} dari {$import->totalRows} baris data diproses.",
+                'data' => $import->produkData,
+                'errors' => $import->errors,
+                'stats' => [
+                    'total' => $import->totalRows,
+                    'valid' => $import->validRows,
+                    'invalid' => count($import->errors),
+                ],
+            ];
+
+            return response()->json($response);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error saat import: ' . $e->getMessage(),
+                'errors' => [$e->getMessage()],
+            ], 500);
+        }
     }
 }

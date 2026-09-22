@@ -202,7 +202,7 @@
                                                             <input type="text" class="form-control" name="temperature_produk[]" placeholder="Contoh: -18">
                                                         </div>
                                                         <div class="col-md-2">
-                                                            <button type="button" class="btn btn-success w-100" id="add-temp">
+                                                            <button type="button" class="btn btn-success w-100 mt-1" id="add-temp">
                                                                 <i class="bi bi-plus"></i>
                                                             </button>
                                                         </div>
@@ -262,8 +262,8 @@
                                         
                                         <!-- Universal Import Section -->
                                         <div class="alert border-primary" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
-                                            <div class="d-flex justify-content-between align-items-center">
-                                                <div>
+                                            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+                                                <div class="flex-grow-1">
                                                     <h6 class="mb-2 text-white"><i class="bi bi-lightning-charge-fill text-warning"></i> <strong>CARA CEPAT - Import Multiple Produk Sekaligus</strong></h6>
                                                     <p class="mb-2 text-white" style="font-size: 0.95rem;">Untuk loading dengan <strong>banyak produk berbeda</strong>, gunakan fitur ini untuk menghemat waktu:</p>
                                                     <ol class="mb-0 ps-3 text-white" style="font-size: 0.90rem;">
@@ -273,9 +273,9 @@
                                                         <li>Upload file Excel</li>
                                                     </ol>
                                                 </div>
-                                                <div class="text-end ms-3" style="min-width: 220px;">
+                                                <div class="text-md-end mt-3 mt-md-0 ms-md-3 flex-shrink-0">
                                                     <a href="{{ route('pemeriksaan-loading-produk.download-template-universal') }}" 
-                                                       class="btn btn-light btn-sm mb-2 d-block" style="font-weight: 600;">
+                                                    class="btn btn-light btn-sm mb-2 d-block" style="font-weight: 600;">
                                                         <i class="bi bi-download"></i> Download Template Universal
                                                     </a>
                                                     <button type="button" class="btn btn-sm btn-warning d-block" id="btn-import-universal" style="font-weight: 600; color: #000;">
@@ -617,7 +617,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 <input type="text" class="form-control" name="temperature_produk[]" placeholder="Contoh: -18">
             </div>
             <div class="col-md-2">
-                <button type="button" class="btn btn-danger w-100 remove-temp">
+                <button type="button" class="btn btn-danger w-100 mt-1 remove-temp">
                     <i class="bi bi-trash"></i>
                 </button>
             </div>

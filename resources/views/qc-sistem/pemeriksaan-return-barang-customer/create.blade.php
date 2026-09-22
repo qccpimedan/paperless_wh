@@ -185,6 +185,32 @@
                                                 @enderror
                                             </div>
 
+                                            <!-- Universal Import Section -->
+                                            <div class="alert border-primary mt-4" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                                                <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+                                                    <div class="flex-grow-1">
+                                                        <h6 class="mb-2 text-white"><i class="bi bi-lightning-charge-fill text-warning"></i> <strong>CARA CEPAT - Import Multiple Produk Return Sekaligus</strong></h6>
+                                                        <p class="mb-2 text-white" style="font-size: 0.95rem;">Untuk return dengan <strong>banyak produk berbeda</strong>, gunakan fitur ini untuk menghemat waktu:</p>
+                                                        <ol class="mb-0 ps-3 text-white" style="font-size: 0.90rem;">
+                                                            <li>Download <strong>Template Universal</strong> (berisi semua produk)</li>
+                                                            <li>Isi customer, alasan return, kode produksi, ED, jumlah untuk produk yang dibutuhkan</li>
+                                                            <li>Hapus baris produk yang tidak digunakan</li>
+                                                            <li>Upload file Excel</li>
+                                                        </ol>
+                                                    </div>
+                                                    <div class="text-md-end mt-3 mt-md-0 ms-md-3 flex-shrink-0">
+                                                        <a href="{{ route('return-barang.download-template-universal') }}" 
+                                                        class="btn btn-light btn-sm mb-2 d-block" style="font-weight: 600;">
+                                                            <i class="bi bi-download"></i> Download Template Universal
+                                                        </a>
+                                                        <button type="button" class="btn btn-sm btn-warning d-block" id="btn-import-universal-return" style="font-weight: 600; color: #000;">
+                                                            <i class="bi bi-file-earmark-excel"></i> Import Universal
+                                                        </button>
+                                                        <input type="file" id="file-import-universal-return" accept=".xlsx,.xls" style="display:none;">
+                                                    </div>
+                                                </div>
+                                            </div>
+
                                             <!-- DATA PRODUK MULTIPLE -->
                                             <h5 class="text-primary mb-3 mt-4">Data Produk <span class="text-danger">*</span></h5>
                                             <div id="produk-container">
@@ -446,7 +472,7 @@ document.addEventListener('DOMContentLoaded', function() {
     setTimeout(observeChoicesDropdown, 500);
     
     // ===== ORIGINAL CODE =====
-    const form = document.getElementById('return-barang-form');
+    const form = document.getElementById('form-pemeriksaan-return-barang-customer');
     const submitBtn = document.getElementById('btn-submit-return');
 
     function initChoicesOnce(selectEl) {
@@ -481,6 +507,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (selectEl.dataset) {
             selectEl.dataset.choicesInitialized = 'true';
         }
+        selectEl._choicesInstance = instance;
         return instance;
     }
 
@@ -538,26 +565,28 @@ document.addEventListener('DOMContentLoaded', function() {
     const manualEkspedisiField = document.getElementById('nama_ekspedisi_manual');
 
     // Tampilkan/sembunyikan input manual saat halaman dimuat
-    if (ekspedisiSelect.value === 'other') {
-        manualInput.style.display = 'block';
-        if (manualEkspedisiField) manualEkspedisiField.required = true;
-    } else {
-        if (manualEkspedisiField) manualEkspedisiField.required = false;
-    }
-
-    // Tampilkan/sembunyikan input manual saat dropdown berubah
-    ekspedisiSelect.addEventListener('change', function() {
-        if (this.value === 'other') {
-            manualInput.style.display = 'block';
+    if (ekspedisiSelect) {
+        if (ekspedisiSelect.value === 'other') {
+            if (manualInput) manualInput.style.display = 'block';
             if (manualEkspedisiField) manualEkspedisiField.required = true;
         } else {
-            manualInput.style.display = 'none';
-            if (manualEkspedisiField) {
-                manualEkspedisiField.required = false;
-                manualEkspedisiField.value = '';
-            }
+            if (manualEkspedisiField) manualEkspedisiField.required = false;
         }
-    });
+
+        // Tampilkan/sembunyikan input manual saat dropdown berubah
+        ekspedisiSelect.addEventListener('change', function() {
+            if (this.value === 'other') {
+                if (manualInput) manualInput.style.display = 'block';
+                if (manualEkspedisiField) manualEkspedisiField.required = true;
+            } else {
+                if (manualInput) manualInput.style.display = 'none';
+                if (manualEkspedisiField) {
+                    manualEkspedisiField.required = false;
+                    manualEkspedisiField.value = '';
+                }
+            }
+        });
+    }
 
     // Update remove button visibility
     function updateRemoveButtons() {
@@ -570,10 +599,11 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Add produk field
-    let produkIndex = 1;
-    document.getElementById('add-produk').addEventListener('click', function() {
+    // Add produk field function
+    window.addProdukRow = function() {
         const container = document.getElementById('produk-container');
+        const rows = container.querySelectorAll('.produk-row');
+        const produkIndex = rows.length;
         const newRow = document.createElement('div');
         newRow.className = 'produk-row mb-4 p-3 border rounded';
         newRow.style.backgroundColor = '#f8f9fa';
@@ -700,9 +730,8 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
         `;
         container.appendChild(newRow);
-        produkIndex++;
 
-        const newCustomerSelect = newRow.querySelector('select[name="produk_data[' + String(produkIndex - 1) + '][id_customer]"]');
+        const newCustomerSelect = newRow.querySelector(`select[name="produk_data[${produkIndex}][id_customer]"]`);
         if (newCustomerSelect) {
             initChoicesOnce(newCustomerSelect);
         }
@@ -714,9 +743,16 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         populateProdukOptionsForRow(newRow);
-        
         updateRemoveButtons();
-    });
+        return newRow;
+    };
+
+    const addBtn = document.getElementById('add-produk');
+    if (addBtn) {
+        addBtn.addEventListener('click', function() {
+            window.addProdukRow();
+        });
+    }
     
     // Remove produk field
     document.getElementById('produk-container').addEventListener('click', function(e) {
@@ -755,7 +791,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const produkByKategori = @json($produkByKategori ?? []);
     const produkKategoriById = @json($produkKategoriById ?? []);
 
-    function populateProdukOptionsForRow(rowEl) {
+    window.populateProdukOptionsForRow = function populateProdukOptionsForRow(rowEl) {
         const kategoriSelect = rowEl.querySelector('select.kategori-produk-select');
         const produkSelect = rowEl.querySelector('select.produk-select');
 
@@ -813,9 +849,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
             const instance = new Choices(freshProdukSelect, {
                 searchResultLimit: 100,
-                    searchFuzziness: 0.000001,
-                    fuseOptions: { ignoreLocation: true, threshold: 0.2, matchAllTokens: false },
-                    searchEnabled: true,
+                searchFuzziness: 0.000001,
+                fuseOptions: { ignoreLocation: true, threshold: 0.2, matchAllTokens: false },
+                searchEnabled: true,
                 searchPlaceholderValue: 'Cari...',
                 itemSelectText: 'Tekan untuk memilih',
                 noResultsText: 'Tidak ada hasil ditemukan',
@@ -868,5 +904,186 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // no-op: customer & alasan sekarang per-produk (produk_data[index][...])
 });
+
+// ===== UNIVERSAL IMPORT HANDLER =====
+const btnImportUniversal = document.getElementById('btn-import-universal-return');
+const fileImportUniversal = document.getElementById('file-import-universal-return');
+
+if (btnImportUniversal && fileImportUniversal) {
+    // Click button to trigger file input
+    btnImportUniversal.addEventListener('click', function() {
+        fileImportUniversal.click();
+    });
+
+    // Handle file selection
+    fileImportUniversal.addEventListener('change', async function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        // Validate file type
+        const validTypes = ['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/vnd.ms-excel'];
+        if (!validTypes.includes(file.type)) {
+            alert('File harus berformat Excel (.xlsx atau .xls)');
+            fileImportUniversal.value = '';
+            return;
+        }
+
+        // Show loading
+        btnImportUniversal.disabled = true;
+        btnImportUniversal.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Memproses...';
+
+        try {
+            // Create FormData
+            const formData = new FormData();
+            formData.append('file', file);
+
+            // Get CSRF token safely
+            const csrfTokenMeta = document.querySelector('meta[name="csrf-token"]');
+            const csrfInput = document.querySelector('input[name="_token"]');
+            const csrfToken = csrfTokenMeta ? csrfTokenMeta.getAttribute('content') : (csrfInput ? csrfInput.value : '');
+
+            // Send to server
+            const response = await fetch('{{ route("return-barang.import-universal") }}', {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'application/json',
+                },
+                body: formData
+            });
+
+            const result = await response.json();
+
+            if (result.success && result.data && result.data.length > 0) {
+                // Clear existing rows
+                document.getElementById('produk-container').innerHTML = '';
+                
+                // Populate form synchronously with imported data
+                result.data.forEach((produkData) => {
+                    if (typeof window.addProdukRow === 'function') {
+                        const newRow = window.addProdukRow();
+                        if (newRow) {
+                            populateProdukRow(newRow, produkData);
+                        }
+                    }
+                });
+
+                // Show success message
+                let message = `✅ Import berhasil! ${result.stats.valid} produk diproses.`;
+                if (result.stats.invalid > 0) {
+                    message += `\n⚠️ ${result.stats.invalid} baris diabaikan karena error:\n`;
+                    message += result.errors.slice(0, 5).join('\n');
+                    if (result.errors.length > 5) {
+                        message += `\n... dan ${result.errors.length - 5} error lainnya`;
+                    }
+                }
+                alert(message);
+
+            } else {
+                // Show errors
+                let errorMsg = result.message || 'Import gagal!';
+                if (result.errors && result.errors.length > 0) {
+                    errorMsg += '\n\nError:\n' + result.errors.slice(0, 10).join('\n');
+                    if (result.errors.length > 10) {
+                        errorMsg += `\n... dan ${result.errors.length - 10} error lainnya`;
+                    }
+                }
+                alert(errorMsg);
+            }
+
+        } catch (error) {
+            console.error('Import error:', error);
+            alert('Terjadi kesalahan saat import: ' + error.message);
+        } finally {
+            // Reset button
+            btnImportUniversal.disabled = false;
+            btnImportUniversal.innerHTML = '<i class="bi bi-file-earmark-excel"></i> Import Universal';
+            fileImportUniversal.value = '';
+        }
+    });
+}
+
+/**
+ * Helper to set Choices.js value safely with retries for DOM readiness
+ */
+function setChoicesValue(selectEl, value) {
+    if (!selectEl || value === undefined || value === null) return;
+    const strVal = String(value);
+    selectEl.value = strVal;
+    
+    const trySet = () => {
+        const inst = selectEl._choicesInstance || selectEl.choicesInstance;
+        if (inst && typeof inst.setChoiceByValue === 'function') {
+            try {
+                inst.setChoiceByValue(strVal);
+            } catch (e) {
+                try {
+                    if (!isNaN(value)) {
+                        inst.setChoiceByValue(Number(value));
+                    }
+                } catch (err) {}
+            }
+        }
+    };
+    
+    trySet();
+    setTimeout(trySet, 50);
+    setTimeout(trySet, 200);
+}
+
+/**
+ * Populate produk row element with imported data
+ */
+function populateProdukRow(rowEl, data) {
+    if (!rowEl || !data) return;
+
+    // Helper for input setting
+    const setInputValue = (selector, val) => {
+        const input = rowEl.querySelector(selector);
+        if (input && val !== undefined && val !== null) {
+            input.value = val;
+        }
+    };
+
+    // 1. Set text & date & textarea & simple select inputs
+    setInputValue('input[name$="[alasan_return]"]', data.alasan_return);
+    setInputValue('select[name$="[kondisi_produk]"]', data.kondisi_produk);
+    setInputValue('input[name$="[suhu_produk]"]', data.suhu_produk);
+    setInputValue('input[name$="[kode_produksi]"]', data.kode_produksi);
+    setInputValue('input[name$="[expired_date]"]', data.expired_date);
+    setInputValue('input[name$="[jumlah_barang]"]', data.jumlah_barang);
+    setInputValue('input[name$="[rekomendasi]"]', data.rekomendasi);
+    setInputValue('textarea[name$="[keterangan]"]', data.keterangan);
+
+    // 2. Set Radio buttons for kondisi_kemasan & kondisi_produk_check
+    const kemasanVal = (data.kondisi_kemasan == 1 || data.kondisi_kemasan === '1' || data.kondisi_kemasan === 'ya') ? '1' : '0';
+    const kemasanRadio = rowEl.querySelector(`input[name$="[kondisi_kemasan]"][value="${kemasanVal}"]`);
+    if (kemasanRadio) kemasanRadio.checked = true;
+
+    const produkCheckVal = (data.kondisi_produk_check == 1 || data.kondisi_produk_check === '1' || data.kondisi_produk_check === 'ya') ? '1' : '0';
+    const produkCheckRadio = rowEl.querySelector(`input[name$="[kondisi_produk_check]"][value="${produkCheckVal}"]`);
+    if (produkCheckRadio) produkCheckRadio.checked = true;
+
+    // 3. Set Kategori Select (Choices)
+    const kategoriSelect = rowEl.querySelector('select.kategori-produk-select');
+    if (kategoriSelect && data.kategori_code) {
+        setChoicesValue(kategoriSelect, data.kategori_code);
+    }
+
+    // 4. Set Produk Select (Choices with Category dependency)
+    if (data.id_produk) {
+        rowEl.dataset.oldProdukId = String(data.id_produk);
+    }
+    if (typeof window.populateProdukOptionsForRow === 'function') {
+        window.populateProdukOptionsForRow(rowEl);
+    }
+
+    // 5. Set Customer Select (Choices)
+    const customerSelect = rowEl.querySelector('select[name$="[id_customer]"]');
+    if (customerSelect && data.id_customer) {
+        setChoicesValue(customerSelect, data.id_customer);
+    }
+}
+
 </script>
 @endsection
