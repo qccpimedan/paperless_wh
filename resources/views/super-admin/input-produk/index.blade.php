@@ -28,8 +28,13 @@
                     <div class="mt-2" style="max-height: 150px; overflow-y: auto;">
                         <small><strong>Daftar Produk:</strong></small>
                         <ul class="mb-0 small">
-                            @foreach(session('updated_products') as $productName)
-                                <li>{{ $productName }}</li>
+                            @foreach(session('updated_products') as $product)
+                                <li>
+                                    {{ is_array($product) ? $product['nama'] : $product }}
+                                    @if(is_array($product) && isset($product['kategori']))
+                                        <span class="badge bg-primary ms-1">{{ $product['kategori'] }}</span>
+                                    @endif
+                                </li>
                             @endforeach
                         </ul>
                     </div>

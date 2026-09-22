@@ -52,7 +52,10 @@ class ProdukImport implements ToCollection, WithHeadingRow
                 'kategori_code' => $kategori,
             ]);
 
-            $this->added_products[] = $nama;
+            $this->added_products[] = [
+                'nama' => $nama,
+                'kategori' => $kategori,
+            ];
             $this->inserted++;
         }
     }
