@@ -78,7 +78,10 @@ class ProdukUpdateImport implements ToCollection, WithHeadingRow
             }
 
             if ($isUpdated) {
-                $this->updated_products[] = $produk->nama_produk;
+                $this->updated_products[] = [
+                    'nama' => $produk->nama_produk,
+                    'kategori' => $produk->kategori_code,
+                ];
                 $this->updated_count++;
             }
         }
