@@ -515,7 +515,7 @@
                     </a>
                     <div class="logo d-flex align-items-center gap-2">
                         <img src="{{ asset('dist/images/logo/revisi_logo.png') }}" alt="Logo" style="max-width: 140px; width: 100%; height: auto; display: block;">
-                        <span class="badge badge-animated-version text-white rounded-pill px-2 py-1 d-none d-sm-inline-block" style="font-size: 0.65rem; font-weight: 700; letter-spacing: 0.5px; line-height: 1;">v1.6</span>
+                        <span class="badge badge-animated-version text-white rounded-pill px-2 py-1 d-none d-sm-inline-block" style="font-size: 0.65rem; font-weight: 700; letter-spacing: 0.5px; line-height: 1;">v1.6.1</span>
                     </div>
                 </div>
 

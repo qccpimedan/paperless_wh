@@ -340,6 +340,45 @@
                                                             <tr><td><strong>Expire Date:</strong></td><td>{{ $fmtDate($it['expire'] ?? null) }}</td></tr>
                                                             <tr><td><strong>Jumlah Datang:</strong></td><td>{{ $it['jumlah_datang'] ?? '-' }} @if(!empty($it['unit_datang']))<strong>{{ $it['unit_datang'] }}</strong>@endif</td></tr>
                                                             <tr><td><strong>Jumlah Sampling:</strong></td><td>{{ $it['jumlah_sampling'] ?? '-' }} @if(!empty($it['unit_sampling']))<strong>{{ $it['unit_sampling'] }}</strong>@endif</td></tr>
+                                                            <tr>
+                                                                <td><strong>Suhu Mobil:</strong></td>
+                                                                <td>
+                                                                    @if(!empty($it['suhu_mobil_type']))
+                                                                        <span class="badge bg-info">{{ $it['suhu_mobil_type'] }}</span>
+                                                                        @if(!empty($it['suhu_mobil_value']))
+                                                                            <span class="ms-1">{{ $it['suhu_mobil_value'] }}{{ strpos($it['suhu_mobil_value'], '°') === false ? '°C' : '' }}</span>
+                                                                        @endif
+                                                                    @else
+                                                                        <span class="text-muted">-</span>
+                                                                    @endif
+                                                                </td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td><strong>Suhu Produk:</strong></td>
+                                                                <td>
+                                                                    @if(!empty($it['suhu_produk_type']))
+                                                                        <span class="badge bg-primary">{{ $it['suhu_produk_type'] }}</span>
+                                                                        @if(!empty($it['suhu_produk_value']))
+                                                                            <span class="ms-1">{{ $it['suhu_produk_value'] }}{{ strpos($it['suhu_produk_value'], '°') === false ? '°C' : '' }}</span>
+                                                                        @endif
+                                                                    @else
+                                                                        <span class="text-muted">-</span>
+                                                                    @endif
+                                                                </td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td><strong>Kondisi Produk:</strong></td>
+                                                                <td>
+                                                                    @if(!empty($it['kondisi_produk']))
+                                                                        <span class="badge bg-secondary">{{ $it['kondisi_produk'] }}</span>
+                                                                        @if(!empty($it['kondisi_produk_suhu_value']))
+                                                                            <span class="ms-1">{{ $it['kondisi_produk_suhu_value'] }}{{ strpos($it['kondisi_produk_suhu_value'], '°') === false ? '°C' : '' }}</span>
+                                                                        @endif
+                                                                    @else
+                                                                        <span class="text-muted">-</span>
+                                                                    @endif
+                                                                </td>
+                                                            </tr>
                                                         </table>
                                                     </div>
                                                     <div class="col-md-6">
