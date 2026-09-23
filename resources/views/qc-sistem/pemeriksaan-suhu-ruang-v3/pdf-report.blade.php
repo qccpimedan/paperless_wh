@@ -192,6 +192,9 @@
                 $hJam = $history->created_at->format('H:i');
             }
 
+            // FIX: Gunakan tanggal dari created_at history untuk fix midnight crossing bug
+            $tanggalHistory = $history->created_at ? $history->created_at->format('d/m/Y') : $tanggalStr;
+
             $hSuhuProduk = !empty($history->suhu_produk_baru) ? $history->suhu_produk_baru : $suhuProdukStr;
             $userQcName = $history->user ? $history->user->name : $qcStr;
 
@@ -221,7 +224,7 @@
                     if (!$isSameV3($oldItem, $newItem) && !empty($newItem)) {
                         $rows[] = [
                             'no'          => $no++,
-                            'tanggal'     => $tanggalStr,
+                            'tanggal'     => $tanggalHistory,
                             'shift'       => $shiftStr,
                             'time'        => $hJam,
                             'qc'          => $userQcName,

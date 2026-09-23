@@ -335,10 +335,12 @@ class PemeriksaanSuhuRuangController extends Controller
 
         $prestagingSetting = $request->input('prestaging_setting');
         $prestagingDisplay = $request->input('prestaging_display');
-        if ($prestagingSetting || $prestagingDisplay) {
+        $prestagingActual = $request->input('prestaging_actual');
+        if ($prestagingSetting || $prestagingDisplay || $prestagingActual) {
             $suhuData['prestaging'] = [
                 'setting' => $prestagingSetting,
                 'display' => $prestagingDisplay,
+                'actual' => $prestagingActual,
             ];
         }
 

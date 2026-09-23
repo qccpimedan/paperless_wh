@@ -905,7 +905,7 @@
                                 @if($sp_v !== null && $sp_v !== '')<div class="f-row"><span class="f-label" style="width:65px;">Nilai:</span><span class="f-value">{{ $sp_v }}°C</span></div>@endif
                                 @if($smt_v)<div class="f-row"><span class="f-label" style="width:65px;">Suhu Mobil:</span><span class="f-value">{{ $smt_v }}</span></div>@endif
                                 @if($sm_v !== null && $sm_v !== '')<div class="f-row"><span class="f-label" style="width:65px;">Nilai Mobil:</span><span class="f-value">{{ $sm_v }}°C</span></div>@endif
-                                @if($kp_v !== null && $kp_v !== '')<div class="f-row"><span class="f-label" style="width:65px;">Suhu Kondisi:</span><span class="f-value">{{ $kp_v }}°C</span></div>@endif
+                                @if($kp_v !== null && $kp_v !== '')<div class="f-row"><span class="f-label" style="width:65px;">Suhu Kondisi Produk:</span><span class="f-value">{{ $kp_v }}°C</span></div>@endif
                             @endif
 
                             @php

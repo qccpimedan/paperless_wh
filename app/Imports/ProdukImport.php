@@ -37,11 +37,14 @@ class ProdukImport implements ToCollection, WithHeadingRow
                 continue;
             }
 
+            // FIX: Cek duplikasi berdasarkan kombinasi nama_produk + kategori_code
             $exists = Produk::query()
-                ->whereRaw('LOWER(nama_produk) = ?', [mb_strtolower($nama)])
+                ->where('nama_produk', $nama)
+                ->where('kategori_code', $kategori)
                 ->exists();
 
             if ($exists) {
+                $this->errors[] = "Baris {$rowNumber}: Produk '{$nama}' dengan kategori '{$kategori}' sudah ada di database. Baris dilewati.";
                 $this->skipped++;
                 continue;
             }

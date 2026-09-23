@@ -158,6 +158,9 @@
                 $hJam = $history->created_at->format('H:i');
             }
 
+            // FIX: Gunakan tanggal dari created_at history, bukan dari main record
+            $tanggalHistory = $history->created_at ? $history->created_at->format('d/m/Y') : $tanggalStr;
+
             $hSuhuProduk = !empty($history->suhu_produk_baru) ? $history->suhu_produk_baru : $suhuProdukStr;
             $userQcName = $history->user ? $history->user->name : $qcStr;
 
@@ -188,7 +191,7 @@
                         if (!$isSameV2($oldItem, $newItem) && !empty($newItem)) {
                             $rows[] = [
                                 'no' => $no++,
-                                'tanggal' => $tanggalStr,
+                                'tanggal' => $tanggalHistory,
                                 'shift' => $shiftStr,
                                 'time' => $hJam,
                                 'qc' => $userQcName,
@@ -206,7 +209,7 @@
                     if (!$isSameV2($lama, $baru) && !empty($baru)) {
                         $rows[] = [
                             'no' => $no++,
-                            'tanggal' => $tanggalStr,
+                            'tanggal' => $tanggalHistory,
                             'shift' => $shiftStr,
                             'time' => $hJam,
                             'qc' => $userQcName,

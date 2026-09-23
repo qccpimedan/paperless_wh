@@ -1597,6 +1597,44 @@ document.addEventListener('DOMContentLoaded', function() {
                 el.value = '';
             });
 
+            // FIX: Inject hidden inputs untuk suhu agar array tetap sinkron dengan id_produk[]
+            // Tambah Detail tidak punya input suhu, tapi array harus sama panjangnya
+            const hiddenSuhuMobilType = document.createElement('input');
+            hiddenSuhuMobilType.type = 'hidden';
+            hiddenSuhuMobilType.name = 'suhu_mobil_type[]';
+            hiddenSuhuMobilType.value = '';
+            newItem.appendChild(hiddenSuhuMobilType);
+
+            const hiddenSuhuMobilValue = document.createElement('input');
+            hiddenSuhuMobilValue.type = 'hidden';
+            hiddenSuhuMobilValue.name = 'suhu_mobil_value[]';
+            hiddenSuhuMobilValue.value = '';
+            newItem.appendChild(hiddenSuhuMobilValue);
+
+            const hiddenSuhuProdukType = document.createElement('input');
+            hiddenSuhuProdukType.type = 'hidden';
+            hiddenSuhuProdukType.name = 'suhu_produk_type[]';
+            hiddenSuhuProdukType.value = '';
+            newItem.appendChild(hiddenSuhuProdukType);
+
+            const hiddenSuhuProdukValue = document.createElement('input');
+            hiddenSuhuProdukValue.type = 'hidden';
+            hiddenSuhuProdukValue.name = 'suhu_produk_value[]';
+            hiddenSuhuProdukValue.value = '';
+            newItem.appendChild(hiddenSuhuProdukValue);
+
+            const hiddenKondisiProduk = document.createElement('input');
+            hiddenKondisiProduk.type = 'hidden';
+            hiddenKondisiProduk.name = 'kondisi_produk[]';
+            hiddenKondisiProduk.value = '';
+            newItem.appendChild(hiddenKondisiProduk);
+
+            const hiddenKondisiProdukSuhu = document.createElement('input');
+            hiddenKondisiProdukSuhu.type = 'hidden';
+            hiddenKondisiProdukSuhu.name = 'kondisi_produk_suhu_value[]';
+            hiddenKondisiProdukSuhu.value = '';
+            newItem.appendChild(hiddenKondisiProdukSuhu);
+
             container.appendChild(newItem);
             syncHeaderToDetails(rowEl);
             syncDokumenToDetails(rowEl);

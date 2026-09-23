@@ -152,6 +152,20 @@ class ProdukController extends Controller
             'id_distributor.*' => 'nullable|exists:distributors,id',
         ]);
 
+        // Validasi untuk mencegah duplikasi produk
+        // Cek kombinasi nama_produk + kategori_code
+        $existingProduk = Produk::where('nama_produk', trim($request->nama_produk))
+            ->where('kategori_code', $request->kategori_code)
+            ->first();
+
+        if ($existingProduk) {
+            return redirect()->back()
+                ->withInput()
+                ->withErrors([
+                    'nama_produk' => 'Produk dengan nama "' . $request->nama_produk . '" dan kategori "' . $request->kategori_code . '" sudah terdaftar. Silakan gunakan nama produk yang berbeda atau pilih kategori lain.'
+                ]);
+        }
+
         $produk = Produk::create([
             'id_user' => Auth::id(),
             'nama_produk' => trim($request->nama_produk),
@@ -224,6 +238,21 @@ class ProdukController extends Controller
             'id_distributor' => 'nullable|array',
             'id_distributor.*' => 'nullable|exists:distributors,id',
         ]);
+
+        // Validasi untuk mencegah duplikasi produk saat update
+        // Cek kombinasi nama_produk + kategori_code, kecuali produk yang sedang di-edit
+        $existingProduk = Produk::where('nama_produk', trim($request->nama_produk))
+            ->where('kategori_code', $request->kategori_code)
+            ->where('id', '!=', $produk->id) // Exclude produk yang sedang di-edit
+            ->first();
+
+        if ($existingProduk) {
+            return redirect()->back()
+                ->withInput()
+                ->withErrors([
+                    'nama_produk' => 'Produk dengan nama "' . $request->nama_produk . '" dan kategori "' . $request->kategori_code . '" sudah terdaftar. Silakan gunakan nama produk yang berbeda atau pilih kategori lain.'
+                ]);
+        }
 
         $produk->update([
             'nama_produk' => trim($request->nama_produk),

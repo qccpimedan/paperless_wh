@@ -338,7 +338,7 @@
                                                     <span class="ms-1 me-2">{{ $kondisiProdukHeader }}</span>
                                                 @endif
                                                 @if($suhuKondisiProdukHeader !== '')
-                                                    <strong>Suhu Kondisi:</strong>
+                                                    <strong>Suhu Kondisi Produk:</strong>
                                                     <span class="ms-1">{{ $suhuKondisiProdukHeader }}</span>
                                                 @endif
                                             </span>
