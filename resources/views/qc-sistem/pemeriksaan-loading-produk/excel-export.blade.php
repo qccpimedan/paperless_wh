@@ -19,12 +19,24 @@
             $plantName   = $p->user && $p->user->plant ? ($p->user->plant->plant ?? 'MEDAN') : 'MEDAN';
             $kendaraan   = $p->kendaraan ? (($p->kendaraan->jenis_kendaraan ?? '-') . ' - ' . ($p->kendaraan->no_kendaraan ?? '-')) : '-';
             $supirName   = $p->supir ? ($p->supir->nama_supir ?? '-') : '-';
+            
+            // FIX: Tujuan dengan fallback ke data lama
             $tujuanLabel = '-';
             if ($p->tujuanPengiriman) {
+                // Data BARU: ada relasi tujuanPengiriman
                 $tujuanLabel = $p->tujuanPengiriman->customer
                     ? ($p->tujuanPengiriman->customer->nama_cust ?? '') . ($p->tujuanPengiriman->nama_tujuan && $p->tujuanPengiriman->nama_tujuan !== '-' ? ' - ' . $p->tujuanPengiriman->nama_tujuan : '')
                     : ($p->tujuanPengiriman->nama_tujuan ?? '-');
+            } elseif ($p->id_tujuan_pengiriman) {
+                // Data LAMA (fallback): query manual dari kolom id_tujuan_pengiriman
+                $tujuanOld = \App\Models\TujuanPengiriman::with('customer')->find($p->id_tujuan_pengiriman);
+                if ($tujuanOld) {
+                    $tujuanLabel = $tujuanOld->customer
+                        ? ($tujuanOld->customer->nama_cust ?? '') . ($tujuanOld->nama_tujuan && $tujuanOld->nama_tujuan !== '-' ? ' - ' . $tujuanOld->nama_tujuan : '')
+                        : ($tujuanOld->nama_tujuan ?? '-');
+                }
             }
+            
             $segelLabel = '-';
             if ($p->segel_gembok === null) $segelLabel = '-';
             elseif ($p->segel_gembok) $segelLabel = 'Segel' . ($p->no_segel ? ' (No: ' . $p->no_segel . ')' : '');
@@ -129,13 +141,23 @@
             @php $produkRows = is_array($p->produk_data) ? $p->produk_data : []; @endphp
             @forelse($produkRows as $i => $data)
                 @php
+                    // FIX: Tujuan per-produk dengan fallback ke data lama
                     $idTujuanItem = $data['id_tujuan_pengiriman'] ?? null;
+                    
+                    // Data LAMA (fallback): jika produk tidak punya id_tujuan, gunakan dari record utama
+                    if (!$idTujuanItem && $p->id_tujuan_pengiriman) {
+                        $idTujuanItem = $p->id_tujuan_pengiriman;
+                    }
+                    
                     $tujuanItemLabel = '-';
                     if ($idTujuanItem) {
                         $tujuanObj = \App\Models\TujuanPengiriman::with('customer')->find($idTujuanItem);
                         if ($tujuanObj) {
                             $tujuanItemLabel = $tujuanObj->customer
                                 ? ($tujuanObj->customer->nama_cust ?? '') . ($tujuanObj->nama_tujuan && $tujuanObj->nama_tujuan !== '-' ? ' - ' . $tujuanObj->nama_tujuan : '')
+                                : ($tujuanObj->nama_tujuan ?? '-');
+                        }
+                    }
                                 : ($tujuanObj->nama_tujuan ?? '-');
                         }
                     }

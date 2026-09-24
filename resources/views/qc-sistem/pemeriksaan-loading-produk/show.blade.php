@@ -236,8 +236,16 @@
                                     @php
                                         $idProdukItem = $produk['id_produk'] ?? null;
 
-                                        // Resolve nama tujuan per produk
+                                        // FIX: Resolve nama tujuan per produk dengan fallback ke data lama
+                                        // Data BARU: ambil dari produk_data JSON
                                         $idTujuanItem = $produk['id_tujuan_pengiriman'] ?? null;
+                                        
+                                        // Data LAMA (fallback): ambil dari kolom id_tujuan_pengiriman utama
+                                        // Jika produk tidak punya id_tujuan_pengiriman, gunakan dari record utama
+                                        if (!$idTujuanItem && $pemeriksaanLoading->id_tujuan_pengiriman) {
+                                            $idTujuanItem = $pemeriksaanLoading->id_tujuan_pengiriman;
+                                        }
+                                        
                                         $tujuanLabel = '-';
                                         if ($idTujuanItem) {
                                             $tujuanObj = \App\Models\TujuanPengiriman::with('customer')->find($idTujuanItem);
