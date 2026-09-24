@@ -829,8 +829,14 @@
                                     $idProduk =
                                         $row['id_produk'] ?? null;
 
-                                    $idTujuanProduk =
-                                        $row['id_tujuan_pengiriman'] ?? null;
+                                    // FIX: Ambil id_tujuan dengan fallback ke data lama
+                                    $idTujuanProduk = $row['id_tujuan_pengiriman'] ?? null;
+                                    
+                                    // Data LAMA (fallback): jika produk tidak punya id_tujuan_pengiriman,
+                                    // gunakan dari record utama pemeriksaan loading
+                                    if (!$idTujuanProduk && isset($pemeriksaanLoading->id_tujuan_pengiriman)) {
+                                        $idTujuanProduk = $pemeriksaanLoading->id_tujuan_pengiriman;
+                                    }
 
                                     $kodeProduksi =
                                         $row['kode_produksi'] ?? null;
