@@ -1111,7 +1111,32 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
             $data['status_baris_array'] = json_encode($statusArray);
         }
 
+        // FIX: Preserve approval fields agar tidak ter-overwrite saat edit data
+        $preserveFields = [
+            'verified_by_qc',
+            'verified_by_produksi',
+            'verified_by_spv',
+            'verified_by',
+            'verified_at',
+            'status_verifikasi',
+            'verification_notes',
+        ];
+
+        // Simpan nilai lama approval fields
+        $oldApprovalData = [];
+        foreach ($preserveFields as $field) {
+            if (!is_null($pemeriksaanBahanBaku->$field)) {
+                $oldApprovalData[$field] = $pemeriksaanBahanBaku->$field;
+            }
+        }
+
+        // Update dengan data baru
         $pemeriksaanBahanBaku->update($data);
+
+        // Restore approval fields jika ada
+        if (!empty($oldApprovalData)) {
+            $pemeriksaanBahanBaku->update($oldApprovalData);
+        }
 
         return redirect()->route('pemeriksaan-bahan-baku.index')
         ->with('success', 'Data pemeriksaan kedatangan bahan baku penunjang berhasil diupdate!');

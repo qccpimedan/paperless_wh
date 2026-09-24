@@ -280,7 +280,32 @@ class PemeriksaanSuhuRuangV3Controller extends Controller
         // Save history before updating
         $this->saveHistory($pemeriksaanSuhuRuangV3, $data);
         
+        // FIX: Preserve approval fields agar tidak ter-overwrite saat edit data
+        $preserveFields = [
+            'verified_by_qc',
+            'verified_by_produksi',
+            'verified_by_spv',
+            'verified_by',
+            'verified_at',
+            'status_verifikasi',
+            'verification_notes',
+        ];
+
+        // Simpan nilai lama approval fields
+        $oldApprovalData = [];
+        foreach ($preserveFields as $field) {
+            if (!is_null($pemeriksaanSuhuRuangV3->$field)) {
+                $oldApprovalData[$field] = $pemeriksaanSuhuRuangV3->$field;
+            }
+        }
+
+        // Update dengan data baru
         $pemeriksaanSuhuRuangV3->update($data);
+
+        // Restore approval fields jika ada
+        if (!empty($oldApprovalData)) {
+            $pemeriksaanSuhuRuangV3->update($oldApprovalData);
+        }
 
         return redirect()->route('pemeriksaan-suhu-ruang-v3.index')->with('success', 'Pemeriksaan suhu ruang V3 berhasil diperbarui!');
     }

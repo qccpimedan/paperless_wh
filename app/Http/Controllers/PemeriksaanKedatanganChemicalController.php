@@ -1282,7 +1282,32 @@ return view('qc-sistem.pemeriksaan-kedatangan-chemical.index', compact('pemeriks
             'detail_chemicals' => $detailChemicals,
         ];
 
+        // FIX: Preserve approval fields agar tidak ter-overwrite saat edit data
+        $preserveFields = [
+            'verified_by_qc',
+            'verified_by_produksi',
+            'verified_by_spv',
+            'verified_by',
+            'verified_at',
+            'status_verifikasi',
+            'verification_notes',
+        ];
+
+        // Simpan nilai lama approval fields
+        $oldApprovalData = [];
+        foreach ($preserveFields as $field) {
+            if (!is_null($pemeriksaanChemical->$field)) {
+                $oldApprovalData[$field] = $pemeriksaanChemical->$field;
+            }
+        }
+
+        // Update dengan data baru
         $pemeriksaanChemical->update($data);
+
+        // Restore approval fields jika ada
+        if (!empty($oldApprovalData)) {
+            $pemeriksaanChemical->update($oldApprovalData);
+        }
 
         return redirect()->route('pemeriksaan-chemical.index')
             ->with('success', 'Data pemeriksaan kedatangan chemical berhasil diupdate!');
