@@ -872,6 +872,11 @@
                                     if ($idTujuanProduk) {
 
                                         $tObj = $tujuanMap[$idTujuanProduk] ?? null;
+                                        
+                                        // FALLBACK: Jika tujuanMap kosong (data lama), gunakan relasi eager-loaded
+                                        if (!$tObj && $pemeriksaan->tujuanPengiriman && $pemeriksaan->tujuanPengiriman->id == $idTujuanProduk) {
+                                            $tObj = $pemeriksaan->tujuanPengiriman;
+                                        }
 
                                         if ($tObj) {
 

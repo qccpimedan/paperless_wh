@@ -170,7 +170,16 @@
                     }
                     
                     $tujuanItemLabel = '-';
-                    if ($idTujuanItem) {
+                    
+                    // OPTIMIZED: Gunakan relasi eager-loaded jika ada
+                    if ($idTujuanItem && $p->tujuanPengiriman && $p->tujuanPengiriman->id == $idTujuanItem) {
+                        // Data LAMA atau data baru dengan tujuan sama dengan record utama
+                        $tujuanObj = $p->tujuanPengiriman;
+                        $tujuanItemLabel = $tujuanObj->customer
+                            ? ($tujuanObj->customer->nama_cust ?? '') . ($tujuanObj->nama_tujuan && $tujuanObj->nama_tujuan !== '-' ? ' - ' . $tujuanObj->nama_tujuan : '')
+                            : ($tujuanObj->nama_tujuan ?? '-');
+                    } elseif ($idTujuanItem) {
+                        // Data BARU dengan tujuan berbeda per-produk
                         $tujuanObj = \App\Models\TujuanPengiriman::with('customer')->find($idTujuanItem);
                         if ($tujuanObj) {
                             $tujuanItemLabel = $tujuanObj->customer
