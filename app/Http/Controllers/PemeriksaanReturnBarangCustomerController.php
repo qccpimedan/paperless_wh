@@ -476,7 +476,32 @@ class PemeriksaanReturnBarangCustomerController extends Controller
               $validated['kode_produksi'], $validated['expired_date'], $validated['jumlah_barang'],
               $validated['kondisi_kemasan'], $validated['kondisi_produk_check'], $validated['rekomendasi'], $validated['keterangan']);
 
+        // FIX: Preserve approval fields agar tidak ter-overwrite saat edit data
+        $preserveFields = [
+            'verified_by_qc',
+            'verified_by_produksi',
+            'verified_by_spv',
+            'verified_by',
+            'verified_at',
+            'status_verifikasi',
+            'verification_notes',
+        ];
+
+        // Simpan nilai lama approval fields
+        $oldApprovalData = [];
+        foreach ($preserveFields as $field) {
+            if (!is_null($pemeriksaanReturnBarangCustomer->$field)) {
+                $oldApprovalData[$field] = $pemeriksaanReturnBarangCustomer->$field;
+            }
+        }
+
+        // Update dengan data baru
         $pemeriksaanReturnBarangCustomer->update($validated);
+
+        // Restore approval fields jika ada
+        if (!empty($oldApprovalData)) {
+            $pemeriksaanReturnBarangCustomer->update($oldApprovalData);
+        }
 
         return redirect()->route('return-barang.index')->with('success', 'Pemeriksaan return barang berhasil diperbarui!');
     }

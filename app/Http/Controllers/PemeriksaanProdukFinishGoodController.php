@@ -646,6 +646,26 @@ return view('qc-sistem.pemeriksaan-produk-finish-good.index', compact('pemeriksa
             $distributorArray[$idx] = $pid && isset($distributorByProduk[$pid]) ? $distributorByProduk[$pid] : [];
         }
 
+        // FIX: Preserve approval fields agar tidak ter-overwrite saat edit data
+        $preserveFields = [
+            'verified_by_qc',
+            'verified_by_produksi',
+            'verified_by_spv',
+            'verified_by',
+            'verified_at',
+            'status_verifikasi',
+            'verification_notes',
+        ];
+
+        // Simpan nilai lama approval fields
+        $oldApprovalData = [];
+        foreach ($preserveFields as $field) {
+            if (!is_null($pemeriksaanProdukFinishGood->$field)) {
+                $oldApprovalData[$field] = $pemeriksaanProdukFinishGood->$field;
+            }
+        }
+
+        // Update dengan data baru
         $pemeriksaanProdukFinishGood->update([
             'id_shift' => $validated['id_shift'] ?? null,
             'tanggal' => $validated['tanggal'],
@@ -691,6 +711,11 @@ return view('qc-sistem.pemeriksaan-produk-finish-good.index', compact('pemeriksa
             'image_finish_good_array' => $imagePaths,
             'upload_coa_array' => $coaPaths,
         ]);
+
+        // Restore approval fields jika ada
+        if (!empty($oldApprovalData)) {
+            $pemeriksaanProdukFinishGood->update($oldApprovalData);
+        }
 
         return redirect()->route('pemeriksaan-produk-finish-good.index')
             ->with('success', 'Data pemeriksaan Finish Good berhasil diperbarui');

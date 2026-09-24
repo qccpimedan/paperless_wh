@@ -788,7 +788,32 @@ return view('qc-sistem.pemeriksaan-kedatangan-kemasan.index', compact('pemeriksa
             'file_coa_array' => json_encode(array_values($newFileCoa)),
         ];
     
+        // FIX: Preserve approval fields agar tidak ter-overwrite saat edit data
+        $preserveFields = [
+            'verified_by_qc',
+            'verified_by_produksi',
+            'verified_by_spv',
+            'verified_by',
+            'verified_at',
+            'status_verifikasi',
+            'verification_notes',
+        ];
+
+        // Simpan nilai lama approval fields
+        $oldApprovalData = [];
+        foreach ($preserveFields as $field) {
+            if (!is_null($pemeriksaanKedatanganKemasan->$field)) {
+                $oldApprovalData[$field] = $pemeriksaanKedatanganKemasan->$field;
+            }
+        }
+
+        // Update dengan data baru
         $pemeriksaanKedatanganKemasan->update($data);
+
+        // Restore approval fields jika ada
+        if (!empty($oldApprovalData)) {
+            $pemeriksaanKedatanganKemasan->update($oldApprovalData);
+        }
     
         return redirect()->route('pemeriksaan-kedatangan-kemasan.index')
             ->with('success', 'Data pemeriksaan kedatangan kemasan berhasil diupdate!');

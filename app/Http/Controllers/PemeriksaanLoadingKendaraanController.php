@@ -364,6 +364,26 @@ class PemeriksaanLoadingKendaraanController extends Controller
             'terdapat_celah' => $request->input('kondisi_mobil.terdapat_celah'),
         ];
 
+        // FIX: Preserve approval fields agar tidak ter-overwrite saat edit data
+        $preserveFields = [
+            'verified_by_qc',
+            'verified_by_produksi',
+            'verified_by_spv',
+            'verified_by',
+            'verified_at',
+            'status_verifikasi',
+            'verification_notes',
+        ];
+
+        // Simpan nilai lama approval fields
+        $oldApprovalData = [];
+        foreach ($preserveFields as $field) {
+            if (!is_null($pemeriksaanLoadingKendaraan->$field)) {
+                $oldApprovalData[$field] = $pemeriksaanLoadingKendaraan->$field;
+            }
+        }
+
+        // Update dengan data baru
         $pemeriksaanLoadingKendaraan->update([
             'tanggal' => $request->tanggal,
             'id_ekspedisi' => $request->id_ekspedisi,
@@ -383,6 +403,11 @@ class PemeriksaanLoadingKendaraanController extends Controller
             'segel_gembok' => $request->input('segel_gembok') === 'segel' ? true : ($request->input('segel_gembok') === 'gembok' ? false : null),
             'no_segel' => $request->input('segel_gembok') === 'segel' ? $request->no_segel : null,
         ]);
+
+        // Restore approval fields jika ada
+        if (!empty($oldApprovalData)) {
+            $pemeriksaanLoadingKendaraan->update($oldApprovalData);
+        }
 
         return redirect()->route('pemeriksaan-loading-kendaraan.index')->with('success', 'Pemeriksaan loading kendaraan berhasil diupdate!');
     }

@@ -262,6 +262,26 @@ class PemeriksaanSuhuRuangV2Controller extends Controller
             'tindakan_koreksi_baru' => $request->tindakan_koreksi,
         ]);
 
+        // FIX: Preserve approval fields agar tidak ter-overwrite saat edit data
+        $preserveFields = [
+            'verified_by_qc',
+            'verified_by_produksi',
+            'verified_by_spv',
+            'verified_by',
+            'verified_at',
+            'status_verifikasi',
+            'verification_notes',
+        ];
+
+        // Simpan nilai lama approval fields
+        $oldApprovalData = [];
+        foreach ($preserveFields as $field) {
+            if (!is_null($pemeriksaanSuhuRuangV2->$field)) {
+                $oldApprovalData[$field] = $pemeriksaanSuhuRuangV2->$field;
+            }
+        }
+
+        // Update dengan data baru
         $pemeriksaanSuhuRuangV2->update([
             'tanggal' => $request->tanggal,
             'suhu_produk' => $request->suhu_produk,
@@ -276,6 +296,11 @@ class PemeriksaanSuhuRuangV2Controller extends Controller
             'keterangan' => $request->keterangan,
             'tindakan_koreksi' => $request->tindakan_koreksi,
         ]);
+
+        // Restore approval fields jika ada
+        if (!empty($oldApprovalData)) {
+            $pemeriksaanSuhuRuangV2->update($oldApprovalData);
+        }
 
         return redirect()->route('pemeriksaan-suhu-ruang-v2.index')->with('success', 'Pemeriksaan suhu ruang V2 berhasil diupdate!');
     }
