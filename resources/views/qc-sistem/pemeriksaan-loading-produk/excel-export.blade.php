@@ -138,7 +138,27 @@
                 <td style="background-color:#8a9a5b; color:#ffffff; font-size:9pt; font-weight:bold; padding:6px 8px; border:1px solid #5f6d3e; text-align:center;">Berat/Karung</td>
                 <td style="background-color:#6c757d; color:#ffffff; font-size:9pt; font-weight:bold; padding:6px 8px; border:1px solid #495057; text-align:center;">Kondisi</td>
             </tr>
-            @php $produkRows = is_array($p->produk_data) ? $p->produk_data : []; @endphp
+            @php 
+                $produkRows = is_array($p->produk_data) ? $p->produk_data : [];
+                
+                // FIX: Untuk data LAMA yang tidak punya produk_data (NULL/kosong),
+                // buat 1 row kosong agar informasi tetap muncul (customer/tujuan dari kolom utama)
+                if (empty($produkRows)) {
+                    $produkRows = [
+                        [
+                            'id_produk' => null,
+                            'id_tujuan_pengiriman' => null, // Akan fallback ke $p->id_tujuan_pengiriman
+                            'kode_produksi' => null,
+                            'best_before' => null,
+                            'jumlah_kemasan' => null,
+                            'jumlah_sampling' => null,
+                            'berat_perkarung' => null,
+                            'kondisi_kemasan' => null,
+                            'keterangan' => null,
+                        ]
+                    ];
+                }
+            @endphp
             @forelse($produkRows as $i => $data)
                 @php
                     // FIX: Tujuan per-produk dengan fallback ke data lama
@@ -158,9 +178,7 @@
                                 : ($tujuanObj->nama_tujuan ?? '-');
                         }
                     }
-                                : ($tujuanObj->nama_tujuan ?? '-');
-                        }
-                    }
+                    
                     $bb = $data['best_before'] ?? null;
                     $bbLabel = '-';
                     if ($bb) {
