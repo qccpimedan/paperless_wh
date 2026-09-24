@@ -834,8 +834,8 @@
                                     
                                     // Data LAMA (fallback): jika produk tidak punya id_tujuan_pengiriman,
                                     // gunakan dari record utama pemeriksaan loading
-                                    if (!$idTujuanProduk && isset($pemeriksaanLoading->id_tujuan_pengiriman)) {
-                                        $idTujuanProduk = $pemeriksaanLoading->id_tujuan_pengiriman;
+                                    if (!$idTujuanProduk && isset($pemeriksaan->id_tujuan_pengiriman)) {
+                                        $idTujuanProduk = $pemeriksaan->id_tujuan_pengiriman;
                                     }
 
                                     $kodeProduksi =
