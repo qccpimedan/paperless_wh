@@ -451,14 +451,15 @@
                                             $lamaData = is_array($h->{$colLama}) ? $h->{$colLama} : (json_decode($h->{$colLama} ?? '[]', true) ?: []);
                                             $baruData = is_array($h->{$colBaru}) ? $h->{$colBaru} : (json_decode($h->{$colBaru} ?? '[]', true) ?: []);
 
-                                            if (json_encode($lamaData) === json_encode($baruData)) continue;
-
+                                            // FIX: Tampilkan semua data update, meskipun nilainya sama (untuk audit trail)
+                                            // Hanya skip jika benar-benar tidak ada data baru
+                                            
                                             if (in_array($secKey, ['cold_storage', 'anteroom_loading'])) {
                                                 $allUnits = array_unique(array_merge(array_keys((array)$lamaData), array_keys((array)$baruData)));
                                                 foreach ($allUnits as $uId) {
                                                     $lItem = $lamaData[$uId] ?? [];
                                                     $bItem = $baruData[$uId] ?? [];
-                                                    if (json_encode($lItem) === json_encode($bItem)) continue;
+                                                    // Skip hanya jika data baru benar-benar kosong (tidak ada input sama sekali)
                                                     if (empty($bItem['setting']) && empty($bItem['display']) && empty($bItem['actual'])) continue;
 
                                                     $timelineRowsV2[] = [

@@ -413,7 +413,8 @@
                                                 foreach ($allItems as $unitId) {
                                                     $bItem = collect((array) $baruData)->firstWhere('unit', $unitId) ?? [];
                                                     $lItem = collect((array) $lamaData)->firstWhere('unit', $unitId) ?? [];
-                                                    if (json_encode($lItem) === json_encode($bItem)) continue;
+                                                    // FIX: Tampilkan semua update, meskipun nilainya sama (untuk audit trail)
+                                                    // Skip hanya jika data baru benar-benar kosong
                                                     if (empty($bItem['setting']) && empty($bItem['display']) && empty($bItem['actual'])) continue;
                                                     $timelineRows[] = [
                                                         'no'     => $no++,
