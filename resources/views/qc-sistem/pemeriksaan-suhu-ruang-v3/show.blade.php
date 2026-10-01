@@ -181,6 +181,8 @@
                                         }
                                     }
 
+                                    $displayedKeysV3 = []; // FIX DUPLIKASI: Track jam+area yang sudah ditampilkan
+                                    
                                     foreach ($historiesV3 as $hItem) {
                                         $waktuRow = $hItem->pukul_baru ?? $hItem->pukul_lama ?? $hItem->created_at->format('H:i');
 
@@ -197,6 +199,18 @@
                                                     foreach ($arrayBaru as $unitKey => $itemData) {
                                                         if (is_array($itemData)) {
                                                             $unitNum = str_replace('unit_', '', (string)$unitKey);
+                                                            
+                                                            // FIX DUPLIKASI: Track unique key (jam + area + unit)
+                                                            $uniqueKeyV3 = $waktuRow . '_' . $secConf['label'] . '_' . $unitNum;
+                                                            
+                                                            // Skip kalau jam+area+unit ini sudah pernah ditampilkan
+                                                            if (isset($displayedKeysV3[$uniqueKeyV3])) {
+                                                                continue;
+                                                            }
+                                                            
+                                                            // Tandai sebagai sudah ditampilkan
+                                                            $displayedKeysV3[$uniqueKeyV3] = true;
+                                                            
                                                             $timelineRowsV3[] = [
                                                                 'no'           => $noCounterV3++,
                                                                 'waktu'        => $waktuRow,
