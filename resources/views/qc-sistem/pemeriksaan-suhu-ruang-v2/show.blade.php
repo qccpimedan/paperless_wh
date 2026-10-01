@@ -439,6 +439,8 @@
                                     }
 
                                     // Iterasi History Updates
+                                    $displayedKeys = []; // FIX DUPLIKASI: Track jam+area yang sudah ditampilkan
+                                    
                                     foreach ($historiesV2 as $h) {
                                         $editedAtV2 = $h->created_at ? $h->created_at->format('d/m/Y H:i') : '-';
                                         $pukulH = $h->pukul_baru ?? $h->pukul_lama ?? null;
@@ -462,6 +464,17 @@
                                                     // Skip hanya jika data baru benar-benar kosong (tidak ada input sama sekali)
                                                     if (empty($bItem['setting']) && empty($bItem['display']) && empty($bItem['actual'])) continue;
 
+                                                    // FIX DUPLIKASI: Track unique key (jam + area)
+                                                    $uniqueKey = $jamH . '_' . $secLabel . '_' . $uId;
+                                                    
+                                                    // Skip kalau jam+area ini sudah pernah ditampilkan (ambil yang pertama/terakhir saja)
+                                                    if (isset($displayedKeys[$uniqueKey])) {
+                                                        continue;
+                                                    }
+                                                    
+                                                    // Tandai sebagai sudah ditampilkan
+                                                    $displayedKeys[$uniqueKey] = true;
+
                                                     $timelineRowsV2[] = [
                                                         'no'     => $noV2++,
                                                         'waktu'  => $jamH,
@@ -475,6 +488,18 @@
                                                 }
                                             } else {
                                                 if (empty($baruData['setting']) && empty($baruData['display']) && empty($baruData['actual'])) continue;
+                                                
+                                                // FIX DUPLIKASI: Track unique key (jam + area)
+                                                $uniqueKey = $jamH . '_' . $secLabel;
+                                                
+                                                // Skip kalau jam+area ini sudah pernah ditampilkan
+                                                if (isset($displayedKeys[$uniqueKey])) {
+                                                    continue;
+                                                }
+                                                
+                                                // Tandai sebagai sudah ditampilkan
+                                                $displayedKeys[$uniqueKey] = true;
+                                                
                                                 $timelineRowsV2[] = [
                                                     'no'     => $noV2++,
                                                     'waktu'  => $jamH,
@@ -490,16 +515,23 @@
 
                                         // Update Suhu Produk
                                         if (($h->suhu_produk_lama ?? null) !== ($h->suhu_produk_baru ?? null) && !empty($h->suhu_produk_baru)) {
-                                            $timelineRowsV2[] = [
-                                                'no'     => $noV2++,
-                                                'waktu'  => $jamH,
-                                                'edited' => $editedAtV2,
-                                                'area'   => 'Suhu Produk',
-                                                'setting'=> '-',
-                                                'aktual' => $h->suhu_produk_baru,
-                                                'display'=> '-',
-                                                'tipe'   => 'update',
-                                            ];
+                                            // FIX DUPLIKASI: Track unique key
+                                            $uniqueKey = $jamH . '_Suhu Produk';
+                                            
+                                            if (!isset($displayedKeys[$uniqueKey])) {
+                                                $displayedKeys[$uniqueKey] = true;
+                                                
+                                                $timelineRowsV2[] = [
+                                                    'no'     => $noV2++,
+                                                    'waktu'  => $jamH,
+                                                    'edited' => $editedAtV2,
+                                                    'area'   => 'Suhu Produk',
+                                                    'setting'=> '-',
+                                                    'aktual' => $h->suhu_produk_baru,
+                                                    'display'=> '-',
+                                                    'tipe'   => 'update',
+                                                ];
+                                            }
                                         }
                                     }
                                 @endphp

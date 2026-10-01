@@ -316,7 +316,10 @@ class PemeriksaanSuhuRuangController extends Controller
             $actual = $request->input("cold_storage_{$i}_actual");
             
             if ($setting || $display || $actual) {
-                $coldStorage[] = [
+                // ✅ FIX: Use unit number as array key (not push [])
+                // Old: $coldStorage[] = [...] creates 0-based index (0,1,2,3)
+                // New: $coldStorage[$i] = [...] creates unit-based keys (1,2,3,4)
+                $coldStorage[$i] = [
                     'unit' => $i,
                     'setting' => $setting,
                     'display' => $display,
@@ -335,7 +338,10 @@ class PemeriksaanSuhuRuangController extends Controller
             $actual = $request->input("anteroom_loading_{$i}_actual");
             
             if ($setting || $display || $actual) {
-                $anteroomLoading[] = [
+                // ✅ FIX: Use unit number as array key (not push [])
+                // Old: $anteroomLoading[] = [...] creates 0-based index (0,1,2,3)
+                // New: $anteroomLoading[$i] = [...] creates unit-based keys (1,2,3,4)
+                $anteroomLoading[$i] = [
                     'unit' => $i,
                     'setting' => $setting,
                     'display' => $display,
