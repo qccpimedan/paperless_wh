@@ -59,7 +59,7 @@
                     || request()->routeIs('tujuan-pengirimans.*') || request()->routeIs('supirs.*') 
                     || request()->routeIs('produks.*') || request()->routeIs('bahan-kemasans.*') 
                     || request()->routeIs('ekspedisis.*') || request()->routeIs('std-precoolings.*') || request()->routeIs('input-areas.*') 
-                    || request()->routeIs('input-master-forms.*') || request()->routeIs('input-deskripsis.*') ? 'active' : '' }}">
+                    || request()->routeIs('input-master-forms.*') || request()->routeIs('input-deskripsis.*') || request()->routeIs('master-standar-audit.*') ? 'active' : '' }}">
                     <a href="#" class='sidebar-link'>
                         <i class="bi bi-collection-fill"></i>
                         <span>Data Master</span>
@@ -69,7 +69,7 @@
                     || request()->routeIs('produsens.*') || request()->routeIs('chemicals.*') || request()->routeIs('jenis-kendaraans.*') || request()->routeIs('tujuan-pengirimans.*') 
                     || request()->routeIs('supirs.*') || request()->routeIs('produks.*') || request()->routeIs('ekspedisis.*') || request()->routeIs('std-precoolings.*') 
                     || request()->routeIs('input-areas.*') || request()->routeIs('bahan-kemasans.*')
-                    || request()->routeIs('input-master-forms.*') || request()->routeIs('input-deskripsis.*') ? 'active' : '' }}">
+                    || request()->routeIs('input-master-forms.*') || request()->routeIs('input-deskripsis.*') || request()->routeIs('master-standar-audit.*') ? 'active' : '' }}">
                         {{-- Input Role, Plant, User - Only for Superadmin --}}
                         @if($userRole === 'superadmin')
                             <li class="submenu-item {{ request()->routeIs('roles.*') ? 'active' : '' }}">
@@ -136,6 +136,9 @@
                         <li class="submenu-item {{ request()->routeIs('input-master-forms.*') ? 'active' : '' }}">
                             <a href="{{ route('input-master-forms.index')}}">Input Master Form</a>
                         </li>
+                        <li class="submenu-item {{ request()->routeIs('master-standar-audit.*') ? 'active' : '' }}">
+                            <a href="{{ route('master-standar-audit.index')}}">Input Standar Audit</a>
+                        </li>
 
                     </ul>
                 </li>
@@ -194,13 +197,13 @@
                         </li>
                     </ul>
                 </li>
-                <li class="sidebar-item has-sub {{ request()->routeIs('return-barang.*') ? 'active' : '' }}">
+                <li class="sidebar-item has-sub {{ request()->routeIs('return-barang.*') || request()->routeIs('pemeriksaan-return-barang-customer.*') ? 'active' : '' }}">
                     <a href="#" class='sidebar-link'>
                         <i class="bi bi-pen-fill"></i>
                         <span>Pemeriksaan Return Barang</span>
                     </a>
-                    <ul class="submenu {{ request()->routeIs('return-barang.*') ? 'active' : '' }}">
-                        <li class="submenu-item {{ request()->routeIs('return-barang.*') ? 'active' : '' }}">
+                    <ul class="submenu {{ request()->routeIs('return-barang.*') || request()->routeIs('pemeriksaan-return-barang-customer.*') ? 'active' : '' }}">
+                        <li class="submenu-item {{ request()->routeIs('return-barang.*') || request()->routeIs('pemeriksaan-return-barang-customer.*') ? 'active' : '' }}">
                             <a href="{{ route('return-barang.index') }}">Return Barang Customer</a>
                         </li>
                     </ul>

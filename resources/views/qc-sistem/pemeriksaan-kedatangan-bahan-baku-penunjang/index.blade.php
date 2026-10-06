@@ -2,6 +2,14 @@
 @section('container')
 @php
     $user = \Illuminate\Support\Facades\Auth::user();
+    $userRole = auth()->user()->role ? strtolower(auth()->user()->role->role) : null;
+
+    // AUDITOR AUTO-REDIRECT: Auditor harus langsung ke halaman audit (jika belum di audit view)
+    if ($userRole === 'auditor' && !($isAuditView ?? false)) {
+        header('Location: ' . route('pemeriksaan-bahan-baku.audit'));
+        exit;
+    }
+
     if ($user && $user->role && strtolower($user->role->role) === 'superadmin') {
         $shifts = \App\Models\Shift::all();
     } else {
@@ -13,7 +21,6 @@
             })
             ->get();
     }
-    $userRole = auth()->user()->role ? strtolower(auth()->user()->role->role) : null;
     $canVerify = in_array($userRole, ['qc inspector', 'produksi', 'warehouse', 'spv qc', 'superadmin']);
 @endphp
 
@@ -56,6 +63,13 @@
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="card-title mb-0">Daftar Pemeriksaan</h5>
                     <div class="d-flex gap-2">
+                        {{-- Link to Audit Page --}}
+                        @if(in_array($userRole, ['auditor', 'spv qc', 'superadmin']))
+                            <a href="{{ route('pemeriksaan-bahan-baku.audit') }}" class="btn btn-warning">
+                                <i class="bi bi-shield-check"></i> Data Audit
+                            </a>
+                        @endif
+
                         @if($canVerify)
                             <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#multiApprovalModal">
                                 <i class="bi bi-patch-check"></i> Multi Approval
@@ -252,6 +266,7 @@
                                                     @can('delete_pemeriksaan_kedatangan_bahan_baku_penunjang')
                                                         <button type="button" class="btn btn-sm btn-danger" onclick="if(confirm('Yakin ingin menghapus data ini?')) document.getElementById('del-{{$item->uuid}}').submit()"><i class="bi bi-trash"></i></button>
                                                     @endcan
+                                                    <x-audit-action-btn :item="$item" route-prefix="pemeriksaan-bahan-baku" :is-audit-view="$isAuditView ?? false" />
                                                 </div>
                                             </td>
                                         </tr>

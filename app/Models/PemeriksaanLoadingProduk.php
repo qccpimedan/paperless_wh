@@ -7,10 +7,11 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 use App\Traits\HasPlantTimezoneTimestamps;
 use App\Traits\HasSubAreaSession;
+use App\Models\Traits\HasAudit;
 
 class PemeriksaanLoadingProduk extends Model
 {
-    use HasFactory, HasPlantTimezoneTimestamps, HasSubAreaSession;
+    use HasFactory, HasPlantTimezoneTimestamps, HasSubAreaSession, HasAudit;
 
     protected $fillable = [
         'uuid',
@@ -37,6 +38,8 @@ class PemeriksaanLoadingProduk extends Model
         'verified_by_spv',
         'verified_at',
         'verification_notes',
+        'is_audit',
+        'source_uuid',
     ];
 
     protected $casts = [
@@ -44,6 +47,7 @@ class PemeriksaanLoadingProduk extends Model
         'produk_data' => 'array',
         'segel_gembok' => 'boolean',
         'tanggal' => 'date',
+        'is_audit' => 'boolean',
     ];
 
     protected static function boot()

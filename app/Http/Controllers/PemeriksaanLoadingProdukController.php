@@ -21,9 +21,11 @@ use App\Exports\LoadingTemplateUniversalExport;
 use App\Imports\LoadingUniversalImport;
 use App\Imports\LoadingUniversalSheetImport;
 use Maatwebsite\Excel\HeadingRowImport;
+use App\Http\Controllers\Traits\HasAuditController;
 
 class PemeriksaanLoadingProdukController extends Controller
 {
+    use HasAuditController;
     public function index(Request $request)
     {
         $user = Auth::user();
@@ -38,7 +40,7 @@ class PemeriksaanLoadingProdukController extends Controller
             'kendaraan',
             'supir',
             'produk'
-        ]);
+        ])->where('is_audit', false);
 
         if (!($user->role && strtolower($user->role->role) === 'superadmin')) {
             $query->whereHas('user', function ($q) use ($user) {
@@ -1646,5 +1648,82 @@ class PemeriksaanLoadingProdukController extends Controller
         }
 
         return back()->with('info', 'Tidak ada data yang memenuhi syarat untuk diverifikasi pada filter tersebut.');
+    }
+
+    // ==========================================
+    // AUDIT METHODS (HasAuditController Trait)
+    // ==========================================
+
+    protected function auditModel(): string
+    {
+        return PemeriksaanLoadingProduk::class;
+    }
+
+    protected function auditRoutePrefix(): string
+    {
+        return 'pemeriksaan-loading-produk';
+    }
+
+    protected function auditViewPrefix(): string
+    {
+        return 'qc-sistem.pemeriksaan-loading-produk';
+    }
+
+    protected function auditRelations(): array
+    {
+        return ['user', 'shift', 'tujuanPengiriman.customer', 'kendaraan', 'supir', 'produk'];
+    }
+
+    protected function auditSearchColumns(): array
+    {
+        return ['no_segel', 'temperature_mobil', 'produk_data', 'status_verifikasi', 'verification_notes'];
+    }
+
+    protected function auditDateColumn(): string
+    {
+        return 'tanggal';
+    }
+
+    protected function auditTimeColumn(): string
+    {
+        return 'created_at';
+    }
+
+    protected function auditShiftColumn(): string
+    {
+        return 'id_shift';
+    }
+
+    protected function auditPlanColumn(): ?string
+    {
+        return null;
+    }
+
+    protected function auditExtraViewData($records): array
+    {
+        $produkKategoriOptions = Produk::query()
+            ->whereNotNull('kategori_code')
+            ->select('kategori_code')
+            ->distinct()
+            ->orderBy('kategori_code')
+            ->pluck('kategori_code')
+            ->values();
+
+        $produkList = Produk::query()
+            ->select(['id', 'nama_produk', 'kategori_code'])
+            ->orderBy('nama_produk')
+            ->get();
+
+        $produkByKategori = $produkList
+            ->groupBy('kategori_code')
+            ->map(function ($items) {
+                return $items->map(function ($p) {
+                    return ['id' => $p->id, 'nama' => $p->nama_produk];
+                })->values();
+            });
+
+        $produkNamaById = $produkList->pluck('nama_produk', 'id')->all();
+
+        return compact('produkKategoriOptions', 'produkList', 'produkByKategori', 'produkNamaById');
     }
 }

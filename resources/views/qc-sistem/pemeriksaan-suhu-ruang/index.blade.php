@@ -2,6 +2,14 @@
 @section('container')
 @php
     $user = \Illuminate\Support\Facades\Auth::user();
+    $userRole = auth()->user()->role ? strtolower(auth()->user()->role->role) : null;
+
+    // AUDITOR AUTO-REDIRECT: Auditor harus langsung ke halaman audit (jika belum di audit view)
+    if ($userRole === 'auditor' && !($isAuditView ?? false)) {
+        header('Location: ' . route('pemeriksaan-suhu-ruang.audit'));
+        exit;
+    }
+
     if ($user && $user->role && strtolower($user->role->role) === 'superadmin') {
         $shifts = \App\Models\Shift::all();
     } else {
@@ -13,7 +21,6 @@
             })
             ->get();
     }
-    $userRole = auth()->user()->role ? strtolower(auth()->user()->role->role) : null;
     $canVerify = in_array($userRole, ['qc inspector', 'warehouse', 'produksi', 'spv qc', 'superadmin', 'produksi/warehouse']);
 @endphp
 <div id="main">
@@ -23,7 +30,7 @@
         <div class="page-title">
             <div class="row">
                 <div class="col-12 col-md-6 order-md-1 order-last">
-                    <h3>Pemeriksaan Suhu Ruang (Gudang CS)</h3>
+                    <h3>Pemeriksaan Suhu Ruang (Food Processing)</h3>
                     <p class="text-subtitle text-muted">Kelola data pemeriksaan suhu ruang gudang cold storage</p>
                 </div>
                 <div class="col-12 col-md-6 order-md-2 order-first">
@@ -55,6 +62,13 @@
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="card-title mb-0">Daftar Pemeriksaan Suhu Ruang</h5>
                     <div class="d-flex gap-2">
+                        {{-- Link to Audit Page --}}
+                        @if(in_array($userRole, ['auditor', 'spv qc', 'superadmin']))
+                            <a href="{{ route('pemeriksaan-suhu-ruang.audit') }}" class="btn btn-warning">
+                                <i class="bi bi-shield-check"></i> Data Audit
+                            </a>
+                        @endif
+
                         @if($canVerify)
                             <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#multiApprovalModal">
                                 <i class="bi bi-patch-check"></i> Multi Approval
@@ -217,6 +231,8 @@
                                                         <i class="bi bi-clock-history"></i>
                                                     </a>
                                                     @endcan
+                                                    <x-audit-action-btn :item="$item" route-prefix="pemeriksaan-suhu-ruang" :is-audit-view="$isAuditView ?? false" />
+                                                    
                                                     <!-- <a href="{{ route('pemeriksaan-suhu-ruang.print-pdf', $item->uuid) }}" 
                                                         class="btn btn-sm btn-danger" title="Cetak PDF" target="_blank">
                                                         <i class="bi bi-file-earmark-text"></i>

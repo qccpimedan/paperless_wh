@@ -7,10 +7,11 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 use App\Traits\HasPlantTimezoneTimestamps;
 use App\Traits\HasSubAreaSession;
+use App\Models\Traits\HasAudit;
 
 class PemeriksaanKedatanganChemical extends Model
 {
-    use HasFactory, HasPlantTimezoneTimestamps, HasSubAreaSession;
+    use HasFactory, HasPlantTimezoneTimestamps, HasSubAreaSession, HasAudit;
 
     protected $fillable = [
         'uuid',
@@ -32,12 +33,15 @@ class PemeriksaanKedatanganChemical extends Model
         'verified_by_spv',
         'verified_at',
         'verification_notes',
+        'is_audit',
+        'source_uuid',
     ];
 
     protected $casts = [
         'kondisi_mobil' => 'array',
         'detail_chemicals' => 'array', // Cast JSON ke array
         'tanggal' => 'date',
+        'is_audit' => 'boolean',
     ];
 
     protected static function boot()

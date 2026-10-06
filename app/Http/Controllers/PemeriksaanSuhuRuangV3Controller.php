@@ -11,16 +11,19 @@ use App\Imports\PemeriksaanSuhuRuangV3Import;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Maatwebsite\Excel\Facades\Excel;
+use App\Http\Controllers\Traits\HasAuditController;
 
 class PemeriksaanSuhuRuangV3Controller extends Controller
 {
+    use HasAuditController;
     public function index(Request $request)
     {
         $user = Auth::user();
 
         $search = trim((string) $request->input('search', ''));
         
-        $query = PemeriksaanSuhuRuangV3::with(['user.role', 'user.plant', 'shift']);
+        $query = PemeriksaanSuhuRuangV3::with(['user.role', 'user.plant', 'shift'])
+            ->where('is_audit', false);
 
         if (!($user->role && strtolower($user->role->role) === 'superadmin')) {
             $query->whereHas('user', function ($q) use ($user) {
@@ -1124,4 +1127,55 @@ class PemeriksaanSuhuRuangV3Controller extends Controller
             return redirect()->route('pemeriksaan-suhu-ruang-v3.index')->with('error', 'Gagal mengimpor file: ' . $e->getMessage());
         }
     }
+        // ==========================================
+    // AUDIT METHODS (HasAuditController Trait)
+    // ==========================================
+
+    protected function auditModel(): string
+    {
+        return PemeriksaanSuhuRuangV3::class;
+    }
+
+    protected function auditRoutePrefix(): string
+    {
+        return 'pemeriksaan-suhu-ruang-v3';
+    }
+
+    protected function auditViewPrefix(): string
+    {
+        return 'qc-sistem.pemeriksaan-suhu-ruang-v3';
+    }
+
+    protected function auditRelations(): array
+    {
+        return ['shift', 'user'];
+    }
+
+    protected function auditSearchColumns(): array
+    {
+        return ['tanggal', 'pukul', 'keterangan', 'tindakan_koreksi'];
+    }
+
+    protected function auditDateColumn(): string
+    {
+        return 'tanggal';
+    }
+
+    protected function auditTimeColumn(): ?string
+    {
+        return 'pukul';
+    }
+
+    protected function auditShiftColumn(): string
+    {
+        return 'id_shift';
+    }
+
+    protected function auditPlanColumn(): ?string
+    {
+        return null; // V3 tidak punya id_plant
+    }
 }
+
+
+

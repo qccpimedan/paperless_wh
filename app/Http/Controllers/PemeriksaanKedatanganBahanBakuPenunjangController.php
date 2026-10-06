@@ -14,10 +14,11 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\UploadedFile;
 use Monarobase\CountryList\CountryListFacade as Countries; // Menggunakan Facade
-
+use App\Http\Controllers\Traits\HasAuditController;
 
 class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
 {
+    use HasAuditController;
 
     /**
      * Simpan file COA (PDF atau gambar).
@@ -238,7 +239,8 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
         $user = Auth::user();
         $search = trim((string) $request->input('search', ''));
 
-        $query = PemeriksaanKedatanganBahanBakuPenunjang::with(['user.role', 'user.plant', 'bahan', 'shift']);
+        $query = PemeriksaanKedatanganBahanBakuPenunjang::with(['user.role', 'user.plant', 'bahan', 'shift'])
+            ->where('is_audit', false);
         
         // SuperAdmin dapat melihat semua data, tapi jika ingin filter sesuai plant aktif (jika ada):
         if ($user->role && strtolower($user->role->role) === 'superadmin') {
@@ -1953,5 +1955,83 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
         }
 
         return back()->with('info', 'Tidak ada data yang memenuhi syarat untuk diverifikasi pada filter tersebut.');
+    }
+
+    // ==========================================
+    // AUDIT METHODS (HasAuditController Trait)
+    // ==========================================
+
+    protected function auditModel(): string
+    {
+        return PemeriksaanKedatanganBahanBakuPenunjang::class;
+    }
+
+    protected function auditRoutePrefix(): string
+    {
+        return 'pemeriksaan-bahan-baku';
+    }
+
+    protected function auditViewPrefix(): string
+    {
+        return 'qc-sistem.pemeriksaan-kedatangan-bahan-baku-penunjang';
+    }
+
+    protected function auditRelations(): array
+    {
+        return ['user', 'shift', 'bahan'];
+    }
+
+    protected function auditSearchColumns(): array
+    {
+        return ['no_po', 'kode_produksi_array', 'status_verifikasi', 'verification_notes'];
+    }
+
+    protected function auditDateColumn(): string
+    {
+        return 'tanggal';
+    }
+
+    protected function auditTimeColumn(): string
+    {
+        return 'created_at';
+    }
+
+    protected function auditShiftColumn(): string
+    {
+        return 'id_shift';
+    }
+
+    protected function auditPlanColumn(): ?string
+    {
+        return null;
+    }
+
+    protected function auditExtraViewData($records): array
+    {
+        $produkKategoriOptions = \App\Models\Produk::query()
+            ->whereNotNull('kategori_code')
+            ->select('kategori_code')
+            ->distinct()
+            ->orderBy('kategori_code')
+            ->pluck('kategori_code')
+            ->values();
+
+        $produkList = \App\Models\Produk::query()
+            ->select(['id', 'nama_produk', 'kategori_code'])
+            ->orderBy('nama_produk')
+            ->get();
+
+        $produkByKategori = $produkList
+            ->groupBy('kategori_code')
+            ->map(function ($items) {
+                return $items->map(function ($p) {
+                    return ['id' => $p->id, 'nama' => $p->nama_produk];
+                })->values();
+            });
+
+        $produkNamaById = $produkList->pluck('nama_produk', 'id')->all();
+        $bahanNamaById = \App\Models\Bahan::select(['id', 'nama_bahan'])->get()->pluck('nama_bahan', 'id')->all();
+
+        return compact('produkKategoriOptions', 'produkList', 'produkByKategori', 'produkNamaById', 'bahanNamaById');
     }
 }
