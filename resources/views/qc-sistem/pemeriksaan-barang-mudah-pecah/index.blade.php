@@ -227,7 +227,12 @@
                                             <td>
                                                 <div class="btn-group">
                                                     @can('view_pemeriksaan_barang_mudah_pecah') <a href="{{ route('pemeriksaan-barang-mudah-pecah.show', $item->uuid) }}" class="btn btn-sm btn-info text-white"><i class="bi bi-eye"></i></a> @endcan
-                                                    @can('edit_pemeriksaan_barang_mudah_pecah') <a href="{{ route('pemeriksaan-barang-mudah-pecah.edit', $item->uuid) }}" class="btn btn-sm btn-warning text-white"><i class="bi bi-pencil"></i></a> @endcan
+                                                    @can('edit_pemeriksaan_barang_mudah_pecah') 
+                                                        <a href="{{ route('pemeriksaan-barang-mudah-pecah.edit', $item->uuid) }}{{ ($isAuditView ?? false) ? '?from_audit=1' : '' }}" 
+                                                           class="btn btn-sm btn-warning text-white">
+                                                            <i class="bi bi-pencil"></i>
+                                                        </a> 
+                                                    @endcan
                                                     <x-audit-action-btn :item="$item" route-prefix="pemeriksaan-barang-mudah-pecah" :is-audit-view="$isAuditView ?? false" />
 
                                                 </div>

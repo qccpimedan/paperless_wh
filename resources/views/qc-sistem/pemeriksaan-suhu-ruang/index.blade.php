@@ -217,11 +217,16 @@
                                             <td>
                                                 <div class="btn-vertical">
                                                     @can('view_pemeriksaan_suhu_ruang') <a href="{{ route('pemeriksaan-suhu-ruang.show', $item->uuid) }}" class="btn btn-sm btn-info text-white"><i class="bi bi-eye"></i></a> @endcan
-                                                    @can('edit_pemeriksaan_suhu_ruang') <a href="{{ route('pemeriksaan-suhu-ruang.edit', $item->uuid) }}" class="btn btn-sm btn-warning text-white"><i class="bi bi-pencil"></i></a> @endcan
+                                                    @can('edit_pemeriksaan_suhu_ruang') 
+                                                        <a href="{{ route('pemeriksaan-suhu-ruang.edit', $item->uuid) }}{{ ($isAuditView ?? false) ? '?from_audit=1' : '' }}" 
+                                                           class="btn btn-sm btn-warning text-white">
+                                                            <i class="bi bi-pencil"></i>
+                                                        </a> 
+                                                    @endcan
                                                     @can('delete_pemeriksaan_suhu_ruang')
                                                         <button type="button" class="btn btn-sm btn-danger" onclick="if(confirm('Yakin ingin menghapus data ini?')) document.getElementById('del-{{$item->uuid}}').submit()"><i class="bi bi-trash"></i></button>
                                                     @endcan
-                                                    <a href="{{ route('pemeriksaan-suhu-ruang.edit', $item->uuid) }}?edit_per_2jam=1" 
+                                                    <a href="{{ route('pemeriksaan-suhu-ruang.edit', $item->uuid) }}?edit_per_2jam=1{{ ($isAuditView ?? false) ? '&from_audit=1' : '' }}" 
                                                         class="btn btn-sm btn-success" title="Edit Per Jam">
                                                         <i class="bi bi-hourglass-bottom"></i>
                                                     </a>

@@ -120,10 +120,11 @@ trait HasAuditController
                       });
                 });
 
-            // Filter plant (hanya jika kolom tersedia di tabel)
-            $planCol = $this->auditPlanColumn();
-            if ($planCol && $user->role && strtolower($user->role->role ?? '') !== 'superadmin') {
-                $q->where($planCol, $user->id_plan);
+            // Filter plant (hanya untuk non-superadmin)
+            if (!($user->role && strtolower($user->role->role) === 'superadmin')) {
+                $q->whereHas('user', function ($userQuery) use ($user) {
+                    $userQuery->where('id_plant', $user->getEffectivePlantId());
+                });
             }
 
             if ($search) {

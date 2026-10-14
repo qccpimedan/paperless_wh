@@ -711,7 +711,7 @@
         @php
             $authUser = auth()->user();
             $isAuditorRole = $authUser && $authUser->role && strtolower($authUser->role->role) === 'auditor';
-            $isAuditActive = ($isAuditView ?? false) || request()->boolean('is_audit') || request()->is('*/audit-data*');
+            $isAuditActive = ($isAuditView ?? false) || request()->boolean('is_audit') || request()->is('*/audit-data*') || request()->has('from_audit');
         @endphp
 
         @if($isAuditActive && !$isAuditorRole)

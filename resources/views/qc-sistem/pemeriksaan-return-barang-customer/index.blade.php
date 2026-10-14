@@ -255,7 +255,12 @@
                                             <td>
                                                 <div class="btn-vertical">
                                                     @can('view_pemeriksaan_return_barang_customer') <a href="{{ route('return-barang.show', $item->uuid) }}" class="btn btn-sm btn-info text-white"><i class="bi bi-eye"></i></a> @endcan
-                                                    @can('edit_pemeriksaan_return_barang_customer') <a href="{{ route('return-barang.edit', $item->uuid) }}" class="btn btn-sm btn-warning text-white"><i class="bi bi-pencil"></i></a> @endcan
+                                                    @can('edit_pemeriksaan_return_barang_customer') 
+                                                        <a href="{{ route('return-barang.edit', $item->uuid) }}{{ ($isAuditView ?? false) ? '?from_audit=1' : '' }}" 
+                                                           class="btn btn-sm btn-warning text-white">
+                                                            <i class="bi bi-pencil"></i>
+                                                        </a> 
+                                                    @endcan
                                                     @can('delete_pemeriksaan_return_barang_customer')
                                                         <button type="button" class="btn btn-sm btn-danger" onclick="if(confirm('Yakin ingin menghapus data ini?')) document.getElementById('del-{{$item->uuid}}').submit()"><i class="bi bi-trash"></i></button>
                                                     @endcan

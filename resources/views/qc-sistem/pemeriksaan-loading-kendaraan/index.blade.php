@@ -226,7 +226,12 @@
                                             <td>
                                                 <div class="btn-vertical">
                                                     @can('view_pemeriksaan_loading_kendaraan') <a href="{{ route('pemeriksaan-loading-kendaraan.show', $item->uuid) }}" class="btn btn-sm btn-info text-white"><i class="bi bi-eye"></i></a> @endcan
-                                                    @can('edit_pemeriksaan_loading_kendaraan') <a href="{{ route('pemeriksaan-loading-kendaraan.edit', $item->uuid) }}" class="btn btn-sm btn-warning text-white"><i class="bi bi-pencil"></i></a> @endcan
+                                                    @can('edit_pemeriksaan_loading_kendaraan') 
+                                                        <a href="{{ route('pemeriksaan-loading-kendaraan.edit', $item->uuid) }}{{ ($isAuditView ?? false) ? '?from_audit=1' : '' }}" 
+                                                           class="btn btn-sm btn-warning text-white">
+                                                            <i class="bi bi-pencil"></i>
+                                                        </a> 
+                                                    @endcan
                                                     @can('delete_pemeriksaan_loading_kendaraan')
                                                         <button type="button" class="btn btn-sm btn-danger" onclick="if(confirm('Yakin ingin menghapus data ini?')) document.getElementById('del-{{$item->uuid}}').submit()"><i class="bi bi-trash"></i></button>
                                                     @endcan
