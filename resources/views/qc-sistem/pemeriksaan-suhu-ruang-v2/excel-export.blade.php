@@ -113,7 +113,7 @@
             if ($secDef['type'] === 'multi' && is_array($valData)) {
                 foreach ($valData as $uKey => $item) {
                     if (!is_array($item)) continue;
-                    $unitName = $item['unit'] ?? (is_string($uKey) ? $uKey : '');
+                    $unitName = $item['unit'] ?? ((string)$uKey !== '' ? (string)$uKey : '');
                     $rows[] = [
                         'no' => $no++,
                         'tanggal' => $tanggalStr,
@@ -185,10 +185,15 @@
                     $allUnits = array_unique($allUnits);
 
                     foreach ($allUnits as $u) {
-                        $oldItem = $findUnitRowV2($lama, $u);
                         $newItem = $findUnitRowV2($baru, $u);
 
-                        if (!$isSameV2($oldItem, $newItem) && !empty($newItem)) {
+                        $isFilled = !empty($newItem) && (
+                            (isset($newItem['setting']) && $newItem['setting'] !== '' && $newItem['setting'] !== null) ||
+                            (isset($newItem['display']) && $newItem['display'] !== '' && $newItem['display'] !== null) ||
+                            (isset($newItem['actual']) && $newItem['actual'] !== '' && $newItem['actual'] !== null)
+                        );
+
+                        if ($isFilled) {
                             $rows[] = [
                                 'no' => $no++,
                                 'tanggal' => $tanggalHistory,
@@ -206,7 +211,13 @@
                         }
                     }
                 } else {
-                    if (!$isSameV2($lama, $baru) && !empty($baru)) {
+                    $isFilled = !empty($baru) && (
+                        (isset($baru['setting']) && $baru['setting'] !== '' && $baru['setting'] !== null) ||
+                        (isset($baru['display']) && $baru['display'] !== '' && $baru['display'] !== null) ||
+                        (isset($baru['actual']) && $baru['actual'] !== '' && $baru['actual'] !== null)
+                    );
+
+                    if ($isFilled) {
                         $rows[] = [
                             'no' => $no++,
                             'tanggal' => $tanggalHistory,

@@ -218,10 +218,15 @@
                 $allUnits = array_unique($allUnits);
 
                 foreach ($allUnits as $u) {
-                    $oldItem = $findUnitRowV3($lama, $u);
                     $newItem = $findUnitRowV3($baru, $u);
 
-                    if (!$isSameV3($oldItem, $newItem) && !empty($newItem)) {
+                    $isFilled = !empty($newItem) && (
+                        (isset($newItem['setting']) && $newItem['setting'] !== '' && $newItem['setting'] !== null) ||
+                        (isset($newItem['display']) && $newItem['display'] !== '' && $newItem['display'] !== null) ||
+                        (isset($newItem['actual']) && $newItem['actual'] !== '' && $newItem['actual'] !== null)
+                    );
+
+                    if ($isFilled) {
                         $rows[] = [
                             'no'          => $no++,
                             'tanggal'     => $tanggalHistory,

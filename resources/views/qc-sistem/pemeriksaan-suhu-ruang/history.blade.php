@@ -215,13 +215,9 @@
                                                                     @php
                                                                         $oldItem = $oldArray[$itemKey] ?? [];
                                                                         $newItem = $newArray[$itemKey] ?? [];
-                                                                        $unitNumber = (int)$itemKey + 1; // Convert 0-based index to 1-based unit number
-                                                                        $unitLabelPrefix = 'Unit';
-                                                                        if ($key === 'cold_storage') {
-                                                                            $unitLabelPrefix = 'CS';
-                                                                        } elseif ($key === 'anteroom_loading') {
-                                                                            $unitLabelPrefix = 'Anteroom Loading';
-                                                                        }
+                                                                        $rawUnit = $newItem['unit'] ?? ($oldItem['unit'] ?? $itemKey);
+                                                                        $unitNumber = (is_numeric($rawUnit) && (int)$rawUnit === 0) ? 1 : $rawUnit;
+                                                                        $unitLabel = ($key === 'cold_storage') ? "CS {$unitNumber}" : "{$unitNumber}";
                                                                     @endphp
                                                                     @if(is_array($oldItem) || is_array($newItem))
                                                                         @foreach(['setting', 'display', 'actual'] as $param)
@@ -230,7 +226,7 @@
                                                                                 $newVal = $newItem[$param] ?? null;
                                                                             @endphp
                                                                             <tr>
-                                                                                <td><strong>{{ ucfirst(str_replace('_', ' ', $key)) }}</strong> {{ $unitLabelPrefix }} {{ $unitNumber }}</td>
+                                                                                <td><strong>{{ ucfirst(str_replace('_', ' ', $key)) }}</strong> {{ $unitLabel }}</td>
                                                                                 <td>{{ ucfirst($param) }}</td>
                                                                                 <td style="background-color: #ffe5e5;">{{ $oldVal ?? '-' }}</td>
                                                                                 <td style="background-color: #e5ffe5;">{{ $newVal ?? '-' }}</td>
