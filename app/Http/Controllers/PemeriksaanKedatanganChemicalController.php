@@ -13,9 +13,11 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
 use Monarobase\CountryList\CountryListFacade as Countries;
+use App\Http\Controllers\Traits\HasAuditController;
 
 class PemeriksaanKedatanganChemicalController extends Controller
 {
+    use HasAuditController;
     private function safeFuzzyMatch($a, $b)
     {
         if (!$a || !$b) return false;
@@ -29,9 +31,13 @@ class PemeriksaanKedatanganChemicalController extends Controller
     {
         $user = Auth::user();
 
+        // Detect audit mode from request
+        $isAuditView = $request->has('mode') && $request->mode === 'audit';
+
         $search = trim((string) $request->input('search', ''));
 
-        $query = PemeriksaanKedatanganChemical::with(['user.role', 'user.plant', 'shift']);
+        $query = PemeriksaanKedatanganChemical::with(['user.role', 'user.plant', 'shift'])
+            ->where('is_audit', $isAuditView); // Use is_audit based on mode
 
         if (!($user->role && strtolower($user->role->role) === 'superadmin')) {
             $query->whereHas('user', function ($q) use ($user) {
@@ -115,7 +121,7 @@ class PemeriksaanKedatanganChemicalController extends Controller
                 })->values();
             });
 
-return view('qc-sistem.pemeriksaan-kedatangan-chemical.index', compact('pemeriksaans', 'produkKategoriOptions', 'produkList', 'produkByKategori'));
+return view('qc-sistem.pemeriksaan-kedatangan-chemical.index', compact('pemeriksaans', 'produkKategoriOptions', 'produkList', 'produkByKategori', 'isAuditView'));
     }
 
     public function create()
@@ -1843,5 +1849,80 @@ return view('qc-sistem.pemeriksaan-kedatangan-chemical.index', compact('pemeriks
         }
 
         return back()->with('info', 'Tidak ada data yang memenuhi syarat untuk diverifikasi pada filter tersebut.');
+    }
+
+    // ==========================================
+    // AUDIT METHODS (HasAuditController Trait)
+    // ==========================================
+
+    protected function auditModel(): string
+    {
+        return PemeriksaanKedatanganChemical::class;
+    }
+
+    protected function auditRoutePrefix(): string
+    {
+        return 'pemeriksaan-chemical';
+    }
+
+    protected function auditViewPrefix(): string
+    {
+        return 'qc-sistem.pemeriksaan-kedatangan-chemical';
+    }
+
+    protected function auditRelations(): array
+    {
+        return ['user', 'shift'];
+    }
+
+    protected function auditSearchColumns(): array
+    {
+        return ['no_mobil', 'nama_supir', 'status_verifikasi', 'verification_notes'];
+    }
+
+    protected function auditDateColumn(): string
+    {
+        return 'tanggal';
+    }
+
+    protected function auditTimeColumn(): string
+    {
+        return 'created_at';
+    }
+
+    protected function auditShiftColumn(): string
+    {
+        return 'id_shift';
+    }
+
+    protected function auditPlanColumn(): ?string
+    {
+        return null;
+    }
+
+    protected function auditExtraViewData($records): array
+    {
+        $produkKategoriOptions = \App\Models\Produk::query()
+            ->whereNotNull('kategori_code')
+            ->select('kategori_code')
+            ->distinct()
+            ->orderBy('kategori_code')
+            ->pluck('kategori_code')
+            ->values();
+
+        $produkList = \App\Models\Produk::query()
+            ->select(['id', 'nama_produk', 'kategori_code'])
+            ->orderBy('nama_produk')
+            ->get();
+
+        $produkByKategori = $produkList
+            ->groupBy('kategori_code')
+            ->map(function ($items) {
+                return $items->map(function ($p) {
+                    return ['id' => $p->id, 'nama' => $p->nama_produk];
+                })->values();
+            });
+
+        return compact('produkKategoriOptions', 'produkList', 'produkByKategori');
     }
 }

@@ -7,10 +7,11 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 use App\Traits\HasPlantTimezoneTimestamps;
 use App\Traits\HasSubAreaSession;
+use App\Models\Traits\HasAudit;
 
 class PemeriksaanReturnBarangCustomer extends Model
 {
-    use HasFactory, HasPlantTimezoneTimestamps, HasSubAreaSession;
+    use HasFactory, HasPlantTimezoneTimestamps, HasSubAreaSession, HasAudit;
 
     protected $table = 'pemeriksaan_return_barang_customers';
 
@@ -35,11 +36,14 @@ class PemeriksaanReturnBarangCustomer extends Model
         'verified_by_spv',
         'verified_at',
         'verification_notes',
+        'is_audit',
+        'source_uuid',
     ];
 
     protected $casts = [
         'tanggal' => 'date',
         'produk_data' => 'array',
+        'is_audit' => 'boolean',
     ];
 
     protected static function boot()

@@ -8,6 +8,7 @@ use App\Models\Shift;
 use App\Models\Produk;
 use App\Traits\EditablePer2JamTrait;
 use App\Exports\PemeriksaanSuhuRuangV2Export;
+use App\Http\Controllers\Traits\HasAuditController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
@@ -15,7 +16,7 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class PemeriksaanSuhuRuangV2Controller extends Controller
 {
-    use EditablePer2JamTrait;
+    use EditablePer2JamTrait, HasAuditController;
     
     protected function getEditRouteName()
     {
@@ -27,7 +28,8 @@ class PemeriksaanSuhuRuangV2Controller extends Controller
 
         $search = trim((string) $request->input('search', ''));
         
-        $query = PemeriksaanSuhuRuangV2::with(['user.role', 'user.plant', 'shift', 'produk']);
+        $query = PemeriksaanSuhuRuangV2::with(['user.role', 'user.plant', 'shift', 'produk'])
+            ->where('is_audit', false);
 
         if (!($user->role && strtolower($user->role->role) === 'superadmin')) {
             $query->whereHas('user', function ($q) use ($user) {
@@ -1309,4 +1311,58 @@ class PemeriksaanSuhuRuangV2Controller extends Controller
 
         return back()->with('info', 'Tidak ada data yang memenuhi syarat untuk diverifikasi pada filter tersebut.');
     }
+    // ============================================================================
+    // AUDIT TRAIT IMPLEMENTATIONS
+    // ============================================================================
+
+    /**
+     * Required by HasAuditController Trait
+     */
+    protected function auditModel(): string
+    {
+        return PemeriksaanSuhuRuangV2::class;
+    }
+
+    protected function auditRoutePrefix(): string
+    {
+        return 'pemeriksaan-suhu-ruang-v2';
+    }
+
+    protected function auditViewPrefix(): string
+    {
+        return 'qc-sistem.pemeriksaan-suhu-ruang-v2';
+    }
+
+    protected function auditRelations(): array
+    {
+        return ['shift', 'user', 'produk', 'verifiedBy', 'qcVerifier', 'produksiVerifier', 'spvVerifier'];
+    }
+
+    protected function auditSearchColumns(): array
+    {
+        return ['suhu_produk', 'keterangan', 'status_verifikasi'];
+    }
+
+    protected function auditDateColumn(): string
+    {
+        return 'tanggal';
+    }
+
+    protected function auditTimeColumn(): string
+    {
+        return 'pukul';
+    }
+
+    protected function auditShiftColumn(): string
+    {
+        return 'id_shift';
+    }
+
+    protected function auditPlanColumn(): ?string
+    {
+        return null;
+    }
+
 }
+
+    

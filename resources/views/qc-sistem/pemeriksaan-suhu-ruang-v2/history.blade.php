@@ -239,13 +239,8 @@
                                                                     @php
                                                                         $oldItem = $oldArray[$key] ?? [];
                                                                         $newItem = $newArray[$key] ?? [];
-                                                                        $unitNumber = (int)$key + 1; // Convert 0-based index to 1-based unit number
-                                                                        $unitLabelPrefix = 'Unit';
-                                                                        if ($label === 'Cold Storage') {
-                                                                            $unitLabelPrefix = 'CS';
-                                                                        } elseif ($label === 'Anteroom Loading') {
-                                                                            $unitLabelPrefix = 'Anteroom Loading';
-                                                                        }
+                                                                        $unitNumber = (is_numeric($key) && (int)$key === 0) ? 1 : $key;
+                                                                        $unitLabel = ($label === 'Cold Storage') ? "CS {$unitNumber}" : "{$unitNumber}";
                                                                     @endphp
                                                                     @foreach(['setting', 'display', 'actual'] as $param)
                                                                         @php
@@ -253,7 +248,7 @@
                                                                             $newVal = $newItem[$param] ?? null;
                                                                         @endphp
                                                                         <tr>
-                                                                            <td><strong>{{ $label }}</strong> {{ $unitLabelPrefix }} {{ $unitNumber }}</td>
+                                                                            <td><strong>{{ $label }}</strong> {{ $unitLabel }}</td>
                                                                             <td>{{ ucfirst($param) }}</td>
                                                                             <td style="background-color: #ffe5e5;">{{ $oldVal ?? '-' }}</td>
                                                                             <td style="background-color: #e5ffe5;">{{ $newVal ?? '-' }}</td>

@@ -7,10 +7,11 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 use App\Traits\HasPlantTimezoneTimestamps;
 use App\Traits\HasSubAreaSession;
+use App\Models\Traits\HasAudit;
 
 class PemeriksaanSuhuRuangV2 extends Model
 {
-    use HasFactory, HasPlantTimezoneTimestamps, HasSubAreaSession;
+    use HasFactory, HasPlantTimezoneTimestamps, HasSubAreaSession, HasAudit;
     protected $table = 'pemeriksaan_suhu_ruang_v2s';
 
     protected $fillable = [
@@ -38,6 +39,9 @@ class PemeriksaanSuhuRuangV2 extends Model
         'verified_by_qc',
         'verified_by_produksi',
         'verified_by_spv',
+        // Audit Fields
+        'is_audit',
+        'source_uuid',
     ];
 
     protected $casts = [
@@ -49,6 +53,7 @@ class PemeriksaanSuhuRuangV2 extends Model
         'suhu_chillroom_rm' => 'json',
         'suhu_chillroom_domestik' => 'json',
         'tanggal' => 'date',
+        'is_audit' => 'boolean',
     ];
 
     protected static function boot()

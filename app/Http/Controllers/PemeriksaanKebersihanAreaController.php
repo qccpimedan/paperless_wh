@@ -11,9 +11,11 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Barryvdh\DomPDF\Facade\Pdf as PDF;
+use App\Http\Controllers\Traits\HasAuditController;
 
 class PemeriksaanKebersihanAreaController extends Controller
 {
+    use HasAuditController;
     /**
      * Display a listing of the resource.
      */
@@ -23,7 +25,8 @@ class PemeriksaanKebersihanAreaController extends Controller
 
         $search = trim((string) $request->input('search', ''));
 
-        $query = PemeriksaanKebersihanArea::with(['user.role', 'user.plant', 'shift']);
+        $query = PemeriksaanKebersihanArea::with(['user.role', 'user.plant', 'shift'])
+            ->where('is_audit', false);
 
         if (!($user->role && strtolower($user->role->role) === 'superadmin')) {
             $query->whereHas('user', function ($q) use ($user) {
@@ -675,5 +678,62 @@ class PemeriksaanKebersihanAreaController extends Controller
         }
 
         return back()->with('info', 'Tidak ada data yang memenuhi syarat untuk diverifikasi pada filter tersebut.');
+    }
+
+    // ==========================================
+    // AUDIT METHODS (HasAuditController Trait)
+    // ==========================================
+
+    protected function auditModel(): string
+    {
+        return PemeriksaanKebersihanArea::class;
+    }
+
+    protected function auditRoutePrefix(): string
+    {
+        return 'pemeriksaan-kebersihan-area';
+    }
+
+    protected function auditViewPrefix(): string
+    {
+        return 'qc-sistem.pemeriksaan-kebersihan-area';
+    }
+
+    protected function auditRelations(): array
+    {
+        return ['user', 'shift'];
+    }
+
+    protected function auditSearchColumns(): array
+    {
+        return ['tanggal', 'status_verifikasi', 'verification_notes'];
+    }
+
+    protected function auditDateColumn(): string
+    {
+        return 'tanggal';
+    }
+
+    protected function auditTimeColumn(): string
+    {
+        return 'created_at';
+    }
+
+    protected function auditShiftColumn(): string
+    {
+        return 'id_shift';
+    }
+
+    protected function auditPlanColumn(): ?string
+    {
+        return null;
+    }
+
+    protected function auditExtraViewData($records): array
+    {
+        $areaNamaById = \App\Models\InputArea::pluck('nama_area', 'id')->all();
+        $masterFormNamaById = \App\Models\InputMasterForm::pluck('nama_form', 'id')->all();
+
+        return compact('areaNamaById', 'masterFormNamaById');
     }
 }

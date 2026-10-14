@@ -7,10 +7,11 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 use App\Traits\HasPlantTimezoneTimestamps;
 use App\Traits\HasSubAreaSession;
+use App\Models\Traits\HasAudit;
 
 class PemeriksaanKedatanganBahanBakuPenunjang extends Model
 {
-    use HasFactory, HasPlantTimezoneTimestamps, HasSubAreaSession;
+    use HasFactory, HasPlantTimezoneTimestamps, HasSubAreaSession, HasAudit;
 
     protected $fillable = [
         'uuid',
@@ -80,6 +81,8 @@ class PemeriksaanKedatanganBahanBakuPenunjang extends Model
         'file_coa_array',
         'image_bahan_baku_array',
         'keterangan_array',
+        'is_audit',
+        'source_uuid',
     ];
 
     protected $casts = [
@@ -92,6 +95,7 @@ class PemeriksaanKedatanganBahanBakuPenunjang extends Model
         'image_bahan_baku_array' => 'array',
         'tanggal' => 'date',
         'expire_date' => 'date',
+        'is_audit' => 'boolean',
     ];
 
     protected static function boot()

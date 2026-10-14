@@ -2,6 +2,14 @@
 @section('container')
 @php
     $user = \Illuminate\Support\Facades\Auth::user();
+    $userRole = auth()->user()->role ? strtolower(auth()->user()->role->role) : null;
+
+    // AUDITOR AUTO-REDIRECT: Auditor harus langsung ke halaman audit (jika belum di audit view)
+    if ($userRole === 'auditor' && !($isAuditView ?? false)) {
+        header('Location: ' . route('pemeriksaan-barang-mudah-pecah.audit'));
+        exit;
+    }
+
     if ($user && $user->role && strtolower($user->role->role) === 'superadmin') {
         $shifts = \App\Models\Shift::all();
     } else {
@@ -13,7 +21,6 @@
             })
             ->get();
     }
-    $userRole = auth()->user()->role ? strtolower(auth()->user()->role->role) : null;
     $canVerify = in_array($userRole, ['qc inspector', 'warehouse', 'produksi', 'spv qc', 'superadmin', 'produksi/warehouse']);
 @endphp
 <div id="main">
@@ -55,6 +62,13 @@
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="card-title mb-0">Daftar Pemeriksaan Barang Mudah Pecah</h5>
                     <div class="d-flex gap-2">
+                        <!-- {{-- Link to Audit Page --}}
+                        @if(in_array($userRole, ['auditor', 'spv qc', 'superadmin']))
+                            <a href="{{ route('pemeriksaan-barang-mudah-pecah.audit') }}" class="btn btn-warning">
+                                <i class="bi bi-shield-check"></i> Data Audit
+                            </a>
+                        @endif -->
+
                         @if($canVerify)
                             <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#multiApprovalModal">
                                 <i class="bi bi-patch-check"></i> Multi Approval
@@ -214,6 +228,8 @@
                                                 <div class="btn-group">
                                                     @can('view_pemeriksaan_barang_mudah_pecah') <a href="{{ route('pemeriksaan-barang-mudah-pecah.show', $item->uuid) }}" class="btn btn-sm btn-info text-white"><i class="bi bi-eye"></i></a> @endcan
                                                     @can('edit_pemeriksaan_barang_mudah_pecah') <a href="{{ route('pemeriksaan-barang-mudah-pecah.edit', $item->uuid) }}" class="btn btn-sm btn-warning text-white"><i class="bi bi-pencil"></i></a> @endcan
+                                                    <!-- <x-audit-action-btn :item="$item" route-prefix="pemeriksaan-barang-mudah-pecah" :is-audit-view="$isAuditView ?? false" /> -->
+
                                                 </div>
                                             </td>
                                         </tr>

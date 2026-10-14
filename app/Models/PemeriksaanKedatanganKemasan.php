@@ -7,10 +7,11 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 use App\Traits\HasPlantTimezoneTimestamps;
 use App\Traits\HasSubAreaSession;
+use App\Models\Traits\HasAudit;
 
 class PemeriksaanKedatanganKemasan extends Model
 {
-    use HasFactory, HasPlantTimezoneTimestamps, HasSubAreaSession;
+    use HasFactory, HasPlantTimezoneTimestamps, HasSubAreaSession, HasAudit;
 
     /**
      * The attributes that are mass assignable.
@@ -78,6 +79,8 @@ class PemeriksaanKedatanganKemasan extends Model
         'keterangan_array',
         'image_kemasan_array',
         'file_coa_array',
+        'is_audit',
+        'source_uuid',
     ];
 
     /**
@@ -94,6 +97,7 @@ class PemeriksaanKedatanganKemasan extends Model
         'dokumen_halal' => 'boolean',
         'coa' => 'boolean',
         'image_kemasan_array' => 'array',
+        'is_audit' => 'boolean',
     ];
 
     /**

@@ -175,11 +175,15 @@
                     $allUnits = array_unique($allUnits);
 
                     foreach ($allUnits as $u) {
-                        $oldItem = $findUnitRow($oldSection, $u);
                         $newItem = $findUnitRow($newSection, $u);
 
-                        // Masukkan ke tabel jika ada perubahan data pada unit ini
-                        if (!$isSame($oldItem, $newItem) && !empty($newItem)) {
+                        $isFilled = !empty($newItem) && (
+                            (isset($newItem['setting']) && $newItem['setting'] !== '' && $newItem['setting'] !== null) ||
+                            (isset($newItem['display']) && $newItem['display'] !== '' && $newItem['display'] !== null) ||
+                            (isset($newItem['actual']) && $newItem['actual'] !== '' && $newItem['actual'] !== null)
+                        );
+
+                        if ($isFilled) {
                             $rows[] = [
                                 'no' => $no++,
                                 'tanggal' => $tanggalHistory,
@@ -197,8 +201,13 @@
                         }
                     }
                 } else {
-                    // Section tunggal
-                    if (!$isSame($oldSection, $newSection) && !empty($newSection)) {
+                    $isFilled = !empty($newSection) && (
+                        (isset($newSection['setting']) && $newSection['setting'] !== '' && $newSection['setting'] !== null) ||
+                        (isset($newSection['display']) && $newSection['display'] !== '' && $newSection['display'] !== null) ||
+                        (isset($newSection['actual']) && $newSection['actual'] !== '' && $newSection['actual'] !== null)
+                    );
+
+                    if ($isFilled) {
                         $rows[] = [
                             'no' => $no++,
                             'tanggal' => $tanggalHistory,

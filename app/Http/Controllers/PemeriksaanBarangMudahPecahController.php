@@ -14,9 +14,11 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf as PDF;
+use App\Http\Controllers\Traits\HasAuditController;
 
 class PemeriksaanBarangMudahPecahController extends Controller
 {
+    use HasAuditController;
     /**
      * Display a listing of the resource.
      */
@@ -802,5 +804,54 @@ class PemeriksaanBarangMudahPecahController extends Controller
         }
 
         return back()->with('info', 'Tidak ada data yang memenuhi syarat untuk diverifikasi pada filter tersebut.');
+    }
+
+    // ==========================================
+    // AUDIT METHODS (HasAuditController Trait)
+    // ==========================================
+
+    protected function auditModel(): string
+    {
+        return PemeriksaanBarangMudahPecah::class;
+    }
+
+    protected function auditRoutePrefix(): string
+    {
+        return 'pemeriksaan-barang-mudah-pecah';
+    }
+
+    protected function auditViewPrefix(): string
+    {
+        return 'qc-sistem.pemeriksaan-barang-mudah-pecah';
+    }
+
+    protected function auditRelations(): array
+    {
+        return ['user', 'shift', 'area', 'details.barang'];
+    }
+
+    protected function auditSearchColumns(): array
+    {
+        return ['tanggal', 'status_verifikasi', 'verification_notes'];
+    }
+
+    protected function auditDateColumn(): string
+    {
+        return 'tanggal';
+    }
+
+    protected function auditTimeColumn(): string
+    {
+        return 'created_at';
+    }
+
+    protected function auditShiftColumn(): string
+    {
+        return 'id_shift';
+    }
+
+    protected function auditPlanColumn(): ?string
+    {
+        return null;
     }
 }

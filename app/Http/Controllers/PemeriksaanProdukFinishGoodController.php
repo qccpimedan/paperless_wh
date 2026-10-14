@@ -10,16 +10,19 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Barryvdh\DomPDF\Facade\Pdf as PDF;
 use Monarobase\CountryList\CountryListFacade as Countries;
+use App\Http\Controllers\Traits\HasAuditController;
 
 class PemeriksaanProdukFinishGoodController extends Controller
 {
+    use HasAuditController;
     public function index(Request $request)
     {
         $user = Auth::user();
 
         $search = trim((string) $request->input('search', ''));
 
-        $query = PemeriksaanProdukFinishGood::with(['user.role', 'user.plant', 'shift']);
+        $query = PemeriksaanProdukFinishGood::with(['user.role', 'user.plant', 'shift'])
+            ->where('is_audit', false);
 
         if (!($user->role && strtolower($user->role->role) === 'superadmin')) {
             $query->whereHas('user', function ($q) use ($user) {
@@ -1310,5 +1313,82 @@ return view('qc-sistem.pemeriksaan-produk-finish-good.index', compact('pemeriksa
         }
 
         return back()->with('info', 'Tidak ada data yang memenuhi syarat untuk diverifikasi pada filter tersebut.');
+    }
+
+    // ==========================================
+    // AUDIT METHODS (HasAuditController Trait)
+    // ==========================================
+
+    protected function auditModel(): string
+    {
+        return PemeriksaanProdukFinishGood::class;
+    }
+
+    protected function auditRoutePrefix(): string
+    {
+        return 'pemeriksaan-produk-finish-good';
+    }
+
+    protected function auditViewPrefix(): string
+    {
+        return 'qc-sistem.pemeriksaan-produk-finish-good';
+    }
+
+    protected function auditRelations(): array
+    {
+        return ['user', 'shift'];
+    }
+
+    protected function auditSearchColumns(): array
+    {
+        return ['no_segel', 'no_mobil', 'nama_supir', 'kode_produksi_array', 'status_verifikasi', 'verification_notes'];
+    }
+
+    protected function auditDateColumn(): string
+    {
+        return 'tanggal';
+    }
+
+    protected function auditTimeColumn(): string
+    {
+        return 'created_at';
+    }
+
+    protected function auditShiftColumn(): string
+    {
+        return 'id_shift';
+    }
+
+    protected function auditPlanColumn(): ?string
+    {
+        return null;
+    }
+
+    protected function auditExtraViewData($records): array
+    {
+        $produkKategoriOptions = Produk::query()
+            ->whereNotNull('kategori_code')
+            ->select('kategori_code')
+            ->distinct()
+            ->orderBy('kategori_code')
+            ->pluck('kategori_code')
+            ->values();
+
+        $produkList = Produk::query()
+            ->select(['id', 'nama_produk', 'kategori_code'])
+            ->orderBy('nama_produk')
+            ->get();
+
+        $produkByKategori = $produkList
+            ->groupBy('kategori_code')
+            ->map(function ($items) {
+                return $items->map(function ($p) {
+                    return ['id' => $p->id, 'nama' => $p->nama_produk];
+                })->values();
+            });
+
+        $produkNamaById = $produkList->pluck('nama_produk', 'id')->all();
+
+        return compact('produkNamaById', 'produkKategoriOptions', 'produkList', 'produkByKategori');
     }
 }

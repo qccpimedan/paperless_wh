@@ -13,10 +13,11 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Barryvdh\DomPDF\Facade\Pdf as PDF;
-
+use App\Http\Controllers\Traits\HasAuditController;
 
 class PemeriksaanKedatanganKemasanController extends Controller
 {
+    use HasAuditController;
     /**
      * Simpan file COA (PDF atau gambar).
      * Jika gambar > 3MB, otomatis dikompres sebelum disimpan.
@@ -66,7 +67,8 @@ class PemeriksaanKedatanganKemasanController extends Controller
 
         $search = trim((string) $request->input('search', ''));
 
-        $query = PemeriksaanKedatanganKemasan::with(['user.role', 'user.plant', 'bahan', 'shift']);
+        $query = PemeriksaanKedatanganKemasan::with(['user.role', 'user.plant', 'bahan', 'shift'])
+            ->where('is_audit', false);
 
         if (!($user->role && strtolower($user->role->role) === 'superadmin')) {
             $query->whereHas('user', function ($q) use ($effectivePlantId) {
@@ -1575,5 +1577,93 @@ return view('qc-sistem.pemeriksaan-kedatangan-kemasan.index', compact('pemeriksa
         }
 
         return back()->with('info', 'Tidak ada data yang perlu diverifikasi pada filter tersebut.');
+    }
+
+    // ==========================================
+    // AUDIT METHODS (HasAuditController Trait)
+    // ==========================================
+
+    protected function auditModel(): string
+    {
+        return PemeriksaanKedatanganKemasan::class;
+    }
+
+    protected function auditRoutePrefix(): string
+    {
+        return 'pemeriksaan-kedatangan-kemasan';
+    }
+
+    protected function auditViewPrefix(): string
+    {
+        return 'qc-sistem.pemeriksaan-kedatangan-kemasan';
+    }
+
+    protected function auditRelations(): array
+    {
+        return ['user', 'shift'];
+    }
+
+    protected function auditSearchColumns(): array
+    {
+        return ['no_po', 'no_mobil', 'nama_supir', 'status_verifikasi', 'verification_notes'];
+    }
+
+    protected function auditDateColumn(): string
+    {
+        return 'tanggal';
+    }
+
+    protected function auditTimeColumn(): string
+    {
+        return 'created_at';
+    }
+
+    protected function auditShiftColumn(): string
+    {
+        return 'id_shift';
+    }
+
+    protected function auditPlanColumn(): ?string
+    {
+        return null;
+    }
+
+    protected function auditExtraViewData($records): array
+    {
+        $produkIds = $records
+            ->flatMap(function ($pemeriksaan) {
+                $ids = json_decode($pemeriksaan->id_bahan_array ?? '[]', true);
+                return is_array($ids) ? $ids : [];
+            })
+            ->filter(fn ($id) => !empty($id))
+            ->unique()
+            ->values();
+
+        $produkNamaById = $produkIds->isNotEmpty()
+            ? Produk::whereIn('id', $produkIds)->pluck('nama_produk', 'id')
+            : collect();
+
+        $produkKategoriOptions = Produk::query()
+            ->whereNotNull('kategori_code')
+            ->select('kategori_code')
+            ->distinct()
+            ->orderBy('kategori_code')
+            ->pluck('kategori_code')
+            ->values();
+
+        $produkList = Produk::query()
+            ->select(['id', 'nama_produk', 'kategori_code'])
+            ->orderBy('nama_produk')
+            ->get();
+
+        $produkByKategori = $produkList
+            ->groupBy('kategori_code')
+            ->map(function ($items) {
+                return $items->map(function ($p) {
+                    return ['id' => $p->id, 'nama' => $p->nama_produk];
+                })->values();
+            });
+
+        return compact('produkNamaById', 'produkKategoriOptions', 'produkList', 'produkByKategori');
     }
 }

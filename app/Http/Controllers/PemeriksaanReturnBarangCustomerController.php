@@ -12,9 +12,11 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Barryvdh\DomPDF\Facade\Pdf as PDF;
 use Maatwebsite\Excel\Facades\Excel;
+use App\Http\Controllers\Traits\HasAuditController;
 
 class PemeriksaanReturnBarangCustomerController extends Controller
 {
+    use HasAuditController;
     public function index(Request $request)
     {
         $user = Auth::user();
@@ -27,7 +29,7 @@ class PemeriksaanReturnBarangCustomerController extends Controller
             'shift',
             'ekspedisi',
             'customer'
-        ]);
+        ])->where('is_audit', false);
 
         if (!($user->role && strtolower($user->role->role) === 'superadmin')) {
             $query->whereHas('user', function ($q) use ($user) {
@@ -1206,5 +1208,82 @@ class PemeriksaanReturnBarangCustomerController extends Controller
                 'errors' => [$e->getMessage()],
             ], 500);
         }
+    }
+
+    // ==========================================
+    // AUDIT METHODS (HasAuditController Trait)
+    // ==========================================
+
+    protected function auditModel(): string
+    {
+        return PemeriksaanReturnBarangCustomer::class;
+    }
+
+    protected function auditRoutePrefix(): string
+    {
+        return 'pemeriksaan-return-barang-customer';
+    }
+
+    protected function auditViewPrefix(): string
+    {
+        return 'qc-sistem.pemeriksaan-return-barang-customer';
+    }
+
+    protected function auditRelations(): array
+    {
+        return ['user', 'shift', 'ekspedisi', 'customer'];
+    }
+
+    protected function auditSearchColumns(): array
+    {
+        return ['no_segel', 'no_polisi', 'no_surat_jalan', 'no_po', 'produk_data', 'status_verifikasi', 'verification_notes'];
+    }
+
+    protected function auditDateColumn(): string
+    {
+        return 'tanggal';
+    }
+
+    protected function auditTimeColumn(): string
+    {
+        return 'created_at';
+    }
+
+    protected function auditShiftColumn(): string
+    {
+        return 'id_shift';
+    }
+
+    protected function auditPlanColumn(): ?string
+    {
+        return null;
+    }
+
+    protected function auditExtraViewData($records): array
+    {
+        $produkKategoriOptions = Produk::query()
+            ->whereNotNull('kategori_code')
+            ->select('kategori_code')
+            ->distinct()
+            ->orderBy('kategori_code')
+            ->pluck('kategori_code')
+            ->values();
+
+        $produkList = Produk::query()
+            ->select(['id', 'nama_produk', 'kategori_code'])
+            ->orderBy('nama_produk')
+            ->get();
+
+        $produkByKategori = $produkList
+            ->groupBy('kategori_code')
+            ->map(function ($items) {
+                return $items->map(function ($p) {
+                    return ['id' => $p->id, 'nama' => $p->nama_produk];
+                })->values();
+            });
+
+        $produkNamaById = $produkList->pluck('nama_produk', 'id')->all();
+
+        return compact('produkKategoriOptions', 'produkList', 'produkByKategori', 'produkNamaById');
     }
 }

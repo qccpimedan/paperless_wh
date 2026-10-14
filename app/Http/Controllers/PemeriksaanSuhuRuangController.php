@@ -11,10 +11,11 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\PemeriksaanSuhuRuangExport;
+use App\Http\Controllers\Traits\HasAuditController;
 
 class PemeriksaanSuhuRuangController extends Controller
 {
-    use EditablePer2JamTrait;
+    use EditablePer2JamTrait, HasAuditController;
 
     protected function getEditRouteName()
     {
@@ -26,7 +27,8 @@ class PemeriksaanSuhuRuangController extends Controller
 
         $search = trim((string) $request->input('search', ''));
         
-        $query = PemeriksaanSuhuRuang::with(['user.role', 'user.plant', 'shift', 'produk']);
+        $query = PemeriksaanSuhuRuang::with(['user.role', 'user.plant', 'shift', 'produk'])
+            ->where('is_audit', false);
 
         if (!($user->role && strtolower($user->role->role) === 'superadmin')) {
             $query->whereHas('user', function ($q) use ($user) {
@@ -1217,5 +1219,54 @@ class PemeriksaanSuhuRuangController extends Controller
         }
 
         return back()->with('info', 'Tidak ada data yang memenuhi syarat untuk diverifikasi pada filter tersebut.');
+    }
+
+    // ==========================================
+    // AUDIT METHODS (HasAuditController Trait)
+    // ==========================================
+
+    protected function auditModel(): string
+    {
+        return PemeriksaanSuhuRuang::class;
+    }
+
+    protected function auditRoutePrefix(): string
+    {
+        return 'pemeriksaan-suhu-ruang';
+    }
+
+    protected function auditViewPrefix(): string
+    {
+        return 'qc-sistem.pemeriksaan-suhu-ruang';
+    }
+
+    protected function auditRelations(): array
+    {
+        return ['shift', 'user', 'produk'];
+    }
+
+    protected function auditSearchColumns(): array
+    {
+        return ['tanggal', 'pukul', 'keterangan'];
+    }
+
+    protected function auditDateColumn(): string
+    {
+        return 'tanggal';
+    }
+
+    protected function auditTimeColumn(): string
+    {
+        return 'pukul';
+    }
+
+    protected function auditShiftColumn(): string
+    {
+        return 'id_shift';
+    }
+
+    protected function auditPlanColumn(): ?string
+    {
+        return null; // V1 filter berdasarkan user.id_plant via whereHas, bukan kolom langsung
     }
 }

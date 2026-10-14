@@ -40,6 +40,7 @@ use App\Http\Controllers\PemeriksaanBarangMudahPecahController;
 use App\Http\Controllers\BahanKemasanController;
 use App\Http\Controllers\ManagerController;
 use App\Http\Controllers\SsoLoginController;
+use App\Http\Controllers\MasterStandarAuditController;
 use Illuminate\Support\Facades\Auth;
 
 // Redirect root to login
@@ -136,6 +137,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::put('access-control/{roleId}', [AccessControlController::class, 'update'])->name('access-control.update');
     Route::get('access-control/{roleId}/permissions', [AccessControlController::class, 'getPermissions'])->name('access-control.permissions');
 
+    // Master Standar Audit Routes
+    Route::prefix('master-standar-audit')->name('master-standar-audit.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\MasterStandarAuditController::class, 'index'])->name('index');
+        Route::get('/get-columns', [\App\Http\Controllers\MasterStandarAuditController::class, 'getColumns'])->name('get-columns');
+        Route::post('/store', [\App\Http\Controllers\MasterStandarAuditController::class, 'store'])->name('store');
+        Route::put('/{uuid}', [\App\Http\Controllers\MasterStandarAuditController::class, 'update'])->name('update');
+        Route::delete('/{uuid}', [\App\Http\Controllers\MasterStandarAuditController::class, 'destroy'])->name('destroy');
+    });
+
     // Manager - Switch Plant Routes
     Route::post('manager/switch-plant', [ManagerController::class, 'switchPlant'])->name('manager.switch-plant');
     Route::post('manager/reset-plant', [ManagerController::class, 'resetPlant'])->name('manager.reset-plant');
@@ -219,6 +229,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('input-deskripsis/template', [InputDeskripsiController::class, 'template'])->name('input-deskripsis.template');
         Route::post('input-deskripsis/import', [InputDeskripsiController::class, 'import'])->name('input-deskripsis.import');
         Route::resource('input-deskripsis', InputDeskripsiController::class);
+
+        // Master Standar Audit Routes
+        Route::get('master-standar-audit/get-columns', [MasterStandarAuditController::class, 'getColumns'])->name('master-standar-audit.get-columns');
+        Route::resource('master-standar-audit', MasterStandarAuditController::class);
     });
     
     // QC System Routes
@@ -244,6 +258,67 @@ Route::middleware(['auth', 'verified'])->group(function () {
          Route::get('pemeriksaan-suhu-ruang-v2/export-pdf', [PemeriksaanSuhuRuangV2Controller::class, 'exportPDF'])->name('pemeriksaan-suhu-ruang-v2.export-pdf');
          Route::get('pemeriksaan-suhu-ruang-v2/export-excel', [PemeriksaanSuhuRuangV2Controller::class, 'exportExcel'])->name('pemeriksaan-suhu-ruang-v2.export-excel');
          Route::get('pemeriksaan-suhu-ruang-v2/{pemeriksaanSuhuRuangV2:uuid}/print-pdf', [PemeriksaanSuhuRuangV2Controller::class, 'printPDF'])->name('pemeriksaan-suhu-ruang-v2.print-pdf');
+        
+        // Audit Routes for Pemeriksaan Suhu Ruang V2
+        Route::get('pemeriksaan-suhu-ruang-v2/audit-data', [PemeriksaanSuhuRuangV2Controller::class, 'auditIndex'])->name('pemeriksaan-suhu-ruang-v2.audit');
+        Route::get('pemeriksaan-suhu-ruang-v2/audit-search', [PemeriksaanSuhuRuangV2Controller::class, 'auditSearchAjax'])->name('pemeriksaan-suhu-ruang-v2.audit-search');
+        Route::get('pemeriksaan-suhu-ruang-v2/copy-to-audit/{uuid}', [PemeriksaanSuhuRuangV2Controller::class, 'copyToAudit'])->name('pemeriksaan-suhu-ruang-v2.copy-to-audit');
+        
+        // Audit Routes for Pemeriksaan Suhu Ruang V3
+        Route::get('pemeriksaan-suhu-ruang-v3/audit-data', [PemeriksaanSuhuRuangV3Controller::class, 'auditIndex'])->name('pemeriksaan-suhu-ruang-v3.audit');
+        Route::get('pemeriksaan-suhu-ruang-v3/audit-search', [PemeriksaanSuhuRuangV3Controller::class, 'auditSearchAjax'])->name('pemeriksaan-suhu-ruang-v3.audit-search');
+        Route::get('pemeriksaan-suhu-ruang-v3/copy-to-audit/{uuid}', [PemeriksaanSuhuRuangV3Controller::class, 'copyToAudit'])->name('pemeriksaan-suhu-ruang-v3.copy-to-audit');
+
+        // Audit Routes for Pemeriksaan Suhu Ruang V1
+        Route::get('pemeriksaan-suhu-ruang/audit-data', [PemeriksaanSuhuRuangController::class, 'auditIndex'])->name('pemeriksaan-suhu-ruang.audit');
+        Route::get('pemeriksaan-suhu-ruang/audit-search', [PemeriksaanSuhuRuangController::class, 'auditSearchAjax'])->name('pemeriksaan-suhu-ruang.audit-search');
+        Route::get('pemeriksaan-suhu-ruang/copy-to-audit/{uuid}', [PemeriksaanSuhuRuangController::class, 'copyToAudit'])->name('pemeriksaan-suhu-ruang.copy-to-audit');
+        
+        // Audit Routes for Barang Mudah Pecah
+        Route::get('pemeriksaan-barang-mudah-pecah/audit-data', [PemeriksaanBarangMudahPecahController::class, 'auditIndex'])->name('pemeriksaan-barang-mudah-pecah.audit');
+        Route::get('pemeriksaan-barang-mudah-pecah/audit-search', [PemeriksaanBarangMudahPecahController::class, 'auditSearchAjax'])->name('pemeriksaan-barang-mudah-pecah.audit-search');
+        Route::get('pemeriksaan-barang-mudah-pecah/copy-to-audit/{uuid}', [PemeriksaanBarangMudahPecahController::class, 'copyToAudit'])->name('pemeriksaan-barang-mudah-pecah.copy-to-audit');
+
+        // Audit Routes for Kebersihan Area
+        Route::get('pemeriksaan-kebersihan-area/audit-data', [PemeriksaanKebersihanAreaController::class, 'auditIndex'])->name('pemeriksaan-kebersihan-area.audit');
+        Route::get('pemeriksaan-kebersihan-area/audit-search', [PemeriksaanKebersihanAreaController::class, 'auditSearchAjax'])->name('pemeriksaan-kebersihan-area.audit-search');
+        Route::get('pemeriksaan-kebersihan-area/copy-to-audit/{uuid}', [PemeriksaanKebersihanAreaController::class, 'copyToAudit'])->name('pemeriksaan-kebersihan-area.copy-to-audit');
+
+        // Audit Routes for Bahan Baku Penunjang
+        Route::get('pemeriksaan-bahan-baku/audit-data', [PemeriksaanKedatanganBahanBakuPenunjangController::class, 'auditIndex'])->name('pemeriksaan-bahan-baku.audit');
+        Route::get('pemeriksaan-bahan-baku/audit-search', [PemeriksaanKedatanganBahanBakuPenunjangController::class, 'auditSearchAjax'])->name('pemeriksaan-bahan-baku.audit-search');
+        Route::get('pemeriksaan-bahan-baku/copy-to-audit/{uuid}', [PemeriksaanKedatanganBahanBakuPenunjangController::class, 'copyToAudit'])->name('pemeriksaan-bahan-baku.copy-to-audit');
+
+        // Audit Routes for Chemical
+        Route::get('pemeriksaan-chemical/audit-data', [PemeriksaanKedatanganChemicalController::class, 'auditIndex'])->name('pemeriksaan-chemical.audit');
+        Route::get('pemeriksaan-chemical/audit-search', [PemeriksaanKedatanganChemicalController::class, 'auditSearchAjax'])->name('pemeriksaan-chemical.audit-search');
+        Route::get('pemeriksaan-chemical/copy-to-audit/{uuid}', [PemeriksaanKedatanganChemicalController::class, 'copyToAudit'])->name('pemeriksaan-chemical.copy-to-audit');
+
+        // Audit Routes for Kemasan
+        Route::get('pemeriksaan-kedatangan-kemasan/audit-data', [PemeriksaanKedatanganKemasanController::class, 'auditIndex'])->name('pemeriksaan-kedatangan-kemasan.audit');
+        Route::get('pemeriksaan-kedatangan-kemasan/audit-search', [PemeriksaanKedatanganKemasanController::class, 'auditSearchAjax'])->name('pemeriksaan-kedatangan-kemasan.audit-search');
+        Route::get('pemeriksaan-kedatangan-kemasan/copy-to-audit/{uuid}', [PemeriksaanKedatanganKemasanController::class, 'copyToAudit'])->name('pemeriksaan-kedatangan-kemasan.copy-to-audit');
+
+        // Audit Routes for Loading Kendaraan
+        Route::get('pemeriksaan-loading-kendaraan/audit-data', [PemeriksaanLoadingKendaraanController::class, 'auditIndex'])->name('pemeriksaan-loading-kendaraan.audit');
+        Route::get('pemeriksaan-loading-kendaraan/audit-search', [PemeriksaanLoadingKendaraanController::class, 'auditSearchAjax'])->name('pemeriksaan-loading-kendaraan.audit-search');
+        Route::get('pemeriksaan-loading-kendaraan/copy-to-audit/{uuid}', [PemeriksaanLoadingKendaraanController::class, 'copyToAudit'])->name('pemeriksaan-loading-kendaraan.copy-to-audit');
+
+        // Audit Routes for Loading Produk
+        Route::get('pemeriksaan-loading-produk/audit-data', [PemeriksaanLoadingProdukController::class, 'auditIndex'])->name('pemeriksaan-loading-produk.audit');
+        Route::get('pemeriksaan-loading-produk/audit-search', [PemeriksaanLoadingProdukController::class, 'auditSearchAjax'])->name('pemeriksaan-loading-produk.audit-search');
+        Route::get('pemeriksaan-loading-produk/copy-to-audit/{uuid}', [PemeriksaanLoadingProdukController::class, 'copyToAudit'])->name('pemeriksaan-loading-produk.copy-to-audit');
+
+        // Audit Routes for Produk Finish Good
+        Route::get('pemeriksaan-produk-finish-good/audit-data', [PemeriksaanProdukFinishGoodController::class, 'auditIndex'])->name('pemeriksaan-produk-finish-good.audit');
+        Route::get('pemeriksaan-produk-finish-good/audit-search', [PemeriksaanProdukFinishGoodController::class, 'auditSearchAjax'])->name('pemeriksaan-produk-finish-good.audit-search');
+        Route::get('pemeriksaan-produk-finish-good/copy-to-audit/{uuid}', [PemeriksaanProdukFinishGoodController::class, 'copyToAudit'])->name('pemeriksaan-produk-finish-good.copy-to-audit');
+
+        // Audit Routes for Return Barang Customer
+        Route::get('pemeriksaan-return-barang-customer/audit-data', [PemeriksaanReturnBarangCustomerController::class, 'auditIndex'])->name('pemeriksaan-return-barang-customer.audit');
+        Route::get('pemeriksaan-return-barang-customer/audit-search', [PemeriksaanReturnBarangCustomerController::class, 'auditSearchAjax'])->name('pemeriksaan-return-barang-customer.audit-search');
+        Route::get('pemeriksaan-return-barang-customer/copy-to-audit/{uuid}', [PemeriksaanReturnBarangCustomerController::class, 'copyToAudit'])->name('pemeriksaan-return-barang-customer.copy-to-audit');
+        
         Route::get('pemeriksaan-suhu-ruang-v3/export-pdf', [PemeriksaanSuhuRuangV3Controller::class, 'exportPDF'])->name('pemeriksaan-suhu-ruang-v3.export-pdf');
         Route::get('pemeriksaan-suhu-ruang-v3/export-excel', [PemeriksaanSuhuRuangV3Controller::class, 'exportExcel'])->name('pemeriksaan-suhu-ruang-v3.export-excel');
         Route::get('pemeriksaan-suhu-ruang-v3/download-template', [PemeriksaanSuhuRuangV3Controller::class, 'downloadTemplate'])->name('pemeriksaan-suhu-ruang-v3.download-template');

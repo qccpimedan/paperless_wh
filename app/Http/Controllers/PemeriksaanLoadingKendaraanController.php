@@ -12,9 +12,11 @@ use App\Models\Shift;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf as PDF;
+use App\Http\Controllers\Traits\HasAuditController;
 
 class PemeriksaanLoadingKendaraanController extends Controller
 {
+    use HasAuditController;
     public function index(Request $request)
     {
         $user = Auth::user();
@@ -28,7 +30,7 @@ class PemeriksaanLoadingKendaraanController extends Controller
             'kendaraan',
             'tujuanPengiriman',
             'stdPrecooling'
-        ]);
+        ])->where('is_audit', false);
 
         if (!($user->role && strtolower($user->role->role) === 'superadmin')) {
             $query->whereHas('user', function ($q) use ($user) {
@@ -777,5 +779,54 @@ class PemeriksaanLoadingKendaraanController extends Controller
         }
 
         return back()->with('info', 'Tidak ada data yang memenuhi syarat untuk diverifikasi pada filter tersebut.');
+    }
+
+    // ==========================================
+    // AUDIT METHODS (HasAuditController Trait)
+    // ==========================================
+
+    protected function auditModel(): string
+    {
+        return PemeriksaanLoadingKendaraan::class;
+    }
+
+    protected function auditRoutePrefix(): string
+    {
+        return 'pemeriksaan-loading-kendaraan';
+    }
+
+    protected function auditViewPrefix(): string
+    {
+        return 'qc-sistem.pemeriksaan-loading-kendaraan';
+    }
+
+    protected function auditRelations(): array
+    {
+        return ['user', 'ekspedisi', 'kendaraan', 'tujuanPengiriman', 'stdPrecooling', 'shift'];
+    }
+
+    protected function auditSearchColumns(): array
+    {
+        return ['no_segel', 'suhu_precooling', 'keterangan', 'status_verifikasi', 'verification_notes'];
+    }
+
+    protected function auditDateColumn(): string
+    {
+        return 'tanggal';
+    }
+
+    protected function auditTimeColumn(): string
+    {
+        return 'created_at';
+    }
+
+    protected function auditShiftColumn(): string
+    {
+        return 'id_shift';
+    }
+
+    protected function auditPlanColumn(): ?string
+    {
+        return null;
     }
 }

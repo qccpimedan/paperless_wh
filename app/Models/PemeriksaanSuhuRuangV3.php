@@ -7,10 +7,11 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 use App\Traits\HasPlantTimezoneTimestamps;
 use App\Traits\HasSubAreaSession;
+use App\Models\Traits\HasAudit;
 
 class PemeriksaanSuhuRuangV3 extends Model
 {
-    use HasFactory, HasPlantTimezoneTimestamps, HasSubAreaSession;
+    use HasFactory, HasPlantTimezoneTimestamps, HasSubAreaSession, HasAudit;
     protected $table = 'pemeriksaan_suhu_ruang_v3s';
     protected $fillable = [
         'uuid',
@@ -36,6 +37,8 @@ class PemeriksaanSuhuRuangV3 extends Model
         'verified_by_qc',
         'verified_by_produksi',
         'verified_by_spv',
+        'is_audit',
+        'source_uuid',
     ];
 
     protected $casts = [
@@ -48,6 +51,7 @@ class PemeriksaanSuhuRuangV3 extends Model
         'suhu_packaging' => 'json',
         'suhu_ruang_chemical' => 'json',
         'suhu_ruang_seasoning' => 'json',
+        'is_audit' => 'boolean',
     ];
 
     protected static function boot()

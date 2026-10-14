@@ -701,14 +701,101 @@
         /* Khusus untuk button navigation */
         #notification-bell:focus,
         #notification-bell:active,
-        #userDropdown:focus,
-        #userDropdown:active,
         #sidebar-close-mobile:focus,
         #sidebar-close-mobile:active {
             outline: none !important;
             box-shadow: none !important;
         }
         </style>
+
+        @php
+            $authUser = auth()->user();
+            $isAuditorRole = $authUser && $authUser->role && strtolower($authUser->role->role) === 'auditor';
+            $isAuditActive = ($isAuditView ?? false) || request()->boolean('is_audit') || request()->is('*/audit-data*');
+        @endphp
+
+        @if($isAuditActive && !$isAuditorRole)
+        <div id="audit-mode-banner" style="
+            position: fixed;
+            top: 65px;
+            left: 300px;
+            right: 0;
+            z-index: 999;
+            background: linear-gradient(90deg, #fff3cd 0%, #fff8e6 100%);
+            border-bottom: 2px solid #ffc107;
+            border-left: 5px solid #e6a800;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 14px 24px;
+            box-shadow: 0 2px 10px rgba(255,193,7,0.25);
+            min-height: 56px;
+        ">
+            <i class="bi bi-shield-lock-fill" style="color: #e6a800; font-size: 1.5rem; flex-shrink: 0; line-height: 1;"></i>
+            <div style="flex: 1; min-width: 0; line-height: 1.6;">
+                <div style="display: flex; align-items: center; flex-wrap: wrap; gap: 10px;">
+                    <span class="badge" style="background: #ffc107; color: #000; font-size: 0.75rem; font-weight: 700; border-radius: 4px; padding: 4px 10px; letter-spacing: 0.5px;">MODE AUDIT</span>
+                    <span style="font-size: 0.95rem; color: #6c4a00; font-weight: 600; line-height: 1.4;">Halaman Data Audit (Salinan)</span>
+                </div>
+                <div class="d-none d-md-block" style="font-size: 0.82rem; color: #856404; margin-top: 4px; line-height: 1.5;">
+                    Perubahan disimpan terpisah &amp; tidak memengaruhi data operasional utama.
+                </div>
+            </div>
+        </div>
+        {{-- Push #main content down agar tidak tertutup banner --}}
+        <style>
+            #audit-mode-banner ~ * #main,
+            #main { margin-top: 0; }
+            
+            /* Responsive adjustments */
+            @media (max-width: 1199px) {
+                #audit-mode-banner {
+                    left: 260px;
+                    padding: 12px 20px;
+                    gap: 14px;
+                }
+            }
+            
+            @media (max-width: 991px) {
+                #audit-mode-banner {
+                    left: 0;
+                    padding: 12px 16px;
+                    gap: 12px;
+                }
+                #audit-mode-banner i {
+                    font-size: 1.3rem;
+                }
+            }
+            
+            @media (max-width: 767px) {
+                #audit-mode-banner {
+                    padding: 10px 14px;
+                    min-height: 48px;
+                }
+                #audit-mode-banner .badge {
+                    font-size: 0.7rem !important;
+                    padding: 3px 8px !important;
+                }
+            }
+        </style>
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                var banner = document.getElementById('audit-mode-banner');
+                var main = document.getElementById('main');
+                if (banner && main) {
+                    main.style.paddingTop = (banner.offsetHeight + 8) + 'px';
+                }
+                // Responsive: sidebar collapsed on small screen
+                function adjustBanner() {
+                    if (banner) {
+                        banner.style.left = window.innerWidth <= 1199 ? '0' : '300px';
+                    }
+                }
+                adjustBanner();
+                window.addEventListener('resize', adjustBanner);
+            });
+        </script>
+        @endif
 
         @yield('container')
     </div>
