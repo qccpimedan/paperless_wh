@@ -62,12 +62,12 @@
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="card-title mb-0">Daftar Pemeriksaan Barang Mudah Pecah</h5>
                     <div class="d-flex gap-2">
-                        {{-- Link to Audit Page --}}
+                        <!-- {{-- Link to Audit Page --}}
                         @if(in_array($userRole, ['auditor', 'spv qc', 'superadmin']))
                             <a href="{{ route('pemeriksaan-barang-mudah-pecah.audit') }}" class="btn btn-warning">
                                 <i class="bi bi-shield-check"></i> Data Audit
                             </a>
-                        @endif
+                        @endif -->
 
                         @if($canVerify)
                             <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#multiApprovalModal">
@@ -228,7 +228,7 @@
                                                 <div class="btn-group">
                                                     @can('view_pemeriksaan_barang_mudah_pecah') <a href="{{ route('pemeriksaan-barang-mudah-pecah.show', $item->uuid) }}" class="btn btn-sm btn-info text-white"><i class="bi bi-eye"></i></a> @endcan
                                                     @can('edit_pemeriksaan_barang_mudah_pecah') <a href="{{ route('pemeriksaan-barang-mudah-pecah.edit', $item->uuid) }}" class="btn btn-sm btn-warning text-white"><i class="bi bi-pencil"></i></a> @endcan
-                                                    <x-audit-action-btn :item="$item" route-prefix="pemeriksaan-barang-mudah-pecah" :is-audit-view="$isAuditView ?? false" />
+                                                    <!-- <x-audit-action-btn :item="$item" route-prefix="pemeriksaan-barang-mudah-pecah" :is-audit-view="$isAuditView ?? false" /> -->
 
                                                 </div>
                                             </td>

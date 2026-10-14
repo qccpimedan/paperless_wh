@@ -62,12 +62,12 @@
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="card-title mb-0">Daftar Pemeriksaan Suhu Ruang</h5>
                     <div class="d-flex gap-2">
-                        {{-- Link to Audit Page --}}
+                        <!-- {{-- Link to Audit Page --}}
                         @if(in_array($userRole, ['auditor', 'spv qc', 'superadmin']))
                             <a href="{{ route('pemeriksaan-suhu-ruang.audit') }}" class="btn btn-warning">
                                 <i class="bi bi-shield-check"></i> Data Audit
                             </a>
-                        @endif
+                        @endif -->
 
                         @if($canVerify)
                             <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#multiApprovalModal">
@@ -231,7 +231,7 @@
                                                         <i class="bi bi-clock-history"></i>
                                                     </a>
                                                     @endcan
-                                                    <x-audit-action-btn :item="$item" route-prefix="pemeriksaan-suhu-ruang" :is-audit-view="$isAuditView ?? false" />
+                                                    <!-- <x-audit-action-btn :item="$item" route-prefix="pemeriksaan-suhu-ruang" :is-audit-view="$isAuditView ?? false" /> -->
                                                     
                                                     <!-- <a href="{{ route('pemeriksaan-suhu-ruang.print-pdf', $item->uuid) }}" 
                                                         class="btn btn-sm btn-danger" title="Cetak PDF" target="_blank">

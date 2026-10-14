@@ -62,12 +62,12 @@
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="card-title mb-0">Daftar Pemeriksaan Kebersihan Area</h5>
                     <div class="d-flex gap-2">
-                        {{-- Link to Audit Page --}}
+                        <!-- {{-- Link to Audit Page --}}
                         @if(in_array($userRole, ['auditor', 'spv qc', 'superadmin']))
                             <a href="{{ route('pemeriksaan-kebersihan-area.audit') }}" class="btn btn-warning">
                                 <i class="bi bi-shield-check"></i> Data Audit
                             </a>
-                        @endif
+                        @endif -->
 
                         @if($canVerify)
                             <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#multiApprovalModal">
@@ -240,7 +240,7 @@
                                                     @can('delete_pemeriksaan_kebersihan_area')
                                                         <button type="button" class="btn btn-sm btn-danger" onclick="if(confirm('Yakin ingin menghapus data ini?')) document.getElementById('del-{{$item->uuid}}').submit()"><i class="bi bi-trash"></i></button>
                                                     @endcan
-                                                    <x-audit-action-btn :item="$item" route-prefix="pemeriksaan-kebersihan-area" :is-audit-view="$isAuditView ?? false" />
+                                                    <!-- <x-audit-action-btn :item="$item" route-prefix="pemeriksaan-kebersihan-area" :is-audit-view="$isAuditView ?? false" /> -->
                                                 </div>
                                             </td>
                                         </tr>
