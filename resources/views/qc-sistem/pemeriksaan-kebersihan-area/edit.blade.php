@@ -140,6 +140,21 @@
                             <div class="kba-item-body">
                                 <div class="row g-3">
                                     <div class="col-md-6">
+                                        <label class="form-label">Master form <span class="text-danger">*</span></label>
+                                        <select class="form-select master-form-select" name="items[{{ $index }}][id_master_form]" required>
+                                            <option value="">Pilih master form</option>
+                                            @foreach($masterForms as $form)
+                                                <option value="{{ $form->id }}" 
+                                                        data-area-id="{{ $form->id_input_area ?? '' }}" 
+                                                        data-area-name="{{ $form->area->nama_area ?? 'Semua Area' }}"
+                                                        {{ ($item['id_master_form'] ?? '') == $form->id ? 'selected' : '' }}>
+                                                    {{ $form->nama_form }}{{ $form->area ? ' (' . $form->area->nama_area . ')' : '' }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                        <small class="text-muted">Master form akan menentukan area dan aspek pemeriksaan</small>
+                                    </div>
+                                    <div class="col-md-6">
                                         <label class="form-label">Area <span class="text-danger">*</span></label>
                                         <select class="form-select area-select" name="items[{{ $index }}][id_area]" required>
                                             <option value="">Pilih area</option>
@@ -147,15 +162,7 @@
                                                 <option value="{{ $area->id }}" {{ ($item['id_area'] ?? '') == $area->id ? 'selected' : '' }}>{{ $area->nama_area }}</option>
                                             @endforeach
                                         </select>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label">Master form <span class="text-danger">*</span></label>
-                                        <select class="form-select master-form-select" name="items[{{ $index }}][id_master_form]" required>
-                                            <option value="">Pilih master form</option>
-                                            @foreach($masterForms as $form)
-                                                <option value="{{ $form->id }}" {{ ($item['id_master_form'] ?? '') == $form->id ? 'selected' : '' }}>{{ $form->nama_form }}</option>
-                                            @endforeach
-                                        </select>
+                                        <small class="text-muted area-hint" style="display:none;"></small>
                                     </div>
                                     <div class="col-md-6">
                                         <label class="form-label">Jam sebelum proses</label>
@@ -311,6 +318,8 @@ document.addEventListener('DOMContentLoaded', function () {
     @php
         $masterFormsData = $masterForms->mapWithKeys(fn ($f) => [$f->id => [
             'nama'   => $f->nama_form,
+            'area_id' => $f->id_input_area,
+            'area_name' => $f->area?->nama_area ?? 'Semua Area',
             'fields' => $f->fields->map(fn ($x) => ['id' => $x->id, 'nama' => $x->field_name])->values(),
         ]]);
     @endphp
@@ -505,7 +514,27 @@ document.addEventListener('DOMContentLoaded', function () {
                 e.target.value = e.target.dataset.prev ?? '';
                 return;
             }
-            renderFields(item, e.target.value);
+            
+            const formId = e.target.value;
+            const formData = masterFormsData[formId];
+            const areaSelect = item.querySelector('.area-select');
+            const areaHint = item.querySelector('.area-hint');
+            
+            // Auto-fill area based on master form
+            if (formData && formData.area_id) {
+                // Master form has specific area - auto select it
+                areaSelect.value = formData.area_id;
+                areaSelect.disabled = true;
+                areaHint.textContent = `Area otomatis terisi dari Master Form: ${formData.area_name}`;
+                areaHint.style.display = 'block';
+                syncTitle(item);
+            } else {
+                // Master form for all areas - enable manual selection
+                areaSelect.disabled = false;
+                areaHint.style.display = 'none';
+            }
+            
+            renderFields(item, formId);
             refreshItem(item);
         }
         if (e.target.classList.contains('master-form-select')) e.target.dataset.prev = e.target.value;
@@ -548,6 +577,12 @@ document.addEventListener('DOMContentLoaded', function () {
         clone.querySelector('.master-form-select').dataset.prev = '';
         clone.querySelector('.kba-item-title').textContent = 'Area baru';
         clone.classList.remove('is-complete');
+        
+        // Reset area select
+        const areaSelect = clone.querySelector('.area-select');
+        areaSelect.disabled = false;
+        areaSelect.value = '';
+        clone.querySelector('.area-hint').style.display = 'none';
 
         container.appendChild(clone);
         itemIndex++;
@@ -559,7 +594,22 @@ document.addEventListener('DOMContentLoaded', function () {
 
     /* ---------- Inisialisasi data yang sudah ada ---------- */
     container.querySelectorAll('.repeater-item').forEach((item) => {
-        item.querySelector('.master-form-select').dataset.prev = item.querySelector('.master-form-select').value;
+        const masterSelect = item.querySelector('.master-form-select');
+        const formId = masterSelect.value;
+        const formData = masterFormsData[formId];
+        const areaSelect = item.querySelector('.area-select');
+        const areaHint = item.querySelector('.area-hint');
+        
+        // Check if master form has specific area
+        if (formData && formData.area_id) {
+            // Set area value from master form
+            areaSelect.value = formData.area_id;
+            areaSelect.disabled = true;
+            areaHint.textContent = `Area otomatis terisi dari Master Form: ${formData.area_name}`;
+            areaHint.style.display = 'block';
+        }
+        
+        masterSelect.dataset.prev = formId;
         syncTitle(item);
         refreshItem(item);
     });

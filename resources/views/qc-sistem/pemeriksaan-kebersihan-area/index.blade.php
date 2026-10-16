@@ -109,8 +109,9 @@
                                 <label class="form-label">Tanggal</label>
                                 <input type="date" name="tanggal" class="form-control" value="{{ request('tanggal') }}">
                             </div>
-                            <div class="col-md-3 d-flex align-items-end">
-                                <button type="submit" class="btn btn-success w-100"><i class="bi bi-file-pdf"></i> PDF</button>
+                            <div class="col-md-3 d-flex align-items-end gap-2">
+                                <button type="submit" formaction="{{ route('pemeriksaan-kebersihan-area.export-pdf') }}" class="btn btn-danger flex-fill"><i class="bi bi-file-pdf"></i> PDF</button>
+                                <button type="submit" formaction="{{ route('pemeriksaan-kebersihan-area.export-excel') }}" class="btn btn-success flex-fill"><i class="bi bi-file-earmark-excel"></i> Excel</button>
                             </div>
                         </form>
                     </div>
@@ -191,17 +192,65 @@
                                             @endif
                                             <td>
                                                 @php
-                                                    $areas = collect($item->area_data)->pluck('id_area')->filter()->unique()->values()->all();
-                                                    $countArea = count($areas);
-                                                    $firstAreaId = $areas[0] ?? null;
-                                                    $firstArea = $firstAreaId ? ($areaNamaById[$firstAreaId] ?? '-') : '-';
+                                                    // Decode area_data jika masih string
+                                                    $areaDataRaw = $item->area_data;
+                                                    if (is_string($areaDataRaw)) {
+                                                        $areaDataRaw = json_decode($areaDataRaw, true);
+                                                    }
+                                                    $areaDataCollection = collect($areaDataRaw ?? []);
+                                                    
+                                                    if ($areaDataCollection->isEmpty()) {
+                                                        echo '<span class="badge bg-light text-muted">-</span>';
+                                                    } else {
+                                                        // Ambil area pertama dengan detail master form
+                                                        $firstAreaData = $areaDataCollection->first();
+                                                        $firstAreaId = $firstAreaData['id_area'] ?? null;
+                                                        $firstMasterFormId = $firstAreaData['id_master_form'] ?? null;
+                                                        
+                                                        // PERBAIKAN: Ambil area dari Master Form (relasi)
+                                                        $firstMasterForm = $firstMasterFormId ? \App\Models\InputMasterForm::with('area')->find($firstMasterFormId) : null;
+                                                        
+                                                        // Cek apakah area di JSON sama dengan area di Master Form (auto-filled)
+                                                        $masterFormAreaId = $firstMasterForm && $firstMasterForm->area ? $firstMasterForm->area->id : null;
+                                                        $isAutoFilled = $masterFormAreaId && $masterFormAreaId == $firstAreaId;
+                                                        
+                                                        // Jika ada area di JSON, tampilkan itu
+                                                        // Jika tidak ada tapi master form punya area, tampilkan area master form
+                                                        if ($firstAreaId) {
+                                                            $displayArea = $areaNamaById[$firstAreaId] ?? '-';
+                                                        } elseif ($masterFormAreaId) {
+                                                            $displayArea = $firstMasterForm->area->nama_area;
+                                                            $isAutoFilled = true; // Mark as auto-filled
+                                                        } else {
+                                                            $displayArea = '-';
+                                                        }
+                                                        
+                                                        // Hitung total area unik
+                                                        $uniqueAreas = $areaDataCollection->pluck('id_area')->filter()->unique()->count();
                                                 @endphp
-                                                <span class="badge bg-info">{{ $firstArea }}</span>
-                                                @if($countArea > 1) <br><small class="text-primary">+{{ $countArea-1 }} lainnya</small> @endif
+                                                <div class="d-flex align-items-center gap-1">
+                                                    <span class="badge bg-info">{{ $displayArea }}</span>
+                                                    <!-- @if($isAutoFilled)
+                                                        <span class="badge bg-success" style="font-size: 0.65rem;" title="Area otomatis dari Master Form">
+                                                            <i class="bi bi-link-45deg"></i> AUTO
+                                                        </span>
+                                                    @endif -->
+                                                </div>
+                                                @if($uniqueAreas > 1) 
+                                                    <small class="text-primary">+{{ $uniqueAreas - 1 }} lainnya</small> 
+                                                @endif
+                                                @php
+                                                    }
+                                                @endphp
                                             </td>
                                             <td>
                                                 @php
-                                                    $forms = collect($item->area_data)->pluck('id_master_form')->filter()->unique()->values()->all();
+                                                    // Decode area_data jika masih string
+                                                    $areaDataRaw2 = $item->area_data;
+                                                    if (is_string($areaDataRaw2)) {
+                                                        $areaDataRaw2 = json_decode($areaDataRaw2, true);
+                                                    }
+                                                    $forms = collect($areaDataRaw2 ?? [])->pluck('id_master_form')->filter()->unique()->values()->all();
                                                     $countForm = count($forms);
                                                     $firstFormId = $forms[0] ?? null;
                                                     $firstForm = $firstFormId ? ($masterFormNamaById[$firstFormId] ?? '-') : '-';

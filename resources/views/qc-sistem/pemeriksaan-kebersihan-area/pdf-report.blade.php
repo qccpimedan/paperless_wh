@@ -296,12 +296,20 @@
                 @foreach($areaData as $item)
                     @php
                         $selectedArea = \App\Models\InputArea::find($item['id_area'] ?? null);
-                        $selectedForm = \App\Models\InputMasterForm::find($item['id_master_form'] ?? null);
+                        $selectedForm = \App\Models\InputMasterForm::with('area')->find($item['id_master_form'] ?? null);
                         $fields = $selectedForm ? $selectedForm->fields : [];
                         $itemFields = collect($item['fields'] ?? []);
+                        $isAutoFilledArea = $selectedForm && $selectedForm->id_input_area && $selectedForm->id_input_area == $item['id_area'];
                     @endphp
                     <div style="background: #f8f9fa; padding: 8px; font-weight: bold; border-left: 4px solid #8b1428; margin-bottom: 5px; border-top: 1px solid #dee2e6; border-bottom: 1px solid #dee2e6; margin-top: 10px;">
-                        Area: {{ $selectedArea ? $selectedArea->nama_area : '-' }} | Form: {{ $selectedForm ? $selectedForm->nama_form : '-' }} | Tgl: {{ $p->tanggal ? \Carbon\Carbon::parse($p->tanggal)->format('d/m/Y') : '-' }}
+                        @if($isAutoFilledArea)
+                            <span style="background: #28a745; color: white; padding: 2px 6px; border-radius: 3px; font-size: 7px; margin-left: 4px;">✓ AUTO</span>
+                        @endif
+                        | Form: {{ $selectedForm ? $selectedForm->nama_form : '-' }}
+                        @if($selectedForm && $selectedForm->area)
+                            <span style="background: #17a2b8; color: white; padding: 2px 6px; border-radius: 3px; font-size: 7px; margin-left: 2px;">{{ $selectedForm->area->nama_area }}</span>
+                        @endif
+                        | Tgl: {{ $p->tanggal ? \Carbon\Carbon::parse($p->tanggal)->format('d/m/Y') : '-' }}
                     </div>
                     <table class="report" style="width: 100%; margin-bottom: 10px;">
                         <thead>
@@ -465,15 +473,24 @@
                 @foreach($areaData as $item)
                     @php
                         $selectedArea = \App\Models\InputArea::find($item['id_area'] ?? null);
-                        $selectedForm = \App\Models\InputMasterForm::find($item['id_master_form'] ?? null);
+                        $selectedForm = \App\Models\InputMasterForm::with('area')->find($item['id_master_form'] ?? null);
                         $fields = $selectedForm ? $selectedForm->fields : [];
                         $itemFields = collect($item['fields'] ?? []);
+                        $isAutoFilledArea = $selectedForm && $selectedForm->id_input_area && $selectedForm->id_input_area == $item['id_area'];
                     @endphp
                     <tr>
                         <td colspan="4" style="padding: 10px 0;">
                             <div style="background: #f8f9fa; padding: 8px; font-weight: bold; border-left: 4px solid #8b1428; margin-bottom: 5px; border-bottom: 1px solid #dee2e6;">
-                                Area: {{ $selectedArea ? $selectedArea->nama_area : '-' }} &nbsp;|&nbsp; 
-                                Form: {{ $selectedForm ? $selectedForm->nama_form : '-' }} &nbsp;|&nbsp;
+                                Area: {{ $selectedArea ? $selectedArea->nama_area : '-' }}
+                                @if($isAutoFilledArea)
+                                    <span style="background: #28a745; color: white; padding: 2px 6px; border-radius: 3px; font-size: 7px; margin-left: 4px;">✓ AUTO</span>
+                                @endif
+                                &nbsp;|&nbsp; 
+                                Form: {{ $selectedForm ? $selectedForm->nama_form : '-' }}
+                                @if($selectedForm && $selectedForm->area)
+                                    <span style="background: #17a2b8; color: white; padding: 2px 6px; border-radius: 3px; font-size: 7px; margin-left: 2px;">{{ $selectedForm->area->nama_area }}</span>
+                                @endif
+                                &nbsp;|&nbsp;
                                 Jam: {{ $item['jam_sebelum_proses'] ?? '-' }} / {{ $item['jam_saat_proses'] ?? '-' }}
                             </div>
                             <table class="report" style="width: 100%;">
