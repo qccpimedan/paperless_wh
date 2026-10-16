@@ -227,7 +227,17 @@
                                             <td>
                                                 <div class="btn-group">
                                                     @can('view_pemeriksaan_barang_mudah_pecah') <a href="{{ route('pemeriksaan-barang-mudah-pecah.show', $item->uuid) }}" class="btn btn-sm btn-info text-white"><i class="bi bi-eye"></i></a> @endcan
-                                                    @can('edit_pemeriksaan_barang_mudah_pecah') <a href="{{ route('pemeriksaan-barang-mudah-pecah.edit', $item->uuid) }}" class="btn btn-sm btn-warning text-white"><i class="bi bi-pencil"></i></a> @endcan
+                                                    @can('edit_pemeriksaan_barang_mudah_pecah') 
+                                                        <a href="{{ route('pemeriksaan-barang-mudah-pecah.edit', $item->uuid) }}{{ ($isAuditView ?? false) ? '?from_audit=1' : '' }}" 
+                                                           class="btn btn-sm btn-warning text-white">
+                                                            <i class="bi bi-pencil"></i>
+                                                        </a> 
+                                                    @endcan
+                                                    @can('delete_pemeriksaan_barang_mudah_pecah')
+                                                        <button type="button" class="btn btn-sm btn-danger" onclick="if(confirm('Yakin ingin menghapus data ini?')) document.getElementById('del-{{$item->uuid}}').submit()">
+                                                            <i class="bi bi-trash"></i>
+                                                        </button>
+                                                    @endcan
                                                     <!-- <x-audit-action-btn :item="$item" route-prefix="pemeriksaan-barang-mudah-pecah" :is-audit-view="$isAuditView ?? false" /> -->
 
                                                 </div>
@@ -291,6 +301,12 @@
         @endif
 
         @foreach($pemeriksaans as $item)
+            @can('delete_pemeriksaan_barang_mudah_pecah')
+                <form id="del-{{$item->uuid}}" action="{{ route('pemeriksaan-barang-mudah-pecah.destroy', $item->uuid) }}" method="POST" style="display:none;">
+                    @csrf
+                    @method('DELETE')
+                </form>
+            @endcan
             <div class="modal fade" id="appProduksi{{ $item->id }}" tabindex="-1" aria-hidden="true"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Approve Produksi</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><form action="{{ route('pemeriksaan-barang-mudah-pecah.approve-produksi', $item->uuid) }}" method="POST">@csrf<div class="modal-body"><textarea class="form-control" name="notes" placeholder="Catatan (Opsional)"></textarea></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button><button type="submit" class="btn btn-success">Approve</button></div></form></div></div></div>
             <div class="modal fade" id="rejProduksi{{ $item->id }}" tabindex="-1" aria-hidden="true"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Reject Produksi</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><form action="{{ route('pemeriksaan-barang-mudah-pecah.reject-produksi', $item->uuid) }}" method="POST">@csrf<div class="modal-body"><textarea class="form-control" name="notes" placeholder="Alasan penolakan" required></textarea></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button><button type="submit" class="btn btn-danger">Reject</button></div></form></div></div></div>
             <div class="modal fade" id="appSPV{{ $item->id }}" tabindex="-1" aria-hidden="true"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Verifikasi SPV QC</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><form action="{{ route('pemeriksaan-barang-mudah-pecah.approve-spv', $item->uuid) }}" method="POST">@csrf<div class="modal-body"><textarea class="form-control" name="notes" placeholder="Catatan (Opsional)"></textarea></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button><button type="submit" class="btn btn-success">Verifikasi</button></div></form></div></div></div>
