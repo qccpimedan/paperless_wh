@@ -43,6 +43,7 @@
                                 <tr>
                                     <th>No</th>
                                     <th>Nama Form</th>
+                                    <th>Area</th>
                                     <th>Jumlah Field</th>
                                     <th>Plant</th>
                                     <th>Aksi</th>
@@ -54,6 +55,13 @@
                                         <td>{{ $index + 1 }}</td>
                                         <td>
                                             <strong>{{ $form->nama_form }}</strong>
+                                        </td>
+                                        <td>
+                                            @if($form->area)
+                                                <span class="badge bg-success">{{ $form->area->nama_area }}</span>
+                                            @else
+                                                <span class="badge bg-secondary">Semua Area</span>
+                                            @endif
                                         </td>
                                         <td>
                                             <span class="badge bg-info">{{ $form->fields->count() }} Field</span>
@@ -86,7 +94,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="5" class="text-center">
+                                        <td colspan="6" class="text-center">
                                             <div class="py-4">
                                                 <i class="bi bi-inbox fs-1 text-muted"></i>
                                                 <p class="text-muted mt-2 mb-3">Belum ada data master form</p>

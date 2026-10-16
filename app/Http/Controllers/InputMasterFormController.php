@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\InputMasterForm;
 use App\Models\InputMasterFormField;
+use App\Models\InputArea;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -18,10 +19,10 @@ class InputMasterFormController extends Controller
         
         // SuperAdmin dapat melihat semua data
         if ($user->role && strtolower($user->role->role) === 'superadmin') {
-            $masterForms = InputMasterForm::with(['user.role', 'user.plant'])->latest()->get();
+            $masterForms = InputMasterForm::with(['user.role', 'user.plant', 'area'])->latest()->get();
         } else {
             // Admin dan role lain hanya melihat data sesuai plant mereka
-            $masterForms = InputMasterForm::with(['user.role', 'user.plant'])
+            $masterForms = InputMasterForm::with(['user.role', 'user.plant', 'area'])
                 ->whereHas('user', function($query) use ($user) {
                     $query->where('id_plant', $user->getEffectivePlantId());
                 })
@@ -37,7 +38,18 @@ class InputMasterFormController extends Controller
      */
     public function create()
     {
-        return view('super-admin.input-master-form.create');
+        $user = Auth::user();
+        
+        // Get areas based on user plant
+        if ($user->role && strtolower($user->role->role) === 'superadmin') {
+            $areas = InputArea::orderBy('nama_area')->get();
+        } else {
+            $areas = InputArea::whereHas('user', function($query) use ($user) {
+                $query->where('id_plant', $user->getEffectivePlantId());
+            })->orderBy('nama_area')->get();
+        }
+        
+        return view('super-admin.input-master-form.create', compact('areas'));
     }
 
     /**
@@ -47,6 +59,7 @@ class InputMasterFormController extends Controller
     {
         $request->validate([
             'nama_form' => 'required|string|max:255',
+            'id_input_area' => 'nullable|exists:input_areas,id',
             'field_name' => 'required|array|min:1',
             'field_name.*' => 'required|string|max:255',
         ]);
@@ -55,6 +68,7 @@ class InputMasterFormController extends Controller
         $masterForm = InputMasterForm::create([
             'id_user' => Auth::id(),
             'nama_form' => trim($request->nama_form),
+            'id_input_area' => $request->id_input_area,
         ]);
 
         // Create fields
@@ -81,7 +95,18 @@ class InputMasterFormController extends Controller
         $this->checkPlantAccess($inputMasterForm);
         $inputMasterForm->load('fields');
         
-        return view('super-admin.input-master-form.edit', compact('inputMasterForm'));
+        $user = Auth::user();
+        
+        // Get areas based on user plant
+        if ($user->role && strtolower($user->role->role) === 'superadmin') {
+            $areas = InputArea::orderBy('nama_area')->get();
+        } else {
+            $areas = InputArea::whereHas('user', function($query) use ($user) {
+                $query->where('id_plant', $user->getEffectivePlantId());
+            })->orderBy('nama_area')->get();
+        }
+        
+        return view('super-admin.input-master-form.edit', compact('inputMasterForm', 'areas'));
     }
 
     /**
@@ -93,6 +118,7 @@ class InputMasterFormController extends Controller
         
         $request->validate([
             'nama_form' => 'required|string|max:255',
+            'id_input_area' => 'nullable|exists:input_areas,id',
             'field_name' => 'required|array|min:1',
             'field_name.*' => 'required|string|max:255',
         ]);
@@ -100,6 +126,7 @@ class InputMasterFormController extends Controller
         // Update master form
         $inputMasterForm->update([
             'nama_form' => trim($request->nama_form),
+            'id_input_area' => $request->id_input_area,
         ]);
 
         // Delete old fields

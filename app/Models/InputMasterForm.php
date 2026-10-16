@@ -13,6 +13,7 @@ class InputMasterForm extends Model
     protected $fillable = [
         'uuid',
         'id_user',
+        'id_input_area',
         'nama_form',
     ];
 
@@ -35,6 +36,11 @@ class InputMasterForm extends Model
     public function user()
     {
         return $this->belongsTo(User::class, 'id_user');
+    }
+
+    public function area()
+    {
+        return $this->belongsTo(InputArea::class, 'id_input_area');
     }
 
     public function fields()

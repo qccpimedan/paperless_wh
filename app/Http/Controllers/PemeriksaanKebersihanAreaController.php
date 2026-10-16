@@ -77,11 +77,11 @@ class PemeriksaanKebersihanAreaController extends Controller
         $user = Auth::user();
 
         if ($user->role && strtolower($user->role->role) === 'superadmin') {
-            $masterForms = InputMasterForm::all();
+            $masterForms = InputMasterForm::with('area')->get();
             $areas = InputArea::all();
             $shifts = Shift::all();
         } else {
-            $masterForms = InputMasterForm::whereHas('user', function ($query) use ($user) {
+            $masterForms = InputMasterForm::with('area')->whereHas('user', function ($query) use ($user) {
                 $query->where('id_plant', $user->getEffectivePlantId());
             })->get();
 
@@ -181,7 +181,7 @@ class PemeriksaanKebersihanAreaController extends Controller
         $pemeriksaanKebersihanArea->load(['shift', 'user']);
         
         $areas = InputArea::all();
-        $masterForms = InputMasterForm::with('fields')->get();
+        $masterForms = InputMasterForm::with(['fields', 'area'])->get();
 
         return view('qc-sistem.pemeriksaan-kebersihan-area.show', compact('pemeriksaanKebersihanArea', 'areas', 'masterForms'));
     }
@@ -196,11 +196,11 @@ class PemeriksaanKebersihanAreaController extends Controller
         $pemeriksaanKebersihanArea->load(['shift']);
 
         if ($user->role && strtolower($user->role->role) === 'superadmin') {
-            $masterForms = InputMasterForm::with('fields')->get();
+            $masterForms = InputMasterForm::with(['fields', 'area'])->get();
             $areas = InputArea::all();
             $shifts = Shift::all();
         } else {
-            $masterForms = InputMasterForm::with('fields')->whereHas('user', function ($query) use ($user) {
+            $masterForms = InputMasterForm::with(['fields', 'area'])->whereHas('user', function ($query) use ($user) {
                 $query->where('id_plant', $user->getEffectivePlantId());
             })->get();
 
@@ -736,4 +736,98 @@ class PemeriksaanKebersihanAreaController extends Controller
 
         return compact('areaNamaById', 'masterFormNamaById');
     }
+    public function exportExcel(Request $request, $uuid = null)
+    {
+        $user = Auth::user();
+
+        if ($uuid) {
+            // Penarikan data per data (single record)
+            $query = PemeriksaanKebersihanArea::where('uuid', $uuid);
+        } else {
+            // Penarikan data berdasarkan filter (batch/search)
+            $query = PemeriksaanKebersihanArea::query();
+        }
+
+        $query->with([
+            'user.role',
+            'user.plant',
+            'shift',
+            'qcVerifier',
+            'produksiVerifier',
+            'spvVerifier',
+        ]);
+
+        if ($user->role && strtolower($user->role->role) !== 'superadmin') {
+            $query->whereHas('user', function ($q) use ($user) {
+                $q->where('id_plant', $user->getEffectivePlantId());
+            });
+        }
+
+        if (!$uuid) {
+            $id_shift = $request->input('id_shift');
+            $tanggalDari = $request->input('tanggal_dari');
+            $tanggalSampai = $request->input('tanggal_sampai');
+            $tanggal = $request->input('tanggal');
+
+            if ($id_shift) {
+                if ($id_shift !== 'all') {
+                    $query->where('id_shift', $id_shift);
+                }
+                $shift = $id_shift !== 'all' ? Shift::find($id_shift) : null;
+                
+                if ($shift && $shift->is_date_range) {
+                    if ($tanggalDari && $tanggalSampai) {
+                        $query->whereBetween('tanggal', [$tanggalDari, $tanggalSampai]);
+                    } elseif ($tanggalDari) {
+                        $query->whereDate('tanggal', '>=', $tanggalDari);
+                    } elseif ($tanggalSampai) {
+                        $query->whereDate('tanggal', '<=', $tanggalSampai);
+                    }
+                } else {
+                    if ($tanggal) {
+                        $query->whereDate('tanggal', $tanggal);
+                    } elseif ($tanggalDari && $tanggalSampai) {
+                        $query->whereBetween('tanggal', [$tanggalDari, $tanggalSampai]);
+                    }
+                }
+            } else {
+                if ($tanggal) {
+                    $query->whereDate('tanggal', $tanggal);
+                }
+            }
+        }
+
+        $pemeriksaans = $query->latest()->get();
+
+        if ($pemeriksaans->isEmpty()) {
+            return redirect()->back()->with('error', 'Data tidak ditemukan untuk di-export.');
+        }
+
+        $firstP = $pemeriksaans->first();
+        $shift = $firstP ? $firstP->shift : null;
+
+        // Get verifiers
+        $qcUser = $firstP && $firstP->qcVerifier ? $firstP->qcVerifier->name : null;
+        $produksiUser = $firstP && $firstP->produksiVerifier ? $firstP->produksiVerifier->name : null;
+        $spvQcUser = $firstP && $firstP->spvVerifier ? $firstP->spvVerifier->name : null;
+
+        $filename = 'laporan-kebersihan-area-' . ($uuid ? $firstP->uuid : date('Ymd-His')) . '.xlsx';
+
+        return \Maatwebsite\Excel\Facades\Excel::download(
+            new \App\Exports\PemeriksaanKebersihanAreaExport($pemeriksaans, [
+                'tanggal' => $uuid ? $firstP->tanggal->format('Y-m-d') : ($request->input('tanggal') ?? null),
+                'tanggal_dari' => $uuid ? null : ($request->input('tanggal_dari') ?? null),
+                'tanggal_sampai' => $uuid ? null : ($request->input('tanggal_sampai') ?? null),
+                'shift' => $shift,
+                'qcUser' => $qcUser,
+                'produksiUser' => $produksiUser,
+                'spvQcUser' => $spvQcUser,
+            ]),
+            $filename
+        );
+    }
+
 }
+
+
+    

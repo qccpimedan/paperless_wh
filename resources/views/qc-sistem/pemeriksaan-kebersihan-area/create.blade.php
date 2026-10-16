@@ -120,22 +120,26 @@
                         <div class="kba-item-body">
                             <div class="row g-3">
                                 <div class="col-md-6">
-                                    <label class="form-label">Area <span class="text-danger">*</span></label>
-                                    <select class="form-select area-select" name="items[0][id_area]" required>
-                                        <option value="">Pilih area</option>
-                                        @foreach($areas as $area)
-                                            <option value="{{ $area->id }}">{{ $area->nama_area }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                                <div class="col-md-6">
                                     <label class="form-label">Master form <span class="text-danger">*</span></label>
                                     <select class="form-select master-form-select" name="items[0][id_master_form]" required>
                                         <option value="">Pilih master form</option>
                                         @foreach($masterForms as $form)
-                                            <option value="{{ $form->id }}">{{ $form->nama_form }}</option>
+                                            <option value="{{ $form->id }}" data-area-id="{{ $form->id_input_area ?? '' }}" data-area-name="{{ $form->area->nama_area ?? 'Semua Area' }}">
+                                                {{ $form->nama_form }}{{ $form->area ? ' (' . $form->area->nama_area . ')' : '' }}
+                                            </option>
                                         @endforeach
                                     </select>
+                                    <small class="text-muted">Master form akan menentukan area dan aspek pemeriksaan</small>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Area <span class="text-danger">*</span></label>
+                                    <select class="form-select area-select" name="items[0][id_area]" required>
+                                        <option value="">Pilih master form dulu</option>
+                                        @foreach($areas as $area)
+                                            <option value="{{ $area->id }}" style="display:none;">{{ $area->nama_area }}</option>
+                                        @endforeach
+                                    </select>
+                                    <small class="text-muted area-hint" style="display:none;"></small>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label">Jam sebelum proses</label>
@@ -245,6 +249,8 @@ document.addEventListener('DOMContentLoaded', function () {
     @php
         $masterFormsData = $masterForms->mapWithKeys(fn ($f) => [$f->id => [
             'nama'   => $f->nama_form,
+            'area_id' => $f->id_input_area,
+            'area_name' => $f->area?->nama_area ?? 'Semua Area',
             'fields' => $f->fields->map(fn ($x) => ['id' => $x->id, 'nama' => $x->field_name])->values(),
         ]]);
     @endphp
@@ -424,7 +430,41 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!item) return;
 
         if (e.target.classList.contains('master-form-select')) {
-            renderFields(item, e.target.value);
+            const formId = e.target.value;
+            const formData = masterFormsData[formId];
+            const areaSelect = item.querySelector('.area-select');
+            const areaHint = item.querySelector('.area-hint');
+            
+            // Auto-fill area based on master form
+            if (formData && formData.area_id) {
+                // Master form has specific area - auto select it
+                areaSelect.value = formData.area_id;
+                areaSelect.disabled = true;
+                areaHint.textContent = `Area otomatis terisi dari Master Form: ${formData.area_name}`;
+                areaHint.style.display = 'block';
+                
+                // Update title
+                const opt = areaSelect.selectedOptions[0];
+                if (opt) {
+                    item.querySelector('.kba-item-title').textContent = opt.textContent.trim();
+                }
+            } else {
+                // Master form for all areas - enable manual selection
+                areaSelect.disabled = false;
+                areaSelect.value = '';
+                areaHint.style.display = 'none';
+                
+                // Show all area options
+                areaSelect.querySelectorAll('option').forEach(opt => {
+                    if (opt.value) opt.style.display = 'block';
+                });
+                
+                // Reset first option text
+                areaSelect.querySelector('option[value=""]').textContent = 'Pilih area';
+                item.querySelector('.kba-item-title').textContent = 'Area baru';
+            }
+            
+            renderFields(item, formId);
             refreshItem(item);
         }
 
@@ -469,6 +509,13 @@ document.addEventListener('DOMContentLoaded', function () {
         clone.querySelector('.form-fields-container').style.display = 'none';
         clone.querySelector('.kba-item-title').textContent = 'Area baru';
         clone.classList.remove('is-complete');
+        
+        // Reset area select
+        const areaSelect = clone.querySelector('.area-select');
+        areaSelect.disabled = false;
+        areaSelect.value = '';
+        areaSelect.querySelector('option[value=""]').textContent = 'Pilih master form dulu';
+        clone.querySelector('.area-hint').style.display = 'none';
 
         container.appendChild(clone);
         itemIndex++;

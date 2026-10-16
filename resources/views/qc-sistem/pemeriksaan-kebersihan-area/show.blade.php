@@ -65,11 +65,26 @@
                                     @php
                                         $selectedArea = $areas->firstWhere('id', $item['id_area'] ?? null);
                                         $selectedForm = $masterForms->firstWhere('id', $item['id_master_form'] ?? null);
+                                        $isAutoFilledArea = $selectedForm && $selectedForm->id_input_area && $selectedForm->id_input_area == $item['id_area'];
                                     @endphp
                                     <div class="card mt-4 shadow-sm border border-primary">
                                         <div class="card-header bg-primary text-white pb-2 pt-3">
-                                            <h5 class="card-title text-white mb-0">Area: {{ $selectedArea ? $selectedArea->nama_area : '-' }}</h5>
-                                            <p class="mb-0 text-white-50"><small>Master Form: {{ $selectedForm ? $selectedForm->nama_form : '-' }}</small></p>
+                                            <h5 class="card-title text-white mb-0">
+                                                Area: {{ $selectedArea ? $selectedArea->nama_area : '-' }}
+                                                @if($isAutoFilledArea)
+                                                    <span class="badge bg-success ms-2" style="font-size: 0.7rem;">
+                                                        <i class="bi bi-link-45deg"></i> Dari Master Form
+                                                    </span>
+                                                @endif
+                                            </h5>
+                                            <p class="mb-0 text-white-50">
+                                                <small>
+                                                    <i class="bi bi-journal-text"></i> Master Form: {{ $selectedForm ? $selectedForm->nama_form : '-' }}
+                                                    @if($selectedForm && $selectedForm->area)
+                                                        <span class="badge bg-info bg-opacity-25 ms-1">{{ $selectedForm->area->nama_area }}</span>
+                                                    @endif
+                                                </small>
+                                            </p>
                                         </div>
                                         <div class="card-body pt-3">
                                             <div class="row mb-3">

@@ -250,6 +250,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('return-barang/download-template-universal', [PemeriksaanReturnBarangCustomerController::class, 'downloadTemplateUniversal'])->name('return-barang.download-template-universal');
         Route::post('return-barang/import-universal', [PemeriksaanReturnBarangCustomerController::class, 'importUniversal'])->name('return-barang.import-universal');
         Route::get('pemeriksaan-kebersihan-area/export-pdf/{uuid?}', [PemeriksaanKebersihanAreaController::class, 'exportPDF'])->name('pemeriksaan-kebersihan-area.export-pdf');
+        Route::get('pemeriksaan-kebersihan-area/export-excel/{uuid?}', [PemeriksaanKebersihanAreaController::class, 'exportExcel'])->name('pemeriksaan-kebersihan-area.export-excel');
         Route::get('golden-sample-reports/export-pdf', [GoldenSampleReportController::class, 'exportPDF'])->name('golden-sample-reports.export-pdf');
         Route::get('pemeriksaan-barang-mudah-pecah/export-pdf', [PemeriksaanBarangMudahPecahController::class, 'exportPDF'])->name('pemeriksaan-barang-mudah-pecah.export-pdf');
         Route::get('pemeriksaan-suhu-ruang/export-pdf', [PemeriksaanSuhuRuangController::class, 'exportPDF'])->name('pemeriksaan-suhu-ruang.export-pdf');

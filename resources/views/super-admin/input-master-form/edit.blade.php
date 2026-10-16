@@ -57,6 +57,22 @@
                                             </div>
 
                                             <div class="col-md-12 mt-3">
+                                                <label for="id_input_area">Area <span class="text-muted">(Opsional)</span></label>
+                                                <select id="id_input_area" class="form-select @error('id_input_area') is-invalid @enderror" name="id_input_area">
+                                                    <option value="">-- Pilih Area (Opsional) --</option>
+                                                    @foreach($areas as $area)
+                                                        <option value="{{ $area->id }}" {{ old('id_input_area', $inputMasterForm->id_input_area) == $area->id ? 'selected' : '' }}>
+                                                            {{ $area->nama_area }}
+                                                        </option>
+                                                    @endforeach
+                                                </select>
+                                                @error('id_input_area')
+                                                    <div class="invalid-feedback">{{ $message }}</div>
+                                                @enderror
+                                                <small class="text-muted">Pilih area jika form ini khusus untuk area tertentu</small>
+                                            </div>
+
+                                            <div class="col-md-12 mt-3">
                                                 <label for="field_name">Field yang Diinput <span class="text-danger">*</span></label>
                                                 <div id="dynamic-fields">
                                                     @foreach($inputMasterForm->fields as $index => $field)
