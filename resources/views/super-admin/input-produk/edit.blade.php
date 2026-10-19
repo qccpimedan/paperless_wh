@@ -1,5 +1,10 @@
 @extends('layouts.app')
 @section('container')
+@php
+    // Hanya superadmin yang boleh mengubah Nama Produk & Kategori
+    $authUser = auth()->user();
+    $isSuperadmin = $authUser->role && strtolower($authUser->role->role) === 'superadmin';
+@endphp
 <div id="main">
 
 
@@ -41,24 +46,33 @@
                                     </div>
                                 @endif
 
+                                @unless($isSuperadmin)
+                                    <div class="alert alert-light-warning color-warning">
+                                        <i class="bi bi-lock-fill me-1"></i>
+                                        Nama Produk dan Kategori hanya dapat diubah oleh Superadmin. Anda hanya dapat mengubah Produsen dan Distributor.
+                                    </div>
+                                @endunless
+
                                 <form class="form form-horizontal" action="{{ route('produks.update', $produk->uuid) }}" method="POST">
                                     @csrf
                                     @method('PUT')
                                     <div class="form-body">
                                         <div class="row">
                                             <div class="col-md-12">
-                                                <label for="nama_produk">Nama Produk <span class="text-danger">*</span></label>
+                                                <label for="nama_produk">Nama Produk @if($isSuperadmin)<span class="text-danger">*</span>@endif</label>
                                                 <input type="text" id="nama_produk" class="form-control @error('nama_produk') is-invalid @enderror"
                                                     name="nama_produk" placeholder="Nama Produk" 
-                                                    value="{{ old('nama_produk', $produk->nama_produk) }}" required>
+                                                    value="{{ old('nama_produk', $produk->nama_produk) }}"
+                                                    {{ $isSuperadmin ? 'required' : 'readonly disabled' }}>
                                                 @error('nama_produk')
                                                     <div class="invalid-feedback">{{ $message }}</div>
                                                 @enderror
                                             </div>
 
                                             <div class="col-md-12 mt-2">
-                                                <label for="kategori_code">Kategori <span class="text-danger">*</span></label>
-                                                <select name="kategori_code" id="kategori_code" class="form-select @error('kategori_code') is-invalid @enderror" required>
+                                                <label for="kategori_code">Kategori @if($isSuperadmin)<span class="text-danger">*</span>@endif</label>
+                                                <select name="kategori_code" id="kategori_code" class="form-select @error('kategori_code') is-invalid @enderror"
+                                                    {{ $isSuperadmin ? 'required' : 'disabled' }}>
                                                     <option value="">-- Pilih Kategori --</option>
                                                     @php
                                                         $selectedKategori = old('kategori_code', $produk->kategori_code);

@@ -153,8 +153,8 @@ class ProdukController extends Controller
         ]);
 
         // Validasi untuk mencegah duplikasi produk
-        // Cek kombinasi nama_produk + kategori_code
-        $existingProduk = Produk::where('nama_produk', trim($request->nama_produk))
+        // Cek kombinasi nama_produk + kategori_code (case-insensitive)
+        $existingProduk = Produk::whereRaw('LOWER(nama_produk) = ?', [strtolower(trim($request->nama_produk))])
             ->where('kategori_code', $request->kategori_code)
             ->first();
 
@@ -227,39 +227,70 @@ class ProdukController extends Controller
 
     /**
      * Update the specified resource in storage.
+     * Nama produk & kategori hanya boleh diubah oleh superadmin.
+     * User lain hanya dapat mengubah produsen & distributor.
      */
     public function update(Request $request, Produk $produk)
     {
-        $request->validate([
-            'nama_produk' => 'required|string|max:255',
-            'kategori_code' => 'required|string|in:WHSE,WHD2,WHDS,RT01,CR01,CR02,SHTS,SHCS,OTRM,SHCS & OTRM,CHEMICAL',
+        $user = Auth::user();
+        $isSuperadmin = $user->role && strtolower($user->role->role) === 'superadmin';
+
+        $rules = [
             'id_produsen' => 'nullable|array',
             'id_produsen.*' => 'nullable|exists:produsens,id',
             'id_distributor' => 'nullable|array',
             'id_distributor.*' => 'nullable|exists:distributors,id',
-        ]);
+        ];
 
-        // Validasi untuk mencegah duplikasi produk saat update
-        // Cek kombinasi nama_produk + kategori_code, kecuali produk yang sedang di-edit
-        $existingProduk = Produk::where('nama_produk', trim($request->nama_produk))
-            ->where('kategori_code', $request->kategori_code)
-            ->where('id', '!=', $produk->id) // Exclude produk yang sedang di-edit
-            ->first();
-
-        if ($existingProduk) {
-            return redirect()->back()
-                ->withInput()
-                ->withErrors([
-                    'nama_produk' => 'Produk dengan nama "' . $request->nama_produk . '" dan kategori "' . $request->kategori_code . '" sudah terdaftar. Silakan gunakan nama produk yang berbeda atau pilih kategori lain.'
-                ]);
+        if ($isSuperadmin) {
+            $rules['nama_produk'] = 'required|string|max:255';
+            $rules['kategori_code'] = 'required|string|in:WHSE,WHD2,WHDS,RT01,CR01,CR02,SHTS,SHCS,OTRM,SHCS & OTRM,CHEMICAL';
         }
 
-        $produk->update([
-            'nama_produk' => trim($request->nama_produk),
-            'kategori_code' => $request->kategori_code,
-        ]);
+        $request->validate($rules);
 
-        $plantId = Auth::user()->id_plant;
+        // Nama & kategori hanya diproses untuk superadmin.
+        // Untuk user lain, input nama_produk / kategori_code diabaikan sepenuhnya
+        // (walaupun dimanipulasi lewat inspect element).
+        if ($isSuperadmin) {
+            // Normalisasi: rapikan spasi (termasuk non-breaking space) dan abaikan huruf besar/kecil
+            $normalisasiNama = function ($nama) {
+                return mb_strtolower(trim(preg_replace('/[\s\x{00A0}]+/u', ' ', (string) $nama)));
+            };
+            // SHCS dan OTRM ditampilkan sebagai "SHCS & OTRM" di form edit
+            $normalisasiKategori = function ($kategori) {
+                return in_array($kategori, ['SHCS', 'OTRM'], true) ? 'SHCS & OTRM' : $kategori;
+            };
+
+            $namaBaru = trim($request->nama_produk);
+            $kategoriBaru = $request->kategori_code;
+
+            $namaBerubah = $normalisasiNama($produk->nama_produk) !== $normalisasiNama($namaBaru);
+            $kategoriBerubah = $normalisasiKategori($produk->kategori_code) !== $normalisasiKategori($kategoriBaru);
+
+            // Cek duplikasi HANYA jika nama atau kategori benar-benar diubah
+            if ($namaBerubah || $kategoriBerubah) {
+                $existingProduk = Produk::whereRaw('LOWER(TRIM(nama_produk)) = ?', [mb_strtolower($namaBaru)])
+                    ->where('kategori_code', $kategoriBaru)
+                    ->where('id', '!=', $produk->id)
+                    ->first();
+
+                if ($existingProduk) {
+                    return redirect()->back()
+                        ->withInput()
+                        ->withErrors([
+                            'nama_produk' => 'Produk dengan nama "' . $namaBaru . '" dan kategori "' . $kategoriBaru . '" sudah terdaftar. Silakan gunakan nama produk yang berbeda atau pilih kategori lain.'
+                        ]);
+                }
+
+                $produk->update([
+                    'nama_produk' => $namaBaru,
+                    'kategori_code' => $kategoriBaru,
+                ]);
+            }
+        }
+
+        $plantId = $user->getEffectivePlantId();
 
         $produk->produsens()->wherePivot('id_plant', $plantId)->detach();
         $produk->distributors()->wherePivot('id_plant', $plantId)->detach();
