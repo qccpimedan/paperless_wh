@@ -101,10 +101,22 @@
         return (string) $val;
     };
 
+    // Sebuah area dianggap "diisi" jika setting / aktual / display punya nilai (angka 0 tetap dihitung diisi).
+    // Area yang semuanya kosong tidak akan ditampilkan di PDF.
+    $hasValue = function ($item) {
+        if (!is_array($item)) {
+            return $item !== null && $item !== '' && $item !== [];
+        }
+        foreach (['setting', 'actual', 'display'] as $k) {
+            if (isset($item[$k]) && $item[$k] !== '' && $item[$k] !== null) {
+                return true;
+            }
+        }
+        return false;
+    };
+
     $rows = [];
     $no = 1;
-
-    $isSameV2 = fn ($a, $b) => json_encode($a) === json_encode($b);
 
     $findUnitRowV2 = function ($rowsData, $unit) {
         if (!is_array($rowsData)) return null;
@@ -159,7 +171,9 @@
 
             if ($secDef['type'] === 'multi' && is_array($valData)) {
                 foreach ($valData as $uKey => $item) {
-                    if (!is_array($item)) continue;
+                    // Lewati unit yang tidak diisi sama sekali
+                    if (!is_array($item) || !$hasValue($item)) continue;
+
                     $unitName = $item['unit'] ?? ((string)$uKey !== '' ? (string)$uKey : '');
                     $rows[] = [
                         'no' => $no++,
@@ -177,6 +191,9 @@
                     ];
                 }
             } else {
+                // Lewati area single yang tidak diisi sama sekali
+                if (!$hasValue($valData)) continue;
+
                 $rows[] = [
                     'no' => $no++,
                     'tanggal' => $tanggalStr,
@@ -234,13 +251,7 @@
                     foreach ($allUnits as $u) {
                         $newItem = $findUnitRowV2($baru, $u);
 
-                        $isFilled = !empty($newItem) && (
-                            (isset($newItem['setting']) && $newItem['setting'] !== '' && $newItem['setting'] !== null) ||
-                            (isset($newItem['display']) && $newItem['display'] !== '' && $newItem['display'] !== null) ||
-                            (isset($newItem['actual']) && $newItem['actual'] !== '' && $newItem['actual'] !== null)
-                        );
-
-                        if ($isFilled) {
+                        if (!empty($newItem) && $hasValue($newItem)) {
                             $rows[] = [
                                 'no' => $no++,
                                 'tanggal' => $tanggalHistory,
@@ -258,13 +269,7 @@
                         }
                     }
                 } else {
-                    $isFilled = !empty($baru) && (
-                        (isset($baru['setting']) && $baru['setting'] !== '' && $baru['setting'] !== null) ||
-                        (isset($baru['display']) && $baru['display'] !== '' && $baru['display'] !== null) ||
-                        (isset($baru['actual']) && $baru['actual'] !== '' && $baru['actual'] !== null)
-                    );
-
-                    if ($isFilled) {
+                    if (!empty($baru) && $hasValue($baru)) {
                         $rows[] = [
                             'no' => $no++,
                             'tanggal' => $tanggalHistory,

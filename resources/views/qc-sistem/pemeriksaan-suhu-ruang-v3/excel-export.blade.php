@@ -55,10 +55,22 @@
         return (string) $val;
     };
 
+    // Sebuah area dianggap "diisi" jika setting / aktual / display punya nilai (angka 0 tetap dihitung diisi).
+    // Area yang semuanya kosong tidak akan ditampilkan di Excel.
+    $hasValue = function ($item) {
+        if (!is_array($item)) {
+            return $item !== null && $item !== '' && $item !== [];
+        }
+        foreach (['setting', 'actual', 'display'] as $k) {
+            if (isset($item[$k]) && $item[$k] !== '' && $item[$k] !== null) {
+                return true;
+            }
+        }
+        return false;
+    };
+
     $rows = [];
     $no = 1;
-
-    $isSameV3 = fn ($a, $b) => json_encode($a) === json_encode($b);
 
     $findUnitRowV3 = function ($rowsData, $unit) {
         if (!is_array($rowsData)) return null;
@@ -113,10 +125,8 @@
             if (empty($valData) || !is_array($valData)) continue;
 
             foreach ($valData as $uKey => $item) {
-                if (!is_array($item)) continue;
-                $isFilledTemp = !empty($item['setting']) || !empty($item['display']) || !empty($item['actual'])
-                    || $item['setting'] === '0' || $item['display'] === '0' || $item['actual'] === '0';
-                if (!$isFilledTemp) continue;
+                // Lewati unit yang tidak diisi sama sekali
+                if (!is_array($item) || !$hasValue($item)) continue;
 
                 $unitName = str_replace('unit_', '', (string) $uKey);
 
@@ -176,13 +186,7 @@
                 foreach ($allUnits as $u) {
                     $newItem = $findUnitRowV3($baru, $u);
 
-                    $isFilled = !empty($newItem) && (
-                        (isset($newItem['setting']) && $newItem['setting'] !== '' && $newItem['setting'] !== null) ||
-                        (isset($newItem['display']) && $newItem['display'] !== '' && $newItem['display'] !== null) ||
-                        (isset($newItem['actual']) && $newItem['actual'] !== '' && $newItem['actual'] !== null)
-                    );
-
-                    if ($isFilled) {
+                    if (!empty($newItem) && $hasValue($newItem)) {
                         $rows[] = [
                             'no'          => $no++,
                             'tanggal'     => $tanggalHistory,
