@@ -95,8 +95,25 @@
 
     $pickValue = function ($val, $key) {
         if ($val === null || $val === '' || $val === []) return '-';
-        if (is_array($val)) return $val[$key] ?? '-';
+        if (is_array($val)) {
+            $v = $val[$key] ?? null;
+            return ($v === null || $v === '') ? '-' : $v;
+        }
         return (string) $val;
+    };
+
+    // Sebuah area dianggap "diisi" jika setting / aktual / display punya nilai (angka 0 tetap dihitung diisi).
+    // Area yang semuanya kosong tidak akan ditampilkan.
+    $hasValue = function ($item) {
+        if (!is_array($item)) {
+            return $item !== null && $item !== '' && $item !== [];
+        }
+        foreach (['setting', 'actual', 'display'] as $k) {
+            if (isset($item[$k]) && $item[$k] !== '' && $item[$k] !== null) {
+                return true;
+            }
+        }
+        return false;
     };
 
     $rows = [];
@@ -130,8 +147,8 @@
         $firstHistory = $histories->first();
 
         // 1. Ambil Data Input Pertama (Initial State)
-        $initialSuhuProduk = ($firstHistory && !empty($firstHistory->suhu_produk_lama)) 
-            ? $firstHistory->suhu_produk_lama 
+        $initialSuhuProduk = ($firstHistory && !empty($firstHistory->suhu_produk_lama))
+            ? $firstHistory->suhu_produk_lama
             : $suhuProdukStr;
 
         $initialTime = '-';
@@ -147,8 +164,8 @@
 
         foreach ($sectionDefsV3 as $fieldKey => $secLabel) {
             $initialFieldLamaKey = $fieldKey . '_lama';
-            $valData = ($firstHistory && isset($firstHistory->$initialFieldLamaKey)) 
-                ? $firstHistory->$initialFieldLamaKey 
+            $valData = ($firstHistory && isset($firstHistory->$initialFieldLamaKey))
+                ? $firstHistory->$initialFieldLamaKey
                 : ($p->$fieldKey ?? null);
 
             if (is_string($valData) && !empty($valData)) {
@@ -157,10 +174,8 @@
             if (empty($valData) || !is_array($valData)) continue;
 
             foreach ($valData as $uKey => $item) {
-                if (!is_array($item)) continue;
-                $isFilledTemp = !empty($item['setting']) || !empty($item['display']) || !empty($item['actual'])
-                    || $item['setting'] === '0' || $item['display'] === '0' || $item['actual'] === '0';
-                if (!$isFilledTemp) continue;
+                // Lewati unit yang tidak diisi sama sekali
+                if (!is_array($item) || !$hasValue($item)) continue;
 
                 $unitName = str_replace('unit_', '', (string) $uKey);
 
@@ -220,13 +235,8 @@
                 foreach ($allUnits as $u) {
                     $newItem = $findUnitRowV3($baru, $u);
 
-                    $isFilled = !empty($newItem) && (
-                        (isset($newItem['setting']) && $newItem['setting'] !== '' && $newItem['setting'] !== null) ||
-                        (isset($newItem['display']) && $newItem['display'] !== '' && $newItem['display'] !== null) ||
-                        (isset($newItem['actual']) && $newItem['actual'] !== '' && $newItem['actual'] !== null)
-                    );
-
-                    if ($isFilled) {
+                    // Tampilkan hanya jika area diisi
+                    if (!empty($newItem) && $hasValue($newItem)) {
                         $rows[] = [
                             'no'          => $no++,
                             'tanggal'     => $tanggalHistory,
