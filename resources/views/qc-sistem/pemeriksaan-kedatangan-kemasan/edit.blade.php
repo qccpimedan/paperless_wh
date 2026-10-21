@@ -568,9 +568,9 @@
                                                             <div class="produsen-hidden-inputs"></div>
                                                             <div class="distributor-hidden-inputs"></div>
 
-                                                            <input type="hidden" name="penampakan[]" class="penampakan-hidden" value="{{ $penampakans[$srcIndex] ?? '' }}">
-                                                            <input type="hidden" name="sealing[]" class="sealing-hidden" value="{{ $sealings[$srcIndex] ?? '' }}">
-                                                            <input type="hidden" name="cetakan[]" class="cetakan-hidden" value="{{ $cetakans[$srcIndex] ?? '' }}">
+                                                            <input type="hidden" class="penampakan-hidden" value="{{ $penampakans[$srcIndex] ?? '' }}">
+                                                            <input type="hidden" class="sealing-hidden" value="{{ $sealings[$srcIndex] ?? '' }}">
+                                                            <input type="hidden" class="cetakan-hidden" value="{{ $cetakans[$srcIndex] ?? '' }}">
                                                             <input type="hidden" name="logo_halal[]" class="logo-halal-hidden" value="{{ $logo_halals[$srcIndex] ?? '' }}">
                                                             <input type="hidden" name="dokumen_halal[]" class="dokumen-halal-hidden" value="{{ $dokumen_halals[$srcIndex] ?? '' }}">
                                                             <input type="hidden" name="coa[]" class="coa-hidden" value="{{ $coas[$srcIndex] ?? '' }}">
@@ -1237,7 +1237,7 @@
                                                     const masterRadioGroups = ['penampakan', 'sealing', 'cetakan', 'logo_halal', 'dokumen_halal', 'coa'];
                                                     masterRadioGroups.forEach((g) => {
                                                         detailEl.querySelectorAll(`input[type="radio"][name^="${g}_master_"]`).forEach((r) => {
-                                                            r.name = `${g}_master_${idx}`;
+                                                            r.name = `${g}[${idx}]`;
                                                         });
                                                     });
 
@@ -1498,6 +1498,29 @@
                                                     const row = target.closest('.unified-row');
                                                     if (row) {
                                                         syncDokumenToDetails(row);
+                                                    }
+                                                }
+                                                if (target && target.matches('input[type="radio"][name^="penampakan_master_"], input[type="radio"][name*="penampakan_"]')) {
+                                                    const detail = target.closest('.detail-item');
+                                                    if (detail) {
+                                                        const hidden = detail.querySelector('input.penampakan-hidden');
+                                                        if (hidden) hidden.value = String(target.value);
+                                                    }
+                                                }
+                                                if (target && target.matches('input[type="radio"][name^="sealing_master_"], input[type="radio"][name*="sealing_"]')) {
+                                                    const detail = target.closest('.detail-item');
+                                                    if (detail) {
+                                                        const hidden = detail.querySelector('input.sealing-hidden');
+                                                        if (hidden) hidden.value = String(target.value);
+                                                    }
+                                                }
+                                                if (target && target.matches('input[type="radio"][name^="cetakan_master_"], input[type="radio"][name*="cetakan_"]')) {
+                                                    const detail = target.closest('.detail-item');
+                                                    if (detail) {
+                                                        const hidden = detail.querySelector('input.cetakan-hidden');
+                                                        if (hidden) {
+                                                            hidden.value = String(target.value);
+                                                    }
                                                     }
                                                 }
                                             });
@@ -2136,6 +2159,22 @@
                                                     section.querySelector('.coa-pdf-input').style.display = 'none';
                                                     section.querySelector('.coa-img-input').style.display = '';
                                                     section.querySelector('.coa-pdf-input input[type="file"]').value = '';
+                                                }
+                                            });
+
+                                            const editFormEl = document.querySelector('form[action*="pemeriksaan-kedatangan-kemasan"]');
+                                            if (editFormEl) {
+                                                editFormEl.addEventListener('submit', function() {
+                                                    document.querySelectorAll('#unified-container .detail-item').forEach((detail) => {
+                                                        ['penampakan', 'sealing', 'cetakan'].forEach((field) => {
+                                                            const checked = detail.querySelector('input[type="radio"][name*="' + field + '_"]:checked');
+                                                            const hidden = detail.querySelector('input.' + field + '-hidden');
+                                                            if (checked && hidden) {
+                                                                hidden.value = String(checked.value);
+                                                            }
+                                                        });
+                                                    });
+                                                });
                                                 }
                                             });
                                         });

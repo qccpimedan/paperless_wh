@@ -680,14 +680,14 @@
                                                                 <div class="mb-3">
                                                                     <label class="form-label"><strong>Status Allergen</strong></label>
                                                                     <div class="form-check">
-                                                                        <input class="form-check-input" type="radio" name="kondisi_fisik_allergen_${uniqueId}" id="allergen_ya_${uniqueId}" value="Allergen">
-                                                                        <label class="form-check-label" for="allergen_ya_${uniqueId}">Allergen</label>
+                                                                        <input class="form-check-input" type="radio" name="kondisi_fisik_allergen_1" id="allergen_ya_1" value="Allergen">
+                                                                        <label class="form-check-label" for="allergen_ya_1">Allergen</label>
                                                                     </div>
                                                                     <div class="form-check">
-                                                                        <input class="form-check-input" type="radio" name="kondisi_fisik_allergen_${uniqueId}" id="allergen_tidak_${uniqueId}" value="Non-Allergen">
-                                                                        <label class="form-check-label" for="allergen_tidak_${uniqueId}">Non-Allergen</label>
+                                                                        <input class="form-check-input" type="radio" name="kondisi_fisik_allergen_1" id="allergen_tidak_1" value="Non-Allergen">
+                                                                        <label class="form-check-label" for="allergen_tidak_1">Non-Allergen</label>
                                                                     </div>
-                                                                    <input type="hidden" name="kondisi_fisik_allergen[]" class="radio-value-allergen-${uniqueId}">
+                                                                    <input type="hidden" name="kondisi_fisik_allergen[]" class="radio-value-allergen-${uniqueId} allergen-hidden-value">
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -2077,7 +2077,7 @@ function addNewRow() {
                             <input class="form-check-input" type="radio" name="kondisi_fisik_allergen_${uniqueId}" id="allergen_tidak_${uniqueId}" value="Non-Allergen">
                             <label class="form-check-label" for="allergen_tidak_${uniqueId}">Non-Allergen</label>
                         </div>
-                        <input type="hidden" name="kondisi_fisik_allergen[]" class="radio-value-allergen-${uniqueId}">
+                        <input type="hidden" name="kondisi_fisik_allergen[]" class="radio-value-allergen-${uniqueId} allergen-hidden-value">
                     </div>
                 </div>
             </div>
@@ -2389,7 +2389,7 @@ function setupRadioListeners(row, uniqueId) {
             }
         });
     });
-    
+
     // Dokumen - Logo Halal
     row.querySelectorAll(`input[name="logo_halal_${uniqueId}"]`).forEach(radio => {
         radio.addEventListener('change', function() {
@@ -2859,6 +2859,15 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         // Jika validasi berhasil, form akan submit normalmente
     });
+});
+
+// Sinkronisasi allergen untuk baris awal dan baris dinamis.
+document.addEventListener('change', function(event) {
+    const radio = event.target;
+    if (!radio.matches('input[type="radio"][name^="kondisi_fisik_allergen_"]')) return;
+    const section = radio.closest('.mb-3');
+    const hidden = section ? section.querySelector('input.allergen-hidden-value') : null;
+    if (hidden) hidden.value = radio.value;
 });
 </script>
 @endpush

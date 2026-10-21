@@ -760,7 +760,7 @@
                                                                                 {{ ($kond['allergen'] ?? '') === 'Non-Allergen' ? 'checked' : '' }}>
                                                                             <label class="form-check-label">Non-Allergen</label>
                                                                         </div>
-                                                                        <input type="hidden" name="kondisi_fisik_allergen[]" value="{{ $kond['allergen'] ?? '' }}">
+                                                                        <input type="hidden" name="kondisi_fisik_allergen[]" class="allergen-hidden-value" value="{{ $kond['allergen'] ?? '' }}">
                                                                     </div>
                                                                 </div>
                                                             </div>
@@ -1820,7 +1820,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                         <input class="form-check-input allergen-radio" type="radio" name="kondisi_fisik_allergen_${rowCount}_1" value="Non-Allergen">
                                         <label class="form-check-label">Non-Allergen</label>
                                     </div>
-                                    <input type="hidden" name="kondisi_fisik_allergen[]" value="">
+                                    <input type="hidden" name="kondisi_fisik_allergen[]" class="allergen-hidden-value" value="">
                                 </div>
                             </div>
                         </div>
@@ -2344,6 +2344,14 @@ document.addEventListener('change', function(e) {
 });
 
 // Before submit: disable hidden COA file input + radio buttons
+document.addEventListener('change', function(event) {
+    const radio = event.target;
+    if (!radio.matches('input.allergen-radio, input[type="radio"][name^="kondisi_fisik_allergen_"]')) return;
+    const section = radio.closest('.mb-3');
+    const hidden = section ? section.querySelector('input.allergen-hidden-value') : null;
+    if (hidden) hidden.value = radio.value;
+});
+
 try {
     const coaForm = document.querySelector('form[action*="pemeriksaan-bahan-baku"]');
     if (coaForm) {

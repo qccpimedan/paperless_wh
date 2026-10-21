@@ -374,16 +374,20 @@ return view('qc-sistem.pemeriksaan-kedatangan-kemasan.index', compact('pemeriksa
         $jumlah_samplings = $request->input('jumlah_sampling', []);
         $unit_samplings = $request->input('unit_sampling', []);
         $spesifikasis = $request->input('spesifikasi', []);
-        $penampakans = array_values((array) $request->input('penampakan', []));
-        $sealings = array_values((array) $request->input('sealing', []));
-        $cetakans = array_values((array) $request->input('cetakan', []));
+        // Normalisasi kondisi fisik: konversi '' ke null agar tersimpan benar per-index
+        $normalizeKondisi = function (array $arr): array {
+            return array_map(fn($v) => ($v === '' || $v === null) ? null : $v, array_values($arr));
+        };
+        $penampakans    = $normalizeKondisi((array) $request->input('penampakan', []));
+        $sealings       = $normalizeKondisi((array) $request->input('sealing', []));
+        $cetakans       = $normalizeKondisi((array) $request->input('cetakan', []));
         $ketebalan_microns = $request->input('ketebalan_micron', []);
         $dimensis = $request->input('dimensi', []);
         $berats = $request->input('berat', []);
         $statuses = $request->input('status', []);
-        $logo_halals = array_values((array) $request->input('logo_halal', []));
-        $dokumen_halals = array_values((array) $request->input('dokumen_halal', []));
-        $coas = array_values((array) $request->input('coa', []));
+        $logo_halals    = $normalizeKondisi((array) $request->input('logo_halal', []));
+        $dokumen_halals = $normalizeKondisi((array) $request->input('dokumen_halal', []));
+        $coas           = $normalizeKondisi((array) $request->input('coa', []));
         $keterangans = $request->input('keterangan', []);
 
         $rowCountForSupplier = max(count($id_produks), count($kode_produksis), count($jumlah_datangs), count($jumlah_samplings), count((array) $produsenInput), count((array) $distributorInput));
@@ -688,16 +692,20 @@ return view('qc-sistem.pemeriksaan-kedatangan-kemasan.index', compact('pemeriksa
         $jumlah_samplings = $request->input('jumlah_sampling', []);
         $unit_samplings = $request->input('unit_sampling', []);
         $spesifikasis = $request->input('spesifikasi', []);
-        $penampakans = array_values((array) $request->input('penampakan', []));
-        $sealings = array_values((array) $request->input('sealing', []));
-        $cetakans = array_values((array) $request->input('cetakan', []));
+        // Normalisasi kondisi fisik: konversi '' ke null agar tersimpan benar per-index
+        $normalizeKondisi = function (array $arr): array {
+            return array_map(fn($v) => ($v === '' || $v === null) ? null : $v, array_values($arr));
+        };
+        $penampakans    = $normalizeKondisi((array) $request->input('penampakan', []));
+        $sealings       = $normalizeKondisi((array) $request->input('sealing', []));
+        $cetakans       = $normalizeKondisi((array) $request->input('cetakan', []));
         $ketebalan_microns = $request->input('ketebalan_micron', []);
         $dimensis = $request->input('dimensi', []);
         $berats = $request->input('berat', []);
         $statuses = $request->input('status', []);
-        $logo_halals = array_values((array) $request->input('logo_halal', []));
-        $dokumen_halals = array_values((array) $request->input('dokumen_halal', []));
-        $coas = array_values((array) $request->input('coa', []));
+        $logo_halals    = $normalizeKondisi((array) $request->input('logo_halal', []));
+        $dokumen_halals = $normalizeKondisi((array) $request->input('dokumen_halal', []));
+        $coas           = $normalizeKondisi((array) $request->input('coa', []));
         $keterangans = $request->input('keterangan', []);
 
         $existingImageKemasan = json_decode($pemeriksaanKedatanganKemasan->image_kemasan_array ?? '[]', true);

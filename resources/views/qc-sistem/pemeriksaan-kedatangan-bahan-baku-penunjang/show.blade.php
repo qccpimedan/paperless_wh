@@ -454,10 +454,10 @@
                                                                 </div>
                                                                 @if(isset($kondisiFisikArray[$index]['allergen']) && $kondisiFisikArray[$index]['allergen'])
                                                                     <div class="d-flex align-items-center small mt-1">
-                                                                        <span class="badge {{ $kondisiFisikArray[$index]['allergen'] === 'Allergen' ? 'bg-warning text-dark' : 'bg-info' }} me-2">
+                                                                        <!-- <span>Status Allergen</span> -->
+                                                                        <span class="badge {{ $kondisiFisikArray[$index]['allergen'] === 'Allergen' ? 'bg-warning text-dark' : 'bg-info' }}">
                                                                             {{ $kondisiFisikArray[$index]['allergen'] }}
                                                                         </span>
-                                                                        <span>Status Allergen</span>
                                                                     </div>
                                                                 @endif
                                                             </div>
