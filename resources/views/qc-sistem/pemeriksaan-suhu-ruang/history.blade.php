@@ -225,14 +225,14 @@
                                 <span class="text-muted small">{{ $changedRows }} lokasi</span>
                             </div>
                         </div>
-                        <div class="hx-card hx-stat">
+                        <!-- <div class="hx-card hx-stat">
                             <small>Rentang suhu (actual)</small>
                             <div class="fw-semibold mt-2">
                                 <span class="text-danger">{{ $rangeOld }}</span>
                                 <i class="bi bi-arrow-right mx-1 text-muted"></i>
                                 <span class="text-success">{{ $rangeNew }}</span>
                             </div>
-                        </div>
+                        </div> -->
                         <div class="hx-card hx-stat ok">
                             <small class="text-success">Verifikasi QC</small>
                             <div class="d-flex justify-content-between align-items-baseline">

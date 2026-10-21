@@ -225,7 +225,7 @@
                                                 @else <span class="badge bg-danger">{{ str_replace('_', ' ', $st) }}</span> @endif
                                             </td>
                                             <td>
-                                                <div class="btn-group">
+                                                <div class="btn-vertical">
                                                     @can('view_pemeriksaan_barang_mudah_pecah') <a href="{{ route('pemeriksaan-barang-mudah-pecah.show', $item->uuid) }}" class="btn btn-sm btn-info text-white"><i class="bi bi-eye"></i></a> @endcan
                                                     @can('edit_pemeriksaan_barang_mudah_pecah') 
                                                         <a href="{{ route('pemeriksaan-barang-mudah-pecah.edit', $item->uuid) }}{{ ($isAuditView ?? false) ? '?from_audit=1' : '' }}" 

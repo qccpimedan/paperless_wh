@@ -1,598 +1,450 @@
 @extends('layouts.app')
 @section('container')
+@php
+    $m = $pemeriksaanSuhuRuangV2;
+
+    /* ===== Label & standar (logika tidak diubah) ===== */
+    $sectionLabelsV2 = [
+        'cold_storage'          => 'Cold Storage',
+        'anteroom_loading'      => 'Anteroom Loading',
+        'pre_loading'           => 'Pre Loading',
+        'prestaging'            => 'Prestaging',
+        'anteroom_ekspansi_abf' => 'Anteroom Ekspansi ABF',
+        'chillroom_rm'          => 'Chillroom RM',
+        'chillroom_domestik'    => 'Chillroom Domestik',
+    ];
+    $sectionStd = ['cold_storage' => '-18', 'anteroom_loading' => '(0±5°C)'];
+
+    /* ===== Kartu monitoring ===== */
+    $areaCards = [];
+    foreach ($sectionLabelsV2 as $secKey => $secLabel) {
+        $data = $m->{'suhu_' . $secKey};
+        if (empty($data)) continue;
+
+        $group = ['key' => $secKey, 'label' => $secLabel, 'items' => []];
+        if (in_array($secKey, ['cold_storage', 'anteroom_loading'])) {
+            foreach ($data as $unit => $item) {
+                $group['items'][] = [
+                    'chip'    => ($secKey === 'cold_storage' ? 'CS ' : 'AL ') . $unit,
+                    'setting' => $item['setting'] ?? null,
+                    'display' => $item['display'] ?? null,
+                    'actual'  => $item['actual'] ?? null,
+                ];
+            }
+        } else {
+            $group['items'][] = [
+                'chip' => null,
+                'setting' => $data['setting'] ?? null,
+                'display' => $data['display'] ?? null,
+                'actual'  => $data['actual'] ?? null,
+            ];
+        }
+        $areaCards[] = $group;
+    }
+
+    /* ===== Timeline riwayat ===== */
+    $historiesV2 = $m->histories->sortBy('id');
+    $firstHistory = $historiesV2->first();
+    $timelineRows = [];
+    $noV2 = 1;
+
+    $rawInitPukul = $firstHistory && $firstHistory->pukul_lama ? $firstHistory->pukul_lama : $m->pukul;
+    $initJamV2 = $rawInitPukul ? \Carbon\Carbon::parse($rawInitPukul)->format('H:i') : '-';
+
+    $initColdStorageData = $firstHistory && $firstHistory->suhu_cold_storage_lama !== null
+        ? (is_array($firstHistory->suhu_cold_storage_lama) ? $firstHistory->suhu_cold_storage_lama : (json_decode($firstHistory->suhu_cold_storage_lama, true) ?: []))
+        : $m->suhu_cold_storage;
+
+    $initAnteroomLoadingData = $firstHistory && $firstHistory->suhu_anteroom_loading_lama !== null
+        ? (is_array($firstHistory->suhu_anteroom_loading_lama) ? $firstHistory->suhu_anteroom_loading_lama : (json_decode($firstHistory->suhu_anteroom_loading_lama, true) ?: []))
+        : $m->suhu_anteroom_loading;
+
+    $initSuhuProdukVal = $firstHistory && $firstHistory->suhu_produk_lama !== null
+        ? $firstHistory->suhu_produk_lama
+        : $m->suhu_produk;
+
+    if (!empty($initColdStorageData)) {
+        foreach ((array) $initColdStorageData as $uId => $uVal) {
+            $timelineRows[] = ['no' => $noV2++, 'waktu' => $initJamV2, 'area' => 'Cold Storage ' . $uId,
+                'setting' => $uVal['setting'] ?? '-', 'aktual' => $uVal['actual'] ?? '-', 'display' => $uVal['display'] ?? '-', 'tipe' => 'awal', 'dot' => 'primary'];
+        }
+    }
+    if (!empty($initAnteroomLoadingData)) {
+        foreach ((array) $initAnteroomLoadingData as $uId => $uVal) {
+            $timelineRows[] = ['no' => $noV2++, 'waktu' => $initJamV2, 'area' => 'Anteroom Loading ' . $uId,
+                'setting' => $uVal['setting'] ?? '-', 'aktual' => $uVal['actual'] ?? '-', 'display' => $uVal['display'] ?? '-', 'tipe' => 'awal', 'dot' => 'primary'];
+        }
+    }
+    foreach (['pre_loading', 'prestaging', 'anteroom_ekspansi_abf', 'chillroom_rm', 'chillroom_domestik'] as $sKey) {
+        $attrLama = 'suhu_' . $sKey . '_lama';
+        $attr = 'suhu_' . $sKey;
+        $val = ($firstHistory && $firstHistory->{$attrLama} !== null)
+            ? (is_array($firstHistory->{$attrLama}) ? $firstHistory->{$attrLama} : (json_decode($firstHistory->{$attrLama}, true) ?: []))
+            : $m->{$attr};
+
+        if (!empty($val) && (!empty($val['setting']) || !empty($val['display']) || !empty($val['actual']))) {
+            $timelineRows[] = ['no' => $noV2++, 'waktu' => $initJamV2, 'area' => $sectionLabelsV2[$sKey],
+                'setting' => $val['setting'] ?? '-', 'aktual' => $val['actual'] ?? '-', 'display' => $val['display'] ?? '-', 'tipe' => 'awal', 'dot' => 'primary'];
+        }
+    }
+    if (!empty($initSuhuProdukVal)) {
+        $timelineRows[] = ['no' => $noV2++, 'waktu' => $initJamV2, 'area' => 'Suhu Produk', 'note' => 'Direct Core Check',
+            'setting' => '-', 'aktual' => $initSuhuProdukVal, 'display' => '-', 'tipe' => 'awal', 'dot' => 'warning'];
+    }
+
+    $displayedKeys = []; // cegah duplikasi jam + area
+    foreach ($historiesV2 as $h) {
+        $pukulH = $h->pukul_baru ?? $h->pukul_lama ?? null;
+        $jamH = $pukulH ? \Carbon\Carbon::parse($pukulH)->format('H:i') : '-';
+
+        foreach ($sectionLabelsV2 as $secKey => $secLabel) {
+            $colLama = 'suhu_' . $secKey . '_lama';
+            $colBaru = 'suhu_' . $secKey . '_baru';
+            $lamaData = is_array($h->{$colLama}) ? $h->{$colLama} : (json_decode($h->{$colLama} ?? '[]', true) ?: []);
+            $baruData = is_array($h->{$colBaru}) ? $h->{$colBaru} : (json_decode($h->{$colBaru} ?? '[]', true) ?: []);
+
+            if (in_array($secKey, ['cold_storage', 'anteroom_loading'])) {
+                $allUnits = array_unique(array_merge(array_keys((array) $lamaData), array_keys((array) $baruData)));
+                foreach ($allUnits as $uId) {
+                    $bItem = $baruData[$uId] ?? [];
+                    if (empty($bItem['setting']) && empty($bItem['display']) && empty($bItem['actual'])) continue;
+
+                    $uniqueKey = $jamH . '_' . $secLabel . '_' . $uId;
+                    if (isset($displayedKeys[$uniqueKey])) continue;
+                    $displayedKeys[$uniqueKey] = true;
+
+                    $timelineRows[] = ['no' => $noV2++, 'waktu' => $jamH, 'area' => $secLabel . ' ' . $uId,
+                        'setting' => $bItem['setting'] ?? '-', 'aktual' => $bItem['actual'] ?? '-', 'display' => $bItem['display'] ?? '-', 'tipe' => 'update', 'dot' => 'primary'];
+                }
+            } else {
+                if (empty($baruData['setting']) && empty($baruData['display']) && empty($baruData['actual'])) continue;
+
+                $uniqueKey = $jamH . '_' . $secLabel;
+                if (isset($displayedKeys[$uniqueKey])) continue;
+                $displayedKeys[$uniqueKey] = true;
+
+                $timelineRows[] = ['no' => $noV2++, 'waktu' => $jamH, 'area' => $secLabel,
+                    'setting' => $baruData['setting'] ?? '-', 'aktual' => $baruData['actual'] ?? '-', 'display' => $baruData['display'] ?? '-', 'tipe' => 'update', 'dot' => 'primary'];
+            }
+        }
+
+        if (($h->suhu_produk_lama ?? null) !== ($h->suhu_produk_baru ?? null) && !empty($h->suhu_produk_baru)) {
+            $uniqueKey = $jamH . '_Suhu Produk';
+            if (!isset($displayedKeys[$uniqueKey])) {
+                $displayedKeys[$uniqueKey] = true;
+                $timelineRows[] = ['no' => $noV2++, 'waktu' => $jamH, 'area' => 'Suhu Produk', 'note' => 'Direct Core Check',
+                    'setting' => '-', 'aktual' => $h->suhu_produk_baru, 'display' => '-', 'tipe' => 'update', 'dot' => 'warning'];
+            }
+        }
+    }
+@endphp
+
+<style>
+    /* ===== Food Processing – detail page (scoped dengan prefix .fp-) ===== */
+    .fp { --fp-ink:#0f172a; --fp-muted:#64748b; --fp-line:#e5e9f0; --fp-soft:#f8fafc;
+          --fp-blue:#2563eb; --fp-blue-soft:#eff6ff; --fp-blue-line:#bfdbfe;
+          --fp-green:#16a34a; --fp-green-soft:#ecfdf3; --fp-amber:#f59e0b; --fp-navy:#0b1220; }
+    .fp-mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+
+    /* Header */
+    .fp-head { display:flex; justify-content:space-between; align-items:flex-start; gap:1rem; flex-wrap:wrap; margin-bottom:1.25rem; }
+    .fp-head h3 { margin:0; font-weight:700; letter-spacing:-.02em; color:var(--fp-ink); display:flex; align-items:center; gap:.75rem; flex-wrap:wrap; }
+    .fp-head p  { margin:.25rem 0 0; color:var(--fp-muted); font-size:.85rem; }
+    .fp-actions { display:flex; gap:.5rem; }
+    .fp-btn { display:inline-flex; align-items:center; gap:.4rem; padding:.5rem .9rem; border-radius:.5rem; font-size:.82rem; font-weight:600;
+              border:1px solid var(--fp-line); background:#fff; color:var(--fp-ink); text-decoration:none; cursor:pointer; transition:background .15s, border-color .15s; }
+    .fp-btn:hover { background:var(--fp-soft); color:var(--fp-ink); }
+    .fp-btn-primary { background:var(--fp-blue); border-color:var(--fp-blue); color:#fff; }
+    .fp-btn-primary:hover { background:#1d4ed8; border-color:#1d4ed8; color:#fff; }
+    .fp-pill { display:inline-flex; align-items:center; gap:.35rem; padding:.2rem .6rem; border-radius:999px; font-size:.72rem; font-weight:600; }
+    .fp-pill-green { background:var(--fp-green-soft); color:var(--fp-green); border:1px solid #bbf7d0; }
+    .fp-updated { display:inline-flex; align-items:center; gap:.4rem; padding:.35rem .75rem; border:1px solid var(--fp-line); border-radius:.5rem; background:#fff; font-size:.78rem; color:var(--fp-muted); }
+    .fp-updated b { color:var(--fp-ink); }
+
+    /* Panel */
+    .fp-panel { background:#fff; border:1px solid var(--fp-line); border-radius:.9rem; padding:1.25rem; margin-bottom:1.5rem; }
+    .fp-panel-title { display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; font-weight:600; color:var(--fp-ink); }
+    .fp-panel-title .dot { width:.55rem; height:.55rem; border-radius:50%; background:var(--fp-blue); display:inline-block; margin-right:.6rem; }
+    .fp-id { font-size:.7rem; color:#94a3b8; }
+
+    /* Info tiles */
+    .fp-tiles { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:.9rem; }
+    .fp-tile { border:1px solid var(--fp-line); border-radius:.7rem; padding:.9rem 1rem; background:var(--fp-soft); display:flex; flex-direction:column; justify-content:space-between; min-height:6.5rem; }
+    .fp-tile-label { font-size:.7rem; font-weight:600; letter-spacing:.04em; color:var(--fp-muted); text-transform:uppercase; }
+    .fp-tile-value { font-weight:600; color:var(--fp-ink); display:flex; align-items:center; gap:.5rem; }
+    .fp-tile-hot { background:var(--fp-blue-soft); border-color:var(--fp-blue-line); }
+    .fp-tile-hot .fp-temp { font-size:1.5rem; font-weight:700; color:var(--fp-blue); line-height:1; }
+    .fp-tile-hot .fp-temp small { font-size:.85rem; font-weight:500; }
+    .fp-ico { width:1.9rem; height:1.9rem; border-radius:.5rem; background:var(--fp-blue); color:#fff; display:inline-flex; align-items:center; justify-content:center; }
+    .fp-code { display:inline-block; background:var(--fp-navy); color:#fff; font-size:.7rem; font-weight:700; padding:.1rem .45rem; border-radius:.3rem; margin:.25rem 0; }
+    .fp-prod-name { font-size:.82rem; font-weight:600; color:var(--fp-ink); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+    /* Section heading */
+    .fp-sec { display:flex; justify-content:space-between; align-items:center; margin:0 0 .75rem; flex-wrap:wrap; gap:.5rem; }
+    .fp-sec h5 { margin:0; font-weight:700; color:var(--fp-ink); display:flex; align-items:center; gap:.6rem; }
+    .fp-chip { background:#e2e8f0; color:#334155; font-size:.7rem; font-weight:700; padding:.15rem .55rem; border-radius:999px; }
+    .fp-sec small { color:var(--fp-muted); }
+
+    /* Reading cards */
+    .fp-reads { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:.9rem; }
+    .fp-read { border:1px solid var(--fp-line); border-radius:.8rem; padding:1rem 1.1rem; background:#fff; position:relative; }
+    .fp-read.is-actual { border-color:var(--fp-blue-line); background:linear-gradient(180deg,#fff,var(--fp-blue-soft)); }
+    .fp-read-label { font-size:.75rem; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color:var(--fp-ink); }
+    .fp-read-cap { font-size:.74rem; color:#94a3b8; margin-top:.15rem; }
+    .fp-read-val { font-size:2rem; font-weight:700; color:var(--fp-ink); line-height:1; margin:.9rem 0; display:flex; align-items:baseline; gap:.5rem; }
+    .fp-read.is-actual .fp-read-val { color:var(--fp-blue); }
+    .fp-read-val small { font-size:.85rem; font-weight:500; color:var(--fp-muted); }
+    .fp-read-foot { border-top:1px solid var(--fp-line); padding-top:.6rem; font-size:.78rem; color:var(--fp-muted); display:flex; align-items:center; gap:.4rem; }
+    .fp-tag { position:absolute; top:.75rem; right:.75rem; font-size:.65rem; font-weight:700; padding:.15rem .45rem; border-radius:.3rem; color:#fff; display:inline-flex; align-items:center; gap:.25rem; }
+    .fp-tag-std { background:#0ea5e9; }
+    .fp-tag-manual { background:var(--fp-amber); }
+    .fp-unit { margin:0 0 .5rem; font-size:.8rem; font-weight:600; color:var(--fp-muted); }
+    .fp-unit-group + .fp-unit-group { margin-top:1.1rem; }
+
+    /* Catatan */
+    .fp-notes { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:.9rem; }
+    .fp-note { border:1px solid var(--fp-line); border-left:3px solid var(--fp-amber); border-radius:.6rem; padding:.8rem 1rem; background:#fffbeb; }
+    .fp-note b { display:block; font-size:.72rem; text-transform:uppercase; letter-spacing:.04em; color:var(--fp-muted); margin-bottom:.25rem; }
+
+    /* Timeline table */
+    .fp-table-wrap { border-radius:.8rem; overflow:hidden; border:1px solid var(--fp-line); background:#fff; }
+    .fp-table { width:100%; border-collapse:collapse; font-size:.85rem; }
+    .fp-table thead th { background:var(--fp-navy); color:#fff; font-size:.7rem; letter-spacing:.05em; text-transform:uppercase; padding:.85rem 1rem; font-weight:700; }
+    .fp-table tbody td { padding:.8rem 1rem; border-top:1px solid var(--fp-line); vertical-align:middle; }
+    .fp-table tbody tr:hover { background:var(--fp-soft); }
+    .fp-table tbody tr.is-update { background:#fffbeb; }
+    .fp-table .c { text-align:center; }
+    .fp-time { background:#f1f5f9; padding:.2rem .5rem; border-radius:.3rem; font-size:.8rem; }
+    .fp-area { display:flex; align-items:center; gap:.55rem; font-weight:600; color:var(--fp-ink); }
+    .fp-area i.d { width:.5rem; height:.5rem; border-radius:50%; display:inline-block; }
+    .fp-area i.d-primary { background:var(--fp-blue); } .fp-area i.d-warning { background:var(--fp-amber); }
+    .fp-area em { font-style:normal; font-weight:400; font-size:.7rem; color:#94a3b8; }
+    .fp-actual { background:var(--fp-blue-soft); color:var(--fp-blue); font-weight:600; }
+    .fp-status { display:inline-flex; align-items:center; gap:.3rem; font-size:.72rem; font-weight:700; padding:.25rem .6rem; border-radius:.35rem; color:#fff; }
+    .fp-status-awal { background:var(--fp-green); } .fp-status-update { background:var(--fp-amber); color:#422006; }
+    .fp-table-foot { display:flex; justify-content:space-between; gap:1rem; flex-wrap:wrap; padding:.7rem 1rem; background:var(--fp-soft); border-top:1px solid var(--fp-line); font-size:.74rem; color:var(--fp-muted); }
+
+    /* Footer bar */
+    .fp-footer { display:flex; justify-content:space-between; align-items:center; gap:1rem; flex-wrap:wrap; background:#fff; border:1px solid var(--fp-line); border-radius:.9rem; padding:.9rem 1.25rem; }
+    .fp-footer small { color:var(--fp-muted); }
+
+    @media (max-width:1199px){ .fp-tiles{ grid-template-columns:repeat(3,minmax(0,1fr)); } }
+    @media (max-width:767px){
+        .fp-tiles,.fp-reads,.fp-notes{ grid-template-columns:1fr; }
+        .fp-actions{ width:100%; } .fp-actions .fp-btn{ flex:1; justify-content:center; }
+    }
+    @media print { .fp-actions,.fp-footer,.fp-updated{ display:none !important; } }
+</style>
+
+
 <div id="main">
+    <div class="fp">
 
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item"><a href="{{ route('dashboard') }}"><i class="bi bi-house-door-fill"></i> Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{{ route('pemeriksaan-suhu-ruang-v2.index') }}">Pemeriksaan</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Detail Pemeriksaan</li>
+                </ol>
+            </nav>
+            <!-- @if($m->updated_at)
+                <span class="fp-updated"><i class="bi bi-clock"></i> Terakhir diperbarui: <b>{{ $m->updated_at->format('d M Y, H:i') }} WIB</b></span>
+            @endif -->
+        </div>
 
-    <div class="page-heading">
-        <div class="page-title">
-            <div class="row">
-                <div class="col-12 col-md-6 order-md-1 order-last">
-                    <h3>CS Meat</h3>
-                    <p class="text-subtitle text-muted">Detail CS Meat</p>
-                </div>
-                <div class="col-12 col-md-6 order-md-2 order-first">
-                    <nav aria-label="breadcrumb" class="breadcrumb-header float-start float-lg-end">
-                        <ol class="breadcrumb">
-                            <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
-                            <li class="breadcrumb-item"><a href="{{ route('pemeriksaan-suhu-ruang-v2.index') }}">Pemeriksaan</a></li>
-                            <li class="breadcrumb-item active" aria-current="page">Detail Pemeriksaan</li>
-                        </ol>
-                    </nav>
-                </div>
+        <div class="fp-head">
+            <div>
+                <h3>CS Meat</h3>
+                <p>Detail log dan parameter monitoring suhu ruangan serta produk daging.</p>
+            </div>
+            <div class="fp-actions">
+                <!-- <button type="button" class="fp-btn" onclick="window.print()"><i class="bi bi-printer"></i> Cetak Form</button> -->
+                <!-- <a href="{{ route('pemeriksaan-suhu-ruang-v2.edit', $m->uuid) }}" class="fp-btn fp-btn-primary"><i class="bi bi-pencil-square"></i> Edit Data</a> -->
             </div>
         </div>
-        
-        <section id="basic-horizontal-layouts">
-            <div class="row match-height">
-                <div class="col-md-12 col-12">
-                    <div class="card">
-                        <div class="card-header">
-                            <h4 class="card-title">Detail CS Meat </h4>
-                        </div>
-                        <div class="card-content">
-                            <div class="card-body">
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <div class="mb-3">
-                                            <label class="form-label"><strong>Tanggal</strong></label>
-                                            <p class="form-control-plaintext">{{ $pemeriksaanSuhuRuangV2->tanggal->format('d-m-Y') }}</p>
-                                        </div>
-                                    </div>
 
-                                    <div class="col-md-6">
-                                        <div class="mb-3">
-                                            <label class="form-label"><strong>Shift</strong></label>
-                                            <p class="form-control-plaintext"><span class="badge bg-info">{{ $pemeriksaanSuhuRuangV2->shift->shift ?? '-' }}</span></p>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="mb-3">
-                                            <label class="form-label"><strong>Pukul</strong></label>
-                                            <p class="form-control-plaintext">{{ $pemeriksaanSuhuRuangV2->pukul ?? '-' }}</p>
-                                        </div>
-                                    </div>
-
-                                    <div class="col-md-6">
-                                        <div class="mb-3">
-                                            <label class="form-label"><strong>Suhu Produk</strong></label>
-                                            <p class="form-control-plaintext"><span class="badge bg-secondary">{{ $pemeriksaanSuhuRuangV2->suhu_produk ?? '-' }}</span></p>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="mb-3">
-                                            <label class="form-label"><strong>Produk</strong></label>
-                                            <p class="form-control-plaintext">
-                                                @if($pemeriksaanSuhuRuangV2->produk)
-                                                    @if($pemeriksaanSuhuRuangV2->produk->kategori_code)
-                                                        <span class="badge bg-primary">{{ $pemeriksaanSuhuRuangV2->produk->kategori_code }}</span>
-                                                    @endif
-                                                    {{ $pemeriksaanSuhuRuangV2->produk->nama_produk ?? '-' }}
-                                                @else
-                                                    -
-                                                @endif
-                                            </p>
-                                        </div>
-                                    </div>
-
-                                </div>
-
-                                <!-- Cold Storage Section -->
-                                @if(!empty($pemeriksaanSuhuRuangV2->suhu_cold_storage))
-                                    @php
-                                        $coldStorageData = $pemeriksaanSuhuRuangV2->suhu_cold_storage;
-                                    @endphp
-                                    
-                                    <div class="row mt-4">
-                                        <div class="col-md-12">
-                                            <h5 class="mb-3"><strong>Cold Storage</strong></h5>
-                                        </div>
-                                        @foreach($coldStorageData as $unit => $item)
-                                            <div class="col-md-12 mt-3 p-3 border rounded bg-light">
-                                                <div class="row">
-                                                    <div class="col-md-12">
-                                                        <label class="form-label"><strong>CS {{ $unit }}</strong></label>
-                                                    </div>
-                                                    <div class="col-md-4">
-                                                        <label class="form-label">Setting (°C)</label>
-                                                        <p class="form-control-plaintext">
-                                                            {{ $item['setting'] ?? '-' }}
-                                                            @if($item['setting'] == '-18')
-                                                                <span class="badge bg-info ms-2">Std</span>
-                                                            @elseif($item['setting'])
-                                                                <span class="badge bg-warning ms-2">Manual</span>
-                                                            @endif
-                                                        </p>
-                                                    </div>
-                                                    <div class="col-md-4">
-                                                        <label class="form-label">Display (°C)</label>
-                                                        <p class="form-control-plaintext">
-                                                            {{ $item['display'] ?? '-' }}
-                                                            @if($item['display'] == '-18')
-                                                                <span class="badge bg-info ms-2">Std</span>
-                                                            @elseif($item['display'])
-                                                                <span class="badge bg-warning ms-2">Manual</span>
-                                                            @endif
-                                                        </p>
-                                                    </div>
-                                                    <div class="col-md-4">
-                                                        <label class="form-label">Actual (°C)</label>
-                                                        <p class="form-control-plaintext">
-                                                            {{ $item['actual'] ?? '-' }}
-                                                            @if($item['actual'] == '-18')
-                                                                <span class="badge bg-info ms-2">Std</span>
-                                                            @elseif($item['actual'])
-                                                                <span class="badge bg-warning ms-2">Manual</span>
-                                                            @endif
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        @endforeach
-                                    </div>
-                                @endif
-
-                                <!-- Anteroom Loading Section -->
-                                @if(!empty($pemeriksaanSuhuRuangV2->suhu_anteroom_loading))
-                                    @php
-                                        $anteroomLoadingData = $pemeriksaanSuhuRuangV2->suhu_anteroom_loading;
-                                    @endphp
-                                    
-                                    <div class="row mt-4">
-                                        <div class="col-md-12">
-                                            <h5 class="mb-3"><strong>Anteroom Loading</strong></h5>
-                                        </div>
-                                        @foreach($anteroomLoadingData as $unit => $item)
-                                            <div class="col-md-12 mt-3 p-3 border rounded bg-light">
-                                                <div class="row">
-                                                    <div class="col-md-12">
-                                                        <label class="form-label"><strong>Anteroom Loading {{ $unit }}</strong></label>
-                                                    </div>
-                                                    <div class="col-md-4">
-                                                        <label class="form-label">Setting (°C)</label>
-                                                        <p class="form-control-plaintext">
-                                                            {{ $item['setting'] ?? '-' }}
-                                                            @if(strpos($item['setting'] ?? '', '(0±5°C)') !== false || $item['setting'] == '(0±5°C)')
-                                                                <span class="badge bg-info ms-2">Std</span>
-                                                            @elseif($item['setting'])
-                                                                <span class="badge bg-warning ms-2">Manual</span>
-                                                            @endif
-                                                        </p>
-                                                    </div>
-                                                    <div class="col-md-4">
-                                                        <label class="form-label">Display (°C)</label>
-                                                        <p class="form-control-plaintext">
-                                                            {{ $item['display'] ?? '-' }}
-                                                            @if(strpos($item['display'] ?? '', '(0±5°C)') !== false || $item['display'] == '(0±5°C)')
-                                                                <span class="badge bg-info ms-2">Std</span>
-                                                            @elseif($item['display'])
-                                                                <span class="badge bg-warning ms-2">Manual</span>
-                                                            @endif
-                                                        </p>
-                                                    </div>
-                                                    <div class="col-md-4">
-                                                        <label class="form-label">Actual (°C)</label>
-                                                        <p class="form-control-plaintext">
-                                                            {{ $item['actual'] ?? '-' }}
-                                                            @if(strpos($item['actual'] ?? '', '(0±5°C)') !== false || $item['actual'] == '(0±5°C)')
-                                                                <span class="badge bg-info ms-2">Std</span>
-                                                            @elseif($item['actual'])
-                                                                <span class="badge bg-warning ms-2">Manual</span>
-                                                            @endif
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        @endforeach
-                                    </div>
-                                @endif
-
-                                <!-- Suhu Pre Loading -->
-                                @if(!empty($pemeriksaanSuhuRuangV2->suhu_pre_loading))
-                                    <div class="row mt-4">
-                                        <div class="col-md-12">
-                                            <h5 class="mb-3"><strong>Suhu Pre Loading</strong></h5>
-                                        </div>
-                                        <div class="col-md-12 mt-3 p-3 border rounded bg-light">
-                                            <div class="row">
-                                                <div class="col-md-4">
-                                                    <label class="form-label">Setting (°C)</label>
-                                                    <p class="form-control-plaintext">{{ $pemeriksaanSuhuRuangV2->suhu_pre_loading['setting'] ?? '-' }}</p>
-                                                </div>
-                                                <div class="col-md-4">
-                                                    <label class="form-label">Display (°C)</label>
-                                                    <p class="form-control-plaintext">{{ $pemeriksaanSuhuRuangV2->suhu_pre_loading['display'] ?? '-' }}</p>
-                                                </div>
-                                                <div class="col-md-4">
-                                                    <label class="form-label">Actual (°C)</label>
-                                                    <p class="form-control-plaintext">{{ $pemeriksaanSuhuRuangV2->suhu_pre_loading['actual'] ?? '-' }}</p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                @endif
-
-                                <!-- Suhu Prestaging -->
-                                @if(!empty($pemeriksaanSuhuRuangV2->suhu_prestaging))
-                                    <div class="row mt-4">
-                                        <div class="col-md-12">
-                                            <h5 class="mb-3"><strong>Suhu Prestaging</strong></h5>
-                                        </div>
-                                        <div class="col-md-12 mt-3 p-3 border rounded bg-light">
-                                            <div class="row">
-                                                <div class="col-md-4">
-                                                    <label class="form-label">Setting (°C)</label>
-                                                    <p class="form-control-plaintext">{{ $pemeriksaanSuhuRuangV2->suhu_prestaging['setting'] ?? '-' }}</p>
-                                                </div>
-                                                <div class="col-md-4">
-                                                    <label class="form-label">Display (°C)</label>
-                                                    <p class="form-control-plaintext">{{ $pemeriksaanSuhuRuangV2->suhu_prestaging['display'] ?? '-' }}</p>
-                                                </div>
-                                                <div class="col-md-4">
-                                                    <label class="form-label">Actual (°C)</label>
-                                                    <p class="form-control-plaintext">{{ $pemeriksaanSuhuRuangV2->suhu_prestaging['actual'] ?? '-' }}</p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                @endif
-
-                                <!-- Suhu Anteroom Ekspansi ABF -->
-                                @if(!empty($pemeriksaanSuhuRuangV2->suhu_anteroom_ekspansi_abf))
-                                    <div class="row mt-4">
-                                        <div class="col-md-12">
-                                            <h5 class="mb-3"><strong>Suhu Anteroom Ekspansi ABF</strong></h5>
-                                        </div>
-                                        <div class="col-md-12 mt-3 p-3 border rounded bg-light">
-                                            <div class="row">
-                                                <div class="col-md-4">
-                                                    <label class="form-label">Setting (°C)</label>
-                                                    <p class="form-control-plaintext">{{ $pemeriksaanSuhuRuangV2->suhu_anteroom_ekspansi_abf['setting'] ?? '-' }}</p>
-                                                </div>
-                                                <div class="col-md-4">
-                                                    <label class="form-label">Display (°C)</label>
-                                                    <p class="form-control-plaintext">{{ $pemeriksaanSuhuRuangV2->suhu_anteroom_ekspansi_abf['display'] ?? '-' }}</p>
-                                                </div>
-                                                <div class="col-md-4">
-                                                    <label class="form-label">Actual (°C)</label>
-                                                    <p class="form-control-plaintext">{{ $pemeriksaanSuhuRuangV2->suhu_anteroom_ekspansi_abf['actual'] ?? '-' }}</p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                @endif
-
-                                <!-- Suhu Chillroom RM -->
-                                @if(!empty($pemeriksaanSuhuRuangV2->suhu_chillroom_rm))
-                                    <div class="row mt-4">
-                                        <div class="col-md-12">
-                                            <h5 class="mb-3"><strong>Suhu Chillroom RM</strong></h5>
-                                        </div>
-                                        <div class="col-md-12 mt-3 p-3 border rounded bg-light">
-                                            <div class="row">
-                                                <div class="col-md-4">
-                                                    <label class="form-label">Setting (°C)</label>
-                                                    <p class="form-control-plaintext">{{ $pemeriksaanSuhuRuangV2->suhu_chillroom_rm['setting'] ?? '-' }}</p>
-                                                </div>
-                                                <div class="col-md-4">
-                                                    <label class="form-label">Display (°C)</label>
-                                                    <p class="form-control-plaintext">{{ $pemeriksaanSuhuRuangV2->suhu_chillroom_rm['display'] ?? '-' }}</p>
-                                                </div>
-                                                <div class="col-md-4">
-                                                    <label class="form-label">Actual (°C)</label>
-                                                    <p class="form-control-plaintext">{{ $pemeriksaanSuhuRuangV2->suhu_chillroom_rm['actual'] ?? '-' }}</p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                @endif
-
-                                <!-- Suhu Chillroom Domestik -->
-                                @if(!empty($pemeriksaanSuhuRuangV2->suhu_chillroom_domestik))
-                                    <div class="row mt-4">
-                                        <div class="col-md-12">
-                                            <h5 class="mb-3"><strong>Suhu Chillroom Domestik</strong></h5>
-                                        </div>
-                                        <div class="col-md-12 mt-3 p-3 border rounded bg-light">
-                                            <div class="row">
-                                                <div class="col-md-4">
-                                                    <label class="form-label">Setting (°C)</label>
-                                                    <p class="form-control-plaintext">{{ $pemeriksaanSuhuRuangV2->suhu_chillroom_domestik['setting'] ?? '-' }}</p>
-                                                </div>
-                                                <div class="col-md-4">
-                                                    <label class="form-label">Display (°C)</label>
-                                                    <p class="form-control-plaintext">{{ $pemeriksaanSuhuRuangV2->suhu_chillroom_domestik['display'] ?? '-' }}</p>
-                                                </div>
-                                                <div class="col-md-4">
-                                                    <label class="form-label">Actual (°C)</label>
-                                                    <p class="form-control-plaintext">{{ $pemeriksaanSuhuRuangV2->suhu_chillroom_domestik['actual'] ?? '-' }}</p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                @endif
-
-                                <!-- Catatan Section -->
-                                @if($pemeriksaanSuhuRuangV2->keterangan || $pemeriksaanSuhuRuangV2->tindakan_koreksi)
-                                    <div class="row mt-4">
-                                        <div class="col-md-12">
-                                            <h5 class="mb-3"><strong>Catatan</strong></h5>
-                                        </div>
-                                        @if($pemeriksaanSuhuRuangV2->keterangan)
-                                            <div class="col-md-6">
-                                                <div class="mb-3">
-                                                    <label class="form-label"><strong>Keterangan</strong></label>
-                                                    <p class="form-control-plaintext">{{ $pemeriksaanSuhuRuangV2->keterangan }}</p>
-                                                </div>
-                                            </div>
-                                        @endif
-                                        @if($pemeriksaanSuhuRuangV2->tindakan_koreksi)
-                                            <div class="col-md-6">
-                                                <div class="mb-3">
-                                                    <label class="form-label"><strong>Tindakan Koreksi</strong></label>
-                                                    <p class="form-control-plaintext">{{ $pemeriksaanSuhuRuangV2->tindakan_koreksi }}</p>
-                                                </div>
-                                            </div>
-                                        @endif
-                                    </div>
-                                @endif
-
-                                <!-- Riwayat Data Per Jam -->
-                                @php
-                                    $historiesV2 = $pemeriksaanSuhuRuangV2->histories->sortBy('id');
-                                    $firstHistory = $historiesV2->first();
-                                    $timelineRowsV2 = [];
-                                    $noV2 = 1;
-
-                                    $rawInitPukul = $firstHistory && $firstHistory->pukul_lama ? $firstHistory->pukul_lama : $pemeriksaanSuhuRuangV2->pukul;
-                                    $initJamV2 = $rawInitPukul ? \Carbon\Carbon::parse($rawInitPukul)->format('H:i') : '-';
-                                    $initCreatedV2 = $pemeriksaanSuhuRuangV2->created_at ? $pemeriksaanSuhuRuangV2->created_at->format('d/m/Y H:i') : '-';
-
-                                    $sectionLabelsV2 = [
-                                        'cold_storage'          => 'Cold Storage',
-                                        'anteroom_loading'      => 'Anteroom Loading',
-                                        'pre_loading'           => 'Pre Loading',
-                                        'prestaging'            => 'Prestaging',
-                                        'anteroom_ekspansi_abf' => 'Anteroom Ekspansi ABF',
-                                        'chillroom_rm'          => 'Chillroom RM',
-                                        'chillroom_domestik'    => 'Chillroom Domestik',
-                                    ];
-
-                                    // Mengambil nilai data awal (jika pernah di-edit/update, gunakan *_lama dari history pertama)
-                                    $initColdStorageData = $firstHistory && $firstHistory->suhu_cold_storage_lama !== null
-                                        ? (is_array($firstHistory->suhu_cold_storage_lama) ? $firstHistory->suhu_cold_storage_lama : (json_decode($firstHistory->suhu_cold_storage_lama, true) ?: []))
-                                        : $pemeriksaanSuhuRuangV2->suhu_cold_storage;
-
-                                    $initAnteroomLoadingData = $firstHistory && $firstHistory->suhu_anteroom_loading_lama !== null
-                                        ? (is_array($firstHistory->suhu_anteroom_loading_lama) ? $firstHistory->suhu_anteroom_loading_lama : (json_decode($firstHistory->suhu_anteroom_loading_lama, true) ?: []))
-                                        : $pemeriksaanSuhuRuangV2->suhu_anteroom_loading;
-
-                                    $initSuhuProdukVal = $firstHistory && $firstHistory->suhu_produk_lama !== null
-                                        ? $firstHistory->suhu_produk_lama
-                                        : $pemeriksaanSuhuRuangV2->suhu_produk;
-
-                                    // Input Awal Cold Storage
-                                    if (!empty($initColdStorageData)) {
-                                        foreach ((array)$initColdStorageData as $uId => $uVal) {
-                                            $timelineRowsV2[] = [
-                                                'no'     => $noV2++,
-                                                'waktu'  => $initJamV2,
-                                                'edited' => $initCreatedV2,
-                                                'area'   => 'Cold Storage ' . $uId,
-                                                'setting'=> $uVal['setting'] ?? '-',
-                                                'aktual' => $uVal['actual'] ?? '-',
-                                                'display'=> $uVal['display'] ?? '-',
-                                                'tipe'   => 'awal',
-                                            ];
-                                        }
-                                    }
-
-                                    // Input Awal Anteroom Loading
-                                    if (!empty($initAnteroomLoadingData)) {
-                                        foreach ((array)$initAnteroomLoadingData as $uId => $uVal) {
-                                            $timelineRowsV2[] = [
-                                                'no'     => $noV2++,
-                                                'waktu'  => $initJamV2,
-                                                'edited' => $initCreatedV2,
-                                                'area'   => 'Anteroom Loading ' . $uId,
-                                                'setting'=> $uVal['setting'] ?? '-',
-                                                'aktual' => $uVal['actual'] ?? '-',
-                                                'display'=> $uVal['display'] ?? '-',
-                                                'tipe'   => 'awal',
-                                            ];
-                                        }
-                                    }
-
-                                    // Input Awal Single Sections
-                                    foreach (['pre_loading', 'prestaging', 'anteroom_ekspansi_abf', 'chillroom_rm', 'chillroom_domestik'] as $sKey) {
-                                        $attrLama = 'suhu_' . $sKey . '_lama';
-                                        $attr = 'suhu_' . $sKey;
-                                        $val = ($firstHistory && $firstHistory->{$attrLama} !== null)
-                                            ? (is_array($firstHistory->{$attrLama}) ? $firstHistory->{$attrLama} : (json_decode($firstHistory->{$attrLama}, true) ?: []))
-                                            : $pemeriksaanSuhuRuangV2->{$attr};
-
-                                        if (!empty($val) && (!empty($val['setting']) || !empty($val['display']) || !empty($val['actual']))) {
-                                            $timelineRowsV2[] = [
-                                                'no'     => $noV2++,
-                                                'waktu'  => $initJamV2,
-                                                'edited' => $initCreatedV2,
-                                                'area'   => $sectionLabelsV2[$sKey],
-                                                'setting'=> $val['setting'] ?? '-',
-                                                'aktual' => $val['actual'] ?? '-',
-                                                'display'=> $val['display'] ?? '-',
-                                                'tipe'   => 'awal',
-                                            ];
-                                        }
-                                    }
-
-                                    // Input Awal Suhu Produk
-                                    if (!empty($initSuhuProdukVal)) {
-                                        $timelineRowsV2[] = [
-                                            'no'     => $noV2++,
-                                            'waktu'  => $initJamV2,
-                                            'edited' => $initCreatedV2,
-                                            'area'   => 'Suhu Produk',
-                                            'setting'=> '-',
-                                            'aktual' => $initSuhuProdukVal,
-                                            'display'=> '-',
-                                            'tipe'   => 'awal',
-                                        ];
-                                    }
-
-                                    // Iterasi History Updates
-                                    $displayedKeys = []; // FIX DUPLIKASI: Track jam+area yang sudah ditampilkan
-                                    
-                                    foreach ($historiesV2 as $h) {
-                                        $editedAtV2 = $h->created_at ? $h->created_at->format('d/m/Y H:i') : '-';
-                                        $pukulH = $h->pukul_baru ?? $h->pukul_lama ?? null;
-                                        $jamH = $pukulH ? \Carbon\Carbon::parse($pukulH)->format('H:i') : '-';
-
-                                        foreach ($sectionLabelsV2 as $secKey => $secLabel) {
-                                            $colLama = 'suhu_' . $secKey . '_lama';
-                                            $colBaru = 'suhu_' . $secKey . '_baru';
-
-                                            $lamaData = is_array($h->{$colLama}) ? $h->{$colLama} : (json_decode($h->{$colLama} ?? '[]', true) ?: []);
-                                            $baruData = is_array($h->{$colBaru}) ? $h->{$colBaru} : (json_decode($h->{$colBaru} ?? '[]', true) ?: []);
-
-                                            // FIX: Tampilkan semua data update, meskipun nilainya sama (untuk audit trail)
-                                            // Hanya skip jika benar-benar tidak ada data baru
-                                            
-                                            if (in_array($secKey, ['cold_storage', 'anteroom_loading'])) {
-                                                $allUnits = array_unique(array_merge(array_keys((array)$lamaData), array_keys((array)$baruData)));
-                                                foreach ($allUnits as $uId) {
-                                                    $lItem = $lamaData[$uId] ?? [];
-                                                    $bItem = $baruData[$uId] ?? [];
-                                                    // Skip hanya jika data baru benar-benar kosong (tidak ada input sama sekali)
-                                                    if (empty($bItem['setting']) && empty($bItem['display']) && empty($bItem['actual'])) continue;
-
-                                                    // FIX DUPLIKASI: Track unique key (jam + area)
-                                                    $uniqueKey = $jamH . '_' . $secLabel . '_' . $uId;
-                                                    
-                                                    // Skip kalau jam+area ini sudah pernah ditampilkan (ambil yang pertama/terakhir saja)
-                                                    if (isset($displayedKeys[$uniqueKey])) {
-                                                        continue;
-                                                    }
-                                                    
-                                                    // Tandai sebagai sudah ditampilkan
-                                                    $displayedKeys[$uniqueKey] = true;
-
-                                                    $timelineRowsV2[] = [
-                                                        'no'     => $noV2++,
-                                                        'waktu'  => $jamH,
-                                                        'edited' => $editedAtV2,
-                                                        'area'   => $secLabel . ' ' . $uId,
-                                                        'setting'=> $bItem['setting'] ?? '-',
-                                                        'aktual' => $bItem['actual'] ?? '-',
-                                                        'display'=> $bItem['display'] ?? '-',
-                                                        'tipe'   => 'update',
-                                                    ];
-                                                }
-                                            } else {
-                                                if (empty($baruData['setting']) && empty($baruData['display']) && empty($baruData['actual'])) continue;
-                                                
-                                                // FIX DUPLIKASI: Track unique key (jam + area)
-                                                $uniqueKey = $jamH . '_' . $secLabel;
-                                                
-                                                // Skip kalau jam+area ini sudah pernah ditampilkan
-                                                if (isset($displayedKeys[$uniqueKey])) {
-                                                    continue;
-                                                }
-                                                
-                                                // Tandai sebagai sudah ditampilkan
-                                                $displayedKeys[$uniqueKey] = true;
-                                                
-                                                $timelineRowsV2[] = [
-                                                    'no'     => $noV2++,
-                                                    'waktu'  => $jamH,
-                                                    'edited' => $editedAtV2,
-                                                    'area'   => $secLabel,
-                                                    'setting'=> $baruData['setting'] ?? '-',
-                                                    'aktual' => $baruData['actual'] ?? '-',
-                                                    'display'=> $baruData['display'] ?? '-',
-                                                    'tipe'   => 'update',
-                                                ];
-                                            }
-                                        }
-
-                                        // Update Suhu Produk
-                                        if (($h->suhu_produk_lama ?? null) !== ($h->suhu_produk_baru ?? null) && !empty($h->suhu_produk_baru)) {
-                                            // FIX DUPLIKASI: Track unique key
-                                            $uniqueKey = $jamH . '_Suhu Produk';
-                                            
-                                            if (!isset($displayedKeys[$uniqueKey])) {
-                                                $displayedKeys[$uniqueKey] = true;
-                                                
-                                                $timelineRowsV2[] = [
-                                                    'no'     => $noV2++,
-                                                    'waktu'  => $jamH,
-                                                    'edited' => $editedAtV2,
-                                                    'area'   => 'Suhu Produk',
-                                                    'setting'=> '-',
-                                                    'aktual' => $h->suhu_produk_baru,
-                                                    'display'=> '-',
-                                                    'tipe'   => 'update',
-                                                ];
-                                            }
-                                        }
-                                    }
-                                @endphp
-
-                                @if(!empty($timelineRowsV2))
-                                <div class="row mt-5 pt-3 border-top">
-                                    <div class="col-md-12">
-                                        <h5 class="mb-3 d-flex align-items-center gap-2">
-                                            <i class="bi bi-clock-history text-primary"></i>
-                                            <strong>Riwayat Data Per Jam</strong>
-                                            <span class="badge bg-primary ms-1">{{ count($timelineRowsV2) }} entri</span>
-                                        </h5>
-                                        <div class="table-responsive">
-                                            <table class="table table-bordered table-hover table-sm align-middle">
-                                                <thead class="table-dark">
-                                                    <tr>
-                                                        <th class="text-center" style="width:4%">No</th>
-                                                        <th class="text-center" style="width:8%">Pukul</th>
-                                                        <th style="width:22%">Area</th>
-                                                        <th class="text-center">Setting (°C)</th>
-                                                        <th class="text-center">Actual (°C)</th>
-                                                        <th class="text-center">Display (°C)</th>
-                                                        <th class="text-center" style="width:8%">Status</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    @foreach($timelineRowsV2 as $tRow)
-                                                    <tr class="{{ $tRow['tipe'] === 'update' ? 'table-warning' : '' }}">
-                                                        <td class="text-center">{{ $tRow['no'] }}</td>
-                                                        <td class="text-center fw-semibold">{{ $tRow['waktu'] }}</td>
-                                                        <td>{{ $tRow['area'] }}</td>
-                                                        <td class="text-center">{{ $tRow['setting'] }}</td>
-                                                        <td class="text-center">{{ $tRow['aktual'] }}</td>
-                                                        <td class="text-center">{{ $tRow['display'] }}</td>
-                                                        <td class="text-center">
-                                                            @if($tRow['tipe'] === 'awal')
-                                                                <span class="badge bg-success">Input Awal</span>
-                                                            @else
-                                                                <span class="badge bg-warning text-dark">Update</span>
-                                                            @endif
-                                                        </td>
-                                                    </tr>
-                                                    @endforeach
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    </div>
-                                </div>
-                                @endif
-
-                                <div class="col-md-12 d-flex justify-content-end mt-4">
-                                    <a href="{{ route('pemeriksaan-suhu-ruang-v2.index') }}" class="btn btn-light-secondary me-1 mb-1">Kembali</a>
-                                    <a href="{{ route('pemeriksaan-suhu-ruang-v2.edit', $pemeriksaanSuhuRuangV2->uuid) }}" class="btn btn-primary me-1 mb-1">Edit</a>
-                                </div>
-                            </div>
-                        </div>
+        {{-- Ringkasan --}}
+        <div class="fp-panel">
+            <div class="fp-panel-title">
+                <span><span class="dot"></span>Detail CS Meat</span>
+                <!-- <span class="fp-id fp-mono">ID: {{ strtoupper(substr($m->uuid, 0, 8)) }}</span> -->
+            </div>
+            <div class="fp-tiles">
+                <div class="fp-tile">
+                    <span class="fp-tile-label">Tanggal inspeksi</span>
+                    <span class="fp-tile-value fp-mono"><i class="bi bi-calendar-event text-primary"></i> {{ $m->tanggal->format('d-m-Y') }}</span>
+                </div>
+                <div class="fp-tile">
+                    <span class="fp-tile-label">Shift kerja</span>
+                    <span class="fp-tile-value"><span class="badge bg-info"><i class="bi bi-people-fill"></i> {{ $m->shift->shift ?? '-' }}</span></span>
+                </div>
+                <div class="fp-tile">
+                    <span class="fp-tile-label">Pukul pencatatan</span>
+                    <span class="fp-tile-value fp-mono"><i class="bi bi-clock text-warning"></i> {{ $m->pukul ?? '-' }} <small class="text-muted">WIB</small></span>
+                </div>
+                <div class="fp-tile fp-tile-hot">
+                    <span class="fp-tile-label">Suhu produk</span>
+                    <span class="fp-tile-value">
+                        <span class="fp-ico"><i class="bi bi-snow2"></i></span>
+                        <span class="fp-temp">{{ $m->suhu_produk ?? '-' }}<small> °C</small></span>
+                    </span>
+                </div>
+                <div class="fp-tile">
+                    <span class="fp-tile-label">Komoditas / produk</span>
+                    <div>
+                        @if($m->produk)
+                            @if($m->produk->kategori_code)<span class="fp-code">{{ $m->produk->kategori_code }}</span>@endif
+                            <div class="fp-prod-name" title="{{ $m->produk->nama_produk }}">{{ $m->produk->nama_produk ?? '-' }}</div>
+                        @else
+                            <div class="fp-prod-name">-</div>
+                        @endif
                     </div>
                 </div>
             </div>
-        </section>
+        </div>
+
+        {{--
+            Variabel yang dibutuhkan:
+            $areaCards  : [ ['key'=>..,'label'=>..,'items'=>[ ['unit'=>..,'chip'=>..,'setting'=>..,'display'=>..,'actual'=>..], ... ]], ... ]
+            $sectionStd : (opsional) ['cold_storage' => '-18', 'anteroom_loading' => '(0±5°C)']
+        --}}
+        @php
+            $sectionStd = $sectionStd ?? [];
+            $fieldMeta = [
+                'setting' => ['label' => 'Setting (°C)', 'caption' => 'Preset termostat ruang',        'icon' => 'bi-sliders'],
+                'display' => ['label' => 'Display (°C)', 'caption' => 'Indikator digital panel mesin', 'icon' => 'bi-display'],
+                'actual'  => ['label' => 'Actual (°C)',  'caption' => 'Pengukuran termometer fisik QC', 'icon' => 'bi-thermometer-half'],
+            ];
+            $isStd = function ($secKey, $val) use ($sectionStd) {
+                if (!isset($sectionStd[$secKey]) || $val === null || $val === '') return false;
+                return $secKey === 'cold_storage'
+                    ? $val == $sectionStd[$secKey]
+                    : (strpos((string) $val, $sectionStd[$secKey]) !== false);
+            };
+        @endphp
+
+        <!-- @foreach($areaCards as $group)
+            <div class="mb-4">
+                <div class="fp-sec">
+                    <h5>
+                        {{ $group['label'] }} Monitoring
+                        @if(count($group['items']) === 1 && !empty($group['items'][0]['chip']))
+                            <span class="fp-chip">{{ $group['items'][0]['chip'] }}</span>
+                        @endif
+                    </h5>
+                </div>
+
+                <div class="fp-panel mb-0">
+                    @foreach($group['items'] as $item)
+                        <div class="fp-unit-group">
+                            @if(count($group['items']) > 1 && !empty($item['chip']))
+                                <p class="fp-unit"><span class="fp-chip">{{ $item['chip'] }}</span></p>
+                            @endif
+
+                            <div class="fp-reads">
+                                @foreach($fieldMeta as $field => $meta)
+                                    @php $val = $item[$field] ?? null; @endphp
+                                    <div class="fp-read {{ $field === 'actual' ? 'is-actual' : '' }}">
+                                        @if($val !== null && $val !== '')
+                                            @if($isStd($group['key'], $val))
+                                                <span class="fp-tag fp-tag-std"><i class="bi bi-check2-circle"></i> Std</span>
+                                            @elseif(isset($sectionStd[$group['key']]))
+                                                <span class="fp-tag fp-tag-manual"><i class="bi bi-hand-index-thumb"></i> Manual</span>
+                                            @endif
+                                        @endif
+
+                                        <div class="fp-read-label">{{ $meta['label'] }}</div>
+                                        <div class="fp-read-cap">{{ $meta['caption'] }}</div>
+                                        <div class="fp-read-val">{{ $val !== null && $val !== '' ? $val : '-' }} <small>°Celsius</small></div>
+                                        <div class="fp-read-foot"><i class="bi {{ $meta['icon'] }}"></i> {{ $meta['label'] }}</div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        @endforeach -->
+
+        {{-- ===== Catatan ===== --}}
+        @if($m->keterangan || $m->tindakan_koreksi)
+            <div class="mb-4">
+                <div class="fp-sec"><h5><i class="bi bi-journal-text text-primary"></i> Catatan</h5></div>
+                <div class="fp-notes">
+                    @if($m->keterangan)<div class="fp-note"><b>Keterangan</b>{{ $m->keterangan }}</div>@endif
+                    @if($m->tindakan_koreksi)<div class="fp-note"><b>Tindakan Koreksi</b>{{ $m->tindakan_koreksi }}</div>@endif
+                </div>
+            </div>
+        @endif
+
+        {{-- Variabel: $timelineRows (array baris riwayat) --}}
+        @if(!empty($timelineRows))
+            <div class="mb-4">
+                <div class="fp-sec">
+                    <h5>
+                        <i class="bi bi-clock-history text-primary"></i> Riwayat Data Per Jam
+                        <span class="fp-chip" style="background:var(--fp-blue-soft);color:var(--fp-blue)">{{ count($timelineRows) }} entri</span>
+                    </h5>
+                    <small>Pencatatan interval 60 menit</small>
+                </div>
+
+                <div class="fp-table-wrap">
+                    <div class="table-responsive">
+                        <table class="fp-table">
+                            <thead>
+                                <tr>
+                                    <th class="c" style="width:5%">No</th>
+                                    <th class="c" style="width:9%">Pukul</th>
+                                    <th style="text-align:left">Area / Titik Ukur</th>
+                                    <th class="c">Setting (°C)</th>
+                                    <th class="c">Actual (°C)</th>
+                                    <th class="c">Display (°C)</th>
+                                    <th class="c" style="width:11%">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($timelineRows as $tRow)
+                                    <tr class="{{ $tRow['tipe'] === 'update' ? 'is-update' : '' }}">
+                                        <td class="c text-muted">{{ $tRow['no'] }}</td>
+                                        <td class="c"><span class="fp-time fp-mono">{{ $tRow['waktu'] }}</span></td>
+                                        <td>
+                                            <span class="fp-area">
+                                                <i class="d d-{{ $tRow['dot'] ?? 'primary' }}"></i>{{ $tRow['area'] }}
+                                                @if(!empty($tRow['note']))<em class="fp-mono">({{ $tRow['note'] }})</em>@endif
+                                            </span>
+                                        </td>
+                                        <td class="c">{{ $tRow['setting'] }}</td>
+                                        <td class="c fp-actual">{{ $tRow['aktual'] }}</td>
+                                        <td class="c">{{ $tRow['display'] }}</td>
+                                        <td class="c">
+                                            @if($tRow['tipe'] === 'awal')
+                                                <span class="fp-status fp-status-awal"><i class="bi bi-check-circle-fill"></i> Input Awal</span>
+                                            @else
+                                                <span class="fp-status fp-status-update"><i class="bi bi-arrow-repeat"></i> Update</span>
+                                            @endif
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="fp-table-foot">
+                        <span>Menampilkan {{ count($timelineRows) }} dari {{ count($timelineRows) }} riwayat entri data sesi ini</span>
+                        <!-- <span><i class="bi bi-shield-check text-success"></i> ISO 22000 &amp; HACCP Compliant Cold Chain Record</span> -->
+                    </div>
+                </div>
+            </div>
+        @endif
+
+
+        <div class="fp-footer">
+            <small><i class="bi bi-info-circle-fill text-primary"></i> Perubahan terakhir tercatat pada riwayat data di atas.</small>
+            <div class="fp-actions">
+                <a href="{{ route('pemeriksaan-suhu-ruang-v2.index') }}" class="fp-btn"><i class="bi bi-arrow-left"></i> Kembali</a>
+                <a href="{{ route('pemeriksaan-suhu-ruang-v2.edit', $m->uuid) }}" class="fp-btn fp-btn-primary"><i class="bi bi-pencil-square"></i> Edit Data</a>
+            </div>
+        </div>
     </div>
 </div>
-
 @endsection
