@@ -500,9 +500,9 @@
                                                     <div class="produsen-hidden-inputs"></div>
                                                     <div class="distributor-hidden-inputs"></div>
 
-                                                    <input type="hidden" name="penampakan[]" class="penampakan-hidden" value="{{ old('penampakan.0') }}">
-                                                    <input type="hidden" name="sealing[]" class="sealing-hidden" value="{{ old('sealing.0') }}">
-                                                    <input type="hidden" name="cetakan[]" class="cetakan-hidden" value="{{ old('cetakan.0') }}">
+                                                    <input type="hidden" class="penampakan-hidden" value="{{ old('penampakan.0') }}">
+                                                    <input type="hidden" class="sealing-hidden" value="{{ old('sealing.0') }}">
+                                                    <input type="hidden" class="cetakan-hidden" value="{{ old('cetakan.0') }}">
                                                     <input type="hidden" name="logo_halal[]" class="logo-halal-hidden" value="{{ old('logo_halal.0') }}">
                                                     <input type="hidden" name="dokumen_halal[]" class="dokumen-halal-hidden" value="{{ old('dokumen_halal.0') }}">
                                                     <input type="hidden" name="coa[]" class="coa-hidden" value="{{ old('coa.0') }}">
@@ -578,11 +578,11 @@
                                                                 <div class="mb-3">
                                                                     <label class="form-label"><strong>Penampakan</strong></label>
                                                                     <div class="form-check">
-                                                                        <input class="form-check-input" type="radio" name="penampakan_master_0" value="1" {{ old('penampakan.0') == '1' ? 'checked' : '' }}>
+                                                                        <input class="form-check-input" type="radio" name="penampakan[0]" value="1" {{ old('penampakan.0') == '1' ? 'checked' : '' }}>
                                                                         <label class="form-check-label">Ya ✓</label>
                                                                     </div>
                                                                     <div class="form-check">
-                                                                        <input class="form-check-input" type="radio" name="penampakan_master_0" value="0" {{ old('penampakan.0') == '0' ? 'checked' : '' }}>
+                                                                        <input class="form-check-input" type="radio" name="penampakan[0]" value="0" {{ old('penampakan.0') == '0' ? 'checked' : '' }}>
                                                                         <label class="form-check-label">Tidak ✗</label>
                                                                     </div>
                                                                 </div>
@@ -591,11 +591,11 @@
                                                                 <div class="mb-3">
                                                                     <label class="form-label"><strong>Sealing</strong></label>
                                                                     <div class="form-check">
-                                                                        <input class="form-check-input" type="radio" name="sealing_master_0" value="1" {{ old('sealing.0') == '1' ? 'checked' : '' }}>
+                                                                        <input class="form-check-input" type="radio" name="sealing[0]" value="1" {{ old('sealing.0') == '1' ? 'checked' : '' }}>
                                                                         <label class="form-check-label">Ya ✓</label>
                                                                     </div>
                                                                     <div class="form-check">
-                                                                        <input class="form-check-input" type="radio" name="sealing_master_0" value="0" {{ old('sealing.0') == '0' ? 'checked' : '' }}>
+                                                                        <input class="form-check-input" type="radio" name="sealing[0]" value="0" {{ old('sealing.0') == '0' ? 'checked' : '' }}>
                                                                         <label class="form-check-label">Tidak ✗</label>
                                                                     </div>
                                                                 </div>
@@ -604,11 +604,11 @@
                                                                 <div class="mb-3">
                                                                     <label class="form-label"><strong>Cetakan</strong></label>
                                                                     <div class="form-check">
-                                                                        <input class="form-check-input" type="radio" name="cetakan_master_0" value="1" {{ old('cetakan.0') == '1' ? 'checked' : '' }}>
+                                                                        <input class="form-check-input" type="radio" name="cetakan[0]" value="1" {{ old('cetakan.0') == '1' ? 'checked' : '' }}>
                                                                         <label class="form-check-label">Ya ✓</label>
                                                                     </div>
                                                                     <div class="form-check">
-                                                                        <input class="form-check-input" type="radio" name="cetakan_master_0" value="0" {{ old('cetakan.0') == '0' ? 'checked' : '' }}>
+                                                                        <input class="form-check-input" type="radio" name="cetakan[0]" value="0" {{ old('cetakan.0') == '0' ? 'checked' : '' }}>
                                                                         <label class="form-check-label">Tidak ✗</label>
                                                                     </div>
                                                                 </div>
@@ -1207,9 +1207,9 @@ document.addEventListener('DOMContentLoaded', function() {
                         <div class="produsen-hidden-inputs"></div>
                         <div class="distributor-hidden-inputs"></div>
 
-                        <input type="hidden" name="penampakan[]" class="penampakan-hidden" value="">
-                        <input type="hidden" name="sealing[]" class="sealing-hidden" value="">
-                        <input type="hidden" name="cetakan[]" class="cetakan-hidden" value="">
+                        <input type="hidden" class="penampakan-hidden" value="">
+                        <input type="hidden" class="sealing-hidden" value="">
+                        <input type="hidden" class="cetakan-hidden" value="">
                         <input type="hidden" name="logo_halal[]" class="logo-halal-hidden" value="">
                         <input type="hidden" name="dokumen_halal[]" class="dokumen-halal-hidden" value="">
                         <input type="hidden" name="coa[]" class="coa-hidden" value="">
@@ -1267,11 +1267,11 @@ document.addEventListener('DOMContentLoaded', function() {
                                     <div class="mb-3">
                                         <label class="form-label"><strong>Penampakan</strong></label>
                                         <div class="form-check">
-                                            <input class="form-check-input" type="radio" name="penampakan_master_0" value="1">
+                                            <input class="form-check-input" type="radio" name="penampakan_master_${timestamp}" value="1">
                                             <label class="form-check-label">Ya ✓</label>
                                         </div>
                                         <div class="form-check">
-                                            <input class="form-check-input" type="radio" name="penampakan_master_0" value="0">
+                                            <input class="form-check-input" type="radio" name="penampakan_master_${timestamp}" value="0">
                                             <label class="form-check-label">Tidak ✗</label>
                                         </div>
                                     </div>
@@ -1280,11 +1280,11 @@ document.addEventListener('DOMContentLoaded', function() {
                                     <div class="mb-3">
                                         <label class="form-label"><strong>Sealing</strong></label>
                                         <div class="form-check">
-                                            <input class="form-check-input" type="radio" name="sealing_master_0" value="1">
+                                            <input class="form-check-input" type="radio" name="sealing_master_${timestamp}" value="1">
                                             <label class="form-check-label">Ya ✓</label>
                                         </div>
                                         <div class="form-check">
-                                            <input class="form-check-input" type="radio" name="sealing_master_0" value="0">
+                                            <input class="form-check-input" type="radio" name="sealing_master_${timestamp}" value="0">
                                             <label class="form-check-label">Tidak ✗</label>
                                         </div>
                                     </div>
@@ -1293,11 +1293,11 @@ document.addEventListener('DOMContentLoaded', function() {
                                     <div class="mb-3">
                                         <label class="form-label"><strong>Cetakan</strong></label>
                                         <div class="form-check">
-                                            <input class="form-check-input" type="radio" name="cetakan_master_0" value="1">
+                                            <input class="form-check-input" type="radio" name="cetakan_master_${timestamp}" value="1">
                                             <label class="form-check-label">Ya ✓</label>
                                         </div>
                                         <div class="form-check">
-                                            <input class="form-check-input" type="radio" name="cetakan_master_0" value="0">
+                                            <input class="form-check-input" type="radio" name="cetakan_master_${timestamp}" value="0">
                                             <label class="form-check-label">Tidak ✗</label>
                                         </div>
                                     </div>
@@ -1454,6 +1454,9 @@ document.addEventListener('DOMContentLoaded', function() {
             `;
             container.appendChild(newRow);
             newRow.dataset.rowIndex = String(rowIndex);
+            updateDetailIndices();
+            syncHeaderToDetails(newRow);
+            syncDokumenToDetails(newRow);
 
             initKemasanCollapses();
             collapseAllProdukExcept(newRow);
@@ -1787,7 +1790,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const masterRadioGroups = ['penampakan', 'sealing', 'cetakan', 'logo_halal', 'dokumen_halal', 'coa', 'coa_type'];
             masterRadioGroups.forEach((g) => {
                 detailEl.querySelectorAll(`input[type="radio"][name^="${g}_master_"]`).forEach((r) => {
-                    r.name = `${g}_master_${idx}`;
+                    r.name = `${g}[${idx}]`;
                 });
             });
 
@@ -2433,6 +2436,15 @@ document.addEventListener('DOMContentLoaded', function() {
      * Handle form submit
      */
     form.addEventListener('submit', function(e) {
+        document.querySelectorAll('#unified-container .detail-item').forEach((detail) => {
+            ['penampakan', 'sealing', 'cetakan'].forEach((field) => {
+                const checked = detail.querySelector('input[type="radio"][name*="' + field + '_"]:checked');
+                const hidden = detail.querySelector('input.' + field + '-hidden');
+                if (checked && hidden) {
+                    hidden.value = String(checked.value);
+                }
+            });
+        });
         const errors = validateForm();
         
         if (errors.length > 0) {
