@@ -2,421 +2,482 @@
 @section('container')
 <div id="main">
 
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-    <div class="page-heading">
-        <div class="page-title">
-            <div class="row">
-                <div class="col-12 col-md-6 order-md-1 order-last">
-                    <h3>Food Prosesing</h3>
-                    <p class="text-subtitle text-muted">Buat Food Prosesing baru</p>
-                </div>
-                <div class="col-12 col-md-6 order-md-2 order-first">
-                    <nav aria-label="breadcrumb" class="breadcrumb-header float-start float-lg-end">
-                        <ol class="breadcrumb">
-                            <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
-                            <li class="breadcrumb-item"><a href="{{ route('pemeriksaan-suhu-ruang.index') }}">Pemeriksaan</a></li>
-                            <li class="breadcrumb-item active" aria-current="page">Buat Pemeriksaan</li>
-                        </ol>
-                    </nav>
-                </div>
+<style>
+    /* ============================================================
+       Semua style di-scope ke .fp-page, jadi tidak bergantung pada
+       Tailwind/Bootstrap dan tidak mengubah tampilan halaman lain.
+       ============================================================ */
+    .fp-page {
+        --brand-50: #eef6ff; --brand-100: #d9ebff; --brand-200: #bcd9fb;
+        --brand-500: #1d6cdb; --brand-600: #1456b8; --brand-700: #0f4494;
+        --ink: #0f172a; --text: #334155; --muted: #64748b; --faint: #94a3b8;
+        --line: #e2e8f0; --line-soft: #f1f5f9; --rose: #e11d48;
+
+        font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+        font-size: 13px; color: var(--text);
+        max-width: 1120px; margin: 0 auto;
+        -webkit-font-smoothing: antialiased;
+    }
+    .fp-page *, .fp-page *::before, .fp-page *::after { box-sizing: border-box; }
+
+    /* Tema per section */
+    .fp-page .is-brand  { --accent: #1456b8; --accent-ink: #0f4494; --accent-line: #bcd9fb; --unit-bg: #eff6ff; --unit-line: #dbeafe; }
+    .fp-page .is-teal   { --accent: #0d9488; --accent-ink: #0f766e; --accent-line: #99f6e4; --unit-bg: #f0fdfa; --unit-line: #ccfbf1; }
+
+    /* ---------- Header ---------- */
+    .fp-crumbs { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; font-size: 12px; color: var(--muted); margin-bottom: 8px; }
+    .fp-crumbs a { color: var(--muted); text-decoration: none; }
+    .fp-crumbs a:hover { color: var(--brand-600); }
+    .fp-crumbs .sep { color: #cbd5e1; }
+    .fp-crumbs .now { color: var(--brand-700); background: var(--brand-50); padding: 2px 10px; border-radius: 6px; font-weight: 600; }
+    .fp-title { font-size: 26px; line-height: 1.2; font-weight: 700; color: var(--ink); letter-spacing: -.02em; margin: 0; }
+    .fp-sub { font-size: 12.5px; color: var(--muted); margin: 4px 0 24px; }
+
+    /* ---------- Alert error ---------- */
+    .fp-alert { display: flex; gap: 12px; padding: 14px 16px; margin-bottom: 20px; border: 1px solid #fecdd3; background: #fff1f2; color: #9f1239; border-radius: 12px; }
+    .fp-alert svg { flex: none; width: 18px; height: 18px; margin-top: 1px; }
+    .fp-alert strong { display: block; margin-bottom: 4px; font-size: 13px; }
+    .fp-alert ul { margin: 0; padding-left: 16px; font-size: 12.5px; }
+
+    /* ---------- Card ---------- */
+    .fp-card { background: #fff; border: 1px solid var(--line); border-radius: 14px; box-shadow: 0 1px 2px rgba(15,23,42,.04); padding: 24px; margin-bottom: 20px; }
+    .fp-card-head { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px; padding-bottom: 16px; margin-bottom: 20px; border-bottom: 1px solid var(--line-soft); }
+    .fp-card-title { display: flex; align-items: center; gap: 12px; }
+    .fp-card-title h2 { margin: 0; font-size: 15px; font-weight: 700; color: var(--ink); }
+    .fp-card-title p { margin: 2px 0 0; font-size: 11.5px; color: var(--faint); }
+    .fp-ico { flex: none; width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; }
+    .fp-ico svg { width: 18px; height: 18px; }
+    .fp-ico.t-brand  { background: #eef6ff; color: #1456b8; }
+    .fp-ico.t-sky    { background: #f0f9ff; color: #0284c7; }
+    .fp-ico.t-teal   { background: #f0fdfa; color: #0d9488; }
+    .fp-ico.t-violet { background: #f5f3ff; color: #7c3aed; }
+    .fp-ico.t-amber  { background: #fffbeb; color: #d97706; }
+
+    /* ---------- Grid & field ---------- */
+    .fp-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px 20px; }
+    .fp-grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 20px; }
+    .fp-triple { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+    @media (max-width: 991px) { .fp-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    @media (max-width: 767px) { .fp-triple, .fp-grid-2 { grid-template-columns: 1fr; } }
+    @media (max-width: 575px) { .fp-grid { grid-template-columns: 1fr; } .fp-card { padding: 18px; } }
+
+    .fp-label { display: flex; align-items: center; justify-content: space-between; gap: 4px; margin: 0 0 6px; font-size: 12px; font-weight: 600; color: #334155; }
+    .fp-label .fp-req { color: var(--rose); font-weight: 700; }
+    .fp-label .fp-hint { font-weight: 400; font-size: 10.5px; color: var(--faint); }
+    .fp-sublabel { display: block; margin: 0 0 6px; font-size: 12px; font-weight: 500; color: #475569; }
+
+    .fp-page .fp-input {
+        width: 100%; height: 40px; padding: 0 12px;
+        font: inherit; font-size: 13px; color: var(--ink);
+        background-color: #fff; border: 1px solid var(--line); border-radius: 10px;
+        box-shadow: 0 1px 1px rgba(15,23,42,.03);
+        transition: border-color .15s, box-shadow .15s, background-color .15s;
+    }
+    .fp-page textarea.fp-input { height: auto; padding: 10px 12px; line-height: 1.5; resize: vertical; }
+    .fp-page select.fp-input {
+        -webkit-appearance: none; appearance: none; padding-right: 34px; cursor: pointer;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='M6 8l4 4 4-4' fill='none' stroke='%2394a3b8' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+        background-repeat: no-repeat; background-position: right 10px center; background-size: 16px;
+    }
+    .fp-page .fp-input::placeholder { color: #a8b3c4; }
+    .fp-page .fp-input:hover { border-color: #cbd5e1; }
+    .fp-page .fp-input:focus { outline: 0; border-color: var(--brand-500); box-shadow: 0 0 0 3px rgba(29,108,219,.15); }
+    .fp-page .fp-input.is-invalid { border-color: #fb7185; background-image: none; }
+    .fp-page select.fp-input.is-invalid { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='M6 8l4 4 4-4' fill='none' stroke='%2394a3b8' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); }
+    .fp-page .fp-input.is-invalid:focus { box-shadow: 0 0 0 3px rgba(225,29,72,.15); }
+    .fp-error { margin-top: 5px; font-size: 11.5px; color: var(--rose); }
+    .fp-manual { margin-top: 8px; }
+
+    /* ---------- Choices.js (kategori & produk) ---------- */
+    .fp-page .choices { margin-bottom: 0; font-size: 13px; }
+    .fp-page .choices__inner { min-height: 40px; padding: 6px 10px; background: #fff; border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 1px 1px rgba(15,23,42,.03); font-size: 13px; }
+    .fp-page .choices.is-focused .choices__inner,
+    .fp-page .choices.is-open .choices__inner { border-color: var(--brand-500); box-shadow: 0 0 0 3px rgba(29,108,219,.15); }
+    .fp-page .choices.is-open .choices__inner { border-radius: 10px 10px 0 0; }
+    .fp-page .choices__list--dropdown, .fp-page .choices__list[aria-expanded] { border: 1px solid var(--line); border-radius: 0 0 10px 10px; z-index: 30; box-shadow: 0 10px 24px rgba(15,23,42,.1); }
+    .fp-page .choices__list--dropdown .choices__item--selectable.is-highlighted { background: var(--brand-50); color: var(--brand-700); }
+
+    /* ---------- Chip unit ---------- */
+    .fp-chips { display: inline-flex; flex-wrap: wrap; gap: 4px; padding: 4px; background: #f8fafc; border: 1px solid var(--line); border-radius: 12px; }
+    .fp-chip { display: inline-flex; align-items: center; gap: 8px; margin: 0; padding: 7px 12px; border: 1px solid transparent; border-radius: 9px; font-size: 12px; font-weight: 500; color: var(--muted); cursor: pointer; user-select: none; transition: all .15s; }
+    .fp-chip:hover { color: var(--text); background: rgba(255,255,255,.7); }
+    .fp-chip:has(input:checked) { background: #fff; color: var(--accent-ink); border-color: var(--accent-line); font-weight: 600; box-shadow: 0 1px 2px rgba(15,23,42,.07); }
+    .fp-chip:has(input:focus-visible) { outline: 2px solid var(--accent); outline-offset: 1px; }
+    .fp-chip input {
+        -webkit-appearance: none; appearance: none; flex: none; width: 16px; height: 16px; margin: 0;
+        border: 1.5px solid #cbd5e1; border-radius: 5px; background: #fff center / 12px no-repeat; transition: all .15s;
+    }
+    .fp-chip input:checked {
+        background-color: var(--accent); border-color: var(--accent);
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='white' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3.5 8.5l3 3 6-6.5'/%3E%3C/svg%3E");
+    }
+
+    /* ---------- Kartu unit ---------- */
+    .fp-empty { margin: 0; padding: 22px 16px; text-align: center; font-size: 12.5px; color: var(--faint); border: 1.5px dashed var(--line); border-radius: 12px; background: #fafbfc; }
+    @keyframes fp-in { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+    .fp-unit { padding: 16px; margin-bottom: 14px; border: 1px solid var(--unit-line); border-radius: 12px; background: linear-gradient(90deg, var(--unit-bg), #fff 55%); animation: fp-in .22s ease-out; transition: border-color .15s; }
+    .fp-unit:last-child { margin-bottom: 0; }
+    .fp-unit:hover { border-color: var(--accent-line); }
+    .fp-unit-head { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+    .fp-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 3px var(--unit-line); }
+    .fp-unit-name { font-size: 13px; font-weight: 700; color: var(--ink); }
+    .fp-badge { padding: 2px 9px; border-radius: 999px; font-size: 10.5px; font-weight: 600; background: var(--unit-line); color: var(--accent-ink); }
+    .fp-badge.is-muted { background: var(--line-soft); color: var(--muted); }
+
+    /* ---------- Accordion area opsional ---------- */
+    .fp-acc { margin-bottom: 10px; border: 1px solid var(--line); border-radius: 12px; background: #fff; transition: border-color .15s, box-shadow .15s; }
+    .fp-acc:last-child { margin-bottom: 0; }
+    .fp-acc[open] { border-color: var(--brand-200); box-shadow: 0 2px 8px rgba(29,108,219,.06); }
+    .fp-acc summary { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 14px 16px; list-style: none; cursor: pointer; font-weight: 600; color: var(--ink); border-radius: 12px; }
+    .fp-acc summary::-webkit-details-marker { display: none; }
+    .fp-acc summary:hover { background: #f8fafc; }
+    .fp-acc summary:focus-visible { outline: 2px solid var(--brand-500); outline-offset: -2px; }
+    .fp-acc summary .left { display: flex; align-items: center; gap: 10px; }
+    .fp-acc summary .chev { width: 16px; height: 16px; color: var(--faint); transition: transform .2s; }
+    .fp-acc[open] summary .chev { transform: rotate(180deg); }
+    .fp-acc .body { padding: 4px 16px 18px; }
+
+    /* ---------- Bar aksi bawah ---------- */
+    .fp-bar { position: sticky; bottom: 12px; z-index: 20; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; padding: 12px 16px; margin-top: 4px; background: rgba(255,255,255,.92); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); border: 1px solid var(--line); border-radius: 14px; box-shadow: 0 -2px 6px rgba(15,23,42,.03), 0 10px 28px rgba(15,23,42,.1); }
+    .fp-bar-status { display: flex; align-items: center; gap: 10px; font-size: 12px; color: var(--muted); }
+    .fp-bar-status b { color: var(--text); font-weight: 600; }
+    .fp-pulse { position: relative; width: 10px; height: 10px; border-radius: 50%; background: #cbd5e1; }
+    .fp-pulse.is-on { background: #10b981; }
+    .fp-pulse.is-on::after { content: ''; position: absolute; inset: 0; border-radius: 50%; background: #34d399; animation: fp-ping 1.6s cubic-bezier(0,0,.2,1) infinite; }
+    @keyframes fp-ping { 75%, 100% { transform: scale(2.4); opacity: 0; } }
+    .fp-bar-actions { display: flex; align-items: center; gap: 10px; }
+    .fp-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 38px; padding: 0 18px; font: inherit; font-size: 12.5px; font-weight: 600; text-decoration: none; border: 1px solid transparent; border-radius: 10px; cursor: pointer; transition: all .15s; }
+    .fp-btn svg { width: 16px; height: 16px; }
+    .fp-btn-ghost { color: var(--muted); background: transparent; }
+    .fp-btn-ghost:hover { color: var(--ink); background: var(--line-soft); }
+    .fp-btn-primary { color: #fff; background: var(--brand-600); box-shadow: 0 2px 8px rgba(20,86,184,.3); }
+    .fp-btn-primary:hover { background: var(--brand-700); color: #fff; }
+    .fp-btn-primary:active { transform: translateY(1px); }
+    .fp-btn:focus-visible { outline: 2px solid var(--brand-500); outline-offset: 2px; }
+
+    @media (prefers-reduced-motion: reduce) {
+        .fp-unit, .fp-pulse.is-on::after { animation: none; }
+        .fp-page * { transition: none !important; }
+    }
+</style>
+
+<div class="fp-page">
+    <header>
+        <nav class="fp-crumbs" aria-label="breadcrumb">
+            <a href="{{ route('dashboard') }}">Dashboard</a><span class="sep">/</span>
+            <a href="{{ route('pemeriksaan-suhu-ruang.index') }}">Pemeriksaan Suhu Ruang</a><span class="sep">/</span>
+            <span class="now" aria-current="page">Buat Pemeriksaan</span>
+        </nav>
+        <h1 class="fp-title">Formulir Pemeriksaan Suhu Ruang</h1>
+        <p class="fp-sub">Food Processing &middot; pencatatan dan verifikasi kepatuhan suhu cold-chain harian.</p>
+    </header>
+
+    @if ($errors->any())
+        <div class="fp-alert" role="alert">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v4m0 4h.01"/></svg>
+            <div>
+                <strong>Data belum bisa disimpan. Periksa kembali isian berikut:</strong>
+                <ul>
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
             </div>
         </div>
-        
-        <section id="basic-horizontal-layouts">
-            <div class="row match-height">
-                <div class="col-md-12 col-12">
-                    <div class="card">
-                        <div class="card-header">
-                            <h4 class="card-title">Form Food Prosesing</h4>
-                        </div>
-                        <div class="card-content">
-                            <div class="card-body">
-                                @if ($errors->any())
-                                    <div class="alert alert-danger">
-                                        <ul class="mb-0">
-                                            @foreach ($errors->all() as $error)
-                                                <li>{{ $error }}</li>
-                                            @endforeach
-                                        </ul>
-                                    </div>
-                                @endif
+    @endif
 
-                                <form id="form-pemeriksaan-suhu-ruang" data-autosave="true" class="form form-horizontal" action="{{ route('pemeriksaan-suhu-ruang.store') }}" method="POST">
-                                    @csrf
-                                    <div class="form-body">
-                                        <div class="row">
-                                            <div class="col-md-6">
-                                                <label for="tanggal">Tanggal <span class="text-danger">*</span></label>
-                                                <input type="date" id="tanggal" class="form-control @error('tanggal') is-invalid @enderror"
-                                                    name="tanggal" value="{{ old('tanggal', date('Y-m-d')) }}" required>
-                                                @error('tanggal')
-                                                    <div class="invalid-feedback">{{ $message }}</div>
-                                                @enderror
-                                            </div>
+    <form id="form-pemeriksaan-suhu-ruang" data-autosave="true" class="form form-horizontal" action="{{ route('pemeriksaan-suhu-ruang.store') }}" method="POST">
+        @csrf
 
-                                            <div class="col-md-6">
-                                                <label for="id_shift">Shift <span class="text-danger">*</span></label>
-                                                <select id="id_shift" class="form-control @error('id_shift') is-invalid @enderror"
-                                                    name="id_shift" required>
-                                                    <option value="">-- Pilih Shift --</option>
-                                                    @foreach($shifts as $shift)
-                                                        <option value="{{ $shift->id }}" {{ old('id_shift') == $shift->id ? 'selected' : '' }}>
-                                                            {{ $shift->shift }}
-                                                        </option>
-                                                    @endforeach
-                                                </select>
-                                                @error('id_shift')
-                                                    <div class="invalid-feedback">{{ $message }}</div>
-                                                @enderror
-                                            </div>
-
-                                            <div class="col-md-6 mt-3">
-                                                @php
-                                                    $selectedProdukId = old('id_produk', '');
-                                                    $selectedKategori = old('kategori_code', '');
-                                                    if (($selectedKategori === null || $selectedKategori === '') && $selectedProdukId) {
-                                                        $selectedKategori = $produkKategoriById[$selectedProdukId] ?? '';
-                                                    }
-                                                @endphp
-
-                                                <label>Kategori Produk <span class="text-danger">*</span></label>
-                                                <select class="choices form-control kategori-produk-select @error('kategori_code') is-invalid @enderror" name="kategori_code" required>
-                                                    <option value="">-- Pilih Kategori --</option>
-                                                    @foreach(($produkKategoriOptions ?? []) as $kategori)
-                                                        <option value="{{ $kategori }}" {{ $selectedKategori == $kategori ? 'selected' : '' }}>
-                                                            {{ $kategori }}
-                                                        </option>
-                                                    @endforeach
-                                                </select>
-                                                @error('kategori_code')
-                                                    <div class="invalid-feedback">{{ $message }}</div>
-                                                @enderror
-
-                                                <label for="id_produk" class="mt-2">Produk <span class="text-danger">*</span></label>
-                                                <select id="id_produk" class="form-control produk-select @error('id_produk') is-invalid @enderror"
-                                                    name="id_produk" data-selected="{{ old('id_produk', '') }}" required>
-                                                    <option value="">-- Pilih Produk --</option>
-                                                </select>
-                                                @error('id_produk')
-                                                    <div class="invalid-feedback">{{ $message }}</div>
-                                                @enderror
-                                            </div>
-
-                                            <div class="col-md-6 mt-3">
-                                                <label for="suhu_produk">Suhu Produk</label>
-                                                <input type="text" inputmode="text" id="suhu_produk" class="form-control @error('suhu_produk') is-invalid @enderror"
-                                                    name="suhu_produk" value="{{ old('suhu_produk') }}" placeholder="Contoh: 25°C">
-                                                @error('suhu_produk')
-                                                    <div class="invalid-feedback">{{ $message }}</div>
-                                                @enderror
-                                            </div>
-
-                                            <div class="col-md-6 mt-3">
-                                                <label for="pukul">Pukul</label>
-                                                <input type="time" id="pukul" class="form-control @error('pukul') is-invalid @enderror"
-                                                    name="pukul" value="{{ old('pukul') }}">
-                                                @error('pukul')
-                                                    <div class="invalid-feedback">{{ $message }}</div>
-                                                @enderror
-                                            </div>
-
-                                            <!-- Cold Storage Section -->
-                                            <div class="col-md-12 mt-4">
-                                                <h5 class="mb-3"><strong>Cold Storage (1-4) <small>(Isi sesuai dengan unit yang digunakan)</small></strong></h5>
-                                            </div>
-                                            <!-- ✅ CHECKBOX SECTION -->
-                                            <div class="col-md-12 mt-3 p-3 border rounded bg-light">
-                                                <div class="row">
-                                                    @for($i = 1; $i <= 4; $i++)
-                                                        <div class="col-md-3">
-                                                            <div class="form-check">
-                                                                <input class="form-check-input cold-storage-checkbox" type="checkbox" id="cold_storage_{{ $i }}_check" data-unit="{{ $i }}">
-                                                                <label class="form-check-label" for="cold_storage_{{ $i }}_check">
-                                                                    CS {{ $i }}
-                                                                </label>
-                                                            </div>
-                                                        </div>
-                                                    @endfor
-                                                </div>
-                                            </div>
-                                            @for($i = 1; $i <= 4; $i++)
-                                                <div class="col-md-12 mt-3 p-3 border rounded bg-light cold-storage-unit" id="cold_storage_{{ $i }}_form" style="display: none;">
-                                                    <div class="row">
-                                                        <div class="col-md-12">
-                                                            <label class="form-label"><strong>CS {{ $i }}</strong></label>
-                                                        </div>
-                                                        <div class="col-md-4">
-                                                            <label for="cold_storage_{{ $i }}_setting">Setting (°C)</label>
-                                                            <select id="cold_storage_{{ $i }}_setting" class="form-select form-select-sm"
-                                                                name="cold_storage_{{ $i }}_setting">
-                                                                <option value="">-- Pilih atau Isi Manual --</option>
-                                                                <option value="-18" {{ old('cold_storage_' . $i . '_setting') == '-18' ? 'selected' : '' }}>Std ≤ (-18)°C</option>
-                                                                <option value="manual" {{ old('cold_storage_' . $i . '_setting') && old('cold_storage_' . $i . '_setting') != '-18' ? 'selected' : '' }}>Input Manual</option>
-                                                            </select>
-                                                            <input type="text" inputmode="text" id="cold_storage_{{ $i }}_setting_manual" 
-                                                                class="form-control form-control-sm mt-2" style="display: none;"
-                                                                placeholder="Masukkan nilai"
-                                                                value="{{ old('cold_storage_' . $i . '_setting') && old('cold_storage_' . $i . '_setting') != '-18' ? old('cold_storage_' . $i . '_setting') : '' }}">
-                                                        </div>
-                                                        <div class="col-md-4">
-                                                            <label for="cold_storage_{{ $i }}_display">Display (°C)</label>
-                                                            <select id="cold_storage_{{ $i }}_display" class="form-select form-select-sm"
-                                                                name="cold_storage_{{ $i }}_display">
-                                                                <option value="">-- Pilih atau Isi Manual --</option>
-                                                                <option value="-18" {{ old('cold_storage_' . $i . '_display') == '-18' ? 'selected' : '' }}>Std ≤ (-18)°C</option>
-                                                                <option value="manual" {{ old('cold_storage_' . $i . '_display') && old('cold_storage_' . $i . '_display') != '-18' ? 'selected' : '' }}>Input Manual</option>
-                                                            </select>
-                                                            <input type="text" inputmode="text" id="cold_storage_{{ $i }}_display_manual" 
-                                                                class="form-control form-control-sm mt-2" style="display: none;"
-                                                                placeholder="Masukkan nilai"
-                                                                value="{{ old('cold_storage_' . $i . '_display') && old('cold_storage_' . $i . '_display') != '-18' ? old('cold_storage_' . $i . '_display') : '' }}">
-                                                        </div>
-                                                        <div class="col-md-4">
-                                                            <label for="cold_storage_{{ $i }}_actual">Actual (°C)</label>
-                                                            <select id="cold_storage_{{ $i }}_actual" class="form-select form-select-sm"
-                                                                name="cold_storage_{{ $i }}_actual">
-                                                                <option value="">-- Pilih atau Isi Manual --</option>
-                                                                <option value="-18" {{ old('cold_storage_' . $i . '_actual') == '-18' ? 'selected' : '' }}>Std ≤ (-18)°C</option>
-                                                                <option value="manual" {{ old('cold_storage_' . $i . '_actual') && old('cold_storage_' . $i . '_actual') != '-18' ? 'selected' : '' }}>Input Manual</option>
-                                                            </select>
-                                                            <input type="text" inputmode="text" id="cold_storage_{{ $i }}_actual_manual" 
-                                                                class="form-control form-control-sm mt-2" style="display: none;"
-                                                                placeholder="Masukkan nilai"
-                                                                value="{{ old('cold_storage_' . $i . '_actual') && old('cold_storage_' . $i . '_actual') != '-18' ? old('cold_storage_' . $i . '_actual') : '' }}">
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            @endfor
-
-                                            <!-- Anteroom Loading Section -->
-                                            <div class="col-md-12 mt-4">
-                                                <h5 class="mb-3"><strong>Anteroom Loading (1-4) <small>(Isi sesuai dengan unit yang digunakan)</small></strong></h5>
-                                            </div>
-                                            <!-- ✅ CHECKBOX SECTION -->
-                                            <div class="col-md-12 mt-3 p-3 border rounded bg-light">
-                                                <div class="row">
-                                                    @for($i = 1; $i <= 4; $i++)
-                                                        <div class="col-md-3">
-                                                            <div class="form-check">
-                                                                <input class="form-check-input anteroom-loading-checkbox" type="checkbox" id="anteroom_loading_{{ $i }}_check" data-unit="{{ $i }}">
-                                                                <label class="form-check-label" for="anteroom_loading_{{ $i }}_check">
-                                                                    Anteroom Loading {{ $i }}
-                                                                </label>
-                                                            </div>
-                                                        </div>
-                                                    @endfor
-                                                </div>
-                                            </div>
-                                            @for($i = 1; $i <= 4; $i++)
-                                                <div class="col-md-12 mt-3 p-3 border rounded bg-light anteroom-loading-unit" id="anteroom_loading_{{ $i }}_form" style="display: none;">
-                                                    <div class="row">
-                                                        <div class="col-md-12">
-                                                            <label class="form-label"><strong>Anteroom Loading {{ $i }}</strong></label>
-                                                        </div>
-                                                        <div class="col-md-4">
-                                                            <label for="anteroom_loading_{{ $i }}_setting">Setting (°C)</label>
-                                                            <select id="anteroom_loading_{{ $i }}_setting" class="form-select form-select-sm"
-                                                                name="anteroom_loading_{{ $i }}_setting">
-                                                                <option value="">-- Pilih atau Isi Manual --</option>
-                                                                <option value="(0±5°C)" {{ old('anteroom_loading_' . $i . '_setting') == '(0±5°C)' ? 'selected' : '' }}>Std 0 ± 5°C</option>
-                                                                <option value="manual" {{ old('anteroom_loading_' . $i . '_setting') && old('anteroom_loading_' . $i . '_setting') != '(0±5°C)' && old('anteroom_loading_' . $i . '_setting') ? 'selected' : '' }}>Input Manual</option>
-                                                            </select>
-                                                            <input type="text" inputmode="text" id="anteroom_loading_{{ $i }}_setting_manual" 
-                                                                class="form-control form-control-sm mt-2" style="display: none;"
-                                                                placeholder="Masukkan nilai"
-                                                                value="{{ old('anteroom_loading_' . $i . '_setting') && old('anteroom_loading_' . $i . '_setting') != '0' ? old('anteroom_loading_' . $i . '_setting') : '' }}">
-                                                        </div>
-                                                        <div class="col-md-4">
-                                                            <label for="anteroom_loading_{{ $i }}_display">Display (°C)</label>
-                                                            <select id="anteroom_loading_{{ $i }}_display" class="form-select form-select-sm"
-                                                                name="anteroom_loading_{{ $i }}_display">
-                                                                <option value="">-- Pilih atau Isi Manual --</option>
-                                                                <option value="(0±5°C)" {{ old('anteroom_loading_' . $i . '_display') == '(0±5°C)' ? 'selected' : '' }}>Std 0 ± 5°C</option>
-                                                                <option value="manual" {{ old('anteroom_loading_' . $i . '_display') && old('anteroom_loading_' . $i . '_display') != '(0±5°C)' && old('anteroom_loading_' . $i . '_display') ? 'selected' : '' }}>Input Manual</option>
-                                                            </select>
-                                                            <input type="text" inputmode="text" id="anteroom_loading_{{ $i }}_display_manual" 
-                                                                class="form-control form-control-sm mt-2" style="display: none;"
-                                                                placeholder="Masukkan nilai"
-                                                                value="{{ old('anteroom_loading_' . $i . '_display') && old('anteroom_loading_' . $i . '_display') != '0' ? old('anteroom_loading_' . $i . '_display') : '' }}">
-                                                        </div>
-                                                        <div class="col-md-4">
-                                                            <label for="anteroom_loading_{{ $i }}_actual">Actual (°C)</label>
-                                                            <select id="anteroom_loading_{{ $i }}_actual" class="form-select form-select-sm"
-                                                                name="anteroom_loading_{{ $i }}_actual">
-                                                                <option value="">-- Pilih atau Isi Manual --</option>
-                                                                <option value="(0±5°C)" {{ old('anteroom_loading_' . $i . '_actual') == '(0±5°C)' ? 'selected' : '' }}>Std 0 ± 5°C</option>
-                                                                <option value="manual" {{ old('anteroom_loading_' . $i . '_actual') && old('anteroom_loading_' . $i . '_actual') != '(0±5°C)' && old('anteroom_loading_' . $i . '_actual') ? 'selected' : '' }}>Input Manual</option>
-                                                            </select>
-                                                            <input type="text" inputmode="text" id="anteroom_loading_{{ $i }}_actual_manual" 
-                                                                class="form-control form-control-sm mt-2" style="display: none;"
-                                                                placeholder="Masukkan nilai"
-                                                                value="{{ old('anteroom_loading_' . $i . '_actual') && old('anteroom_loading_' . $i . '_actual') != '0' ? old('anteroom_loading_' . $i . '_actual') : '' }}">
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            @endfor
-
-                                            <!-- Pre Loading Section -->
-                                            <div class="col-md-12 mt-4">
-                                                <h5 class="mb-3"><strong>Pre Loading <small>(Opsional)</small></strong></h5>
-                                            </div>
-                                            <div class="col-md-12 mt-3 p-3 border rounded bg-light">
-                                                <div class="row">
-                                                    <div class="col-md-4">
-                                                        <label for="pre_loading_setting">Setting (°C)</label>
-                                                        <input type="text" inputmode="text" id="pre_loading_setting" 
-                                                            class="form-control form-control-sm"
-                                                            name="pre_loading_setting"
-                                                            placeholder="Setting"
-                                                            value="{{ old('pre_loading_setting') }}">
-                                                    </div>
-                                                    <div class="col-md-4">
-                                                        <label for="pre_loading_display">Display (°C)</label>
-                                                        <input type="text" inputmode="text" id="pre_loading_display" 
-                                                            class="form-control form-control-sm"
-                                                            name="pre_loading_display"
-                                                            placeholder="Display"
-                                                            value="{{ old('pre_loading_display') }}">
-                                                    </div>
-                                                    <div class="col-md-4">
-                                                        <label for="pre_loading_actual">Actual (°C)</label>
-                                                        <input type="text" inputmode="text" id="pre_loading_actual" 
-                                                            class="form-control form-control-sm"
-                                                            name="pre_loading_actual"
-                                                            placeholder="Actual"
-                                                            value="{{ old('pre_loading_actual') }}">
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <!-- Prestaging Section -->
-                                            <div class="col-md-12 mt-4">
-                                                <h5 class="mb-3"><strong>Prestaging <small>(Opsional)</small></strong></h5>
-                                            </div>
-                                            <div class="col-md-12 mt-3 p-3 border rounded bg-light">
-                                                <div class="row">
-                                                    <div class="col-md-4">
-                                                        <label for="prestaging_setting">Setting (°C)</label>
-                                                        <input type="text" inputmode="text" id="prestaging_setting" 
-                                                            class="form-control form-control-sm"
-                                                            name="prestaging_setting"
-                                                            placeholder="Setting"
-                                                            value="{{ old('prestaging_setting') }}">
-                                                    </div>
-                                                    <div class="col-md-4">
-                                                        <label for="prestaging_display">Display (°C)</label>
-                                                        <input type="text" inputmode="text" id="prestaging_display" 
-                                                            class="form-control form-control-sm"
-                                                            name="prestaging_display"
-                                                            placeholder="Display"
-                                                            value="{{ old('prestaging_display') }}">
-                                                    </div>
-                                                    <div class="col-md-4">
-                                                        <label for="prestaging_actual">Actual (°C)</label>
-                                                        <input type="text" inputmode="text" id="prestaging_actual" 
-                                                            class="form-control form-control-sm"
-                                                            name="prestaging_actual"
-                                                            placeholder="Actual"
-                                                            value="{{ old('prestaging_actual') }}">
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <!-- Anteroom Ekspansi Further Section -->
-                                            <div class="col-md-12 mt-4">
-                                                <h5 class="mb-3"><strong>Anteroom Ekspansi Further <small>(Opsional)</small></strong></h5>
-                                            </div>
-                                            <div class="col-md-12 mt-3 p-3 border rounded bg-light">
-                                                <div class="row">
-                                                    <div class="col-md-4">
-                                                        <label for="anteroom_ekspansi_further_setting">Setting (°C)</label>
-                                                        <input type="text" inputmode="text" id="anteroom_ekspansi_further_setting" 
-                                                            class="form-control form-control-sm"
-                                                            name="anteroom_ekspansi_further_setting"
-                                                            placeholder="Setting"
-                                                            value="{{ old('anteroom_ekspansi_further_setting') }}">
-                                                    </div>
-                                                    <div class="col-md-4">
-                                                        <label for="anteroom_ekspansi_further_display">Display (°C)</label>
-                                                        <input type="text" inputmode="text" id="anteroom_ekspansi_further_display" 
-                                                            class="form-control form-control-sm"
-                                                            name="anteroom_ekspansi_further_display"
-                                                            placeholder="Display"
-                                                            value="{{ old('anteroom_ekspansi_further_display') }}">
-                                                    </div>
-                                                    <div class="col-md-4">
-                                                        <label for="anteroom_ekspansi_further_actual">Actual (°C)</label>
-                                                        <input type="text" inputmode="text" id="anteroom_ekspansi_further_actual" 
-                                                            class="form-control form-control-sm"
-                                                            name="anteroom_ekspansi_further_actual"
-                                                            placeholder="Actual"
-                                                            value="{{ old('anteroom_ekspansi_further_actual') }}">
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <!-- Anteroom Ekspansi Sausage Section -->
-                                            <div class="col-md-12 mt-4">
-                                                <h5 class="mb-3"><strong>Anteroom Ekspansi Sausage <small>(Opsional)</small></strong></h5>
-                                            </div>
-                                            <div class="col-md-12 mt-3 p-3 border rounded bg-light">
-                                                <div class="row">
-                                                    <div class="col-md-4">
-                                                        <label for="anteroom_ekspansi_sausage_setting">Setting (°C)</label>
-                                                        <input type="text" inputmode="text" id="anteroom_ekspansi_sausage_setting" 
-                                                            class="form-control form-control-sm"
-                                                            name="anteroom_ekspansi_sausage_setting"
-                                                            placeholder="Setting"
-                                                            value="{{ old('anteroom_ekspansi_sausage_setting') }}">
-                                                    </div>
-                                                    <div class="col-md-4">
-                                                        <label for="anteroom_ekspansi_sausage_display">Display (°C)</label>
-                                                        <input type="text" inputmode="text" id="anteroom_ekspansi_sausage_display" 
-                                                            class="form-control form-control-sm"
-                                                            name="anteroom_ekspansi_sausage_display"
-                                                            placeholder="Display"
-                                                            value="{{ old('anteroom_ekspansi_sausage_display') }}">
-                                                    </div>
-                                                    <div class="col-md-4">
-                                                        <label for="anteroom_ekspansi_sausage_actual">Actual (°C)</label>
-                                                        <input type="text" inputmode="text" id="anteroom_ekspansi_sausage_actual" 
-                                                            class="form-control form-control-sm"
-                                                            name="anteroom_ekspansi_sausage_actual"
-                                                            placeholder="Actual"
-                                                            value="{{ old('anteroom_ekspansi_sausage_actual') }}">
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <!-- Catatan Section -->
-                                            <div class="col-md-12 mt-4">
-                                                <h5 class="mb-3"><strong>Catatan</strong></h5>
-                                            </div>
-                                            <div class="col-md-6 mt-3">
-                                                <label for="keterangan">Keterangan</label>
-                                                <textarea id="keterangan" class="form-control form-control-sm"
-                                                    name="keterangan" placeholder="Keterangan" rows="3">{{ old('keterangan') }}</textarea>
-                                            </div>
-                                            <div class="col-md-6 mt-3">
-                                                <label for="tindakan_koreksi">Tindakan Koreksi</label>
-                                                <textarea id="tindakan_koreksi" class="form-control form-control-sm"
-                                                    name="tindakan_koreksi" placeholder="Tindakan Koreksi" rows="3">{{ old('tindakan_koreksi') }}</textarea>
-                                            </div>
-
-                                            <div class="col-md-12 d-flex justify-content-end mt-4">
-                                                <button type="submit" class="btn btn-primary me-1 mb-1">Buat Pemeriksaan</button>
-                                                <a href="{{ route('pemeriksaan-suhu-ruang.index') }}" class="btn btn-light-secondary me-1 mb-1 btn-kembali-confirm">Kembali</a>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
+        {{-- ============ 1. INFORMASI UMUM ============ --}}
+        <section class="fp-card">
+            <div class="fp-card-head">
+                <div class="fp-card-title">
+                    <span class="fp-ico t-brand"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 16v-4m0-4h.01"/></svg></span>
+                    <div>
+                        <h2>1. Informasi Umum &amp; Parameter Produk</h2>
+                        <p>Pastikan tanggal, shift, dan produk sesuai dengan yang sedang diperiksa.</p>
                     </div>
                 </div>
             </div>
+
+            @php
+                $selectedProdukId = old('id_produk', '');
+                $selectedKategori = old('kategori_code', '');
+                if (($selectedKategori === null || $selectedKategori === '') && $selectedProdukId) {
+                    $selectedKategori = $produkKategoriById[$selectedProdukId] ?? '';
+                }
+            @endphp
+
+            <div class="fp-grid">
+                <div>
+                    <label class="fp-label" for="tanggal"><span>Tanggal <span class="fp-req">*</span></span></label>
+                    <input type="date" id="tanggal" class="form-control fp-input @error('tanggal') is-invalid @enderror"
+                        name="tanggal" value="{{ old('tanggal', date('Y-m-d')) }}" required>
+                    @error('tanggal')
+                        <div class="fp-error">{{ $message }}</div>
+                    @enderror
+                </div>
+
+                <div>
+                    <label class="fp-label" for="id_shift"><span>Shift <span class="fp-req">*</span></span></label>
+                    <select id="id_shift" class="form-control fp-input @error('id_shift') is-invalid @enderror"
+                        name="id_shift" required>
+                        <option value="">-- Pilih Shift --</option>
+                        @foreach($shifts as $shift)
+                            <option value="{{ $shift->id }}" {{ old('id_shift') == $shift->id ? 'selected' : '' }}>
+                                {{ $shift->shift }}
+                            </option>
+                        @endforeach
+                    </select>
+                    @error('id_shift')
+                        <div class="fp-error">{{ $message }}</div>
+                    @enderror
+                </div>
+
+                <div>
+                    <label class="fp-label" for="pukul"><span>Pukul</span></label>
+                    <input type="time" id="pukul" class="form-control fp-input @error('pukul') is-invalid @enderror"
+                        name="pukul" value="{{ old('pukul') }}">
+                    @error('pukul')
+                        <div class="fp-error">{{ $message }}</div>
+                    @enderror
+                </div>
+
+                <div>
+                    <label class="fp-label" for="kategori_code"><span>Kategori Produk <span class="fp-req">*</span></span></label>
+                    <select id="kategori_code" class="choices form-control kategori-produk-select @error('kategori_code') is-invalid @enderror" name="kategori_code" required>
+                        <option value="">-- Pilih Kategori --</option>
+                        @foreach(($produkKategoriOptions ?? []) as $kategori)
+                            <option value="{{ $kategori }}" {{ $selectedKategori == $kategori ? 'selected' : '' }}>
+                                {{ $kategori }}
+                            </option>
+                        @endforeach
+                    </select>
+                    @error('kategori_code')
+                        <div class="fp-error">{{ $message }}</div>
+                    @enderror
+                </div>
+
+                <div>
+                    <label class="fp-label" for="id_produk"><span>Produk <span class="fp-req">*</span></span></label>
+                    <select id="id_produk" class="form-control produk-select @error('id_produk') is-invalid @enderror"
+                        name="id_produk" data-selected="{{ old('id_produk', '') }}" required>
+                        <option value="">-- Pilih Produk --</option>
+                    </select>
+                    @error('id_produk')
+                        <div class="fp-error">{{ $message }}</div>
+                    @enderror
+                </div>
+
+                <div>
+                    <label class="fp-label" for="suhu_produk"><span>Suhu Produk</span><span class="fp-hint">Probe internal</span></label>
+                    <input type="text" inputmode="text" id="suhu_produk" class="form-control fp-input @error('suhu_produk') is-invalid @enderror"
+                        name="suhu_produk" value="{{ old('suhu_produk') }}" placeholder="Contoh: 25°C">
+                    @error('suhu_produk')
+                        <div class="fp-error">{{ $message }}</div>
+                    @enderror
+                </div>
+            </div>
         </section>
-    </div>
+
+        {{-- ============ 2. COLD STORAGE ============ --}}
+        <section class="fp-card is-brand">
+            <div class="fp-card-head">
+                <div class="fp-card-title">
+                    <span class="fp-ico t-sky"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M2 12h20M4.93 4.93l14.14 14.14M19.07 4.93L4.93 19.07"/></svg></span>
+                    <div>
+                        <h2>2. Cold Storage (1-4)</h2>
+                        <p>Centang unit yang digunakan, lalu isi data suhunya.</p>
+                    </div>
+                </div>
+                <div class="fp-chips" role="group" aria-label="Pilih unit Cold Storage">
+                    @for($i = 1; $i <= 4; $i++)
+                        <label class="fp-chip" for="cold_storage_{{ $i }}_check">
+                            <input class="cold-storage-checkbox" type="checkbox" id="cold_storage_{{ $i }}_check" data-unit="{{ $i }}">
+                            <span>CS {{ $i }}</span>
+                        </label>
+                    @endfor
+                </div>
+            </div>
+
+            <p class="fp-empty" id="cold_storage_empty">Belum ada unit dipilih. Centang CS 1 &ndash; CS 4 di atas untuk mulai mengisi.</p>
+
+            @for($i = 1; $i <= 4; $i++)
+                <div class="fp-unit cold-storage-unit" id="cold_storage_{{ $i }}_form" style="display: none;">
+                    <div class="fp-unit-head">
+                        <span class="fp-dot"></span>
+                        <span class="fp-unit-name">Unit CS {{ $i }}</span>
+                        <span class="fp-badge">Standar &le; (-18)&deg;C</span>
+                    </div>
+                    <div class="fp-triple">
+                        @foreach(['setting' => 'Setting', 'display' => 'Display', 'actual' => 'Actual'] as $field => $fieldLabel)
+                            @php $key = 'cold_storage_' . $i . '_' . $field; @endphp
+                            <div>
+                                <label class="fp-sublabel" for="{{ $key }}">{{ $fieldLabel }} (°C)</label>
+                                <select id="{{ $key }}" class="form-select form-select-sm fp-input"
+                                    name="{{ $key }}">
+                                    <option value="">-- Pilih atau Isi Manual --</option>
+                                    <option value="-18" {{ old($key) == '-18' ? 'selected' : '' }}>Std ≤ (-18)°C</option>
+                                    <option value="manual" {{ old($key) && old($key) != '-18' ? 'selected' : '' }}>Input Manual</option>
+                                </select>
+                                <input type="text" inputmode="text" id="{{ $key }}_manual"
+                                    class="form-control form-control-sm fp-input fp-manual" style="display: none;"
+                                    placeholder="Masukkan nilai"
+                                    value="{{ old($key) && old($key) != '-18' ? old($key) : '' }}">
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            @endfor
+        </section>
+
+        {{-- ============ 3. ANTEROOM LOADING ============ --}}
+        <section class="fp-card is-teal">
+            <div class="fp-card-head">
+                <div class="fp-card-title">
+                    <span class="fp-ico t-teal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M12 3v18M9 12h.01M15 12h.01"/></svg></span>
+                    <div>
+                        <h2>3. Anteroom Loading (1-4)</h2>
+                        <p>Centang anteroom yang digunakan, lalu isi data suhunya.</p>
+                    </div>
+                </div>
+                <div class="fp-chips" role="group" aria-label="Pilih unit Anteroom Loading">
+                    @for($i = 1; $i <= 4; $i++)
+                        <label class="fp-chip" for="anteroom_loading_{{ $i }}_check">
+                            <input class="anteroom-loading-checkbox" type="checkbox" id="anteroom_loading_{{ $i }}_check" data-unit="{{ $i }}">
+                            <span>Anteroom {{ $i }}</span>
+                        </label>
+                    @endfor
+                </div>
+            </div>
+
+            <p class="fp-empty" id="anteroom_loading_empty">Belum ada anteroom dipilih. Centang Anteroom 1 &ndash; 4 di atas untuk mulai mengisi.</p>
+
+            @for($i = 1; $i <= 4; $i++)
+                <div class="fp-unit anteroom-loading-unit" id="anteroom_loading_{{ $i }}_form" style="display: none;">
+                    <div class="fp-unit-head">
+                        <span class="fp-dot"></span>
+                        <span class="fp-unit-name">Anteroom Loading {{ $i }}</span>
+                        <span class="fp-badge">Standar 0 &plusmn; 5&deg;C</span>
+                    </div>
+                    <div class="fp-triple">
+                        @foreach(['setting' => 'Setting', 'display' => 'Display', 'actual' => 'Actual'] as $field => $fieldLabel)
+                            @php $key = 'anteroom_loading_' . $i . '_' . $field; @endphp
+                            <div>
+                                <label class="fp-sublabel" for="{{ $key }}">{{ $fieldLabel }} (°C)</label>
+                                <select id="{{ $key }}" class="form-select form-select-sm fp-input"
+                                    name="{{ $key }}">
+                                    <option value="">-- Pilih atau Isi Manual --</option>
+                                    <option value="(0±5°C)" {{ old($key) == '(0±5°C)' ? 'selected' : '' }}>Std 0 ± 5°C</option>
+                                    <option value="manual" {{ old($key) && old($key) != '(0±5°C)' && old($key) ? 'selected' : '' }}>Input Manual</option>
+                                </select>
+                                <input type="text" inputmode="text" id="{{ $key }}_manual"
+                                    class="form-control form-control-sm fp-input fp-manual" style="display: none;"
+                                    placeholder="Masukkan nilai"
+                                    value="{{ old($key) && old($key) != '0' ? old($key) : '' }}">
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            @endfor
+        </section>
+
+        {{-- ============ 4. AREA OPSIONAL ============ --}}
+        @php
+            $optionalAreas = [
+                'pre_loading'               => 'Pre Loading',
+                'prestaging'                => 'Prestaging',
+                'anteroom_ekspansi_further' => 'Anteroom Ekspansi Further',
+                'anteroom_ekspansi_sausage' => 'Anteroom Ekspansi Sausage',
+            ];
+        @endphp
+        <section class="fp-card">
+            <div class="fp-card-head">
+                <div class="fp-card-title">
+                    <span class="fp-ico t-violet"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg></span>
+                    <div>
+                        <h2>4. Area Tambahan <span style="font-weight:500;color:var(--faint)">(Opsional)</span></h2>
+                        <p>Buka area yang perlu dicatat. Area yang tidak diisi bisa dibiarkan tertutup.</p>
+                    </div>
+                </div>
+            </div>
+
+            @foreach($optionalAreas as $areaKey => $areaLabel)
+                @php
+                    $areaFilled = collect(['setting', 'display', 'actual'])->contains(fn ($f) => filled(old($areaKey . '_' . $f)));
+                @endphp
+                <details class="fp-acc" {{ $areaFilled ? 'open' : '' }}>
+                    <summary>
+                        <span class="left">
+                            <span>{{ $areaLabel }}</span>
+                            <span class="fp-badge is-muted">Opsional</span>
+                        </span>
+                        <svg class="chev" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8l4 4 4-4"/></svg>
+                    </summary>
+                    <div class="body">
+                        <div class="fp-triple">
+                            @foreach(['setting' => 'Setting', 'display' => 'Display', 'actual' => 'Actual'] as $field => $fieldLabel)
+                                <div>
+                                    <label class="fp-sublabel" for="{{ $areaKey }}_{{ $field }}">{{ $fieldLabel }} (°C)</label>
+                                    <input type="text" inputmode="text" id="{{ $areaKey }}_{{ $field }}"
+                                        class="form-control form-control-sm fp-input"
+                                        name="{{ $areaKey }}_{{ $field }}"
+                                        placeholder="{{ $fieldLabel }}"
+                                        value="{{ old($areaKey . '_' . $field) }}">
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                </details>
+            @endforeach
+        </section>
+
+        {{-- ============ 5. CATATAN ============ --}}
+        <section class="fp-card">
+            <div class="fp-card-head">
+                <div class="fp-card-title">
+                    <span class="fp-ico t-amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4 12.5-12.5z"/></svg></span>
+                    <div>
+                        <h2>5. Catatan</h2>
+                        <p>Tuliskan kondisi khusus di lapangan dan tindakan koreksi bila ada penyimpangan.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="fp-grid-2">
+                <div>
+                    <label class="fp-label" for="keterangan"><span>Keterangan</span></label>
+                    <textarea id="keterangan" class="form-control form-control-sm fp-input"
+                        name="keterangan" placeholder="Keterangan" rows="4">{{ old('keterangan') }}</textarea>
+                </div>
+                <div>
+                    <label class="fp-label" for="tindakan_koreksi"><span>Tindakan Koreksi</span></label>
+                    <textarea id="tindakan_koreksi" class="form-control form-control-sm fp-input"
+                        name="tindakan_koreksi" placeholder="Tindakan Koreksi" rows="4">{{ old('tindakan_koreksi') }}</textarea>
+                </div>
+            </div>
+        </section>
+
+        {{-- ============ BAR AKSI ============ --}}
+        <div class="fp-bar">
+            <div class="fp-bar-status" aria-live="polite">
+                <span class="fp-pulse" id="fpPulse"></span>
+                <span id="fpUnitSummary">Belum ada unit yang dipilih</span>
+            </div>
+            <div class="fp-bar-actions">
+                <a href="{{ route('pemeriksaan-suhu-ruang.index') }}" class="fp-btn fp-btn-ghost btn-kembali-confirm">Kembali</a>
+                <button type="submit" class="fp-btn fp-btn-primary">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg>
+                    Buat Pemeriksaan
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
 </div>
 
 <script>
@@ -598,6 +659,58 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         populateProdukOptions(kategoriSelect.value);
     }
+
+    /* ============================================================
+       Tambahan khusus tampilan (tidak menyentuh data/backend):
+       - empty state saat belum ada unit dipilih
+       - ringkasan unit aktif di bar bawah
+       - unit yang sudah terisi (mis. setelah validasi gagal)
+         otomatis dicentang agar datanya tetap terlihat
+       ============================================================ */
+    const unitGroups = [
+        { prefix: 'cold_storage',     cls: 'cold-storage-checkbox',     label: 'Cold Storage' },
+        { prefix: 'anteroom_loading', cls: 'anteroom-loading-checkbox', label: 'Anteroom Loading' },
+    ];
+    const summaryEl = document.getElementById('fpUnitSummary');
+    const pulseEl = document.getElementById('fpPulse');
+
+    const refreshSummary = function() {
+        const counts = unitGroups.map(g => ({
+            label: g.label,
+            n: document.querySelectorAll(`.${g.cls}:checked`).length,
+        }));
+        const total = counts.reduce((sum, c) => sum + c.n, 0);
+
+        if (summaryEl) {
+            summaryEl.innerHTML = total
+                ? counts.map(c => `${c.label}: <b>${c.n} unit</b>`).join(' &nbsp;&middot;&nbsp; ')
+                : 'Belum ada unit yang dipilih';
+        }
+        if (pulseEl) pulseEl.classList.toggle('is-on', total > 0);
+    };
+
+    unitGroups.forEach(g => {
+        const boxes = document.querySelectorAll(`.${g.cls}`);
+        const emptyEl = document.getElementById(`${g.prefix}_empty`);
+
+        const updateGroup = function() {
+            const anyChecked = [...boxes].some(b => b.checked);
+            if (emptyEl) emptyEl.style.display = anyChecked ? 'none' : '';
+            refreshSummary();
+        };
+
+        boxes.forEach(box => {
+            const card = document.getElementById(`${g.prefix}_${box.dataset.unit}_form`);
+            const hasValue = card && [...card.querySelectorAll('select, input')].some(el => el.value !== '');
+            if (hasValue && !box.checked) {
+                box.checked = true;
+                box.dispatchEvent(new Event('change'));
+            }
+            box.addEventListener('change', updateGroup);
+        });
+
+        updateGroup();
+    });
 });
 </script>
 @endsection

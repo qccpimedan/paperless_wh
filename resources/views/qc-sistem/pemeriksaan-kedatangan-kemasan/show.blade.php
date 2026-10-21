@@ -1,461 +1,429 @@
 @extends('layouts.app')
 @section('container')
+@php
+    $m = $pemeriksaanKedatanganKemasan;
+
+    /* ===== Kondisi mobil (logika tidak diubah) ===== */
+    $kondisiMobil = [
+        'bersih' => 'Bersih', 'bebas_hama' => 'Bebas dari hama',
+        'tidak_kondensasi' => 'Tidak Kondensasi', 'bebas_produk_halal' => 'Bebas dari Produk Non Halal',
+        'tidak_berbau' => 'Tidak Berbau', 'tidak_ada_sampah' => 'Tidak ada sampah',
+        'tidak_ada_mikroba' => 'Tidak ada mikroba', 'lampu_cover_utuh' => 'Lampu Cover utuh',
+        'pallet_utuh' => 'Pallet utuh', 'tertutup_rapat' => 'Tertutup rapat',
+        'bebas_kontaminan' => 'Bebas kontaminan',
+    ];
+    $kondisiLolos = 0;
+    foreach ($kondisiMobil as $k => $l) {
+        if (isset($m->kondisi_mobil[$k]) && $m->kondisi_mobil[$k]) $kondisiLolos++;
+    }
+    $kondisiTotal = count($kondisiMobil);
+
+    /* ===== Data dinamis (logika tidak diubah) ===== */
+    $id_bahans = json_decode($m->id_bahan_array ?? '[]', true) ?? [];
+    $produsens = json_decode($m->produsen_array ?? '[]', true) ?? [];
+    $distributors = json_decode($m->distributor_array ?? '[]', true) ?? [];
+    $kode_produksis = json_decode($m->kode_produksi_array ?? '[]', true) ?? [];
+    $jumlah_datangs = json_decode($m->jumlah_datang_array ?? '[]', true) ?? [];
+    $unit_datangs = json_decode($m->unit_datang_array ?? '[]', true) ?? [];
+    $jumlah_samplings = json_decode($m->jumlah_sampling_array ?? '[]', true) ?? [];
+    $unit_samplings = json_decode($m->unit_sampling_array ?? '[]', true) ?? [];
+    $spesifikasis = json_decode($m->spesifikasi_array ?? '[]', true) ?? [];
+    $penampakans = json_decode($m->penampakan_array ?? '[]', true) ?? [];
+    $sealings = json_decode($m->sealing_array ?? '[]', true) ?? [];
+    $cetakans = json_decode($m->cetakan_array ?? '[]', true) ?? [];
+    $ketebalan_microns = json_decode($m->ketebalan_micron_array ?? '[]', true) ?? [];
+    $dimensis = json_decode($m->dimensi_array ?? '[]', true) ?? [];
+    $berats = json_decode($m->berat_array ?? '[]', true) ?? [];
+    $statuses = json_decode($m->status_array ?? '[]', true) ?? [];
+    $logo_halals = json_decode($m->logo_halal_array ?? '[]', true) ?? [];
+    $dokumen_halals = json_decode($m->dokumen_halal_array ?? '[]', true) ?? [];
+    $coas = json_decode($m->coa_array ?? '[]', true) ?? [];
+    $file_coas = json_decode($m->file_coa_array ?? '[]', true) ?? [];
+    $keterangans = json_decode($m->keterangan_array ?? '[]', true) ?? [];
+    $image_kemasans = json_decode($m->image_kemasan_array ?? '[]', true) ?? [];
+
+    $groupedDetailIdx = [];
+    foreach ((array) $id_bahans as $i => $pid) {
+        $pid = $pid === null ? '' : (string) $pid;
+        if ($pid === '') continue;
+        if (!isset($groupedDetailIdx[$pid])) $groupedDetailIdx[$pid] = [];
+        $groupedDetailIdx[$pid][] = $i;
+    }
+
+    // Ubah nilai produsen/distributor (array atau string "a, b") menjadi list
+    $toList = function ($val) {
+        if (is_array($val)) {
+            return array_values(array_filter($val, fn ($v) => $v !== null && $v !== ''));
+        }
+        $raw = trim((string) $val);
+        return $raw !== '' ? array_values(array_filter(array_map('trim', explode(',', $raw)))) : [];
+    };
+
+    $statusClass = fn ($s) => match ($s) {
+        'Release' => 'ok', 'Hold' => 'warn', 'Retur' => 'info', default => 'mute',
+    };
+@endphp
+
+<style>
+    /* ===== Detail Kedatangan Kemasan (scoped .fp-) ===== */
+    .fp { --fp-ink:#0f172a; --fp-muted:#64748b; --fp-line:#e5e9f0; --fp-soft:#f8fafc;
+          --fp-blue:#2563eb; --fp-blue-soft:#eff6ff; --fp-blue-line:#bfdbfe;
+          --fp-green:#16a34a; --fp-green-soft:#ecfdf3; --fp-green-line:#bbf7d0;
+          --fp-red:#dc2626; --fp-red-soft:#fef2f2; --fp-red-line:#fecaca;
+          --fp-amber:#f59e0b; --fp-navy:#0b1220; }
+    .fp-mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+
+    /* Header */
+    .fp-head { display:flex; justify-content:space-between; align-items:flex-start; gap:1rem; flex-wrap:wrap; margin-bottom:1.25rem; }
+    .fp-head h3 { margin:0; font-weight:700; letter-spacing:-.02em; color:var(--fp-ink); }
+    .fp-head p  { margin:.25rem 0 0; color:var(--fp-muted); font-size:.85rem; }
+    .fp-actions { display:flex; gap:.5rem; flex-wrap:wrap; }
+    .fp-btn { display:inline-flex; align-items:center; gap:.4rem; padding:.5rem .9rem; border-radius:.5rem; font-size:.82rem; font-weight:600;
+              border:1px solid var(--fp-line); background:#fff; color:var(--fp-ink); text-decoration:none; cursor:pointer; transition:background .15s; }
+    .fp-btn:hover { background:var(--fp-soft); color:var(--fp-ink); }
+    .fp-btn-warn { background:var(--fp-amber); border-color:var(--fp-amber); color:#fff; }
+    .fp-btn-warn:hover { background:#d97706; border-color:#d97706; color:#fff; }
+    .fp-btn-blue { background:var(--fp-blue-soft); border-color:var(--fp-blue-line); color:var(--fp-blue); }
+    .fp-btn-blue:hover { background:#dbeafe; color:var(--fp-blue); }
+    .fp-btn-sm { padding:.35rem .7rem; font-size:.76rem; }
+
+    /* Panel */
+    .fp-panel { background:#fff; border:1px solid var(--fp-line); border-radius:.9rem; margin-bottom:1.5rem; overflow:hidden; }
+    .fp-panel-head { display:flex; justify-content:space-between; align-items:center; gap:.75rem; flex-wrap:wrap; padding:.9rem 1.25rem; border-bottom:1px solid var(--fp-line); }
+    .fp-panel-head h5 { margin:0; font-size:.88rem; font-weight:700; letter-spacing:.02em; text-transform:uppercase; color:var(--fp-ink); display:flex; align-items:center; gap:.6rem; }
+    .fp-panel-head h5 i.bar { width:.28rem; height:1rem; border-radius:.2rem; background:var(--fp-blue); display:inline-block; }
+    .fp-panel-head h5 i.bar.green { background:var(--fp-green); }
+    .fp-panel-body { padding:1.25rem; }
+    .fp-id { font-size:.72rem; color:#94a3b8; }
+    .fp-pill { display:inline-flex; align-items:center; gap:.35rem; padding:.2rem .7rem; border-radius:999px; font-size:.74rem; font-weight:600; }
+    .fp-pill-ok { background:var(--fp-green-soft); color:var(--fp-green); border:1px solid var(--fp-green-line); }
+    .fp-pill-bad { background:var(--fp-red-soft); color:var(--fp-red); border:1px solid var(--fp-red-line); }
+
+    /* Field grid */
+    .fp-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:1.25rem 1.5rem; }
+    .fp-field-label { font-size:.7rem; font-weight:600; letter-spacing:.04em; text-transform:uppercase; color:var(--fp-muted); margin-bottom:.35rem; }
+    .fp-field-value { font-weight:600; color:var(--fp-ink); }
+    .fp-plate { display:inline-block; background:#f1f5f9; border:1px solid var(--fp-line); border-radius:.3rem; padding:.1rem .5rem; font-size:.8rem; }
+    .fp-tag { display:inline-flex; align-items:center; gap:.3rem; font-size:.72rem; font-weight:700; padding:.2rem .65rem; border-radius:999px; }
+    .fp-tag-ok   { background:var(--fp-green); color:#fff; }
+    .fp-tag-warn { background:#fef3c7; color:#92400e; border:1px solid #fde68a; }
+    .fp-tag-info { background:var(--fp-blue); color:#fff; }
+    .fp-tag-mute { background:#e2e8f0; color:#475569; }
+    .fp-tag-cyan { background:#06b6d4; color:#fff; font-size:.78rem; }
+    .fp-dash { color:#94a3b8; font-weight:400; }
+
+    /* Kondisi mobil */
+    .fp-checks { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:.7rem; }
+    .fp-check { display:flex; align-items:center; gap:.7rem; padding:.7rem .9rem; border-radius:.6rem; font-size:.85rem; font-weight:500; border:1px solid var(--fp-green-line); background:var(--fp-green-soft); color:var(--fp-ink); }
+    .fp-check i { width:1.35rem; height:1.35rem; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; background:var(--fp-green); color:#fff; font-size:1.15rem; line-height:1; flex:none; }
+    .fp-check.is-bad { border-color:var(--fp-red-line); background:var(--fp-red-soft); }
+    .fp-check.is-bad i { background:var(--fp-red); }
+
+    /* Section title */
+    .fp-sec { display:flex; justify-content:space-between; align-items:center; margin:0 0 .75rem; flex-wrap:wrap; gap:.5rem; }
+    .fp-sec h5 { margin:0; font-weight:700; color:var(--fp-ink); display:flex; align-items:center; gap:.6rem; }
+    .fp-sec h5 i.bar { width:.28rem; height:1.1rem; border-radius:.2rem; background:#6366f1; display:inline-block; }
+    .fp-sec small { color:var(--fp-muted); }
+
+    /* Item produk */
+    .fp-item-head { display:flex; justify-content:space-between; align-items:flex-start; gap:1rem; flex-wrap:wrap; padding:1.1rem 1.25rem; border-bottom:1px solid var(--fp-line); }
+    .fp-item-title { display:flex; align-items:center; gap:.6rem; flex-wrap:wrap; }
+    .fp-item-no { background:var(--fp-navy); color:#fff; font-size:.72rem; font-weight:700; padding:.2rem .55rem; border-radius:.3rem; }
+    .fp-party { display:flex; gap:1.25rem; flex-wrap:wrap; margin-top:.6rem; font-size:.8rem; color:var(--fp-muted); }
+    .fp-party b { color:var(--fp-ink); }
+    .fp-party ol { margin:.2rem 0 0; padding-left:1.1rem; color:var(--fp-ink); font-weight:600; }
+    .fp-docs { display:flex; align-items:center; gap:.4rem; flex-wrap:wrap; font-size:.78rem; color:var(--fp-muted); }
+    .fp-doc { display:inline-flex; align-items:center; gap:.3rem; padding:.3rem .75rem; border-radius:.35rem; font-size:.74rem; font-weight:700; color:#fff; }
+    .fp-doc i { font-size:1.05rem; line-height:1; }
+    .fp-doc.ok { background:var(--fp-green); } .fp-doc.bad { background:var(--fp-red); }
+
+    /* Detail card */
+    .fp-detail { border:1px solid var(--fp-line); border-radius:.7rem; overflow:hidden; background:#fff; }
+    .fp-detail + .fp-detail { margin-top:1rem; }
+    .fp-detail-head { display:flex; justify-content:space-between; align-items:center; padding:.75rem 1.1rem; background:var(--fp-soft); border-bottom:1px solid var(--fp-line); font-size:.85rem; font-weight:700; color:var(--fp-ink); }
+    .fp-detail-body { padding:1.1rem; }
+    .fp-kv { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:0 2rem; }
+    .fp-kv-row { display:flex; justify-content:space-between; gap:1rem; padding:.6rem 0; border-bottom:1px dashed var(--fp-line); font-size:.84rem; }
+    .fp-kv-row span:first-child { color:var(--fp-muted); }
+    .fp-kv-row span:last-child { font-weight:600; color:var(--fp-ink); text-align:right; }
+    .fp-code { background:#f1f5f9; padding:.1rem .5rem; border-radius:.3rem; font-size:.78rem; }
+    .fp-phys { display:flex; gap:.6rem; flex-wrap:wrap; margin-top:1rem; align-items:center; }
+    .fp-phys > span:first-child { font-size:.78rem; color:var(--fp-muted); margin-right:.25rem; }
+    .fp-phys .fp-pill { font-size:.72rem; }
+    .fp-note { margin-top:1rem; padding:.7rem .9rem; border-left:3px solid var(--fp-amber); background:#fffbeb; border-radius:.4rem; font-size:.83rem; }
+    .fp-note b { display:block; font-size:.7rem; text-transform:uppercase; letter-spacing:.04em; color:var(--fp-muted); margin-bottom:.2rem; }
+    .fp-files { display:flex; gap:.5rem; flex-wrap:wrap; margin-top:1rem; }
+
+    @media (max-width:1199px){ .fp-grid{ grid-template-columns:repeat(2,minmax(0,1fr)); } .fp-checks{ grid-template-columns:repeat(2,minmax(0,1fr)); } }
+    @media (max-width:767px){
+        .fp-grid,.fp-checks,.fp-kv{ grid-template-columns:1fr; }
+        .fp-actions{ width:100%; } .fp-actions .fp-btn{ flex:1; justify-content:center; }
+    }
+    @media print { .fp-actions,.fp-files{ display:none !important; } }
+</style>
+
 <div id="main">
-    <div class="page-heading">
-        <div class="page-title">
-            <div class="row">
-                <div class="col-12 col-md-6">
-                    <h3>Detail Pemeriksaan Kedatangan Kemasan</h3>
-                </div>
-                <div class="col-12 col-md-6">
-                    <nav aria-label="breadcrumb" class="breadcrumb-header float-start float-lg-end">
-                        <ol class="breadcrumb">
-                            <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
-                            <li class="breadcrumb-item"><a href="{{ route('pemeriksaan-kedatangan-kemasan.index') }}">Pemeriksaan</a></li>
-                            <li class="breadcrumb-item active">Detail</li>
-                        </ol>
-                    </nav>
+    <div class="fp">
+
+        {{-- ===== Breadcrumb ===== --}}
+        <nav aria-label="breadcrumb" class="mb-3">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a href="{{ route('dashboard') }}"><i class="bi bi-house-door-fill"></i> Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{{ route('pemeriksaan-kedatangan-kemasan.index') }}">Pemeriksaan</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Kedatangan Kemasan</li>
+            </ol>
+        </nav>
+
+        {{-- ===== Header ===== --}}
+        <div class="fp-head">
+            <div>
+                <h3>Detail Pemeriksaan Kedatangan Kemasan</h3>
+                <p>Detail pemeriksaan dan log verifikasi mutu material kemasan.</p>
+            </div>
+            <div class="fp-actions">
+                <a href="{{ route('pemeriksaan-kedatangan-kemasan.index') }}" class="fp-btn"><i class="bi bi-arrow-left"></i> Kembali</a>
+                <!-- <button type="button" class="fp-btn" onclick="window.print()"><i class="bi bi-printer"></i> Cetak PDF</button> -->
+                <a href="{{ route('pemeriksaan-kedatangan-kemasan.edit', $m->uuid) }}" class="fp-btn fp-btn-warn"><i class="bi bi-pencil-square"></i> Edit Data</a>
+            </div>
+        </div>
+
+        {{-- ===== Informasi dasar ===== --}}
+        <div class="fp-panel">
+            <div class="fp-panel-head">
+                <h5><i class="bar"></i> Informasi Dasar Kendaraan &amp; Jadwal</h5>
+                <!-- <span class="fp-id fp-mono">ID Inspeksi: #{{ strtoupper(substr($m->uuid, 0, 8)) }}</span> -->
+            </div>
+            <div class="fp-panel-body">
+                <div class="fp-grid">
+                    <div>
+                        <div class="fp-field-label">Tanggal kedatangan</div>
+                        <div class="fp-field-value">{{ $m->tanggal->format('d/m/Y') }}</div>
+                    </div>
+                    <div>
+                        <div class="fp-field-label">No. PO</div>
+                        <div class="fp-field-value">{!! $m->no_po ? e($m->no_po) : '<span class="fp-dash">-</span>' !!}</div>
+                    </div>
+                    <div>
+                        <div class="fp-field-label">Segel / Gembok</div>
+                        <div class="fp-field-value">
+                            @if($m->segel_gembok)
+                                @if($m->segel_gembok === 'segel')
+                                    <span class="fp-tag fp-tag-info">Segel</span>
+                                @elseif($m->segel_gembok === 'gembok')
+                                    <span class="fp-tag fp-tag-warn">Gembok</span>
+                                @else
+                                    <span class="fp-tag fp-tag-mute">{{ $m->segel_gembok }}</span>
+                                @endif
+                            @else
+                                <span class="fp-dash">-</span>
+                            @endif
+                        </div>
+                    </div>
+                    <div>
+                        <div class="fp-field-label">No. Segel</div>
+                        <div class="fp-field-value">
+                            @if($m->segel_gembok === 'segel' && $m->no_segel)
+                                {{ $m->no_segel }}
+                            @else
+                                <span class="fp-dash">-</span>
+                            @endif
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="fp-field-label">Nama supir</div>
+                        <div class="fp-field-value">{!! $m->nama_supir ? e($m->nama_supir) : '<span class="fp-dash">-</span>' !!}</div>
+                    </div>
+                    <div>
+                        <div class="fp-field-label">Jenis mobil</div>
+                        <div class="fp-field-value">{!! $m->jenis_mobil ? e($m->jenis_mobil) : '<span class="fp-dash">-</span>' !!}</div>
+                    </div>
+                    <div>
+                        <div class="fp-field-label">No. polisi kendaraan</div>
+                        <div class="fp-field-value">
+                            @if($m->no_mobil)<span class="fp-plate fp-mono">{{ $m->no_mobil }}</span>@else<span class="fp-dash">-</span>@endif
+                        </div>
+                    </div>
+                    <div>
+                        <div class="fp-field-label">Shift kedatangan</div>
+                        <div class="fp-field-value">
+                            @if($m->shift)<span class="fp-tag fp-tag-info">{{ $m->shift->shift }}</span>@else<span class="fp-dash">-</span>@endif
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-        
-        <section class="section">
-            <div class="card">
-                <div class="card-header d-flex justify-content-between">
-                    <h4>Detail Pemeriksaan</h4>
+
+        {{-- ===== Kondisi mobil ===== --}}
+        <div class="fp-panel">
+            <div class="fp-panel-head">
+                <h5><i class="bar green"></i> Kondisi Mobil Pengangkut</h5>
+                @if($m->kondisi_mobil)
+                    <span class="fp-pill {{ $kondisiLolos === $kondisiTotal ? 'fp-pill-ok' : 'fp-pill-bad' }}">
+                        <i class="bi {{ $kondisiLolos === $kondisiTotal ? 'bi-check-circle-fill' : 'bi-exclamation-circle-fill' }}"></i>
+                        {{ $kondisiLolos }}/{{ $kondisiTotal }} parameter lolos
+                    </span>
+                @endif
+            </div>
+            <div class="fp-panel-body">
+                @if($m->kondisi_mobil)
+                    <div class="fp-checks">
+                        @foreach($kondisiMobil as $key => $label)
+                            @php $lolos = isset($m->kondisi_mobil[$key]) && $m->kondisi_mobil[$key]; @endphp
+                            <div class="fp-check {{ $lolos ? '' : 'is-bad' }}">
+                                <i class="bi {{ $lolos ? 'bi-check' : 'bi-x' }}"></i> {{ $label }}
+                            </div>
+                        @endforeach
+                    </div>
+                @else
+                    <span class="text-muted">Tidak ada data kondisi mobil.</span>
+                @endif
+            </div>
+        </div>
+
+        {{-- ===== Informasi kemasan & supplier ===== --}}
+        <div class="fp-sec">
+            <h5><i class="bar"></i> Informasi Kemasan &amp; Supplier</h5>
+            <small>Total {{ count($groupedDetailIdx) }} item material kemasan</small>
+        </div>
+
+        @forelse($groupedDetailIdx as $produkId => $detailIdxList)
+            @php
+                $firstIdx = $detailIdxList[0] ?? null;
+                $prodList = $toList($firstIdx !== null ? ($produsens[$firstIdx] ?? null) : null);
+                $distList = $toList($firstIdx !== null ? ($distributors[$firstIdx] ?? null) : null);
+                $pNama = $produkNamaById[$produkId] ?? '-';
+                $logoVal = $firstIdx !== null ? ($logo_halals[$firstIdx] ?? null) : null;
+                $dokVal  = $firstIdx !== null ? ($dokumen_halals[$firstIdx] ?? null) : null;
+                $coaVal  = $firstIdx !== null ? ($coas[$firstIdx] ?? null) : null;
+            @endphp
+
+            <div class="fp-panel">
+                <div class="fp-item-head">
                     <div>
-                        <a href="{{ route('pemeriksaan-kedatangan-kemasan.edit', $pemeriksaanKedatanganKemasan->uuid) }}" class="btn btn-warning">Edit</a>
-                        <a href="{{ route('pemeriksaan-kedatangan-kemasan.index') }}" class="btn btn-secondary">Kembali</a>
+                        <div class="fp-item-title">
+                            <span class="fp-item-no">Item #{{ $loop->iteration }}</span>
+                            @if($pNama)<span class="fp-tag fp-tag-cyan">{{ $pNama }}</span>@endif
+                        </div>
+
+                        @if(count($prodList) > 0 || count($distList) > 0)
+                            <div class="fp-party">
+                                @if(count($prodList) > 0)
+                                    <div>
+                                        <b>Produsen:</b>
+                                        @if(count($prodList) > 1)
+                                            <ol>@foreach($prodList as $item)<li>{{ $item }}</li>@endforeach</ol>
+                                        @else
+                                            <span style="color:var(--fp-ink);font-weight:600">{{ $prodList[0] }}</span>
+                                        @endif
+                                    </div>
+                                @endif
+                                @if(count($distList) > 0)
+                                    <div>
+                                        <b>Distributor:</b>
+                                        @if(count($distList) > 1)
+                                            <ol>@foreach($distList as $item)<li>{{ $item }}</li>@endforeach</ol>
+                                        @else
+                                            <span style="color:var(--fp-ink);font-weight:600">{{ $distList[0] }}</span>
+                                        @endif
+                                    </div>
+                                @endif
+                            </div>
+                        @endif
+                    </div>
+
+                    <div class="fp-docs">
+                        <span>Status dokumen:</span>
+                        <span class="fp-doc {{ $logoVal ? 'ok' : 'bad' }}"><i class="bi {{ $logoVal ? 'bi-check' : 'bi-x' }}"></i> Logo Halal</span>
+                        <span class="fp-doc {{ $dokVal ? 'ok' : 'bad' }}"><i class="bi {{ $dokVal ? 'bi-check' : 'bi-x' }}"></i> Dokumen Halal</span>
+                        <span class="fp-doc {{ $coaVal ? 'ok' : 'bad' }}"><i class="bi {{ $coaVal ? 'bi-check' : 'bi-x' }}"></i> COA</span>
                     </div>
                 </div>
-                <div class="card-body">
-                    <!-- Informasi Dasar -->
-                    <h5 class="text-primary">Informasi Dasar</h5>
-                    <div class="row mb-4">
-                        <div class="col-md-6">
-                            <table class="table table-borderless">
-                                <tr><td><strong>Tanggal:</strong></td><td>{{ $pemeriksaanKedatanganKemasan->tanggal->format('d/m/Y') }}</td></tr>
-                                <!-- <tr><td><strong>Jenis Pemeriksaan:</strong></td><td>{{ $pemeriksaanKedatanganKemasan->jenis_pemeriksaan ?? '-' }}</td></tr> -->
-                                <tr><td><strong>No. PO:</strong></td><td>{{ $pemeriksaanKedatanganKemasan->no_po ?? '-' }}</td></tr>
-                                <!-- <tr><td><strong>Status:</strong></td><td>
-                                    @if($pemeriksaanKedatanganKemasan->status === 'Release')
-                                        <span class="badge bg-success">Release</span>
-                                    @else
-                                        <span class="badge bg-warning">Hold</span>
-                                    @endif
-                                </td></tr> -->
-                                <tr><td><strong>Segel/Gembok:</strong></td><td>
-                                    @if($pemeriksaanKedatanganKemasan->segel_gembok)
-                                        @if($pemeriksaanKedatanganKemasan->segel_gembok === 'segel')
-                                            <span class="badge bg-info">Segel</span>
-                                        @elseif($pemeriksaanKedatanganKemasan->segel_gembok === 'gembok')
-                                            <span class="badge bg-warning">Gembok</span>
-                                        @else
-                                            <span class="badge bg-secondary">{{ $pemeriksaanKedatanganKemasan->segel_gembok }}</span>
-                                        @endif
-                                    @else
-                                        <span class="badge bg-secondary">-</span>
-                                    @endif
-                                </td></tr>
-                                <tr><td><strong>No. Segel:</strong></td><td>
-                                    @if($pemeriksaanKedatanganKemasan->segel_gembok === 'segel' && $pemeriksaanKedatanganKemasan->no_segel)
-                                        {{ $pemeriksaanKedatanganKemasan->no_segel }}
-                                    @else
-                                        -
-                                    @endif
-                                </td></tr>
-                            </table>
-                        </div>
-                        <div class="col-md-6">
-                            <table class="table table-borderless">
-                                <tr><td><strong>Nama Supir:</strong></td><td>{{ $pemeriksaanKedatanganKemasan->nama_supir ?? '-' }}</td></tr>
-                                <tr><td><strong>Jenis Mobil:</strong></td><td>{{ $pemeriksaanKedatanganKemasan->jenis_mobil ?? '-' }}</td></tr>
-                                <tr><td><strong>No. Mobil:</strong></td><td>{{ $pemeriksaanKedatanganKemasan->no_mobil ?? '-' }}</td></tr>
-                                <tr><td><strong>Shift:</strong></td><td>
-                                    @if($pemeriksaanKedatanganKemasan->shift)
-                                        <span class="badge bg-primary">{{ $pemeriksaanKedatanganKemasan->shift->shift }}</span>
-                                    @else
-                                        -
-                                    @endif
-                                </td></tr>
-                            </table>
-                        </div>
-                    </div>
 
-                    <!-- Kondisi Mobil -->
-                    <h5 class="text-primary">Kondisi Mobil Pengangkut</h5>
-                    @if($pemeriksaanKedatanganKemasan->kondisi_mobil)
-                        <div class="row mb-4">
-                            @php
-                                $kondisiMobil = [
-                                    'bersih' => 'Bersih', 'bebas_hama' => 'Bebas dari hama',
-                                    'tidak_kondensasi' => 'Tidak Kondensasi', 'bebas_produk_halal' => 'Bebas dari Produk Non Halal',
-                                    'tidak_berbau' => 'Tidak Berbau', 'tidak_ada_sampah' => 'Tidak ada sampah',
-                                    'tidak_ada_mikroba' => 'Tidak ada mikroba', 'lampu_cover_utuh' => 'Lampu Cover utuh',
-                                    'pallet_utuh' => 'Pallet utuh', 'tertutup_rapat' => 'Tertutup rapat',
-                                    'bebas_kontaminan' => 'Bebas kontaminan'
-                                ];
-                            @endphp
-                            @foreach($kondisiMobil as $key => $label)
-                                <div class="col-md-4 mb-2">
-                                    @if(isset($pemeriksaanKedatanganKemasan->kondisi_mobil[$key]) && $pemeriksaanKedatanganKemasan->kondisi_mobil[$key])
-                                        <span class="badge bg-success">✓</span>
-                                    @else
-                                        <span class="badge bg-danger">✗</span>
-                                    @endif
-                                    {{ $label }}
-                                </div>
-                            @endforeach
-                        </div>
-                    @endif
-
-                    <!-- Informasi Kemasan & Supplier (Dynamic Rows) -->
-                    <h5 class="text-primary">Informasi Kemasan & Supplier</h5>
-                    @php
-                        $id_bahans = json_decode($pemeriksaanKedatanganKemasan->id_bahan_array ?? '[]', true) ?? [];
-                        $produsens = json_decode($pemeriksaanKedatanganKemasan->produsen_array ?? '[]', true) ?? [];
-                        $distributors = json_decode($pemeriksaanKedatanganKemasan->distributor_array ?? '[]', true) ?? [];
-                        $kode_produksis = json_decode($pemeriksaanKedatanganKemasan->kode_produksi_array ?? '[]', true) ?? [];
-                        $jumlah_datangs = json_decode($pemeriksaanKedatanganKemasan->jumlah_datang_array ?? '[]', true) ?? [];
-                        $unit_datangs = json_decode($pemeriksaanKedatanganKemasan->unit_datang_array ?? '[]', true) ?? [];
-                        $jumlah_samplings = json_decode($pemeriksaanKedatanganKemasan->jumlah_sampling_array ?? '[]', true) ?? [];
-                        $unit_samplings = json_decode($pemeriksaanKedatanganKemasan->unit_sampling_array ?? '[]', true) ?? [];
-                        $spesifikasis = json_decode($pemeriksaanKedatanganKemasan->spesifikasi_array ?? '[]', true) ?? [];
-                        $penampakans = json_decode($pemeriksaanKedatanganKemasan->penampakan_array ?? '[]', true) ?? [];
-                        $sealings = json_decode($pemeriksaanKedatanganKemasan->sealing_array ?? '[]', true) ?? [];
-                        $cetakans = json_decode($pemeriksaanKedatanganKemasan->cetakan_array ?? '[]', true) ?? [];
-                        $ketebalan_microns = json_decode($pemeriksaanKedatanganKemasan->ketebalan_micron_array ?? '[]', true) ?? [];
-                        $dimensis = json_decode($pemeriksaanKedatanganKemasan->dimensi_array ?? '[]', true) ?? [];
-                        $berats = json_decode($pemeriksaanKedatanganKemasan->berat_array ?? '[]', true) ?? [];
-                        $statuses = json_decode($pemeriksaanKedatanganKemasan->status_array ?? '[]', true) ?? [];
-                        $logo_halals = json_decode($pemeriksaanKedatanganKemasan->logo_halal_array ?? '[]', true) ?? [];
-                        $dokumen_halals = json_decode($pemeriksaanKedatanganKemasan->dokumen_halal_array ?? '[]', true) ?? [];
-                        $coas = json_decode($pemeriksaanKedatanganKemasan->coa_array ?? '[]', true) ?? [];
-                        $file_coas = json_decode($pemeriksaanKedatanganKemasan->file_coa_array ?? '[]', true) ?? [];
-                        $keterangans = json_decode($pemeriksaanKedatanganKemasan->keterangan_array ?? '[]', true) ?? [];
-                        $image_kemasans = json_decode($pemeriksaanKedatanganKemasan->image_kemasan_array ?? '[]', true) ?? [];
-
-                        $groupedDetailIdx = [];
-                        foreach ((array) $id_bahans as $i => $pid) {
-                            $pid = $pid === null ? '' : (string) $pid;
-                            if ($pid === '') continue;
-                            if (!isset($groupedDetailIdx[$pid])) $groupedDetailIdx[$pid] = [];
-                            $groupedDetailIdx[$pid][] = $i;
-                        }
-                    @endphp
-
-                    @forelse($groupedDetailIdx as $produkId => $detailIdxList)
-                        @php
-                            $firstIdx = $detailIdxList[0] ?? null;
-                            $prodVal = $firstIdx !== null ? ($produsens[$firstIdx] ?? null) : null;
-                            if (is_array($prodVal)) {
-                                $prodList = array_values(array_filter($prodVal, fn ($v) => $v !== null && $v !== ''));
-                                $prodText = implode(', ', $prodList);
-                            } else {
-                                $raw = trim((string) $prodVal);
-                                $prodList = $raw !== '' ? array_values(array_filter(array_map('trim', explode(',', $raw)))) : [];
-                                $prodText = $raw;
-                            }
-
-                            $distVal = $firstIdx !== null ? ($distributors[$firstIdx] ?? null) : null;
-                            if (is_array($distVal)) {
-                                $distList = array_values(array_filter($distVal, fn ($v) => $v !== null && $v !== ''));
-                                $distText = implode(', ', $distList);
-                            } else {
-                                $raw = trim((string) $distVal);
-                                $distList = $raw !== '' ? array_values(array_filter(array_map('trim', explode(',', $raw)))) : [];
-                                $distText = $raw;
-                            }
-                        @endphp
-
-                        <div class="card mb-3" style="border-left: 4px solid #435ebe;">
-                            <div class="card-header bg-light">
-                                @php
-                                    $pNama = $produkNamaById[$produkId] ?? '-';
-                                @endphp
-                                <h6 class="mb-1">Produk {{ $loop->iteration }}</h6>
+                <div class="fp-panel-body">
+                    @foreach($detailIdxList as $detailNo => $index)
+                        <div class="fp-detail">
+                            <div class="fp-detail-head">
+                                <span>Detail #{{ $detailNo + 1 }} – Spesifikasi &amp; Fisik</span>
+                                @if(isset($statuses[$index]))
+                                    <span class="fp-tag fp-tag-{{ $statusClass($statuses[$index]) }}">{{ strtoupper($statuses[$index] ?: '-') }}</span>
+                                @endif
                             </div>
-                            <div class="card-body">
-                                <div class="mb-3">
-                                    <div class="d-flex flex-wrap gap-2">
-                                        @if($pNama)
-                                            <span class="badge bg-info">{{ $pNama }}</span>
-                                        @endif
 
-                                        @if(count($prodList) > 0)
-                                            <span class="badge bg-light text-dark border d-inline-block text-start p-2">
-                                                <strong>Produsen:</strong>
-                                                @if(count($prodList) > 1)
-                                                    <ol class="mb-0 ps-3 mt-1 text-start">
-                                                        @foreach($prodList as $item)<li>{{ $item }}</li>@endforeach
-                                                    </ol>
-                                                @else
-                                                    <span class="ms-1">{{ $prodList[0] }}</span>
-                                                @endif
-                                            </span>
-                                        @endif
-
-                                        @if(count($distList) > 0)
-                                            <span class="badge bg-light text-dark border d-inline-block text-start p-2">
-                                                <strong>Distributor:</strong>
-                                                @if(count($distList) > 1)
-                                                    <ol class="mb-0 ps-3 mt-1 text-start">
-                                                        @foreach($distList as $item)<li>{{ $item }}</li>@endforeach
-                                                    </ol>
-                                                @else
-                                                    <span class="ms-1">{{ $distList[0] }}</span>
-                                                @endif
-                                            </span>
-                                        @endif
+                            <div class="fp-detail-body">
+                                <div class="fp-kv">
+                                    <div>
+                                        <div class="fp-kv-row"><span>Kode produksi</span><span><span class="fp-code fp-mono">{{ $kode_produksis[$index] ?? '-' }}</span></span></div>
+                                        <div class="fp-kv-row"><span>Jumlah datang</span><span>{{ $jumlah_datangs[$index] ?? '-' }} @if($unit_datangs[$index] ?? null){{ $unit_datangs[$index] }}@endif</span></div>
+                                        <div class="fp-kv-row"><span>Jumlah sampling</span><span>{{ $jumlah_samplings[$index] ?? '-' }} @if($unit_samplings[$index] ?? null){{ $unit_samplings[$index] }}@endif</span></div>
                                     </div>
-
-                                    <div class="mt-2 small">
-                                        <span class="me-2"><strong>Dokumen:</strong></span>
-                                        @php
-                                            $firstIdx = $detailIdxList[0] ?? null;
-                                            $logoVal = $firstIdx !== null ? ($logo_halals[$firstIdx] ?? null) : null;
-                                            $dokVal = $firstIdx !== null ? ($dokumen_halals[$firstIdx] ?? null) : null;
-                                            $coaVal = $firstIdx !== null ? ($coas[$firstIdx] ?? null) : null;
-                                        @endphp
-                                        
-                                        @if($logoVal)
-                                            <span class="badge bg-success me-1">Logo Halal ✓</span>
-                                        @else
-                                            <span class="badge bg-danger me-1">Logo Halal ✗</span>
-                                        @endif
-
-                                        @if($dokVal)
-                                            <span class="badge bg-success me-1">Dokumen Halal ✓</span>
-                                        @else
-                                            <span class="badge bg-danger me-1">Dokumen Halal ✗</span>
-                                        @endif
-
-                                        @if($coaVal)
-                                            <span class="badge bg-success me-1">COA ✓</span>
-                                        @else
-                                            <span class="badge bg-danger me-1">COA ✗</span>
-                                        @endif
+                                    <div>
+                                        <div class="fp-kv-row"><span>Spesifikasi referensi</span><span>{{ $spesifikasis[$index] ?? '-' }}</span></div>
+                                        <div class="fp-kv-row"><span>Ketebalan (micron)</span><span>{{ $ketebalan_microns[$index] ?? '-' }}</span></div>
+                                        <div class="fp-kv-row"><span>Dimensi</span><span>{{ $dimensis[$index] ?? '-' }}</span></div>
+                                        <div class="fp-kv-row"><span>Berat</span><span>{{ $berats[$index] ?? '-' }}</span></div>
                                     </div>
                                 </div>
 
-                                @foreach($detailIdxList as $detailNo => $index)
-                                    <div class="border rounded p-3 mb-3" style="background: #fff;">
-                                        <div class="d-flex justify-content-between align-items-center mb-2">
-                                            <span class="fw-bold">Detail #{{ $detailNo + 1 }}</span>
-                                            @if(isset($statuses[$index]))
-                                                @if($statuses[$index] === 'Release')
-                                                    <span class="badge bg-success">Release</span>
-                                                @elseif($statuses[$index] === 'Hold')
-                                                    <span class="badge bg-warning">Hold</span>
-                                                @elseif($statuses[$index] === 'Retur')
-                                                    <span class="badge bg-primary">Retur</span>
-                                                @else
-                                                    <span class="badge bg-secondary">{{ $statuses[$index] ?? '-' }}</span>
-                                                @endif
-                                            @endif
-                                        </div>
+                                <div class="fp-phys">
+                                    <span>Kondisi fisik:</span>
+                                    @foreach(['Penampakan' => $penampakans, 'Sealing' => $sealings, 'Cetakan' => $cetakans] as $physLabel => $physArr)
+                                        @php $physOk = (bool) ($physArr[$index] ?? null); @endphp
+                                        <span class="fp-pill {{ $physOk ? 'fp-pill-ok' : 'fp-pill-bad' }}">
+                                            <i class="bi {{ $physOk ? 'bi-check-circle-fill' : 'bi-x-circle-fill' }}"></i> {{ $physLabel }}
+                                        </span>
+                                    @endforeach
+                                </div>
 
-                                        <div class="row">
-                                            <div class="col-md-6">
-                                                <table class="table table-borderless table-sm">
-                                                    <tr><td width="40%"><strong>Kode Produksi:</strong></td><td>{{ $kode_produksis[$index] ?? '-' }}</td></tr>
-                                                    <tr><td><strong>Jumlah Datang:</strong></td><td>{{ $jumlah_datangs[$index] ?? '-' }} @if($unit_datangs[$index] ?? null)<strong>{{ $unit_datangs[$index] }}</strong>@endif</td></tr>
-                                                    <tr><td><strong>Jumlah Sampling:</strong></td><td>{{ $jumlah_samplings[$index] ?? '-' }} @if($unit_samplings[$index] ?? null)<strong>{{ $unit_samplings[$index] }}</strong>@endif</td></tr>
-                                                </table>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <table class="table table-borderless table-sm">
-                                                    <tr><td width="40%"><strong>Spesifikasi:</strong></td><td>{{ $spesifikasis[$index] ?? '-' }}</td></tr>
-                                                    <tr><td><strong>Ketebalan (Micron):</strong></td><td>{{ $ketebalan_microns[$index] ?? '-' }}</td></tr>
-                                                    <tr><td><strong>Dimensi:</strong></td><td>{{ $dimensis[$index] ?? '-' }}</td></tr>
-                                                    <tr><td><strong>Berat:</strong></td><td>{{ $berats[$index] ?? '-' }}</td></tr>
-                                                </table>
-                                            </div>
-                                        </div>
+                                @if($keterangans[$index] ?? null)
+                                    <div class="fp-note"><b>Keterangan</b>{{ $keterangans[$index] }}</div>
+                                @endif
 
-                                        <div class="row mt-2">
-                                            <div class="col-md-6 offset-md-6">
-                                                <table class="table table-borderless table-sm mb-0">
-                                                    <tr>
-                                                        <td width="40%"><strong>Kondisi Fisik:</strong></td>
-                                                        <td>
-                                                            <div class="d-flex flex-column gap-1">
-                                                                <div class="d-flex align-items-center small">
-                                                                    @if($penampakans[$index] ?? null)
-                                                                        <span class="badge bg-success me-2" style="min-width: 24px;">✓</span>
-                                                                    @else
-                                                                        <span class="badge bg-danger me-2" style="min-width: 24px;">✗</span>
-                                                                    @endif
-                                                                    <span>Penampakan</span>
-                                                                </div>
-                                                                <div class="d-flex align-items-center small">
-                                                                    @if($sealings[$index] ?? null)
-                                                                        <span class="badge bg-success me-2" style="min-width: 24px;">✓</span>
-                                                                    @else
-                                                                        <span class="badge bg-danger me-2" style="min-width: 24px;">✗</span>
-                                                                    @endif
-                                                                    <span>Sealing</span>
-                                                                </div>
-                                                                <div class="d-flex align-items-center small">
-                                                                    @if($cetakans[$index] ?? null)
-                                                                        <span class="badge bg-success me-2" style="min-width: 24px;">✓</span>
-                                                                    @else
-                                                                        <span class="badge bg-danger me-2" style="min-width: 24px;">✗</span>
-                                                                    @endif
-                                                                    <span>Cetakan</span>
-                                                                </div>
-                                                            </div>
-                                                        </td>
-                                                    </tr>
-                                                </table>
-                                            </div>
-                                        </div>
-
-                                        @if($keterangans[$index] ?? null)
-                                            <div class="row mt-2">
-                                                <div class="col-12">
-                                                    <strong>Keterangan:</strong>
-                                                    <p class="mt-1 p-2 bg-light rounded small">{{ $keterangans[$index] }}</p>
-                                                </div>
-                                            </div>
-                                        @endif
-
-                                        @php
-                                            $imgPath = $image_kemasans[$index] ?? null;
-                                            $coaFile = $file_coas[$index] ?? null;
-                                        @endphp
+                                @php
+                                    $imgPath = $image_kemasans[$index] ?? null;
+                                    $coaFile = $file_coas[$index] ?? null;
+                                @endphp
+                                @if($coaFile || $imgPath)
+                                    <div class="fp-files">
                                         @if($coaFile)
-                                            <div class="mt-3 mb-2">
-                                                <!-- <strong>File COA:</strong> -->
-                                                <a href="{{ asset('storage/' . $coaFile) }}" target="_blank" class="btn btn-sm btn-info"><i class="bi bi-file-earmark-text"></i> Lihat File COA (PDF)</a>
-                                            </div>
+                                            <a href="{{ asset('storage/' . $coaFile) }}" target="_blank" class="fp-btn fp-btn-blue fp-btn-sm"><i class="bi bi-file-earmark-text"></i> Lihat File COA (PDF)</a>
                                         @endif
                                         @if($imgPath)
-                                            <div class="mt-3">
-                                                <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#modalFoto{{ $index }}">
-                                                    <i class="bi bi-image"></i> Lihat Foto Produk
-                                                </button>
+                                            <button type="button" class="fp-btn fp-btn-blue fp-btn-sm" data-bs-toggle="modal" data-bs-target="#modalFoto{{ $index }}">
+                                                <i class="bi bi-image"></i> Lihat Foto Produk
+                                            </button>
+                                        @endif
+                                    </div>
+                                @endif
 
-                                                <!-- Modal Foto -->
-                                                <div class="modal fade" id="modalFoto{{ $index }}" tabindex="-1" aria-labelledby="modalFotoLabel{{ $index }}" aria-hidden="true">
-                                                    <div class="modal-dialog modal-dialog-centered modal-lg">
-                                                        <div class="modal-content">
-                                                            <div class="modal-header">
-                                                                <h5 class="modal-title" id="modalFotoLabel{{ $index }}">Foto Produk - Detail #{{ $detailNo + 1 }}</h5>
-                                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                                            </div>
-                                                            <div class="modal-body text-center bg-light">
-                                                                <img src="{{ asset('storage/' . $imgPath) }}" alt="Foto Produk" class="img-fluid rounded shadow-sm border p-1" style="max-height: 80vh;">
-                                                            </div>
-                                                            <div class="modal-footer">
-                                                                <a href="{{ asset('storage/' . $imgPath) }}" target="_blank" class="btn btn-info btn-sm">Buka di Tab Baru</a>
-                                                                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Tutup</button>
-                                                            </div>
-                                                        </div>
-                                                    </div>
+                                @if($imgPath)
+                                    <div class="modal fade" id="modalFoto{{ $index }}" tabindex="-1" aria-labelledby="modalFotoLabel{{ $index }}" aria-hidden="true">
+                                        <div class="modal-dialog modal-dialog-centered modal-lg">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title" id="modalFotoLabel{{ $index }}">Foto Produk - Detail #{{ $detailNo + 1 }}</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                </div>
+                                                <div class="modal-body text-center bg-light">
+                                                    <img src="{{ asset('storage/' . $imgPath) }}" alt="Foto Produk" class="img-fluid rounded shadow-sm border p-1" style="max-height: 80vh;">
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <a href="{{ asset('storage/' . $imgPath) }}" target="_blank" class="btn btn-info btn-sm">Buka di Tab Baru</a>
+                                                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Tutup</button>
                                                 </div>
                                             </div>
-                                        @endif
+                                        </div>
                                     </div>
-                                @endforeach
-                            </div>
-                        </div>
-                    @empty
-                        <div class="alert alert-info">Tidak ada data dynamic form</div>
-                    @endforelse
-
-                    <!-- Kondisi Fisik & Dokumentasi -->
-                    <!-- <div class="row mb-4">
-                        <div class="col-md-6">
-                            <h5 class="text-primary">Kondisi Fisik</h5>
-                            @if($pemeriksaanKedatanganKemasan->kondisi_fisik)
-                                @php
-                                    $kondisiFisik = [
-                                        'penampakan' => 'Penampakan',
-                                        'sealing' => 'Sealing',
-                                        'cetakan' => 'Cetakan'
-                                    ];
-                                @endphp
-                                @foreach($kondisiFisik as $key => $label)
-                                    <div class="mb-2">
-                                        @if(isset($pemeriksaanKedatanganKemasan->kondisi_fisik[$key]) && $pemeriksaanKedatanganKemasan->kondisi_fisik[$key])
-                                            <span class="badge bg-success me-2">✓</span>
-                                        @else
-                                            <span class="badge bg-danger me-2">✗</span>
-                                        @endif
-                                        {{ $label }}
-                                    </div>
-                                @endforeach
-                            @else
-                                <p class="text-muted">Tidak ada data kondisi fisik</p>
-                            @endif
-                            
-                            @if($pemeriksaanKedatanganKemasan->ketebalan_micron)
-                                <div class="mt-3 p-2 bg-light rounded">
-                                    <strong>Ketebalan:</strong> {{ $pemeriksaanKedatanganKemasan->ketebalan_micron }} Micron
-                                </div>
-                            @endif
-                            @if($pemeriksaanKedatanganKemasan->dimensi)
-                                <div class="mt-2 p-2 bg-light rounded">
-                                    <strong>Dimensi:</strong> {{ $pemeriksaanKedatanganKemasan->dimensi }}
-                                </div>
-                            @endif
-                        </div>
-                        
-                        <div class="col-md-6">
-                            <h5 class="text-primary">Dokumentasi</h5>
-                            <div class="mb-2">
-                                @if($pemeriksaanKedatanganKemasan->logo_halal)
-                                    <span class="badge bg-success me-2">✓</span>
-                                @else
-                                    <span class="badge bg-danger me-2">✗</span>
                                 @endif
-                                Logo Halal
-                            </div>
-                            <div class="mb-2">
-                                @if($pemeriksaanKedatanganKemasan->dokumen_halal)
-                                    <span class="badge bg-success me-2">✓</span>
-                                @else
-                                    <span class="badge bg-danger me-2">✗</span>
-                                @endif
-                                Persyaratan Dokumen: Halal (berlaku)
-                            </div>
-                            <div class="mb-2">
-                                @if($pemeriksaanKedatanganKemasan->coa)
-                                    <span class="badge bg-success me-2">✓</span>
-                                @else
-                                    <span class="badge bg-danger me-2">✗</span>
-                                @endif
-                                COA (Certificate of Analysis)
                             </div>
                         </div>
-                    </div> -->
-
-                    <!-- Informasi Tambahan -->
-                    <!-- <div class="row mb-4">
-                        <div class="col-12">
-                            <h5 class="text-primary">Informasi Tambahan</h5>
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <table class="table table-borderless">
-                                        <tr><td width="40%"><strong>Dibuat Oleh:</strong></td><td>
-                                            <strong>{{ $pemeriksaanKedatanganKemasan->user->name }}</strong>
-                                            <br><small class="text-muted">{{ $pemeriksaanKedatanganKemasan->user->username }}</small>
-                                        </td></tr>
-                                    </table>
-                                </div>
-                                <div class="col-md-6">
-                                    <table class="table table-borderless">
-                                        <tr><td width="40%"><strong>Dibuat Pada:</strong></td><td>{{ $pemeriksaanKedatanganKemasan->created_at->format('d/m/Y H:i:s') }}</td></tr>
-                                        <tr><td><strong>Diupdate Pada:</strong></td><td>{{ $pemeriksaanKedatanganKemasan->updated_at->format('d/m/Y H:i:s') }}</td></tr>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-                    </div> -->
+                    @endforeach
                 </div>
             </div>
-        </section>
+        @empty
+            <div class="fp-panel"><div class="fp-panel-body text-center text-muted">Tidak ada data kemasan &amp; supplier.</div></div>
+        @endforelse
+
     </div>
 </div>
 @endsection
