@@ -12,13 +12,13 @@
             size: A4;
             margin: 10mm;
         }
-        
+
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
-        
+
         body {
             font-family: 'Segoe UI', Arial, sans-serif;
             font-size: 9px;
@@ -26,12 +26,12 @@
             color: #1a1a1a;
             background: #fff;
         }
-        
+
         .container {
             width: 100%;
             max-width: 100%;
         }
-        
+
         .header {
             display: table;
             width: 100%;
@@ -40,43 +40,43 @@
             padding-bottom: 10px;
             page-break-inside: avoid;
         }
-        
+
         .header-left {
             display: table-cell;
             width: 60%;
             vertical-align: middle;
         }
-        
+
         .header-right {
             display: table-cell;
             width: 40%;
             vertical-align: middle;
             text-align: right;
         }
-        
+
         .logo-company {
             display: table;
             width: 100%;
         }
-        
+
         .header-logo {
             display: table-cell;
             width: 50px;
             vertical-align: middle;
         }
-        
+
         .header-logo img {
             width: 45px;
             height: 45px;
             object-fit: contain;
         }
-        
+
         .header-company {
             display: table-cell;
             vertical-align: middle;
             padding-left: 10px;
         }
-        
+
         .header-company h2 {
             font-size: 11px;
             font-weight: bold;
@@ -84,13 +84,13 @@
             margin-bottom: 1px;
             letter-spacing: 0.5px;
         }
-        
+
         .header-company p {
             font-size: 7.5px;
             color: #444;
             margin-bottom: 0;
         }
-        
+
         .header-title h1 {
             font-size: 12px;
             font-weight: bold;
@@ -111,32 +111,32 @@
             page-break-inside: avoid;
             padding: 0;
         }
-        
+
         .subheader-table {
             width: 100%;
             border-collapse: collapse;
         }
-        
+
         .subheader-table td {
             padding: 5px 8px;
             font-size: 7.5px;
             border-bottom: 1px solid #e9ecef;
             vertical-align: top;
         }
-        
+
         .subheader-table tr:last-child td {
             border-bottom: none;
         }
-        
+
         .subheader-label {
             font-weight: 600;
             color: #495057;
         }
-        
+
         .subheader-value {
             color: #1a1a1a;
         }
-        
+
         .subheader-divider {
             width: 1px;
             background: #dee2e6;
@@ -147,7 +147,7 @@
             page-break-inside: avoid;
             margin-bottom: 12px;
         }
-        
+
         .columns-wrap {
             width: 100%;
             border: 1px solid #dee2e6;
@@ -156,7 +156,7 @@
             display: table;
             table-layout: fixed;
         }
-        
+
         .columns-wrap .col {
             width: 25%;
             display: table-cell;
@@ -167,15 +167,15 @@
             vertical-align: top;
             page-break-inside: avoid;
         }
-        
+
         .columns-wrap .col:last-child {
             border-right: none;
         }
-        
+
         .columns-wrap .col.empty-col {
             background: #f8f9fa;
         }
-        
+
         .col-header {
             font-weight: bold;
             font-size: 7.5px;
@@ -187,7 +187,7 @@
             letter-spacing: 0.5px;
             text-transform: uppercase;
         }
-        
+
         .sec-title {
             font-weight: bold;
             font-size: 7px;
@@ -198,45 +198,54 @@
             padding-bottom: 1px;
             text-transform: uppercase;
         }
-        
+
         .col[data-num="true"] .sec-title {
             counter-increment: sec-c;
         }
-        
+
         .col[data-num="true"] .sec-title::before {
             content: counter(sec-c) ". ";
         }
-        
+
         .col[data-num="true"] {
             counter-reset: sec-c;
         }
-        
+
         .f-row {
             margin-bottom: 2px;
             display: table;
             width: 100%;
         }
-        
+
         .f-label {
             display: table-cell;
             font-weight: 600;
             color: #495057;
-            width: 48px;
+            width: 62px;
             padding-right: 3px;
             white-space: nowrap;
         }
-        
+
         .f-value {
             display: table-cell;
             color: #1a1a1a;
             word-wrap: break-word;
         }
-        
+
+        /* Teks Spesifikasi (bisa panjang, boleh turun baris) */
+        .spec-text {
+            color: #1a1a1a;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            white-space: pre-line;
+            line-height: 1.35;
+        }
+
         .check-item {
             color: #28a745;
             font-weight: 500;
         }
-        
+
         .check-item::before {
             content: "V ";
             color: #28a745;
@@ -251,7 +260,7 @@
             background: #f8f9fa;
             page-break-inside: avoid;
         }
-        
+
         .sig-note {
             font-size: 6.5px;
             color: #495057;
@@ -262,36 +271,36 @@
             margin-bottom: 10px;
             line-height: 1.4;
         }
-        
+
         .sig-note .ok {
             color: #28a745;
             font-weight: 600;
         }
-        
+
         .sig-note .not-ok {
             color: #dc3545;
             font-weight: 600;
         }
-        
+
         .sig-table {
             width: 100%;
             border-collapse: collapse;
         }
-        
+
         .sig-cell {
             width: 33.33%;
             text-align: center;
             padding: 0 10px;
             vertical-align: top;
         }
-        
+
         .sig-label {
             font-size: 7.5px;
             font-weight: 600;
             color: #495057;
             padding-bottom: 20px;
         }
-        
+
         .sig-space {
             height: 50px;
             margin: 0 5px;
@@ -299,18 +308,18 @@
             align-items: center;
             justify-content: center;
         }
-        
+
         .sig-line {
             border-bottom: 2px solid #1a1a1a;
             height: 35px;
             width: 100%;
         }
-        
+
         .qr-img {
             max-height: 50px;
             max-width: 50px;
         }
-        
+
         .sig-name {
             font-size: 7.5px;
             font-weight: bold;
@@ -328,7 +337,7 @@
             border-radius: 6px;
             border: 1px dashed #dee2e6;
         }
-        
+
         .clearfix::after {
             content: "";
             display: table;
@@ -500,10 +509,10 @@
                                         $bahan_id  = (json_decode($p->id_bahan_array ?? '[]', true) ?? [])[$ri] ?? null;
                                         $negara_val = (json_decode($p->negara_produsen_array ?? '[]', true) ?? [])[$ri] ?? null;
                                         if (is_array($negara_val)) { $negara_val = implode(', ', array_filter($negara_val)); }
-                                        
+
                                         $prod_val = (json_decode($p->produsen_array ?? '[]', true) ?? [])[$ri] ?? null;
                                         $prod_text = is_array($prod_val) ? implode(', ', array_filter($prod_val, fn($v) => $v !== null && $v !== '')) : trim((string)$prod_val);
-                                        
+
                                         $dist_val = (json_decode($p->distributor_array ?? '[]', true) ?? [])[$ri] ?? null;
                                         $dist_text = is_array($dist_val) ? implode(', ', array_filter($dist_val, fn($v) => $v !== null && $v !== '')) : trim((string)$dist_val);
                                     @endphp
@@ -520,13 +529,25 @@
                                         @endif
                                         @if($negara_val)<div class="f-row"><span class="f-label">Negara:</span><span class="f-value">{{ $negara_val }}</span></div>@endif
                                         @php
+                                            // FIX: kode produksi, expire date & kondisi produk sekarang ikut tampil di mode semua shift
+                                            $kode_v  = (json_decode($p->kode_produksi_array ?? '[]', true) ?? [])[$ri] ?? null;
+                                            $exp_v   = (json_decode($p->expire_date_array ?? '[]', true) ?? [])[$ri] ?? null;
+                                            $kprod_v = (json_decode($p->kondisi_produk ?? '[]', true) ?? [])[$ri] ?? null;
                                             $jd_v = (json_decode($p->jumlah_datang_array ?? '[]', true) ?? [])[$ri] ?? null;
                                             $ud_v = (json_decode($p->unit_datang_array ?? '[]', true) ?? [])[$ri] ?? null;
                                             $js_v = (json_decode($p->jumlah_sampling_array ?? '[]', true) ?? [])[$ri] ?? null;
                                             $us_v = (json_decode($p->unit_sampling_array ?? '[]', true) ?? [])[$ri] ?? null;
                                         @endphp
-                                        @if($jd_v)<div class="f-row"><span class="f-label">Jml Datang:</span><span class="f-value">{{ $jd_v }} {{ $ud_v ?? '' }}</span></div>@endif
-                                        @if($js_v)<div class="f-row"><span class="f-label">Jml Sample:</span><span class="f-value">{{ $js_v }} {{ $us_v ?? '' }}</span></div>@endif
+                                        @if($kode_v)<div class="f-row"><span class="f-label" style="width:65px;">Kode Prod:</span><span class="f-value">{{ $kode_v }}</span></div>@endif
+                                        @if($exp_v)
+                                            @php
+                                                try { $expFormatted = \Carbon\Carbon::parse($exp_v)->format('d/m/Y'); } catch(\Exception $e) { $expFormatted = $exp_v; }
+                                            @endphp
+                                            <div class="f-row"><span class="f-label" style="width:65px;">Exp. Date:</span><span class="f-value">{{ $expFormatted }}</span></div>
+                                        @endif
+                                        @if($kprod_v)<div class="f-row"><span class="f-label" style="width:65px;">Kondisi:</span><span class="f-value">{{ $kprod_v }}</span></div>@endif
+                                        @if($jd_v)<div class="f-row"><span class="f-label" style="width:65px;">Jml Datang:</span><span class="f-value">{{ $jd_v }} {{ $ud_v ?? '' }}</span></div>@endif
+                                        @if($js_v)<div class="f-row"><span class="f-label" style="width:65px;">Jml Sample:</span><span class="f-value">{{ $js_v }} {{ $us_v ?? '' }}</span></div>@endif
                                     @endif
                                     @php
                                         $sp_v  = (json_decode($p->suhu_produk ?? '[]', true) ?? [])[$ri] ?? null;
@@ -560,6 +581,16 @@
                                         @if(isset($kf_v['benda_asing']))<div class="f-row"><span class="f-label">B.Asing:</span><span class="f-value">{{ $kf_v['benda_asing'] ? 'V' : 'X' }}</span></div>@endif
                                         @if(isset($kf_v['aroma']))<div class="f-row"><span class="f-label">Aroma:</span><span class="f-value">{{ $kf_v['aroma'] ? 'V' : 'X' }}</span></div>@endif
                                         @if(!empty($kf_v['allergen']))<div class="f-row"><span class="f-label" style="width:60px;">Allergen:</span><span class="f-value" style="font-weight:bold;">{{ $kf_v['allergen'] }}</span></div>@endif
+                                    @endif
+                                    @php
+                                        // FIX: field Spesifikasi sekarang ditampilkan
+                                        $spes_v = (json_decode($p->spesifikasi_array ?? '[]', true) ?? [])[$ri] ?? null;
+                                        if (is_array($spes_v)) { $spes_v = implode(', ', array_filter($spes_v, fn($v) => $v !== null && $v !== '')); }
+                                        $spes_v = trim((string) $spes_v);
+                                    @endphp
+                                    @if($spes_v !== '')
+                                        <div class="sec-title">Spesifikasi</div>
+                                        <div class="spec-text">{{ $spes_v }}</div>
                                     @endif
                                     @php
                                         $lh_v = (json_decode($p->logo_halal_array ?? '[]', true) ?? [])[$ri] ?? null;
@@ -624,8 +655,8 @@
                                     <div class="sig-label">Disetujui Oleh:</div>
                                     <div class="sig-space">
                                         @if($fRecSig && $fRecSig->spvVerifier)
-                                            @php $sd="Dokumen #{$fRecSig->id} diverifikasi oleh {$fRecSig->spvVerifier->name} (SPV QC)"; $sq=\SimpleSoftwareIO\QrCode\Facades\QrCode::size(50)->generate($sd); $sb="data:image/svg+xml;base64,".base64_encode($sq); @endphp
-                                            <img src="{{ $sb }}" class="qr-img" alt="QR">
+                                            @php $sd="Dokumen #{$fRecSig->id} diverifikasi oleh {$fRecSig->spvVerifier->name} (SPV QC)"; $sq=\SimpleSoftwareIO\QrCode\Facades\QrCode::size(50)->generate($sd); $sqb="data:image/svg+xml;base64,".base64_encode($sq); @endphp
+                                            <img src="{{ $sqb }}" class="qr-img" alt="QR">
                                         @else <div class="sig-line"></div> @endif
                                     </div>
                                     <div class="sig-name">{{ $fRecSig && $fRecSig->spvVerifier ? $fRecSig->spvVerifier->name : '-' }}</div>
@@ -645,7 +676,7 @@
             @endif
 
         @else
-            {{-- ======= MODE: SHIFT TUNGGAL (existing logic) ======= --}}
+            {{-- ======= MODE: SHIFT TUNGGAL ======= --}}
         @if($pemeriksaans->count() > 0)
             @php
                 $columnsPerPage = 4;
@@ -733,7 +764,7 @@
                 };
                 $chunks = $pdfColumns->groupBy(fn($col) => $groupKeyFn($col['record']))->flatMap(fn($cols) => $cols->chunk($columnsPerPage));
             @endphp
-            
+
             @foreach($chunks as $pageIndex => $pageRecords)
                 @php
                     $firstColumn = $pageRecords->first();
@@ -842,13 +873,13 @@
                                 $tempId = json_decode($p->id_bahan_array ?? '[]', true) ?? [];
                                 $tempArr = json_decode($p->negara_produsen_array ?? '[]', true) ?? [];
                                 $bahan_id = $tempId[$ri] ?? null;
-                                
+
                                 $negara_val = $tempArr[$ri] ?? null;
                                 if (is_array($negara_val)) { $negara_val = implode(', ', array_filter($negara_val)); }
-                                
+
                                 $prod_val = (json_decode($p->produsen_array ?? '[]', true) ?? [])[$ri] ?? null;
                                 $prod_text = is_array($prod_val) ? implode(', ', array_filter($prod_val, fn($v) => $v !== null && $v !== '')) : trim((string)$prod_val);
-                                
+
                                 $dist_val = (json_decode($p->distributor_array ?? '[]', true) ?? [])[$ri] ?? null;
                                 $dist_text = is_array($dist_val) ? implode(', ', array_filter($dist_val, fn($v) => $v !== null && $v !== '')) : trim((string)$dist_val);
                             @endphp
@@ -875,16 +906,16 @@
                                     $js_v = (json_decode($p->jumlah_sampling_array ?? '[]', true) ?? [])[$ri] ?? null;
                                     $us_v = (json_decode($p->unit_sampling_array ?? '[]', true) ?? [])[$ri] ?? null;
                                 @endphp
-                                @if($kode_v)<div class="f-row"><span class="f-label">Kode Prod:</span><span class="f-value">{{ $kode_v }}</span></div>@endif
+                                @if($kode_v)<div class="f-row"><span class="f-label" style="width:65px;">Kode Prod:</span><span class="f-value">{{ $kode_v }}</span></div>@endif
                                 @if($exp_v)
                                     @php
                                         try { $expFormatted = \Carbon\Carbon::parse($exp_v)->format('d/m/Y'); } catch(\Exception $e) { $expFormatted = $exp_v; }
                                     @endphp
-                                    <div class="f-row"><span class="f-label">Best Before:</span><span class="f-value">{{ $expFormatted }}</span></div>
+                                    <div class="f-row"><span class="f-label" style="width:65px;">Exp. Date:</span><span class="f-value">{{ $expFormatted }}</span></div>
                                 @endif
-                                @if($kprod_v)<div class="f-row"><span class="f-label">Kondisi:</span><span class="f-value">{{ $kprod_v }}</span></div>@endif
-                                @if($jd_v)<div class="f-row"><span class="f-label">Jml Datang:</span><span class="f-value">{{ $jd_v }} {{ $ud_v ?? '' }}</span></div>@endif
-                                @if($js_v)<div class="f-row"><span class="f-label">Jml Sampling:</span><span class="f-value">{{ $js_v }} {{ $us_v ?? '' }}</span></div>@endif
+                                @if($kprod_v)<div class="f-row"><span class="f-label" style="width:65px;">Kondisi:</span><span class="f-value">{{ $kprod_v }}</span></div>@endif
+                                @if($jd_v)<div class="f-row"><span class="f-label" style="width:65px;">Jml Datang:</span><span class="f-value">{{ $jd_v }} {{ $ud_v ?? '' }}</span></div>@endif
+                                @if($js_v)<div class="f-row"><span class="f-label" style="width:65px;">Jml Sampling:</span><span class="f-value">{{ $js_v }} {{ $us_v ?? '' }}</span></div>@endif
                             @endif
 
                             @php
@@ -934,6 +965,18 @@
                             @endif
 
                             @php
+                                // FIX: field Spesifikasi sekarang ditampilkan
+                                $spess = json_decode($p->spesifikasi_array ?? '[]', true) ?? [];
+                                $spes_v = $spess[$ri] ?? null;
+                                if (is_array($spes_v)) { $spes_v = implode(', ', array_filter($spes_v, fn($v) => $v !== null && $v !== '')); }
+                                $spes_v = trim((string) $spes_v);
+                            @endphp
+                            @if($spes_v !== '')
+                                <div class="sec-title">Spesifikasi</div>
+                                <div class="spec-text">{{ $spes_v }}</div>
+                            @endif
+
+                            @php
                                 $lhs = json_decode($p->logo_halal_array ?? '[]', true) ?? [];
                                 $dhs = json_decode($p->dokumen_halal_array ?? '[]', true) ?? [];
                                 $cas = json_decode($p->coa_array ?? '[]', true) ?? [];
@@ -948,7 +991,7 @@
                                 @if($lh_v !== null)<div class="f-row"><span class="f-label" style="width:55px;">Logo Halal:</span><span class="f-value">{{ $lh_v ? 'Ya' : 'Tidak' }}</span></div>@endif
                                 @if($dh_v !== null)<div class="f-row"><span class="f-label" style="width:55px;">Dok. Halal:</span><span class="f-value">{{ $dh_v ? 'Ya' : 'Tidak' }}</span></div>@endif
                                 @if($ca_v !== null)<div class="f-row"><span class="f-label" style="width:55px;">COA:</span><span class="f-value">{{ $ca_v ? 'Ya' : 'Tidak' }}</span></div>@endif
-                                <!-- @if($fc_v)<div class="f-row"><span class="f-label" style="width:55px;">File COA:</span><span class="f-value">Ada</span></div>@endif -->
+                                {{-- @if($fc_v)<div class="f-row"><span class="f-label" style="width:55px;">File COA:</span><span class="f-value">Ada</span></div>@endif --}}
                             @endif
 
                             @php
@@ -999,7 +1042,7 @@
                         <span class="ok">V</span> : OK (Kondisi Mobil, Kemasan, Warna, Benda Asing, Aroma: Sesuai Standar, Logo Halal, Halal Berlaku, COA: Tersedia)<br>
                         <span class="not-ok">X</span> : Parameter Tidak Sesuai
                     </div>
-                    
+
                     @php $fRec = $pemeriksaans->first(); @endphp
                     <table class="sig-table">
                         <tr>
