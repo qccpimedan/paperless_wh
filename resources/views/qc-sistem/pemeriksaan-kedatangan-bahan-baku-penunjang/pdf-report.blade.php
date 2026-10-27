@@ -537,6 +537,9 @@
                                             $ud_v = (json_decode($p->unit_datang_array ?? '[]', true) ?? [])[$ri] ?? null;
                                             $js_v = (json_decode($p->jumlah_sampling_array ?? '[]', true) ?? [])[$ri] ?? null;
                                             $us_v = (json_decode($p->unit_sampling_array ?? '[]', true) ?? [])[$ri] ?? null;
+                                            $js_v = is_array($js_v) ? $js_v : [$js_v];
+                                            $us_v = is_array($us_v) ? $us_v : [$us_v];
+                                            $js_display = implode(', ', array_values(array_filter(array_map(fn($v, $i) => trim((string) $v . ' ' . ($us_v[$i] ?? '')), $js_v, array_keys($js_v)), fn($v) => trim($v) !== '')));
                                         @endphp
                                         @if($kode_v)<div class="f-row"><span class="f-label" style="width:65px;">Kode Prod:</span><span class="f-value">{{ $kode_v }}</span></div>@endif
                                         @if($exp_v)
@@ -547,7 +550,7 @@
                                         @endif
                                         @if($kprod_v)<div class="f-row"><span class="f-label" style="width:65px;">Kondisi:</span><span class="f-value">{{ $kprod_v }}</span></div>@endif
                                         @if($jd_v)<div class="f-row"><span class="f-label" style="width:65px;">Jml Datang:</span><span class="f-value">{{ $jd_v }} {{ $ud_v ?? '' }}</span></div>@endif
-                                        @if($js_v)<div class="f-row"><span class="f-label" style="width:65px;">Jml Sample:</span><span class="f-value">{{ $js_v }} {{ $us_v ?? '' }}</span></div>@endif
+                                        @if($js_display)<div class="f-row"><span class="f-label" style="width:65px;">Jml Sample:</span><span class="f-value">{{ $js_display }}</span></div>@endif
                                     @endif
                                     @php
                                         $sp_v  = (json_decode($p->suhu_produk ?? '[]', true) ?? [])[$ri] ?? null;
@@ -905,6 +908,9 @@
                                     $ud_v = (json_decode($p->unit_datang_array ?? '[]', true) ?? [])[$ri] ?? null;
                                     $js_v = (json_decode($p->jumlah_sampling_array ?? '[]', true) ?? [])[$ri] ?? null;
                                     $us_v = (json_decode($p->unit_sampling_array ?? '[]', true) ?? [])[$ri] ?? null;
+                                    $js_v = is_array($js_v) ? $js_v : [$js_v];
+                                    $us_v = is_array($us_v) ? $us_v : [$us_v];
+                                    $js_display = implode(', ', array_values(array_filter(array_map(fn($v, $i) => trim((string) $v . ' ' . ($us_v[$i] ?? '')), $js_v, array_keys($js_v)), fn($v) => trim($v) !== '')));
                                 @endphp
                                 @if($kode_v)<div class="f-row"><span class="f-label" style="width:65px;">Kode Prod:</span><span class="f-value">{{ $kode_v }}</span></div>@endif
                                 @if($exp_v)
@@ -915,7 +921,7 @@
                                 @endif
                                 @if($kprod_v)<div class="f-row"><span class="f-label" style="width:65px;">Kondisi:</span><span class="f-value">{{ $kprod_v }}</span></div>@endif
                                 @if($jd_v)<div class="f-row"><span class="f-label" style="width:65px;">Jml Datang:</span><span class="f-value">{{ $jd_v }} {{ $ud_v ?? '' }}</span></div>@endif
-                                @if($js_v)<div class="f-row"><span class="f-label" style="width:65px;">Jml Sampling:</span><span class="f-value">{{ $js_v }} {{ $us_v ?? '' }}</span></div>@endif
+                                @if($js_display)<div class="f-row"><span class="f-label" style="width:65px;">Jml Sampling:</span><span class="f-value">{{ $js_display }}</span></div>@endif
                             @endif
 
                             @php
@@ -1039,7 +1045,7 @@
 
                 <div class="signature-section">
                     <div class="sig-note">
-                        <span class="ok">V</span> : OK (Kondisi Mobil, Kemasan, Warna, Benda Asing, Aroma: Sesuai Standar, Logo Halal, Halal Berlaku, COA: Tersedia)<br>
+                        <span class="ok">V</span> : OK (Kondisi Mobil, Kemasan, Warna, Tidak Ada Benda Asing, Aroma: Sesuai Standar, Logo Halal, Halal Berlaku, COA: Tersedia)<br>
                         <span class="not-ok">X</span> : Parameter Tidak Sesuai
                     </div>
 

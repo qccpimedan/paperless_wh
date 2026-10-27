@@ -669,15 +669,25 @@
                                                             <div class="col-md-6">
                                                                 <div class="form-group">
                                                                     <label class="form-label">Jumlah Sampling</label>
-                                                                    <div class="input-group" style="max-width: 100%;">
-                                                                        <input type="text" class="form-control" name="jumlah_sampling[]" value="{{ $jumlahSamplingArray[$i] ?? '' }}" placeholder="Jumlah" min="0" step="any">
-                                                                        <select class="form-select" name="unit_sampling[]" style="max-width: 120px;">
+                                                                    @php
+                                                                        $samplingValues = is_array($jumlahSamplingArray[$i] ?? null) ? $jumlahSamplingArray[$i] : [($jumlahSamplingArray[$i] ?? '')];
+                                                                        $samplingUnits = is_array($unitSamplingArray[$i] ?? null) ? $unitSamplingArray[$i] : [($unitSamplingArray[$i] ?? '')];
+                                                                    @endphp
+                                                                    <div class="sampling-entries">
+                                                                    @foreach($samplingValues as $samplingNo => $samplingValue)
+                                                                    <div class="input-group sampling-entry mb-2" style="max-width: 100%;">
+                                                                        <input type="text" class="form-control sampling-amount" name="sampling_detail[{{ $i }}][]" value="{{ $samplingValue }}" placeholder="Jumlah" min="0" step="any">
+                                                                        <select class="form-select sampling-unit" name="unit_sampling_detail[{{ $i }}][]" style="max-width: 120px;">
                                                                             <option value="">Pilih Parameter</option>
                                                                             @foreach(\App\Models\PemeriksaanKedatanganBahanBakuPenunjang::unitParameters() as $key => $label)
-                                                                                <option value="{{ $key }}" {{ ($unitSamplingArray[$i] ?? '') == $key ? 'selected' : '' }}>{{ $label }}</option>
+                                                                                <option value="{{ $key }}" {{ ($samplingUnits[$samplingNo] ?? '') == $key ? 'selected' : '' }}>{{ $label }}</option>
                                                                             @endforeach
                                                                         </select>
+                                                                        <button type="button" class="btn btn-outline-danger remove-sampling-btn" title="Hapus sampling" aria-label="Hapus sampling"><i class="bi bi-trash"></i></button>
                                                                     </div>
+                                                                    @endforeach
+                                                                    </div>
+                                                                    <button type="button" class="btn btn-outline-primary btn-sm add-sampling-btn"><i class="bi bi-plus"></i> Tambah Sampling</button>
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -715,7 +725,7 @@
                                                                 </div>
                                                                 <div class="col-md-3">
                                                                     <div class="mb-3">
-                                                                        <label class="form-label"><strong>Benda Asing</strong></label>
+                                                                        <label class="form-label"><strong>Tidak Ada Benda Asing</strong></label>
                                                                         <div class="form-check">
                                                                             <input class="form-check-input" type="radio" name="kondisi_fisik_benda_asing_{{ $produkNo }}_{{ $detailNo + 1 }}" value="1" {{ (($kond['benda_asing'] ?? false) == true) ? 'checked' : '' }}>
                                                                             <label class="form-check-label">Ya ✓</label>
@@ -1734,15 +1744,19 @@ document.addEventListener('DOMContentLoaded', function() {
                         <div class="col-md-6">
                             <div class="form-group">
                                 <label class="form-label">Jumlah Sampling</label>
-                                <div class="input-group" style="max-width: 100%;">
-                                    <input type="text" class="form-control" name="jumlah_sampling[]" placeholder="Jumlah" min="0" step="any">
-                                    <select class="form-select" name="unit_sampling[]" style="max-width: 120px;">
+                                <div class="sampling-entries">
+                                <div class="input-group sampling-entry mb-2" style="max-width: 100%;">
+                                    <input type="text" class="form-control sampling-amount" name="sampling_detail[0][]" placeholder="Jumlah" min="0" step="any">
+                                    <select class="form-select sampling-unit" name="unit_sampling_detail[0][]" style="max-width: 120px;">
                                         <option value="">Pilih Parameter</option>
                                         @foreach(\App\Models\PemeriksaanKedatanganBahanBakuPenunjang::unitParameters() as $key => $label)
                                             <option value="{{ $key }}">{{ $label }}</option>
                                         @endforeach
                                     </select>
+                                    <button type="button" class="btn btn-outline-danger remove-sampling-btn" title="Hapus sampling" aria-label="Hapus sampling"><i class="bi bi-trash"></i></button>
                                 </div>
+                                </div>
+                                <button type="button" class="btn btn-outline-primary btn-sm add-sampling-btn"><i class="bi bi-plus"></i> Tambah Sampling</button>
                             </div>
                         </div>
                     </div>
@@ -1781,7 +1795,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             </div>
                             <div class="col-md-3">
                                 <div class="mb-3">
-                                    <label class="form-label"><strong>Benda Asing</strong></label>
+                                    <label class="form-label"><strong>Tidak Ada Benda Asing</strong></label>
                                     <div class="form-check">
                                         <input class="form-check-input" type="radio" name="kondisi_fisik_benda_asing_${rowCount}_1" value="1">
                                         <label class="form-check-label">Ya ✓</label>
@@ -2370,6 +2384,51 @@ try {
         }, true);
     }
 } catch(err) {}
+
+// Dynamic sampling: satu detail dapat memiliki beberapa pasangan jumlah + unit.
+(function () {
+    function reindexSamplingNames() {
+        document.querySelectorAll('#unified-container .detail-item').forEach((detail, detailIndex) => {
+            const entries = detail.querySelectorAll('.sampling-entry');
+            entries.forEach((entry, samplingIndex) => {
+                const amount = entry.querySelector('.sampling-amount');
+                const unit = entry.querySelector('.sampling-unit');
+                const removeButton = entry.querySelector('.remove-sampling-btn');
+                if (amount) amount.name = `sampling_detail[${detailIndex}][]`;
+                if (unit) unit.name = `unit_sampling_detail[${detailIndex}][]`;
+                if (removeButton) removeButton.hidden = samplingIndex === 0;
+            });
+        });
+    }
+
+    document.addEventListener('click', function (event) {
+        const removeButton = event.target.closest('.remove-sampling-btn');
+        if (removeButton) {
+            const entries = removeButton.closest('.sampling-entries');
+            const entry = removeButton.closest('.sampling-entry');
+            if (entries && entry && entries.querySelectorAll('.sampling-entry').length > 1) {
+                entry.remove();
+                reindexSamplingNames();
+            }
+            return;
+        }
+        const button = event.target.closest('.add-sampling-btn');
+        if (!button) return;
+        const entries = button.previousElementSibling;
+        const template = entries ? entries.querySelector('.sampling-entry') : null;
+        if (!entries || !template) return;
+        const clone = template.cloneNode(true);
+        const amount = clone.querySelector('.sampling-amount');
+        const unit = clone.querySelector('.sampling-unit');
+        if (amount) amount.value = '';
+        if (unit) unit.value = '';
+        entries.appendChild(clone);
+        reindexSamplingNames();
+    });
+
+    document.addEventListener('submit', reindexSamplingNames, true);
+    reindexSamplingNames();
+})();
 
 </script>
 @endpush
