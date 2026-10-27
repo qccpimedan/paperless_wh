@@ -28,6 +28,16 @@
     $jumlahSamplingArray = json_decode($m->jumlah_sampling_array, true) ?? [];
     $unitDatangArray = json_decode($m->unit_datang_array, true) ?? [];
     $unitSamplingArray = json_decode($m->unit_sampling_array, true) ?? [];
+    $formatSampling = function ($values, $units) {
+        $values = is_array($values) ? $values : [$values];
+        $units = is_array($units) ? $units : [$units];
+        $parts = [];
+        foreach ($values as $i => $value) {
+            if ($value === null || $value === '') continue;
+            $parts[] = trim((string) $value . ' ' . ($units[$i] ?? ''));
+        }
+        return implode(', ', $parts);
+    };
     $spesifikasiArray = json_decode($m->spesifikasi_array, true) ?? [];
     $kondisiProdukArray = json_decode($m->kondisi_produk, true) ?? [];
     $suhuProdukArray = json_decode($m->suhu_produk, true) ?? [];
@@ -395,7 +405,7 @@
                                         <div class="fp-kv-row"><span>Kode produksi</span><span><span class="fp-code fp-mono">{{ $kodeProduksiArray[$index] ?? '-' }}</span></span></div>
                                         <div class="fp-kv-row"><span>Expire date</span><span>@if(isset($expireDateArray[$index]) && $expireDateArray[$index]){{ \Carbon\Carbon::parse($expireDateArray[$index])->format('d/m/Y') }}@else - @endif</span></div>
                                         <div class="fp-kv-row"><span>Jumlah datang</span><span>{{ $jumlahDatangArray[$index] ?? '-' }} @if($unitDatangArray[$index] ?? null){{ $unitDatangArray[$index] }}@endif</span></div>
-                                        <div class="fp-kv-row"><span>Jumlah sampling</span><span>{{ $jumlahSamplingArray[$index] ?? '-' }} @if($unitSamplingArray[$index] ?? null){{ $unitSamplingArray[$index] }}@endif</span></div>
+                                        <div class="fp-kv-row"><span>Jumlah sampling</span><span>{{ $formatSampling($jumlahSamplingArray[$index] ?? [], $unitSamplingArray[$index] ?? []) ?: '-' }}</span></div>
                                     </div>
                                     <div>
                                         <div class="fp-kv-row"><span>Hasil uji FFA</span><span>{{ $hasilUjiFfaArray[$index] ?? '-' }}</span></div>
@@ -404,7 +414,7 @@
 
                                 <div class="fp-phys">
                                     <span>Kondisi fisik:</span>
-                                    @foreach(['Kemasan' => 'kemasan', 'Warna' => 'warna', 'Benda Asing' => 'benda_asing', 'Aroma' => 'aroma'] as $physLabel => $physKey)
+                                    @foreach(['Kemasan' => 'kemasan', 'Warna' => 'warna', 'Tidak Ada Benda Asing' => 'benda_asing', 'Aroma' => 'aroma'] as $physLabel => $physKey)
                                         @php $physOk = (bool) ($fisik[$physKey] ?? null); @endphp
                                         <span class="fp-pill {{ $physOk ? 'fp-pill-ok' : 'fp-pill-bad' }}"><i class="bi {{ $physOk ? 'bi-check-circle-fill' : 'bi-x-circle-fill' }}"></i> {{ $physLabel }}</span>
                                     @endforeach

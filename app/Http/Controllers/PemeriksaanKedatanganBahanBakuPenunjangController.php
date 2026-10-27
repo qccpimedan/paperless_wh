@@ -471,6 +471,12 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
             'jumlah_sampling.*' => 'nullable|string|max:255',
             'unit_sampling' => 'nullable|array',
             'unit_sampling.*' => 'nullable|string|in:kg,gram,pcs,roll,karung,box,lembar,liter,pail',
+            'sampling_detail' => 'nullable|array',
+            'sampling_detail.*' => 'nullable|array',
+            'sampling_detail.*.*' => 'nullable|string|max:255',
+            'unit_sampling_detail' => 'nullable|array',
+            'unit_sampling_detail.*' => 'nullable|array',
+            'unit_sampling_detail.*.*' => 'nullable|string|in:kg,gram,pcs,roll,karung,box,lembar,liter,pail',
             'spesifikasi' => 'nullable|array',
             'spesifikasi.*' => 'nullable|string',
             'kondisi_produk' => 'nullable|array',
@@ -511,6 +517,19 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
         ];
 
         $data = $request->all();
+
+        // Sampling dapat terdiri dari beberapa pasangan jumlah + unit per detail.
+        $samplingDetails = $request->input('sampling_detail');
+        $samplingUnitDetails = $request->input('unit_sampling_detail');
+        if (!is_array($samplingDetails)) {
+            $samplingDetails = array_map(fn ($value) => [$value], (array) $request->input('jumlah_sampling', []));
+        }
+        if (!is_array($samplingUnitDetails)) {
+            $samplingUnitDetails = array_map(fn ($value) => [$value], (array) $request->input('unit_sampling', []));
+        }
+        $data['jumlah_sampling_array'] = json_encode(array_values($samplingDetails));
+        $data['unit_sampling_array'] = json_encode(array_values($samplingUnitDetails));
+        unset($data['sampling_detail'], $data['unit_sampling_detail']);
 
         // Normalize nested produsen/distributor arrays (produsen[row][]) into string per row for storage
         $normalizeNestedMulti = function ($rows) {
@@ -872,6 +891,12 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
             'jumlah_sampling.*' => 'nullable|string|max:255',
             'unit_sampling' => 'nullable|array',
             'unit_sampling.*' => 'nullable|string|in:kg,gram,pcs,roll,karung,box,lembar,liter,pail',
+            'sampling_detail' => 'nullable|array',
+            'sampling_detail.*' => 'nullable|array',
+            'sampling_detail.*.*' => 'nullable|string|max:255',
+            'unit_sampling_detail' => 'nullable|array',
+            'unit_sampling_detail.*' => 'nullable|array',
+            'unit_sampling_detail.*.*' => 'nullable|string|in:kg,gram,pcs,roll,karung,box,lembar,liter,pail',
             'spesifikasi' => 'nullable|array',
             'spesifikasi.*' => 'nullable|string',
             'kondisi_produk' => 'nullable|array',
@@ -912,6 +937,18 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
         ];
 
         $data = $request->all();
+        // Sampling dapat terdiri dari beberapa pasangan jumlah + unit per detail.
+        $samplingDetails = $request->input('sampling_detail');
+        $samplingUnitDetails = $request->input('unit_sampling_detail');
+        if (!is_array($samplingDetails)) {
+            $samplingDetails = array_map(fn ($value) => [$value], (array) $request->input('jumlah_sampling', []));
+        }
+        if (!is_array($samplingUnitDetails)) {
+            $samplingUnitDetails = array_map(fn ($value) => [$value], (array) $request->input('unit_sampling', []));
+        }
+        $data['jumlah_sampling_array'] = json_encode(array_values($samplingDetails));
+        $data['unit_sampling_array'] = json_encode(array_values($samplingUnitDetails));
+        unset($data['sampling_detail'], $data['unit_sampling_detail']);
         $data['segel_gembok'] = $request->input('segel_gembok');
         $data['kondisi_mobil'] = $kondisiMobil;
 
