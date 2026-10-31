@@ -542,7 +542,7 @@
                                     @endif
                                     @if(!empty($chemicalDetail['id_distributor']))
                                         <div class="field-row">
-                                            <span class="field-label">Dist:</span>
+                                            <span class="field-label">Distributor:</span>
                                             <span class="field-value">{{ $distributorMap[$chemicalDetail['id_distributor']] ?? 'N/A' }}</span>
                                         </div>
                                     @endif

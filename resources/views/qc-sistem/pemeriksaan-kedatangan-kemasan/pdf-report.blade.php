@@ -519,8 +519,14 @@
                                     $spesifikasis = json_decode($pemeriksaan->spesifikasi_array ?? '[]', true) ?? [];
 
                                     $id_bahan = $id_bahans[$rowIndex] ?? null;
-                                    $produsen_val = $produsens_arr[$rowIndex] ?? null;
-                                    $distributor_val = $distributors_arr[$rowIndex] ?? null;
+                                    $prod_val = $produsens_arr[$rowIndex] ?? null;
+                                    $prod_text = is_array($prod_val)
+                                        ? implode(', ', array_filter($prod_val, fn ($v) => $v !== null && $v !== ''))
+                                        : trim((string) $prod_val);
+                                    $dist_val = $distributors_arr[$rowIndex] ?? null;
+                                    $dist_text = is_array($dist_val)
+                                        ? implode(', ', array_filter($dist_val, fn ($v) => $v !== null && $v !== ''))
+                                        : trim((string) $dist_val);
                                     $kode_produksi_val = $kode_produksis[$rowIndex] ?? null;
                                     $jumlah_datang_val = $jumlah_datangs[$rowIndex] ?? null;
                                     $unit_datang_val = $unit_datangs[$rowIndex] ?? null;
@@ -528,14 +534,8 @@
                                     $unit_sampling_val = $unit_samplings[$rowIndex] ?? null;
                                     $spesifikasi_val = $spesifikasis[$rowIndex] ?? null;
 
-                                    if (is_array($produsen_val)) {
-                                        $produsen_val = implode(', ', array_values(array_filter($produsen_val, fn ($v) => $v !== null && $v !== '')));
-                                    }
-                                    if (is_array($distributor_val)) {
-                                        $distributor_val = implode(', ', array_values(array_filter($distributor_val, fn ($v) => $v !== null && $v !== '')));
-                                    }
                                 @endphp
-                                @if($id_bahan || $produsen_val || $distributor_val || $kode_produksi_val || $jumlah_datang_val || $jumlah_sampling_val || $spesifikasi_val || $pemeriksaan->no_po)
+                                @if($id_bahan || $prod_text || $dist_text || $kode_produksi_val || $jumlah_datang_val || $jumlah_sampling_val || $spesifikasi_val || $pemeriksaan->no_po)
                                     <div class="section-title">2. Bahan Kemasan</div>
                                     @if($pemeriksaan->no_po)
                                         <div class="field-row">
@@ -549,16 +549,16 @@
                                             <span class="field-value">{{ $bahanMap[$id_bahan] ?? 'N/A' }}</span>
                                         </div>
                                     @endif
-                                    @if($produsen_val)
+                                    @if($prod_text)
                                         <div class="field-row">
                                             <span class="field-label">Produsen:</span>
-                                            <span class="field-value">{{ $produsen_val }}</span>
+                                            <span class="field-value">{{ $prod_text }}</span>
                                         </div>
                                     @endif
-                                    @if($distributor_val)
+                                    @if($dist_text)
                                         <div class="field-row">
                                             <span class="field-label">Distributor:</span>
-                                            <span class="field-value">{{ $distributor_val }}</span>
+                                            <span class="field-value">{{ $dist_text }}</span>
                                         </div>
                                     @endif
                                     @if($kode_produksi_val)
