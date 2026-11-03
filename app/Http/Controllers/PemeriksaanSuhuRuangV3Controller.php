@@ -800,7 +800,21 @@ class PemeriksaanSuhuRuangV3Controller extends Controller
             'user.role',
             'user.plant',
             'shift',
-            'histories',
+            'histories' => function ($q) use ($tanggalDari, $tanggalSampai, $tanggal) {
+                $q->when($tanggalDari && $tanggalSampai, function ($historyQuery) use ($tanggalDari, $tanggalSampai) {
+                    $historyQuery->whereDate('created_at', '>=', $tanggalDari)
+                        ->whereDate('created_at', '<=', $tanggalSampai);
+                })
+                    ->when($tanggalDari && !$tanggalSampai, function ($historyQuery) use ($tanggalDari) {
+                        $historyQuery->whereDate('created_at', '>=', $tanggalDari);
+                    })
+                    ->when(!$tanggalDari && $tanggalSampai, function ($historyQuery) use ($tanggalSampai) {
+                        $historyQuery->whereDate('created_at', '<=', $tanggalSampai);
+                    })
+                    ->when(!$tanggalDari && !$tanggalSampai && $tanggal, function ($historyQuery) use ($tanggal) {
+                        $historyQuery->whereDate('created_at', $tanggal);
+                    });
+            },
             'verifiedByQc.role',
             'verifiedByProduksi.role',
             'verifiedBySpv.role',
@@ -824,7 +838,8 @@ class PemeriksaanSuhuRuangV3Controller extends Controller
 
             if ($isShift1) {
                 if ($tanggalDari && $tanggalSampai) {
-                    $query->whereBetween('tanggal', [$tanggalDari, $tanggalSampai]);
+                    $query->whereDate('tanggal', '>=', $tanggalDari)
+                        ->whereDate('tanggal', '<=', $tanggalSampai);
                 } elseif ($tanggalDari) {
                     $query->whereDate('tanggal', '>=', $tanggalDari);
                 } elseif ($tanggalSampai) {
@@ -875,14 +890,29 @@ class PemeriksaanSuhuRuangV3Controller extends Controller
         $dataPerShift = [];
         foreach ($allShifts as $shift) {
             $query = PemeriksaanSuhuRuangV3::with([
-                'user.role', 'user.plant', 'shift', 'histories',
+                'user.role', 'user.plant', 'shift',
+                'histories' => function ($q) use ($tanggalDari, $tanggalSampai) {
+                    $q->when($tanggalDari && $tanggalSampai, function ($historyQuery) use ($tanggalDari, $tanggalSampai) {
+                        $historyQuery->whereDate('created_at', '>=', $tanggalDari)
+                            ->whereDate('created_at', '<=', $tanggalSampai);
+                    })
+                        ->when($tanggalDari && !$tanggalSampai, function ($historyQuery) use ($tanggalDari) {
+                            $historyQuery->whereDate('created_at', '>=', $tanggalDari);
+                        })
+                        ->when(!$tanggalDari && $tanggalSampai, function ($historyQuery) use ($tanggalSampai) {
+                            $historyQuery->whereDate('created_at', '<=', $tanggalSampai);
+                        });
+                },
                 'verifiedByQc.role', 'verifiedByProduksi.role', 'verifiedBySpv.role',
             ]);
             if ($user->role && strtolower($user->role->role) !== 'superadmin') {
                 $query->whereHas('user', fn($q) => $q->where('id_plant', $user->getEffectivePlantId()));
             }
             $query->where('id_shift', $shift->id);
-            if ($tanggalDari && $tanggalSampai) { $query->whereBetween('tanggal', [$tanggalDari, $tanggalSampai]); }
+            if ($tanggalDari && $tanggalSampai) {
+                $query->whereDate('tanggal', '>=', $tanggalDari)
+                    ->whereDate('tanggal', '<=', $tanggalSampai);
+            }
             elseif ($tanggalDari) { $query->whereDate('tanggal', '>=', $tanggalDari); }
             elseif ($tanggalSampai) { $query->whereDate('tanggal', '<=', $tanggalSampai); }
             $records = $query->latest()->get();

@@ -881,7 +881,7 @@ class PemeriksaanSuhuRuangV2Controller extends Controller
             'spvVerifier' => function ($q) {
                 $q->select('id', 'name');
             },
-            'histories' => function ($q) {
+            'histories' => function ($q) use ($tanggalDari, $tanggalSampai, $tanggal) {
                 $q->select(
                     'id',
                     'id_pemeriksaan_suhu_ruang_v2',
@@ -905,6 +905,19 @@ class PemeriksaanSuhuRuangV2Controller extends Controller
                     'suhu_chillroom_domestik_lama',
                     'suhu_chillroom_domestik_baru'
                 )
+                    ->when($tanggalDari && $tanggalSampai, function ($historyQuery) use ($tanggalDari, $tanggalSampai) {
+                        $historyQuery->whereDate('created_at', '>=', $tanggalDari)
+                            ->whereDate('created_at', '<=', $tanggalSampai);
+                    })
+                    ->when($tanggalDari && !$tanggalSampai, function ($historyQuery) use ($tanggalDari) {
+                        $historyQuery->whereDate('created_at', '>=', $tanggalDari);
+                    })
+                    ->when(!$tanggalDari && $tanggalSampai, function ($historyQuery) use ($tanggalSampai) {
+                        $historyQuery->whereDate('created_at', '<=', $tanggalSampai);
+                    })
+                    ->when(!$tanggalDari && !$tanggalSampai && $tanggal, function ($historyQuery) use ($tanggal) {
+                        $historyQuery->whereDate('created_at', $tanggal);
+                    })
                     ->orderByDesc('id');
             }
         ]);
@@ -927,7 +940,8 @@ class PemeriksaanSuhuRuangV2Controller extends Controller
 
             if ($isShift1) {
                 if ($tanggalDari && $tanggalSampai) {
-                    $query->whereBetween('tanggal', [$tanggalDari, $tanggalSampai]);
+                    $query->whereDate('tanggal', '>=', $tanggalDari)
+                        ->whereDate('tanggal', '<=', $tanggalSampai);
                 } elseif ($tanggalDari) {
                     $query->whereDate('tanggal', '>=', $tanggalDari);
                 } elseif ($tanggalSampai) {
@@ -1030,7 +1044,20 @@ class PemeriksaanSuhuRuangV2Controller extends Controller
                 'qcVerifier'       => fn($q) => $q->select('id', 'name'),
                 'produksiVerifier' => fn($q) => $q->select('id', 'name'),
                 'spvVerifier'      => fn($q) => $q->select('id', 'name'),
-                'histories'        => fn($q) => $q->select($historiesSelect)->orderByDesc('id'),
+                'histories'        => function ($q) use ($historiesSelect, $tanggalDari, $tanggalSampai) {
+                    $q->select($historiesSelect)
+                        ->when($tanggalDari && $tanggalSampai, function ($historyQuery) use ($tanggalDari, $tanggalSampai) {
+                            $historyQuery->whereDate('created_at', '>=', $tanggalDari)
+                                ->whereDate('created_at', '<=', $tanggalSampai);
+                        })
+                        ->when($tanggalDari && !$tanggalSampai, function ($historyQuery) use ($tanggalDari) {
+                            $historyQuery->whereDate('created_at', '>=', $tanggalDari);
+                        })
+                        ->when(!$tanggalDari && $tanggalSampai, function ($historyQuery) use ($tanggalSampai) {
+                            $historyQuery->whereDate('created_at', '<=', $tanggalSampai);
+                        })
+                        ->orderByDesc('id');
+                },
             ]);
 
             if ($user->role && strtolower($user->role->role) !== 'superadmin') {
@@ -1040,7 +1067,8 @@ class PemeriksaanSuhuRuangV2Controller extends Controller
             $query->where('id_shift', $shift->id);
 
             if ($tanggalDari && $tanggalSampai) {
-                $query->whereBetween('tanggal', [$tanggalDari, $tanggalSampai]);
+                $query->whereDate('tanggal', '>=', $tanggalDari)
+                    ->whereDate('tanggal', '<=', $tanggalSampai);
             } elseif ($tanggalDari) {
                 $query->whereDate('tanggal', '>=', $tanggalDari);
             } elseif ($tanggalSampai) {
@@ -1364,5 +1392,3 @@ class PemeriksaanSuhuRuangV2Controller extends Controller
     }
 
 }
-
-    
