@@ -61,7 +61,10 @@ class PemeriksaanKebersihanAreaController extends Controller
 
         $query->filterSubArea($request->sub_area);
 
-        $pemeriksaans = $query->latest()->paginate(25);
+        $pemeriksaans = $query
+            ->orderByDesc('created_at')
+            ->orderByDesc('id')
+            ->paginate(25);
 
         $areaNamaById = InputArea::pluck('nama_area', 'id')->all();
         $masterFormNamaById = InputMasterForm::pluck('nama_form', 'id')->all();

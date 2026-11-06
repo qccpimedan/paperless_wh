@@ -57,7 +57,10 @@ class DetailKomplainController extends Controller
         
         $query->filterSubArea($request->sub_area);
 
-        $komplains = $query->latest()->paginate(25);
+        $komplains = $query
+            ->orderByDesc('created_at')
+            ->orderByDesc('id')
+            ->paginate(25);
         return view('qc-sistem.detail-komplain.index', compact('komplains'));
     }
 

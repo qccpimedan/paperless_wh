@@ -20,7 +20,10 @@ class BarangController extends Controller
         
         // SuperAdmin dapat melihat semua data
         if ($user->role && strtolower($user->role->role) === 'superadmin') {
-            $barangs = Barang::with(['user.role', 'user.plant', 'area'])->latest()->paginate(25);
+            $barangs = Barang::with(['user.role', 'user.plant', 'area'])
+                ->orderByDesc('created_at')
+                ->orderByDesc('id')
+                ->paginate(25);
         } else {
             // Admin dan role lain hanya melihat data sesuai plant mereka
             $barangs = Barang::with(['user.role', 'user.plant', 'area'])
