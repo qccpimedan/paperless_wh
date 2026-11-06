@@ -1005,7 +1005,10 @@ class PemeriksaanSuhuRuangController extends Controller
             }
         }
 
-        $pemeriksaans = $query->latest()->get();
+        $pemeriksaans = $query
+            ->orderByDesc('created_at')
+            ->orderByDesc('id')
+            ->get();
         $shift = $id_shift ? Shift::find($id_shift) : null;
 
         $pdf = \PDF::loadView('qc-sistem.pemeriksaan-suhu-ruang.pdf-report', [
@@ -1159,7 +1162,10 @@ class PemeriksaanSuhuRuangController extends Controller
             }
         }
 
-        $pemeriksaans = $query->latest()->get();
+        $pemeriksaans = $query
+            ->orderByDesc('created_at')
+            ->orderByDesc('id')
+            ->get();
         $shift = ($id_shift && $id_shift !== 'all') ? Shift::find($id_shift) : null;
 
         $filenameDate = $tanggal ?? $tanggalDari ?? date('Y-m-d');

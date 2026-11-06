@@ -133,6 +133,8 @@
                         'tanggal' => $tanggalStr,
                         'shift' => $shiftStr,
                         'time' => $initialTime,
+                        '_sort_created_at' => $p->created_at ? $p->created_at->timestamp : 0,
+                        '_sort_id' => $p->id ?? 0,
                         'qc' => $qcStr,
                         'group' => $groupStr,
                         'produk' => $produkStr,
@@ -152,6 +154,8 @@
                     'tanggal' => $tanggalStr,
                     'shift' => $shiftStr,
                     'time' => $initialTime,
+                    '_sort_created_at' => $p->created_at ? $p->created_at->timestamp : 0,
+                    '_sort_id' => $p->id ?? 0,
                     'qc' => $qcStr,
                     'group' => $groupStr,
                     'produk' => $produkStr,
@@ -210,6 +214,8 @@
                                 'tanggal' => $tanggalHistory,
                                 'shift' => $shiftStr,
                                 'time' => $hJam,
+                                '_sort_created_at' => $history->created_at ? $history->created_at->timestamp : 0,
+                                '_sort_id' => $history->id ?? 0,
                                 'qc' => $userQcName,
                                 'group' => $groupStr,
                                 'produk' => $produkStr,
@@ -228,6 +234,8 @@
                             'tanggal' => $tanggalHistory,
                             'shift' => $shiftStr,
                             'time' => $hJam,
+                            '_sort_created_at' => $history->created_at ? $history->created_at->timestamp : 0,
+                            '_sort_id' => $history->id ?? 0,
                             'qc' => $userQcName,
                             'group' => $groupStr,
                             'produk' => $produkStr,
@@ -242,6 +250,17 @@
             }
         }
     }
+
+    // Pastikan semua baris (input awal dan riwayat edit) tersusun dari yang terbaru.
+    usort($rows, function (array $a, array $b) {
+        return ($b['_sort_created_at'] <=> $a['_sort_created_at'])
+            ?: ($b['_sort_id'] <=> $a['_sort_id']);
+    });
+
+    foreach ($rows as $index => &$row) {
+        $row['no'] = $index + 1;
+    }
+    unset($row);
 
     $lastRecord = $allRecords->last();
     $logoPath = public_path('dist/images/logo/cpi-logo.png');
