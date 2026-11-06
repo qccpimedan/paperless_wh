@@ -136,9 +136,9 @@
                         <li class="submenu-item {{ request()->routeIs('input-master-forms.*') ? 'active' : '' }}">
                             <a href="{{ route('input-master-forms.index')}}">Input Master Form</a>
                         </li>
-                        <li class="submenu-item {{ request()->routeIs('master-standar-audit.*') ? 'active' : '' }}">
+                        <!-- <li class="submenu-item {{ request()->routeIs('master-standar-audit.*') ? 'active' : '' }}">
                             <a href="{{ route('master-standar-audit.index')}}">Input Standar Audit</a>
-                        </li>
+                        </li> -->
 
                     </ul>
                 </li>
