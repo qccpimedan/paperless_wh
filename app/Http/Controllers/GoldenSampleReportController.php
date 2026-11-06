@@ -62,7 +62,10 @@ class GoldenSampleReportController extends Controller
 
         $query->filterSubArea($request->sub_area);
 
-        $reports = $query->latest()->paginate(25);
+        $reports = $query
+            ->orderByDesc('created_at')
+            ->orderByDesc('id')
+            ->paginate(25);
 
         return view('qc-sistem.golden-sample-retort.index', compact('reports'));
     }

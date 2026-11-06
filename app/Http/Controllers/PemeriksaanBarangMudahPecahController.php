@@ -81,7 +81,10 @@ class PemeriksaanBarangMudahPecahController extends Controller
         
         $query->filterSubArea($request->sub_area);
 
-        $pemeriksaans = $query->latest()->paginate(25);
+        $pemeriksaans = $query
+            ->orderByDesc('created_at')
+            ->orderByDesc('id')
+            ->paginate(25);
         
         return view('qc-sistem.pemeriksaan-barang-mudah-pecah.index', compact('pemeriksaans'));
     }
