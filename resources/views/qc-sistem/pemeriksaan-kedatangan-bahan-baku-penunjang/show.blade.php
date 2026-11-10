@@ -378,7 +378,6 @@
 
                     <div class="fp-docs">
                         <span>Status dokumen:</span>
-                        <span class="fp-doc {{ $halalVal ? 'ok' : 'bad' }}"><i class="bi {{ $halalVal ? 'bi-check' : 'bi-x' }}"></i> Logo Halal</span>
                         <span class="fp-doc {{ $dokHalalVal ? 'ok' : 'bad' }}"><i class="bi {{ $dokHalalVal ? 'bi-check' : 'bi-x' }}"></i> Dokumen Halal</span>
                         <span class="fp-doc {{ $coaVal ? 'ok' : 'bad' }}"><i class="bi {{ $coaVal ? 'bi-check' : 'bi-x' }}"></i> COA</span>
                     </div>
@@ -421,6 +420,8 @@
                                     @if(isset($fisik['allergen']) && $fisik['allergen'])
                                         <span class="fp-tag {{ $fisik['allergen'] === 'Allergen' ? 'fp-tag-warn' : 'fp-tag-info' }}">{{ $fisik['allergen'] }}</span>
                                     @endif
+                                    <span class="fp-doc {{ $halalVal ? 'ok' : 'bad' }}"><i class="bi {{ $halalVal ? 'bi-check' : 'bi-x' }}"></i> Logo Halal</span>
+
                                 </div>
 
                                 @if($spesifikasiArray[$index] ?? null)

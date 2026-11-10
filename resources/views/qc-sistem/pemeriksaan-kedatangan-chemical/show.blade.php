@@ -281,7 +281,6 @@
                         </div>
                         <div class="fp-docs">
                             <span>Status dokumen:</span>
-                            <span class="fp-doc {{ $logoVal ? 'ok' : 'bad' }}"><i class="bi {{ $logoVal ? 'bi-check' : 'bi-x' }}"></i> Dokumen Halal</span>
                             <span class="fp-doc {{ $coaVal ? 'ok' : 'bad' }}"><i class="bi {{ $coaVal ? 'bi-check' : 'bi-x' }}"></i> COA</span>
                         </div>
                     </div>
@@ -323,6 +322,8 @@
                                             @foreach(['Kemasan' => $detail['kondisi_fisik']['kemasan'] ?? null, 'Warna' => $detail['kondisi_fisik']['warna'] ?? null] as $physLabel => $physVal)
                                                 <span class="fp-pill {{ $physVal ? 'fp-pill-ok' : 'fp-pill-bad' }}"><i class="bi {{ $physVal ? 'bi-check-circle-fill' : 'bi-x-circle-fill' }}"></i> {{ $physLabel }}</span>
                                             @endforeach
+                                            <span class="fp-doc {{ $logoVal ? 'ok' : 'bad' }}"><i class="bi {{ $logoVal ? 'bi-check' : 'bi-x' }}"></i> Logo Halal</span>
+
                                         </div>
                                     @endif
 

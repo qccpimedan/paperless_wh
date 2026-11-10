@@ -318,9 +318,9 @@
                                 <th style="width: 32%;">Aspek Yang Dinilai</th>
                                 <th style="width: 10%;">Sebelum</th>
                                 <th style="width: 10%;">Sesudah</th>
-                                <th style="width: 10%;">Verifikasi</th>
                                 <th style="width: 17%;">Keterangan</th>
                                 <th style="width: 16%;">Tindakan</th>
+                                <th style="width: 10%;">Verifikasi</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -346,6 +346,8 @@
                                             </span>
                                         @else - @endif
                                     </td>
+                                    <td>{{ $d['keterangan'] ?? '-' }}</td>
+                                    <td>{{ $d['tindakan_koreksi'] ?? '-' }}</td>
                                     <td style="text-align:center;">
                                         @if(isset($d['verifikasi_hasil']) && $d['verifikasi_hasil'] !== null)
                                             <span class="{{ $d['verifikasi_hasil'] == 1 ? 'badge-ok' : 'badge-no' }}">
@@ -353,8 +355,6 @@
                                             </span>
                                         @else - @endif
                                     </td>
-                                    <td>{{ $d['keterangan'] ?? '-' }}</td>
-                                    <td>{{ $d['tindakan_koreksi'] ?? '-' }}</td>
                                 </tr>
                             @empty
                                 <tr><td colspan="7" style="text-align:center;">Tidak ada aspek penilaian</td></tr>
@@ -500,9 +500,9 @@
                                         <th style="width: 32%;">Aspek Yang Dinilai</th>
                                         <th style="width: 10%;">Sebelum</th>
                                         <th style="width: 10%;">Sesudah</th>
-                                        <th style="width: 10%;">Verifikasi</th>
                                         <th style="width: 17%;">Keterangan</th>
                                         <th style="width: 17%;">Tindakan</th>
+                                        <th style="width: 10%;">Verifikasi</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -529,6 +529,8 @@
                                                     </span>
                                                 @else - @endif
                                             </td>
+                                            <td>{{ $d['keterangan'] ?? '-' }}</td>
+                                            <td>{{ $d['tindakan_koreksi'] ?? '-' }}</td>
                                             <td style="text-align:center;">
                                                 @if(isset($d['verifikasi_hasil']) && $d['verifikasi_hasil'] !== null)
                                                     <span class="{{ $d['verifikasi_hasil'] == 1 ? 'badge-ok' : 'badge-no' }}">
@@ -536,8 +538,6 @@
                                                     </span>
                                                 @else - @endif
                                             </td>
-                                            <td>{{ $d['keterangan'] ?? '-' }}</td>
-                                            <td>{{ $d['tindakan_koreksi'] ?? '-' }}</td>
                                         </tr>
                                     @empty
                                         <tr><td colspan="7" style="text-align:center;">Tidak ada aspek penilaian</td></tr>

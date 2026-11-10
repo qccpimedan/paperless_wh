@@ -525,11 +525,11 @@
                                                                 </div>
                                                             </div>
 
-                                                            <!-- Kondisi Fisik -->
+                                                            <!-- Kondisi Fisik (Kemasan, Warna, Logo Halal) -->
                                                             <div class="form-section mb-3">
                                                                 <h6 class="text-primary mb-2">Kondisi Fisik</h6>
                                                                 <div class="row">
-                                                                    <div class="col-md-6">
+                                                                    <div class="col-md-4">
                                                                         <div class="mb-3">
                                                                             <label class="form-label"><strong>Kemasan</strong></label>
                                                                             <div class="form-check">
@@ -543,7 +543,7 @@
                                                                             <input type="hidden" name="kondisi_fisik_kemasan[]" value="{{ ($detail['kondisi_fisik']['kemasan'] ?? false) ? '1' : '0' }}" class="radio-value-kemasan-1">
                                                                         </div>
                                                                     </div>
-                                                                    <div class="col-md-6">
+                                                                    <div class="col-md-4">
                                                                         <div class="mb-3">
                                                                             <label class="form-label"><strong>Warna</strong></label>
                                                                             <div class="form-check">
@@ -557,16 +557,9 @@
                                                                             <input type="hidden" name="kondisi_fisik_warna[]" value="{{ ($detail['kondisi_fisik']['warna'] ?? false) ? '1' : '0' }}" class="radio-value-warna-1">
                                                                         </div>
                                                                     </div>
-                                                                </div>
-                                                            </div>
-
-                                                            <!-- Dokumen -->
-                                                            <div class="form-section mb-3">
-                                                                <h6 class="text-primary mb-2">Dokumen & Sertifikasi</h6>
-                                                                <div class="row">
-                                                                    <div class="col-md-6">
+                                                                    <div class="col-md-4">
                                                                         <div class="mb-3">
-                                                                            <label class="form-label"><strong>Halal (berlaku)</strong></label>
+                                                                            <label class="form-label"><strong>Logo Halal</strong></label>
                                                                             <div class="form-check">
                                                                                 <input class="form-check-input" type="radio" name="persyaratan_dokumen_halal_1" value="1" {{ (($detail['persyaratan_dokumen_halal'] ?? false) == true) ? 'checked' : '' }}>
                                                                                 <label class="form-check-label">Ya ✓</label>
@@ -578,6 +571,13 @@
                                                                             <input type="hidden" name="persyaratan_dokumen_halal[]" value="{{ ($detail['persyaratan_dokumen_halal'] ?? false) ? '1' : '0' }}" class="radio-value-halal-1">
                                                                         </div>
                                                                     </div>
+                                                                </div>
+                                                            </div>
+
+                                                            <!-- Dokumen (Logo Halal sudah dipindah ke Kondisi Fisik) -->
+                                                            <div class="form-section mb-3">
+                                                                <h6 class="text-primary mb-2">Dokumen & Sertifikasi</h6>
+                                                                <div class="row">
                                                                     <div class="col-md-6">
                                                                         <div class="mb-3">
                                                                             <label class="form-label"><strong>COA</strong></label>
@@ -982,6 +982,8 @@ function updateRemoveButtons() {
     });
 }
 
+// Catatan: Logo Halal (persyaratan_dokumen_halal) kini berada di section Kondisi Fisik,
+// tetapi tetap berada di dalam .detail-item sehingga mapping di bawah tidak perlu berubah.
 function setupRowRadios(detailEl) {
     const globalIndex = Number(detailEl.dataset.detailGlobalIndex || 0) + 1;
     const mappings = [
@@ -1224,7 +1226,7 @@ function addNewRow() {
                 <div class="form-section mb-3">
                     <h6 class="text-primary mb-2">Kondisi Fisik</h6>
                     <div class="row">
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <div class="mb-3">
                                 <label class="form-label"><strong>Kemasan</strong></label>
                                 <div class="form-check">
@@ -1238,7 +1240,7 @@ function addNewRow() {
                                 <input type="hidden" name="kondisi_fisik_kemasan[]" class="radio-value-kemasan-1">
                             </div>
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <div class="mb-3">
                                 <label class="form-label"><strong>Warna</strong></label>
                                 <div class="form-check">
@@ -1252,15 +1254,9 @@ function addNewRow() {
                                 <input type="hidden" name="kondisi_fisik_warna[]" class="radio-value-warna-1">
                             </div>
                         </div>
-                    </div>
-                </div>
-
-                <div class="form-section mb-3">
-                    <h6 class="text-primary mb-2">Dokumen & Sertifikasi</h6>
-                    <div class="row">
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <div class="mb-3">
-                                <label class="form-label"><strong>Halal (berlaku)</strong></label>
+                                <label class="form-label"><strong>Logo Halal</strong></label>
                                 <div class="form-check">
                                     <input class="form-check-input" type="radio" name="persyaratan_dokumen_halal_1" value="1">
                                     <label class="form-check-label">Ya ✓</label>
@@ -1272,6 +1268,12 @@ function addNewRow() {
                                 <input type="hidden" name="persyaratan_dokumen_halal[]" class="radio-value-halal-1">
                             </div>
                         </div>
+                    </div>
+                </div>
+
+                <div class="form-section mb-3">
+                    <h6 class="text-primary mb-2">Dokumen & Sertifikasi</h6>
+                    <div class="row">
                         <div class="col-md-6">
                             <div class="mb-3">
                                 <label class="form-label"><strong>COA</strong></label>

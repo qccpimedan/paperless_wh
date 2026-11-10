@@ -125,7 +125,7 @@
                                         </button>
                                         <ul class="dropdown-menu dropdown-menu-end">
                                             <li><button type="button" class="dropdown-item kba-auto-opt" data-scope="sebelum">Sebelum proses saja</button></li>
-                                            <li><button type="button" class="dropdown-item kba-auto-opt" data-scope="saat">Saat proses saja</button></li>
+                                            <li><button type="button" class="dropdown-item kba-auto-opt" data-scope="saat">Sesudah proses saja</button></li>
                                             <li><button type="button" class="dropdown-item kba-auto-opt" data-scope="verif">Verifikasi saja</button></li>
                                             <li><hr class="dropdown-divider"></li>
                                             <li><button type="button" class="dropdown-item text-danger kba-auto-opt" data-scope="clear">Kosongkan semua ceklis</button></li>
@@ -170,7 +170,7 @@
                                                value="{{ old('items.'.$index.'.jam_sebelum_proses', $item['jam_sebelum_proses'] ?? '') }}">
                                     </div>
                                     <div class="col-md-6">
-                                        <label class="form-label">Jam saat proses</label>
+                                        <label class="form-label">Jam sesudah proses</label>
                                         <input type="time" class="form-control" name="items[{{ $index }}][jam_saat_proses]"
                                                value="{{ old('items.'.$index.'.jam_saat_proses', $item['jam_saat_proses'] ?? '') }}">
                                     </div>
@@ -188,7 +188,7 @@
                                                 $fieldData = $itemFields->firstWhere('id_master_form_field', $field->id) ?? [];
                                                 $cols = [
                                                     'sebelum' => ['label' => 'Sebelum proses', 'name' => "field_status_sebelum_{$field->id}", 'val' => $norm($fieldData['status_sebelum_proses'] ?? null), 'req' => true],
-                                                    'saat'    => ['label' => 'Saat proses',    'name' => "field_status_saat_{$field->id}",    'val' => $norm($fieldData['status_saat_proses'] ?? null),    'req' => false],
+                                                    'saat'    => ['label' => 'Sesudah proses',    'name' => "field_status_saat_{$field->id}",    'val' => $norm($fieldData['status_saat_proses'] ?? null),    'req' => false],
                                                     'verif'   => ['label' => 'Verifikasi',     'name' => "field_verifikasi_{$field->id}",     'val' => $norm($fieldData['verifikasi_hasil'] ?? null),      'req' => true],
                                                 ];
                                                 $hasNotes = filled($fieldData['keterangan'] ?? null) || filled($fieldData['tindakan_koreksi'] ?? null);
@@ -378,7 +378,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     <div class="kba-aspek-title"><span class="kba-aspek-no">${n + 1}</span><span>${esc(f.nama)}</span></div>
                     <div class="kba-grid">
                         <div><span class="kba-cap">Sebelum proses <span class="text-danger">*</span></span>${seg(`${base}[field_status_sebelum_${f.id}]`, `${dom}_sebelum`, 'sebelum', true)}</div>
-                        <div><span class="kba-cap">Saat proses</span>${seg(`${base}[field_status_saat_${f.id}]`, `${dom}_saat`, 'saat', false)}</div>
+                        <div><span class="kba-cap">Sesudah proses</span>${seg(`${base}[field_status_saat_${f.id}]`, `${dom}_saat`, 'saat', false)}</div>
                         <div><span class="kba-cap">Verifikasi <span class="text-danger">*</span></span>${seg(`${base}[field_verifikasi_${f.id}]`, `${dom}_verif`, 'verif', true)}</div>
                     </div>
                     <button type="button" class="btn btn-link kba-note-toggle"><i class="bi bi-chat-left-text me-1"></i>Catatan &amp; tindakan koreksi</button>

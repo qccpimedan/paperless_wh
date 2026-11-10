@@ -502,11 +502,11 @@
                                                         </div>
                                                     </div>
 
-                                                    <!-- Kondisi Fisik -->
+                                                    <!-- Kondisi Fisik (Kemasan, Warna, Logo Halal) -->
                                                     <div class="form-section mb-3">
                                                         <h6 class="text-primary mb-2">Kondisi Fisik</h6>
                                                         <div class="row">
-                                                            <div class="col-md-6">
+                                                            <div class="col-md-4">
                                                                 <div class="mb-3">
                                                                     <label class="form-label"><strong>Kemasan</strong></label>
                                                                     <div class="form-check">
@@ -520,7 +520,7 @@
                                                                     <input type="hidden" name="kondisi_fisik_kemasan[]" class="radio-value-kemasan-1">
                                                                 </div>
                                                             </div>
-                                                            <div class="col-md-6">
+                                                            <div class="col-md-4">
                                                                 <div class="mb-3">
                                                                     <label class="form-label"><strong>Warna</strong></label>
                                                                     <div class="form-check">
@@ -532,6 +532,20 @@
                                                                         <label class="form-check-label" for="warna_tidak_1">Tidak ✗</label>
                                                                     </div>
                                                                     <input type="hidden" name="kondisi_fisik_warna[]" class="radio-value-warna-1">
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-md-4">
+                                                                <div class="mb-3">
+                                                                    <label class="form-label"><strong>Logo Halal</strong></label>
+                                                                    <div class="form-check">
+                                                                        <input class="form-check-input" type="radio" name="persyaratan_dokumen_halal_1" id="halal_ya_1" value="1">
+                                                                        <label class="form-check-label" for="halal_ya_1">Ya ✓</label>
+                                                                    </div>
+                                                                    <div class="form-check">
+                                                                        <input class="form-check-input" type="radio" name="persyaratan_dokumen_halal_1" id="halal_tidak_1" value="0">
+                                                                        <label class="form-check-label" for="halal_tidak_1">Tidak ✗</label>
+                                                                    </div>
+                                                                    <input type="hidden" name="persyaratan_dokumen_halal[]" class="radio-value-halal-1">
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -617,24 +631,10 @@
                                                         </div>
                                                     </div>
 
-                                                    <!-- Dokumen -->
+                                                    <!-- Dokumen (Logo Halal sudah dipindah ke Kondisi Fisik) -->
                                                     <div class="form-section mb-3">
                                                         <h6 class="text-primary mb-2">Dokumen & Sertifikasi</h6>
                                                         <div class="row">
-                                                            <div class="col-md-6">
-                                                                <div class="mb-3">
-                                                                    <label class="form-label"><strong>Halal (berlaku)</strong></label>
-                                                                    <div class="form-check">
-                                                                        <input class="form-check-input" type="radio" name="persyaratan_dokumen_halal_1" id="halal_ya_1" value="1">
-                                                                        <label class="form-check-label" for="halal_ya_1">Ya ✓</label>
-                                                                    </div>
-                                                                    <div class="form-check">
-                                                                        <input class="form-check-input" type="radio" name="persyaratan_dokumen_halal_1" id="halal_tidak_1" value="0">
-                                                                        <label class="form-check-label" for="halal_tidak_1">Tidak ✗</label>
-                                                                    </div>
-                                                                    <input type="hidden" name="persyaratan_dokumen_halal[]" class="radio-value-halal-1">
-                                                                </div>
-                                                            </div>
                                                             <div class="col-md-6">
                                                                 <div class="mb-3">
                                                                     <label class="form-label"><strong>COA</strong></label>
@@ -1413,6 +1413,8 @@ function setupDynamicFormListeners() {
     });
 }
 
+// Catatan: Logo Halal (persyaratan_dokumen_halal) kini berada di section Kondisi Fisik,
+// tetapi tetap berada di dalam .detail-item sehingga mapping di bawah tidak perlu berubah.
 function setupRowRadios(detailEl) {
     const globalIndex = Number(detailEl.dataset.detailGlobalIndex || 0) + 1;
     const mappings = [
@@ -1467,9 +1469,9 @@ function initializeAllChoices() {
         try {
             const choicesInstance = new Choices(select, {
                 searchResultLimit: 100,
-                    searchFuzziness: 0.000001,
-                    fuseOptions: { ignoreLocation: true, threshold: 0.2, matchAllTokens: false },
-                    searchEnabled: true,
+                searchFuzziness: 0.000001,
+                fuseOptions: { ignoreLocation: true, threshold: 0.2, matchAllTokens: false },
+                searchEnabled: true,
                 removeItemButton: true,
                 placeholder: true,
                 placeholderValue: 'Pilih opsi',
@@ -1510,7 +1512,7 @@ function setupRadioListenersForRow1() {
         });
     });
     
-    // Dokumen - Halal
+    // Kondisi Fisik - Logo Halal
     document.querySelectorAll('input[name="persyaratan_dokumen_halal_1"]').forEach(radio => {
         radio.addEventListener('change', function() {
             if (this.checked) {
@@ -1718,11 +1720,11 @@ function addNewRow() {
                     </div>
                 </div>
 
-                <!-- Kondisi Fisik -->
+                <!-- Kondisi Fisik (Kemasan, Warna, Logo Halal) -->
                 <div class="form-section mb-3">
                     <h6 class="text-primary mb-2">Kondisi Fisik</h6>
                     <div class="row">
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <div class="mb-3">
                                 <label class="form-label"><strong>Kemasan</strong></label>
                                 <div class="form-check">
@@ -1736,7 +1738,7 @@ function addNewRow() {
                                 <input type="hidden" name="kondisi_fisik_kemasan[]" class="radio-value-kemasan-1">
                             </div>
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <div class="mb-3">
                                 <label class="form-label"><strong>Warna</strong></label>
                                 <div class="form-check">
@@ -1748,6 +1750,20 @@ function addNewRow() {
                                     <label class="form-check-label">Tidak ✗</label>
                                 </div>
                                 <input type="hidden" name="kondisi_fisik_warna[]" class="radio-value-warna-1">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="form-label"><strong>Logo Halal</strong></label>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="persyaratan_dokumen_halal_1" value="1">
+                                    <label class="form-check-label">Ya ✓</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="persyaratan_dokumen_halal_1" value="0">
+                                    <label class="form-check-label">Tidak ✗</label>
+                                </div>
+                                <input type="hidden" name="persyaratan_dokumen_halal[]" class="radio-value-halal-1">
                             </div>
                         </div>
                     </div>
@@ -1826,24 +1842,10 @@ function addNewRow() {
                     </div>
                 </div>
 
-                <!-- Dokumen -->
+                <!-- Dokumen (Logo Halal sudah dipindah ke Kondisi Fisik) -->
                 <div class="form-section mb-3">
                     <h6 class="text-primary mb-2">Dokumen & Sertifikasi</h6>
                     <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label class="form-label"><strong>Halal (berlaku)</strong></label>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="persyaratan_dokumen_halal_1" value="1">
-                                    <label class="form-check-label">Ya ✓</label>
-                                </div>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="persyaratan_dokumen_halal_1" value="0">
-                                    <label class="form-check-label">Tidak ✗</label>
-                                </div>
-                                <input type="hidden" name="persyaratan_dokumen_halal[]" class="radio-value-halal-1">
-                            </div>
-                        </div>
                         <div class="col-md-6">
                             <div class="mb-3">
                                 <label class="form-label"><strong>COA</strong></label>
@@ -1915,7 +1917,7 @@ function setupRadioListeners(row, uniqueId) {
         });
     });
     
-    // Dokumen - Halal
+    // Kondisi Fisik - Logo Halal
     row.querySelectorAll(`input[name="persyaratan_dokumen_halal_${uniqueId}"]`).forEach(radio => {
         radio.addEventListener('change', function() {
             if (this.checked) {

@@ -93,7 +93,7 @@
                                                     <p class="form-control-plaintext fw-bold">{{ $item['jam_sebelum_proses'] ?? '-' }}</p>
                                                 </div>
                                                 <div class="col-md-6">
-                                                    <label class="form-label text-muted small mb-0">Jam Saat Proses</label>
+                                                    <label class="form-label text-muted small mb-0">Jam Sesudah Proses</label>
                                                     <p class="form-control-plaintext fw-bold">{{ $item['jam_saat_proses'] ?? '-' }}</p>
                                                 </div>
                                             </div>
@@ -142,7 +142,7 @@
 
                                                         <div class="col-md-4">
                                                             <div class="mb-2">
-                                                                <label class="form-label text-muted small mb-0">Saat Proses</label>
+                                                                <label class="form-label text-muted small mb-0">Sesudah Proses</label>
                                                                 @if(isset($detail['status_saat_proses']) && $detail['status_saat_proses'] === 1)
                                                                     <p class="mb-0"><span class="badge bg-success">✓ OK</span></p>
                                                                 @elseif(isset($detail['status_saat_proses']) && $detail['status_saat_proses'] === 0)

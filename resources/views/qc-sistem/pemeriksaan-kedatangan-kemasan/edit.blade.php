@@ -455,7 +455,6 @@
                                                 $firstIdx = $detailIdxList[0] ?? null;
                                                 $existingKategori = $produkId ? ($existingKategoriByProdukId[$produkId] ?? '') : '';
 
-                                                $docLogo = $firstIdx !== null ? ($logo_halals[$firstIdx] ?? '') : '';
                                                 $docDokumen = $firstIdx !== null ? ($dokumen_halals[$firstIdx] ?? '') : '';
                                                 $docCoa = $firstIdx !== null ? ($coas[$firstIdx] ?? '') : '';
                                             @endphp
@@ -571,7 +570,6 @@
                                                             <input type="hidden" class="penampakan-hidden" value="{{ $penampakans[$srcIndex] ?? '' }}">
                                                             <input type="hidden" class="sealing-hidden" value="{{ $sealings[$srcIndex] ?? '' }}">
                                                             <input type="hidden" class="cetakan-hidden" value="{{ $cetakans[$srcIndex] ?? '' }}">
-                                                            <input type="hidden" name="logo_halal[]" class="logo-halal-hidden" value="{{ $logo_halals[$srcIndex] ?? '' }}">
                                                             <input type="hidden" name="dokumen_halal[]" class="dokumen-halal-hidden" value="{{ $dokumen_halals[$srcIndex] ?? '' }}">
                                                             <input type="hidden" name="coa[]" class="coa-hidden" value="{{ $coas[$srcIndex] ?? '' }}">
 
@@ -624,41 +622,54 @@
                                                             <div class="form-section mb-3 mt-3">
                                                                 <h6 class="text-primary mb-2">Kondisi Fisik</h6>
                                                                 <div class="row">
-                                                                    <div class="col-md-4">
+                                                                    <div class="col-md-3">
                                                                         <div class="mb-3">
                                                                             <label class="form-label"><strong>Penampakan</strong></label>
                                                                             <div class="form-check">
-                                                                                <input class="form-check-input" type="radio" name="penampakan_master_{{ $seq }}" value="1" {{ (string)($penampakans[$srcIndex] ?? '') === '1' ? 'checked' : '' }}>
+                                                                                <input class="form-check-input" type="radio" name="penampakan_master_{{ $seq }}" data-group="penampakan" value="1" {{ (string)($penampakans[$srcIndex] ?? '') === '1' ? 'checked' : '' }}>
                                                                                 <label class="form-check-label">Ya ✓</label>
                                                                             </div>
                                                                             <div class="form-check">
-                                                                                <input class="form-check-input" type="radio" name="penampakan_master_{{ $seq }}" value="0" {{ (string)($penampakans[$srcIndex] ?? '') === '0' ? 'checked' : '' }}>
+                                                                                <input class="form-check-input" type="radio" name="penampakan_master_{{ $seq }}" data-group="penampakan" value="0" {{ (string)($penampakans[$srcIndex] ?? '') === '0' ? 'checked' : '' }}>
                                                                                 <label class="form-check-label">Tidak ✗</label>
                                                                             </div>
                                                                         </div>
                                                                     </div>
-                                                                    <div class="col-md-4">
+                                                                    <div class="col-md-3">
                                                                         <div class="mb-3">
                                                                             <label class="form-label"><strong>Sealing</strong></label>
                                                                             <div class="form-check">
-                                                                                <input class="form-check-input" type="radio" name="sealing_master_{{ $seq }}" value="1" {{ (string)($sealings[$srcIndex] ?? '') === '1' ? 'checked' : '' }}>
+                                                                                <input class="form-check-input" type="radio" name="sealing_master_{{ $seq }}" data-group="sealing" value="1" {{ (string)($sealings[$srcIndex] ?? '') === '1' ? 'checked' : '' }}>
                                                                                 <label class="form-check-label">Ya ✓</label>
                                                                             </div>
                                                                             <div class="form-check">
-                                                                                <input class="form-check-input" type="radio" name="sealing_master_{{ $seq }}" value="0" {{ (string)($sealings[$srcIndex] ?? '') === '0' ? 'checked' : '' }}>
+                                                                                <input class="form-check-input" type="radio" name="sealing_master_{{ $seq }}" data-group="sealing" value="0" {{ (string)($sealings[$srcIndex] ?? '') === '0' ? 'checked' : '' }}>
                                                                                 <label class="form-check-label">Tidak ✗</label>
                                                                             </div>
                                                                         </div>
                                                                     </div>
-                                                                    <div class="col-md-4">
+                                                                    <div class="col-md-3">
                                                                         <div class="mb-3">
                                                                             <label class="form-label"><strong>Cetakan</strong></label>
                                                                             <div class="form-check">
-                                                                                <input class="form-check-input" type="radio" name="cetakan_master_{{ $seq }}" value="1" {{ (string)($cetakans[$srcIndex] ?? '') === '1' ? 'checked' : '' }}>
+                                                                                <input class="form-check-input" type="radio" name="cetakan_master_{{ $seq }}" data-group="cetakan" value="1" {{ (string)($cetakans[$srcIndex] ?? '') === '1' ? 'checked' : '' }}>
                                                                                 <label class="form-check-label">Ya ✓</label>
                                                                             </div>
                                                                             <div class="form-check">
-                                                                                <input class="form-check-input" type="radio" name="cetakan_master_{{ $seq }}" value="0" {{ (string)($cetakans[$srcIndex] ?? '') === '0' ? 'checked' : '' }}>
+                                                                                <input class="form-check-input" type="radio" name="cetakan_master_{{ $seq }}" data-group="cetakan" value="0" {{ (string)($cetakans[$srcIndex] ?? '') === '0' ? 'checked' : '' }}>
+                                                                                <label class="form-check-label">Tidak ✗</label>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="col-md-3">
+                                                                        <div class="mb-3">
+                                                                            <label class="form-label"><strong>Logo Halal</strong></label>
+                                                                            <div class="form-check">
+                                                                                <input class="form-check-input" type="radio" name="logo_halal_master_{{ $seq }}" data-group="logo_halal" value="1" {{ (string)($logo_halals[$srcIndex] ?? '') === '1' ? 'checked' : '' }}>
+                                                                                <label class="form-check-label">Ya ✓</label>
+                                                                            </div>
+                                                                            <div class="form-check">
+                                                                                <input class="form-check-input" type="radio" name="logo_halal_master_{{ $seq }}" data-group="logo_halal" value="0" {{ (string)($logo_halals[$srcIndex] ?? '') === '0' ? 'checked' : '' }}>
                                                                                 <label class="form-check-label">Tidak ✗</label>
                                                                             </div>
                                                                         </div>
@@ -779,24 +790,10 @@
                                                 <!-- Dokumen (Master per Bahan) -->
                                                 <div class="form-section mb-3">
                                                     <h6 class="text-primary mb-2">Dokumen</h6>
-                                                    <input type="hidden" class="doc-master-logo" value="{{ $docLogo }}">
                                                     <input type="hidden" class="doc-master-dokumen" value="{{ $docDokumen }}">
                                                     <input type="hidden" class="doc-master-coa" value="{{ $docCoa }}">
                                                     <div class="row">
-                                                        <div class="col-md-4">
-                                                            <div class="mb-3">
-                                                                <label class="form-label"><strong>Logo Halal</strong></label>
-                                                                <div class="form-check">
-                                                                    <input class="form-check-input" type="radio" name="logo_halal_master_{{ $loop->index }}" value="1" {{ (string)$docLogo === '1' ? 'checked' : '' }}>
-                                                                    <label class="form-check-label">Ya ✓</label>
-                                                                </div>
-                                                                <div class="form-check">
-                                                                    <input class="form-check-input" type="radio" name="logo_halal_master_{{ $loop->index }}" value="0" {{ (string)$docLogo === '0' ? 'checked' : '' }}>
-                                                                    <label class="form-check-label">Tidak ✗</label>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                        <div class="col-md-4">
+                                                        <div class="col-md-6">
                                                             <div class="mb-3">
                                                                 <label class="form-label"><strong>Dokumen Halal</strong></label>
                                                                 <div class="form-check">
@@ -809,7 +806,7 @@
                                                                 </div>
                                                             </div>
                                                         </div>
-                                                        <div class="col-md-4">
+                                                        <div class="col-md-6">
                                                             <div class="mb-3">
                                                                 <label class="form-label"><strong>COA</strong></label>
                                                                 <div class="form-check">
@@ -1234,11 +1231,10 @@
                                                     setArrayName(detailEl.querySelector('textarea[name^="keterangan"], textarea[name="keterangan[]"]'), 'keterangan');
                                                     setArrayName(detailEl.querySelector('input[type="file"][name^="image_kemasan"], input[type="file"][name="image_kemasan[]"]'), 'image_kemasan');
 
-                                                    const masterRadioGroups = ['penampakan', 'sealing', 'cetakan', 'logo_halal', 'dokumen_halal', 'coa'];
-                                                    masterRadioGroups.forEach((g) => {
-                                                        detailEl.querySelectorAll(`input[type="radio"][name^="${g}_master_"]`).forEach((r) => {
-                                                            r.name = `${g}[${idx}]`;
-                                                        });
+                                                    // Radio Kondisi Fisik (penampakan, sealing, cetakan, logo_halal):
+                                                    // nama dibuat unik per detail berdasarkan atribut data-group
+                                                    detailEl.querySelectorAll('input[type="radio"][data-group]').forEach((r) => {
+                                                        r.name = `${r.dataset.group}[${idx}]`;
                                                     });
 
                                                     const prodWrap = detailEl.querySelector('.produsen-hidden-inputs');
@@ -1318,15 +1314,12 @@
                                                     return inp ? String(inp.value) : '';
                                                 };
 
-                                                const logoVal = getCheckedVal('logo_halal');
                                                 const docVal = getCheckedVal('dokumen_halal');
                                                 const coaVal = getCheckedVal('coa');
 
                                                 rowEl.querySelectorAll('.detail-item').forEach((detailEl) => {
-                                                    const l = detailEl.querySelector('input.logo-halal-hidden');
                                                     const d = detailEl.querySelector('input.dokumen-halal-hidden');
                                                     const c = detailEl.querySelector('input.coa-hidden');
-                                                    if (l) l.value = logoVal;
                                                     if (d) d.value = docVal;
                                                     if (c) c.value = coaVal;
                                                 });
@@ -1494,7 +1487,7 @@
                                                     }
                                                 }
 
-                                                if (target && target.matches('input[type="radio"][name^="logo_halal_master_"], input[type="radio"][name^="dokumen_halal_master_"], input[type="radio"][name^="coa_master_"]')) {
+                                                if (target && target.matches('input[type="radio"][name^="dokumen_halal_master_"], input[type="radio"][name^="coa_master_"]')) {
                                                     const row = target.closest('.unified-row');
                                                     if (row) {
                                                         syncDokumenToDetails(row);
@@ -1616,7 +1609,7 @@
                                                     clone.querySelectorAll('.produsen-hidden-inputs, .distributor-hidden-inputs').forEach((wrap) => {
                                                         wrap.innerHTML = '';
                                                     });
-                                                    clone.querySelectorAll('input.penampakan-hidden, input.sealing-hidden, input.cetakan-hidden, input.logo-halal-hidden, input.dokumen-halal-hidden, input.coa-hidden').forEach((h) => {
+                                                    clone.querySelectorAll('input.penampakan-hidden, input.sealing-hidden, input.cetakan-hidden, input.dokumen-halal-hidden, input.coa-hidden').forEach((h) => {
                                                         h.value = '';
                                                     });
 
@@ -1757,7 +1750,6 @@
                                                                 <input type="hidden" name="penampakan[]" class="penampakan-hidden" value="">
                                                                 <input type="hidden" name="sealing[]" class="sealing-hidden" value="">
                                                                 <input type="hidden" name="cetakan[]" class="cetakan-hidden" value="">
-                                                                <input type="hidden" name="logo_halal[]" class="logo-halal-hidden" value="">
                                                                 <input type="hidden" name="dokumen_halal[]" class="dokumen-halal-hidden" value="">
                                                                 <input type="hidden" name="coa[]" class="coa-hidden" value="">
 
@@ -1800,25 +1792,32 @@
                                                                 <div class="form-section mb-3 mt-3">
                                                                     <h6 class="text-primary mb-2">Kondisi Fisik</h6>
                                                                     <div class="row">
-                                                                        <div class="col-md-4">
+                                                                        <div class="col-md-3">
                                                                             <div class="mb-3">
                                                                                 <label class="form-label"><strong>Penampakan</strong></label>
-                                                                                <div class="form-check"><input class="form-check-input" type="radio" name="penampakan_master_new_${rowIndex}" value="1"><label class="form-check-label">Ya ✓</label></div>
-                                                                                <div class="form-check"><input class="form-check-input" type="radio" name="penampakan_master_new_${rowIndex}" value="0"><label class="form-check-label">Tidak ✗</label></div>
+                                                                                <div class="form-check"><input class="form-check-input" type="radio" name="penampakan_master_new_${rowIndex}" data-group="penampakan" value="1"><label class="form-check-label">Ya ✓</label></div>
+                                                                                <div class="form-check"><input class="form-check-input" type="radio" name="penampakan_master_new_${rowIndex}" data-group="penampakan" value="0"><label class="form-check-label">Tidak ✗</label></div>
                                                                             </div>
                                                                         </div>
-                                                                        <div class="col-md-4">
+                                                                        <div class="col-md-3">
                                                                             <div class="mb-3">
                                                                                 <label class="form-label"><strong>Sealing</strong></label>
-                                                                                <div class="form-check"><input class="form-check-input" type="radio" name="sealing_master_new_${rowIndex}" value="1"><label class="form-check-label">Ya ✓</label></div>
-                                                                                <div class="form-check"><input class="form-check-input" type="radio" name="sealing_master_new_${rowIndex}" value="0"><label class="form-check-label">Tidak ✗</label></div>
+                                                                                <div class="form-check"><input class="form-check-input" type="radio" name="sealing_master_new_${rowIndex}" data-group="sealing" value="1"><label class="form-check-label">Ya ✓</label></div>
+                                                                                <div class="form-check"><input class="form-check-input" type="radio" name="sealing_master_new_${rowIndex}" data-group="sealing" value="0"><label class="form-check-label">Tidak ✗</label></div>
                                                                             </div>
                                                                         </div>
-                                                                        <div class="col-md-4">
+                                                                        <div class="col-md-3">
                                                                             <div class="mb-3">
                                                                                 <label class="form-label"><strong>Cetakan</strong></label>
-                                                                                <div class="form-check"><input class="form-check-input" type="radio" name="cetakan_master_new_${rowIndex}" value="1"><label class="form-check-label">Ya ✓</label></div>
-                                                                                <div class="form-check"><input class="form-check-input" type="radio" name="cetakan_master_new_${rowIndex}" value="0"><label class="form-check-label">Tidak ✗</label></div>
+                                                                                <div class="form-check"><input class="form-check-input" type="radio" name="cetakan_master_new_${rowIndex}" data-group="cetakan" value="1"><label class="form-check-label">Ya ✓</label></div>
+                                                                                <div class="form-check"><input class="form-check-input" type="radio" name="cetakan_master_new_${rowIndex}" data-group="cetakan" value="0"><label class="form-check-label">Tidak ✗</label></div>
+                                                                            </div>
+                                                                        </div>
+                                                                        <div class="col-md-3">
+                                                                            <div class="mb-3">
+                                                                                <label class="form-label"><strong>Logo Halal</strong></label>
+                                                                                <div class="form-check"><input class="form-check-input" type="radio" name="logo_halal_master_new_${rowIndex}" data-group="logo_halal" value="1"><label class="form-check-label">Ya ✓</label></div>
+                                                                                <div class="form-check"><input class="form-check-input" type="radio" name="logo_halal_master_new_${rowIndex}" data-group="logo_halal" value="0"><label class="form-check-label">Tidak ✗</label></div>
                                                                             </div>
                                                                         </div>
                                                                     </div>
@@ -1912,25 +1911,17 @@
 
                                                         <div class="form-section mb-3">
                                                             <h6 class="text-primary mb-2">Dokumen</h6>
-                                                            <input type="hidden" class="doc-master-logo" value="">
                                                             <input type="hidden" class="doc-master-dokumen" value="">
                                                             <input type="hidden" class="doc-master-coa" value="">
                                                             <div class="row">
-                                                                <div class="col-md-4">
-                                                                    <div class="mb-3">
-                                                                        <label class="form-label"><strong>Logo Halal</strong></label>
-                                                                        <div class="form-check"><input class="form-check-input" type="radio" name="logo_halal_master_new_${rowIndex}" value="1"><label class="form-check-label">Ya ✓</label></div>
-                                                                        <div class="form-check"><input class="form-check-input" type="radio" name="logo_halal_master_new_${rowIndex}" value="0"><label class="form-check-label">Tidak ✗</label></div>
-                                                                    </div>
-                                                                </div>
-                                                                <div class="col-md-4">
+                                                                <div class="col-md-6">
                                                                     <div class="mb-3">
                                                                         <label class="form-label"><strong>Dokumen Halal</strong></label>
                                                                         <div class="form-check"><input class="form-check-input" type="radio" name="dokumen_halal_master_new_${rowIndex}" value="1"><label class="form-check-label">Ya ✓</label></div>
                                                                         <div class="form-check"><input class="form-check-input" type="radio" name="dokumen_halal_master_new_${rowIndex}" value="0"><label class="form-check-label">Tidak ✗</label></div>
                                                                     </div>
                                                                 </div>
-                                                                <div class="col-md-4">
+                                                                <div class="col-md-6">
                                                                     <div class="mb-3">
                                                                         <label class="form-label"><strong>COA</strong></label>
                                                                         <div class="form-check"><input class="form-check-input" type="radio" name="coa_master_new_${rowIndex}" value="1"><label class="form-check-label">Ya ✓</label></div>

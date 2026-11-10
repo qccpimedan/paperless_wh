@@ -753,6 +753,21 @@
                                                                 </div>
                                                             </div>
                                                             <div class="row mt-2">
+                                                                <!-- Logo Halal (dipindah dari section Dokumen) -->
+                                                                <div class="col-md-3">
+                                                                    <div class="mb-3">
+                                                                        <label class="form-label"><strong>Logo Halal</strong></label>
+                                                                        <div class="form-check">
+                                                                            <input class="form-check-input" type="radio" name="logo_halal_{{ $produkNo }}_{{ $detailNo + 1 }}" value="1" {{ ($logoHalalArray[$i] ?? null) ? 'checked' : '' }}>
+                                                                            <label class="form-check-label">Ya ✓</label>
+                                                                        </div>
+                                                                        <div class="form-check">
+                                                                            <input class="form-check-input" type="radio" name="logo_halal_{{ $produkNo }}_{{ $detailNo + 1 }}" value="0" {{ !($logoHalalArray[$i] ?? null) ? 'checked' : '' }}>
+                                                                            <label class="form-check-label">Tidak ✗</label>
+                                                                        </div>
+                                                                        <input type="hidden" name="logo_halal[]" value="{{ ($logoHalalArray[$i] ?? null) ? '1' : '0' }}">
+                                                                    </div>
+                                                                </div>
                                                                 <div class="col-md-6">
                                                                     <div class="mb-3">
                                                                         <label class="form-label"><strong>Status Allergen</strong></label>
@@ -883,21 +898,7 @@
                                             <div class="form-section mb-3">
                                                 <h6 class="text-primary mb-2">Dokumen</h6>
                                                 <div class="row">
-                                                    <div class="col-md-4">
-                                                        <div class="mb-3">
-                                                            <label class="form-label"><strong>Logo Halal</strong></label>
-                                                            <div class="form-check">
-                                                                <input class="form-check-input" type="radio" name="logo_halal_{{ $produkNo + 1 }}" id="logo_ya_{{ $produkNo + 1 }}" value="1" {{ ($logoHalalArray[$firstIdx] ?? null) ? 'checked' : '' }}>
-                                                                <label class="form-check-label" for="logo_ya_{{ $produkNo + 1 }}">Ya ✓</label>
-                                                            </div>
-                                                            <div class="form-check">
-                                                                <input class="form-check-input" type="radio" name="logo_halal_{{ $produkNo + 1 }}" id="logo_tidak_{{ $produkNo + 1 }}" value="0" {{ !($logoHalalArray[$firstIdx] ?? null) ? 'checked' : '' }}>
-                                                                <label class="form-check-label" for="logo_tidak_{{ $produkNo + 1 }}">Tidak ✗</label>
-                                                            </div>
-                                                            <input type="hidden" name="logo_halal[]" class="radio-value-logo-{{ $produkNo + 1 }}" value="{{ ($logoHalalArray[$firstIdx] ?? null) ? '1' : '0' }}">
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-md-4">
+                                                    <div class="col-md-6">
                                                         <div class="mb-3">
                                                             <label class="form-label"><strong>Dokumen Halal</strong></label>
                                                             <div class="form-check">
@@ -911,7 +912,7 @@
                                                             <input type="hidden" name="dokumen_halal[]" class="radio-value-dokumen-{{ $produkNo + 1 }}" value="{{ ($dokumenHalalArray[$firstIdx] ?? null) ? '1' : '0' }}">
                                                         </div>
                                                     </div>
-                                                    <div class="col-md-4">
+                                                    <div class="col-md-6">
                                                         <div class="mb-3">
                                                             <label class="form-label"><strong>COA</strong></label>
                                                             <div class="form-check">
@@ -1458,7 +1459,7 @@ document.addEventListener('DOMContentLoaded', function() {
             updateConditionalForRow(unifiedRow);
         }
 
-        // Kondisi Fisik radios live inside each .detail-item
+        // Kondisi Fisik radios (termasuk Logo Halal) live inside each .detail-item
         if (target.matches('.detail-item input[type="radio"]')) {
             const name = target.getAttribute('name') || '';
             const map = {
@@ -1466,6 +1467,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 kondisi_fisik_warna: 'kondisi_fisik_warna[]',
                 kondisi_fisik_benda_asing: 'kondisi_fisik_benda_asing[]',
                 kondisi_fisik_aroma: 'kondisi_fisik_aroma[]',
+                logo_halal: 'logo_halal[]', // dipindah ke Kondisi Fisik (per detail)
             };
             const base = name.replace(/_\d+_\d+$/, '');
             const hiddenName = map[base];
@@ -1476,13 +1478,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (hidden) hidden.value = target.value;
                 }
             }
-        }
-
-        // Dokumentasi - Logo Halal
-        if (target.name && target.name.startsWith('logo_halal_')) {
-            const rowIndex = target.name.split('_').pop();
-            const hiddenInput = document.querySelector('.radio-value-logo-' + rowIndex);
-            if (hiddenInput) hiddenInput.value = target.value;
         }
 
         // Dokumentasi - Dokumen Halal
@@ -1823,6 +1818,21 @@ document.addEventListener('DOMContentLoaded', function() {
                             </div>
                         </div>
                         <div class="row mt-2">
+                            <!-- Logo Halal (dipindah dari section Dokumen) -->
+                            <div class="col-md-3">
+                                <div class="mb-3">
+                                    <label class="form-label"><strong>Logo Halal</strong></label>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="logo_halal_${rowCount}_1" value="1">
+                                        <label class="form-check-label">Ya ✓</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="logo_halal_${rowCount}_1" value="0" checked>
+                                        <label class="form-check-label">Tidak ✗</label>
+                                    </div>
+                                    <input type="hidden" name="logo_halal[]" value="0">
+                                </div>
+                            </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label"><strong>Status Allergen</strong></label>
@@ -1935,21 +1945,7 @@ document.addEventListener('DOMContentLoaded', function() {
             <div class="form-section mb-3">
                 <h6 class="text-primary mb-2">Dokumen</h6>
                 <div class="row">
-                    <div class="col-md-4">
-                        <div class="mb-3">
-                            <label class="form-label"><strong>Logo Halal</strong></label>
-                            <div class="form-check">
-                                <input class="form-check-input" type="radio" name="logo_halal_${rowCount}" id="logo_ya_${rowCount}" value="1">
-                                <label class="form-check-label" for="logo_ya_${rowCount}">Ya ✓</label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="radio" name="logo_halal_${rowCount}" id="logo_tidak_${rowCount}" value="0" checked>
-                                <label class="form-check-label" for="logo_tidak_${rowCount}">Tidak ✗</label>
-                            </div>
-                            <input type="hidden" name="logo_halal[]" class="radio-value-logo-${rowCount}" value="0">
-                        </div>
-                    </div>
-                    <div class="col-md-4">
+                    <div class="col-md-6">
                         <div class="mb-3">
                             <label class="form-label"><strong>Dokumen Halal</strong></label>
                             <div class="form-check">
@@ -1963,7 +1959,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             <input type="hidden" name="dokumen_halal[]" class="radio-value-dokumen-${rowCount}" value="0">
                         </div>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-6">
                         <div class="mb-3">
                             <label class="form-label"><strong>COA</strong></label>
                             <div class="form-check">
@@ -2078,6 +2074,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (name.startsWith('kondisi_fisik_warna_')) radio.name = `kondisi_fisik_warna_${produkNo}_${suffix}`;
                 if (name.startsWith('kondisi_fisik_benda_asing_')) radio.name = `kondisi_fisik_benda_asing_${produkNo}_${suffix}`;
                 if (name.startsWith('kondisi_fisik_aroma_')) radio.name = `kondisi_fisik_aroma_${produkNo}_${suffix}`;
+                if (name.startsWith('kondisi_fisik_allergen_')) radio.name = `kondisi_fisik_allergen_${produkNo}_${suffix}`;
+                if (name.startsWith('logo_halal_')) radio.name = `logo_halal_${produkNo}_${suffix}`;
             });
 
             const removeBtn = detailEl.querySelector('.remove-detail-btn');
@@ -2133,7 +2131,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     const produsenVals = Array.from(rowEl.querySelectorAll('.produsen-hidden-inputs input[type="hidden"]')).map(i => i.value);
                     const distributorVals = Array.from(rowEl.querySelectorAll('.distributor-hidden-inputs input[type="hidden"]')).map(i => i.value);
 
-                    const headerLogoHalal = rowEl.querySelector('input[name="logo_halal[]"]');
+                    // NOTE: logo_halal[] sekarang ada di dalam .detail-item (per detail),
+                    // jadi TIDAK diflatten lagi di sini.
                     const headerDokumenHalal = rowEl.querySelector('input[name="dokumen_halal[]"]');
                     const headerCoa = rowEl.querySelector('input[name="coa[]"]');
 
@@ -2146,7 +2145,6 @@ document.addEventListener('DOMContentLoaded', function() {
                         suhu_mobil: headerSuhuMobil ? String(headerSuhuMobil.value || '') : '',
                         kondisi_produk: headerKondisiProduk ? String(headerKondisiProduk.value || '') : '',
                         kondisi_produk_suhu: headerKondisiProdukSuhu ? String(headerKondisiProdukSuhu.value || '') : '',
-                        logo_halal: headerLogoHalal ? String(headerLogoHalal.value || '') : '',
                         dokumen_halal: headerDokumenHalal ? String(headerDokumenHalal.value || '') : '',
                         coa: headerCoa ? String(headerCoa.value || '') : '',
                     };
@@ -2173,7 +2171,6 @@ document.addEventListener('DOMContentLoaded', function() {
                         appendHidden('suhu_mobil[]', header.suhu_mobil);
                         appendHidden('kondisi_produk[]', header.kondisi_produk);
                         appendHidden('kondisi_produk_suhu[]', header.kondisi_produk_suhu);
-                        appendHidden('logo_halal[]', header.logo_halal);
                         appendHidden('dokumen_halal[]', header.dokumen_halal);
                         appendHidden('coa[]', header.coa);
 
@@ -2205,7 +2202,6 @@ document.addEventListener('DOMContentLoaded', function() {
                         headerSuhuMobil,
                         headerKondisiProduk,
                         headerKondisiProdukSuhu,
-                        headerLogoHalal,
                         headerDokumenHalal,
                         headerCoa,
                     ].forEach((el) => {

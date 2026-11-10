@@ -407,7 +407,7 @@
                                             @php
                                                 $items = is_array($group['items'] ?? null) ? $group['items'] : [];
                                                 if (count($items) < 1) $items = [[ 'i' => 0 ]];
-                                                $docLogo = old('logo_halal.'.$gIndex, $items[0]['logo_halal'] ?? null);
+                                                // Logo Halal sekarang per detail (Kondisi Fisik), bukan master per produk
                                                 $docDokumen = old('dokumen_halal.'.$gIndex, $items[0]['dokumen_halal'] ?? null);
                                                 $docCoa = old('coa.'.$gIndex, $items[0]['coa'] ?? null);
                                             @endphp
@@ -560,7 +560,7 @@
                                                             <input type="hidden" name="produsen[]" class="detail-produsen" value="{{ $produsenVal }}">
                                                             <input type="hidden" name="distributor[]" class="detail-distributor" value="{{ $distributorVal }}">
 
-                                                            <input type="hidden" name="logo_halal[]" class="detail-logo" value="{{ old('logo_halal.'.$idx, $it['logo_halal'] ?? '') }}">
+                                                            {{-- logo_halal[] sekarang ada di section Kondisi Fisik (per detail) --}}
                                                             <input type="hidden" name="dokumen_halal[]" class="detail-dokumen" value="{{ old('dokumen_halal.'.$idx, $it['dokumen_halal'] ?? '') }}">
                                                             <input type="hidden" name="coa[]" class="detail-coa" value="{{ old('coa.'.$idx, $it['coa'] ?? '') }}">
 
@@ -610,7 +610,7 @@
                                                             <div class="form-section mb-3">
                                                                 <h6 class="text-primary mb-2">Kondisi Fisik</h6>
                                                                 <div class="row">
-                                                                    <div class="col-md-4">
+                                                                    <div class="col-md-3">
                                                                         <div class="mb-3">
                                                                             <label class="form-label"><strong>Kemasan</strong></label>
                                                                             <div class="form-check">
@@ -624,7 +624,7 @@
                                                                             <input type="hidden" name="kondisi_kemasan[]" class="radio-value-kemasan-{{ $globalDetail }}" value="{{ old('kondisi_kemasan.'.$idx, $it['kemasan'] ?? '') }}">
                                                                         </div>
                                                                     </div>
-                                                                    <div class="col-md-4">
+                                                                    <div class="col-md-3">
                                                                         <div class="mb-3">
                                                                             <label class="form-label"><strong>Warna</strong></label>
                                                                             <div class="form-check">
@@ -638,7 +638,7 @@
                                                                             <input type="hidden" name="kondisi_warna[]" class="radio-value-warna-{{ $globalDetail }}" value="{{ old('kondisi_warna.'.$idx, $it['warna'] ?? '') }}">
                                                                         </div>
                                                                     </div>
-                                                                    <div class="col-md-4">
+                                                                    <div class="col-md-3">
                                                                         <div class="mb-3">
                                                                             <label class="form-label"><strong>Aroma</strong></label>
                                                                             <div class="form-check">
@@ -650,6 +650,20 @@
                                                                                 <label class="form-check-label">Tidak ✗</label>
                                                                             </div>
                                                                             <input type="hidden" name="kondisi_aroma[]" class="radio-value-aroma-{{ $globalDetail }}" value="{{ old('kondisi_aroma.'.$idx, $it['aroma'] ?? '') }}">
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="col-md-3">
+                                                                        <div class="mb-3">
+                                                                            <label class="form-label"><strong>Logo Halal</strong></label>
+                                                                            <div class="form-check">
+                                                                                <input class="form-check-input" type="radio" name="logo_halal_{{ $globalDetail }}" value="1" {{ (string)old('logo_halal.'.$idx, $it['logo_halal'] ?? '') === '1' ? 'checked' : '' }}>
+                                                                                <label class="form-check-label">Ya ✓</label>
+                                                                            </div>
+                                                                            <div class="form-check">
+                                                                                <input class="form-check-input" type="radio" name="logo_halal_{{ $globalDetail }}" value="0" {{ (string)old('logo_halal.'.$idx, $it['logo_halal'] ?? '') === '0' ? 'checked' : '' }}>
+                                                                                <label class="form-check-label">Tidak ✗</label>
+                                                                            </div>
+                                                                            <input type="hidden" name="logo_halal[]" class="radio-value-logo-{{ $globalDetail }}" value="{{ old('logo_halal.'.$idx, $it['logo_halal'] ?? '') }}">
                                                                         </div>
                                                                     </div>
                                                                 </div>
@@ -702,7 +716,7 @@
                                                                             $coaFileArr = is_array($pemeriksaanProdukFinishGood->upload_coa_array) ? $pemeriksaanProdukFinishGood->upload_coa_array : [];
                                                                             $coaPath = $coaFileArr[$idx] ?? null;
                                                                             $coaIsImg = $coaPath && preg_match('/\.(jpeg|jpg|png|gif|webp)$/i', $coaPath);
-                                                                            
+
                                                                             // Jika sebelumnya user mengupload foto (isImg), defaultValue 'gambar'
                                                                             $defaultCoaType = $coaIsImg ? 'gambar' : 'pdf';
                                                                             // Pakai old() jika validasi error kembali ke form
@@ -717,7 +731,7 @@
                                                                                 @endif
                                                                             </div>
                                                                         @endif
-                                                                        
+
                                                                         <div class="coa-upload-section">
                                                                             <div class="form-group mb-2">
                                                                                 <label class="form-label d-block">Tipe File COA Baru</label>
@@ -758,24 +772,10 @@
 
                                                 <div class="form-section mb-3">
                                                     <h6 class="text-primary mb-2">Dokumen</h6>
-                                                    <input type="hidden" class="doc-master-logo" value="{{ $docLogo }}">
                                                     <input type="hidden" class="doc-master-dokumen" value="{{ $docDokumen }}">
                                                     <input type="hidden" class="doc-master-coa" value="{{ $docCoa }}">
                                                     <div class="row">
-                                                        <div class="col-md-4">
-                                                            <div class="mb-3">
-                                                                <label class="form-label"><strong>Logo Halal</strong></label>
-                                                                <div class="form-check">
-                                                                    <input class="form-check-input" type="radio" name="logo_halal_master_{{ $gIndex + 1 }}" value="1" {{ (string)$docLogo === '1' ? 'checked' : '' }}>
-                                                                    <label class="form-check-label">Ya ✓</label>
-                                                                </div>
-                                                                <div class="form-check">
-                                                                    <input class="form-check-input" type="radio" name="logo_halal_master_{{ $gIndex + 1 }}" value="0" {{ (string)$docLogo === '0' ? 'checked' : '' }}>
-                                                                    <label class="form-check-label">Tidak ✗</label>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                        <div class="col-md-4">
+                                                        <div class="col-md-6">
                                                             <div class="mb-3">
                                                                 <label class="form-label"><strong>Dokumen Halal</strong></label>
                                                                 <div class="form-check">
@@ -788,7 +788,7 @@
                                                                 </div>
                                                             </div>
                                                         </div>
-                                                        <div class="col-md-4">
+                                                        <div class="col-md-6">
                                                             <div class="mb-3">
                                                                 <label class="form-label"><strong>COA</strong></label>
                                                                 <div class="form-check">
@@ -816,6 +816,7 @@
                                                     </div>
                                                 </div>
                                             </div>
+                                            @php $globalDetail += count($items); @endphp
                                         @endforeach
                                     </div>
 
@@ -1093,9 +1094,9 @@ function initChoicesForContainer(containerEl) {
         try {
             const instance = new Choices(selectEl, {
                 searchResultLimit: 100,
-                    searchFuzziness: 0.000001,
-                    fuseOptions: { ignoreLocation: true, threshold: 0.2, matchAllTokens: false },
-                    searchEnabled: true,
+                searchFuzziness: 0.000001,
+                fuseOptions: { ignoreLocation: true, threshold: 0.2, matchAllTokens: false },
+                searchEnabled: true,
                 shouldSort: false,
                 itemSelectText: '',
             });
@@ -1123,9 +1124,9 @@ function refreshChoices(selectEl) {
     try {
         const instance = new Choices(selectEl, {
             searchResultLimit: 100,
-                    searchFuzziness: 0.000001,
-                    fuseOptions: { ignoreLocation: true, threshold: 0.2, matchAllTokens: false },
-                    searchEnabled: true,
+            searchFuzziness: 0.000001,
+            fuseOptions: { ignoreLocation: true, threshold: 0.2, matchAllTokens: false },
+            searchEnabled: true,
             shouldSort: false,
             itemSelectText: '',
         });
@@ -1281,6 +1282,7 @@ function setupRowRadios(rowEl) {
         { key: 'kondisi_kemasan', hiddenPrefix: 'kemasan' },
         { key: 'kondisi_warna', hiddenPrefix: 'warna' },
         { key: 'kondisi_aroma', hiddenPrefix: 'aroma' },
+        { key: 'logo_halal', hiddenPrefix: 'logo' },
     ];
 
     mappings.forEach(({ key, hiddenPrefix }) => {
@@ -1323,7 +1325,6 @@ function updateRowNumbers() {
 
         // Update master dokumen radio names per row to avoid cross-row interference
         const rowNum = idx + 1;
-        row.querySelectorAll('input[type="radio"][name^="logo_halal_master_"]').forEach((el) => { el.name = `logo_halal_master_${rowNum}`; });
         row.querySelectorAll('input[type="radio"][name^="dokumen_halal_master_"]').forEach((el) => { el.name = `dokumen_halal_master_${rowNum}`; });
         row.querySelectorAll('input[type="radio"][name^="coa_master_"]').forEach((el) => { el.name = `coa_master_${rowNum}`; });
 
@@ -1341,6 +1342,9 @@ function updateRowNumbers() {
             });
             detailEl.querySelectorAll('input[type="hidden"][name="kondisi_aroma[]"]').forEach((el) => {
                 el.className = `radio-value-aroma-${globalDetail + 1}`;
+            });
+            detailEl.querySelectorAll('input[type="hidden"][name="logo_halal[]"]').forEach((el) => {
+                el.className = `radio-value-logo-${globalDetail + 1}`;
             });
 
             setupRowRadios(detailEl);
@@ -1497,17 +1501,15 @@ function syncHeaderToDetails(rowEl) {
     });
 }
 
+// Logo Halal tidak lagi disinkronkan dari master: sekarang nilainya per detail (Kondisi Fisik)
 function syncDokumenToDetails(rowEl) {
     if (!rowEl) return;
-    const logo = rowEl.querySelector('input.doc-master-logo')?.value ?? '';
     const dok = rowEl.querySelector('input.doc-master-dokumen')?.value ?? '';
     const coa = rowEl.querySelector('input.doc-master-coa')?.value ?? '';
 
     rowEl.querySelectorAll('.detail-item').forEach((detailEl) => {
-        const l = detailEl.querySelector('input.detail-logo');
         const d = detailEl.querySelector('input.detail-dokumen');
         const c = detailEl.querySelector('input.detail-coa');
-        if (l) l.value = logo;
         if (d) d.value = dok;
         if (c) c.value = coa;
     });
@@ -1734,11 +1736,9 @@ function refreshChoicesForContainer(containerEl) {
                 });
             }
 
-            // Reset dokumen master values
-            const docLogo = newRow.querySelector('input.doc-master-logo');
+            // Reset dokumen master values (Logo Halal sudah per detail, tidak ada master lagi)
             const docDok = newRow.querySelector('input.doc-master-dokumen');
             const docCoa = newRow.querySelector('input.doc-master-coa');
-            if (docLogo) docLogo.value = '';
             if (docDok) docDok.value = '';
             if (docCoa) docCoa.value = '';
 
@@ -1780,7 +1780,7 @@ function refreshChoicesForContainer(containerEl) {
                     el.value = '';
                 }
             });
-            newItem.querySelectorAll('input[type="hidden"][name="kondisi_kemasan[]"], input[type="hidden"][name="kondisi_warna[]"], input[type="hidden"][name="kondisi_aroma[]"]').forEach((el) => {
+            newItem.querySelectorAll('input[type="hidden"][name="kondisi_kemasan[]"], input[type="hidden"][name="kondisi_warna[]"], input[type="hidden"][name="kondisi_aroma[]"], input[type="hidden"][name="logo_halal[]"]').forEach((el) => {
                 el.value = '';
             });
 
@@ -1848,11 +1848,7 @@ function refreshChoicesForContainer(containerEl) {
     document.addEventListener('change', function(e) {
         const rowEl = e.target.closest('.unified-row');
         if (!rowEl) return;
-        if (e.target.matches('input[type="radio"][name^="logo_halal_master_"]')) {
-            const master = rowEl.querySelector('input.doc-master-logo');
-            if (master) master.value = e.target.value;
-            syncDokumenToDetails(rowEl);
-        }
+        // Logo Halal tidak lagi punya master; handler-nya ada di setupRowRadios (per detail)
         if (e.target.matches('input[type="radio"][name^="dokumen_halal_master_"]')) {
             const master = rowEl.querySelector('input.doc-master-dokumen');
             if (master) master.value = e.target.value;
@@ -1945,7 +1941,7 @@ function refreshChoicesForContainer(containerEl) {
         const formGroup = input.closest('.form-group');
         const labelEl = formGroup ? formGroup.querySelector('.form-label') : null;
         const originalLabel = labelEl ? labelEl.innerHTML : 'Foto';
-        
+
         if (labelEl) {
             labelEl.innerHTML = originalLabel + ' <span class="badge bg-primary"><i class="bi bi-hourglass-split"></i> Mengompres...</span>';
         }
@@ -1956,7 +1952,7 @@ function refreshChoicesForContainer(containerEl) {
             const dt = new DataTransfer();
             dt.items.add(compressedFile);
             input.files = dt.files;
-            
+
             if (labelEl) {
                 labelEl.innerHTML = originalLabel + ' <span class="badge bg-success"><i class="bi bi-check-circle"></i> Selesai (Auto-Compressed)</span>';
             }

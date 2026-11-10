@@ -131,9 +131,9 @@
                     <th style="background-color: #8b1428; color: #ffffff;">ASPEK YANG DINILAI</th>
                     <th style="background-color: #8b1428; color: #ffffff; text-align: center;">SEBELUM</th>
                     <th style="background-color: #8b1428; color: #ffffff; text-align: center;">SESUDAH</th>
-                    <th style="background-color: #8b1428; color: #ffffff; text-align: center;">VERIFIKASI</th>
                     <th style="background-color: #8b1428; color: #ffffff;">KETERANGAN</th>
                     <th style="background-color: #8b1428; color: #ffffff;">TINDAKAN</th>
+                    <th style="background-color: #8b1428; color: #ffffff; text-align: center;">VERIFIKASI</th>
                 </tr>
 
                 @forelse($fields as $fIdx => $field)
@@ -149,9 +149,9 @@
                         <td>{{ $field->field_name }}</td>
                         <td style="{{ $statusStyle($sb) }}">{{ $sb }}</td>
                         <td style="{{ $statusStyle($ss) }}">{{ $ss }}</td>
-                        <td style="{{ $statusStyle($sv) }}">{{ $sv }}</td>
                         <td>{{ $d['keterangan'] ?? '-' }}</td>
                         <td>{{ $d['tindakan_koreksi'] ?? '-' }}</td>
+                        <td style="{{ $statusStyle($sv) }}">{{ $sv }}</td>
                     </tr>
                 @empty
                     <tr>

@@ -334,7 +334,6 @@
 
                     <div class="fp-docs">
                         <span>Status dokumen:</span>
-                        <span class="fp-doc {{ $logoVal ? 'ok' : 'bad' }}"><i class="bi {{ $logoVal ? 'bi-check' : 'bi-x' }}"></i> Logo Halal</span>
                         <span class="fp-doc {{ $dokVal ? 'ok' : 'bad' }}"><i class="bi {{ $dokVal ? 'bi-check' : 'bi-x' }}"></i> Dokumen Halal</span>
                         <span class="fp-doc {{ $coaVal ? 'ok' : 'bad' }}"><i class="bi {{ $coaVal ? 'bi-check' : 'bi-x' }}"></i> COA</span>
                     </div>
@@ -372,7 +371,9 @@
                                         <span class="fp-pill {{ $physOk ? 'fp-pill-ok' : 'fp-pill-bad' }}">
                                             <i class="bi {{ $physOk ? 'bi-check-circle-fill' : 'bi-x-circle-fill' }}"></i> {{ $physLabel }}
                                         </span>
-                                    @endforeach
+                                        @endforeach
+                                        <span class="fp-doc {{ $logoVal ? 'ok' : 'bad' }}"><i class="bi {{ $logoVal ? 'bi-check' : 'bi-x' }}"></i> Logo Halal</span>
+
                                 </div>
 
                                 @if($keterangans[$index] ?? null)
