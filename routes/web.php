@@ -239,12 +239,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::prefix('qc-sistem')->group(function () {
         // Export PDF Routes (harus sebelum resource routes)
         Route::get('pemeriksaan-kedatangan-kemasan/export-pdf', [PemeriksaanKedatanganKemasanController::class, 'exportPDF'])->name('pemeriksaan-kedatangan-kemasan.export-pdf');
+        Route::get('pemeriksaan-kedatangan-kemasan/export-excel', [PemeriksaanKedatanganKemasanController::class, 'exportExcel'])->name('pemeriksaan-kedatangan-kemasan.export-excel');
         Route::get('pemeriksaan-bahan-baku/export-pdf', [PemeriksaanKedatanganBahanBakuPenunjangController::class, 'exportPDF'])->name('pemeriksaan-bahan-baku.export-pdf');
+        Route::get('pemeriksaan-bahan-baku/export-excel', [PemeriksaanKedatanganBahanBakuPenunjangController::class, 'exportExcel'])->name('pemeriksaan-bahan-baku.export-excel');
         Route::get('pemeriksaan-chemical/export-pdf', [PemeriksaanKedatanganChemicalController::class, 'exportPDF'])->name('pemeriksaan-chemical.export-pdf');
+        Route::get('pemeriksaan-chemical/export-excel', [PemeriksaanKedatanganChemicalController::class, 'exportExcel'])->name('pemeriksaan-chemical.export-excel');
         Route::get('pemeriksaan-produk-finish-good/export-pdf', [PemeriksaanProdukFinishGoodController::class, 'exportPDF'])->name('pemeriksaan-produk-finish-good.export-pdf');
+        Route::get('pemeriksaan-produk-finish-good/export-excel', [PemeriksaanProdukFinishGoodController::class, 'exportExcel'])->name('pemeriksaan-produk-finish-good.export-excel');
         Route::get('pemeriksaan-loading-produk/export-pdf', [PemeriksaanLoadingProdukController::class, 'exportPDF'])->name('pemeriksaan-loading-produk.export-pdf');
         Route::get('pemeriksaan-loading-produk/export-excel', [PemeriksaanLoadingProdukController::class, 'exportExcel'])->name('pemeriksaan-loading-produk.export-excel');
         Route::get('pemeriksaan-loading-kendaraan/export-pdf', [PemeriksaanLoadingKendaraanController::class, 'exportPDF'])->name('pemeriksaan-loading-kendaraan.export-pdf');
+        Route::get('pemeriksaan-loading-kendaraan/export-excel', [PemeriksaanLoadingKendaraanController::class, 'exportExcel'])->name('pemeriksaan-loading-kendaraan.export-excel');
         Route::get('return-barang/export-pdf', [PemeriksaanReturnBarangCustomerController::class, 'exportPDF'])->name('return-barang.export-pdf');
         Route::get('return-barang/export-excel', [PemeriksaanReturnBarangCustomerController::class, 'exportExcel'])->name('return-barang.export-excel');
         Route::get('return-barang/download-template-universal', [PemeriksaanReturnBarangCustomerController::class, 'downloadTemplateUniversal'])->name('return-barang.download-template-universal');
@@ -252,7 +257,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('pemeriksaan-kebersihan-area/export-pdf/{uuid?}', [PemeriksaanKebersihanAreaController::class, 'exportPDF'])->name('pemeriksaan-kebersihan-area.export-pdf');
         Route::get('pemeriksaan-kebersihan-area/export-excel/{uuid?}', [PemeriksaanKebersihanAreaController::class, 'exportExcel'])->name('pemeriksaan-kebersihan-area.export-excel');
         Route::get('golden-sample-reports/export-pdf', [GoldenSampleReportController::class, 'exportPDF'])->name('golden-sample-reports.export-pdf');
+        Route::get('golden-sample-reports/export-excel', [GoldenSampleReportController::class, 'exportExcel'])->name('golden-sample-reports.export-excel');
         Route::get('pemeriksaan-barang-mudah-pecah/export-pdf', [PemeriksaanBarangMudahPecahController::class, 'exportPDF'])->name('pemeriksaan-barang-mudah-pecah.export-pdf');
+        Route::get('pemeriksaan-barang-mudah-pecah/export-excel', [PemeriksaanBarangMudahPecahController::class, 'exportExcel'])->name('pemeriksaan-barang-mudah-pecah.export-excel');
         Route::get('pemeriksaan-suhu-ruang/export-pdf', [PemeriksaanSuhuRuangController::class, 'exportPDF'])->name('pemeriksaan-suhu-ruang.export-pdf');
         Route::get('pemeriksaan-suhu-ruang/export-excel', [PemeriksaanSuhuRuangController::class, 'exportExcel'])->name('pemeriksaan-suhu-ruang.export-excel');
         Route::get('pemeriksaan-suhu-ruang/{pemeriksaanSuhuRuang:uuid}/print-pdf', [PemeriksaanSuhuRuangController::class, 'printPDF'])->name('pemeriksaan-suhu-ruang.print-pdf');
@@ -326,6 +333,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('pemeriksaan-suhu-ruang-v3/import', [PemeriksaanSuhuRuangV3Controller::class, 'import'])->name('pemeriksaan-suhu-ruang-v3.import');
         Route::get('pemeriksaan-suhu-ruang-v3/{pemeriksaanSuhuRuangV3:uuid}/print-pdf', [PemeriksaanSuhuRuangV3Controller::class, 'printPDF'])->name('pemeriksaan-suhu-ruang-v3.print-pdf');
         Route::get('detail-komplain/export-pdf/{uuid?}', [DetailKomplainController::class, 'exportPdf'])->name('detail-komplain.export-pdf');
+        Route::get('detail-komplain/export-excel/{uuid}', [DetailKomplainController::class, 'exportExcel'])->name('detail-komplain.export-excel');
         
         // Routes Tambah data per uuid
         Route::get('pemeriksaan-kedatangan-kemasan/{pemeriksaanKedatanganKemasan:uuid}/tambah-baris', [PemeriksaanKedatanganKemasanController::class, 'createRow'])->name('pemeriksaan-kedatangan-kemasan.tambah-baris');

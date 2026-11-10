@@ -286,6 +286,8 @@
                                                 <div class="btn-vertical">
                                                     @can('view_pemeriksaan_kebersihan_area') <a href="{{ route('pemeriksaan-kebersihan-area.show', $item->uuid) }}" class="btn btn-sm btn-info text-white"><i class="bi bi-eye"></i></a> @endcan
                                                     @can('edit_pemeriksaan_kebersihan_area') <a href="{{ route('pemeriksaan-kebersihan-area.edit', $item->uuid) }}" class="btn btn-sm btn-warning text-white"><i class="bi bi-pencil"></i></a> @endcan
+                                                    <a href="{{ route('pemeriksaan-kebersihan-area.export-pdf', ['uuid' => $item->uuid]) }}" class="btn btn-sm btn-danger" title="Download PDF"><i class="bi bi-file-earmark-text"></i></a>
+                                                    <!-- <a href="{{ route('pemeriksaan-kebersihan-area.export-excel', ['uuid' => $item->uuid]) }}" class="btn btn-sm btn-success" title="Download Excel"><i class="bi bi-file-earmark-excel"></i></a> -->
                                                     @can('delete_pemeriksaan_kebersihan_area')
                                                         <button type="button" class="btn btn-sm btn-danger" onclick="if(confirm('Yakin ingin menghapus data ini?')) document.getElementById('del-{{$item->uuid}}').submit()"><i class="bi bi-trash"></i></button>
                                                     @endcan

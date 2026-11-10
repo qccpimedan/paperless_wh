@@ -8,6 +8,7 @@ use App\Models\Shift;
 use App\Models\Produk;
 use App\Traits\EditablePer2JamTrait;
 use App\Exports\PemeriksaanSuhuRuangV2Export;
+use App\Exports\SingleRecordViewExport;
 use App\Http\Controllers\Traits\HasAuditController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -858,6 +859,29 @@ class PemeriksaanSuhuRuangV2Controller extends Controller
     public function exportPDF(Request $request)
     {
         $user = Auth::user();
+        if ($request->filled('uuid')) {
+            $pemeriksaan = PemeriksaanSuhuRuangV2::where('uuid', $request->input('uuid'))
+                ->with(['user.role', 'user.plant', 'produk', 'shift', 'histories', 'qcVerifier', 'produksiVerifier', 'spvVerifier'])
+                ->firstOrFail();
+            if ($user->role && strtolower($user->role->role) !== 'superadmin'
+                && $user->getEffectivePlantId() !== $pemeriksaan->user->id_plant) {
+                abort(403, 'Unauthorized');
+            }
+            $dataPerShift = [[
+                'shift' => $pemeriksaan->shift,
+                'pemeriksaans' => collect([$pemeriksaan]),
+                'qcUser' => $pemeriksaan->qcVerifier?->name,
+                'produksiUser' => $pemeriksaan->produksiVerifier?->name,
+                'spvQcUser' => $pemeriksaan->spvVerifier?->name,
+            ]];
+            return \PDF::loadView('qc-sistem.pemeriksaan-suhu-ruang-v2.pdf-report', [
+                'pemeriksaans' => collect([$pemeriksaan]),
+                'tanggal' => $pemeriksaan->tanggal,
+                'shift' => $pemeriksaan->shift,
+                'isAllShift' => false,
+                'dataPerShift' => $dataPerShift,
+            ])->download('suhu-ruang-v2-' . $pemeriksaan->uuid . '.pdf');
+        }
         $id_shift = $request->input('id_shift');
         $tanggalDari = $request->input('tanggal_dari');
         $tanggalSampai = $request->input('tanggal_sampai');
@@ -1126,6 +1150,26 @@ class PemeriksaanSuhuRuangV2Controller extends Controller
     public function exportExcel(Request $request)
     {
         $user = Auth::user();
+        if ($request->filled('uuid')) {
+            $pemeriksaan = PemeriksaanSuhuRuangV2::where('uuid', $request->input('uuid'))
+                ->with(['user.role', 'user.plant', 'produk', 'shift', 'histories', 'qcVerifier', 'produksiVerifier', 'spvVerifier'])
+                ->firstOrFail();
+            if ($user->role && strtolower($user->role->role) !== 'superadmin'
+                && $user->getEffectivePlantId() !== $pemeriksaan->user->id_plant) {
+                abort(403, 'Unauthorized');
+            }
+            $data = [
+                'pemeriksaans' => collect([$pemeriksaan]),
+                'tanggal' => $pemeriksaan->tanggal,
+                'shift' => $pemeriksaan->shift,
+                'isAllShift' => false,
+                'dataPerShift' => [[
+                    'shift' => $pemeriksaan->shift,
+                    'pemeriksaans' => collect([$pemeriksaan]),
+                ]],
+            ];
+            return Excel::download(new SingleRecordViewExport('qc-sistem.pemeriksaan-suhu-ruang-v2.pdf-report', $data, 'Suhu Ruang V2'), 'suhu-ruang-v2-' . $pemeriksaan->uuid . '.xlsx');
+        }
         $id_shift = $request->input('id_shift');
         $tanggalDari = $request->input('tanggal_dari');
         $tanggalSampai = $request->input('tanggal_sampai');

@@ -9,10 +9,12 @@ use App\Models\Produsen;
 use App\Models\User;
 use App\Models\Distributor;
 use App\Models\Produk;
+use App\Exports\SingleRecordViewExport;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
 use Monarobase\CountryList\CountryListFacade as Countries;
+use Maatwebsite\Excel\Facades\Excel;
 use App\Http\Controllers\Traits\HasAuditController;
 
 class PemeriksaanKedatanganChemicalController extends Controller
@@ -1641,6 +1643,64 @@ return view('qc-sistem.pemeriksaan-kedatangan-chemical.index', compact('pemeriks
         $filenameDate = $tanggal ?? $tanggalDari ?? date('Y-m-d');
         $filename = 'laporan-pemeriksaan-chemical-' . $filenameDate . '.pdf';
         return $pdf->download($filename);
+    }
+
+    /**
+     * Export one record to Excel based on its UUID.
+     */
+    public function exportExcel(Request $request)
+    {
+        $user = Auth::user();
+        $uuid = $request->input('uuid');
+
+        abort_unless($uuid, 404);
+
+        $pemeriksaan = PemeriksaanKedatanganChemical::where('uuid', $uuid)
+            ->with([
+                'user.role',
+                'user.plant',
+                'shift',
+                'qcVerifier' => function ($q) { $q->select('id', 'name'); },
+                'produksiVerifier' => function ($q) { $q->select('id', 'name'); },
+                'spvVerifier' => function ($q) { $q->select('id', 'name'); },
+            ])
+            ->firstOrFail();
+
+        if ($user->role && strtolower($user->role->role) !== 'superadmin'
+            && $user->getEffectivePlantId() !== $pemeriksaan->user->id_plant) {
+            abort(403, 'Unauthorized');
+        }
+
+        $qcUser = $pemeriksaan->qcVerifier?->name;
+        $produksiUser = $pemeriksaan->produksiVerifier?->name;
+        $spvQcUser = $pemeriksaan->spvVerifier?->name;
+        $dataPerShift = [[
+            'shift' => $pemeriksaan->shift,
+            'pemeriksaans' => collect([$pemeriksaan]),
+            'qcUser' => $qcUser,
+            'produksiUser' => $produksiUser,
+            'spvQcUser' => $spvQcUser,
+            'filterChemicalIds' => null,
+        ]];
+
+        return Excel::download(
+            new SingleRecordViewExport(
+                'qc-sistem.pemeriksaan-kedatangan-chemical.pdf-report',
+                [
+                    'pemeriksaans' => collect([$pemeriksaan]),
+                    'tanggal' => $pemeriksaan->tanggal,
+                    'shift' => $pemeriksaan->shift,
+                    'qcUser' => $qcUser,
+                    'produksiUser' => $produksiUser,
+                    'spvQcUser' => $spvQcUser,
+                    'filterChemicalIds' => null,
+                    'isAllShift' => false,
+                    'dataPerShift' => $dataPerShift,
+                ],
+                'Pemeriksaan Chemical'
+            ),
+            'chemical-' . $pemeriksaan->uuid . '.xlsx'
+        );
     }
 
     private function exportPDFAllShift($request, $user, $tanggalDari, $tanggalSampai, $id_produk, $kategori_code)

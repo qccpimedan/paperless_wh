@@ -16,6 +16,7 @@ use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf as PDF;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\PemeriksaanLoadingProdukExport;
+use App\Exports\SingleRecordViewExport;
 use App\Exports\LoadingTemplateExport;
 use App\Exports\LoadingTemplateUniversalExport;
 use App\Imports\LoadingUniversalImport;
@@ -1350,6 +1351,53 @@ class PemeriksaanLoadingProdukController extends Controller
     public function exportExcel(Request $request)
     {
         $user = Auth::user();
+        if ($request->filled('uuid')) {
+            $pemeriksaan = PemeriksaanLoadingProduk::where('uuid', $request->input('uuid'))
+                ->with(['user.role', 'user.plant', 'shift', 'tujuanPengiriman.customer', 'kendaraan', 'supir', 'qcVerifier', 'produksiVerifier', 'spvVerifier'])
+                ->firstOrFail();
+
+            if ($user->role && strtolower($user->role->role) !== 'superadmin'
+                && $user->getEffectivePlantId() !== $pemeriksaan->user->id_plant) {
+                abort(403, 'Unauthorized');
+            }
+
+            $qcUser = $pemeriksaan->qcVerifier?->name;
+            $produksiUser = $pemeriksaan->produksiVerifier?->name;
+            $spvQcUser = $pemeriksaan->spvVerifier?->name;
+            $produkIds = collect($pemeriksaan->produk_data ?? [])->pluck('id_produk')->filter()->unique()->all();
+            $produkMap = Produk::whereIn('id', $produkIds)->pluck('nama_produk', 'id')->all();
+            $tujuanIds = collect($pemeriksaan->produk_data ?? [])->pluck('id_tujuan_pengiriman')->filter()->unique()->all();
+            $tujuanMap = TujuanPengiriman::with('customer')->whereIn('id', $tujuanIds)->get()->keyBy('id');
+            $dataPerShift = [[
+                'shift' => $pemeriksaan->shift,
+                'pemeriksaans' => collect([$pemeriksaan]),
+                'qcUser' => $qcUser,
+                'produksiUser' => $produksiUser,
+                'spvQcUser' => $spvQcUser,
+                'filterProdukIds' => null,
+                'produkMap' => $produkMap,
+                'tujuanMap' => $tujuanMap,
+            ]];
+
+            return Excel::download(new SingleRecordViewExport(
+                'qc-sistem.pemeriksaan-loading-produk.pdf-report',
+                [
+                    'pemeriksaans' => collect([$pemeriksaan]),
+                    'tanggal' => $pemeriksaan->tanggal,
+                    'shift' => $pemeriksaan->shift,
+                    'qcUser' => $qcUser,
+                    'produksiUser' => $produksiUser,
+                    'spvQcUser' => $spvQcUser,
+                    'filterProdukIds' => null,
+                    'isAllShift' => false,
+                    'dataPerShift' => $dataPerShift,
+                    'produkMap' => $produkMap,
+                    'tujuanMap' => $tujuanMap,
+                ],
+                'Pemeriksaan Loading Produk'
+            ), 'loading-produk-' . $pemeriksaan->uuid . '.xlsx');
+        }
+
         $id_shift = $request->input('id_shift');
         $tanggalDari = $request->input('tanggal_dari');
         $tanggalSampai = $request->input('tanggal_sampai');

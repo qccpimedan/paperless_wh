@@ -11,7 +11,9 @@ use Illuminate\Http\Request;
 use App\Models\Shift;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
+use App\Exports\SingleRecordViewExport;
 use Barryvdh\DomPDF\Facade\Pdf as PDF;
+use Maatwebsite\Excel\Facades\Excel;
 use App\Http\Controllers\Traits\HasAuditController;
 
 class PemeriksaanLoadingKendaraanController extends Controller
@@ -543,6 +545,29 @@ class PemeriksaanLoadingKendaraanController extends Controller
     public function exportPDF(Request $request)
     {
         $user = Auth::user();
+        if ($request->filled('uuid')) {
+            $pemeriksaan = PemeriksaanLoadingKendaraan::where('uuid', $request->input('uuid'))
+                ->with(['user.role', 'user.plant', 'ekspedisi', 'kendaraan', 'tujuanPengiriman', 'stdPrecooling', 'shift', 'verifiedBy', 'qcVerifier', 'produksiVerifier', 'spvVerifier'])
+                ->firstOrFail();
+
+            if ($user->role && strtolower($user->role->role) !== 'superadmin'
+                && $user->getEffectivePlantId() !== $pemeriksaan->user->id_plant) {
+                abort(403, 'Unauthorized');
+            }
+
+            $dataPerShift = [[
+                'shift' => $pemeriksaan->shift,
+                'pemeriksaans' => collect([$pemeriksaan]),
+            ]];
+            return PDF::loadView('qc-sistem.pemeriksaan-loading-kendaraan.pdf-report', [
+                'pemeriksaans' => collect([$pemeriksaan]),
+                'tanggal' => $pemeriksaan->tanggal,
+                'shift' => $pemeriksaan->shift,
+                'isAllShift' => false,
+                'dataPerShift' => $dataPerShift,
+            ])->download('loading-kendaraan-' . $pemeriksaan->uuid . '.pdf');
+        }
+
         $id_shift = $request->input('id_shift');
         $tanggalDari = $request->input('tanggal_dari');
         $tanggalSampai = $request->input('tanggal_sampai');
@@ -625,6 +650,34 @@ class PemeriksaanLoadingKendaraanController extends Controller
         $filenameDate = $tanggal ?? $tanggalDari ?? date('Y-m-d');
         $filename = 'laporan-pemeriksaan-loading-kendaraan-' . $filenameDate . '.pdf';
         return $pdf->download($filename);
+    }
+
+    public function exportExcel(Request $request)
+    {
+        $user = Auth::user();
+        $pemeriksaan = PemeriksaanLoadingKendaraan::where('uuid', $request->input('uuid'))
+            ->with(['user.role', 'user.plant', 'ekspedisi', 'kendaraan', 'tujuanPengiriman', 'stdPrecooling', 'shift', 'verifiedBy', 'qcVerifier', 'produksiVerifier', 'spvVerifier'])
+            ->firstOrFail();
+
+        if ($user->role && strtolower($user->role->role) !== 'superadmin'
+            && $user->getEffectivePlantId() !== $pemeriksaan->user->id_plant) {
+            abort(403, 'Unauthorized');
+        }
+
+        return Excel::download(new SingleRecordViewExport(
+            'qc-sistem.pemeriksaan-loading-kendaraan.pdf-report',
+            [
+                'pemeriksaans' => collect([$pemeriksaan]),
+                'tanggal' => $pemeriksaan->tanggal,
+                'shift' => $pemeriksaan->shift,
+                'isAllShift' => false,
+                'dataPerShift' => [[
+                    'shift' => $pemeriksaan->shift,
+                    'pemeriksaans' => collect([$pemeriksaan]),
+                ]],
+            ],
+            'Pemeriksaan Loading Kendaraan'
+        ), 'loading-kendaraan-' . $pemeriksaan->uuid . '.xlsx');
     }
 
     private function exportPDFAllShift($request, $user, $tanggalDari, $tanggalSampai)

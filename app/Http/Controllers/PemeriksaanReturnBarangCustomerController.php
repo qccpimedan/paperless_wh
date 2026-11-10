@@ -1030,6 +1030,34 @@ class PemeriksaanReturnBarangCustomerController extends Controller
     public function exportExcel(Request $request)
     {
         $user = Auth::user();
+        if ($request->filled('uuid')) {
+            $pemeriksaan = PemeriksaanReturnBarangCustomer::where('uuid', $request->input('uuid'))
+                ->with(['user.role', 'user.plant', 'shift', 'customer', 'ekspedisi', 'qcVerifier', 'produksiVerifier', 'spvVerifier'])
+                ->firstOrFail();
+
+            if ($user->role && strtolower($user->role->role) !== 'superadmin'
+                && $user->getEffectivePlantId() !== $pemeriksaan->user->id_plant) {
+                abort(403, 'Unauthorized');
+            }
+
+            $produkIds = collect($pemeriksaan->produk_data ?? [])
+                ->pluck('id_produk')->filter()->unique()->all();
+            $produkNamaById = $produkIds
+                ? Produk::whereIn('id', $produkIds)->pluck('nama_produk', 'id')->toArray()
+                : [];
+
+            return Excel::download(
+                new \App\Exports\PemeriksaanReturnBarangCustomerExport(
+                    collect([$pemeriksaan]),
+                    $produkNamaById,
+                    $pemeriksaan->qcVerifier?->name,
+                    $pemeriksaan->produksiVerifier?->name,
+                    $pemeriksaan->spvVerifier?->name
+                ),
+                'return-barang-' . $pemeriksaan->uuid . '.xlsx'
+            );
+        }
+
         $id_shift = $request->input('id_shift');
         $tanggalDari = $request->input('tanggal_dari');
         $tanggalSampai = $request->input('tanggal_sampai');

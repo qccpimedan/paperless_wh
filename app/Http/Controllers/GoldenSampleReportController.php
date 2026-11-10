@@ -10,6 +10,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf as PDF;
+use App\Exports\SingleRecordViewExport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class GoldenSampleReportController extends Controller
 {
@@ -548,6 +550,32 @@ class GoldenSampleReportController extends Controller
         $filenameDate = $tanggal ?? $tanggalDari ?? date('Y-m-d');
         $filename = 'laporan-golden-sample-' . $filenameDate . '.pdf';
         return $pdf->download($filename);
+    }
+
+    public function exportExcel(Request $request)
+    {
+        $user = Auth::user();
+        $report = GoldenSampleReport::where('uuid', $request->input('uuid'))
+            ->with(['user.role', 'user.plant', 'plant', 'shift', 'qcVerifier', 'produksiVerifier', 'spvVerifier'])
+            ->firstOrFail();
+
+        if ($user->role && strtolower($user->role->role) !== 'superadmin'
+            && $user->getEffectivePlantId() !== $report->user->id_plant) {
+            abort(403, 'Unauthorized');
+        }
+
+        return Excel::download(new SingleRecordViewExport(
+            'qc-sistem.golden-sample-retort.pdf-report',
+            [
+                'reports' => collect([$report]),
+                'tanggal' => $report->tanggal,
+                'shift' => $report->shift,
+                'qcUser' => $report->qcVerifier?->name,
+                'produksiUser' => $report->produksiVerifier?->name,
+                'spvQcUser' => $report->spvVerifier?->name,
+            ],
+            'Golden Sample'
+        ), 'golden-sample-' . $report->uuid . '.xlsx');
     }
 
     public function batchVerify(Request $request)

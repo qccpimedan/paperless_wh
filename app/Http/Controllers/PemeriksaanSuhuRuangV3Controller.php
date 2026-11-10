@@ -7,6 +7,7 @@ use App\Models\PemeriksaanSuhuRuangV3History;
 use App\Models\Shift;
 use App\Exports\PemeriksaanSuhuRuangV3Export;
 use App\Exports\PemeriksaanSuhuRuangV3TemplateExport;
+use App\Exports\SingleRecordViewExport;
 use App\Imports\PemeriksaanSuhuRuangV3Import;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -790,6 +791,29 @@ class PemeriksaanSuhuRuangV3Controller extends Controller
     public function exportPDF(Request $request)
     {
         $user = Auth::user();
+        if ($request->filled('uuid')) {
+            $pemeriksaan = PemeriksaanSuhuRuangV3::where('uuid', $request->input('uuid'))
+                ->with(['user.role', 'user.plant', 'shift', 'histories', 'verifiedByQc.role', 'verifiedByProduksi.role', 'verifiedBySpv.role'])
+                ->firstOrFail();
+            if ($user->role && strtolower($user->role->role) !== 'superadmin'
+                && $user->getEffectivePlantId() !== $pemeriksaan->user->id_plant) {
+                abort(403, 'Unauthorized');
+            }
+            $dataPerShift = [[
+                'shift' => $pemeriksaan->shift,
+                'pemeriksaans' => collect([$pemeriksaan]),
+                'qcUser' => $pemeriksaan->verifiedByQc?->name,
+                'produksiUser' => $pemeriksaan->verifiedByProduksi?->name,
+                'spvQcUser' => $pemeriksaan->verifiedBySpv?->name,
+            ]];
+            return \PDF::loadView('qc-sistem.pemeriksaan-suhu-ruang-v3.pdf-report', [
+                'pemeriksaans' => collect([$pemeriksaan]),
+                'tanggal' => $pemeriksaan->tanggal,
+                'shift' => $pemeriksaan->shift,
+                'isAllShift' => false,
+                'dataPerShift' => $dataPerShift,
+            ])->download('suhu-ruang-v3-' . $pemeriksaan->uuid . '.pdf');
+        }
         $id_shift = $request->input('id_shift');
         $tanggalDari = $request->input('tanggal_dari');
         $tanggalSampai = $request->input('tanggal_sampai');
@@ -942,6 +966,26 @@ class PemeriksaanSuhuRuangV3Controller extends Controller
     public function exportExcel(Request $request)
     {
         $user = Auth::user();
+        if ($request->filled('uuid')) {
+            $pemeriksaan = PemeriksaanSuhuRuangV3::where('uuid', $request->input('uuid'))
+                ->with(['user.role', 'user.plant', 'shift', 'histories', 'verifiedByQc.role', 'verifiedByProduksi.role', 'verifiedBySpv.role'])
+                ->firstOrFail();
+            if ($user->role && strtolower($user->role->role) !== 'superadmin'
+                && $user->getEffectivePlantId() !== $pemeriksaan->user->id_plant) {
+                abort(403, 'Unauthorized');
+            }
+            $data = [
+                'pemeriksaans' => collect([$pemeriksaan]),
+                'tanggal' => $pemeriksaan->tanggal,
+                'shift' => $pemeriksaan->shift,
+                'isAllShift' => false,
+                'dataPerShift' => [[
+                    'shift' => $pemeriksaan->shift,
+                    'pemeriksaans' => collect([$pemeriksaan]),
+                ]],
+            ];
+            return Excel::download(new SingleRecordViewExport('qc-sistem.pemeriksaan-suhu-ruang-v3.pdf-report', $data, 'Suhu Ruang V3'), 'suhu-ruang-v3-' . $pemeriksaan->uuid . '.xlsx');
+        }
         $id_shift = $request->input('id_shift');
         $tanggalDari = $request->input('tanggal_dari');
         $tanggalSampai = $request->input('tanggal_sampai');

@@ -6,9 +6,11 @@ use App\Models\PemeriksaanProdukFinishGood;
 use App\Models\Produk;
 use App\Models\Shift;
 use App\Models\User;
+use App\Exports\SingleRecordViewExport;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Barryvdh\DomPDF\Facade\Pdf as PDF;
+use Maatwebsite\Excel\Facades\Excel;
 use Monarobase\CountryList\CountryListFacade as Countries;
 use App\Http\Controllers\Traits\HasAuditController;
 
@@ -1104,6 +1106,51 @@ return view('qc-sistem.pemeriksaan-produk-finish-good.index', compact('pemeriksa
         $filenameDate = $tanggal ?? $tanggalDari ?? date('Y-m-d');
         $filename = 'laporan-pemeriksaan-finish-good-' . $filenameDate . '.pdf';
         return $pdf->download($filename);
+    }
+
+    public function exportExcel(Request $request)
+    {
+        $user = Auth::user();
+        $pemeriksaan = PemeriksaanProdukFinishGood::where('uuid', $request->input('uuid'))
+            ->with(['user.role', 'user.plant', 'shift', 'qcVerifier', 'produksiVerifier', 'spvVerifier'])
+            ->firstOrFail();
+
+        if ($user->role && strtolower($user->role->role) !== 'superadmin'
+            && $user->getEffectivePlantId() !== $pemeriksaan->user->id_plant) {
+            abort(403, 'Unauthorized');
+        }
+
+        $qcUser = $pemeriksaan->qcVerifier?->name;
+        $produksiUser = $pemeriksaan->produksiVerifier?->name;
+        $spvQcUser = $pemeriksaan->spvVerifier?->name;
+        $produkIds = array_filter($pemeriksaan->id_produk_array ?? []);
+        $produkMap = Produk::whereIn('id', $produkIds)->pluck('nama_produk', 'id')->all();
+        $dataPerShift = [[
+            'shift' => $pemeriksaan->shift,
+            'pemeriksaans' => collect([$pemeriksaan]),
+            'qcUser' => $qcUser,
+            'produksiUser' => $produksiUser,
+            'spvQcUser' => $spvQcUser,
+            'filterProdukIds' => null,
+            'produkMap' => $produkMap,
+        ]];
+
+        return Excel::download(new SingleRecordViewExport(
+            'qc-sistem.pemeriksaan-produk-finish-good.pdf-report',
+            [
+                'pemeriksaans' => collect([$pemeriksaan]),
+                'tanggal' => $pemeriksaan->tanggal,
+                'shift' => $pemeriksaan->shift,
+                'qcUser' => $qcUser,
+                'produksiUser' => $produksiUser,
+                'spvQcUser' => $spvQcUser,
+                'filterProdukIds' => null,
+                'isAllShift' => false,
+                'dataPerShift' => $dataPerShift,
+                'produkMap' => $produkMap,
+            ],
+            'Pemeriksaan Finish Good'
+        ), 'produk-finish-good-' . $pemeriksaan->uuid . '.xlsx');
     }
 
     private function exportPDFAllShift($request, $user, $tanggalDari, $tanggalSampai, $id_produk, $kategori_code)
