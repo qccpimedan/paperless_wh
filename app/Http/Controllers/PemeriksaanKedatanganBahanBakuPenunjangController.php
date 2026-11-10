@@ -17,10 +17,12 @@ use Illuminate\Http\UploadedFile;
 use Maatwebsite\Excel\Facades\Excel;
 use Monarobase\CountryList\CountryListFacade as Countries; // Menggunakan Facade
 use App\Http\Controllers\Traits\HasAuditController;
+use App\Http\Controllers\Traits\RejectsTruncatedDynamicInput;
 
 class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
 {
     use HasAuditController;
+    use RejectsTruncatedDynamicInput;
 
     /**
      * Simpan file COA (PDF atau gambar).
@@ -431,6 +433,13 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
 
         $inputProdukIds = $request->input('id_produk', $request->input('id_bahan', []));
         $inputBahanIds = $request->input('id_bahan', []);
+        $this->rejectMismatchedDynamicArrayLengths($request, 'id_produk', [
+            'kategori_code', 'negara_produsen', 'kode_produksi', 'expire_date',
+            'jumlah_datang', 'unit_datang', 'jumlah_sampling', 'unit_sampling',
+            'spesifikasi', 'kondisi_fisik_kemasan', 'kondisi_fisik_warna',
+            'kondisi_fisik_benda_asing', 'kondisi_fisik_aroma', 'logo_halal',
+            'dokumen_halal', 'coa', 'status_baris', 'keterangan_hasil',
+        ]);
         [$mappedBahanIds, $missingMapErrors] = $this->mapProdukToBahanIds($request, $inputProdukIds, $inputBahanIds);
         if (!empty($missingMapErrors)) {
             throw \Illuminate\Validation\ValidationException::withMessages($missingMapErrors);

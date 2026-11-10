@@ -13,10 +13,12 @@ use Barryvdh\DomPDF\Facade\Pdf as PDF;
 use Maatwebsite\Excel\Facades\Excel;
 use Monarobase\CountryList\CountryListFacade as Countries;
 use App\Http\Controllers\Traits\HasAuditController;
+use App\Http\Controllers\Traits\RejectsTruncatedDynamicInput;
 
 class PemeriksaanProdukFinishGoodController extends Controller
 {
     use HasAuditController;
+    use RejectsTruncatedDynamicInput;
     public function index(Request $request)
     {
         $user = Auth::user();
@@ -278,6 +280,15 @@ return view('qc-sistem.pemeriksaan-produk-finish-good.index', compact('pemeriksa
             'file_coa.*' => 'nullable|file|mimes:pdf|max:3072',
             'file_coa_img' => 'nullable|array',
             'file_coa_img.*' => 'nullable|file|mimes:jpeg,png,jpg,gif,webp|max:3072',
+        ]);
+
+        $this->rejectMismatchedDynamicArrayLengths($request, 'id_produk', [
+            'kategori_code', 'suhu_mobil_type', 'suhu_mobil_value',
+            'suhu_produk_type', 'suhu_produk_value', 'kondisi_produk',
+            'kondisi_produk_suhu_value', 'negara_produsen', 'kode_produksi',
+            'expire_date', 'jumlah_datang', 'jumlah_sampling', 'kondisi_kemasan',
+            'kondisi_warna', 'kondisi_aroma', 'logo_halal', 'dokumen_halal',
+            'coa', 'status_baris', 'keterangan',
         ]);
 
         $idProdukArr = $request->input('id_produk', []);

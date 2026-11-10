@@ -23,10 +23,12 @@ use App\Imports\LoadingUniversalImport;
 use App\Imports\LoadingUniversalSheetImport;
 use Maatwebsite\Excel\HeadingRowImport;
 use App\Http\Controllers\Traits\HasAuditController;
+use App\Http\Controllers\Traits\RejectsTruncatedDynamicInput;
 
 class PemeriksaanLoadingProdukController extends Controller
 {
     use HasAuditController;
+    use RejectsTruncatedDynamicInput;
     public function index(Request $request)
     {
         $user = Auth::user();
@@ -253,6 +255,10 @@ class PemeriksaanLoadingProdukController extends Controller
 
     public function store(Request $request)
     {
+        $this->rejectIncompleteNestedRows($request, 'produk_data', [
+            'id_produk',
+        ]);
+
         $validated = $request->validate([
             'tanggal' => 'required|date',
             'id_shift' => 'nullable|exists:shifts,id',

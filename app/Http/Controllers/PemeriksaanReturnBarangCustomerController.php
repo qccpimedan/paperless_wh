@@ -13,10 +13,12 @@ use Illuminate\Support\Facades\Auth;
 use Barryvdh\DomPDF\Facade\Pdf as PDF;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Http\Controllers\Traits\HasAuditController;
+use App\Http\Controllers\Traits\RejectsTruncatedDynamicInput;
 
 class PemeriksaanReturnBarangCustomerController extends Controller
 {
     use HasAuditController;
+    use RejectsTruncatedDynamicInput;
     public function index(Request $request)
     {
         $user = Auth::user();
@@ -213,6 +215,12 @@ class PemeriksaanReturnBarangCustomerController extends Controller
 
     public function store(Request $request)
     {
+        $this->rejectIncompleteNestedRows($request, 'produk_data', [
+            'id_customer', 'alasan_return', 'kondisi_produk', 'kategori_code',
+            'id_produk', 'kode_produksi', 'expired_date', 'jumlah_barang',
+            'kondisi_kemasan', 'kondisi_produk_check', 'rekomendasi',
+        ]);
+
         // Debug: Uncomment untuk melihat data yang dikirim
         // dd($request->all());
         

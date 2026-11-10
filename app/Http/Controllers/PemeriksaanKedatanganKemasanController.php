@@ -16,10 +16,12 @@ use Barryvdh\DomPDF\Facade\Pdf as PDF;
 use App\Exports\SingleRecordViewExport;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Http\Controllers\Traits\HasAuditController;
+use App\Http\Controllers\Traits\RejectsTruncatedDynamicInput;
 
 class PemeriksaanKedatanganKemasanController extends Controller
 {
     use HasAuditController;
+    use RejectsTruncatedDynamicInput;
     /**
      * Simpan file COA (PDF atau gambar).
      * Jika gambar > 3MB, otomatis dikompres sebelum disimpan.
@@ -352,6 +354,13 @@ return view('qc-sistem.pemeriksaan-kedatangan-kemasan.index', compact('pemeriksa
             'image_kemasan.*' => 'nullable|image|max:3072',
             'file_coa.*' => 'nullable|mimes:pdf,jpg,jpeg,png,webp|max:3072',
             'file_coa_img.*' => 'nullable|image|max:3072',
+        ]);
+
+        $this->rejectMismatchedDynamicArrayLengths($request, 'id_produk', [
+            'kategori_code', 'kode_produksi', 'jumlah_datang', 'unit_datang',
+            'jumlah_sampling', 'unit_sampling', 'spesifikasi', 'penampakan',
+            'sealing', 'cetakan', 'ketebalan_micron', 'dimensi', 'berat',
+            'status', 'logo_halal', 'dokumen_halal', 'coa', 'keterangan',
         ]);
     
         // Process kondisi mobil dengan logic yang benar

@@ -16,10 +16,12 @@ use Illuminate\Validation\ValidationException;
 use Monarobase\CountryList\CountryListFacade as Countries;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Http\Controllers\Traits\HasAuditController;
+use App\Http\Controllers\Traits\RejectsTruncatedDynamicInput;
 
 class PemeriksaanKedatanganChemicalController extends Controller
 {
     use HasAuditController;
+    use RejectsTruncatedDynamicInput;
     private function safeFuzzyMatch($a, $b)
     {
         if (!$a || !$b) return false;
@@ -342,6 +344,13 @@ return view('qc-sistem.pemeriksaan-kedatangan-chemical.index', compact('pemeriks
     {
         $inputProdukIds = $request->input('id_produk', []);
         $inputChemicalIds = $request->input('id_chemical', []);
+        $this->rejectMismatchedDynamicArrayLengths($request, 'id_produk', [
+            'id_chemical', 'kondisi_chemical', 'id_produsen', 'negara_produsen',
+            'id_distributor', 'kode_produksi', 'expire_date', 'jumlah_datang',
+            'unit_datang', 'jumlah_sampling', 'unit_sampling',
+            'kondisi_fisik_kemasan', 'kondisi_fisik_warna',
+            'persyaratan_dokumen_halal', 'coa', 'status_baris', 'keterangan',
+        ]);
 
         if (is_array($inputProdukIds) && is_array($inputChemicalIds)) {
             $produkRows = Produk::query()

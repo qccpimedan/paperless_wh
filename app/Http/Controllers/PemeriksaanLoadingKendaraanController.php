@@ -15,10 +15,12 @@ use App\Exports\SingleRecordViewExport;
 use Barryvdh\DomPDF\Facade\Pdf as PDF;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Http\Controllers\Traits\HasAuditController;
+use App\Http\Controllers\Traits\RejectsTruncatedDynamicInput;
 
 class PemeriksaanLoadingKendaraanController extends Controller
 {
     use HasAuditController;
+    use RejectsTruncatedDynamicInput;
     public function index(Request $request)
     {
         $user = Auth::user();
@@ -129,6 +131,11 @@ class PemeriksaanLoadingKendaraanController extends Controller
 
     public function store(Request $request)
     {
+        $this->rejectIncompleteNestedRows($request, 'entries', [
+            'id_ekspedisi', 'id_kendaraan', 'id_tujuan_pengiriman',
+            'id_std_precooling', 'jam_mulai', 'jam_selesai', 'suhu_precooling',
+        ]);
+
         $request->validate([
             'tanggal' => 'required|date',
             'id_shift' => 'nullable|exists:shifts,id',
