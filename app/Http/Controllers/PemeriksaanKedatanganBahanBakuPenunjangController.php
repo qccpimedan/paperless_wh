@@ -343,6 +343,14 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
         $produkByKategori = collect();
         $produkMeta = collect();
         $produkKategoriById = collect();
+        $produsens = Produsen::query()
+            ->when($plantId, fn ($query) => $query->whereHas('user', fn ($userQuery) => $userQuery->where('id_plant', $plantId)))
+            ->orderBy('nama_produsen')
+            ->get(['id', 'nama_produsen']);
+        $distributors = Distributor::query()
+            ->when($plantId, fn ($query) => $query->whereHas('user', fn ($userQuery) => $userQuery->where('id_plant', $plantId)))
+            ->orderBy('nama_distributor')
+            ->get(['id', 'nama_distributor']);
         
         // Filter data berdasarkan plant aktif (hasil switch)
         if ($user->role && strtolower($user->role->role) === 'superadmin') {
@@ -410,7 +418,9 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
             'produkKategoriOptions',
             'produkByKategori',
             'produkMeta',
-            'produkKategoriById'
+            'produkKategoriById',
+            'produsens',
+            'distributors'
         ));
     }
 
@@ -760,6 +770,12 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
         $produkByKategori = collect();
         $produkMeta = collect();
         $produkKategoriById = collect();
+        $produsens = Produsen::query()
+            ->when($plantId, fn ($query) => $query->whereHas('user', fn ($userQuery) => $userQuery->where('id_plant', $plantId)))
+            ->orderBy('nama_produsen')->get(['id', 'nama_produsen']);
+        $distributors = Distributor::query()
+            ->when($plantId, fn ($query) => $query->whereHas('user', fn ($userQuery) => $userQuery->where('id_plant', $plantId)))
+            ->orderBy('nama_distributor')->get(['id', 'nama_distributor']);
         
         if ($user->role && strtolower($user->role->role) === 'superadmin') {
             $shifts = Shift::with(['user.plant'])->get();
@@ -850,7 +866,9 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
             'produkByKategori',
             'produkMeta',
             'produkKategoriById',
-            'produkByBahanId'
+            'produkByBahanId',
+            'produsens',
+            'distributors'
         ));
     }
 

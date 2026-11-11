@@ -410,11 +410,15 @@
 
                                                 <!-- Produsen/Distributor (Header Produk) -->
                                                 <div class="row">
-                                                    <div class="col-md-6">
+                                                    <div class="col-md-4">
                                                         <div class="card border-0 shadow-sm mb-2">
                                                             <div class="card-body p-3">
                                                                 <div class="fw-semibold">Produsen</div>
-                                                                <div class="small text-muted mb-2">Otomatis terisi sesuai Produk yang dipilih</div>
+                                                                <div class="small text-muted mb-2">Pilih dari master Produsen plant ini</div>
+                                                                @php $savedProdusenIds = is_array($firstDetail['id_produsen'] ?? null) ? $firstDetail['id_produsen'] : (json_decode((string)($firstDetail['id_produsen'] ?? ''), true) ?: (isset($firstDetail['id_produsen']) && is_numeric($firstDetail['id_produsen']) ? [$firstDetail['id_produsen']] : [])); @endphp
+                                                                <select class="form-select js-supplier-choices produsen-master-select js-chemical-supplier" multiple>
+                                                                    @foreach($produsens as $produsen)<option value="{{ $produsen->id }}" {{ in_array((string)$produsen->id, array_map('strval', $savedProdusenIds), true) ? 'selected' : '' }}>{{ $produsen->nama_produsen }}</option>@endforeach
+                                                                </select>
                                                                 <div class="produsen-badges d-flex flex-wrap gap-1">
                                                                     @php
                                                                         $prodNames = $mappedProdukId ? ($produkMeta[$mappedProdukId]['produsen_names'] ?? []) : [];
@@ -428,15 +432,19 @@
                                                                         <span class="text-muted small">-</span>
                                                                     @endif
                                                                 </div>
-                                                                <input type="hidden" name="id_produsen[]" class="id-produsen-hidden" value="{{ old('id_produsen.' . $firstIdx, $firstDetail['id_produsen'] ?? '') }}">
+                                                                <input type="hidden" name="id_produsen[]" class="id-produsen-hidden" value="{{ old('id_produsen.' . $firstIdx, json_encode($savedProdusenIds)) }}">
                                                             </div>
                                                         </div>
                                                     </div>
-                                                    <div class="col-md-6">
+                                                    <div class="col-md-4">
                                                         <div class="card border-0 shadow-sm mb-2">
                                                             <div class="card-body p-3">
                                                                 <div class="fw-semibold">Distributor</div>
-                                                                <div class="small text-muted mb-2">Otomatis terisi sesuai Produk yang dipilih</div>
+                                                                <div class="small text-muted mb-2">Pilih dari master Distributor plant ini</div>
+                                                                @php $savedDistributorIds = is_array($firstDetail['id_distributor'] ?? null) ? $firstDetail['id_distributor'] : (json_decode((string)($firstDetail['id_distributor'] ?? ''), true) ?: (isset($firstDetail['id_distributor']) && is_numeric($firstDetail['id_distributor']) ? [$firstDetail['id_distributor']] : [])); @endphp
+                                                                <select class="form-select js-supplier-choices distributor-master-select js-chemical-supplier" multiple>
+                                                                    @foreach($distributors as $distributor)<option value="{{ $distributor->id }}" {{ in_array((string)$distributor->id, array_map('strval', $savedDistributorIds), true) ? 'selected' : '' }}>{{ $distributor->nama_distributor }}</option>@endforeach
+                                                                </select>
                                                                 <div class="distributor-badges d-flex flex-wrap gap-1">
                                                                     @php
                                                                         $distNames = $mappedProdukId ? ($produkMeta[$mappedProdukId]['distributor_names'] ?? []) : [];
@@ -450,7 +458,7 @@
                                                                         <span class="text-muted small">-</span>
                                                                     @endif
                                                                 </div>
-                                                                <input type="hidden" name="id_distributor[]" class="id-distributor-hidden" value="{{ old('id_distributor.' . $firstIdx, $firstDetail['id_distributor'] ?? '') }}">
+                                                                <input type="hidden" name="id_distributor[]" class="id-distributor-hidden" value="{{ old('id_distributor.' . $firstIdx, json_encode($savedDistributorIds)) }}">
                                                             </div>
                                                         </div>
                                                     </div>
@@ -945,7 +953,7 @@ const ensureDetailCollapsible = (detailEl, dIdx) => {
     }
 };
 function initializeAllChoices() {
-    const selectElements = document.querySelectorAll('select.choices');
+    const selectElements = document.querySelectorAll('select.choices, select.js-supplier-choices');
     selectElements.forEach(function(select) {
         if (select.dataset.choicesInitialized === 'true' || select.classList.contains('choices__input')) {
             return;
@@ -1139,11 +1147,12 @@ function addNewRow() {
         </div>
         
         <div class="row">
-            <div class="col-md-6">
+            <div class="col-md-4">
                 <div class="card border-0 shadow-sm mb-2">
                     <div class="card-body p-3">
                         <div class="fw-semibold">Produsen</div>
-                        <div class="small text-muted mb-2">Otomatis terisi sesuai Produk yang dipilih</div>
+                        <div class="small text-muted mb-2">Pilih dari master Produsen plant ini</div>
+                        <select class="form-select js-supplier-choices produsen-master-select js-chemical-supplier" multiple>@foreach($produsens as $produsen)<option value="{{ $produsen->id }}">{{ $produsen->nama_produsen }}</option>@endforeach</select>
                         <div class="produsen-badges d-flex flex-wrap gap-1">
                             <span class="text-muted small">-</span>
                         </div>
@@ -1151,11 +1160,12 @@ function addNewRow() {
                     </div>
                 </div>
             </div>
-            <div class="col-md-6">
+            <div class="col-md-4">
                 <div class="card border-0 shadow-sm mb-2">
                     <div class="card-body p-3">
                         <div class="fw-semibold">Distributor</div>
-                        <div class="small text-muted mb-2">Otomatis terisi sesuai Produk yang dipilih</div>
+                        <div class="small text-muted mb-2">Pilih dari master Distributor plant ini</div>
+                        <select class="form-select js-supplier-choices distributor-master-select js-chemical-supplier" multiple>@foreach($distributors as $distributor)<option value="{{ $distributor->id }}">{{ $distributor->nama_distributor }}</option>@endforeach</select>
                         <div class="distributor-badges d-flex flex-wrap gap-1">
                             <span class="text-muted small">-</span>
                         </div>
@@ -1489,8 +1499,12 @@ document.addEventListener('DOMContentLoaded', function() {
         const produsenNames = meta && meta.produsen_names ? meta.produsen_names : [];
         const distributorNames = meta && meta.distributor_names ? meta.distributor_names : [];
 
-        idProdusenHidden.value = (Array.isArray(produsenIds) && produsenIds.length > 0) ? String(produsenIds[0]) : '';
-        idDistributorHidden.value = (Array.isArray(distributorIds) && distributorIds.length > 0) ? String(distributorIds[0]) : '';
+        const produsenSelect = rowEl.querySelector('.produsen-master-select');
+        const distributorSelect = rowEl.querySelector('.distributor-master-select');
+        if (produsenSelect) Array.from(produsenSelect.options).forEach(o => o.selected = (produsenIds || []).map(String).includes(o.value));
+        if (distributorSelect) Array.from(distributorSelect.options).forEach(o => o.selected = (distributorIds || []).map(String).includes(o.value));
+        idProdusenHidden.value = JSON.stringify(produsenSelect ? Array.from(produsenSelect.selectedOptions).map(o => o.value) : produsenIds);
+        idDistributorHidden.value = JSON.stringify(distributorSelect ? Array.from(distributorSelect.selectedOptions).map(o => o.value) : distributorIds);
 
         const renderBadges = (containerEl, values, badgeClass) => {
             if (!Array.isArray(values) || values.length === 0) {
@@ -1512,6 +1526,19 @@ document.addEventListener('DOMContentLoaded', function() {
 
     document.addEventListener('change', function(e) {
         const target = e.target;
+        if (target && target.matches('.produsen-master-select, .distributor-master-select')) {
+            const row = target.closest('.unified-row');
+            if (row) {
+                const produsen = target.classList.contains('produsen-master-select');
+                const hidden = row.querySelector(produsen ? '.id-produsen-hidden' : '.id-distributor-hidden');
+                const badges = row.querySelector(produsen ? '.produsen-badges' : '.distributor-badges');
+                const selected = Array.from(target.selectedOptions);
+                hidden.value = JSON.stringify(selected.map(o => o.value));
+                badges.innerHTML = selected.length ? '' : '<span class="text-muted small">-</span>';
+                selected.forEach(o => { const span = document.createElement('span'); span.className = 'badge badge-removable ' + (produsen ? 'bg-light-primary text-primary' : 'bg-light-info text-info'); span.dataset.id = o.value; span.innerHTML = `${o.text} <button type="button" class="badge-remove-btn" onclick="removeBadgeItem(this, '${produsen ? 'produsen' : 'distributor'}')">Hapus</button>`; badges.appendChild(span); });
+            }
+            return;
+        }
         if (target && target.matches('select.kategori-produk-select')) {
             const row = target.closest('.unified-row');
             if (row) {
@@ -1877,3 +1904,7 @@ document.addEventListener('change', function(e) {
 });
 </script>
 @endsection
+
+@push('scripts')
+    @include('qc-sistem.supplier-choices-sync')
+@endpush

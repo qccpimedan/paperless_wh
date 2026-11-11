@@ -409,11 +409,14 @@
                                             
                                             <!-- Detail Pemeriksaan -->
                                             <div class="row">
-                                                <div class="col-md-6">
+                                                <div class="col-md-4">
                                                     <div class="card border-0 shadow-sm">
                                                         <div class="card-body p-3">
                                                             <div class="fw-semibold">Produsen</div>
-                                                            <div class="small text-muted mb-2">Otomatis terisi sesuai Produk yang dipilih</div>
+                                                            <div class="small text-muted mb-2">Pilih dari master Produsen plant ini</div>
+                                                            <select class="form-select js-supplier-choices js-chemical-supplier produsen-master-select" multiple>
+                                                                @foreach($produsens as $produsen)<option value="{{ $produsen->id }}">{{ $produsen->nama_produsen }}</option>@endforeach
+                                                            </select>
                                                             <div class="produsen-badges d-flex flex-wrap gap-1">
                                                                 <span class="text-muted small">-</span>
                                                             </div>
@@ -421,11 +424,14 @@
                                                         </div>
                                                     </div>
                                                 </div>
-                                                <div class="col-md-6">
+                                                <div class="col-md-4">
                                                     <div class="card border-0 shadow-sm">
                                                         <div class="card-body p-3">
                                                             <div class="fw-semibold">Distributor</div>
-                                                            <div class="small text-muted mb-2">Otomatis terisi sesuai Produk yang dipilih</div>
+                                                            <div class="small text-muted mb-2">Pilih dari master Distributor plant ini</div>
+                                                            <select class="form-select js-supplier-choices js-chemical-supplier distributor-master-select" multiple>
+                                                                @foreach($distributors as $distributor)<option value="{{ $distributor->id }}">{{ $distributor->nama_distributor }}</option>@endforeach
+                                                            </select>
                                                             <div class="distributor-badges d-flex flex-wrap gap-1">
                                                                 <span class="text-muted small">-</span>
                                                             </div>
@@ -706,13 +712,13 @@
     .badge-remove-btn {
         background: none;
         border: none;
-        padding: 0 2px;
+        padding: 1px 4px;
         font-size: 13px;
         font-weight: bold;
         line-height: 1;
         cursor: pointer;
         color: #dc3545;
-        border-radius: 50%;
+        border-radius: 3px;
         transition: color .15s, background .15s;
     }
     .badge-remove-btn:hover {
@@ -1138,11 +1144,30 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+    function setSupplierChoicesValues(select, values) {
+        if (!select) return;
+
+        const normalized = [...new Set((Array.isArray(values) ? values : []).map(value => String(value).trim()).filter(Boolean))];
+        const instance = select.choicesInstance || select.__choicesInstance || null;
+
+        if (instance && typeof instance.removeActiveItems === 'function' && typeof instance.setChoiceByValue === 'function') {
+            instance.removeActiveItems();
+            normalized.forEach(value => instance.setChoiceByValue(value));
+            return;
+        }
+
+        Array.from(select.options).forEach(option => {
+            option.selected = normalized.includes(String(option.value).trim());
+        });
+    }
+
     function applyProdukForRow(rowEl) {
         const produkSelect = rowEl.querySelector('select.produk-select');
         const idChemicalHidden = rowEl.querySelector('.id-chemical-hidden');
         const idProdusenHidden = rowEl.querySelector('.id-produsen-hidden');
         const idDistributorHidden = rowEl.querySelector('.id-distributor-hidden');
+        const produsenSelect = rowEl.querySelector('.produsen-master-select');
+        const distributorSelect = rowEl.querySelector('.distributor-master-select');
         const produsenBadges = rowEl.querySelector('.produsen-badges');
         const distributorBadges = rowEl.querySelector('.distributor-badges');
 
@@ -1168,8 +1193,10 @@ document.addEventListener('DOMContentLoaded', function() {
         const produsenNames = meta && meta.produsen_names ? meta.produsen_names : [];
         const distributorNames = meta && meta.distributor_names ? meta.distributor_names : [];
 
-        idProdusenHidden.value = (Array.isArray(produsenIds) && produsenIds.length > 0) ? String(produsenIds[0]) : '';
-        idDistributorHidden.value = (Array.isArray(distributorIds) && distributorIds.length > 0) ? String(distributorIds[0]) : '';
+        setSupplierChoicesValues(produsenSelect, produsenIds);
+        setSupplierChoicesValues(distributorSelect, distributorIds);
+        idProdusenHidden.value = JSON.stringify(produsenSelect ? Array.from(produsenSelect.selectedOptions).map(o => o.value) : produsenIds);
+        idDistributorHidden.value = JSON.stringify(distributorSelect ? Array.from(distributorSelect.selectedOptions).map(o => o.value) : distributorIds);
 
         const renderBadges = (containerEl, idValues, nameValues, badgeClass, type) => {
             if (!Array.isArray(nameValues) || nameValues.length === 0) {
@@ -1183,7 +1210,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 span.className = badgeClass + ' badge-removable';
                 span.setAttribute('data-value', String(v).trim());
                 span.setAttribute('data-id', String(idVal));
-                span.innerHTML = `${String(v)} <button type="button" class="badge-remove-btn" onclick="removeBadgeItem(this, '${type}')">&times;</button>`;
+                span.innerHTML = `${String(v)} <button type="button" class="badge-remove-btn" onclick="removeBadgeItem(this, '${type}')">Hapus</button>`;
                 containerEl.appendChild(span);
             });
         };
@@ -1194,6 +1221,26 @@ document.addEventListener('DOMContentLoaded', function() {
 
     document.addEventListener('change', function(e) {
         const target = e.target;
+        if (target && target.matches('.produsen-master-select, .distributor-master-select')) {
+            const row = target.closest('.unified-row');
+            if (row) {
+                const isProdusen = target.classList.contains('produsen-master-select');
+                const hidden = row.querySelector(isProdusen ? '.id-produsen-hidden' : '.id-distributor-hidden');
+                const badges = row.querySelector(isProdusen ? '.produsen-badges' : '.distributor-badges');
+                const type = isProdusen ? 'produsen' : 'distributor';
+                const badgeClass = isProdusen ? 'badge bg-light-primary text-primary' : 'badge bg-light-info text-info';
+                const selected = Array.from(target.selectedOptions);
+                hidden.value = JSON.stringify(selected.map(o => o.value));
+                badges.innerHTML = selected.length ? '' : '<span class="text-muted small badge-empty">-</span>';
+                selected.forEach(o => {
+                    const span = document.createElement('span'); span.className = badgeClass + ' badge-removable';
+                    span.dataset.value = o.text; span.dataset.id = o.value;
+                    span.innerHTML = `${o.text} <button type="button" class="badge-remove-btn" onclick="removeBadgeItem(this, '${type}')">Hapus</button>`;
+                    badges.appendChild(span);
+                });
+            }
+            return;
+        }
         if (target && target.matches('select.kategori-produk-select')) {
             const row = target.closest('.unified-row');
             if (row) {
@@ -1453,7 +1500,7 @@ function setupRowRadios(detailEl) {
 
 // Initialize Choices.js for select elements
 function initializeAllChoices() {
-    const selectElements = document.querySelectorAll('select.choices');
+    const selectElements = document.querySelectorAll('select.choices, select.js-supplier-choices');
     
     selectElements.forEach(function(select) {
         // Skip if already initialized
@@ -1584,11 +1631,14 @@ function addNewRow() {
         
         <!-- Detail Pemeriksaan -->
         <div class="row">
-            <div class="col-md-6">
+            <div class="col-md-4">
                 <div class="card border-0 shadow-sm">
                     <div class="card-body p-3">
-                        <div class="fw-semibold">Produsen</div>
-                        <div class="small text-muted mb-2">Otomatis terisi sesuai Produk yang dipilih</div>
+                                                            <div class="fw-semibold">Produsen</div>
+                                                            <div class="small text-muted mb-2">Pilih dari master Produsen plant ini</div>
+                                                            <select class="form-select js-supplier-choices js-chemical-supplier produsen-master-select" multiple>
+                                                                @foreach($produsens as $produsen)<option value="{{ $produsen->id }}">{{ $produsen->nama_produsen }}</option>@endforeach
+                                                            </select>
                         <div class="produsen-badges d-flex flex-wrap gap-1">
                             <span class="text-muted small">-</span>
                         </div>
@@ -1596,11 +1646,14 @@ function addNewRow() {
                     </div>
                 </div>
             </div>
-            <div class="col-md-6">
+            <div class="col-md-4">
                 <div class="card border-0 shadow-sm">
                     <div class="card-body p-3">
-                        <div class="fw-semibold">Distributor</div>
-                        <div class="small text-muted mb-2">Otomatis terisi sesuai Produk yang dipilih</div>
+                                                            <div class="fw-semibold">Distributor</div>
+                                                            <div class="small text-muted mb-2">Pilih dari master Distributor plant ini</div>
+                                                            <select class="form-select js-supplier-choices js-chemical-supplier distributor-master-select" multiple>
+                                                                @foreach($distributors as $distributor)<option value="{{ $distributor->id }}">{{ $distributor->nama_distributor }}</option>@endforeach
+                                                            </select>
                         <div class="distributor-badges d-flex flex-wrap gap-1">
                             <span class="text-muted small">-</span>
                         </div>
@@ -2340,7 +2393,7 @@ document.addEventListener('change', function(e) {
  * Hapus satu badge Produsen/Distributor dari tampilan form Chemical.
  * Data master TIDAK berubah.
  *
- * @param {HTMLButtonElement} btn  — tombol × yang diklik
+ * @param {HTMLButtonElement} btn  — tombol Hapus yang diklik
  * @param {string} type            — 'produsen' | 'distributor'
  */
 function removeBadgeItem(btn, type) {
@@ -2372,21 +2425,57 @@ function removeBadgeItem(btn, type) {
         const idDistributorHidden = rowEl.querySelector('.id-distributor-hidden');
 
         if (type === 'produsen' && idProdusenHidden) {
+            if (produsenSelect) Array.from(produsenSelect.options).forEach(o => { if (o.value === badge.dataset.id) o.selected = false; });
             const remainingBadges = produsenBadgesEl ? produsenBadgesEl.querySelectorAll('.badge-removable') : [];
-            if (remainingBadges.length > 0) {
-                idProdusenHidden.value = remainingBadges[0].getAttribute('data-id') || remainingBadges[0].dataset.id || '';
-            } else {
-                idProdusenHidden.value = '';
-            }
+            idProdusenHidden.value = JSON.stringify(Array.from(remainingBadges).map(item => item.dataset.id));
         } else if (type === 'distributor' && idDistributorHidden) {
+            if (distributorSelect) Array.from(distributorSelect.options).forEach(o => { if (o.value === badge.dataset.id) o.selected = false; });
             const remainingBadges = distributorBadgesEl ? distributorBadgesEl.querySelectorAll('.badge-removable') : [];
-            if (remainingBadges.length > 0) {
-                idDistributorHidden.value = remainingBadges[0].getAttribute('data-id') || remainingBadges[0].dataset.id || '';
-            } else {
-                idDistributorHidden.value = '';
-            }
+            idDistributorHidden.value = JSON.stringify(Array.from(remainingBadges).map(item => item.dataset.id));
         }
     }
 }
 </script>
+<script>
+// Fallback initializer kept separate from the large form script: supplier selects
+// must still become searchable even if another form script fails to initialize.
+(function () {
+    function initChemicalSupplierChoices(root) {
+        if (typeof window.Choices === 'undefined') return;
+        (root || document).querySelectorAll('select.js-supplier-choices').forEach(function (select) {
+            if (select.dataset.choicesInitialized === 'true' || select.dataset.choicesInitialized === '1' || select.closest('.choices')) return;
+            try {
+                select.choicesInstance = new window.Choices(select, {
+                    searchEnabled: true,
+                    searchPlaceholderValue: 'Cari...',
+                    removeItemButton: true,
+                    shouldSort: false,
+                    itemSelectText: '',
+                    noResultsText: 'Tidak ada hasil',
+                    noChoicesText: 'Tidak ada pilihan',
+                });
+                select.dataset.choicesInitialized = 'true';
+            } catch (error) {
+                console.error('Gagal menginisialisasi pilihan supplier Chemical:', error);
+            }
+        });
+    }
+
+    function start() {
+        initChemicalSupplierChoices(document);
+        new MutationObserver(function (mutations) {
+            mutations.forEach(function (mutation) {
+                mutation.addedNodes.forEach(function (node) {
+                    if (node.nodeType === 1) initChemicalSupplierChoices(node);
+                });
+            });
+        }).observe(document.body, { childList: true, subtree: true });
+    }
+
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start, { once: true });
+    else start();
+})();
+
+</script>
+@include('qc-sistem.supplier-choices-sync')
 @endpush

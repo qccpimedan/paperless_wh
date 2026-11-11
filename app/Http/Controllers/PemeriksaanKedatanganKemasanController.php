@@ -188,7 +188,7 @@ return view('qc-sistem.pemeriksaan-kedatangan-kemasan.index', compact('pemeriksa
         ]);
         
         // Get bahan kemasans, shifts, produsens, and distributors based on plant access
-        if ($user->role && strtolower($user->role->role) === 'superadmin') {
+        if ($user->role && strtolower($user->role->role) === 'superadmin' && !$user->getEffectivePlantId()) {
             $bahanKemasans = BahanKemasan::with(['user.plant', 'distributor', 'produsen'])->get();
             $shifts = Shift::with('user.plant')->get();
             $produsens = Produsen::with('user.plant')->get();
@@ -227,25 +227,6 @@ return view('qc-sistem.pemeriksaan-kedatangan-kemasan.index', compact('pemeriksa
         if ($shifts->isEmpty()) {
             $shifts = Shift::all();
         }
-        if ($produsens->isEmpty()) {
-            $produsens = Produsen::all();
-        }
-        if ($distributors->isEmpty()) {
-            $distributors = Distributor::all();
-        }
-
-        $referencedProdusenIds = $bahanKemasans->pluck('id_produsen')->filter()->unique()->values();
-        if ($referencedProdusenIds->isNotEmpty()) {
-            $referencedProdusens = Produsen::with('user.plant')->whereIn('id', $referencedProdusenIds)->get();
-            $produsens = $produsens->concat($referencedProdusens)->unique('id')->values();
-        }
-
-        $referencedDistributorIds = $bahanKemasans->pluck('id_distributor')->filter()->unique()->values();
-        if ($referencedDistributorIds->isNotEmpty()) {
-            $referencedDistributors = Distributor::with('user.plant')->whereIn('id', $referencedDistributorIds)->get();
-            $distributors = $distributors->concat($referencedDistributors)->unique('id')->values();
-        }
-        
         \Log::info('Data for create view:', [
             'bahanKemasans_count' => $bahanKemasans->count(),
             'shifts_count' => $shifts->count(),
@@ -519,7 +500,7 @@ return view('qc-sistem.pemeriksaan-kedatangan-kemasan.index', compact('pemeriksa
         $user = Auth::user();
         
         // Get bahan kemasans, shifts, produsens, and distributors based on plant access (SAMA SEPERTI CREATE)
-    if ($user->role && strtolower($user->role->role) === 'superadmin') {
+    if ($user->role && strtolower($user->role->role) === 'superadmin' && !$user->getEffectivePlantId()) {
         $bahanKemasans = BahanKemasan::with(['user.plant', 'distributor', 'produsen'])->get();
         $shifts = Shift::with('user.plant')->get();
         $produsens = Produsen::with('user.plant')->get();
@@ -558,25 +539,6 @@ return view('qc-sistem.pemeriksaan-kedatangan-kemasan.index', compact('pemeriksa
     if ($shifts->isEmpty()) {
         $shifts = Shift::all();
     }
-    if ($produsens->isEmpty()) {
-        $produsens = Produsen::all();
-    }
-    if ($distributors->isEmpty()) {
-        $distributors = Distributor::all();
-    }
-
-    $referencedProdusenIds = $bahanKemasans->pluck('id_produsen')->filter()->unique()->values();
-    if ($referencedProdusenIds->isNotEmpty()) {
-        $referencedProdusens = Produsen::with('user.plant')->whereIn('id', $referencedProdusenIds)->get();
-        $produsens = $produsens->concat($referencedProdusens)->unique('id')->values();
-    }
-
-    $referencedDistributorIds = $bahanKemasans->pluck('id_distributor')->filter()->unique()->values();
-    if ($referencedDistributorIds->isNotEmpty()) {
-        $referencedDistributors = Distributor::with('user.plant')->whereIn('id', $referencedDistributorIds)->get();
-        $distributors = $distributors->concat($referencedDistributors)->unique('id')->values();
-    }
-
     $plantId = $user->getEffectivePlantId();
 
     $produkKategoriOptions = Produk::query()

@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\PemeriksaanProdukFinishGood;
 use App\Models\Produk;
 use App\Models\Shift;
+use App\Models\Produsen;
+use App\Models\Distributor;
 use App\Models\User;
 use App\Exports\SingleRecordViewExport;
 use Illuminate\Http\Request;
@@ -143,6 +145,8 @@ return view('qc-sistem.pemeriksaan-produk-finish-good.index', compact('pemeriksa
     {
         $user = Auth::user();
         $plantId = $user->getEffectivePlantId();
+        $produsens = Produsen::query()->when($plantId, fn ($q) => $q->whereHas('user', fn ($uq) => $uq->where('id_plant', $plantId)))->orderBy('nama_produsen')->get(['id', 'nama_produsen']);
+        $distributors = Distributor::query()->when($plantId, fn ($q) => $q->whereHas('user', fn ($uq) => $uq->where('id_plant', $plantId)))->orderBy('nama_distributor')->get(['id', 'nama_distributor']);
 
         $countries = Countries::getList('en', 'php');
 
@@ -208,7 +212,9 @@ return view('qc-sistem.pemeriksaan-produk-finish-good.index', compact('pemeriksa
             'produkKategoriOptions',
             'produkByKategori',
             'produkMeta',
-            'produkKategoriById'
+            'produkKategoriById',
+            'produsens',
+            'distributors'
         ));
     }
 
@@ -358,12 +364,19 @@ return view('qc-sistem.pemeriksaan-produk-finish-good.index', compact('pemeriksa
             }
         }
 
+        $submittedProdusen = (array) $request->input('produsen', []);
+        $submittedDistributor = (array) $request->input('distributor', []);
+        $decodeSupplier = function ($value) {
+            if (is_array($value)) return array_values(array_unique(array_filter(array_map('strval', $value), fn ($v) => trim($v) !== '')));
+            $decoded = json_decode((string) $value, true);
+            return is_array($decoded) ? array_values(array_unique(array_filter(array_map('strval', $decoded), fn ($v) => trim($v) !== ''))) : (trim((string) $value) !== '' ? [(string) $value] : []);
+        };
         $produsenArray = [];
         $distributorArray = [];
         foreach ($idProdukArr as $idx => $pid) {
             $pid = $pid ? (int) $pid : null;
-            $produsenArray[$idx] = $pid && isset($produsenByProduk[$pid]) ? $produsenByProduk[$pid] : [];
-            $distributorArray[$idx] = $pid && isset($distributorByProduk[$pid]) ? $distributorByProduk[$pid] : [];
+            $produsenArray[$idx] = array_key_exists($idx, $submittedProdusen) ? $decodeSupplier($submittedProdusen[$idx]) : ($pid && isset($produsenByProduk[$pid]) ? $produsenByProduk[$pid] : []);
+            $distributorArray[$idx] = array_key_exists($idx, $submittedDistributor) ? $decodeSupplier($submittedDistributor[$idx]) : ($pid && isset($distributorByProduk[$pid]) ? $distributorByProduk[$pid] : []);
         }
 
         $pemeriksaan = PemeriksaanProdukFinishGood::create([
@@ -440,6 +453,8 @@ return view('qc-sistem.pemeriksaan-produk-finish-good.index', compact('pemeriksa
     {
         $user = Auth::user();
         $plantId = $user->getEffectivePlantId();
+        $produsens = Produsen::query()->when($plantId, fn ($q) => $q->whereHas('user', fn ($uq) => $uq->where('id_plant', $plantId)))->orderBy('nama_produsen')->get(['id', 'nama_produsen']);
+        $distributors = Distributor::query()->when($plantId, fn ($q) => $q->whereHas('user', fn ($uq) => $uq->where('id_plant', $plantId)))->orderBy('nama_distributor')->get(['id', 'nama_distributor']);
 
         $countries = Countries::getList('en', 'php');
 
@@ -506,7 +521,9 @@ return view('qc-sistem.pemeriksaan-produk-finish-good.index', compact('pemeriksa
             'produkKategoriOptions',
             'produkByKategori',
             'produkMeta',
-            'produkKategoriById'
+            'produkKategoriById',
+            'produsens',
+            'distributors'
         ));
     }
 
@@ -657,12 +674,19 @@ return view('qc-sistem.pemeriksaan-produk-finish-good.index', compact('pemeriksa
             }
         }
 
+        $submittedProdusen = (array) $request->input('produsen', []);
+        $submittedDistributor = (array) $request->input('distributor', []);
+        $decodeSupplier = function ($value) {
+            if (is_array($value)) return array_values(array_unique(array_filter(array_map('strval', $value), fn ($v) => trim($v) !== '')));
+            $decoded = json_decode((string) $value, true);
+            return is_array($decoded) ? array_values(array_unique(array_filter(array_map('strval', $decoded), fn ($v) => trim($v) !== ''))) : (trim((string) $value) !== '' ? [(string) $value] : []);
+        };
         $produsenArray = [];
         $distributorArray = [];
         foreach ($idProdukArr as $idx => $pid) {
             $pid = $pid ? (int) $pid : null;
-            $produsenArray[$idx] = $pid && isset($produsenByProduk[$pid]) ? $produsenByProduk[$pid] : [];
-            $distributorArray[$idx] = $pid && isset($distributorByProduk[$pid]) ? $distributorByProduk[$pid] : [];
+            $produsenArray[$idx] = array_key_exists($idx, $submittedProdusen) ? $decodeSupplier($submittedProdusen[$idx]) : ($pid && isset($produsenByProduk[$pid]) ? $produsenByProduk[$pid] : []);
+            $distributorArray[$idx] = array_key_exists($idx, $submittedDistributor) ? $decodeSupplier($submittedDistributor[$idx]) : ($pid && isset($distributorByProduk[$pid]) ? $distributorByProduk[$pid] : []);
         }
 
         // FIX: Preserve approval fields agar tidak ter-overwrite saat edit data

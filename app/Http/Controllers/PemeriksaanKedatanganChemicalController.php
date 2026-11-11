@@ -22,6 +22,18 @@ class PemeriksaanKedatanganChemicalController extends Controller
 {
     use HasAuditController;
     use RejectsTruncatedDynamicInput;
+    private function normalizeSupplierIds($value): array
+    {
+        if (is_array($value)) {
+            $values = $value;
+        } else {
+            $decoded = json_decode((string) $value, true);
+            $values = is_array($decoded) ? $decoded : [$value];
+        }
+
+        return array_values(array_unique(array_filter(array_map('intval', $values), fn ($id) => $id > 0)));
+    }
+
     private function safeFuzzyMatch($a, $b)
     {
         if (!$a || !$b) return false;
@@ -433,14 +445,14 @@ return view('qc-sistem.pemeriksaan-kedatangan-chemical.index', compact('pemeriks
                         'nama_chemical' => $produkRawName,
                     ];
 
-                    $incomingProdusen = $request->input('id_produsen.' . $idx);
+                    $incomingProdusen = $this->normalizeSupplierIds($request->input('id_produsen.' . $idx));
                     if (!empty($incomingProdusen)) {
-                        $createPayload['id_produsen'] = $incomingProdusen;
+                        $createPayload['id_produsen'] = $incomingProdusen[0];
                     }
 
-                    $incomingDistributor = $request->input('id_distributor.' . $idx);
+                    $incomingDistributor = $this->normalizeSupplierIds($request->input('id_distributor.' . $idx));
                     if (!empty($incomingDistributor)) {
-                        $createPayload['id_distributor'] = $incomingDistributor;
+                        $createPayload['id_distributor'] = $incomingDistributor[0];
                     }
 
                     $createdChemical = Chemical::create($createPayload);
@@ -474,10 +486,8 @@ return view('qc-sistem.pemeriksaan-kedatangan-chemical.index', compact('pemeriks
             'id_chemical.*' => 'required|exists:chemicals,id',
             'kondisi_chemical' => 'nullable|array',
             'id_produsen' => 'nullable|array',
-            'id_produsen.*' => 'nullable|exists:produsens,id',
             'negara_produsen' => 'nullable|array',
             'id_distributor' => 'nullable|array',
-            'id_distributor.*' => 'nullable|exists:distributors,id',
             'kode_produksi' => 'nullable|array',
             'expire_date' => 'nullable|array',
             'jumlah_datang' => 'nullable|array',
@@ -532,9 +542,9 @@ return view('qc-sistem.pemeriksaan-kedatangan-chemical.index', compact('pemeriks
             $detailChemicals[] = [
                 'id_chemical' => $idChemical,
                 'kondisi_chemical' => $request->input('kondisi_chemical.' . $index),
-                'id_produsen' => $request->input('id_produsen.' . $index),
+                'id_produsen' => $this->normalizeSupplierIds($request->input('id_produsen.' . $index)),
                 'negara_produsen' => $request->input('negara_produsen.' . $index),
-                'id_distributor' => $request->input('id_distributor.' . $index),
+                'id_distributor' => $this->normalizeSupplierIds($request->input('id_distributor.' . $index)),
                 'kode_produksi' => $request->input('kode_produksi.' . $index),
                 'expire_date' => $request->input('expire_date.' . $index),
                 'jumlah_datang' => $request->input('jumlah_datang.' . $index),
@@ -632,8 +642,13 @@ return view('qc-sistem.pemeriksaan-kedatangan-chemical.index', compact('pemeriks
                 ];
             });
         $produkNamaById = $produkList->pluck('nama_produk', 'id')->all();
+        $allSupplierIds = collect($pemeriksaanChemical->detail_chemicals ?? [])->flatMap(function ($detail) {
+            return array_merge($this->normalizeSupplierIds($detail['id_produsen'] ?? null), $this->normalizeSupplierIds($detail['id_distributor'] ?? null));
+        })->unique()->values();
+        $produsenNamesById = Produsen::whereIn('id', $allSupplierIds)->pluck('nama_produsen', 'id')->all();
+        $distributorNamesById = Distributor::whereIn('id', $allSupplierIds)->pluck('nama_distributor', 'id')->all();
         
-        return view('qc-sistem.pemeriksaan-kedatangan-chemical.show', compact('pemeriksaanChemical', 'produkMeta', 'produkByChemicalId', 'produkNamaById'));
+        return view('qc-sistem.pemeriksaan-kedatangan-chemical.show', compact('pemeriksaanChemical', 'produkMeta', 'produkByChemicalId', 'produkNamaById', 'produsenNamesById', 'distributorNamesById'));
     }
 
     public function edit(PemeriksaanKedatanganChemical $pemeriksaanChemical)
@@ -977,14 +992,14 @@ return view('qc-sistem.pemeriksaan-kedatangan-chemical.index', compact('pemeriks
                         'nama_chemical' => (string) $produk->nama_produk,
                     ];
 
-                    $incomingProdusen = $request->input('id_produsen');
+                    $incomingProdusen = $this->normalizeSupplierIds($request->input('id_produsen'));
                     if (!empty($incomingProdusen)) {
-                        $createPayload['id_produsen'] = $incomingProdusen;
+                        $createPayload['id_produsen'] = $incomingProdusen[0];
                     }
 
-                    $incomingDistributor = $request->input('id_distributor');
+                    $incomingDistributor = $this->normalizeSupplierIds($request->input('id_distributor'));
                     if (!empty($incomingDistributor)) {
-                        $createPayload['id_distributor'] = $incomingDistributor;
+                        $createPayload['id_distributor'] = $incomingDistributor[0];
                     }
 
                     $createdChemical = Chemical::create($createPayload);
@@ -1195,10 +1210,8 @@ return view('qc-sistem.pemeriksaan-kedatangan-chemical.index', compact('pemeriks
             'id_chemical.*' => 'required|exists:chemicals,id',
             'kondisi_chemical' => 'nullable|array',
             'id_produsen' => 'nullable|array',
-            'id_produsen.*' => 'nullable|exists:produsens,id',
             'negara_produsen' => 'nullable|array',
             'id_distributor' => 'nullable|array',
-            'id_distributor.*' => 'nullable|exists:distributors,id',
             'kode_produksi' => 'nullable|array',
             'expire_date' => 'nullable|array',
             'jumlah_datang' => 'nullable|array',
@@ -1267,9 +1280,9 @@ return view('qc-sistem.pemeriksaan-kedatangan-chemical.index', compact('pemeriks
             $detailChemicals[] = [
                 'id_chemical' => $idChemical,
                 'kondisi_chemical' => $request->input('kondisi_chemical.' . $index),
-                'id_produsen' => $request->input('id_produsen.' . $index),
+                'id_produsen' => $this->normalizeSupplierIds($request->input('id_produsen.' . $index)),
                 'negara_produsen' => $request->input('negara_produsen.' . $index),
-                'id_distributor' => $request->input('id_distributor.' . $index),
+                'id_distributor' => $this->normalizeSupplierIds($request->input('id_distributor.' . $index)),
                 'kode_produksi' => $request->input('kode_produksi.' . $index),
                 'expire_date' => $request->input('expire_date.' . $index),
                 'jumlah_datang' => $request->input('jumlah_datang.' . $index),

@@ -13,6 +13,8 @@
     $kondisiProdukArr = is_array($pemeriksaanProdukFinishGood->kondisi_produk_array) ? $pemeriksaanProdukFinishGood->kondisi_produk_array : [];
     $kondisiProdukSuhuValueArr = is_array($pemeriksaanProdukFinishGood->kondisi_produk_suhu_value_array) ? $pemeriksaanProdukFinishGood->kondisi_produk_suhu_value_array : [];
     $negaraArr = is_array($pemeriksaanProdukFinishGood->negara_produsen_array) ? $pemeriksaanProdukFinishGood->negara_produsen_array : [];
+    $produsenArr = is_array($pemeriksaanProdukFinishGood->produsen_array) ? $pemeriksaanProdukFinishGood->produsen_array : [];
+    $distributorArr = is_array($pemeriksaanProdukFinishGood->distributor_array) ? $pemeriksaanProdukFinishGood->distributor_array : [];
     $kodeArr = is_array($pemeriksaanProdukFinishGood->kode_produksi_array) ? $pemeriksaanProdukFinishGood->kode_produksi_array : [];
     $expireArr = is_array($pemeriksaanProdukFinishGood->expire_date_array) ? $pemeriksaanProdukFinishGood->expire_date_array : [];
     $jmlDatangArr = is_array($pemeriksaanProdukFinishGood->jumlah_datang_array) ? $pemeriksaanProdukFinishGood->jumlah_datang_array : [];
@@ -44,6 +46,8 @@
                 'id_produk' => $pid,
                 'kategori' => $kategori,
                 'negara' => $negara,
+                'produsen' => $produsenArr[$i] ?? [],
+                'distributor' => $distributorArr[$i] ?? [],
                 'items' => [],
             ];
         }
@@ -438,27 +442,33 @@
                                                 </div>
 
                                                 <div class="row">
-                                                    <div class="col-md-6">
+                                                    <div class="col-md-4">
                                                         <div class="card border-0 shadow-sm">
                                                             <div class="card-body p-3">
                                                                 <div class="fw-semibold">Produsen</div>
-                                                                <div class="small text-muted mb-2">Otomatis terisi sesuai Produk yang dipilih</div>
+                                                                <div class="small text-muted mb-2">Pilih dari seluruh master Produsen Plant ini</div>
+                                                                <select class="form-select js-supplier-choices supplier-master-select produsen-master-select mb-2" multiple aria-label="Pilih produsen">
+                                                                    @foreach (($produsens ?? []) as $produsen)<option value="{{ $produsen->nama_produsen }}" {{ in_array($produsen->nama_produsen, (array) ($group['produsen'] ?? []), true) ? 'selected' : '' }}>{{ $produsen->nama_produsen }}</option>@endforeach
+                                                                </select>
                                                                 <div class="produsen-badges d-flex flex-wrap gap-1" data-row-index="{{ $gIndex }}">
-                                                                    <span class="text-muted small">-</span>
+                                                                    @forelse ((array) ($group['produsen'] ?? []) as $supplierName)<span class="badge bg-light-primary text-primary badge-removable" data-value="{{ $supplierName }}">{{ $supplierName }} <button type="button" class="badge-remove-btn" onclick="removeBadgeItem(this, 'produsen')">Hapus</button></span>@empty<span class="text-muted small badge-empty">-</span>@endforelse
                                                                 </div>
-                                                                <input type="hidden" class="produsen-hidden" value="">
+                                                                <input type="hidden" class="produsen-hidden" value="{{ json_encode((array) ($group['produsen'] ?? [])) }}">
                                                             </div>
                                                         </div>
                                                     </div>
-                                                    <div class="col-md-6">
+                                                    <div class="col-md-4">
                                                         <div class="card border-0 shadow-sm">
                                                             <div class="card-body p-3">
                                                                 <div class="fw-semibold">Distributor</div>
-                                                                <div class="small text-muted mb-2">Otomatis terisi sesuai Produk yang dipilih</div>
+                                                                <div class="small text-muted mb-2">Pilih dari seluruh master Distributor Plant ini</div>
+                                                                <select class="form-select js-supplier-choices supplier-master-select distributor-master-select mb-2" multiple aria-label="Pilih distributor">
+                                                                    @foreach (($distributors ?? []) as $distributor)<option value="{{ $distributor->nama_distributor }}" {{ in_array($distributor->nama_distributor, (array) ($group['distributor'] ?? []), true) ? 'selected' : '' }}>{{ $distributor->nama_distributor }}</option>@endforeach
+                                                                </select>
                                                                 <div class="distributor-badges d-flex flex-wrap gap-1" data-row-index="{{ $gIndex }}">
-                                                                    <span class="text-muted small">-</span>
+                                                                    @forelse ((array) ($group['distributor'] ?? []) as $supplierName)<span class="badge bg-light-info text-info badge-removable" data-value="{{ $supplierName }}">{{ $supplierName }} <button type="button" class="badge-remove-btn" onclick="removeBadgeItem(this, 'distributor')">Hapus</button></span>@empty<span class="text-muted small badge-empty">-</span>@endforelse
                                                                 </div>
-                                                                <input type="hidden" class="distributor-hidden" value="">
+                                                                <input type="hidden" class="distributor-hidden" value="{{ json_encode((array) ($group['distributor'] ?? [])) }}">
                                                             </div>
                                                         </div>
                                                     </div>
@@ -1089,7 +1099,7 @@ function initChoicesForContainer(containerEl) {
     if (!containerEl) return;
     if (!window.Choices) return;
 
-    containerEl.querySelectorAll('select.choices').forEach((selectEl) => {
+    containerEl.querySelectorAll('select.choices, select.js-supplier-choices').forEach((selectEl) => {
         if (selectEl.dataset.choicesInitialized === '1') return;
         try {
             const instance = new Choices(selectEl, {
@@ -1097,6 +1107,7 @@ function initChoicesForContainer(containerEl) {
                 searchFuzziness: 0.000001,
                 fuseOptions: { ignoreLocation: true, threshold: 0.2, matchAllTokens: false },
                 searchEnabled: true,
+                removeItemButton: true,
                 shouldSort: false,
                 itemSelectText: '',
             });
@@ -1127,6 +1138,7 @@ function refreshChoices(selectEl) {
             searchFuzziness: 0.000001,
             fuseOptions: { ignoreLocation: true, threshold: 0.2, matchAllTokens: false },
             searchEnabled: true,
+            removeItemButton: true,
             shouldSort: false,
             itemSelectText: '',
         });
@@ -1385,25 +1397,73 @@ function applyProdukMetaForRow(rowEl, forceOverride) {
     const produkId = String(produkSelect.value || '');
     const meta = produkId && produkMeta ? produkMeta[produkId] : null;
 
-    const renderBadges = (el, list) => {
+    const renderBadges = (el, list, type) => {
         if (!el) return;
         el.innerHTML = '';
         (list || []).forEach((t) => {
             const span = document.createElement('span');
-            span.className = 'badge bg-light-secondary me-1 mb-1';
-            span.textContent = t;
+            span.className = `${type === 'produsen' ? 'badge bg-light-primary text-primary' : 'badge bg-light-info text-info'} badge-removable`;
+            span.dataset.value = t;
+            span.innerHTML = `${t} <button type="button" class="badge-remove-btn" onclick="removeFinishGoodBadge(this, '${type}')">Hapus</button>`;
             el.appendChild(span);
         });
+        if (!(list || []).length) el.innerHTML = '<span class="text-muted small badge-empty">-</span>';
     };
 
     const produsen = meta && Array.isArray(meta.produsen) ? meta.produsen : [];
     const distributor = meta && Array.isArray(meta.distributor) ? meta.distributor : [];
 
-    renderBadges(produsenBadges, produsen);
-    renderBadges(distributorBadges, distributor);
+    renderBadges(produsenBadges, produsen, 'produsen');
+    renderBadges(distributorBadges, distributor, 'distributor');
 
     if (produsenHidden) produsenHidden.value = JSON.stringify(produsen);
     if (distributorHidden) distributorHidden.value = JSON.stringify(distributor);
+    [['produsen', produsen], ['distributor', distributor]].forEach(([type, values]) => {
+        const select = rowEl.querySelector(`select.${type}-master-select`);
+        if (select) Array.from(select.options).forEach(option => { option.selected = values.includes(option.value); });
+    });
+}
+
+function syncFinishGoodEditSupplier(select) {
+    const row = select.closest('.unified-row');
+    if (!row) return;
+    const type = select.classList.contains('produsen-master-select') ? 'produsen' : 'distributor';
+    const values = Array.from(select.selectedOptions).map(option => option.value).filter(Boolean);
+    const badges = row.querySelector(`.${type}-badges`);
+    const hidden = row.querySelector(`input.${type}-hidden`);
+    if (!badges || !hidden) return;
+    badges.innerHTML = '';
+    values.forEach(value => {
+        const badge = document.createElement('span');
+        badge.className = `${type === 'produsen' ? 'badge bg-light-primary text-primary' : 'badge bg-light-info text-info'} badge-removable`;
+        badge.dataset.value = value;
+        badge.innerHTML = `${value} <button type="button" class="badge-remove-btn" onclick="removeFinishGoodBadge(this, '${type}')">Hapus</button>`;
+        badges.appendChild(badge);
+    });
+    if (!values.length) badges.innerHTML = '<span class="text-muted small badge-empty">-</span>';
+    hidden.value = JSON.stringify(values);
+    syncHeaderToDetails(row);
+}
+
+document.addEventListener('change', event => {
+    if (event.target.matches('select.supplier-master-select')) syncFinishGoodEditSupplier(event.target);
+});
+
+function removeFinishGoodBadge(button, type) {
+    const badge = button.closest('.badge-removable');
+    const row = badge?.closest('.unified-row');
+    if (!badge || !row) return;
+    const value = badge.dataset.value || '';
+    const select = row.querySelector(`select.${type}-master-select`);
+    const option = select && Array.from(select.options).find(item => item.value === value);
+    if (option) option.selected = false;
+    badge.remove();
+    const badges = row.querySelector(`.${type}-badges`);
+    const hidden = row.querySelector(`input.${type}-hidden`);
+    const values = Array.from(badges.querySelectorAll('.badge-removable')).map(item => item.dataset.value).filter(Boolean);
+    if (!values.length) badges.innerHTML = '<span class="text-muted small badge-empty">-</span>';
+    hidden.value = JSON.stringify(values);
+    syncHeaderToDetails(row);
 }
 
 function populateProdukOptionsForRow(rowEl) {
@@ -1643,7 +1703,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 function refreshChoicesForContainer(containerEl) {
     if (!containerEl) return;
-    containerEl.querySelectorAll('select.choices').forEach((selectEl) => {
+    containerEl.querySelectorAll('select.choices, select.js-supplier-choices').forEach((selectEl) => {
         refreshChoices(selectEl);
     });
 }
@@ -2002,5 +2062,6 @@ function refreshChoicesForContainer(containerEl) {
     });
 });
 </script>
+@include('qc-sistem.supplier-choices-sync')
 @endpush
 @endsection
