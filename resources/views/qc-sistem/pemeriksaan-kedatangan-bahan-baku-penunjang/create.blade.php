@@ -1402,7 +1402,7 @@ function initBbpCollapses() {
             if (!radio) return;
 
             const name = radio.getAttribute('name') || '';
-            const base = name.replace(/_\d+$/, '');
+            const base = name.replace(/(_\d+){1,2}$/, '');
 
             const detailMap = {
                 kondisi_fisik_kemasan: 'kondisi_fisik_kemasan[]',
@@ -1467,7 +1467,22 @@ function initBbpCollapses() {
         });
     }
 
+    // Kunci unik per produk (tidak berubah walau baris dihapus/ditambah)
+    function getRowKey(rowEl) {
+        if (!rowEl.dataset.rowKey) {
+            window.__bbpRowKeySeq = (window.__bbpRowKeySeq || Date.now()) + 1;
+            rowEl.dataset.rowKey = String(window.__bbpRowKeySeq);
+        }
+        return rowEl.dataset.rowKey;
+    }
+
+    // Hilangkan akhiran angka (_1 atau _123_1) dari name/id
+    function stripNumericSuffix(str) {
+        return String(str || '').replace(/(_\d+){1,2}$/, '');
+    }
+
     function reindexDetails(rowEl) {
+        const rowKey = getRowKey(rowEl);
         const details = Array.from(rowEl.querySelectorAll('.detail-item'));
         details.forEach((detailEl, idx) => {
             const suffix = String(idx + 1);
@@ -1483,22 +1498,23 @@ function initBbpCollapses() {
                 }
             }
 
+            // Nama & id radio dibuat unik: {base}_{rowKey}_{detail}
             detailEl.querySelectorAll('input[type="radio"]').forEach((radio) => {
                 if (!radio.name) return;
-                const baseName = radio.name.replace(/_\d+$/, '');
-                radio.name = `${baseName}_${suffix}`;
+                const baseName = radio.name.startsWith('coa_type')
+                    ? 'coa_type'
+                    : stripNumericSuffix(radio.name);
+                radio.name = `${baseName}_${rowKey}_${suffix}`;
 
                 if (radio.id) {
-                    const baseId = radio.id.replace(/_\d+$/, '');
-                    radio.id = `${baseId}_${suffix}`;
+                    radio.id = `${stripNumericSuffix(radio.id)}_${rowKey}_${suffix}`;
                 }
             });
 
-            detailEl.querySelectorAll('label[for]').forEach((label) => {
-                const currentFor = label.getAttribute('for');
+            detailEl.querySelectorAll('label[for]').forEach((lbl) => {
+                const currentFor = lbl.getAttribute('for');
                 if (!currentFor) return;
-                const baseFor = currentFor.replace(/_\d+$/, '');
-                label.setAttribute('for', `${baseFor}_${suffix}`);
+                lbl.setAttribute('for', `${stripNumericSuffix(currentFor)}_${rowKey}_${suffix}`);
             });
 
             detailEl.querySelectorAll('.radio-value-kemasan-1, .radio-value-warna-1, .radio-value-benda-1, .radio-value-aroma-1, .radio-value-logo-1').forEach((el) => {
@@ -2315,6 +2331,9 @@ function initBbpCollapses() {
         
         // Setup radio button listeners for the new row
         setupRadioListeners(newRow, uniqueId);
+
+        // Beri nama radio unik per produk agar tidak bentrok dengan produk lain
+        reindexDetails(newRow);
         
         // Initialize Choices.js ONLY for selects in the new row
         const newSelects = newRow.querySelectorAll('select.choices');

@@ -2069,6 +2069,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         initChoices();
         initBbpEditCollapses();
+        reindexDetails(newRow);
 
         updateRemoveButtons();
     }
@@ -2129,8 +2130,17 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+    // Kunci unik per produk (tidak bergantung pada data-row-index yang bisa berulang)
+    function getRowKey(rowEl) {
+        if (!rowEl.dataset.rowKey) {
+            window.__bbpRowKeySeq = (window.__bbpRowKeySeq || Date.now()) + 1;
+            rowEl.dataset.rowKey = String(window.__bbpRowKeySeq);
+        }
+        return rowEl.dataset.rowKey;
+    }
+
     function reindexDetails(rowEl) {
-        const produkNo = String(rowEl.getAttribute('data-row-index') || '0');
+        const rowKey = getRowKey(rowEl);
         const details = Array.from(rowEl.querySelectorAll('.detail-item'));
         details.forEach((detailEl, idx) => {
             const suffix = String(idx + 1);
@@ -2146,12 +2156,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
             detailEl.querySelectorAll('input[type="radio"]').forEach((radio) => {
                 const name = radio.getAttribute('name') || '';
-                if (name.startsWith('kondisi_fisik_kemasan_')) radio.name = `kondisi_fisik_kemasan_${produkNo}_${suffix}`;
-                if (name.startsWith('kondisi_fisik_warna_')) radio.name = `kondisi_fisik_warna_${produkNo}_${suffix}`;
-                if (name.startsWith('kondisi_fisik_benda_asing_')) radio.name = `kondisi_fisik_benda_asing_${produkNo}_${suffix}`;
-                if (name.startsWith('kondisi_fisik_aroma_')) radio.name = `kondisi_fisik_aroma_${produkNo}_${suffix}`;
-                if (name.startsWith('kondisi_fisik_allergen_')) radio.name = `kondisi_fisik_allergen_${produkNo}_${suffix}`;
-                if (name.startsWith('logo_halal_')) radio.name = `logo_halal_${produkNo}_${suffix}`;
+                if (!name) return;
+                // coa_type[] sebelumnya dipakai bersama semua detail -> dijadikan grup per detail
+                const base = name.startsWith('coa_type')
+                    ? 'coa_type'
+                    : name.replace(/(_\d+){1,2}$/, '');
+                radio.name = `${base}_${rowKey}_${suffix}`;
             });
 
             const removeBtn = detailEl.querySelector('.remove-detail-btn');

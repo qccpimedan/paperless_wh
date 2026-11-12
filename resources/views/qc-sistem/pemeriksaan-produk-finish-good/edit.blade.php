@@ -1303,29 +1303,53 @@ function setupKondisiMobilCheckAll() {
     });
 }
 
+// Parkir semua radio milik detail dengan nama sementara yang unik sebelum penomoran ulang.
+// Tanpa ini, radio yang tercentang yang diberi nama sama dengan grup lain akan membuat
+// browser menghapus centang radio lain di grup tersebut (pilihan "hilang" dari tampilan).
+function parkDetailRadios(detailEl) {
+    window.__radioParkSeq = (window.__radioParkSeq || 0) + 1;
+    const uid = window.__radioParkSeq;
+    const groupKeys = ['kondisi_kemasan', 'kondisi_warna', 'kondisi_aroma', 'logo_halal'];
+    detailEl.querySelectorAll('input[type="radio"]').forEach((radio) => {
+        let grp = null;
+        if (radio.classList.contains('coa-type-pdf') || radio.classList.contains('coa-type-img')) {
+            grp = 'coa_type_master';
+        } else {
+            const name = radio.getAttribute('name') || '';
+            // Cocokkan nama persis "<key>_<angka>" agar grup lain (mis. coa_type_*) tidak ikut tertangkap
+            grp = groupKeys.find((k) => new RegExp('^' + k + '_\\d+$').test(name)) || null;
+        }
+        if (!grp) return;
+        radio.__radioGroup = grp;
+        radio.name = `__park_${uid}_${grp}`;
+    });
+}
+
+function radiosOfGroup(detailEl, grp) {
+    return Array.from(detailEl.querySelectorAll('input[type="radio"]')).filter((r) => r.__radioGroup === grp);
+}
+
 function setupRowRadios(rowEl) {
     const globalIndex = Number(rowEl.dataset.detailGlobalIndex || 0) + 1;
     const mappings = [
         { key: 'kondisi_kemasan', hiddenPrefix: 'kemasan' },
         { key: 'kondisi_warna', hiddenPrefix: 'warna' },
         { key: 'kondisi_aroma', hiddenPrefix: 'aroma' },
-        { key: 'logo_halal', hiddenPrefix: 'logo' },
+        { key: 'logo_halal', hiddenPrefix: 'logo' }, // Logo Halal (Kondisi Fisik, per detail)
     ];
 
     mappings.forEach(({ key, hiddenPrefix }) => {
         const radioName = `${key}_${globalIndex}`;
-        rowEl.querySelectorAll(`input[type="radio"][name^="${key}_"]`).forEach((radio) => {
+        radiosOfGroup(rowEl, key).forEach((radio) => {
             radio.name = radioName;
-        });
-
-        rowEl.querySelectorAll('input[type="radio"][name^="coa_type_master_"]').forEach((radio) => {
-            radio.name = `coa_type_master_${globalIndex}`;
         });
 
         const hidden = rowEl.querySelector(`input[type="hidden"].radio-value-${hiddenPrefix}-${globalIndex}`)
             || rowEl.querySelector(`input[type="hidden"][name="${key}[]"]`);
 
         rowEl.querySelectorAll(`input[type="radio"][name="${radioName}"]`).forEach((radio) => {
+            if (radio.__hiddenBound) return; // cegah listener ganda
+            radio.__hiddenBound = true;
             radio.addEventListener('change', function () {
                 if (hidden) hidden.value = this.value;
             });
@@ -1336,9 +1360,16 @@ function setupRowRadios(rowEl) {
             hidden.value = checked.value;
         }
     });
+
+    // Tipe file COA (PDF/Gambar): grup radio sendiri per detail
+    radiosOfGroup(rowEl, 'coa_type_master').forEach((radio) => {
+        radio.name = `coa_type_master_${globalIndex}`;
+    });
 }
 
 function updateRowNumbers() {
+    // Fase 1: parkir semua radio detail agar penamaan ulang tidak saling menimpa
+    document.querySelectorAll('.unified-row .detail-items .detail-item').forEach(parkDetailRadios);
     let globalDetail = 0;
     document.querySelectorAll('#unified-container .unified-row').forEach((row, idx) => {
         row.dataset.rowIndex = String(idx);

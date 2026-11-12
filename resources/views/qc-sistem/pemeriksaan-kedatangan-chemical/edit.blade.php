@@ -541,11 +541,11 @@
                                                                         <div class="mb-3">
                                                                             <label class="form-label"><strong>Kemasan</strong></label>
                                                                             <div class="form-check">
-                                                                                <input class="form-check-input" type="radio" name="kondisi_fisik_kemasan_1" value="1" {{ (($detail['kondisi_fisik']['kemasan'] ?? false) == true) ? 'checked' : '' }}>
+                                                                                <input class="form-check-input" type="radio" name="kondisi_fisik_kemasan_{{ $idx + 1 }}" value="1" {{ (($detail['kondisi_fisik']['kemasan'] ?? false) == true) ? 'checked' : '' }}>
                                                                                 <label class="form-check-label">Ya ✓</label>
                                                                             </div>
                                                                             <div class="form-check">
-                                                                                <input class="form-check-input" type="radio" name="kondisi_fisik_kemasan_1" value="0" {{ (($detail['kondisi_fisik']['kemasan'] ?? false) == false) ? 'checked' : '' }}>
+                                                                                <input class="form-check-input" type="radio" name="kondisi_fisik_kemasan_{{ $idx + 1 }}" value="0" {{ (($detail['kondisi_fisik']['kemasan'] ?? false) == false) ? 'checked' : '' }}>
                                                                                 <label class="form-check-label">Tidak ✗</label>
                                                                             </div>
                                                                             <input type="hidden" name="kondisi_fisik_kemasan[]" value="{{ ($detail['kondisi_fisik']['kemasan'] ?? false) ? '1' : '0' }}" class="radio-value-kemasan-1">
@@ -555,11 +555,11 @@
                                                                         <div class="mb-3">
                                                                             <label class="form-label"><strong>Warna</strong></label>
                                                                             <div class="form-check">
-                                                                                <input class="form-check-input" type="radio" name="kondisi_fisik_warna_1" value="1" {{ (($detail['kondisi_fisik']['warna'] ?? false) == true) ? 'checked' : '' }}>
+                                                                                <input class="form-check-input" type="radio" name="kondisi_fisik_warna_{{ $idx + 1 }}" value="1" {{ (($detail['kondisi_fisik']['warna'] ?? false) == true) ? 'checked' : '' }}>
                                                                                 <label class="form-check-label">Ya ✓</label>
                                                                             </div>
                                                                             <div class="form-check">
-                                                                                <input class="form-check-input" type="radio" name="kondisi_fisik_warna_1" value="0" {{ (($detail['kondisi_fisik']['warna'] ?? false) == false) ? 'checked' : '' }}>
+                                                                                <input class="form-check-input" type="radio" name="kondisi_fisik_warna_{{ $idx + 1 }}" value="0" {{ (($detail['kondisi_fisik']['warna'] ?? false) == false) ? 'checked' : '' }}>
                                                                                 <label class="form-check-label">Tidak ✗</label>
                                                                             </div>
                                                                             <input type="hidden" name="kondisi_fisik_warna[]" value="{{ ($detail['kondisi_fisik']['warna'] ?? false) ? '1' : '0' }}" class="radio-value-warna-1">
@@ -569,11 +569,11 @@
                                                                         <div class="mb-3">
                                                                             <label class="form-label"><strong>Logo Halal</strong></label>
                                                                             <div class="form-check">
-                                                                                <input class="form-check-input" type="radio" name="persyaratan_dokumen_halal_1" value="1" {{ (($detail['persyaratan_dokumen_halal'] ?? false) == true) ? 'checked' : '' }}>
+                                                                                <input class="form-check-input" type="radio" name="persyaratan_dokumen_halal_{{ $idx + 1 }}" value="1" {{ (($detail['persyaratan_dokumen_halal'] ?? false) == true) ? 'checked' : '' }}>
                                                                                 <label class="form-check-label">Ya ✓</label>
                                                                             </div>
                                                                             <div class="form-check">
-                                                                                <input class="form-check-input" type="radio" name="persyaratan_dokumen_halal_1" value="0" {{ (($detail['persyaratan_dokumen_halal'] ?? false) == false) ? 'checked' : '' }}>
+                                                                                <input class="form-check-input" type="radio" name="persyaratan_dokumen_halal_{{ $idx + 1 }}" value="0" {{ (($detail['persyaratan_dokumen_halal'] ?? false) == false) ? 'checked' : '' }}>
                                                                                 <label class="form-check-label">Tidak ✗</label>
                                                                             </div>
                                                                             <input type="hidden" name="persyaratan_dokumen_halal[]" value="{{ ($detail['persyaratan_dokumen_halal'] ?? false) ? '1' : '0' }}" class="radio-value-halal-1">
@@ -590,11 +590,11 @@
                                                                         <div class="mb-3">
                                                                             <label class="form-label"><strong>COA</strong></label>
                                                                             <div class="form-check">
-                                                                                <input class="form-check-input" type="radio" name="coa_1" value="1" {{ (($detail['coa'] ?? false) == true) ? 'checked' : '' }}>
+                                                                                <input class="form-check-input" type="radio" name="coa_{{ $idx + 1 }}" value="1" {{ (($detail['coa'] ?? false) == true) ? 'checked' : '' }}>
                                                                                 <label class="form-check-label">Ya ✓</label>
                                                                             </div>
                                                                             <div class="form-check">
-                                                                                <input class="form-check-input" type="radio" name="coa_1" value="0" {{ (($detail['coa'] ?? false) == false) ? 'checked' : '' }}>
+                                                                                <input class="form-check-input" type="radio" name="coa_{{ $idx + 1 }}" value="0" {{ (($detail['coa'] ?? false) == false) ? 'checked' : '' }}>
                                                                                 <label class="form-check-label">Tidak ✗</label>
                                                                             </div>
                                                                             <input type="hidden" name="coa[]" value="{{ ($detail['coa'] ?? false) ? '1' : '0' }}" class="radio-value-coa-1">
@@ -995,6 +995,32 @@ function updateRemoveButtons() {
 
 // Catatan: Logo Halal (persyaratan_dokumen_halal) kini berada di section Kondisi Fisik,
 // tetapi tetap berada di dalam .detail-item sehingga mapping di bawah tidak perlu berubah.
+// Parkir semua radio milik detail dengan nama sementara yang unik sebelum penomoran ulang.
+// Tanpa ini, radio yang tercentang yang diberi nama sama dengan grup lain akan membuat
+// browser menghapus centang radio lain di grup tersebut (pilihan "hilang" dari tampilan).
+function parkDetailRadios(detailEl) {
+    window.__radioParkSeq = (window.__radioParkSeq || 0) + 1;
+    const uid = window.__radioParkSeq;
+    const groupKeys = ['kondisi_fisik_kemasan', 'kondisi_fisik_warna', 'persyaratan_dokumen_halal', 'coa'];
+    detailEl.querySelectorAll('input[type="radio"]').forEach((radio) => {
+        let grp = null;
+        if (radio.classList.contains('coa-type-pdf') || radio.classList.contains('coa-type-img')) {
+            grp = 'coa_type';
+        } else {
+            const name = radio.getAttribute('name') || '';
+            // Cocokkan nama persis "<key>_<angka>" agar grup lain (mis. coa_type_*) tidak ikut tertangkap
+            grp = groupKeys.find((k) => new RegExp('^' + k + '_\\d+$').test(name)) || null;
+        }
+        if (!grp) return;
+        radio.__radioGroup = grp;
+        radio.name = `__park_${uid}_${grp}`;
+    });
+}
+
+function radiosOfGroup(detailEl, grp) {
+    return Array.from(detailEl.querySelectorAll('input[type="radio"]')).filter((r) => r.__radioGroup === grp);
+}
+
 function setupRowRadios(detailEl) {
     const globalIndex = Number(detailEl.dataset.detailGlobalIndex || 0) + 1;
     const mappings = [
@@ -1006,7 +1032,7 @@ function setupRowRadios(detailEl) {
 
     mappings.forEach(({ key, hiddenPrefix }) => {
         const radioName = `${key}_${globalIndex}`;
-        detailEl.querySelectorAll(`input[type="radio"][name^="${key}_"]`).forEach((radio, idx) => {
+        radiosOfGroup(detailEl, key).forEach((radio, idx) => {
             radio.name = radioName;
             const uniqueRadioId = `${key}_${globalIndex}_${idx}`;
             radio.id = uniqueRadioId;
@@ -1019,6 +1045,8 @@ function setupRowRadios(detailEl) {
             || detailEl.querySelector(`input[type="hidden"][name="${key}[]"]`);
 
         detailEl.querySelectorAll(`input[type="radio"][name="${radioName}"]`).forEach((radio) => {
+            if (radio.__hiddenBound) return; // cegah listener ganda
+            radio.__hiddenBound = true;
             radio.addEventListener('change', function () {
                 if (hidden) hidden.value = this.value;
             });
@@ -1042,6 +1070,8 @@ function updateDetailButtons() {
 }
 
 function updateRowNumbers() {
+    // Fase 1: parkir semua radio detail agar penamaan ulang tidak saling menimpa
+    document.querySelectorAll('.unified-row .detail-items .detail-item').forEach(parkDetailRadios);
     const rows = document.querySelectorAll('.unified-row');
     let globalDetail = 0;
     rows.forEach((row, index) => {
@@ -1067,6 +1097,10 @@ function updateRowNumbers() {
             });
             detailEl.querySelectorAll('input[type="hidden"][name="coa[]"]').forEach((el) => {
                 el.className = `radio-value-coa-${globalDetail + 1}`;
+            });
+
+            detailEl.querySelectorAll('.coa-type-pdf, .coa-type-img').forEach((r) => {
+                r.name = `coa_file_type_${globalDetail}`;
             });
 
             detailEl.querySelectorAll('input[type="file"]').forEach((el) => {
@@ -1767,10 +1801,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!addBtn) return;
         setTimeout(() => {
             document.querySelectorAll('.detail-item').forEach((item, idx) => {
-                const radios = item.querySelectorAll('.coa-type-pdf, .coa-type-img');
-                radios.forEach(r => {
-                    r.name = `coa_file_type_${idx}`;
-                });
+                // Nama radio tipe file COA kini diatur di updateRowNumbers()
                 const coaBadges = item.querySelectorAll('.badge.bg-success');
                 coaBadges.forEach(b => {
                     if (b.textContent.trim() === 'COA Tersimpan') {

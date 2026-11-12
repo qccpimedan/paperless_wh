@@ -1462,6 +1462,32 @@ function setupDynamicFormListeners() {
 
 // Catatan: Logo Halal (persyaratan_dokumen_halal) kini berada di section Kondisi Fisik,
 // tetapi tetap berada di dalam .detail-item sehingga mapping di bawah tidak perlu berubah.
+// Parkir semua radio milik detail dengan nama sementara yang unik sebelum penomoran ulang.
+// Tanpa ini, radio yang tercentang yang diberi nama sama dengan grup lain akan membuat
+// browser menghapus centang radio lain di grup tersebut (pilihan "hilang" dari tampilan).
+function parkDetailRadios(detailEl) {
+    window.__radioParkSeq = (window.__radioParkSeq || 0) + 1;
+    const uid = window.__radioParkSeq;
+    const groupKeys = ['kondisi_fisik_kemasan', 'kondisi_fisik_warna', 'persyaratan_dokumen_halal', 'coa'];
+    detailEl.querySelectorAll('input[type="radio"]').forEach((radio) => {
+        let grp = null;
+        if (radio.classList.contains('coa-type-pdf') || radio.classList.contains('coa-type-img')) {
+            grp = 'coa_type';
+        } else {
+            const name = radio.getAttribute('name') || '';
+            // Cocokkan nama persis "<key>_<angka>" agar grup lain (mis. coa_type_*) tidak ikut tertangkap
+            grp = groupKeys.find((k) => new RegExp('^' + k + '_\\d+$').test(name)) || null;
+        }
+        if (!grp) return;
+        radio.__radioGroup = grp;
+        radio.name = `__park_${uid}_${grp}`;
+    });
+}
+
+function radiosOfGroup(detailEl, grp) {
+    return Array.from(detailEl.querySelectorAll('input[type="radio"]')).filter((r) => r.__radioGroup === grp);
+}
+
 function setupRowRadios(detailEl) {
     const globalIndex = Number(detailEl.dataset.detailGlobalIndex || 0) + 1;
     const mappings = [
@@ -1473,7 +1499,7 @@ function setupRowRadios(detailEl) {
 
     mappings.forEach(({ key, hiddenPrefix }) => {
         const radioName = `${key}_${globalIndex}`;
-        detailEl.querySelectorAll(`input[type="radio"][name^="${key}_"]`).forEach((radio, idx) => {
+        radiosOfGroup(detailEl, key).forEach((radio, idx) => {
             radio.name = radioName;
             const uniqueRadioId = `${key}_${globalIndex}_${idx}`;
             radio.id = uniqueRadioId;
@@ -1486,6 +1512,8 @@ function setupRowRadios(detailEl) {
             || detailEl.querySelector(`input[type="hidden"][name="${key}[]"]`);
 
         detailEl.querySelectorAll(`input[type="radio"][name="${radioName}"]`).forEach((radio) => {
+            if (radio.__hiddenBound) return; // cegah listener ganda
+            radio.__hiddenBound = true;
             radio.addEventListener('change', function () {
                 if (hidden) hidden.value = this.value;
             });
@@ -2128,6 +2156,8 @@ function getDistributorOptions() {
 
 // Update row numbers
 function updateRowNumbers() {
+    // Fase 1: parkir semua radio detail agar penamaan ulang tidak saling menimpa
+    document.querySelectorAll('.unified-row .detail-items .detail-item').forEach(parkDetailRadios);
     const rows = document.querySelectorAll('#unified-container .unified-row');
     let globalDetail = 0;
     rows.forEach((row, index) => {
