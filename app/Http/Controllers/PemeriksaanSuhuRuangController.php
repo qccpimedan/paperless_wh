@@ -11,7 +11,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\PemeriksaanSuhuRuangExport;
-use App\Exports\SingleRecordViewExport;
 use App\Http\Controllers\Traits\HasAuditController;
 
 class PemeriksaanSuhuRuangController extends Controller
@@ -1140,17 +1139,13 @@ class PemeriksaanSuhuRuangController extends Controller
                 && $user->getEffectivePlantId() !== $pemeriksaan->user->id_plant) {
                 abort(403, 'Unauthorized');
             }
-            $data = [
-                'pemeriksaans' => collect([$pemeriksaan]),
-                'tanggal' => $pemeriksaan->tanggal,
-                'shift' => $pemeriksaan->shift,
-                'isAllShift' => false,
-                'dataPerShift' => [[
+            return Excel::download(
+                new PemeriksaanSuhuRuangExport(collect([$pemeriksaan]), [
+                    'tanggal' => $pemeriksaan->tanggal,
                     'shift' => $pemeriksaan->shift,
-                    'pemeriksaans' => collect([$pemeriksaan]),
-                ]],
-            ];
-            return Excel::download(new SingleRecordViewExport('qc-sistem.pemeriksaan-suhu-ruang.pdf-report', $data, 'Suhu Ruang'), 'suhu-ruang-' . $pemeriksaan->uuid . '.xlsx');
+                ]),
+                'suhu-ruang-' . $pemeriksaan->uuid . '.xlsx'
+            );
         }
         $id_shift = $request->input('id_shift');
         $tanggalDari = $request->input('tanggal_dari');
