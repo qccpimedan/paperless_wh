@@ -2466,46 +2466,5 @@ function removeBadgeItem(btn, type) {
     }
 }
 </script>
-<script>
-// Fallback initializer kept separate from the large form script: supplier selects
-// must still become searchable even if another form script fails to initialize.
-(function () {
-    function initChemicalSupplierChoices(root) {
-        if (typeof window.Choices === 'undefined') return;
-        (root || document).querySelectorAll('select.js-supplier-choices').forEach(function (select) {
-            if (select.dataset.choicesInitialized === 'true' || select.dataset.choicesInitialized === '1' || select.closest('.choices')) return;
-            try {
-                select.choicesInstance = new window.Choices(select, {
-                    searchEnabled: true,
-                    searchPlaceholderValue: 'Cari...',
-                    removeItemButton: true,
-                    shouldSort: false,
-                    itemSelectText: '',
-                    noResultsText: 'Tidak ada hasil',
-                    noChoicesText: 'Tidak ada pilihan',
-                });
-                select.dataset.choicesInitialized = 'true';
-            } catch (error) {
-                console.error('Gagal menginisialisasi pilihan supplier Chemical:', error);
-            }
-        });
-    }
-
-    function start() {
-        initChemicalSupplierChoices(document);
-        new MutationObserver(function (mutations) {
-            mutations.forEach(function (mutation) {
-                mutation.addedNodes.forEach(function (node) {
-                    if (node.nodeType === 1) initChemicalSupplierChoices(node);
-                });
-            });
-        }).observe(document.body, { childList: true, subtree: true });
-    }
-
-    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start, { once: true });
-    else start();
-})();
-
-</script>
 @include('qc-sistem.supplier-choices-sync')
 @endpush
