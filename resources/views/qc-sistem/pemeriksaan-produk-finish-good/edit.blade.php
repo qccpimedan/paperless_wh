@@ -15,6 +15,16 @@
     $negaraArr = is_array($pemeriksaanProdukFinishGood->negara_produsen_array) ? $pemeriksaanProdukFinishGood->negara_produsen_array : [];
     $produsenArr = is_array($pemeriksaanProdukFinishGood->produsen_array) ? $pemeriksaanProdukFinishGood->produsen_array : [];
     $distributorArr = is_array($pemeriksaanProdukFinishGood->distributor_array) ? $pemeriksaanProdukFinishGood->distributor_array : [];
+    $normalizeSupplierList = function ($value) {
+        if (is_string($value)) {
+            $decoded = json_decode($value, true);
+            $value = json_last_error() === JSON_ERROR_NONE ? $decoded : [$value];
+        }
+        if (!is_array($value)) $value = [$value];
+        return array_values(array_unique(array_filter(array_map(function ($item) {
+            return is_scalar($item) ? trim((string) $item) : '';
+        }, $value), fn ($item) => $item !== '')));
+    };
     $kodeArr = is_array($pemeriksaanProdukFinishGood->kode_produksi_array) ? $pemeriksaanProdukFinishGood->kode_produksi_array : [];
     $expireArr = is_array($pemeriksaanProdukFinishGood->expire_date_array) ? $pemeriksaanProdukFinishGood->expire_date_array : [];
     $jmlDatangArr = is_array($pemeriksaanProdukFinishGood->jumlah_datang_array) ? $pemeriksaanProdukFinishGood->jumlah_datang_array : [];
@@ -46,8 +56,8 @@
                 'id_produk' => $pid,
                 'kategori' => $kategori,
                 'negara' => $negara,
-                'produsen' => $produsenArr[$i] ?? [],
-                'distributor' => $distributorArr[$i] ?? [],
+                'produsen' => $normalizeSupplierList($produsenArr[$i] ?? []),
+                'distributor' => $normalizeSupplierList($distributorArr[$i] ?? []),
                 'items' => [],
             ];
         }
@@ -449,6 +459,7 @@
                                                                 <div class="small text-muted mb-2">Pilih dari seluruh master Produsen Plant ini</div>
                                                                 <select class="form-select js-supplier-choices supplier-master-select produsen-master-select mb-2" multiple aria-label="Pilih produsen">
                                                                     @foreach (($produsens ?? []) as $produsen)<option value="{{ $produsen->nama_produsen }}" {{ in_array($produsen->nama_produsen, (array) ($group['produsen'] ?? []), true) ? 'selected' : '' }}>{{ $produsen->nama_produsen }}</option>@endforeach
+                                                                    @foreach (array_diff((array) ($group['produsen'] ?? []), collect($produsens ?? [])->pluck('nama_produsen')->all()) as $savedProdusen)<option value="{{ $savedProdusen }}" selected>{{ $savedProdusen }}</option>@endforeach
                                                                 </select>
                                                                 <div class="produsen-badges d-flex flex-wrap gap-1" data-row-index="{{ $gIndex }}">
                                                                     @forelse ((array) ($group['produsen'] ?? []) as $supplierName)<span class="badge bg-light-primary text-primary badge-removable" data-value="{{ $supplierName }}">{{ $supplierName }} <button type="button" class="badge-remove-btn" onclick="removeBadgeItem(this, 'produsen')">Hapus</button></span>@empty<span class="text-muted small badge-empty">-</span>@endforelse
@@ -464,6 +475,7 @@
                                                                 <div class="small text-muted mb-2">Pilih dari seluruh master Distributor Plant ini</div>
                                                                 <select class="form-select js-supplier-choices supplier-master-select distributor-master-select mb-2" multiple aria-label="Pilih distributor">
                                                                     @foreach (($distributors ?? []) as $distributor)<option value="{{ $distributor->nama_distributor }}" {{ in_array($distributor->nama_distributor, (array) ($group['distributor'] ?? []), true) ? 'selected' : '' }}>{{ $distributor->nama_distributor }}</option>@endforeach
+                                                                    @foreach (array_diff((array) ($group['distributor'] ?? []), collect($distributors ?? [])->pluck('nama_distributor')->all()) as $savedDistributor)<option value="{{ $savedDistributor }}" selected>{{ $savedDistributor }}</option>@endforeach
                                                                 </select>
                                                                 <div class="distributor-badges d-flex flex-wrap gap-1" data-row-index="{{ $gIndex }}">
                                                                     @forelse ((array) ($group['distributor'] ?? []) as $supplierName)<span class="badge bg-light-info text-info badge-removable" data-value="{{ $supplierName }}">{{ $supplierName }} <button type="button" class="badge-remove-btn" onclick="removeBadgeItem(this, 'distributor')">Hapus</button></span>@empty<span class="text-muted small badge-empty">-</span>@endforelse
@@ -864,6 +876,9 @@
     }
     .collapse-chevron { transition: transform .2s ease; }
     .collapse-toggle-btn[aria-expanded="true"] .collapse-chevron { transform: rotate(180deg); }
+    .badge-removable { display: inline-flex; align-items: center; gap: 4px; padding-right: 4px; }
+    .badge-remove-btn { appearance: none; -webkit-appearance: none; background: none; border: none; padding: 1px 4px; font: inherit; font-size: 12px; font-weight: 600; line-height: 1; cursor: pointer; color: #dc3545; border-radius: 3px; }
+    .badge-remove-btn:hover { color: #fff; background: #dc3545; }
 </style>
 
 @push('scripts')
@@ -1466,7 +1481,7 @@ function removeFinishGoodBadge(button, type) {
     syncHeaderToDetails(row);
 }
 
-function populateProdukOptionsForRow(rowEl) {
+function populateProdukOptionsForRow(rowEl, applyProductDefaults = true) {
     const kategoriSelect = rowEl.querySelector('select.kategori-produk-select');
     const produkSelect = rowEl.querySelector('select.produk-select');
     if (!kategoriSelect || !produkSelect) return;
@@ -1510,7 +1525,7 @@ function populateProdukOptionsForRow(rowEl) {
     }
     refreshChoices(produkSelect);
 
-    applyProdukMetaForRow(rowEl, true);
+    if (applyProductDefaults !== null) applyProdukMetaForRow(rowEl, applyProductDefaults);
 }
 
 function setupProdukRowListeners(rowEl) {
@@ -1561,6 +1576,27 @@ function syncHeaderToDetails(rowEl) {
     });
 }
 
+// Ambil pilihan terakhir dari select saat submit agar hidden input tiap detail
+// tidak tertinggal pada nilai lama jika event Choices tidak memperbaruinya.
+document.addEventListener('submit', function(event) {
+    const form = event.target;
+    if (!form || !form.querySelector('#unified-container')) return;
+
+    form.querySelectorAll('#unified-container .unified-row').forEach((rowEl) => {
+        ['produsen', 'distributor'].forEach((type) => {
+            const select = rowEl.querySelector(`select.${type}-master-select`);
+            const hidden = rowEl.querySelector(`input.${type}-hidden`);
+            if (!select || !hidden) return;
+
+            const values = Array.from(select.selectedOptions)
+                .map((option) => String(option.value || '').trim())
+                .filter(Boolean);
+            hidden.value = JSON.stringify([...new Set(values)]);
+        });
+        syncHeaderToDetails(rowEl);
+    });
+}, true);
+
 // Logo Halal tidak lagi disinkronkan dari master: sekarang nilainya per detail (Kondisi Fisik)
 function syncDokumenToDetails(rowEl) {
     if (!rowEl) return;
@@ -1590,7 +1626,7 @@ function initializeProdukFlow() {
         setupProdukRowListeners(row);
 
         if (kategoriSelect && kategoriSelect.value) {
-            populateProdukOptionsForRow(row);
+            populateProdukOptionsForRow(row, null);
         }
 
         syncHeaderToDetails(row);

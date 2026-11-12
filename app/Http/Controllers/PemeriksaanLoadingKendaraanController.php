@@ -572,7 +572,10 @@ class PemeriksaanLoadingKendaraanController extends Controller
                 'shift' => $pemeriksaan->shift,
                 'isAllShift' => false,
                 'dataPerShift' => $dataPerShift,
-            ])->download('loading-kendaraan-' . $pemeriksaan->uuid . '.pdf');
+                
+            ])
+            ->setPaper('a4', 'landscape')
+            ->download('loading-kendaraan-' . $pemeriksaan->uuid . '.pdf');
         }
 
         $id_shift = $request->input('id_shift');
@@ -652,7 +655,7 @@ class PemeriksaanLoadingKendaraanController extends Controller
                 'pemeriksaans' => $pemeriksaans,
                 'shift' => $shift,
             ]],
-        ]);
+        ])->setPaper('a4', 'landscape');
 
         $filenameDate = $tanggal ?? $tanggalDari ?? date('Y-m-d');
         $filename = 'laporan-pemeriksaan-loading-kendaraan-' . $filenameDate . '.pdf';
@@ -758,7 +761,7 @@ class PemeriksaanLoadingKendaraanController extends Controller
             'shift'          => null,
             'pemeriksaans'   => collect(),
             'isAllShift'     => true,
-        ]);
+        ])->setPaper('a4', 'landscape');
 
         $filename = 'laporan-semua-shift-loading-kendaraan-'
             . ($tanggalDari ?? date('Y-m-d'))

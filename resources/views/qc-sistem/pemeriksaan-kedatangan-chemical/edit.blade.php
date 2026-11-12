@@ -720,7 +720,7 @@
                                 <!-- Submit Buttons -->
                                 <div class="form-group">
                                     <button type="submit" class="btn btn-primary">
-                                        Update
+                                        Simpan Perubahan
                                     </button>
                                     <a href="{{ route('pemeriksaan-chemical.index') }}" class="btn btn-secondary">
                                         Kembali
@@ -749,6 +749,9 @@
     }
     .collapse-chevron { transition: transform .2s ease; }
     .collapse-toggle-btn[aria-expanded="true"] .collapse-chevron { transform: rotate(180deg); }
+    .badge-removable { display: inline-flex; align-items: center; gap: 4px; padding-right: 4px; }
+    .badge-remove-btn { appearance: none; -webkit-appearance: none; background: none; border: none; padding: 1px 4px; font: inherit; font-size: 12px; font-weight: 600; line-height: 1; cursor: pointer; color: #dc3545; border-radius: 3px; }
+    .badge-remove-btn:hover { color: #fff; background: #dc3545; }
 </style>
 
 <script>
@@ -1693,43 +1696,36 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Sync header fields into extra details so arrays remain aligned
+    // Sync header supplier selection into each detail in the same order as id_chemical[].
     document.addEventListener('submit', function(e) {
         const form = e.target;
         if (!form || form.tagName.toLowerCase() !== 'form') return;
         if (!form.closest('#main')) return;
 
-        form.querySelectorAll('input.__synced_header_value').forEach((el) => el.remove());
-
-        const rows = Array.from(form.querySelectorAll('#main .unified-row'));
+        const rows = Array.from(form.querySelectorAll('.unified-row'));
         rows.forEach((rowEl) => {
             const details = Array.from(rowEl.querySelectorAll('.detail-items .detail-item'));
-            if (details.length <= 1) return;
+            const supplierSelections = ['produsen', 'distributor'].map((type) => {
+                const select = rowEl.querySelector(`select.${type}-master-select`);
+                const values = select
+                    ? Array.from(select.selectedOptions).map((option) => String(option.value || '').trim()).filter(Boolean)
+                    : [];
+                return { type, value: JSON.stringify([...new Set(values)]) };
+            });
 
-            const getVal = (sel) => {
-                const el = rowEl.querySelector(sel);
-                return el ? (el.value || '') : '';
-            };
-
-            const headerValues = {
-                kategori_code: getVal('select[name="kategori_code[]"]'),
-                id_produk: getVal('select[name="id_produk[]"]'),
-                kondisi_chemical: getVal('select[name="kondisi_chemical[]"]'),
-                id_chemical: getVal('input[name="id_chemical[]"]'),
-                id_produsen: getVal('input[name="id_produsen[]"]'),
-                id_distributor: getVal('input[name="id_distributor[]"]'),
-            };
-
-            for (let i = 1; i < details.length; i += 1) {
-                Object.entries(headerValues).forEach(([key, value]) => {
+            // Hapus input supplier per-group; controller membutuhkan satu nilai
+            // supplier untuk setiap detail (sejajar dengan id_chemical[]).
+            rowEl.querySelectorAll('.id-produsen-hidden, .id-distributor-hidden').forEach((input) => input.remove());
+            details.forEach((detail) => {
+                supplierSelections.forEach(({ type, value }) => {
                     const input = document.createElement('input');
                     input.type = 'hidden';
-                    input.name = `${key}[]`;
+                    input.name = `id_${type}[]`;
                     input.value = value;
-                    input.className = '__synced_header_value';
-                    form.appendChild(input);
+                    input.className = `__submitted_${type}_value`;
+                    detail.appendChild(input);
                 });
-            }
+            });
         });
     });
 

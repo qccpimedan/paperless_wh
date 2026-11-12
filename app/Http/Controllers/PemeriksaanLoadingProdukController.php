@@ -58,8 +58,16 @@ class PemeriksaanLoadingProdukController extends Controller
                 ->pluck('id')
                 ->map(fn ($id) => (int) $id)
                 ->all();
+            $matchingTujuanIds = TujuanPengiriman::query()
+                ->where('nama_tujuan', 'like', '%' . $search . '%')
+                ->orWhereHas('customer', function ($q) use ($search) {
+                    $q->where('nama_cust', 'like', '%' . $search . '%');
+                })
+                ->pluck('id')
+                ->map(fn ($id) => (int) $id)
+                ->all();
 
-            $query->where(function ($q) use ($search, $matchingProductIds) {
+            $query->where(function ($q) use ($search, $matchingProductIds, $matchingTujuanIds) {
                 // Konversi format d/m/Y ke Y-m-d
                 $tanggalSearch = null;
                 if (preg_match('/^\d{2}\/\d{2}\/\d{4}$/', $search)) {
@@ -109,6 +117,17 @@ class PemeriksaanLoadingProdukController extends Controller
                         }
                     });
                 }
+
+                if (!empty($matchingTujuanIds)) {
+                    $q->orWhere(function ($qj) use ($matchingTujuanIds) {
+                        foreach ($matchingTujuanIds as $tujuanId) {
+                            $qj->orWhereRaw("JSON_CONTAINS(produk_data, ?, '$')", [json_encode(['id_tujuan_pengiriman' => $tujuanId])])
+                                ->orWhereRaw("JSON_CONTAINS(produk_data, ?, '$')", [json_encode(['id_tujuan_pengiriman' => (string) $tujuanId])])
+                                ->orWhere('produk_data', 'like', '%"id_tujuan_pengiriman":' . $tujuanId . '%')
+                                ->orWhere('produk_data', 'like', '%"id_tujuan_pengiriman":"' . $tujuanId . '"%');
+                        }
+                    });
+                }
             });
         }
 
@@ -119,6 +138,19 @@ class PemeriksaanLoadingProdukController extends Controller
             ->orderByDesc('created_at')
             ->orderByDesc('id')
             ->paginate(25);
+
+        $tujuanIds = $pemeriksaans->getCollection()
+            ->flatMap(function ($item) {
+                $detailIds = collect($item->produk_data ?? [])->pluck('id_tujuan_pengiriman');
+                return $detailIds->push($item->id_tujuan_pengiriman ?? null);
+            })
+            ->filter()
+            ->unique()
+            ->values();
+        $tujuanPengirimanById = TujuanPengiriman::with('customer')
+            ->whereIn('id', $tujuanIds)
+            ->get()
+            ->keyBy('id');
 
         
         $produkKategoriOptions = \App\Models\Produk::query()
@@ -144,7 +176,7 @@ class PemeriksaanLoadingProdukController extends Controller
 
         $produkNamaById = $produkList->pluck('nama_produk', 'id')->all();
 
-        return view('qc-sistem.pemeriksaan-loading-produk.index', compact('pemeriksaans', 'produkKategoriOptions', 'produkList', 'produkByKategori', 'produkNamaById'));
+        return view('qc-sistem.pemeriksaan-loading-produk.index', compact('pemeriksaans', 'produkKategoriOptions', 'produkList', 'produkByKategori', 'produkNamaById', 'tujuanPengirimanById'));
     }
 
     public function create()

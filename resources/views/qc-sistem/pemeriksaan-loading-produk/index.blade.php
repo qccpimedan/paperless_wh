@@ -132,7 +132,7 @@
                     </div>
                     
                     <form action="{{ route('pemeriksaan-loading-produk.index') }}" method="GET" class="row g-3 mb-3">
-                        <div class="col-md-9"><input type="text" name="search" class="form-control" placeholder="Cari Produk, atau No. Kendaraan..." value="{{ request('search') }}"></div>
+                        <div class="col-md-9"><input type="text" name="search" class="form-control" placeholder="Cari Produk, Customer / Tujuan Pengiriman, No. Kendaraan..." value="{{ request('search') }}"></div>
                         
                         @php $isPlantMedan = auth()->user() && auth()->user()->plant && stripos(auth()->user()->plant->plant ?? '', 'medan') !== false; @endphp
                         @if($isPlantMedan || (auth()->user()->role && strtolower(auth()->user()->role->role) === 'superadmin'))
@@ -169,7 +169,7 @@
                                         <th>Sub Area</th>
                                         @endif
                                         <th>Nama Produk</th>
-                                        <!-- <th>Customer</th> -->
+                                        <th>Customer / Tujuan Pengiriman</th>
                                         <th>No. Kendaraan</th>
                                         <th>Verifikasi</th>
                                         <th>Aksi</th>
@@ -212,21 +212,34 @@
                                                     $countP = count($pData);
                                                     $firstPId = $pData[0]['id_produk'] ?? null;
                                                     $pName = $firstPId ? ($produkNamaById[$firstPId] ?? '-') : '-';
+                                                    $tujuanLabels = collect($pData)->map(function ($detail) use ($tujuanPengirimanById) {
+                                                        $tujuan = $tujuanPengirimanById->get($detail['id_tujuan_pengiriman'] ?? null);
+                                                        if (!$tujuan) return null;
+                                                        $customerName = $tujuan->customer->nama_cust ?? null;
+                                                        $tujuanName = $tujuan->nama_tujuan ?? null;
+                                                        if ($tujuanName === '-') $tujuanName = null;
+                                                        return trim(collect([$customerName, $tujuanName])->filter()->implode(' / '));
+                                                    })->filter()->unique()->values();
+                                                    if ($tujuanLabels->isEmpty() && $item->tujuanPengiriman) {
+                                                        $tujuanLabels = collect([trim(collect([
+                                                            $item->tujuanPengiriman->customer->nama_cust ?? null,
+                                                            $item->tujuanPengiriman->nama_tujuan !== '-' ? ($item->tujuanPengiriman->nama_tujuan ?? null) : null,
+                                                        ])->filter()->implode(' / '))])->filter();
+                                                    }
                                                 @endphp
                                                 <span class="badge bg-info">{{ $pName }}</span>
                                                 @if($countP > 1) <br><small class="text-muted">+{{ $countP-1 }} lainnya</small> @endif
                                             </td>
-                                            <!-- <td>
-                                                @if($item->tujuanPengiriman)
-                                                    @if($item->tujuanPengiriman->customer)
-                                                        {{ $item->tujuanPengiriman->customer->nama_cust }}
-                                                    @else
-                                                        {{ $item->tujuanPengiriman->nama_tujuan ?? '-' }}
+                                            <td>
+                                                @if($tujuanLabels->isNotEmpty())
+                                                    <span class="badge bg-light-info text-info">{{ $tujuanLabels->first() }}</span>
+                                                    @if($tujuanLabels->count() > 1)
+                                                        <br><small class="text-muted">+{{ $tujuanLabels->count() - 1 }} lainnya</small>
                                                     @endif
                                                 @else
-                                                    -
+                                                    <span class="text-muted">-</span>
                                                 @endif
-                                            </td> -->
+                                            </td>
                                             <td>{{ $item->kendaraan->no_kendaraan ?? '-' }}</td>
                                             <td>
                                                 @if($st === 'pending' || $st === null)

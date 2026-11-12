@@ -368,9 +368,11 @@
                                                     <div class="produsen-hidden-inputs"></div>
                                                     <div class="distributor-hidden-inputs"></div>
 
-                                                    <input type="hidden" class="penampakan-hidden" value="{{ old('penampakan.0') }}">
-                                                    <input type="hidden" class="sealing-hidden" value="{{ old('sealing.0') }}">
-                                                    <input type="hidden" class="cetakan-hidden" value="{{ old('cetakan.0') }}">
+                                                    {{-- FIX: hidden Kondisi Fisik SELALU ter-submit (punya name). Radio hanya UI. --}}
+                                                    <input type="hidden" name="penampakan[]" class="penampakan-hidden" value="{{ old('penampakan.0') }}">
+                                                    <input type="hidden" name="sealing[]" class="sealing-hidden" value="{{ old('sealing.0') }}">
+                                                    <input type="hidden" name="cetakan[]" class="cetakan-hidden" value="{{ old('cetakan.0') }}">
+                                                    <input type="hidden" name="logo_halal[]" class="logo_halal-hidden" value="{{ old('logo_halal.0') }}">
                                                     <input type="hidden" name="dokumen_halal[]" class="dokumen-halal-hidden" value="{{ old('dokumen_halal.0') }}">
                                                     <input type="hidden" name="coa[]" class="coa-hidden" value="{{ old('coa.0') }}">
 
@@ -441,16 +443,17 @@
                                                     <div class="form-section mb-3 mt-3">
                                                         <h6 class="text-primary mb-2">Kondisi Fisik</h6>
                                                         <div class="row">
+                                                            {{-- FIX: nama radio unik per detail (UI-only), TIDAK pernah di-rename oleh JS --}}
                                                             @foreach ([['penampakan', 'Penampakan'], ['sealing', 'Sealing'], ['cetakan', 'Cetakan'], ['logo_halal', 'Logo Halal']] as [$grp, $grpLabel])
                                                                 <div class="col-md-3">
                                                                     <div class="mb-3">
                                                                         <label class="form-label"><strong>{{ $grpLabel }}</strong></label>
                                                                         <div class="form-check">
-                                                                            <input class="form-check-input" type="radio" name="{{ $grp }}[0]" data-group="{{ $grp }}" value="1" {{ old($grp . '.0') == '1' ? 'checked' : '' }}>
+                                                                            <input class="form-check-input" type="radio" name="{{ $grp }}_master_0" data-group="{{ $grp }}" value="1" {{ old($grp . '.0') == '1' ? 'checked' : '' }}>
                                                                             <label class="form-check-label">Ya ✓</label>
                                                                         </div>
                                                                         <div class="form-check">
-                                                                            <input class="form-check-input" type="radio" name="{{ $grp }}[0]" data-group="{{ $grp }}" value="0" {{ old($grp . '.0') == '0' ? 'checked' : '' }}>
+                                                                            <input class="form-check-input" type="radio" name="{{ $grp }}_master_0" data-group="{{ $grp }}" value="0" {{ old($grp . '.0') == '0' ? 'checked' : '' }}>
                                                                             <label class="form-check-label">Tidak ✗</label>
                                                                         </div>
                                                                     </div>
@@ -712,6 +715,9 @@ document.addEventListener('DOMContentLoaded', function() {
     };
 
     const INIT_SELECTOR = 'select.choices, select.js-supplier-choices';
+
+    // Daftar grup Kondisi Fisik (radio UI-only -> hidden bernama yang selalu ter-submit)
+    const KONDISI_FISIK_GROUPS = ['penampakan', 'sealing', 'cetakan', 'logo_halal'];
 
     const initSelectChoices = (select) => {
         if (!select || (select.classList && select.classList.contains('produk-select'))) return;
@@ -1106,7 +1112,8 @@ document.addEventListener('DOMContentLoaded', function() {
             newRow.className = 'unified-row mb-4 p-3 border rounded';
             newRow.style.backgroundColor = '#f8f9fa';
 
-            const timestamp = Date.now();
+            // Penanda unik per baris produk (dipakai untuk nama radio UI-only)
+            const timestamp = uniqueDomId('r');
             const rowIndex = container.querySelectorAll('.unified-row').length;
             newRow.innerHTML = `
                 <div class="d-flex justify-content-between align-items-center mb-3">
@@ -1186,9 +1193,10 @@ document.addEventListener('DOMContentLoaded', function() {
                         <div class="produsen-hidden-inputs"></div>
                         <div class="distributor-hidden-inputs"></div>
 
-                        <input type="hidden" class="penampakan-hidden" value="">
-                        <input type="hidden" class="sealing-hidden" value="">
-                        <input type="hidden" class="cetakan-hidden" value="">
+                        <input type="hidden" name="penampakan[]" class="penampakan-hidden" value="">
+                        <input type="hidden" name="sealing[]" class="sealing-hidden" value="">
+                        <input type="hidden" name="cetakan[]" class="cetakan-hidden" value="">
+                        <input type="hidden" name="logo_halal[]" class="logo_halal-hidden" value="">
                         <input type="hidden" name="dokumen_halal[]" class="dokumen-halal-hidden" value="">
                         <input type="hidden" name="coa[]" class="coa-hidden" value="">
 
@@ -1344,11 +1352,11 @@ document.addEventListener('DOMContentLoaded', function() {
                                     <div class="form-group">
                                         <label class="form-label d-block">Tipe File</label>
                                         <div class="form-check form-check-inline">
-                                            <input class="form-check-input coa-type-pdf" type="radio" name="coa_type_master_1" value="pdf" checked>
+                                            <input class="form-check-input coa-type-pdf" type="radio" name="coa_type_master_${timestamp}" value="pdf" checked>
                                             <label class="form-check-label">PDF</label>
                                         </div>
                                         <div class="form-check form-check-inline">
-                                            <input class="form-check-input coa-type-img" type="radio" name="coa_type_master_1" value="gambar">
+                                            <input class="form-check-input coa-type-img" type="radio" name="coa_type_master_${timestamp}" value="gambar">
                                             <label class="form-check-label">Gambar</label>
                                         </div>
                                     </div>
@@ -1746,13 +1754,12 @@ document.addEventListener('DOMContentLoaded', function() {
             setArrayName(detailEl.querySelector('input[type="file"][name^="file_coa"]'), 'file_coa');
             setArrayName(detailEl.querySelector('input[type="file"][name^="file_coa_img"]'), 'file_coa_img');
 
-            // Radio Kondisi Fisik: nama unik per detail berdasarkan data-group
-            detailEl.querySelectorAll('input[type="radio"][data-group]').forEach((r) => {
-                r.name = `${r.dataset.group}[${idx}]`;
-            });
-
-            detailEl.querySelectorAll('input[type="radio"][name^="coa_type_master_"]').forEach((r) => {
-                r.name = `coa_type[${idx}]`;
+            // FIX: Kondisi Fisik dibawa oleh hidden input bernama x[idx] yang SELALU ter-submit.
+            // Radio-nya hanya UI (nama unik per detail, TIDAK pernah di-rename di sini),
+            // sehingga pilihan yang sudah dicentang tidak hilang saat detail ditambah/dihapus.
+            KONDISI_FISIK_GROUPS.forEach((g) => {
+                const h = detailEl.querySelector(`input.${g}-hidden`);
+                if (h) h.name = `${g}[${idx}]`;
             });
 
             const prodWrap = detailEl.querySelector('.produsen-hidden-inputs');
@@ -1806,7 +1813,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 wrap.innerHTML = '';
             });
 
-            clone.querySelectorAll('input.penampakan-hidden, input.sealing-hidden, input.cetakan-hidden, input.dokumen-halal-hidden, input.coa-hidden').forEach((h) => {
+            clone.querySelectorAll('input.penampakan-hidden, input.sealing-hidden, input.cetakan-hidden, input.logo_halal-hidden, input.dokumen-halal-hidden, input.coa-hidden').forEach((h) => {
                 h.value = '';
             });
 
@@ -1820,6 +1827,23 @@ document.addEventListener('DOMContentLoaded', function() {
                     });
                 }
             });
+
+            // FIX: beri nama radio yang UNIK sebelum klon masuk DOM,
+            // agar tidak satu grup dengan detail lain (yang akan mengosongkan pilihan sebelumnya).
+            const uid = uniqueDomId('d');
+            clone.querySelectorAll('input[type="radio"]').forEach((r) => {
+                if (r.dataset.group) {
+                    r.name = `${r.dataset.group}_master_${uid}`;
+                } else if (r.name && r.name.startsWith('coa_type')) {
+                    r.name = `coa_type_master_${uid}`;
+                }
+            });
+            const pdfRadio = clone.querySelector('.coa-type-pdf');
+            if (pdfRadio) pdfRadio.checked = true;
+            const pdfBox = clone.querySelector('.coa-pdf-input');
+            const imgBox = clone.querySelector('.coa-img-input');
+            if (pdfBox) pdfBox.style.display = '';
+            if (imgBox) imgBox.style.display = 'none';
 
             container.appendChild(clone);
             updateSectionLabels();
@@ -1936,20 +1960,20 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
 
-        ['penampakan', 'sealing', 'cetakan'].forEach((field) => {
-            if (target && target.matches(`input[type="radio"][name^="${field}_master_"]`)) {
-                const detail = target.closest('.detail-item');
-                if (detail) {
-                    const hidden = detail.querySelector(`input.${field}-hidden`);
-                    if (hidden) hidden.value = String(target.value);
-                }
+        // Kondisi Fisik: salin nilai radio (UI) ke hidden input bernama milik detail yang sama
+        if (target && target.matches('input[type="radio"][data-group]')) {
+            const field = target.dataset.group;
+            const detail = target.closest('.detail-item');
+            if (detail && KONDISI_FISIK_GROUPS.includes(field)) {
+                const hidden = detail.querySelector(`input.${field}-hidden`);
+                if (hidden) hidden.value = String(target.value);
             }
-        });
+        }
     });
 
     document.addEventListener('input', function(e) {
         const target = e.target;
-        if (target && target.matches('input[name="kode_produksi[]"]')) {
+        if (target && target.matches('input[name^="kode_produksi"]')) {
             const detailEl = target.closest('.detail-item');
             const rowEl = target.closest('.unified-row');
             if (!detailEl || !rowEl) return;
@@ -2006,6 +2030,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const rowCount = document.querySelectorAll('#unified-container .unified-row').length;
             if (rowCount > 1) {
                 e.target.closest('.unified-row').remove();
+                updateDetailIndices();
                 updateRemoveButtons();
             } else {
                 alert('Minimal harus ada satu baris data!');
@@ -2134,7 +2159,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     document.addEventListener('change', function(e) {
         const input = e.target;
-        if (input && input.classList && (input.classList.contains('image-kemasan-input') || input.name === 'file_coa_img[]')) {
+        if (input && input.classList && (input.classList.contains('image-kemasan-input') || (input.name && input.name.startsWith('file_coa_img')))) {
             handleImageInputChange(input);
         }
     });
@@ -2276,13 +2301,12 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     form.addEventListener('submit', function(e) {
+        // Pengaman terakhir: sinkronkan radio Kondisi Fisik -> hidden bernama (per detail)
         document.querySelectorAll('#unified-container .detail-item').forEach((detail) => {
-            ['penampakan', 'sealing', 'cetakan'].forEach((field) => {
-                const checked = detail.querySelector('input[type="radio"][name*="' + field + '_"]:checked');
-                const hidden = detail.querySelector('input.' + field + '-hidden');
-                if (checked && hidden) {
-                    hidden.value = String(checked.value);
-                }
+            ['penampakan', 'sealing', 'cetakan', 'logo_halal'].forEach((f) => {
+                const checked = detail.querySelector(`input[type="radio"][data-group="${f}"]:checked`);
+                const hidden = detail.querySelector(`input.${f}-hidden`);
+                if (hidden) hidden.value = checked ? String(checked.value) : '';
             });
         });
         const errors = validateForm();
