@@ -414,7 +414,8 @@
                                                         <div class="card border-0 shadow-sm mb-2">
                                                             <div class="card-body p-3">
                                                                 <div class="fw-semibold">Produsen</div>
-                                                                <div class="small text-muted mb-2">Pilih dari master Produsen plant ini</div>
+                                                                <div class="small text-muted mb-2">Data akan terisi secara otomatis berdasarkan produk yang dipilih. Anda juga dapat memilih data secara manual melalui pilihan yang tersedia di bawah ini.</div>
+                                                                <option value="" selected disabled>-- Pilih Produsen --</option>
                                                                 @php $savedProdusenIds = is_array($firstDetail['id_produsen'] ?? null) ? $firstDetail['id_produsen'] : (json_decode((string)($firstDetail['id_produsen'] ?? ''), true) ?: (isset($firstDetail['id_produsen']) && is_numeric($firstDetail['id_produsen']) ? [$firstDetail['id_produsen']] : [])); @endphp
                                                                 <select class="form-select js-supplier-choices produsen-master-select js-chemical-supplier" multiple>
                                                                     @foreach($produsens as $produsen)<option value="{{ $produsen->id }}" {{ in_array((string)$produsen->id, array_map('strval', $savedProdusenIds), true) ? 'selected' : '' }}>{{ $produsen->nama_produsen }}</option>@endforeach
@@ -440,7 +441,8 @@
                                                         <div class="card border-0 shadow-sm mb-2">
                                                             <div class="card-body p-3">
                                                                 <div class="fw-semibold">Distributor</div>
-                                                                <div class="small text-muted mb-2">Pilih dari master Distributor plant ini</div>
+                                                                <div class="small text-muted mb-2">Data akan terisi secara otomatis berdasarkan produk yang dipilih. Anda juga dapat memilih data secara manual melalui pilihan yang tersedia di bawah ini.</div>
+                                                                <option value="" selected disabled>-- Pilih Distributor --</option>
                                                                 @php $savedDistributorIds = is_array($firstDetail['id_distributor'] ?? null) ? $firstDetail['id_distributor'] : (json_decode((string)($firstDetail['id_distributor'] ?? ''), true) ?: (isset($firstDetail['id_distributor']) && is_numeric($firstDetail['id_distributor']) ? [$firstDetail['id_distributor']] : [])); @endphp
                                                                 <select class="form-select js-supplier-choices distributor-master-select js-chemical-supplier" multiple>
                                                                     @foreach($distributors as $distributor)<option value="{{ $distributor->id }}" {{ in_array((string)$distributor->id, array_map('strval', $savedDistributorIds), true) ? 'selected' : '' }}>{{ $distributor->nama_distributor }}</option>@endforeach
@@ -1188,7 +1190,8 @@ function addNewRow() {
                 <div class="card border-0 shadow-sm mb-2">
                     <div class="card-body p-3">
                         <div class="fw-semibold">Produsen</div>
-                        <div class="small text-muted mb-2">Pilih dari master Produsen plant ini</div>
+                        <div class="small text-muted mb-2">Data akan terisi secara otomatis berdasarkan produk yang dipilih. Anda juga dapat memilih data secara manual melalui pilihan yang tersedia di bawah ini.</div>
+                        <option value="" selected disabled>-- Pilih Produsen --</option>
                         <select class="form-select js-supplier-choices produsen-master-select js-chemical-supplier" multiple>@foreach($produsens as $produsen)<option value="{{ $produsen->id }}">{{ $produsen->nama_produsen }}</option>@endforeach</select>
                         <div class="produsen-badges d-flex flex-wrap gap-1">
                             <span class="text-muted small">-</span>
@@ -1201,7 +1204,8 @@ function addNewRow() {
                 <div class="card border-0 shadow-sm mb-2">
                     <div class="card-body p-3">
                         <div class="fw-semibold">Distributor</div>
-                        <div class="small text-muted mb-2">Pilih dari master Distributor plant ini</div>
+                        <div class="small text-muted mb-2">Data akan terisi secara otomatis berdasarkan produk yang dipilih. Anda juga dapat memilih data secara manual melalui pilihan yang tersedia di bawah ini.</div>
+                        <option value="" selected disabled>-- Pilih Distributor --</option>
                         <select class="form-select js-supplier-choices distributor-master-select js-chemical-supplier" multiple>@foreach($distributors as $distributor)<option value="{{ $distributor->id }}">{{ $distributor->nama_distributor }}</option>@endforeach</select>
                         <div class="distributor-badges d-flex flex-wrap gap-1">
                             <span class="text-muted small">-</span>

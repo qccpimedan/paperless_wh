@@ -507,7 +507,8 @@
                                                     <div class="card border-0 shadow-sm">
                                                         <div class="card-body p-3">
                                                             <div class="fw-semibold">Distributor</div>
-                                                            <div class="small text-muted mb-2">Pilih dari seluruh master Distributor Plant ini</div>
+                                                            <div class="small text-muted mb-2">Data akan terisi secara otomatis berdasarkan produk yang dipilih. Anda juga dapat memilih data secara manual melalui pilihan yang tersedia di bawah ini.</div>
+                                                            <option value="" selected disabled>-- Pilih Distributor --</option>
                                                             <select class="form-select js-supplier-choices supplier-master-select distributor-master-select mb-2" multiple aria-label="Pilih distributor">
                                                                 @foreach (($distributors ?? []) as $distributor)
                                                                     <option value="{{ $distributor->nama_distributor }}" {{ in_array($distributor->nama_distributor, $existingDistributorItems, true) ? 'selected' : '' }}>{{ $distributor->nama_distributor }}</option>
@@ -532,7 +533,8 @@
                                                     <div class="card border-0 shadow-sm">
                                                         <div class="card-body p-3">
                                                             <div class="fw-semibold">Produsen</div>
-                                                            <div class="small text-muted mb-2">Pilih dari seluruh master Produsen Plant ini</div>
+                                                            <div class="small text-muted mb-2">Data akan terisi secara otomatis berdasarkan produk yang dipilih. Anda juga dapat memilih data secara manual melalui pilihan yang tersedia di bawah ini.</div>
+                                                            <option value="" selected disabled>-- Pilih Produsen --</option>
                                                             <select class="form-select js-supplier-choices supplier-master-select produsen-master-select mb-2" multiple aria-label="Pilih produsen">
                                                                 @foreach (($produsens ?? []) as $produsen)
                                                                     <option value="{{ $produsen->nama_produsen }}" {{ in_array($produsen->nama_produsen, $existingProdusenItems, true) ? 'selected' : '' }}>{{ $produsen->nama_produsen }}</option>
@@ -1668,7 +1670,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     <div class="card border-0 shadow-sm">
                         <div class="card-body p-3">
                             <div class="fw-semibold">Produsen</div>
-                            <div class="small text-muted mb-2">Pilih dari seluruh master Produsen Plant ini</div>
+                            <div class="small text-muted mb-2">Data akan terisi secara otomatis berdasarkan produk yang dipilih. Anda juga dapat memilih data secara manual melalui pilihan yang tersedia di bawah ini.</div>
+                            <option value="" selected disabled>-- Pilih Produsen --</option>
                             <select class="form-select js-supplier-choices supplier-master-select produsen-master-select mb-2" multiple aria-label="Pilih produsen">
                                 @foreach (($produsens ?? []) as $produsen)
                                     <option value="{{ $produsen->nama_produsen }}">{{ $produsen->nama_produsen }}</option>
@@ -1683,7 +1686,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     <div class="card border-0 shadow-sm">
                         <div class="card-body p-3">
                             <div class="fw-semibold">Distributor</div>
-                            <div class="small text-muted mb-2">Pilih dari seluruh master Distributor Plant ini</div>
+                            <div class="small text-muted mb-2">Data akan terisi secara otomatis berdasarkan produk yang dipilih. Anda juga dapat memilih data secara manual melalui pilihan yang tersedia di bawah ini.</div>
+                            <option value="" selected disabled>-- Pilih Distributor --</option>
                             <select class="form-select js-supplier-choices supplier-master-select distributor-master-select mb-2" multiple aria-label="Pilih distributor">
                                 @foreach (($distributors ?? []) as $distributor)
                                     <option value="{{ $distributor->nama_distributor }}">{{ $distributor->nama_distributor }}</option>
