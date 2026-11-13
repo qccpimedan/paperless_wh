@@ -34,6 +34,9 @@
         table.data-simple td.center { text-align: center; }
         table.data-simple tbody tr:nth-child(even) { background: #fafafa; }
 
+        /* FIX: font DejaVu Sans mendukung simbol ≤ ≥ ± (Helvetica bawaan DomPDF tidak mendukung ≤) */
+        table.data-simple td.setting-cell { font-family: 'DejaVu Sans', sans-serif; font-size: 7.5px; text-align: center; }
+
         .empty-state { text-align: center; padding: 40px; color: #6c757d; font-style: italic; }
 
         /* ===== Signature TTD tiap halaman ===== */
@@ -143,8 +146,8 @@
         $firstHistory = $histories->first();
 
         // 1. Ambil Data Input Pertama (Initial State)
-        $initialSuhuProduk = ($firstHistory && $firstHistory->suhu_produk_lama !== null) 
-            ? $firstHistory->suhu_produk_lama 
+        $initialSuhuProduk = ($firstHistory && $firstHistory->suhu_produk_lama !== null)
+            ? $firstHistory->suhu_produk_lama
             : $suhuProdukStr;
 
         $initialTime = '-';
@@ -160,8 +163,8 @@
 
         foreach ($sectionDefsV2 as $fieldKey => $secDef) {
             $initialFieldLamaKey = $fieldKey . '_lama';
-            $valData = ($firstHistory && $firstHistory->$initialFieldLamaKey !== null) 
-                ? $firstHistory->$initialFieldLamaKey 
+            $valData = ($firstHistory && $firstHistory->$initialFieldLamaKey !== null)
+                ? $firstHistory->$initialFieldLamaKey
                 : ($p->$fieldKey ?? null);
 
             if (is_string($valData) && !empty($valData)) {
@@ -412,7 +415,7 @@
                         <td>{{ $row['produk'] }}</td>
                         <td class="center">{{ $row['suhu_produk'] }}</td>
                         <td>{{ $row['area'] }}</td>
-                        <td class="center">{{ $row['setting'] }}</td>
+                        <td class="setting-cell">{{ $row['setting'] }}</td>
                         <td class="center">{{ $row['aktual'] }}</td>
                         <td class="center">{{ $row['display'] }}</td>
                     </tr>

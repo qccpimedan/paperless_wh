@@ -34,6 +34,9 @@
         table.data-simple td.center { text-align: center; }
         table.data-simple tbody tr:nth-child(even) { background: #fafafa; }
 
+        /* FIX: font DejaVu Sans mendukung simbol ≤ ≥ ± (Helvetica bawaan DomPDF tidak mendukung ≤) */
+        table.data-simple td.setting-cell { font-family: 'DejaVu Sans', sans-serif; font-size: 7.5px; text-align: center; }
+
         .empty-state { text-align: center; padding: 40px; color: #6c757d; font-style: italic; }
 
         /* ===== Signature TTD tiap halaman ===== */
@@ -130,12 +133,12 @@
 
         // 1. Ambil Data Input Pertama (Initial State)
         $firstHistory = $histories->first();
-        $initialData = $firstHistory 
-            ? (is_array($firstHistory->suhu_data_lama) ? $firstHistory->suhu_data_lama : (json_decode($firstHistory->suhu_data_lama ?? '[]', true) ?: [])) 
+        $initialData = $firstHistory
+            ? (is_array($firstHistory->suhu_data_lama) ? $firstHistory->suhu_data_lama : (json_decode($firstHistory->suhu_data_lama ?? '[]', true) ?: []))
             : $suhu;
 
-        $initialSuhuProduk = ($firstHistory && !empty($firstHistory->suhu_produk_lama)) 
-            ? $firstHistory->suhu_produk_lama 
+        $initialSuhuProduk = ($firstHistory && !empty($firstHistory->suhu_produk_lama))
+            ? $firstHistory->suhu_produk_lama
             : $suhuProdukStr;
 
         $initialTime = '-';
@@ -403,7 +406,7 @@
                         <td>{{ $row['produk'] }}</td>
                         <td class="center">{{ $row['suhu_produk'] }}</td>
                         <td>{{ $row['area'] }}</td>
-                        <td class="center">{{ $row['setting'] }}</td>
+                        <td class="setting-cell">{{ $row['setting'] }}</td>
                         <td class="center">{{ $row['aktual'] }}</td>
                         <td class="center">{{ $row['display'] }}</td>
                     </tr>

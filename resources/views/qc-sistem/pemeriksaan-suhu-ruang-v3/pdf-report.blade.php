@@ -33,6 +33,9 @@
         table.data-simple td.center { text-align: center; }
         table.data-simple tbody tr:nth-child(even) { background: #fafafa; }
 
+        /* FIX: font DejaVu Sans mendukung simbol ≤ ≥ ± (Helvetica bawaan DomPDF tidak mendukung ≤) */
+        table.data-simple td.setting-cell { font-family: 'DejaVu Sans', sans-serif; font-size: 7.5px; text-align: center; }
+
         .empty-state { text-align: center; padding: 40px; color: #6c757d; font-style: italic; }
 
         .signature { width: 100%; margin-top: 14px; border-top: 1px solid #dee2e6; padding-top: 8px; page-break-inside: avoid; }
@@ -369,7 +372,7 @@
                         <td>{{ $row['produk'] }}</td>
                         <td class="center">{{ $row['suhu_produk'] }}</td>
                         <td>{{ $row['area'] }}</td>
-                        <td class="center">{{ $row['setting'] }}</td>
+                        <td class="setting-cell">{{ $row['setting'] }}</td>
                         <td class="center">{{ $row['aktual'] }}</td>
                         <td class="center">{{ $row['display'] }}</td>
                     </tr>
