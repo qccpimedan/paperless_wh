@@ -266,6 +266,8 @@
                                                 <div class="btn-vertical">
                                                     @can('view_pemeriksaan_kedatangan_kemasan') <a href="{{ route('pemeriksaan-kedatangan-kemasan.show', $pemeriksaan->uuid) }}" class="btn btn-sm btn-info text-white"><i class="bi bi-eye"></i></a> @endcan
                                                     @can('edit_pemeriksaan_kedatangan_kemasan') <a href="{{ route('pemeriksaan-kedatangan-kemasan.edit', $pemeriksaan->uuid) }}" class="btn btn-sm btn-warning text-white"><i class="bi bi-pencil"></i></a> @endcan
+                                                    <a href="{{ route('pemeriksaan-kedatangan-kemasan.export-pdf', ['uuid' => $pemeriksaan->uuid]) }}" class="btn btn-sm btn-danger" title="Download PDF"><i class="bi-file-earmark-text"></i></a>
+                                                    <!-- <a href="{{ route('pemeriksaan-kedatangan-kemasan.export-excel', ['uuid' => $pemeriksaan->uuid]) }}" class="btn btn-sm btn-success" title="Download Excel"><i class="bi bi-file-earmark-excel"></i></a> -->
                                                     @can('delete_pemeriksaan_kedatangan_kemasan')
                                                         <button type="button" class="btn btn-sm btn-danger" onclick="if(confirm('Yakin ingin menghapus data ini?')) document.getElementById('del-{{$pemeriksaan->uuid}}').submit()"><i class="bi bi-trash"></i></button>
                                                     @endcan

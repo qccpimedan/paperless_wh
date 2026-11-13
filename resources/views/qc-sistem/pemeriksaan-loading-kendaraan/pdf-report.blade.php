@@ -8,279 +8,277 @@
         $plantName = $firstRecord && $firstRecord->user && $firstRecord->user->plant ? $firstRecord->user->plant->plant : 'MEDAN';
     @endphp
     <style>
-        @page {
-            size: A4;
-            margin: 12mm;
-        }
+            @page {
+                size: A4 landscape;
+                margin: 8mm 10mm;
+            }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
 
-        body {
-            font-family: 'Segoe UI', Arial, sans-serif;
-            font-size: 10px;
-            line-height: 1.4;
-            color: #1a1a1a;
-            background: #fff;
-        }
+            body {
+                font-family: 'Segoe UI', Arial, sans-serif;
+                font-size: 8px;
+                line-height: 1.25;
+                color: #1a1a1a;
+                background: #fff;
+            }
 
-        .container {
-            width: 100%;
-            max-width: 100%;
-        }
+            .container {
+                width: 100%;
+                max-width: 100%;
+            }
 
-        .header {
-            display: table;
-            width: 100%;
-            margin-bottom: 15px;
-            border-bottom: 3px solid #c41e3a;
-            padding-bottom: 12px;
-            page-break-inside: avoid;
-        }
+            /* ===== HEADER ===== */
+            .header {
+                display: table;
+                width: 100%;
+                margin-bottom: 6px;
+                border-bottom: 2px solid #c41e3a;
+                padding-bottom: 5px;
+                page-break-inside: avoid;
+            }
 
-        .header-left {
-            display: table-cell;
-            width: 60%;
-            vertical-align: middle;
-        }
+            .header-left {
+                display: table-cell;
+                width: 60%;
+                vertical-align: middle;
+            }
 
-        .header-right {
-            display: table-cell;
-            width: 40%;
-            vertical-align: middle;
-            text-align: right;
-        }
+            .header-right {
+                display: table-cell;
+                width: 40%;
+                vertical-align: middle;
+                text-align: right;
+            }
 
-        .logo-company {
-            display: table;
-            width: 100%;
-        }
+            .logo-company {
+                display: table;
+                width: 100%;
+            }
 
-        .header-logo {
-            display: table-cell;
-            width: 55px;
-            vertical-align: middle;
-        }
+            .header-logo {
+                display: table-cell;
+                width: 40px;
+                vertical-align: middle;
+            }
 
-        .header-logo img {
-            width: 50px;
-            height: 50px;
-            object-fit: contain;
-        }
+            .header-logo img {
+                width: 36px;
+                height: 36px;
+                object-fit: contain;
+            }
 
-        .header-company {
-            display: table-cell;
-            vertical-align: middle;
-            padding-left: 12px;
-        }
+            .header-company {
+                display: table-cell;
+                vertical-align: middle;
+                padding-left: 8px;
+            }
 
-        .header-company h2 {
-            font-size: 12px;
-            font-weight: bold;
-            color: #c41e3a;
-            margin-bottom: 2px;
-            letter-spacing: 0.5px;
-        }
+            .header-company h2 {
+                font-size: 11px;
+                font-weight: bold;
+                color: #c41e3a;
+                margin-bottom: 1px;
+                letter-spacing: 0.5px;
+            }
 
-        .header-company p {
-            font-size: 8px;
-            color: #444;
-            margin-bottom: 1px;
-        }
+            .header-company p {
+                font-size: 7.5px;
+                color: #444;
+                margin-bottom: 0;
+            }
 
-        .header-title h1 {
-            font-size: 13px;
-            font-weight: bold;
-            color: #1a1a1a;
-            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-            padding: 8px 15px;
-            border-radius: 4px;
-            border-left: 4px solid #c41e3a;
-            display: inline-block;
-        }
+            .header-title h1 {
+                font-size: 12px;
+                font-weight: bold;
+                color: #1a1a1a;
+                background: #f1f3f5;
+                padding: 5px 12px;
+                border-radius: 4px;
+                border-left: 4px solid #c41e3a;
+                display: inline-block;
+            }
 
-        /* ===== SUBHEADER (Hari/Tanggal & Shift) — DIPERBAIKI ===== */
-        .subheader {
-            width: 100%;
-            border: 1px solid #dee2e6;
-            border-radius: 6px;
-            margin-bottom: 15px;
-            background: #f8f9fa;
-            page-break-inside: avoid;
-            padding: 0;
-        }
+            /* ===== SUBHEADER ===== */
+            .subheader {
+                width: 100%;
+                border: 1px solid #dee2e6;
+                border-radius: 4px;
+                margin-bottom: 6px;
+                background: #f8f9fa;
+                page-break-inside: avoid;
+                padding: 0;
+            }
 
-        .subheader-table {
-            width: 100%;
-            border-collapse: collapse;
-            table-layout: fixed; /* memaksa lebar kolom konsisten, mencegah kolom "melar" */
-        }
+            .subheader-table {
+                width: 100%;
+                border-collapse: collapse;
+                table-layout: fixed;
+            }
 
-        .subheader-table td {
-            padding: 8px 12px;
-            font-size: 9px;
-            vertical-align: top;
-            width: 50%;
-        }
+            .subheader-table td {
+                padding: 4px 10px;
+                font-size: 8.5px;
+                vertical-align: top;
+                width: 50%;
+            }
 
-        /* Kolom kedua diberi garis tepi kiri sebagai pemisah (menggantikan .subheader-divider lama) */
-        .subheader-table td.subheader-col-right {
-            border-left: 1px solid #dee2e6;
-        }
+            .subheader-table td.subheader-col-right {
+                border-left: 1px solid #dee2e6;
+            }
 
-        .subheader-label {
-            font-weight: 600;
-            color: #495057;
-        }
+            .subheader-label {
+                font-weight: 600;
+                color: #495057;
+            }
 
-        .subheader-value {
-            color: #1a1a1a;
-        }
+            .subheader-value {
+                color: #1a1a1a;
+            }
 
-        .page-break {
-            page-break-after: avoid;
-            margin-bottom: 15px;
-        }
+            .page-break {
+                page-break-after: avoid;
+                margin-bottom: 6px;
+            }
 
-        .data-table {
-            width: 100%;
-            border-collapse: collapse;
-            border: 1px solid #dee2e6;
-            border-radius: 6px;
-            overflow: hidden;
-            table-layout: fixed;
-        }
+            /* ===== DATA TABLE ===== */
+            .data-table {
+                width: 100%;
+                border-collapse: collapse;
+                border: 1px solid #dee2e6;
+                table-layout: fixed;
+            }
 
-        .data-column {
-            width: 25%;
-            border: 1px solid #dee2e6;
-            padding: 12px;
-            vertical-align: top;
-            font-size: 9px;
-            background: #fff;
-        }
+            .data-column {
+                width: 25%;
+                border: 1px solid #dee2e6;
+                padding: 6px 8px;
+                vertical-align: top;
+                font-size: 8px;
+                background: #fff;
+            }
 
-        .column-header {
-            font-weight: bold;
-            font-size: 9px;
-            color: #ffffff;
-            background: linear-gradient(135deg, #8b1428 0%, #5c0e1a 100%);
-            padding: 8px 10px;
-            margin: -12px -12px 10px -12px;
-            text-align: center;
-            letter-spacing: 0.5px;
-            text-transform: uppercase;
-        }
+            .column-header {
+                font-weight: bold;
+                font-size: 8px;
+                color: #ffffff;
+                background: #8b1428;
+                padding: 4px 8px;
+                margin: -6px -8px 5px -8px;
+                text-align: center;
+                letter-spacing: 0.5px;
+                text-transform: uppercase;
+            }
 
-        .section-title {
-            font-weight: bold;
-            font-size: 9px;
-            color: #c41e3a;
-            border-bottom: 2px solid #c41e3a;
-            margin-top: 10px;
-            margin-bottom: 6px;
-            padding-bottom: 3px;
-            text-transform: uppercase;
-            letter-spacing: 0.3px;
-        }
+            .section-title {
+                font-weight: bold;
+                font-size: 8px;
+                color: #c41e3a;
+                border-bottom: 1.5px solid #c41e3a;
+                margin-top: 5px;
+                margin-bottom: 3px;
+                padding-bottom: 1px;
+                text-transform: uppercase;
+                letter-spacing: 0.3px;
+            }
 
-        .field-row {
-            margin-bottom: 4px;
-            display: table;
-            width: 100%;
-        }
+            .field-row {
+                margin-bottom: 1.5px;
+                display: table;
+                width: 100%;
+            }
 
-        .field-label {
-            display: table-cell;
-            font-weight: 600;
-            color: #495057;
-            width: 110px;
-            padding-right: 6px;
-        }
+            .field-label {
+                display: table-cell;
+                font-weight: 600;
+                color: #495057;
+                width: 85px;
+                padding-right: 4px;
+            }
 
-        .field-value {
-            display: table-cell;
-            color: #1a1a1a;
-            word-wrap: break-word;
-        }
+            .field-value {
+                display: table-cell;
+                color: #1a1a1a;
+                word-wrap: break-word;
+            }
 
-        .signature-section {
-            margin-top: 15px;
-            padding: 15px;
-            border: 1px solid #dee2e6;
-            border-radius: 6px;
-            background: #f8f9fa;
-            page-break-inside: avoid;
-        }
+            /* ===== SIGNATURE ===== */
+            .signature-section {
+                margin-top: 6px;
+                padding: 6px 10px;
+                border: 1px solid #dee2e6;
+                border-radius: 4px;
+                background: #f8f9fa;
+                page-break-inside: avoid;
+            }
 
-        .signature-table {
-            width: 100%;
-            border-collapse: collapse;
-        }
+            .signature-table {
+                width: 100%;
+                border-collapse: collapse;
+            }
 
-        .signature-cell {
-            width: 33.33%;
-            text-align: center;
-            padding: 0 15px;
-            vertical-align: top;
-        }
+            .signature-cell {
+                width: 33.33%;
+                text-align: center;
+                padding: 0 15px;
+                vertical-align: top;
+            }
 
-        .signature-header-item {
-            font-size: 8px;
-            font-weight: 600;
-            color: #495057;
-            padding-bottom: 25px;
-        }
+            .signature-header-item {
+                font-size: 8px;
+                font-weight: 600;
+                color: #495057;
+                padding-bottom: 4px;
+            }
 
-        .signature-space {
-            height: 60px;
-            margin: 0 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
+            .signature-space {
+                height: 42px;
+                margin: 0 10px;
+                text-align: center;
+            }
 
-        .signature-line-empty {
-            border-bottom: 2px solid #1a1a1a;
-            height: 55px;
-            width: 100%;
-        }
+            .signature-line-empty {
+                border-bottom: 1.5px solid #1a1a1a;
+                height: 38px;
+                width: 100%;
+            }
 
-        .qr-code-img {
-            max-height: 55px;
-            max-width: 55px;
-        }
+            .qr-code-img {
+                max-height: 40px;
+                max-width: 40px;
+            }
 
-        .signature-name {
-            font-size: 8px;
-            font-weight: bold;
-            color: #1a1a1a;
-            padding-top: 8px;
-            text-transform: uppercase;
-            letter-spacing: 0.3px;
-        }
+            .signature-name {
+                font-size: 8px;
+                font-weight: bold;
+                color: #1a1a1a;
+                padding-top: 3px;
+                text-transform: uppercase;
+                letter-spacing: 0.3px;
+            }
 
-        .footer-note {
-            text-align: right;
-            padding-right: 10px;
-            font-style: italic;
-            font-size: 9px;
-            color: #666;
-            margin-top: 5px;
-        }
+            .footer-note {
+                text-align: right;
+                padding-right: 10px;
+                font-style: italic;
+                font-size: 8px;
+                color: #666;
+                margin-top: 3px;
+            }
 
-        .empty-message {
-            text-align: center;
-            padding: 40px 20px;
-            font-style: italic;
-            color: #6c757d;
-            background: #f8f9fa;
-            border-radius: 6px;
-            border: 1px dashed #dee2e6;
-        }
+            .empty-message {
+                text-align: center;
+                padding: 40px 20px;
+                font-style: italic;
+                color: #6c757d;
+                background: #f8f9fa;
+                border-radius: 6px;
+                border: 1px dashed #dee2e6;
+            }
     </style>
 </head>
 <body>

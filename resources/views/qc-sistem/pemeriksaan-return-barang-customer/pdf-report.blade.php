@@ -420,12 +420,12 @@
                                         <div class="section-title">Data Produk</div>
                                         @if($row)
                                             <div class="field-row"><span class="field-label">Produk</span><span class="field-value">{{ $produkNamaById[$row['id_produk']] ?? '-' }}</span></div>
-                                            <div class="field-row"><span class="field-label">Kondisi</span><span class="field-value">{{ $row['kondisi_produk'] ?? '-' }}</span></div>
+                                            <div class="field-row"><span class="field-label">Kondisi Produk</span><span class="field-value">{{ $row['kondisi_produk'] ?? '-' }}</span></div>
                                             <div class="field-row"><span class="field-label">Suhu</span><span class="field-value">{{ $row['suhu_produk'] ?? '-' }}</span></div>
                                             <div class="field-row"><span class="field-label">Kode Prod.</span><span class="field-value">{{ $row['kode_produksi'] ?? '-' }}</span></div>
                                             <div class="field-row"><span class="field-label">Best Before</span><span class="field-value">{{ !empty($row['expired_date']) ? \Carbon\Carbon::parse($row['expired_date'])->format('d/m/Y') : '-' }}</span></div>
                                             <div class="field-row"><span class="field-label">Jumlah</span><span class="field-value">{{ $row['jumlah_barang'] ?? '-' }}</span></div>
-                                            <div class="field-row"><span class="field-label">Kemasan</span><span class="field-value">@if(isset($row['kondisi_kemasan'])){{ $row['kondisi_kemasan'] ? 'Baik' : 'Rusak' }}@else-@endif</span></div>
+                                            <div class="field-row"><span class="field-label">Kondisi Kemasan</span><span class="field-value">@if(isset($row['kondisi_kemasan'])){{ $row['kondisi_kemasan'] ? 'Baik' : 'Rusak' }}@else-@endif</span></div>
                                             <div class="field-row"><span class="field-label">Rekomendasi</span><span class="field-value">{{ $row['rekomendasi'] ?? '-' }}</span></div>
                                         @endif
                                     </td>

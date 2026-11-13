@@ -22,10 +22,12 @@ use App\Imports\LoadingUniversalImport;
 use App\Imports\LoadingUniversalSheetImport;
 use Maatwebsite\Excel\HeadingRowImport;
 use App\Http\Controllers\Traits\HasAuditController;
+use App\Http\Controllers\Traits\RejectsTruncatedDynamicInput;
 
 class PemeriksaanLoadingProdukController extends Controller
 {
     use HasAuditController;
+    use RejectsTruncatedDynamicInput;
     public function index(Request $request)
     {
         $user = Auth::user();
@@ -55,8 +57,16 @@ class PemeriksaanLoadingProdukController extends Controller
                 ->pluck('id')
                 ->map(fn ($id) => (int) $id)
                 ->all();
+            $matchingTujuanIds = TujuanPengiriman::query()
+                ->where('nama_tujuan', 'like', '%' . $search . '%')
+                ->orWhereHas('customer', function ($q) use ($search) {
+                    $q->where('nama_cust', 'like', '%' . $search . '%');
+                })
+                ->pluck('id')
+                ->map(fn ($id) => (int) $id)
+                ->all();
 
-            $query->where(function ($q) use ($search, $matchingProductIds) {
+            $query->where(function ($q) use ($search, $matchingProductIds, $matchingTujuanIds) {
                 // Konversi format d/m/Y ke Y-m-d
                 $tanggalSearch = null;
                 if (preg_match('/^\d{2}\/\d{2}\/\d{4}$/', $search)) {
@@ -106,6 +116,17 @@ class PemeriksaanLoadingProdukController extends Controller
                         }
                     });
                 }
+
+                if (!empty($matchingTujuanIds)) {
+                    $q->orWhere(function ($qj) use ($matchingTujuanIds) {
+                        foreach ($matchingTujuanIds as $tujuanId) {
+                            $qj->orWhereRaw("JSON_CONTAINS(produk_data, ?, '$')", [json_encode(['id_tujuan_pengiriman' => $tujuanId])])
+                                ->orWhereRaw("JSON_CONTAINS(produk_data, ?, '$')", [json_encode(['id_tujuan_pengiriman' => (string) $tujuanId])])
+                                ->orWhere('produk_data', 'like', '%"id_tujuan_pengiriman":' . $tujuanId . '%')
+                                ->orWhere('produk_data', 'like', '%"id_tujuan_pengiriman":"' . $tujuanId . '"%');
+                        }
+                    });
+                }
             });
         }
 
@@ -116,6 +137,19 @@ class PemeriksaanLoadingProdukController extends Controller
             ->orderByDesc('created_at')
             ->orderByDesc('id')
             ->paginate(25);
+
+        $tujuanIds = $pemeriksaans->getCollection()
+            ->flatMap(function ($item) {
+                $detailIds = collect($item->produk_data ?? [])->pluck('id_tujuan_pengiriman');
+                return $detailIds->push($item->id_tujuan_pengiriman ?? null);
+            })
+            ->filter()
+            ->unique()
+            ->values();
+        $tujuanPengirimanById = TujuanPengiriman::with('customer')
+            ->whereIn('id', $tujuanIds)
+            ->get()
+            ->keyBy('id');
 
         
         $produkKategoriOptions = \App\Models\Produk::query()
@@ -141,7 +175,7 @@ class PemeriksaanLoadingProdukController extends Controller
 
         $produkNamaById = $produkList->pluck('nama_produk', 'id')->all();
 
-        return view('qc-sistem.pemeriksaan-loading-produk.index', compact('pemeriksaans', 'produkKategoriOptions', 'produkList', 'produkByKategori', 'produkNamaById'));
+        return view('qc-sistem.pemeriksaan-loading-produk.index', compact('pemeriksaans', 'produkKategoriOptions', 'produkList', 'produkByKategori', 'produkNamaById', 'tujuanPengirimanById'));
     }
 
     public function create()
@@ -252,6 +286,10 @@ class PemeriksaanLoadingProdukController extends Controller
 
     public function store(Request $request)
     {
+        $this->rejectIncompleteNestedRows($request, 'produk_data', [
+            'id_produk',
+        ]);
+
         $validated = $request->validate([
             'tanggal' => 'required|date',
             'id_shift' => 'nullable|exists:shifts,id',
@@ -1350,6 +1388,40 @@ class PemeriksaanLoadingProdukController extends Controller
     public function exportExcel(Request $request)
     {
         $user = Auth::user();
+        if ($request->filled('uuid')) {
+            $pemeriksaan = PemeriksaanLoadingProduk::where('uuid', $request->input('uuid'))
+                ->with(['user.role', 'user.plant', 'shift', 'tujuanPengiriman.customer', 'kendaraan', 'supir', 'qcVerifier', 'produksiVerifier', 'spvVerifier'])
+                ->firstOrFail();
+
+            if ($user->role && strtolower($user->role->role) !== 'superadmin'
+                && $user->getEffectivePlantId() !== $pemeriksaan->user->id_plant) {
+                abort(403, 'Unauthorized');
+            }
+
+            $qcUser = $pemeriksaan->qcVerifier?->name;
+            $produksiUser = $pemeriksaan->produksiVerifier?->name;
+            $spvQcUser = $pemeriksaan->spvVerifier?->name;
+            $produkIds = collect($pemeriksaan->produk_data ?? [])
+                ->pluck('id_produk')
+                ->filter()
+                ->unique()
+                ->all();
+            $produkNamaById = $produkIds
+                ? Produk::whereIn('id', $produkIds)->pluck('nama_produk', 'id')->all()
+                : [];
+
+            return Excel::download(
+                new PemeriksaanLoadingProdukExport(
+                    collect([$pemeriksaan]),
+                    $produkNamaById,
+                    $qcUser,
+                    $produksiUser,
+                    $spvQcUser
+                ),
+                'loading-produk-' . $pemeriksaan->uuid . '.xlsx'
+            );
+        }
+
         $id_shift = $request->input('id_shift');
         $tanggalDari = $request->input('tanggal_dari');
         $tanggalSampai = $request->input('tanggal_sampai');

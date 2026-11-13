@@ -594,7 +594,7 @@
                                     {{-- DOKUMEN --}}
                                     <div class="section-title">4. Dokumen</div>
                                     <div class="field-row">
-                                        <span class="field-label">Halal:</span>
+                                        <span class="field-label">Logo Halal:</span>
                                         <span class="field-value">{{ ($chemicalDetail['persyaratan_dokumen_halal'] ?? false) ? 'V' : 'X' }}</span>
                                     </div>
                                     <div class="field-row">

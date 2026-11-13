@@ -13,6 +13,18 @@
     $kondisiProdukArr = is_array($pemeriksaanProdukFinishGood->kondisi_produk_array) ? $pemeriksaanProdukFinishGood->kondisi_produk_array : [];
     $kondisiProdukSuhuValueArr = is_array($pemeriksaanProdukFinishGood->kondisi_produk_suhu_value_array) ? $pemeriksaanProdukFinishGood->kondisi_produk_suhu_value_array : [];
     $negaraArr = is_array($pemeriksaanProdukFinishGood->negara_produsen_array) ? $pemeriksaanProdukFinishGood->negara_produsen_array : [];
+    $produsenArr = is_array($pemeriksaanProdukFinishGood->produsen_array) ? $pemeriksaanProdukFinishGood->produsen_array : [];
+    $distributorArr = is_array($pemeriksaanProdukFinishGood->distributor_array) ? $pemeriksaanProdukFinishGood->distributor_array : [];
+    $normalizeSupplierList = function ($value) {
+        if (is_string($value)) {
+            $decoded = json_decode($value, true);
+            $value = json_last_error() === JSON_ERROR_NONE ? $decoded : [$value];
+        }
+        if (!is_array($value)) $value = [$value];
+        return array_values(array_unique(array_filter(array_map(function ($item) {
+            return is_scalar($item) ? trim((string) $item) : '';
+        }, $value), fn ($item) => $item !== '')));
+    };
     $kodeArr = is_array($pemeriksaanProdukFinishGood->kode_produksi_array) ? $pemeriksaanProdukFinishGood->kode_produksi_array : [];
     $expireArr = is_array($pemeriksaanProdukFinishGood->expire_date_array) ? $pemeriksaanProdukFinishGood->expire_date_array : [];
     $jmlDatangArr = is_array($pemeriksaanProdukFinishGood->jumlah_datang_array) ? $pemeriksaanProdukFinishGood->jumlah_datang_array : [];
@@ -44,6 +56,8 @@
                 'id_produk' => $pid,
                 'kategori' => $kategori,
                 'negara' => $negara,
+                'produsen' => $normalizeSupplierList($produsenArr[$i] ?? []),
+                'distributor' => $normalizeSupplierList($distributorArr[$i] ?? []),
                 'items' => [],
             ];
         }
@@ -407,7 +421,7 @@
                                             @php
                                                 $items = is_array($group['items'] ?? null) ? $group['items'] : [];
                                                 if (count($items) < 1) $items = [[ 'i' => 0 ]];
-                                                $docLogo = old('logo_halal.'.$gIndex, $items[0]['logo_halal'] ?? null);
+                                                // Logo Halal sekarang per detail (Kondisi Fisik), bukan master per produk
                                                 $docDokumen = old('dokumen_halal.'.$gIndex, $items[0]['dokumen_halal'] ?? null);
                                                 $docCoa = old('coa.'.$gIndex, $items[0]['coa'] ?? null);
                                             @endphp
@@ -438,27 +452,37 @@
                                                 </div>
 
                                                 <div class="row">
-                                                    <div class="col-md-6">
+                                                    <div class="col-md-4">
                                                         <div class="card border-0 shadow-sm">
                                                             <div class="card-body p-3">
                                                                 <div class="fw-semibold">Produsen</div>
-                                                                <div class="small text-muted mb-2">Otomatis terisi sesuai Produk yang dipilih</div>
+                                                                <div class="small text-muted mb-2">Data akan terisi secara otomatis berdasarkan produk yang dipilih. Anda juga dapat memilih data secara manual melalui pilihan yang tersedia di bawah ini.</div>
+                                                                <option value="" selected disabled>-- Pilih Produsen --</option>
+                                                                <select class="form-select js-supplier-choices supplier-master-select produsen-master-select mb-2" multiple aria-label="Pilih produsen">
+                                                                    @foreach (($produsens ?? []) as $produsen)<option value="{{ $produsen->nama_produsen }}" {{ in_array($produsen->nama_produsen, (array) ($group['produsen'] ?? []), true) ? 'selected' : '' }}>{{ $produsen->nama_produsen }}</option>@endforeach
+                                                                    @foreach (array_diff((array) ($group['produsen'] ?? []), collect($produsens ?? [])->pluck('nama_produsen')->all()) as $savedProdusen)<option value="{{ $savedProdusen }}" selected>{{ $savedProdusen }}</option>@endforeach
+                                                                </select>
                                                                 <div class="produsen-badges d-flex flex-wrap gap-1" data-row-index="{{ $gIndex }}">
-                                                                    <span class="text-muted small">-</span>
+                                                                    @forelse ((array) ($group['produsen'] ?? []) as $supplierName)<span class="badge bg-light-primary text-primary badge-removable" data-value="{{ $supplierName }}">{{ $supplierName }} <button type="button" class="badge-remove-btn" onclick="removeBadgeItem(this, 'produsen')">Hapus</button></span>@empty<span class="text-muted small badge-empty">-</span>@endforelse
                                                                 </div>
-                                                                <input type="hidden" class="produsen-hidden" value="">
+                                                                <input type="hidden" class="produsen-hidden" value="{{ json_encode((array) ($group['produsen'] ?? [])) }}">
                                                             </div>
                                                         </div>
                                                     </div>
-                                                    <div class="col-md-6">
+                                                    <div class="col-md-4">
                                                         <div class="card border-0 shadow-sm">
                                                             <div class="card-body p-3">
                                                                 <div class="fw-semibold">Distributor</div>
-                                                                <div class="small text-muted mb-2">Otomatis terisi sesuai Produk yang dipilih</div>
+                                                                <div class="small text-muted mb-2">Data akan terisi secara otomatis berdasarkan produk yang dipilih. Anda juga dapat memilih data secara manual melalui pilihan yang tersedia di bawah ini.</div>
+                                                                <option value="" selected disabled>-- Pilih Distributor --</option>
+                                                                <select class="form-select js-supplier-choices supplier-master-select distributor-master-select mb-2" multiple aria-label="Pilih distributor">
+                                                                    @foreach (($distributors ?? []) as $distributor)<option value="{{ $distributor->nama_distributor }}" {{ in_array($distributor->nama_distributor, (array) ($group['distributor'] ?? []), true) ? 'selected' : '' }}>{{ $distributor->nama_distributor }}</option>@endforeach
+                                                                    @foreach (array_diff((array) ($group['distributor'] ?? []), collect($distributors ?? [])->pluck('nama_distributor')->all()) as $savedDistributor)<option value="{{ $savedDistributor }}" selected>{{ $savedDistributor }}</option>@endforeach
+                                                                </select>
                                                                 <div class="distributor-badges d-flex flex-wrap gap-1" data-row-index="{{ $gIndex }}">
-                                                                    <span class="text-muted small">-</span>
+                                                                    @forelse ((array) ($group['distributor'] ?? []) as $supplierName)<span class="badge bg-light-info text-info badge-removable" data-value="{{ $supplierName }}">{{ $supplierName }} <button type="button" class="badge-remove-btn" onclick="removeBadgeItem(this, 'distributor')">Hapus</button></span>@empty<span class="text-muted small badge-empty">-</span>@endforelse
                                                                 </div>
-                                                                <input type="hidden" class="distributor-hidden" value="">
+                                                                <input type="hidden" class="distributor-hidden" value="{{ json_encode((array) ($group['distributor'] ?? [])) }}">
                                                             </div>
                                                         </div>
                                                     </div>
@@ -560,7 +584,7 @@
                                                             <input type="hidden" name="produsen[]" class="detail-produsen" value="{{ $produsenVal }}">
                                                             <input type="hidden" name="distributor[]" class="detail-distributor" value="{{ $distributorVal }}">
 
-                                                            <input type="hidden" name="logo_halal[]" class="detail-logo" value="{{ old('logo_halal.'.$idx, $it['logo_halal'] ?? '') }}">
+                                                            {{-- logo_halal[] sekarang ada di section Kondisi Fisik (per detail) --}}
                                                             <input type="hidden" name="dokumen_halal[]" class="detail-dokumen" value="{{ old('dokumen_halal.'.$idx, $it['dokumen_halal'] ?? '') }}">
                                                             <input type="hidden" name="coa[]" class="detail-coa" value="{{ old('coa.'.$idx, $it['coa'] ?? '') }}">
 
@@ -610,7 +634,7 @@
                                                             <div class="form-section mb-3">
                                                                 <h6 class="text-primary mb-2">Kondisi Fisik</h6>
                                                                 <div class="row">
-                                                                    <div class="col-md-4">
+                                                                    <div class="col-md-3">
                                                                         <div class="mb-3">
                                                                             <label class="form-label"><strong>Kemasan</strong></label>
                                                                             <div class="form-check">
@@ -624,7 +648,7 @@
                                                                             <input type="hidden" name="kondisi_kemasan[]" class="radio-value-kemasan-{{ $globalDetail }}" value="{{ old('kondisi_kemasan.'.$idx, $it['kemasan'] ?? '') }}">
                                                                         </div>
                                                                     </div>
-                                                                    <div class="col-md-4">
+                                                                    <div class="col-md-3">
                                                                         <div class="mb-3">
                                                                             <label class="form-label"><strong>Warna</strong></label>
                                                                             <div class="form-check">
@@ -638,7 +662,7 @@
                                                                             <input type="hidden" name="kondisi_warna[]" class="radio-value-warna-{{ $globalDetail }}" value="{{ old('kondisi_warna.'.$idx, $it['warna'] ?? '') }}">
                                                                         </div>
                                                                     </div>
-                                                                    <div class="col-md-4">
+                                                                    <div class="col-md-3">
                                                                         <div class="mb-3">
                                                                             <label class="form-label"><strong>Aroma</strong></label>
                                                                             <div class="form-check">
@@ -650,6 +674,20 @@
                                                                                 <label class="form-check-label">Tidak ✗</label>
                                                                             </div>
                                                                             <input type="hidden" name="kondisi_aroma[]" class="radio-value-aroma-{{ $globalDetail }}" value="{{ old('kondisi_aroma.'.$idx, $it['aroma'] ?? '') }}">
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="col-md-3">
+                                                                        <div class="mb-3">
+                                                                            <label class="form-label"><strong>Logo Halal</strong></label>
+                                                                            <div class="form-check">
+                                                                                <input class="form-check-input" type="radio" name="logo_halal_{{ $globalDetail }}" value="1" {{ (string)old('logo_halal.'.$idx, $it['logo_halal'] ?? '') === '1' ? 'checked' : '' }}>
+                                                                                <label class="form-check-label">Ya ✓</label>
+                                                                            </div>
+                                                                            <div class="form-check">
+                                                                                <input class="form-check-input" type="radio" name="logo_halal_{{ $globalDetail }}" value="0" {{ (string)old('logo_halal.'.$idx, $it['logo_halal'] ?? '') === '0' ? 'checked' : '' }}>
+                                                                                <label class="form-check-label">Tidak ✗</label>
+                                                                            </div>
+                                                                            <input type="hidden" name="logo_halal[]" class="radio-value-logo-{{ $globalDetail }}" value="{{ old('logo_halal.'.$idx, $it['logo_halal'] ?? '') }}">
                                                                         </div>
                                                                     </div>
                                                                 </div>
@@ -702,7 +740,7 @@
                                                                             $coaFileArr = is_array($pemeriksaanProdukFinishGood->upload_coa_array) ? $pemeriksaanProdukFinishGood->upload_coa_array : [];
                                                                             $coaPath = $coaFileArr[$idx] ?? null;
                                                                             $coaIsImg = $coaPath && preg_match('/\.(jpeg|jpg|png|gif|webp)$/i', $coaPath);
-                                                                            
+
                                                                             // Jika sebelumnya user mengupload foto (isImg), defaultValue 'gambar'
                                                                             $defaultCoaType = $coaIsImg ? 'gambar' : 'pdf';
                                                                             // Pakai old() jika validasi error kembali ke form
@@ -717,7 +755,7 @@
                                                                                 @endif
                                                                             </div>
                                                                         @endif
-                                                                        
+
                                                                         <div class="coa-upload-section">
                                                                             <div class="form-group mb-2">
                                                                                 <label class="form-label d-block">Tipe File COA Baru</label>
@@ -758,24 +796,10 @@
 
                                                 <div class="form-section mb-3">
                                                     <h6 class="text-primary mb-2">Dokumen</h6>
-                                                    <input type="hidden" class="doc-master-logo" value="{{ $docLogo }}">
                                                     <input type="hidden" class="doc-master-dokumen" value="{{ $docDokumen }}">
                                                     <input type="hidden" class="doc-master-coa" value="{{ $docCoa }}">
                                                     <div class="row">
-                                                        <div class="col-md-4">
-                                                            <div class="mb-3">
-                                                                <label class="form-label"><strong>Logo Halal</strong></label>
-                                                                <div class="form-check">
-                                                                    <input class="form-check-input" type="radio" name="logo_halal_master_{{ $gIndex + 1 }}" value="1" {{ (string)$docLogo === '1' ? 'checked' : '' }}>
-                                                                    <label class="form-check-label">Ya ✓</label>
-                                                                </div>
-                                                                <div class="form-check">
-                                                                    <input class="form-check-input" type="radio" name="logo_halal_master_{{ $gIndex + 1 }}" value="0" {{ (string)$docLogo === '0' ? 'checked' : '' }}>
-                                                                    <label class="form-check-label">Tidak ✗</label>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                        <div class="col-md-4">
+                                                        <div class="col-md-6">
                                                             <div class="mb-3">
                                                                 <label class="form-label"><strong>Dokumen Halal</strong></label>
                                                                 <div class="form-check">
@@ -788,7 +812,7 @@
                                                                 </div>
                                                             </div>
                                                         </div>
-                                                        <div class="col-md-4">
+                                                        <div class="col-md-6">
                                                             <div class="mb-3">
                                                                 <label class="form-label"><strong>COA</strong></label>
                                                                 <div class="form-check">
@@ -816,6 +840,7 @@
                                                     </div>
                                                 </div>
                                             </div>
+                                            @php $globalDetail += count($items); @endphp
                                         @endforeach
                                     </div>
 
@@ -853,6 +878,9 @@
     }
     .collapse-chevron { transition: transform .2s ease; }
     .collapse-toggle-btn[aria-expanded="true"] .collapse-chevron { transform: rotate(180deg); }
+    .badge-removable { display: inline-flex; align-items: center; gap: 4px; padding-right: 4px; }
+    .badge-remove-btn { appearance: none; -webkit-appearance: none; background: none; border: none; padding: 1px 4px; font: inherit; font-size: 12px; font-weight: 600; line-height: 1; cursor: pointer; color: #dc3545; border-radius: 3px; }
+    .badge-remove-btn:hover { color: #fff; background: #dc3545; }
 </style>
 
 @push('scripts')
@@ -1088,14 +1116,15 @@ function initChoicesForContainer(containerEl) {
     if (!containerEl) return;
     if (!window.Choices) return;
 
-    containerEl.querySelectorAll('select.choices').forEach((selectEl) => {
+    containerEl.querySelectorAll('select.choices, select.js-supplier-choices').forEach((selectEl) => {
         if (selectEl.dataset.choicesInitialized === '1') return;
         try {
             const instance = new Choices(selectEl, {
                 searchResultLimit: 100,
-                    searchFuzziness: 0.000001,
-                    fuseOptions: { ignoreLocation: true, threshold: 0.2, matchAllTokens: false },
-                    searchEnabled: true,
+                searchFuzziness: 0.000001,
+                fuseOptions: { ignoreLocation: true, threshold: 0.2, matchAllTokens: false },
+                searchEnabled: true,
+                removeItemButton: true,
                 shouldSort: false,
                 itemSelectText: '',
             });
@@ -1123,9 +1152,10 @@ function refreshChoices(selectEl) {
     try {
         const instance = new Choices(selectEl, {
             searchResultLimit: 100,
-                    searchFuzziness: 0.000001,
-                    fuseOptions: { ignoreLocation: true, threshold: 0.2, matchAllTokens: false },
-                    searchEnabled: true,
+            searchFuzziness: 0.000001,
+            fuseOptions: { ignoreLocation: true, threshold: 0.2, matchAllTokens: false },
+            searchEnabled: true,
+            removeItemButton: true,
             shouldSort: false,
             itemSelectText: '',
         });
@@ -1275,28 +1305,53 @@ function setupKondisiMobilCheckAll() {
     });
 }
 
+// Parkir semua radio milik detail dengan nama sementara yang unik sebelum penomoran ulang.
+// Tanpa ini, radio yang tercentang yang diberi nama sama dengan grup lain akan membuat
+// browser menghapus centang radio lain di grup tersebut (pilihan "hilang" dari tampilan).
+function parkDetailRadios(detailEl) {
+    window.__radioParkSeq = (window.__radioParkSeq || 0) + 1;
+    const uid = window.__radioParkSeq;
+    const groupKeys = ['kondisi_kemasan', 'kondisi_warna', 'kondisi_aroma', 'logo_halal'];
+    detailEl.querySelectorAll('input[type="radio"]').forEach((radio) => {
+        let grp = null;
+        if (radio.classList.contains('coa-type-pdf') || radio.classList.contains('coa-type-img')) {
+            grp = 'coa_type_master';
+        } else {
+            const name = radio.getAttribute('name') || '';
+            // Cocokkan nama persis "<key>_<angka>" agar grup lain (mis. coa_type_*) tidak ikut tertangkap
+            grp = groupKeys.find((k) => new RegExp('^' + k + '_\\d+$').test(name)) || null;
+        }
+        if (!grp) return;
+        radio.__radioGroup = grp;
+        radio.name = `__park_${uid}_${grp}`;
+    });
+}
+
+function radiosOfGroup(detailEl, grp) {
+    return Array.from(detailEl.querySelectorAll('input[type="radio"]')).filter((r) => r.__radioGroup === grp);
+}
+
 function setupRowRadios(rowEl) {
     const globalIndex = Number(rowEl.dataset.detailGlobalIndex || 0) + 1;
     const mappings = [
         { key: 'kondisi_kemasan', hiddenPrefix: 'kemasan' },
         { key: 'kondisi_warna', hiddenPrefix: 'warna' },
         { key: 'kondisi_aroma', hiddenPrefix: 'aroma' },
+        { key: 'logo_halal', hiddenPrefix: 'logo' }, // Logo Halal (Kondisi Fisik, per detail)
     ];
 
     mappings.forEach(({ key, hiddenPrefix }) => {
         const radioName = `${key}_${globalIndex}`;
-        rowEl.querySelectorAll(`input[type="radio"][name^="${key}_"]`).forEach((radio) => {
+        radiosOfGroup(rowEl, key).forEach((radio) => {
             radio.name = radioName;
-        });
-
-        rowEl.querySelectorAll('input[type="radio"][name^="coa_type_master_"]').forEach((radio) => {
-            radio.name = `coa_type_master_${globalIndex}`;
         });
 
         const hidden = rowEl.querySelector(`input[type="hidden"].radio-value-${hiddenPrefix}-${globalIndex}`)
             || rowEl.querySelector(`input[type="hidden"][name="${key}[]"]`);
 
         rowEl.querySelectorAll(`input[type="radio"][name="${radioName}"]`).forEach((radio) => {
+            if (radio.__hiddenBound) return; // cegah listener ganda
+            radio.__hiddenBound = true;
             radio.addEventListener('change', function () {
                 if (hidden) hidden.value = this.value;
             });
@@ -1307,9 +1362,16 @@ function setupRowRadios(rowEl) {
             hidden.value = checked.value;
         }
     });
+
+    // Tipe file COA (PDF/Gambar): grup radio sendiri per detail
+    radiosOfGroup(rowEl, 'coa_type_master').forEach((radio) => {
+        radio.name = `coa_type_master_${globalIndex}`;
+    });
 }
 
 function updateRowNumbers() {
+    // Fase 1: parkir semua radio detail agar penamaan ulang tidak saling menimpa
+    document.querySelectorAll('.unified-row .detail-items .detail-item').forEach(parkDetailRadios);
     let globalDetail = 0;
     document.querySelectorAll('#unified-container .unified-row').forEach((row, idx) => {
         row.dataset.rowIndex = String(idx);
@@ -1323,7 +1385,6 @@ function updateRowNumbers() {
 
         // Update master dokumen radio names per row to avoid cross-row interference
         const rowNum = idx + 1;
-        row.querySelectorAll('input[type="radio"][name^="logo_halal_master_"]').forEach((el) => { el.name = `logo_halal_master_${rowNum}`; });
         row.querySelectorAll('input[type="radio"][name^="dokumen_halal_master_"]').forEach((el) => { el.name = `dokumen_halal_master_${rowNum}`; });
         row.querySelectorAll('input[type="radio"][name^="coa_master_"]').forEach((el) => { el.name = `coa_master_${rowNum}`; });
 
@@ -1341,6 +1402,9 @@ function updateRowNumbers() {
             });
             detailEl.querySelectorAll('input[type="hidden"][name="kondisi_aroma[]"]').forEach((el) => {
                 el.className = `radio-value-aroma-${globalDetail + 1}`;
+            });
+            detailEl.querySelectorAll('input[type="hidden"][name="logo_halal[]"]').forEach((el) => {
+                el.className = `radio-value-logo-${globalDetail + 1}`;
             });
 
             setupRowRadios(detailEl);
@@ -1381,28 +1445,76 @@ function applyProdukMetaForRow(rowEl, forceOverride) {
     const produkId = String(produkSelect.value || '');
     const meta = produkId && produkMeta ? produkMeta[produkId] : null;
 
-    const renderBadges = (el, list) => {
+    const renderBadges = (el, list, type) => {
         if (!el) return;
         el.innerHTML = '';
         (list || []).forEach((t) => {
             const span = document.createElement('span');
-            span.className = 'badge bg-light-secondary me-1 mb-1';
-            span.textContent = t;
+            span.className = `${type === 'produsen' ? 'badge bg-light-primary text-primary' : 'badge bg-light-info text-info'} badge-removable`;
+            span.dataset.value = t;
+            span.innerHTML = `${t} <button type="button" class="badge-remove-btn" onclick="removeFinishGoodBadge(this, '${type}')">Hapus</button>`;
             el.appendChild(span);
         });
+        if (!(list || []).length) el.innerHTML = '<span class="text-muted small badge-empty">-</span>';
     };
 
     const produsen = meta && Array.isArray(meta.produsen) ? meta.produsen : [];
     const distributor = meta && Array.isArray(meta.distributor) ? meta.distributor : [];
 
-    renderBadges(produsenBadges, produsen);
-    renderBadges(distributorBadges, distributor);
+    renderBadges(produsenBadges, produsen, 'produsen');
+    renderBadges(distributorBadges, distributor, 'distributor');
 
     if (produsenHidden) produsenHidden.value = JSON.stringify(produsen);
     if (distributorHidden) distributorHidden.value = JSON.stringify(distributor);
+    [['produsen', produsen], ['distributor', distributor]].forEach(([type, values]) => {
+        const select = rowEl.querySelector(`select.${type}-master-select`);
+        if (select) Array.from(select.options).forEach(option => { option.selected = values.includes(option.value); });
+    });
 }
 
-function populateProdukOptionsForRow(rowEl) {
+function syncFinishGoodEditSupplier(select) {
+    const row = select.closest('.unified-row');
+    if (!row) return;
+    const type = select.classList.contains('produsen-master-select') ? 'produsen' : 'distributor';
+    const values = Array.from(select.selectedOptions).map(option => option.value).filter(Boolean);
+    const badges = row.querySelector(`.${type}-badges`);
+    const hidden = row.querySelector(`input.${type}-hidden`);
+    if (!badges || !hidden) return;
+    badges.innerHTML = '';
+    values.forEach(value => {
+        const badge = document.createElement('span');
+        badge.className = `${type === 'produsen' ? 'badge bg-light-primary text-primary' : 'badge bg-light-info text-info'} badge-removable`;
+        badge.dataset.value = value;
+        badge.innerHTML = `${value} <button type="button" class="badge-remove-btn" onclick="removeFinishGoodBadge(this, '${type}')">Hapus</button>`;
+        badges.appendChild(badge);
+    });
+    if (!values.length) badges.innerHTML = '<span class="text-muted small badge-empty">-</span>';
+    hidden.value = JSON.stringify(values);
+    syncHeaderToDetails(row);
+}
+
+document.addEventListener('change', event => {
+    if (event.target.matches('select.supplier-master-select')) syncFinishGoodEditSupplier(event.target);
+});
+
+function removeFinishGoodBadge(button, type) {
+    const badge = button.closest('.badge-removable');
+    const row = badge?.closest('.unified-row');
+    if (!badge || !row) return;
+    const value = badge.dataset.value || '';
+    const select = row.querySelector(`select.${type}-master-select`);
+    const option = select && Array.from(select.options).find(item => item.value === value);
+    if (option) option.selected = false;
+    badge.remove();
+    const badges = row.querySelector(`.${type}-badges`);
+    const hidden = row.querySelector(`input.${type}-hidden`);
+    const values = Array.from(badges.querySelectorAll('.badge-removable')).map(item => item.dataset.value).filter(Boolean);
+    if (!values.length) badges.innerHTML = '<span class="text-muted small badge-empty">-</span>';
+    hidden.value = JSON.stringify(values);
+    syncHeaderToDetails(row);
+}
+
+function populateProdukOptionsForRow(rowEl, applyProductDefaults = true) {
     const kategoriSelect = rowEl.querySelector('select.kategori-produk-select');
     const produkSelect = rowEl.querySelector('select.produk-select');
     if (!kategoriSelect || !produkSelect) return;
@@ -1446,7 +1558,7 @@ function populateProdukOptionsForRow(rowEl) {
     }
     refreshChoices(produkSelect);
 
-    applyProdukMetaForRow(rowEl, true);
+    if (applyProductDefaults !== null) applyProdukMetaForRow(rowEl, applyProductDefaults);
 }
 
 function setupProdukRowListeners(rowEl) {
@@ -1497,17 +1609,36 @@ function syncHeaderToDetails(rowEl) {
     });
 }
 
+// Ambil pilihan terakhir dari select saat submit agar hidden input tiap detail
+// tidak tertinggal pada nilai lama jika event Choices tidak memperbaruinya.
+document.addEventListener('submit', function(event) {
+    const form = event.target;
+    if (!form || !form.querySelector('#unified-container')) return;
+
+    form.querySelectorAll('#unified-container .unified-row').forEach((rowEl) => {
+        ['produsen', 'distributor'].forEach((type) => {
+            const select = rowEl.querySelector(`select.${type}-master-select`);
+            const hidden = rowEl.querySelector(`input.${type}-hidden`);
+            if (!select || !hidden) return;
+
+            const values = Array.from(select.selectedOptions)
+                .map((option) => String(option.value || '').trim())
+                .filter(Boolean);
+            hidden.value = JSON.stringify([...new Set(values)]);
+        });
+        syncHeaderToDetails(rowEl);
+    });
+}, true);
+
+// Logo Halal tidak lagi disinkronkan dari master: sekarang nilainya per detail (Kondisi Fisik)
 function syncDokumenToDetails(rowEl) {
     if (!rowEl) return;
-    const logo = rowEl.querySelector('input.doc-master-logo')?.value ?? '';
     const dok = rowEl.querySelector('input.doc-master-dokumen')?.value ?? '';
     const coa = rowEl.querySelector('input.doc-master-coa')?.value ?? '';
 
     rowEl.querySelectorAll('.detail-item').forEach((detailEl) => {
-        const l = detailEl.querySelector('input.detail-logo');
         const d = detailEl.querySelector('input.detail-dokumen');
         const c = detailEl.querySelector('input.detail-coa');
-        if (l) l.value = logo;
         if (d) d.value = dok;
         if (c) c.value = coa;
     });
@@ -1528,7 +1659,7 @@ function initializeProdukFlow() {
         setupProdukRowListeners(row);
 
         if (kategoriSelect && kategoriSelect.value) {
-            populateProdukOptionsForRow(row);
+            populateProdukOptionsForRow(row, null);
         }
 
         syncHeaderToDetails(row);
@@ -1641,7 +1772,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 function refreshChoicesForContainer(containerEl) {
     if (!containerEl) return;
-    containerEl.querySelectorAll('select.choices').forEach((selectEl) => {
+    containerEl.querySelectorAll('select.choices, select.js-supplier-choices').forEach((selectEl) => {
         refreshChoices(selectEl);
     });
 }
@@ -1734,11 +1865,9 @@ function refreshChoicesForContainer(containerEl) {
                 });
             }
 
-            // Reset dokumen master values
-            const docLogo = newRow.querySelector('input.doc-master-logo');
+            // Reset dokumen master values (Logo Halal sudah per detail, tidak ada master lagi)
             const docDok = newRow.querySelector('input.doc-master-dokumen');
             const docCoa = newRow.querySelector('input.doc-master-coa');
-            if (docLogo) docLogo.value = '';
             if (docDok) docDok.value = '';
             if (docCoa) docCoa.value = '';
 
@@ -1780,7 +1909,7 @@ function refreshChoicesForContainer(containerEl) {
                     el.value = '';
                 }
             });
-            newItem.querySelectorAll('input[type="hidden"][name="kondisi_kemasan[]"], input[type="hidden"][name="kondisi_warna[]"], input[type="hidden"][name="kondisi_aroma[]"]').forEach((el) => {
+            newItem.querySelectorAll('input[type="hidden"][name="kondisi_kemasan[]"], input[type="hidden"][name="kondisi_warna[]"], input[type="hidden"][name="kondisi_aroma[]"], input[type="hidden"][name="logo_halal[]"]').forEach((el) => {
                 el.value = '';
             });
 
@@ -1848,11 +1977,7 @@ function refreshChoicesForContainer(containerEl) {
     document.addEventListener('change', function(e) {
         const rowEl = e.target.closest('.unified-row');
         if (!rowEl) return;
-        if (e.target.matches('input[type="radio"][name^="logo_halal_master_"]')) {
-            const master = rowEl.querySelector('input.doc-master-logo');
-            if (master) master.value = e.target.value;
-            syncDokumenToDetails(rowEl);
-        }
+        // Logo Halal tidak lagi punya master; handler-nya ada di setupRowRadios (per detail)
         if (e.target.matches('input[type="radio"][name^="dokumen_halal_master_"]')) {
             const master = rowEl.querySelector('input.doc-master-dokumen');
             if (master) master.value = e.target.value;
@@ -1945,7 +2070,7 @@ function refreshChoicesForContainer(containerEl) {
         const formGroup = input.closest('.form-group');
         const labelEl = formGroup ? formGroup.querySelector('.form-label') : null;
         const originalLabel = labelEl ? labelEl.innerHTML : 'Foto';
-        
+
         if (labelEl) {
             labelEl.innerHTML = originalLabel + ' <span class="badge bg-primary"><i class="bi bi-hourglass-split"></i> Mengompres...</span>';
         }
@@ -1956,7 +2081,7 @@ function refreshChoicesForContainer(containerEl) {
             const dt = new DataTransfer();
             dt.items.add(compressedFile);
             input.files = dt.files;
-            
+
             if (labelEl) {
                 labelEl.innerHTML = originalLabel + ' <span class="badge bg-success"><i class="bi bi-check-circle"></i> Selesai (Auto-Compressed)</span>';
             }
@@ -2006,5 +2131,6 @@ function refreshChoicesForContainer(containerEl) {
     });
 });
 </script>
+@include('qc-sistem.supplier-choices-sync')
 @endpush
 @endsection

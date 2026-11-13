@@ -9,16 +9,20 @@ use App\Models\Produk;
 use App\Models\Produsen;
 use App\Models\Distributor;
 use App\Models\User;
+use App\Exports\SingleRecordViewExport;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\UploadedFile;
+use Maatwebsite\Excel\Facades\Excel;
 use Monarobase\CountryList\CountryListFacade as Countries; // Menggunakan Facade
 use App\Http\Controllers\Traits\HasAuditController;
+use App\Http\Controllers\Traits\RejectsTruncatedDynamicInput;
 
 class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
 {
     use HasAuditController;
+    use RejectsTruncatedDynamicInput;
 
     /**
      * Simpan file COA (PDF atau gambar).
@@ -339,6 +343,14 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
         $produkByKategori = collect();
         $produkMeta = collect();
         $produkKategoriById = collect();
+        $produsens = Produsen::query()
+            ->when($plantId, fn ($query) => $query->whereHas('user', fn ($userQuery) => $userQuery->where('id_plant', $plantId)))
+            ->orderBy('nama_produsen')
+            ->get(['id', 'nama_produsen']);
+        $distributors = Distributor::query()
+            ->when($plantId, fn ($query) => $query->whereHas('user', fn ($userQuery) => $userQuery->where('id_plant', $plantId)))
+            ->orderBy('nama_distributor')
+            ->get(['id', 'nama_distributor']);
         
         // Filter data berdasarkan plant aktif (hasil switch)
         if ($user->role && strtolower($user->role->role) === 'superadmin') {
@@ -406,7 +418,9 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
             'produkKategoriOptions',
             'produkByKategori',
             'produkMeta',
-            'produkKategoriById'
+            'produkKategoriById',
+            'produsens',
+            'distributors'
         ));
     }
 
@@ -429,6 +443,13 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
 
         $inputProdukIds = $request->input('id_produk', $request->input('id_bahan', []));
         $inputBahanIds = $request->input('id_bahan', []);
+        $this->rejectMismatchedDynamicArrayLengths($request, 'id_produk', [
+            'kategori_code', 'negara_produsen', 'kode_produksi', 'expire_date',
+            'jumlah_datang', 'unit_datang', 'jumlah_sampling', 'unit_sampling',
+            'spesifikasi', 'kondisi_fisik_kemasan', 'kondisi_fisik_warna',
+            'kondisi_fisik_benda_asing', 'kondisi_fisik_aroma', 'logo_halal',
+            'dokumen_halal', 'coa', 'status_baris', 'keterangan_hasil',
+        ]);
         [$mappedBahanIds, $missingMapErrors] = $this->mapProdukToBahanIds($request, $inputProdukIds, $inputBahanIds);
         if (!empty($missingMapErrors)) {
             throw \Illuminate\Validation\ValidationException::withMessages($missingMapErrors);
@@ -749,6 +770,12 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
         $produkByKategori = collect();
         $produkMeta = collect();
         $produkKategoriById = collect();
+        $produsens = Produsen::query()
+            ->when($plantId, fn ($query) => $query->whereHas('user', fn ($userQuery) => $userQuery->where('id_plant', $plantId)))
+            ->orderBy('nama_produsen')->get(['id', 'nama_produsen']);
+        $distributors = Distributor::query()
+            ->when($plantId, fn ($query) => $query->whereHas('user', fn ($userQuery) => $userQuery->where('id_plant', $plantId)))
+            ->orderBy('nama_distributor')->get(['id', 'nama_distributor']);
         
         if ($user->role && strtolower($user->role->role) === 'superadmin') {
             $shifts = Shift::with(['user.plant'])->get();
@@ -839,7 +866,9 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
             'produkByKategori',
             'produkMeta',
             'produkKategoriById',
-            'produkByBahanId'
+            'produkByBahanId',
+            'produsens',
+            'distributors'
         ));
     }
 
@@ -1773,6 +1802,65 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
         }
         
         return $pdf->download($filename);
+    }
+
+    /**
+     * Export one record to Excel based on its UUID.
+     */
+    public function exportExcel(Request $request)
+    {
+        $user = Auth::user();
+        $uuid = $request->input('uuid');
+
+        abort_unless($uuid, 404);
+
+        $pemeriksaan = PemeriksaanKedatanganBahanBakuPenunjang::where('uuid', $uuid)
+            ->with([
+                'user.role',
+                'user.plant',
+                'shift',
+                'bahan',
+                'qcVerifier' => function ($q) { $q->select('id', 'name'); },
+                'produksiVerifier' => function ($q) { $q->select('id', 'name'); },
+                'spvVerifier' => function ($q) { $q->select('id', 'name'); },
+            ])
+            ->firstOrFail();
+
+        if ($user->role && strtolower($user->role->role) !== 'superadmin'
+            && $user->getEffectivePlantId() !== $pemeriksaan->user->id_plant) {
+            abort(403, 'Unauthorized');
+        }
+
+        $qcUser = $pemeriksaan->qcVerifier?->name;
+        $produksiUser = $pemeriksaan->produksiVerifier?->name;
+        $spvQcUser = $pemeriksaan->spvVerifier?->name;
+        $dataPerShift = [[
+            'shift' => $pemeriksaan->shift,
+            'pemeriksaans' => collect([$pemeriksaan]),
+            'qcUser' => $qcUser,
+            'produksiUser' => $produksiUser,
+            'spvQcUser' => $spvQcUser,
+            'filterBahanIds' => null,
+        ]];
+
+        return Excel::download(
+            new SingleRecordViewExport(
+                'qc-sistem.pemeriksaan-kedatangan-bahan-baku-penunjang.pdf-report',
+                [
+                    'pemeriksaans' => collect([$pemeriksaan]),
+                    'tanggal' => $pemeriksaan->tanggal,
+                    'shift' => $pemeriksaan->shift,
+                    'qcUser' => $qcUser,
+                    'produksiUser' => $produksiUser,
+                    'spvQcUser' => $spvQcUser,
+                    'filterBahanIds' => null,
+                    'isAllShift' => false,
+                    'dataPerShift' => $dataPerShift,
+                ],
+                'Pemeriksaan Bahan Baku'
+            ),
+            'bahan-baku-' . $pemeriksaan->uuid . '.xlsx'
+        );
     }
 
     /**

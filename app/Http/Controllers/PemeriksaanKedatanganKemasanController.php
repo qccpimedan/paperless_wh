@@ -13,11 +13,15 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Barryvdh\DomPDF\Facade\Pdf as PDF;
+use App\Exports\SingleRecordViewExport;
+use Maatwebsite\Excel\Facades\Excel;
 use App\Http\Controllers\Traits\HasAuditController;
+use App\Http\Controllers\Traits\RejectsTruncatedDynamicInput;
 
 class PemeriksaanKedatanganKemasanController extends Controller
 {
     use HasAuditController;
+    use RejectsTruncatedDynamicInput;
     /**
      * Simpan file COA (PDF atau gambar).
      * Jika gambar > 3MB, otomatis dikompres sebelum disimpan.
@@ -184,7 +188,7 @@ return view('qc-sistem.pemeriksaan-kedatangan-kemasan.index', compact('pemeriksa
         ]);
         
         // Get bahan kemasans, shifts, produsens, and distributors based on plant access
-        if ($user->role && strtolower($user->role->role) === 'superadmin') {
+        if ($user->role && strtolower($user->role->role) === 'superadmin' && !$user->getEffectivePlantId()) {
             $bahanKemasans = BahanKemasan::with(['user.plant', 'distributor', 'produsen'])->get();
             $shifts = Shift::with('user.plant')->get();
             $produsens = Produsen::with('user.plant')->get();
@@ -223,25 +227,6 @@ return view('qc-sistem.pemeriksaan-kedatangan-kemasan.index', compact('pemeriksa
         if ($shifts->isEmpty()) {
             $shifts = Shift::all();
         }
-        if ($produsens->isEmpty()) {
-            $produsens = Produsen::all();
-        }
-        if ($distributors->isEmpty()) {
-            $distributors = Distributor::all();
-        }
-
-        $referencedProdusenIds = $bahanKemasans->pluck('id_produsen')->filter()->unique()->values();
-        if ($referencedProdusenIds->isNotEmpty()) {
-            $referencedProdusens = Produsen::with('user.plant')->whereIn('id', $referencedProdusenIds)->get();
-            $produsens = $produsens->concat($referencedProdusens)->unique('id')->values();
-        }
-
-        $referencedDistributorIds = $bahanKemasans->pluck('id_distributor')->filter()->unique()->values();
-        if ($referencedDistributorIds->isNotEmpty()) {
-            $referencedDistributors = Distributor::with('user.plant')->whereIn('id', $referencedDistributorIds)->get();
-            $distributors = $distributors->concat($referencedDistributors)->unique('id')->values();
-        }
-        
         \Log::info('Data for create view:', [
             'bahanKemasans_count' => $bahanKemasans->count(),
             'shifts_count' => $shifts->count(),
@@ -350,6 +335,13 @@ return view('qc-sistem.pemeriksaan-kedatangan-kemasan.index', compact('pemeriksa
             'image_kemasan.*' => 'nullable|image|max:3072',
             'file_coa.*' => 'nullable|mimes:pdf,jpg,jpeg,png,webp|max:3072',
             'file_coa_img.*' => 'nullable|image|max:3072',
+        ]);
+
+        $this->rejectMismatchedDynamicArrayLengths($request, 'id_produk', [
+            'kategori_code', 'kode_produksi', 'jumlah_datang', 'unit_datang',
+            'jumlah_sampling', 'unit_sampling', 'spesifikasi', 'penampakan',
+            'sealing', 'cetakan', 'ketebalan_micron', 'dimensi', 'berat',
+            'status', 'logo_halal', 'dokumen_halal', 'coa', 'keterangan',
         ]);
     
         // Process kondisi mobil dengan logic yang benar
@@ -508,7 +500,7 @@ return view('qc-sistem.pemeriksaan-kedatangan-kemasan.index', compact('pemeriksa
         $user = Auth::user();
         
         // Get bahan kemasans, shifts, produsens, and distributors based on plant access (SAMA SEPERTI CREATE)
-    if ($user->role && strtolower($user->role->role) === 'superadmin') {
+    if ($user->role && strtolower($user->role->role) === 'superadmin' && !$user->getEffectivePlantId()) {
         $bahanKemasans = BahanKemasan::with(['user.plant', 'distributor', 'produsen'])->get();
         $shifts = Shift::with('user.plant')->get();
         $produsens = Produsen::with('user.plant')->get();
@@ -547,25 +539,6 @@ return view('qc-sistem.pemeriksaan-kedatangan-kemasan.index', compact('pemeriksa
     if ($shifts->isEmpty()) {
         $shifts = Shift::all();
     }
-    if ($produsens->isEmpty()) {
-        $produsens = Produsen::all();
-    }
-    if ($distributors->isEmpty()) {
-        $distributors = Distributor::all();
-    }
-
-    $referencedProdusenIds = $bahanKemasans->pluck('id_produsen')->filter()->unique()->values();
-    if ($referencedProdusenIds->isNotEmpty()) {
-        $referencedProdusens = Produsen::with('user.plant')->whereIn('id', $referencedProdusenIds)->get();
-        $produsens = $produsens->concat($referencedProdusens)->unique('id')->values();
-    }
-
-    $referencedDistributorIds = $bahanKemasans->pluck('id_distributor')->filter()->unique()->values();
-    if ($referencedDistributorIds->isNotEmpty()) {
-        $referencedDistributors = Distributor::with('user.plant')->whereIn('id', $referencedDistributorIds)->get();
-        $distributors = $distributors->concat($referencedDistributors)->unique('id')->values();
-    }
-
     $plantId = $user->getEffectivePlantId();
 
     $produkKategoriOptions = Produk::query()
@@ -1387,6 +1360,64 @@ return view('qc-sistem.pemeriksaan-kedatangan-kemasan.index', compact('pemeriksa
         $filenameDate = $tanggal ?? $tanggalDari ?? date('Y-m-d');
         $filename = 'laporan-pemeriksaan-kemasan-' . $filenameDate . '.pdf';
         return $pdf->download($filename);
+    }
+
+    public function exportExcel(Request $request)
+    {
+        $user = Auth::user();
+        $uuid = $request->input('uuid');
+
+        abort_unless($uuid, 404);
+
+        $pemeriksaan = PemeriksaanKedatanganKemasan::where('uuid', $uuid)
+            ->with([
+                'user.role',
+                'user.plant',
+                'shift',
+                'bahan',
+                'qcVerifier' => function ($q) { $q->select('id', 'name'); },
+                'produksiVerifier' => function ($q) { $q->select('id', 'name'); },
+                'spvVerifier' => function ($q) { $q->select('id', 'name'); },
+            ])
+            ->firstOrFail();
+
+        if ($user->role && strtolower($user->role->role) !== 'superadmin'
+            && $user->getEffectivePlantId() !== $pemeriksaan->user->id_plant) {
+            abort(403, 'Unauthorized');
+        }
+
+        $qcUser = $pemeriksaan->qcVerifier?->name;
+        $produksiUser = $pemeriksaan->produksiVerifier?->name;
+        $spvQcUser = $pemeriksaan->spvVerifier?->name;
+        $dataPerShift = [[
+            'shift' => $pemeriksaan->shift,
+            'pemeriksaans' => collect([$pemeriksaan]),
+            'qcUser' => $qcUser,
+            'produksiUser' => $produksiUser,
+            'spvQcUser' => $spvQcUser,
+            'filterBahanIds' => null,
+        ]];
+
+        $viewData = [
+            'pemeriksaans' => collect([$pemeriksaan]),
+            'tanggal' => $pemeriksaan->tanggal,
+            'shift' => $pemeriksaan->shift,
+            'qcUser' => $qcUser,
+            'produksiUser' => $produksiUser,
+            'spvQcUser' => $spvQcUser,
+            'filterBahanIds' => null,
+            'isAllShift' => false,
+            'dataPerShift' => $dataPerShift,
+        ];
+
+        return Excel::download(
+            new SingleRecordViewExport(
+                'qc-sistem.pemeriksaan-kedatangan-kemasan.pdf-report',
+                $viewData,
+                'Pemeriksaan Kemasan'
+            ),
+            'kemasan-' . $pemeriksaan->uuid . '.xlsx'
+        );
     }
 
     private function exportPDFAllShift($request, $user, $tanggalDari, $tanggalSampai, $id_produk, $kategori_code)

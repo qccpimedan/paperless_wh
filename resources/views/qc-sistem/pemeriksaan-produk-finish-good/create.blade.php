@@ -323,11 +323,15 @@
                                             </div>
 
                                             <div class="row">
-                                                <div class="col-md-6">
+                                                <div class="col-md-4">
                                                     <div class="card border-0 shadow-sm">
                                                         <div class="card-body p-3">
                                                             <div class="fw-semibold">Produsen</div>
-                                                            <div class="small text-muted mb-2">Otomatis terisi sesuai Produk yang dipilih</div>
+                                                            <div class="small text-muted mb-2">Data akan terisi secara otomatis berdasarkan produk yang dipilih. Anda juga dapat memilih data secara manual melalui pilihan yang tersedia di bawah ini.</div>
+                                                            <option value="" selected disabled>-- Pilih Produsen --</option>
+                                                            <select class="form-select js-supplier-choices supplier-master-select produsen-master-select mb-2" multiple aria-label="Pilih produsen">
+                                                                @foreach (($produsens ?? []) as $produsen)<option value="{{ $produsen->nama_produsen }}">{{ $produsen->nama_produsen }}</option>@endforeach
+                                                            </select>
                                                             <div class="produsen-badges d-flex flex-wrap gap-1" data-row-index="0">
                                                                 <span class="text-muted small">-</span>
                                                             </div>
@@ -335,11 +339,15 @@
                                                         </div>
                                                     </div>
                                                 </div>
-                                                <div class="col-md-6">
+                                                <div class="col-md-4">
                                                     <div class="card border-0 shadow-sm">
                                                         <div class="card-body p-3">
                                                             <div class="fw-semibold">Distributor</div>
-                                                            <div class="small text-muted mb-2">Otomatis terisi sesuai Produk yang dipilih</div>
+                                                            <div class="small text-muted mb-2">Data akan terisi secara otomatis berdasarkan produk yang dipilih. Anda juga dapat memilih data secara manual melalui pilihan yang tersedia di bawah ini.</div>
+                                                            <option value="" selected disabled>-- Pilih Distributor --</option>
+                                                            <select class="form-select js-supplier-choices supplier-master-select distributor-master-select mb-2" multiple aria-label="Pilih distributor">
+                                                                @foreach (($distributors ?? []) as $distributor)<option value="{{ $distributor->nama_distributor }}">{{ $distributor->nama_distributor }}</option>@endforeach
+                                                            </select>
                                                             <div class="distributor-badges d-flex flex-wrap gap-1" data-row-index="0">
                                                                 <span class="text-muted small">-</span>
                                                             </div>
@@ -433,7 +441,6 @@
                                                     <input type="hidden" name="produsen[]" class="detail-produsen" value="">
                                                     <input type="hidden" name="distributor[]" class="detail-distributor" value="">
 
-                                                    <input type="hidden" name="logo_halal[]" class="detail-logo" value="{{ old('logo_halal.0') }}">
                                                     <input type="hidden" name="dokumen_halal[]" class="detail-dokumen" value="{{ old('dokumen_halal.0') }}">
                                                     <input type="hidden" name="coa[]" class="detail-coa" value="{{ old('coa.0') }}">
 
@@ -483,7 +490,7 @@
                                                     <div class="form-section mb-3">
                                                         <h6 class="text-primary mb-2">Kondisi Fisik</h6>
                                                         <div class="row">
-                                                            <div class="col-md-4">
+                                                            <div class="col-md-3">
                                                                 <div class="mb-3">
                                                                     <label class="form-label"><strong>Kemasan</strong></label>
                                                                     <div class="form-check">
@@ -497,7 +504,7 @@
                                                                     <input type="hidden" name="kondisi_kemasan[]" class="radio-value-kemasan-1" value="{{ old('kondisi_kemasan.0') }}">
                                                                 </div>
                                                             </div>
-                                                            <div class="col-md-4">
+                                                            <div class="col-md-3">
                                                                 <div class="mb-3">
                                                                     <label class="form-label"><strong>Warna</strong></label>
                                                                     <div class="form-check">
@@ -511,7 +518,7 @@
                                                                     <input type="hidden" name="kondisi_warna[]" class="radio-value-warna-1" value="{{ old('kondisi_warna.0') }}">
                                                                 </div>
                                                             </div>
-                                                            <div class="col-md-4">
+                                                            <div class="col-md-3">
                                                                 <div class="mb-3">
                                                                     <label class="form-label"><strong>Aroma</strong></label>
                                                                     <div class="form-check">
@@ -523,6 +530,21 @@
                                                                         <label class="form-check-label">Tidak ✗</label>
                                                                     </div>
                                                                     <input type="hidden" name="kondisi_aroma[]" class="radio-value-aroma-1" value="{{ old('kondisi_aroma.0') }}">
+                                                                </div>
+                                                            </div>
+                                                            <!-- Logo Halal (dipindah dari section Dokumen) -->
+                                                            <div class="col-md-3">
+                                                                <div class="mb-3">
+                                                                    <label class="form-label"><strong>Logo Halal</strong></label>
+                                                                    <div class="form-check">
+                                                                        <input class="form-check-input" type="radio" name="kondisi_logo_1" value="1">
+                                                                        <label class="form-check-label">Ya ✓</label>
+                                                                    </div>
+                                                                    <div class="form-check">
+                                                                        <input class="form-check-input" type="radio" name="kondisi_logo_1" value="0">
+                                                                        <label class="form-check-label">Tidak ✗</label>
+                                                                    </div>
+                                                                    <input type="hidden" name="logo_halal[]" class="detail-logo radio-value-logo-1" value="{{ old('logo_halal.0') }}">
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -602,24 +624,10 @@
 
                                             <div class="form-section mb-3">
                                                 <h6 class="text-primary mb-2">Dokumen</h6>
-                                                <input type="hidden" class="doc-master-logo" value="{{ old('logo_halal.0') }}">
                                                 <input type="hidden" class="doc-master-dokumen" value="{{ old('dokumen_halal.0') }}">
                                                 <input type="hidden" class="doc-master-coa" value="{{ old('coa.0') }}">
                                                 <div class="row">
-                                                    <div class="col-md-4">
-                                                        <div class="mb-3">
-                                                            <label class="form-label"><strong>Logo Halal</strong></label>
-                                                            <div class="form-check">
-                                                                <input class="form-check-input" type="radio" name="logo_halal_master_1" value="1">
-                                                                <label class="form-check-label">Ya ✓</label>
-                                                            </div>
-                                                            <div class="form-check">
-                                                                <input class="form-check-input" type="radio" name="logo_halal_master_1" value="0">
-                                                                <label class="form-check-label">Tidak ✗</label>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-md-4">
+                                                    <div class="col-md-6">
                                                         <div class="mb-3">
                                                             <label class="form-label"><strong>Dokumen Halal</strong></label>
                                                             <div class="form-check">
@@ -632,7 +640,7 @@
                                                             </div>
                                                         </div>
                                                     </div>
-                                                    <div class="col-md-4">
+                                                    <div class="col-md-6">
                                                         <div class="mb-3">
                                                             <label class="form-label"><strong>COA</strong></label>
                                                             <div class="form-check">
@@ -705,13 +713,13 @@
     .badge-remove-btn {
         background: none;
         border: none;
-        padding: 0 2px;
+        padding: 1px 4px;
         font-size: 13px;
         font-weight: bold;
         line-height: 1;
         cursor: pointer;
         color: #dc3545;
-        border-radius: 50%;
+        border-radius: 3px;
         transition: color .15s, background .15s;
     }
     .badge-remove-btn:hover {
@@ -991,7 +999,7 @@ function initChoicesForContainer(containerEl) {
             });
             
             // Clean up all select.choices elements
-            pristineRowTemplate.querySelectorAll('select.choices').forEach((el) => {
+            pristineRowTemplate.querySelectorAll('select.choices, select.js-supplier-choices').forEach((el) => {
                 delete el.dataset.choicesInitialized;
                 delete el.__choicesInstance;
                 el.removeAttribute('hidden');
@@ -1060,6 +1068,7 @@ function refreshChoices(selectEl) {
                     searchFuzziness: 0.000001,
                     fuseOptions: { ignoreLocation: true, threshold: 0.2, matchAllTokens: false },
                     searchEnabled: true,
+            removeItemButton: true,
             shouldSort: false,
             itemSelectText: '',
         });
@@ -1071,7 +1080,7 @@ function refreshChoices(selectEl) {
 
 function refreshChoicesForContainer(containerEl) {
     if (!containerEl) return;
-    containerEl.querySelectorAll('select.choices').forEach((selectEl) => {
+    containerEl.querySelectorAll('select.choices, select.js-supplier-choices').forEach((selectEl) => {
         refreshChoices(selectEl);
     });
 }
@@ -1199,28 +1208,53 @@ function setupKondisiMobilCheckAll() {
     console.log('setupKondisiMobilCheckAll called - using inline handler');
 }
 
+// Parkir semua radio milik detail dengan nama sementara yang unik sebelum penomoran ulang.
+// Tanpa ini, radio yang tercentang yang diberi nama sama dengan grup lain akan membuat
+// browser menghapus centang radio lain di grup tersebut (pilihan "hilang" dari tampilan).
+function parkDetailRadios(detailEl) {
+    window.__radioParkSeq = (window.__radioParkSeq || 0) + 1;
+    const uid = window.__radioParkSeq;
+    const groupKeys = ['kondisi_kemasan', 'kondisi_warna', 'kondisi_aroma', 'kondisi_logo'];
+    detailEl.querySelectorAll('input[type="radio"]').forEach((radio) => {
+        let grp = null;
+        if (radio.classList.contains('coa-type-pdf') || radio.classList.contains('coa-type-img')) {
+            grp = 'coa_type_master';
+        } else {
+            const name = radio.getAttribute('name') || '';
+            // Cocokkan nama persis "<key>_<angka>" agar grup lain (mis. coa_type_*) tidak ikut tertangkap
+            grp = groupKeys.find((k) => new RegExp('^' + k + '_\\d+$').test(name)) || null;
+        }
+        if (!grp) return;
+        radio.__radioGroup = grp;
+        radio.name = `__park_${uid}_${grp}`;
+    });
+}
+
+function radiosOfGroup(detailEl, grp) {
+    return Array.from(detailEl.querySelectorAll('input[type="radio"]')).filter((r) => r.__radioGroup === grp);
+}
+
 function setupRowRadios(rowEl) {
     const globalIndex = Number(rowEl.dataset.detailGlobalIndex || 0) + 1;
     const mappings = [
         { key: 'kondisi_kemasan', hiddenPrefix: 'kemasan' },
         { key: 'kondisi_warna', hiddenPrefix: 'warna' },
         { key: 'kondisi_aroma', hiddenPrefix: 'aroma' },
+        { key: 'kondisi_logo', hiddenPrefix: 'logo' }, // Logo Halal (Kondisi Fisik, per detail)
     ];
 
     mappings.forEach(({ key, hiddenPrefix }) => {
         const radioName = `${key}_${globalIndex}`;
-        rowEl.querySelectorAll(`input[type="radio"][name^="${key}_"]`).forEach((radio) => {
+        radiosOfGroup(rowEl, key).forEach((radio) => {
             radio.name = radioName;
-        });
-
-        rowEl.querySelectorAll('input[type="radio"][name^="coa_type_master_"]').forEach((radio) => {
-            radio.name = `coa_type_master_${globalIndex}`;
         });
 
         const hidden = rowEl.querySelector(`input[type="hidden"].radio-value-${hiddenPrefix}-${globalIndex}`)
             || rowEl.querySelector(`input[type="hidden"][name="${key}[]"]`);
 
         rowEl.querySelectorAll(`input[type="radio"][name="${radioName}"]`).forEach((radio) => {
+            if (radio.__hiddenBound) return; // cegah listener ganda
+            radio.__hiddenBound = true;
             radio.addEventListener('change', function () {
                 if (hidden) hidden.value = this.value;
             });
@@ -1231,9 +1265,16 @@ function setupRowRadios(rowEl) {
             hidden.value = checked.value;
         }
     });
+
+    // Tipe file COA (PDF/Gambar): grup radio sendiri per detail
+    radiosOfGroup(rowEl, 'coa_type_master').forEach((radio) => {
+        radio.name = `coa_type_master_${globalIndex}`;
+    });
 }
 
 function updateRowNumbers() {
+    // Fase 1: parkir semua radio detail agar penamaan ulang tidak saling menimpa
+    document.querySelectorAll('.unified-row .detail-items .detail-item').forEach(parkDetailRadios);
     let globalDetail = 0;
     document.querySelectorAll('#unified-container .unified-row').forEach((row, idx) => {
         row.dataset.rowIndex = String(idx);
@@ -1247,7 +1288,6 @@ function updateRowNumbers() {
 
         // Update master dokumen radio names per row to avoid cross-row interference
         const rowNum = idx + 1;
-        row.querySelectorAll('input[type="radio"][name^="logo_halal_master_"]').forEach((el) => { el.name = `logo_halal_master_${rowNum}`; });
         row.querySelectorAll('input[type="radio"][name^="dokumen_halal_master_"]').forEach((el) => { el.name = `dokumen_halal_master_${rowNum}`; });
         row.querySelectorAll('input[type="radio"][name^="coa_master_"]').forEach((el) => { el.name = `coa_master_${rowNum}`; });
 
@@ -1267,6 +1307,9 @@ function updateRowNumbers() {
             detailEl.querySelectorAll('input[type="hidden"][name="kondisi_aroma[]"]').forEach((el) => {
                 el.className = `radio-value-aroma-${globalDetail + 1}`;
             });
+            detailEl.querySelectorAll('input[type="hidden"][name="logo_halal[]"]').forEach((el) => {
+                el.className = `detail-logo radio-value-logo-${globalDetail + 1}`;
+            });
 
             setupRowRadios(detailEl);
             globalDetail += 1;
@@ -1285,6 +1328,23 @@ function updateRemoveButtons() {
     rows.forEach((row) => {
         const btn = row.querySelector('.remove-unified-btn');
         if (btn) btn.disabled = rows.length <= 1;
+    });
+}
+
+function setSupplierChoicesValues(select, values) {
+    if (!select) return;
+
+    const normalized = [...new Set((Array.isArray(values) ? values : []).map(value => String(value).trim()).filter(Boolean))];
+    const instance = select.choicesInstance || select.__choicesInstance || null;
+
+    if (instance && typeof instance.removeActiveItems === 'function' && typeof instance.setChoiceByValue === 'function') {
+        instance.removeActiveItems();
+        normalized.forEach(value => instance.setChoiceByValue(value));
+        return;
+    }
+
+    Array.from(select.options).forEach(option => {
+        option.selected = normalized.includes(String(option.value).trim());
     });
 }
 
@@ -1312,9 +1372,9 @@ function applyProdukMetaForRow(rowEl) {
         }
         arr.forEach((t) => {
             const span = document.createElement('span');
-            span.className = 'badge bg-light-secondary me-1 mb-1 badge-removable';
+            span.className = `${type === 'produsen' ? 'badge bg-light-primary text-primary' : 'badge bg-light-info text-info'} badge-removable`;
             span.setAttribute('data-value', String(t).trim());
-            span.innerHTML = `${String(t)} <button type="button" class="badge-remove-btn" onclick="removeBadgeItem(this, '${type}')">&times;</button>`;
+                span.innerHTML = `${String(t)} <button type="button" class="badge-remove-btn" onclick="removeBadgeItem(this, '${type}')">Hapus</button>`;
             el.appendChild(span);
         });
     };
@@ -1327,7 +1387,34 @@ function applyProdukMetaForRow(rowEl) {
 
     if (produsenHidden) produsenHidden.value = JSON.stringify(produsen);
     if (distributorHidden) distributorHidden.value = JSON.stringify(distributor);
+    setSupplierChoicesValues(rowEl.querySelector('select.produsen-master-select'), produsen);
+    setSupplierChoicesValues(rowEl.querySelector('select.distributor-master-select'), distributor);
 }
+
+function renderFinishGoodSupplierSelection(select) {
+    const row = select.closest('.unified-row');
+    if (!row) return;
+    const type = select.classList.contains('produsen-master-select') ? 'produsen' : 'distributor';
+    const badges = row.querySelector(`.${type}-badges`);
+    const hidden = row.querySelector(`input.${type}-hidden`);
+    const chosen = Array.from(select.selectedOptions).map(option => option.value).filter(Boolean);
+    if (!badges || !hidden) return;
+    badges.innerHTML = '';
+    chosen.forEach(value => {
+        const badge = document.createElement('span');
+        badge.className = `${type === 'produsen' ? 'badge bg-light-primary text-primary' : 'badge bg-light-info text-info'} badge-removable`;
+        badge.dataset.value = value;
+        badge.innerHTML = `${value} <button type="button" class="badge-remove-btn" onclick="removeBadgeItem(this, '${type}')">Hapus</button>`;
+        badges.appendChild(badge);
+    });
+    if (!chosen.length) badges.innerHTML = '<span class="text-muted small badge-empty">-</span>';
+    hidden.value = JSON.stringify(chosen);
+    syncHeaderToDetails(row);
+}
+
+document.addEventListener('change', function(event) {
+    if (event.target.matches('select.supplier-master-select')) renderFinishGoodSupplierSelection(event.target);
+});
 
 function populateProdukOptionsForRow(rowEl) {
     const kategoriSelect = rowEl.querySelector('select.kategori-produk-select');
@@ -1451,15 +1538,13 @@ function syncHeaderToDetails(rowEl) {
 
 function syncDokumenToDetails(rowEl) {
     if (!rowEl) return;
-    const logo = rowEl.querySelector('input.doc-master-logo')?.value ?? '';
+    // NOTE: Logo Halal sekarang per detail (Kondisi Fisik), tidak lagi disinkronkan dari master.
     const dok = rowEl.querySelector('input.doc-master-dokumen')?.value ?? '';
     const coa = rowEl.querySelector('input.doc-master-coa')?.value ?? '';
 
     rowEl.querySelectorAll('.detail-item').forEach((detailEl) => {
-        const l = detailEl.querySelector('input.detail-logo');
         const d = detailEl.querySelector('input.detail-dokumen');
         const c = detailEl.querySelector('input.detail-coa');
-        if (l) l.value = logo;
         if (d) d.value = dok;
         if (c) c.value = coa;
     });
@@ -1514,7 +1599,7 @@ document.addEventListener('DOMContentLoaded', function() {
             pristineRowTemplate.querySelectorAll('.choices').forEach((el) => {
                 if (el.tagName.toLowerCase() !== 'select') el.remove();
             });
-            pristineRowTemplate.querySelectorAll('select.choices').forEach((el) => {
+            pristineRowTemplate.querySelectorAll('select.choices, select.js-supplier-choices').forEach((el) => {
                 delete el.dataset.choicesInitialized;
                 el.removeAttribute('hidden');
                 el.style.display = '';
@@ -1593,7 +1678,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     el.value = '';
                 }
             });
-            newItem.querySelectorAll('input[type="hidden"][name="kondisi_kemasan[]"], input[type="hidden"][name="kondisi_warna[]"], input[type="hidden"][name="kondisi_aroma[]"]').forEach((el) => {
+            newItem.querySelectorAll('input[type="hidden"][name="kondisi_kemasan[]"], input[type="hidden"][name="kondisi_warna[]"], input[type="hidden"][name="kondisi_aroma[]"], input[type="hidden"][name="logo_halal[]"]').forEach((el) => {
                 el.value = '';
             });
 
@@ -1665,11 +1750,6 @@ document.addEventListener('DOMContentLoaded', function() {
             const rowIdx = Number(rowEl.dataset.rowIndex || 0);
             updateProdukLabel(rowEl, rowIdx);
         }
-        if (e.target.matches('input[type="radio"][name^="logo_halal_master_"]')) {
-            const master = rowEl.querySelector('input.doc-master-logo');
-            if (master) master.value = e.target.value;
-            syncDokumenToDetails(rowEl);
-        }
         if (e.target.matches('input[type="radio"][name^="dokumen_halal_master_"]')) {
             const master = rowEl.querySelector('input.doc-master-dokumen');
             if (master) master.value = e.target.value;
@@ -1708,7 +1788,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         el.remove();
                     }
                 });
-                newRow.querySelectorAll('select.choices').forEach((el) => {
+                newRow.querySelectorAll('select.choices, select.js-supplier-choices').forEach((el) => {
                     delete el.dataset.choicesInitialized;
                     el.removeAttribute('hidden');
                     el.style.display = '';
@@ -1785,7 +1865,7 @@ document.addEventListener('DOMContentLoaded', function() {
  * Hapus satu badge Produsen/Distributor dari tampilan form Finish Good.
  * Data master TIDAK berubah.
  *
- * @param {HTMLButtonElement} btn  — tombol × yang diklik
+ * @param {HTMLButtonElement} btn  — tombol Hapus yang diklik
  * @param {string} type            — 'produsen' | 'distributor'
  */
 function removeBadgeItem(btn, type) {
@@ -1793,6 +1873,12 @@ function removeBadgeItem(btn, type) {
     if (!badge) return;
 
     const rowEl = badge.closest('.unified-row');
+    const value = String(badge.dataset.value || '');
+    const select = rowEl && rowEl.querySelector(`select.${type}-master-select`);
+    if (select) {
+        const option = Array.from(select.options).find(item => item.value === value);
+        if (option) option.selected = false;
+    }
     const badgesContainer = badge.closest('.produsen-badges, .distributor-badges');
     
     // Hapus badge dari tampilan
@@ -1831,8 +1917,6 @@ function removeBadgeItem(btn, type) {
     }
 }
 </script>
-@endpush
-
 <!-- Validasi Front-End Form -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -2080,5 +2164,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 </script>
-
+@include('qc-sistem.supplier-choices-sync')
+@endpush
 @endsection

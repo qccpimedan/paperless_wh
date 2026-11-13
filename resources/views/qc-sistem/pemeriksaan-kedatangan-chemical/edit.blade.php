@@ -410,11 +410,16 @@
 
                                                 <!-- Produsen/Distributor (Header Produk) -->
                                                 <div class="row">
-                                                    <div class="col-md-6">
+                                                    <div class="col-md-4">
                                                         <div class="card border-0 shadow-sm mb-2">
                                                             <div class="card-body p-3">
                                                                 <div class="fw-semibold">Produsen</div>
-                                                                <div class="small text-muted mb-2">Otomatis terisi sesuai Produk yang dipilih</div>
+                                                                <div class="small text-muted mb-2">Data akan terisi secara otomatis berdasarkan produk yang dipilih. Anda juga dapat memilih data secara manual melalui pilihan yang tersedia di bawah ini.</div>
+                                                                <option value="" selected disabled>-- Pilih Produsen --</option>
+                                                                @php $savedProdusenIds = is_array($firstDetail['id_produsen'] ?? null) ? $firstDetail['id_produsen'] : (json_decode((string)($firstDetail['id_produsen'] ?? ''), true) ?: (isset($firstDetail['id_produsen']) && is_numeric($firstDetail['id_produsen']) ? [$firstDetail['id_produsen']] : [])); @endphp
+                                                                <select class="form-select js-supplier-choices produsen-master-select js-chemical-supplier" multiple>
+                                                                    @foreach($produsens as $produsen)<option value="{{ $produsen->id }}" {{ in_array((string)$produsen->id, array_map('strval', $savedProdusenIds), true) ? 'selected' : '' }}>{{ $produsen->nama_produsen }}</option>@endforeach
+                                                                </select>
                                                                 <div class="produsen-badges d-flex flex-wrap gap-1">
                                                                     @php
                                                                         $prodNames = $mappedProdukId ? ($produkMeta[$mappedProdukId]['produsen_names'] ?? []) : [];
@@ -428,15 +433,20 @@
                                                                         <span class="text-muted small">-</span>
                                                                     @endif
                                                                 </div>
-                                                                <input type="hidden" name="id_produsen[]" class="id-produsen-hidden" value="{{ old('id_produsen.' . $firstIdx, $firstDetail['id_produsen'] ?? '') }}">
+                                                                <input type="hidden" name="id_produsen[]" class="id-produsen-hidden" value="{{ old('id_produsen.' . $firstIdx, json_encode($savedProdusenIds)) }}">
                                                             </div>
                                                         </div>
                                                     </div>
-                                                    <div class="col-md-6">
+                                                    <div class="col-md-4">
                                                         <div class="card border-0 shadow-sm mb-2">
                                                             <div class="card-body p-3">
                                                                 <div class="fw-semibold">Distributor</div>
-                                                                <div class="small text-muted mb-2">Otomatis terisi sesuai Produk yang dipilih</div>
+                                                                <div class="small text-muted mb-2">Data akan terisi secara otomatis berdasarkan produk yang dipilih. Anda juga dapat memilih data secara manual melalui pilihan yang tersedia di bawah ini.</div>
+                                                                <option value="" selected disabled>-- Pilih Distributor --</option>
+                                                                @php $savedDistributorIds = is_array($firstDetail['id_distributor'] ?? null) ? $firstDetail['id_distributor'] : (json_decode((string)($firstDetail['id_distributor'] ?? ''), true) ?: (isset($firstDetail['id_distributor']) && is_numeric($firstDetail['id_distributor']) ? [$firstDetail['id_distributor']] : [])); @endphp
+                                                                <select class="form-select js-supplier-choices distributor-master-select js-chemical-supplier" multiple>
+                                                                    @foreach($distributors as $distributor)<option value="{{ $distributor->id }}" {{ in_array((string)$distributor->id, array_map('strval', $savedDistributorIds), true) ? 'selected' : '' }}>{{ $distributor->nama_distributor }}</option>@endforeach
+                                                                </select>
                                                                 <div class="distributor-badges d-flex flex-wrap gap-1">
                                                                     @php
                                                                         $distNames = $mappedProdukId ? ($produkMeta[$mappedProdukId]['distributor_names'] ?? []) : [];
@@ -450,7 +460,7 @@
                                                                         <span class="text-muted small">-</span>
                                                                     @endif
                                                                 </div>
-                                                                <input type="hidden" name="id_distributor[]" class="id-distributor-hidden" value="{{ old('id_distributor.' . $firstIdx, $firstDetail['id_distributor'] ?? '') }}">
+                                                                <input type="hidden" name="id_distributor[]" class="id-distributor-hidden" value="{{ old('id_distributor.' . $firstIdx, json_encode($savedDistributorIds)) }}">
                                                             </div>
                                                         </div>
                                                     </div>
@@ -525,68 +535,68 @@
                                                                 </div>
                                                             </div>
 
-                                                            <!-- Kondisi Fisik -->
+                                                            <!-- Kondisi Fisik (Kemasan, Warna, Logo Halal) -->
                                                             <div class="form-section mb-3">
                                                                 <h6 class="text-primary mb-2">Kondisi Fisik</h6>
                                                                 <div class="row">
-                                                                    <div class="col-md-6">
+                                                                    <div class="col-md-4">
                                                                         <div class="mb-3">
                                                                             <label class="form-label"><strong>Kemasan</strong></label>
                                                                             <div class="form-check">
-                                                                                <input class="form-check-input" type="radio" name="kondisi_fisik_kemasan_1" value="1" {{ (($detail['kondisi_fisik']['kemasan'] ?? false) == true) ? 'checked' : '' }}>
+                                                                                <input class="form-check-input" type="radio" name="kondisi_fisik_kemasan_{{ $idx + 1 }}" value="1" {{ (($detail['kondisi_fisik']['kemasan'] ?? false) == true) ? 'checked' : '' }}>
                                                                                 <label class="form-check-label">Ya ✓</label>
                                                                             </div>
                                                                             <div class="form-check">
-                                                                                <input class="form-check-input" type="radio" name="kondisi_fisik_kemasan_1" value="0" {{ (($detail['kondisi_fisik']['kemasan'] ?? false) == false) ? 'checked' : '' }}>
+                                                                                <input class="form-check-input" type="radio" name="kondisi_fisik_kemasan_{{ $idx + 1 }}" value="0" {{ (($detail['kondisi_fisik']['kemasan'] ?? false) == false) ? 'checked' : '' }}>
                                                                                 <label class="form-check-label">Tidak ✗</label>
                                                                             </div>
                                                                             <input type="hidden" name="kondisi_fisik_kemasan[]" value="{{ ($detail['kondisi_fisik']['kemasan'] ?? false) ? '1' : '0' }}" class="radio-value-kemasan-1">
                                                                         </div>
                                                                     </div>
-                                                                    <div class="col-md-6">
+                                                                    <div class="col-md-4">
                                                                         <div class="mb-3">
                                                                             <label class="form-label"><strong>Warna</strong></label>
                                                                             <div class="form-check">
-                                                                                <input class="form-check-input" type="radio" name="kondisi_fisik_warna_1" value="1" {{ (($detail['kondisi_fisik']['warna'] ?? false) == true) ? 'checked' : '' }}>
+                                                                                <input class="form-check-input" type="radio" name="kondisi_fisik_warna_{{ $idx + 1 }}" value="1" {{ (($detail['kondisi_fisik']['warna'] ?? false) == true) ? 'checked' : '' }}>
                                                                                 <label class="form-check-label">Ya ✓</label>
                                                                             </div>
                                                                             <div class="form-check">
-                                                                                <input class="form-check-input" type="radio" name="kondisi_fisik_warna_1" value="0" {{ (($detail['kondisi_fisik']['warna'] ?? false) == false) ? 'checked' : '' }}>
+                                                                                <input class="form-check-input" type="radio" name="kondisi_fisik_warna_{{ $idx + 1 }}" value="0" {{ (($detail['kondisi_fisik']['warna'] ?? false) == false) ? 'checked' : '' }}>
                                                                                 <label class="form-check-label">Tidak ✗</label>
                                                                             </div>
                                                                             <input type="hidden" name="kondisi_fisik_warna[]" value="{{ ($detail['kondisi_fisik']['warna'] ?? false) ? '1' : '0' }}" class="radio-value-warna-1">
                                                                         </div>
                                                                     </div>
-                                                                </div>
-                                                            </div>
-
-                                                            <!-- Dokumen -->
-                                                            <div class="form-section mb-3">
-                                                                <h6 class="text-primary mb-2">Dokumen & Sertifikasi</h6>
-                                                                <div class="row">
-                                                                    <div class="col-md-6">
+                                                                    <div class="col-md-4">
                                                                         <div class="mb-3">
-                                                                            <label class="form-label"><strong>Halal (berlaku)</strong></label>
+                                                                            <label class="form-label"><strong>Logo Halal</strong></label>
                                                                             <div class="form-check">
-                                                                                <input class="form-check-input" type="radio" name="persyaratan_dokumen_halal_1" value="1" {{ (($detail['persyaratan_dokumen_halal'] ?? false) == true) ? 'checked' : '' }}>
+                                                                                <input class="form-check-input" type="radio" name="persyaratan_dokumen_halal_{{ $idx + 1 }}" value="1" {{ (($detail['persyaratan_dokumen_halal'] ?? false) == true) ? 'checked' : '' }}>
                                                                                 <label class="form-check-label">Ya ✓</label>
                                                                             </div>
                                                                             <div class="form-check">
-                                                                                <input class="form-check-input" type="radio" name="persyaratan_dokumen_halal_1" value="0" {{ (($detail['persyaratan_dokumen_halal'] ?? false) == false) ? 'checked' : '' }}>
+                                                                                <input class="form-check-input" type="radio" name="persyaratan_dokumen_halal_{{ $idx + 1 }}" value="0" {{ (($detail['persyaratan_dokumen_halal'] ?? false) == false) ? 'checked' : '' }}>
                                                                                 <label class="form-check-label">Tidak ✗</label>
                                                                             </div>
                                                                             <input type="hidden" name="persyaratan_dokumen_halal[]" value="{{ ($detail['persyaratan_dokumen_halal'] ?? false) ? '1' : '0' }}" class="radio-value-halal-1">
                                                                         </div>
                                                                     </div>
+                                                                </div>
+                                                            </div>
+
+                                                            <!-- Dokumen (Logo Halal sudah dipindah ke Kondisi Fisik) -->
+                                                            <div class="form-section mb-3">
+                                                                <h6 class="text-primary mb-2">Dokumen & Sertifikasi</h6>
+                                                                <div class="row">
                                                                     <div class="col-md-6">
                                                                         <div class="mb-3">
                                                                             <label class="form-label"><strong>COA</strong></label>
                                                                             <div class="form-check">
-                                                                                <input class="form-check-input" type="radio" name="coa_1" value="1" {{ (($detail['coa'] ?? false) == true) ? 'checked' : '' }}>
+                                                                                <input class="form-check-input" type="radio" name="coa_{{ $idx + 1 }}" value="1" {{ (($detail['coa'] ?? false) == true) ? 'checked' : '' }}>
                                                                                 <label class="form-check-label">Ya ✓</label>
                                                                             </div>
                                                                             <div class="form-check">
-                                                                                <input class="form-check-input" type="radio" name="coa_1" value="0" {{ (($detail['coa'] ?? false) == false) ? 'checked' : '' }}>
+                                                                                <input class="form-check-input" type="radio" name="coa_{{ $idx + 1 }}" value="0" {{ (($detail['coa'] ?? false) == false) ? 'checked' : '' }}>
                                                                                 <label class="form-check-label">Tidak ✗</label>
                                                                             </div>
                                                                             <input type="hidden" name="coa[]" value="{{ ($detail['coa'] ?? false) ? '1' : '0' }}" class="radio-value-coa-1">
@@ -712,7 +722,7 @@
                                 <!-- Submit Buttons -->
                                 <div class="form-group">
                                     <button type="submit" class="btn btn-primary">
-                                        Update
+                                        Simpan Perubahan
                                     </button>
                                     <a href="{{ route('pemeriksaan-chemical.index') }}" class="btn btn-secondary">
                                         Kembali
@@ -741,6 +751,9 @@
     }
     .collapse-chevron { transition: transform .2s ease; }
     .collapse-toggle-btn[aria-expanded="true"] .collapse-chevron { transform: rotate(180deg); }
+    .badge-removable { display: inline-flex; align-items: center; gap: 4px; padding-right: 4px; }
+    .badge-remove-btn { appearance: none; -webkit-appearance: none; background: none; border: none; padding: 1px 4px; font: inherit; font-size: 12px; font-weight: 600; line-height: 1; cursor: pointer; color: #dc3545; border-radius: 3px; }
+    .badge-remove-btn:hover { color: #fff; background: #dc3545; }
 </style>
 
 <script>
@@ -945,7 +958,7 @@ const ensureDetailCollapsible = (detailEl, dIdx) => {
     }
 };
 function initializeAllChoices() {
-    const selectElements = document.querySelectorAll('select.choices');
+    const selectElements = document.querySelectorAll('select.choices, select.js-supplier-choices');
     selectElements.forEach(function(select) {
         if (select.dataset.choicesInitialized === 'true' || select.classList.contains('choices__input')) {
             return;
@@ -982,6 +995,34 @@ function updateRemoveButtons() {
     });
 }
 
+// Catatan: Logo Halal (persyaratan_dokumen_halal) kini berada di section Kondisi Fisik,
+// tetapi tetap berada di dalam .detail-item sehingga mapping di bawah tidak perlu berubah.
+// Parkir semua radio milik detail dengan nama sementara yang unik sebelum penomoran ulang.
+// Tanpa ini, radio yang tercentang yang diberi nama sama dengan grup lain akan membuat
+// browser menghapus centang radio lain di grup tersebut (pilihan "hilang" dari tampilan).
+function parkDetailRadios(detailEl) {
+    window.__radioParkSeq = (window.__radioParkSeq || 0) + 1;
+    const uid = window.__radioParkSeq;
+    const groupKeys = ['kondisi_fisik_kemasan', 'kondisi_fisik_warna', 'persyaratan_dokumen_halal', 'coa'];
+    detailEl.querySelectorAll('input[type="radio"]').forEach((radio) => {
+        let grp = null;
+        if (radio.classList.contains('coa-type-pdf') || radio.classList.contains('coa-type-img')) {
+            grp = 'coa_type';
+        } else {
+            const name = radio.getAttribute('name') || '';
+            // Cocokkan nama persis "<key>_<angka>" agar grup lain (mis. coa_type_*) tidak ikut tertangkap
+            grp = groupKeys.find((k) => new RegExp('^' + k + '_\\d+$').test(name)) || null;
+        }
+        if (!grp) return;
+        radio.__radioGroup = grp;
+        radio.name = `__park_${uid}_${grp}`;
+    });
+}
+
+function radiosOfGroup(detailEl, grp) {
+    return Array.from(detailEl.querySelectorAll('input[type="radio"]')).filter((r) => r.__radioGroup === grp);
+}
+
 function setupRowRadios(detailEl) {
     const globalIndex = Number(detailEl.dataset.detailGlobalIndex || 0) + 1;
     const mappings = [
@@ -993,7 +1034,7 @@ function setupRowRadios(detailEl) {
 
     mappings.forEach(({ key, hiddenPrefix }) => {
         const radioName = `${key}_${globalIndex}`;
-        detailEl.querySelectorAll(`input[type="radio"][name^="${key}_"]`).forEach((radio, idx) => {
+        radiosOfGroup(detailEl, key).forEach((radio, idx) => {
             radio.name = radioName;
             const uniqueRadioId = `${key}_${globalIndex}_${idx}`;
             radio.id = uniqueRadioId;
@@ -1006,6 +1047,8 @@ function setupRowRadios(detailEl) {
             || detailEl.querySelector(`input[type="hidden"][name="${key}[]"]`);
 
         detailEl.querySelectorAll(`input[type="radio"][name="${radioName}"]`).forEach((radio) => {
+            if (radio.__hiddenBound) return; // cegah listener ganda
+            radio.__hiddenBound = true;
             radio.addEventListener('change', function () {
                 if (hidden) hidden.value = this.value;
             });
@@ -1029,6 +1072,8 @@ function updateDetailButtons() {
 }
 
 function updateRowNumbers() {
+    // Fase 1: parkir semua radio detail agar penamaan ulang tidak saling menimpa
+    document.querySelectorAll('.unified-row .detail-items .detail-item').forEach(parkDetailRadios);
     const rows = document.querySelectorAll('.unified-row');
     let globalDetail = 0;
     rows.forEach((row, index) => {
@@ -1054,6 +1099,10 @@ function updateRowNumbers() {
             });
             detailEl.querySelectorAll('input[type="hidden"][name="coa[]"]').forEach((el) => {
                 el.className = `radio-value-coa-${globalDetail + 1}`;
+            });
+
+            detailEl.querySelectorAll('.coa-type-pdf, .coa-type-img').forEach((r) => {
+                r.name = `coa_file_type_${globalDetail}`;
             });
 
             detailEl.querySelectorAll('input[type="file"]').forEach((el) => {
@@ -1137,11 +1186,13 @@ function addNewRow() {
         </div>
         
         <div class="row">
-            <div class="col-md-6">
+            <div class="col-md-4">
                 <div class="card border-0 shadow-sm mb-2">
                     <div class="card-body p-3">
                         <div class="fw-semibold">Produsen</div>
-                        <div class="small text-muted mb-2">Otomatis terisi sesuai Produk yang dipilih</div>
+                        <div class="small text-muted mb-2">Data akan terisi secara otomatis berdasarkan produk yang dipilih. Anda juga dapat memilih data secara manual melalui pilihan yang tersedia di bawah ini.</div>
+                        <option value="" selected disabled>-- Pilih Produsen --</option>
+                        <select class="form-select js-supplier-choices produsen-master-select js-chemical-supplier" multiple>@foreach($produsens as $produsen)<option value="{{ $produsen->id }}">{{ $produsen->nama_produsen }}</option>@endforeach</select>
                         <div class="produsen-badges d-flex flex-wrap gap-1">
                             <span class="text-muted small">-</span>
                         </div>
@@ -1149,11 +1200,13 @@ function addNewRow() {
                     </div>
                 </div>
             </div>
-            <div class="col-md-6">
+            <div class="col-md-4">
                 <div class="card border-0 shadow-sm mb-2">
                     <div class="card-body p-3">
                         <div class="fw-semibold">Distributor</div>
-                        <div class="small text-muted mb-2">Otomatis terisi sesuai Produk yang dipilih</div>
+                        <div class="small text-muted mb-2">Data akan terisi secara otomatis berdasarkan produk yang dipilih. Anda juga dapat memilih data secara manual melalui pilihan yang tersedia di bawah ini.</div>
+                        <option value="" selected disabled>-- Pilih Distributor --</option>
+                        <select class="form-select js-supplier-choices distributor-master-select js-chemical-supplier" multiple>@foreach($distributors as $distributor)<option value="{{ $distributor->id }}">{{ $distributor->nama_distributor }}</option>@endforeach</select>
                         <div class="distributor-badges d-flex flex-wrap gap-1">
                             <span class="text-muted small">-</span>
                         </div>
@@ -1224,7 +1277,7 @@ function addNewRow() {
                 <div class="form-section mb-3">
                     <h6 class="text-primary mb-2">Kondisi Fisik</h6>
                     <div class="row">
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <div class="mb-3">
                                 <label class="form-label"><strong>Kemasan</strong></label>
                                 <div class="form-check">
@@ -1238,7 +1291,7 @@ function addNewRow() {
                                 <input type="hidden" name="kondisi_fisik_kemasan[]" class="radio-value-kemasan-1">
                             </div>
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <div class="mb-3">
                                 <label class="form-label"><strong>Warna</strong></label>
                                 <div class="form-check">
@@ -1252,15 +1305,9 @@ function addNewRow() {
                                 <input type="hidden" name="kondisi_fisik_warna[]" class="radio-value-warna-1">
                             </div>
                         </div>
-                    </div>
-                </div>
-
-                <div class="form-section mb-3">
-                    <h6 class="text-primary mb-2">Dokumen & Sertifikasi</h6>
-                    <div class="row">
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <div class="mb-3">
-                                <label class="form-label"><strong>Halal (berlaku)</strong></label>
+                                <label class="form-label"><strong>Logo Halal</strong></label>
                                 <div class="form-check">
                                     <input class="form-check-input" type="radio" name="persyaratan_dokumen_halal_1" value="1">
                                     <label class="form-check-label">Ya ✓</label>
@@ -1272,6 +1319,12 @@ function addNewRow() {
                                 <input type="hidden" name="persyaratan_dokumen_halal[]" class="radio-value-halal-1">
                             </div>
                         </div>
+                    </div>
+                </div>
+
+                <div class="form-section mb-3">
+                    <h6 class="text-primary mb-2">Dokumen & Sertifikasi</h6>
+                    <div class="row">
                         <div class="col-md-6">
                             <div class="mb-3">
                                 <label class="form-label"><strong>COA</strong></label>
@@ -1487,8 +1540,12 @@ document.addEventListener('DOMContentLoaded', function() {
         const produsenNames = meta && meta.produsen_names ? meta.produsen_names : [];
         const distributorNames = meta && meta.distributor_names ? meta.distributor_names : [];
 
-        idProdusenHidden.value = (Array.isArray(produsenIds) && produsenIds.length > 0) ? String(produsenIds[0]) : '';
-        idDistributorHidden.value = (Array.isArray(distributorIds) && distributorIds.length > 0) ? String(distributorIds[0]) : '';
+        const produsenSelect = rowEl.querySelector('.produsen-master-select');
+        const distributorSelect = rowEl.querySelector('.distributor-master-select');
+        if (produsenSelect) Array.from(produsenSelect.options).forEach(o => o.selected = (produsenIds || []).map(String).includes(o.value));
+        if (distributorSelect) Array.from(distributorSelect.options).forEach(o => o.selected = (distributorIds || []).map(String).includes(o.value));
+        idProdusenHidden.value = JSON.stringify(produsenSelect ? Array.from(produsenSelect.selectedOptions).map(o => o.value) : produsenIds);
+        idDistributorHidden.value = JSON.stringify(distributorSelect ? Array.from(distributorSelect.selectedOptions).map(o => o.value) : distributorIds);
 
         const renderBadges = (containerEl, values, badgeClass) => {
             if (!Array.isArray(values) || values.length === 0) {
@@ -1510,6 +1567,19 @@ document.addEventListener('DOMContentLoaded', function() {
 
     document.addEventListener('change', function(e) {
         const target = e.target;
+        if (target && target.matches('.produsen-master-select, .distributor-master-select')) {
+            const row = target.closest('.unified-row');
+            if (row) {
+                const produsen = target.classList.contains('produsen-master-select');
+                const hidden = row.querySelector(produsen ? '.id-produsen-hidden' : '.id-distributor-hidden');
+                const badges = row.querySelector(produsen ? '.produsen-badges' : '.distributor-badges');
+                const selected = Array.from(target.selectedOptions);
+                hidden.value = JSON.stringify(selected.map(o => o.value));
+                badges.innerHTML = selected.length ? '' : '<span class="text-muted small">-</span>';
+                selected.forEach(o => { const span = document.createElement('span'); span.className = 'badge badge-removable ' + (produsen ? 'bg-light-primary text-primary' : 'bg-light-info text-info'); span.dataset.id = o.value; span.innerHTML = `${o.text} <button type="button" class="badge-remove-btn" onclick="removeBadgeItem(this, '${produsen ? 'produsen' : 'distributor'}')">Hapus</button>`; badges.appendChild(span); });
+            }
+            return;
+        }
         if (target && target.matches('select.kategori-produk-select')) {
             const row = target.closest('.unified-row');
             if (row) {
@@ -1664,43 +1734,36 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Sync header fields into extra details so arrays remain aligned
+    // Sync header supplier selection into each detail in the same order as id_chemical[].
     document.addEventListener('submit', function(e) {
         const form = e.target;
         if (!form || form.tagName.toLowerCase() !== 'form') return;
         if (!form.closest('#main')) return;
 
-        form.querySelectorAll('input.__synced_header_value').forEach((el) => el.remove());
-
-        const rows = Array.from(form.querySelectorAll('#main .unified-row'));
+        const rows = Array.from(form.querySelectorAll('.unified-row'));
         rows.forEach((rowEl) => {
             const details = Array.from(rowEl.querySelectorAll('.detail-items .detail-item'));
-            if (details.length <= 1) return;
+            const supplierSelections = ['produsen', 'distributor'].map((type) => {
+                const select = rowEl.querySelector(`select.${type}-master-select`);
+                const values = select
+                    ? Array.from(select.selectedOptions).map((option) => String(option.value || '').trim()).filter(Boolean)
+                    : [];
+                return { type, value: JSON.stringify([...new Set(values)]) };
+            });
 
-            const getVal = (sel) => {
-                const el = rowEl.querySelector(sel);
-                return el ? (el.value || '') : '';
-            };
-
-            const headerValues = {
-                kategori_code: getVal('select[name="kategori_code[]"]'),
-                id_produk: getVal('select[name="id_produk[]"]'),
-                kondisi_chemical: getVal('select[name="kondisi_chemical[]"]'),
-                id_chemical: getVal('input[name="id_chemical[]"]'),
-                id_produsen: getVal('input[name="id_produsen[]"]'),
-                id_distributor: getVal('input[name="id_distributor[]"]'),
-            };
-
-            for (let i = 1; i < details.length; i += 1) {
-                Object.entries(headerValues).forEach(([key, value]) => {
+            // Hapus input supplier per-group; controller membutuhkan satu nilai
+            // supplier untuk setiap detail (sejajar dengan id_chemical[]).
+            rowEl.querySelectorAll('.id-produsen-hidden, .id-distributor-hidden').forEach((input) => input.remove());
+            details.forEach((detail) => {
+                supplierSelections.forEach(({ type, value }) => {
                     const input = document.createElement('input');
                     input.type = 'hidden';
-                    input.name = `${key}[]`;
+                    input.name = `id_${type}[]`;
                     input.value = value;
-                    input.className = '__synced_header_value';
-                    form.appendChild(input);
+                    input.className = `__submitted_${type}_value`;
+                    detail.appendChild(input);
                 });
-            }
+            });
         });
     });
 
@@ -1742,10 +1805,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!addBtn) return;
         setTimeout(() => {
             document.querySelectorAll('.detail-item').forEach((item, idx) => {
-                const radios = item.querySelectorAll('.coa-type-pdf, .coa-type-img');
-                radios.forEach(r => {
-                    r.name = `coa_file_type_${idx}`;
-                });
+                // Nama radio tipe file COA kini diatur di updateRowNumbers()
                 const coaBadges = item.querySelectorAll('.badge.bg-success');
                 coaBadges.forEach(b => {
                     if (b.textContent.trim() === 'COA Tersimpan') {
@@ -1875,3 +1935,7 @@ document.addEventListener('change', function(e) {
 });
 </script>
 @endsection
+
+@push('scripts')
+    @include('qc-sistem.supplier-choices-sync')
+@endpush

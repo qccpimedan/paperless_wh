@@ -23,8 +23,33 @@
     }
     $canVerify = in_array($userRole, ['qc inspector', 'warehouse', 'produksi', 'spv qc', 'superadmin']);
 @endphp
-<div id="main">
 
+{{-- ============ STYLE PERBAIKAN KOLOM CUSTOMER / TUJUAN ============ --}}
+<style>
+    /* Kolom customer dibatasi lebarnya & boleh turun baris */
+    .col-customer {
+        min-width: 200px;
+        max-width: 280px;
+        white-space: normal !important;
+        word-break: break-word;
+    }
+    .customer-badge {
+        display: inline-block;
+        max-width: 100%;
+        white-space: normal;
+        text-align: left;
+        line-height: 1.3;
+        cursor: help;
+    }
+    /* Tooltip menampilkan daftar lengkap, satu nama per baris */
+    .tooltip-inner {
+        white-space: pre-line;
+        text-align: left;
+        max-width: 420px;
+    }
+</style>
+
+<div id="main">
 
     <div class="page-heading">
         <div class="page-title">
@@ -130,10 +155,10 @@
                             </div>
                         </form>
                     </div>
-                    
+
                     <form action="{{ route('pemeriksaan-loading-produk.index') }}" method="GET" class="row g-3 mb-3">
-                        <div class="col-md-9"><input type="text" name="search" class="form-control" placeholder="Cari Produk, atau No. Kendaraan..." value="{{ request('search') }}"></div>
-                        
+                        <div class="col-md-9"><input type="text" name="search" class="form-control" placeholder="Cari Produk, Customer / Tujuan Pengiriman, No. Kendaraan..." value="{{ request('search') }}"></div>
+
                         @php $isPlantMedan = auth()->user() && auth()->user()->plant && stripos(auth()->user()->plant->plant ?? '', 'medan') !== false; @endphp
                         @if($isPlantMedan || (auth()->user()->role && strtolower(auth()->user()->role->role) === 'superadmin'))
                         <div class="col-md-3">
@@ -169,7 +194,7 @@
                                         <th>Sub Area</th>
                                         @endif
                                         <th>Nama Produk</th>
-                                        <!-- <th>Customer</th> -->
+                                        <th class="col-customer">Customer / Tujuan Pengiriman</th>
                                         <th>No. Kendaraan</th>
                                         <th>Verifikasi</th>
                                         <th>Aksi</th>
@@ -212,21 +237,49 @@
                                                     $countP = count($pData);
                                                     $firstPId = $pData[0]['id_produk'] ?? null;
                                                     $pName = $firstPId ? ($produkNamaById[$firstPId] ?? '-') : '-';
+                                                    $tujuanLabels = collect($pData)->map(function ($detail) use ($tujuanPengirimanById) {
+                                                        $tujuan = $tujuanPengirimanById->get($detail['id_tujuan_pengiriman'] ?? null);
+                                                        if (!$tujuan) return null;
+                                                        $customerName = $tujuan->customer->nama_cust ?? null;
+                                                        $tujuanName = $tujuan->nama_tujuan ?? null;
+                                                        if ($tujuanName === '-') $tujuanName = null;
+                                                        return trim(collect([$customerName, $tujuanName])->filter()->implode(' / '));
+                                                    })->filter()->unique()->values();
+                                                    if ($tujuanLabels->isEmpty() && $item->tujuanPengiriman) {
+                                                        $tujuanLabels = collect([trim(collect([
+                                                            $item->tujuanPengiriman->customer->nama_cust ?? null,
+                                                            $item->tujuanPengiriman->nama_tujuan !== '-' ? ($item->tujuanPengiriman->nama_tujuan ?? null) : null,
+                                                        ])->filter()->implode(' / '))])->filter()->values();
+                                                    }
                                                 @endphp
                                                 <span class="badge bg-info">{{ $pName }}</span>
                                                 @if($countP > 1) <br><small class="text-muted">+{{ $countP-1 }} lainnya</small> @endif
                                             </td>
-                                            <!-- <td>
-                                                @if($item->tujuanPengiriman)
-                                                    @if($item->tujuanPengiriman->customer)
-                                                        {{ $item->tujuanPengiriman->customer->nama_cust }}
-                                                    @else
-                                                        {{ $item->tujuanPengiriman->nama_tujuan ?? '-' }}
+
+                                            {{-- ====== KOLOM CUSTOMER / TUJUAN (DIPERBAIKI) ====== --}}
+                                            <td class="col-customer">
+                                                @if($tujuanLabels->isNotEmpty())
+                                                    <span class="badge bg-light-info text-info customer-badge"
+                                                          data-bs-toggle="tooltip"
+                                                          data-bs-placement="top"
+                                                          title="{{ $tujuanLabels->implode("\n") }}">
+                                                        {{ \Illuminate\Support\Str::limit($tujuanLabels->first(), 60) }}
+                                                    </span>
+                                                    @if($tujuanLabels->count() > 1)
+                                                        <br>
+                                                        <small class="text-muted"
+                                                               style="cursor: help;"
+                                                               data-bs-toggle="tooltip"
+                                                               data-bs-placement="bottom"
+                                                               title="{{ $tujuanLabels->slice(1)->implode("\n") }}">
+                                                            +{{ $tujuanLabels->count() - 1 }} lainnya
+                                                        </small>
                                                     @endif
                                                 @else
-                                                    -
+                                                    <span class="text-muted">-</span>
                                                 @endif
-                                            </td> -->
+                                            </td>
+
                                             <td>{{ $item->kendaraan->no_kendaraan ?? '-' }}</td>
                                             <td>
                                                 @if($st === 'pending' || $st === null)
@@ -256,6 +309,8 @@
                                                 <div class="btn-vertical">
                                                     @can('view_pemeriksaan_loading_produk') <a href="{{ route('pemeriksaan-loading-produk.show', $item->uuid) }}" class="btn btn-sm btn-info text-white"><i class="bi bi-eye"></i></a> @endcan
                                                     @can('edit_pemeriksaan_loading_produk') <a href="{{ route('pemeriksaan-loading-produk.edit', $item->uuid) }}" class="btn btn-sm btn-warning text-white"><i class="bi bi-pencil"></i></a> @endcan
+                                                    <a href="{{ route('pemeriksaan-loading-produk.export-pdf', ['uuid' => $item->uuid]) }}" class="btn btn-sm btn-danger" title="Download PDF"><i class="bi-file-earmark-text"></i></a>
+                                                    <a href="{{ route('pemeriksaan-loading-produk.export-excel', ['uuid' => $item->uuid]) }}" class="btn btn-sm btn-success" title="Download Excel"><i class="bi bi-file-earmark-excel"></i></a>
                                                     @can('delete_pemeriksaan_loading_produk')
                                                         <button type="button" class="btn btn-sm btn-danger" onclick="if(confirm('Yakin ingin menghapus data ini?')) document.getElementById('del-{{$item->uuid}}').submit()"><i class="bi bi-trash"></i></button>
                                                     @endcan
@@ -264,7 +319,7 @@
                                             </td>
                                         </tr>
                                     @empty
-                                        <tr><td colspan="10" class="text-center py-4">Belum ada data</td></tr>
+                                        <tr><td colspan="11" class="text-center py-4">Belum ada data</td></tr>
                                     @endforelse
                                 </tbody>
                             </table>
@@ -341,9 +396,16 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // ===== Aktifkan tooltip Bootstrap (daftar lengkap customer/tujuan) =====
+    if (typeof bootstrap !== 'undefined' && bootstrap.Tooltip) {
+        document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function(el) {
+            new bootstrap.Tooltip(el);
+        });
+    }
+
     const pByCat = @json($produkByKategori ?? []);
     const kRel = document.getElementById('filterKategori'), pRel = document.getElementById('filterProduk');
-    
+
     if (kRel && pRel) {
         const initC = (el) => (typeof Choices !== 'undefined') ? new Choices(el, { searchEnabled: true, itemSelectText: '', removeItemButton: true }) : null;
         const kC = initC(kRel), pC = initC(pRel);

@@ -915,21 +915,7 @@ class PemeriksaanSuhuRuangController extends Controller
             'user.plant',
             'produk',
             'shift',
-            'histories' => function ($q) use ($tanggalDari, $tanggalSampai, $tanggal) {
-                $q->when($tanggalDari && $tanggalSampai, function ($historyQuery) use ($tanggalDari, $tanggalSampai) {
-                    $historyQuery->whereDate('created_at', '>=', $tanggalDari)
-                        ->whereDate('created_at', '<=', $tanggalSampai);
-                })
-                    ->when($tanggalDari && !$tanggalSampai, function ($historyQuery) use ($tanggalDari) {
-                        $historyQuery->whereDate('created_at', '>=', $tanggalDari);
-                    })
-                    ->when(!$tanggalDari && $tanggalSampai, function ($historyQuery) use ($tanggalSampai) {
-                        $historyQuery->whereDate('created_at', '<=', $tanggalSampai);
-                    })
-                    ->when(!$tanggalDari && !$tanggalSampai && $tanggal, function ($historyQuery) use ($tanggal) {
-                        $historyQuery->whereDate('created_at', $tanggal);
-                    });
-            },
+            'histories',
             'verifiedByQc.role',
             'verifiedByProduksi.role',
             'verifiedBySpv.role',
@@ -948,6 +934,29 @@ class PemeriksaanSuhuRuangController extends Controller
     public function exportPDF(Request $request)
     {
         $user = Auth::user();
+        if ($request->filled('uuid')) {
+            $pemeriksaan = PemeriksaanSuhuRuang::where('uuid', $request->input('uuid'))
+                ->with(['user.role', 'user.plant', 'produk', 'shift', 'histories', 'verifiedByQc.role', 'verifiedByProduksi.role', 'verifiedBySpv.role'])
+                ->firstOrFail();
+            if ($user->role && strtolower($user->role->role) !== 'superadmin'
+                && $user->getEffectivePlantId() !== $pemeriksaan->user->id_plant) {
+                abort(403, 'Unauthorized');
+            }
+            $dataPerShift = [[
+                'shift' => $pemeriksaan->shift,
+                'pemeriksaans' => collect([$pemeriksaan]),
+                'qcUser' => $pemeriksaan->verifiedByQc?->name,
+                'produksiUser' => $pemeriksaan->verifiedByProduksi?->name,
+                'spvQcUser' => $pemeriksaan->verifiedBySpv?->name,
+            ]];
+            return \PDF::loadView('qc-sistem.pemeriksaan-suhu-ruang.pdf-report', [
+                'pemeriksaans' => collect([$pemeriksaan]),
+                'tanggal' => $pemeriksaan->tanggal,
+                'shift' => $pemeriksaan->shift,
+                'isAllShift' => false,
+                'dataPerShift' => $dataPerShift,
+            ])->download('suhu-ruang-' . $pemeriksaan->uuid . '.pdf');
+        }
         $id_shift = $request->input('id_shift');
         $tanggalDari = $request->input('tanggal_dari');
         $tanggalSampai = $request->input('tanggal_sampai');
@@ -963,11 +972,10 @@ class PemeriksaanSuhuRuangController extends Controller
             'user.plant',
             'produk',
             'shift',
-            'histories',
             'verifiedByQc.role',
             'verifiedByProduksi.role',
             'verifiedBySpv.role',
-        ]);
+        ])->withReportHistories();
 
         if ($user->role && strtolower($user->role->role) !== 'superadmin') {
             $query->whereHas('user', function ($q) use ($user) {
@@ -1045,20 +1053,8 @@ class PemeriksaanSuhuRuangController extends Controller
         foreach ($allShifts as $shift) {
             $query = PemeriksaanSuhuRuang::with([
                 'user.role', 'user.plant', 'produk', 'shift',
-                'histories' => function ($q) use ($tanggalDari, $tanggalSampai) {
-                    $q->when($tanggalDari && $tanggalSampai, function ($historyQuery) use ($tanggalDari, $tanggalSampai) {
-                        $historyQuery->whereDate('created_at', '>=', $tanggalDari)
-                            ->whereDate('created_at', '<=', $tanggalSampai);
-                    })
-                        ->when($tanggalDari && !$tanggalSampai, function ($historyQuery) use ($tanggalDari) {
-                            $historyQuery->whereDate('created_at', '>=', $tanggalDari);
-                        })
-                        ->when(!$tanggalDari && $tanggalSampai, function ($historyQuery) use ($tanggalSampai) {
-                            $historyQuery->whereDate('created_at', '<=', $tanggalSampai);
-                        });
-                },
                 'verifiedByQc.role', 'verifiedByProduksi.role', 'verifiedBySpv.role',
-            ]);
+            ])->withReportHistories();
 
             if ($user->role && strtolower($user->role->role) !== 'superadmin') {
                 $query->whereHas('user', fn($q) => $q->where('id_plant', $user->getEffectivePlantId()));
@@ -1108,6 +1104,22 @@ class PemeriksaanSuhuRuangController extends Controller
     public function exportExcel(Request $request)
     {
         $user = Auth::user();
+        if ($request->filled('uuid')) {
+            $pemeriksaan = PemeriksaanSuhuRuang::where('uuid', $request->input('uuid'))
+                ->with(['user.role', 'user.plant', 'produk', 'shift', 'histories', 'verifiedByQc.role', 'verifiedByProduksi.role', 'verifiedBySpv.role'])
+                ->firstOrFail();
+            if ($user->role && strtolower($user->role->role) !== 'superadmin'
+                && $user->getEffectivePlantId() !== $pemeriksaan->user->id_plant) {
+                abort(403, 'Unauthorized');
+            }
+            return Excel::download(
+                new PemeriksaanSuhuRuangExport(collect([$pemeriksaan]), [
+                    'tanggal' => $pemeriksaan->tanggal,
+                    'shift' => $pemeriksaan->shift,
+                ]),
+                'suhu-ruang-' . $pemeriksaan->uuid . '.xlsx'
+            );
+        }
         $id_shift = $request->input('id_shift');
         $tanggalDari = $request->input('tanggal_dari');
         $tanggalSampai = $request->input('tanggal_sampai');
@@ -1118,11 +1130,10 @@ class PemeriksaanSuhuRuangController extends Controller
             'user.plant',
             'produk',
             'shift',
-            'histories',
             'verifiedByQc.role',
             'verifiedByProduksi.role',
             'verifiedBySpv.role',
-        ]);
+        ])->withReportHistories();
 
         if ($user->role && strtolower($user->role->role) !== 'superadmin') {
             $query->whereHas('user', function ($q) use ($user) {

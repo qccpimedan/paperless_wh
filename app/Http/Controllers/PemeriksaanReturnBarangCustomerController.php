@@ -13,10 +13,12 @@ use Illuminate\Support\Facades\Auth;
 use Barryvdh\DomPDF\Facade\Pdf as PDF;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Http\Controllers\Traits\HasAuditController;
+use App\Http\Controllers\Traits\RejectsTruncatedDynamicInput;
 
 class PemeriksaanReturnBarangCustomerController extends Controller
 {
     use HasAuditController;
+    use RejectsTruncatedDynamicInput;
     public function index(Request $request)
     {
         $user = Auth::user();
@@ -213,6 +215,12 @@ class PemeriksaanReturnBarangCustomerController extends Controller
 
     public function store(Request $request)
     {
+        $this->rejectIncompleteNestedRows($request, 'produk_data', [
+            'id_customer', 'alasan_return', 'kondisi_produk', 'kategori_code',
+            'id_produk', 'kode_produksi', 'expired_date', 'jumlah_barang',
+            'kondisi_kemasan', 'kondisi_produk_check', 'rekomendasi',
+        ]);
+
         // Debug: Uncomment untuk melihat data yang dikirim
         // dd($request->all());
         
@@ -1030,6 +1038,34 @@ class PemeriksaanReturnBarangCustomerController extends Controller
     public function exportExcel(Request $request)
     {
         $user = Auth::user();
+        if ($request->filled('uuid')) {
+            $pemeriksaan = PemeriksaanReturnBarangCustomer::where('uuid', $request->input('uuid'))
+                ->with(['user.role', 'user.plant', 'shift', 'customer', 'ekspedisi', 'qcVerifier', 'produksiVerifier', 'spvVerifier'])
+                ->firstOrFail();
+
+            if ($user->role && strtolower($user->role->role) !== 'superadmin'
+                && $user->getEffectivePlantId() !== $pemeriksaan->user->id_plant) {
+                abort(403, 'Unauthorized');
+            }
+
+            $produkIds = collect($pemeriksaan->produk_data ?? [])
+                ->pluck('id_produk')->filter()->unique()->all();
+            $produkNamaById = $produkIds
+                ? Produk::whereIn('id', $produkIds)->pluck('nama_produk', 'id')->toArray()
+                : [];
+
+            return Excel::download(
+                new \App\Exports\PemeriksaanReturnBarangCustomerExport(
+                    collect([$pemeriksaan]),
+                    $produkNamaById,
+                    $pemeriksaan->qcVerifier?->name,
+                    $pemeriksaan->produksiVerifier?->name,
+                    $pemeriksaan->spvVerifier?->name
+                ),
+                'return-barang-' . $pemeriksaan->uuid . '.xlsx'
+            );
+        }
+
         $id_shift = $request->input('id_shift');
         $tanggalDari = $request->input('tanggal_dari');
         $tanggalSampai = $request->input('tanggal_sampai');

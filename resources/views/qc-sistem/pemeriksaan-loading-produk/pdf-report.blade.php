@@ -779,6 +779,21 @@
 
                             </tr>
 
+                            <!-- ROW 3: WAKTU LOADING -->
+                            <tr>
+                                <td>
+                                    <span class="subheader-label">Mulai Loading:</span>
+                                    <span class="subheader-value">{{ $firstRecord->star_loading ?? '-' }}</span>
+                                </td>
+
+                                <td class="subheader-divider"></td>
+
+                                <td>
+                                    <span class="subheader-label">Selesai Loading:</span>
+                                    <span class="subheader-value">{{ $firstRecord->selesai_loading ?? '-' }}</span>
+                                </td>
+                            </tr>
+
                         </table>
 
                     </div>

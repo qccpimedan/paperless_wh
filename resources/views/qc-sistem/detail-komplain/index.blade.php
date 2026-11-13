@@ -226,11 +226,14 @@
                                             <td>
                                                 <div class="btn-vertical">
                                                     @can('view_detail_komplain') <a href="{{ route('detail-komplain.show', $item->uuid) }}" class="btn btn-sm btn-info text-white"><i class="bi bi-eye"></i></a> @endcan
-                                                    <a href="{{ route('detail-komplain.export-pdf', $item->uuid) }}" 
-                                                    class="btn btn-sm btn-secondary" title="Export PDF" target="_blank">
-                                                        <i class="bi bi-file-earmark-arrow-down"></i>
-                                                    </a>
                                                     @can('edit_detail_komplain') <a href="{{ route('detail-komplain.edit', $item->uuid) }}" class="btn btn-sm btn-warning text-white"><i class="bi bi-pencil"></i></a> @endcan
+                                                    <a href="{{ route('detail-komplain.export-pdf', ['uuid' => $item->uuid]) }}"
+                                                        class="btn btn-sm btn-danger" title="Download PDF">
+                                                        <i class="bi-file-earmark-text"></i>
+                                                    </a>
+                                                    <!-- <a href="{{ route('detail-komplain.export-excel', $item->uuid) }}" class="btn btn-sm btn-success" title="Export Excel">
+                                                        <i class="bi bi-file-earmark-excel"></i>
+                                                    </a> -->
                                                     @can('delete_detail_komplain')
                                                         <button type="button" class="btn btn-sm btn-danger" onclick="if(confirm('Hapus data ini?')) document.getElementById('del-{{ $item->uuid }}').submit();"><i class="bi bi-trash"></i></button>
                                                     @endcan

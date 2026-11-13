@@ -14,6 +14,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf as PDF;
+use App\Exports\SingleRecordViewExport;
+use Maatwebsite\Excel\Facades\Excel;
 use App\Http\Controllers\Traits\HasAuditController;
 
 class PemeriksaanBarangMudahPecahController extends Controller
@@ -613,6 +615,25 @@ class PemeriksaanBarangMudahPecahController extends Controller
     public function exportPDF(Request $request)
     {
         $user = Auth::user();
+        if ($request->filled('uuid')) {
+            $pemeriksaan = PemeriksaanBarangMudahPecah::where('uuid', $request->input('uuid'))
+                ->with(['user.role', 'user.plant', 'shift', 'area', 'details.barang', 'details.areaLocation', 'qcVerifier', 'produksiVerifier', 'spvVerifier'])
+                ->firstOrFail();
+            if ($user->role && strtolower($user->role->role) !== 'superadmin'
+                && $user->getEffectivePlantId() !== $pemeriksaan->user->id_plant) {
+                abort(403, 'Unauthorized');
+            }
+            return PDF::loadView('qc-sistem.pemeriksaan-barang-mudah-pecah.pdf-report', [
+                'pemeriksaans' => collect([$pemeriksaan]),
+                'tanggal' => $pemeriksaan->tanggal,
+                'shift' => $pemeriksaan->shift,
+                'isAllShift' => false,
+                'dataPerShift' => [[
+                    'shift' => $pemeriksaan->shift,
+                    'pemeriksaans' => collect([$pemeriksaan]),
+                ]],
+            ])->download('barang-mudah-pecah-' . $pemeriksaan->uuid . '.pdf');
+        }
         $id_shift = $request->input('id_shift');
         $tanggalDari = $request->input('tanggal_dari');
         $tanggalSampai = $request->input('tanggal_sampai');
@@ -686,6 +707,32 @@ class PemeriksaanBarangMudahPecahController extends Controller
         $firstP = $pemeriksaans->first();
         $filename = 'laporan-barang-mudah-pecah-' . ($firstP ? $firstP->uuid : date('Ymd-His')) . '.pdf';
         return $pdf->download($filename);
+    }
+
+    public function exportExcel(Request $request)
+    {
+        $user = Auth::user();
+        $pemeriksaan = PemeriksaanBarangMudahPecah::where('uuid', $request->input('uuid'))
+            ->with(['user.role', 'user.plant', 'shift', 'area', 'details.barang', 'details.areaLocation', 'qcVerifier', 'produksiVerifier', 'spvVerifier'])
+            ->firstOrFail();
+        if ($user->role && strtolower($user->role->role) !== 'superadmin'
+            && $user->getEffectivePlantId() !== $pemeriksaan->user->id_plant) {
+            abort(403, 'Unauthorized');
+        }
+        return Excel::download(new SingleRecordViewExport(
+            'qc-sistem.pemeriksaan-barang-mudah-pecah.pdf-report',
+            [
+                'pemeriksaans' => collect([$pemeriksaan]),
+                'tanggal' => $pemeriksaan->tanggal,
+                'shift' => $pemeriksaan->shift,
+                'isAllShift' => false,
+                'dataPerShift' => [[
+                    'shift' => $pemeriksaan->shift,
+                    'pemeriksaans' => collect([$pemeriksaan]),
+                ]],
+            ],
+            'Barang Mudah Pecah'
+        ), 'barang-mudah-pecah-' . $pemeriksaan->uuid . '.xlsx');
     }
 
     /**

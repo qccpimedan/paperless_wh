@@ -83,8 +83,8 @@
                 <td style="background-color:#17a2b8; color:#ffffff; font-size:9pt; font-weight:bold; padding:6px 8px; border:1px solid #0f6f80; text-align:center;">Kode Produksi</td>
                 <td style="background-color:#d64550; color:#ffffff; font-size:9pt; font-weight:bold; padding:6px 8px; border:1px solid #962e37; text-align:center;">Best Before</td>
                 <td style="background-color:#8a9a5b; color:#ffffff; font-size:9pt; font-weight:bold; padding:6px 8px; border:1px solid #5f6d3e; text-align:center;">Jumlah</td>
-                <td style="background-color:#6c757d; color:#ffffff; font-size:9pt; font-weight:bold; padding:6px 8px; border:1px solid #495057; text-align:center;">Kemasan</td>
-                <td style="background-color:#e67e22; color:#ffffff; font-size:9pt; font-weight:bold; padding:6px 8px; border:1px solid #d35400; text-align:center;">Cek Produk</td>
+                <td style="background-color:#6c757d; color:#ffffff; font-size:9pt; font-weight:bold; padding:6px 8px; border:1px solid #495057; text-align:center;">Kondisi Kemasan</td>
+                <td style="background-color:#e67e22; color:#ffffff; font-size:9pt; font-weight:bold; padding:6px 8px; border:1px solid #d35400; text-align:center;">Kondisi Produk</td>
                 <td style="background-color:#27ae60; color:#ffffff; font-size:9pt; font-weight:bold; padding:6px 8px; border:1px solid #1e8449; text-align:center;">Alasan Return</td>
                 <td style="background-color:#2980b9; color:#ffffff; font-size:9pt; font-weight:bold; padding:6px 8px; border:1px solid #1f618d; text-align:center;">Rekomendasi</td>
             </tr>

@@ -34,6 +34,9 @@
         table.data-simple td.center { text-align: center; }
         table.data-simple tbody tr:nth-child(even) { background: #fafafa; }
 
+        /* FIX: font DejaVu Sans mendukung simbol ≤ ≥ ± (Helvetica bawaan DomPDF tidak mendukung ≤) */
+        table.data-simple td.setting-cell { font-family: 'DejaVu Sans', sans-serif; font-size: 7.5px; text-align: center; }
+
         .empty-state { text-align: center; padding: 40px; color: #6c757d; font-style: italic; }
 
         /* ===== Signature TTD tiap halaman ===== */
@@ -143,8 +146,8 @@
         $firstHistory = $histories->first();
 
         // 1. Ambil Data Input Pertama (Initial State)
-        $initialSuhuProduk = ($firstHistory && $firstHistory->suhu_produk_lama !== null) 
-            ? $firstHistory->suhu_produk_lama 
+        $initialSuhuProduk = ($firstHistory && $firstHistory->suhu_produk_lama !== null)
+            ? $firstHistory->suhu_produk_lama
             : $suhuProdukStr;
 
         $initialTime = '-';
@@ -160,8 +163,8 @@
 
         foreach ($sectionDefsV2 as $fieldKey => $secDef) {
             $initialFieldLamaKey = $fieldKey . '_lama';
-            $valData = ($firstHistory && $firstHistory->$initialFieldLamaKey !== null) 
-                ? $firstHistory->$initialFieldLamaKey 
+            $valData = ($firstHistory && $firstHistory->$initialFieldLamaKey !== null)
+                ? $firstHistory->$initialFieldLamaKey
                 : ($p->$fieldKey ?? null);
 
             if (is_string($valData) && !empty($valData)) {
@@ -226,8 +229,8 @@
                 $hJam = $history->created_at->format('H:i');
             }
 
-            // FIX: Gunakan tanggal dari created_at history, bukan dari main record
-            $tanggalHistory = $history->created_at ? $history->created_at->format('d/m/Y') : $tanggalStr;
+            // Histori adalah perubahan atas pemeriksaan ini; tanggal laporan tetap tanggal parent.
+            $tanggalHistory = $tanggalStr;
 
             $hSuhuProduk = !empty($history->suhu_produk_baru) ? $history->suhu_produk_baru : $suhuProdukStr;
             $userQcName = $history->user ? $history->user->name : $qcStr;
@@ -308,12 +311,13 @@
     }
     unset($row);
 
-    $lastRecord = $allRecords->last();
-    $rowsPerChunk = 20;
-    $rowChunks = collect($rows)->chunk($rowsPerChunk);
+    // Paginate the complete report continuously; shift is a data column, not a page group.
+    $pages = collect($rows)->values()->chunk(20)->values();
+    $totalPages = $pages->count();
+    $pageNumber = 0;
 @endphp
 
-@if($rowChunks->isEmpty())
+@if($pages->isEmpty())
     <div class="header">
         <div class="header-left">
             <div class="logo-company">
@@ -333,7 +337,13 @@
     </div>
     <div class="empty-state">Tidak ada data untuk periode / filter yang dipilih.</div>
 @else
-    @foreach($rowChunks as $chunkIndex => $chunkRows)
+    @foreach($pages as $chunkRows)
+        @php
+            $pageNumber++;
+            $pageShift = (string) ($chunkRows->first()['shift'] ?? '-');
+            $signatureRecord = $allRecords->first(fn ($record) => (string) ($record->shift->shift ?? '-') === $pageShift)
+                ?? $allRecords->first();
+        @endphp
         {{-- Header KOP --}}
         <div class="header">
             <div class="header-left">
@@ -366,7 +376,7 @@
                     <td class="subheader-label">Total Baris</td>
                     <td>{{ count($rows) }}</td>
                     <td class="subheader-label">Halaman</td>
-                    <td>{{ $chunkIndex + 1 }} / {{ $rowChunks->count() }}</td>
+                    <td>{{ $pageNumber }} / {{ $totalPages }}</td>
                 </tr>
             </table>
         </div>
@@ -401,7 +411,7 @@
                         <td>{{ $row['produk'] }}</td>
                         <td class="center">{{ $row['suhu_produk'] }}</td>
                         <td>{{ $row['area'] }}</td>
-                        <td class="center">{{ $row['setting'] }}</td>
+                        <td class="setting-cell">{{ $row['setting'] }}</td>
                         <td class="center">{{ $row['aktual'] }}</td>
                         <td class="center">{{ $row['display'] }}</td>
                     </tr>
@@ -414,16 +424,16 @@
         </div>
 
         {{-- Blok TTD tiap halaman --}}
-        @if($lastRecord)
+        @if($signatureRecord)
             <div class="signature">
                 <table class="signature-table">
                     <tr>
                         <td class="signature-cell">
                             <div class="signature-header-item">Dibuat Oleh</div>
                             <div class="signature-space">
-                                @if($lastRecord->qcVerifier || $lastRecord->user)
+                                @if($signatureRecord->qcVerifier || $signatureRecord->user)
                                     @php
-                                        $qcNameStr = $lastRecord->qcVerifier->name ?? $lastRecord->user->name;
+                                        $qcNameStr = $signatureRecord->qcVerifier->name ?? $signatureRecord->user->name;
                                         $qcQrCodeSvg = \SimpleSoftwareIO\QrCode\Facades\QrCode::size(50)->generate("Diverifikasi oleh {$qcNameStr} (QC)");
                                     @endphp
                                     <img src="data:image/svg+xml;base64,{{ base64_encode($qcQrCodeSvg) }}" class="qr-code-img" alt="QR Code QC">
@@ -431,35 +441,35 @@
                                     <div class="signature-line-empty"></div>
                                 @endif
                             </div>
-                            <div class="signature-name">{{ $lastRecord->qcVerifier->name ?? $lastRecord->user->name ?? '-' }}</div>
+                            <div class="signature-name">{{ $signatureRecord->qcVerifier->name ?? $signatureRecord->user->name ?? '-' }}</div>
                         </td>
                         <td class="signature-cell">
                             <div class="signature-header-item">Diketahui Oleh</div>
                             <div class="signature-space">
-                                @if($lastRecord->produksiVerifier)
+                                @if($signatureRecord->produksiVerifier)
                                     @php
-                                        $prodQrCodeSvg = \SimpleSoftwareIO\QrCode\Facades\QrCode::size(50)->generate("Diverifikasi oleh {$lastRecord->produksiVerifier->name} (Warehouse)");
+                                        $prodQrCodeSvg = \SimpleSoftwareIO\QrCode\Facades\QrCode::size(50)->generate("Diverifikasi oleh {$signatureRecord->produksiVerifier->name} (Warehouse)");
                                     @endphp
                                     <img src="data:image/svg+xml;base64,{{ base64_encode($prodQrCodeSvg) }}" class="qr-code-img" alt="QR Code Warehouse">
                                 @else
                                     <div class="signature-line-empty"></div>
                                 @endif
                             </div>
-                            <div class="signature-name">{{ $lastRecord->produksiVerifier->name ?? '-' }}</div>
+                            <div class="signature-name">{{ $signatureRecord->produksiVerifier->name ?? '-' }}</div>
                         </td>
                         <td class="signature-cell">
                             <div class="signature-header-item">Disetujui Oleh</div>
                             <div class="signature-space">
-                                @if($lastRecord->spvVerifier)
+                                @if($signatureRecord->spvVerifier)
                                     @php
-                                        $spvQrCodeSvg = \SimpleSoftwareIO\QrCode\Facades\QrCode::size(50)->generate("Diverifikasi oleh {$lastRecord->spvVerifier->name} (SPV QC)");
+                                        $spvQrCodeSvg = \SimpleSoftwareIO\QrCode\Facades\QrCode::size(50)->generate("Diverifikasi oleh {$signatureRecord->spvVerifier->name} (SPV QC)");
                                     @endphp
                                     <img src="data:image/svg+xml;base64,{{ base64_encode($spvQrCodeSvg) }}" class="qr-code-img" alt="QR Code SPV">
                                 @else
                                     <div class="signature-line-empty"></div>
                                 @endif
                             </div>
-                            <div class="signature-name">{{ $lastRecord->spvVerifier->name ?? '-' }}</div>
+                            <div class="signature-name">{{ $signatureRecord->spvVerifier->name ?? '-' }}</div>
                         </td>
                     </tr>
                 </table>
@@ -467,7 +477,7 @@
         @endif
 
         {{-- Page break jika bukan halaman terakhir --}}
-        @if(!$loop->last)
+        @if($pageNumber < $totalPages)
             <div class="page-break"></div>
         @endif
     @endforeach

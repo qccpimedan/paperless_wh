@@ -251,8 +251,10 @@
                     $existingChemicalId = $firstDetail['id_chemical'] ?? null;
                     $mappedProdukId = $existingChemicalId ? ($produkByChemicalId[$existingChemicalId]['id_produk'] ?? null) : null;
 
-                    $prodList = $toList($mappedProdukId ? ($produkMeta[$mappedProdukId]['produsen_names'] ?? []) : []);
-                    $distList = $toList($mappedProdukId ? ($produkMeta[$mappedProdukId]['distributor_names'] ?? []) : []);
+                    $savedProdusenIds = is_array($firstDetail['id_produsen'] ?? null) ? $firstDetail['id_produsen'] : (json_decode((string)($firstDetail['id_produsen'] ?? ''), true) ?: (isset($firstDetail['id_produsen']) && is_numeric($firstDetail['id_produsen']) ? [$firstDetail['id_produsen']] : []));
+                    $savedDistributorIds = is_array($firstDetail['id_distributor'] ?? null) ? $firstDetail['id_distributor'] : (json_decode((string)($firstDetail['id_distributor'] ?? ''), true) ?: (isset($firstDetail['id_distributor']) && is_numeric($firstDetail['id_distributor']) ? [$firstDetail['id_distributor']] : []));
+                    $prodList = array_values(array_filter(array_map(fn ($id) => $produsenNamesById[$id] ?? null, $savedProdusenIds)));
+                    $distList = array_values(array_filter(array_map(fn ($id) => $distributorNamesById[$id] ?? null, $savedDistributorIds)));
 
                     $logoVal = $firstDetail['persyaratan_dokumen_halal'] ?? null;
                     $coaVal = $firstDetail['coa'] ?? null;
@@ -281,7 +283,6 @@
                         </div>
                         <div class="fp-docs">
                             <span>Status dokumen:</span>
-                            <span class="fp-doc {{ $logoVal ? 'ok' : 'bad' }}"><i class="bi {{ $logoVal ? 'bi-check' : 'bi-x' }}"></i> Dokumen Halal</span>
                             <span class="fp-doc {{ $coaVal ? 'ok' : 'bad' }}"><i class="bi {{ $coaVal ? 'bi-check' : 'bi-x' }}"></i> COA</span>
                         </div>
                     </div>
@@ -323,6 +324,8 @@
                                             @foreach(['Kemasan' => $detail['kondisi_fisik']['kemasan'] ?? null, 'Warna' => $detail['kondisi_fisik']['warna'] ?? null] as $physLabel => $physVal)
                                                 <span class="fp-pill {{ $physVal ? 'fp-pill-ok' : 'fp-pill-bad' }}"><i class="bi {{ $physVal ? 'bi-check-circle-fill' : 'bi-x-circle-fill' }}"></i> {{ $physLabel }}</span>
                                             @endforeach
+                                            <span class="fp-doc {{ $logoVal ? 'ok' : 'bad' }}"><i class="bi {{ $logoVal ? 'bi-check' : 'bi-x' }}"></i> Logo Halal</span>
+
                                         </div>
                                     @endif
 

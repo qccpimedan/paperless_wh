@@ -57,9 +57,9 @@ class PemeriksaanKebersihanAreaExport implements FromView, WithTitle, ShouldAuto
             'B' => 35,  // Aspek Yang Dinilai
             'C' => 12,  // Sebelum
             'D' => 12,  // Sesudah
-            'E' => 12,  // Verifikasi
-            'F' => 30,  // Keterangan
-            'G' => 30,  // Tindakan
+            'E' => 30,  // Keterangan
+            'F' => 30,  // Tindakan
+            'G' => 12,  // Verifikasi
         ];
     }
 }

@@ -20,8 +20,14 @@
 
     /* ===== Data dinamis (logika tidak diubah) ===== */
     $id_bahans = json_decode($m->id_bahan_array ?? '[]', true) ?? [];
-    $produsens = json_decode($m->produsen_array ?? '[]', true) ?? [];
-    $distributors = json_decode($m->distributor_array ?? '[]', true) ?? [];
+    $decodedProdusens = json_decode($m->produsen_array ?? '[]', true);
+    $decodedDistributors = json_decode($m->distributor_array ?? '[]', true);
+    $produsens = is_array($decodedProdusens)
+        ? array_values($decodedProdusens)
+        : ($decodedProdusens !== null && $decodedProdusens !== '' ? [$decodedProdusens] : []);
+    $distributors = is_array($decodedDistributors)
+        ? array_values($decodedDistributors)
+        : ($decodedDistributors !== null && $decodedDistributors !== '' ? [$decodedDistributors] : []);
     $kode_produksis = json_decode($m->kode_produksi_array ?? '[]', true) ?? [];
     $jumlah_datangs = json_decode($m->jumlah_datang_array ?? '[]', true) ?? [];
     $unit_datangs = json_decode($m->unit_datang_array ?? '[]', true) ?? [];
@@ -51,12 +57,19 @@
     }
 
     // Ubah nilai produsen/distributor (array atau string "a, b") menjadi list
-    $toList = function ($val) {
+    $toList = function ($val) use (&$toList) {
         if (is_array($val)) {
-            return array_values(array_filter($val, fn ($v) => $v !== null && $v !== ''));
+            $items = [];
+            foreach ($val as $item) {
+                $items = array_merge($items, $toList($item));
+            }
+            return array_values(array_unique($items));
         }
+
         $raw = trim((string) $val);
-        return $raw !== '' ? array_values(array_filter(array_map('trim', explode(',', $raw)))) : [];
+        return $raw !== ''
+            ? array_values(array_filter(array_map('trim', explode(',', $raw)), fn ($item) => $item !== ''))
+            : [];
     };
 
     $statusClass = fn ($s) => match ($s) {
@@ -334,7 +347,6 @@
 
                     <div class="fp-docs">
                         <span>Status dokumen:</span>
-                        <span class="fp-doc {{ $logoVal ? 'ok' : 'bad' }}"><i class="bi {{ $logoVal ? 'bi-check' : 'bi-x' }}"></i> Logo Halal</span>
                         <span class="fp-doc {{ $dokVal ? 'ok' : 'bad' }}"><i class="bi {{ $dokVal ? 'bi-check' : 'bi-x' }}"></i> Dokumen Halal</span>
                         <span class="fp-doc {{ $coaVal ? 'ok' : 'bad' }}"><i class="bi {{ $coaVal ? 'bi-check' : 'bi-x' }}"></i> COA</span>
                     </div>
@@ -372,7 +384,9 @@
                                         <span class="fp-pill {{ $physOk ? 'fp-pill-ok' : 'fp-pill-bad' }}">
                                             <i class="bi {{ $physOk ? 'bi-check-circle-fill' : 'bi-x-circle-fill' }}"></i> {{ $physLabel }}
                                         </span>
-                                    @endforeach
+                                        @endforeach
+                                        <span class="fp-doc {{ $logoVal ? 'ok' : 'bad' }}"><i class="bi {{ $logoVal ? 'bi-check' : 'bi-x' }}"></i> Logo Halal</span>
+
                                 </div>
 
                                 @if($keterangans[$index] ?? null)

@@ -2,7 +2,6 @@
 @section('container')
 <div id="main">
 
-
     <div class="page-heading">
         <div class="page-title">
             <div class="row">
@@ -21,7 +20,7 @@
                 </div>
             </div>
         </div>
-        
+
         <section id="basic-horizontal-layouts">
             <div class="row match-height">
                 <div class="col-md-12 col-12">
@@ -43,7 +42,7 @@
 
                                 <form id="form-pemeriksaan-kedatangan-kemasan" data-autosave="true" class="form form-horizontal" action="{{ route('pemeriksaan-kedatangan-kemasan.store') }}" method="POST" enctype="multipart/form-data">
                                     @csrf
-                                    
+
                                     <!-- Informasi Dasar -->
                                     <div class="form-section mb-4">
                                         <h5 class="text-primary mb-3">Informasi Dasar</h5>
@@ -63,7 +62,7 @@
                                                     <label for="id_shift">Shift</label>
                                                     <select id="id_shift" class="form-control @error('id_shift') is-invalid @enderror" name="id_shift">
                                                         <option value="">Pilih Shift</option>
-                                                          @foreach($shifts as $shift)
+                                                        @foreach($shifts as $shift)
                                                             <option value="{{ $shift->id }}" {{ old('id_shift') == $shift->id ? 'selected' : '' }}>
                                                                 {{ $shift->shift }}
                                                             </option>
@@ -74,18 +73,8 @@
                                                     @enderror
                                                 </div>
                                             </div>
-                                            <!-- <div class="col-md-6">
-                                                <div class="form-group">
-                                                    <label for="jenis_pemeriksaan">Jenis Pemeriksaan</label>
-                                                    <input type="text" id="jenis_pemeriksaan" class="form-control @error('jenis_pemeriksaan') is-invalid @enderror"
-                                                        name="jenis_pemeriksaan" value="{{ old('jenis_pemeriksaan') }}" placeholder="Jenis Pemeriksaan">
-                                                    @error('jenis_pemeriksaan')
-                                                        <div class="invalid-feedback">{{ $message }}</div>
-                                                    @enderror
-                                                </div>
-                                            </div> -->
                                         </div>
-                                        
+
                                         <div class="row">
                                             <div class="col-md-4">
                                                 <div class="form-group">
@@ -135,15 +124,11 @@
                                                     <label><strong>Segel/Gembok</strong></label>
                                                     <div class="form-check">
                                                         <input class="form-check-input" type="radio" id="segel_option" name="segel_gembok" value="segel" onchange="toggleNoSegelField(this)" {{ old('segel_gembok') == 'segel' ? 'checked' : '' }}>
-                                                        <label class="form-check-label" for="segel_option">
-                                                            Segel
-                                                        </label>
+                                                        <label class="form-check-label" for="segel_option">Segel</label>
                                                     </div>
                                                     <div class="form-check">
                                                         <input class="form-check-input" type="radio" id="gembok_option" name="segel_gembok" value="gembok" onchange="toggleNoSegelField(this)" {{ old('segel_gembok') == 'gembok' ? 'checked' : '' }}>
-                                                        <label class="form-check-label" for="gembok_option">
-                                                            Gembok
-                                                        </label>
+                                                        <label class="form-check-label" for="gembok_option">Gembok</label>
                                                     </div>
                                                 </div>
                                             </div>
@@ -158,31 +143,49 @@
                                                 </div>
                                             </div>
                                         </div>
-                                        
+
                                         <script>
                                             // Function untuk toggle No. Segel field
                                             function toggleNoSegelField(radio) {
                                                 const container = document.getElementById('no_segel_container');
                                                 const noSegelInput = document.getElementById('no_segel');
-                                                
+
                                                 if (!container || !noSegelInput) {
                                                     console.warn('No segel container or input not found');
                                                     return;
                                                 }
-                                                
+
                                                 if (radio.value === 'segel') {
                                                     container.style.display = 'block';
-                                                    console.log('Showing No. Segel field');
                                                 } else {
                                                     container.style.display = 'none';
                                                     noSegelInput.value = '';
-                                                    console.log('Hiding No. Segel field');
                                                 }
                                             }
                                         </script>
                                     </div>
-                                    
+
                                     <!-- Kondisi Mobil Pengangkut -->
+                                    @php
+                                        $kondisiMobilItems = [
+                                            ['bersih', '1. Bersih'],
+                                            ['bebas_hama', '2. Bebas dari hama'],
+                                            ['tidak_kondensasi', '3. Tidak Kondensasi'],
+                                            ['bebas_produk_halal', '4. Bebas dari Produk Non Halal'],
+                                            ['tidak_berbau', '5. Tidak Berbau Menyimpang'],
+                                            ['tidak_ada_sampah', '6. Tidak ada sampah'],
+                                            ['tidak_ada_mikroba', '7. Tidak ada pertumbuhan mikroba'],
+                                            ['lampu_cover_utuh', '8. Lampu dan Cover tidak pecah'],
+                                            ['pallet_utuh', '9. Pallet / Alas Utuh'],
+                                            ['tertutup_rapat', '10. Tertutup rapat/tidak bocor'],
+                                            ['bebas_kontaminan', '11. Bebas dari Kontaminan'],
+                                        ];
+                                        $kondisiMobilColumns = [
+                                            array_slice($kondisiMobilItems, 0, 4),
+                                            array_slice($kondisiMobilItems, 4, 4),
+                                            array_slice($kondisiMobilItems, 8, 3),
+                                        ];
+                                    @endphp
                                     <div class="form-section mb-4" id="kondisi-mobil-section">
                                         <h5 class="text-primary mb-3">Kondisi Mobil Pengangkut</h5>
                                         <div class="mb-3">
@@ -192,154 +195,23 @@
                                             </div>
                                         </div>
                                         <div class="row">
-                                            <div class="col-md-4">
-                                                <!-- 1. Bersih -->
-                                                <div class="mb-3">
-                                                    <label class="form-label"><strong>1. Bersih</strong></label>
-                                                    <div class="form-check">
-                                                        <input class="form-check-input" type="radio" name="kondisi_mobil[bersih]" id="bersih_ya" value="1" {{ old('kondisi_mobil.bersih') == '1' ? 'checked' : '' }}>
-                                                        <label class="form-check-label" for="bersih_ya">Ya ✓</label>
-                                                    </div>
-                                                    <div class="form-check">
-                                                        <input class="form-check-input" type="radio" name="kondisi_mobil[bersih]" id="bersih_tidak" value="0" {{ old('kondisi_mobil.bersih') == '0' ? 'checked' : '' }}>
-                                                        <label class="form-check-label" for="bersih_tidak">Tidak ✗</label>
-                                                    </div>
+                                            @foreach ($kondisiMobilColumns as $kolom)
+                                                <div class="col-md-4">
+                                                    @foreach ($kolom as [$key, $label])
+                                                        <div class="mb-3">
+                                                            <label class="form-label"><strong>{{ $label }}</strong></label>
+                                                            <div class="form-check">
+                                                                <input class="form-check-input" type="radio" name="kondisi_mobil[{{ $key }}]" id="{{ $key }}_ya" value="1" {{ old('kondisi_mobil.' . $key) == '1' ? 'checked' : '' }}>
+                                                                <label class="form-check-label" for="{{ $key }}_ya">Ya ✓</label>
+                                                            </div>
+                                                            <div class="form-check">
+                                                                <input class="form-check-input" type="radio" name="kondisi_mobil[{{ $key }}]" id="{{ $key }}_tidak" value="0" {{ old('kondisi_mobil.' . $key) == '0' ? 'checked' : '' }}>
+                                                                <label class="form-check-label" for="{{ $key }}_tidak">Tidak ✗</label>
+                                                            </div>
+                                                        </div>
+                                                    @endforeach
                                                 </div>
-
-                                                <!-- 2. Bebas dari hama -->
-                                                <div class="mb-3">
-                                                    <label class="form-label"><strong>2. Bebas dari hama</strong></label>
-                                                    <div class="form-check">
-                                                        <input class="form-check-input" type="radio" name="kondisi_mobil[bebas_hama]" id="bebas_hama_ya" value="1" {{ old('kondisi_mobil.bebas_hama') == '1' ? 'checked' : '' }}>
-                                                        <label class="form-check-label" for="bebas_hama_ya">Ya ✓</label>
-                                                    </div>
-                                                    <div class="form-check">
-                                                        <input class="form-check-input" type="radio" name="kondisi_mobil[bebas_hama]" id="bebas_hama_tidak" value="0" {{ old('kondisi_mobil.bebas_hama') == '0' ? 'checked' : '' }}>
-                                                        <label class="form-check-label" for="bebas_hama_tidak">Tidak ✗</label>
-                                                    </div>
-                                                </div>
-
-                                                <!-- 3. Tidak Kondensasi -->
-                                                <div class="mb-3">
-                                                    <label class="form-label"><strong>3. Tidak Kondensasi</strong></label>
-                                                    <div class="form-check">
-                                                        <input class="form-check-input" type="radio" name="kondisi_mobil[tidak_kondensasi]" id="tidak_kondensasi_ya" value="1" {{ old('kondisi_mobil.tidak_kondensasi') == '1' ? 'checked' : '' }}>
-                                                        <label class="form-check-label" for="tidak_kondensasi_ya">Ya ✓</label>
-                                                    </div>
-                                                    <div class="form-check">
-                                                        <input class="form-check-input" type="radio" name="kondisi_mobil[tidak_kondensasi]" id="tidak_kondensasi_tidak" value="0" {{ old('kondisi_mobil.tidak_kondensasi') == '0' ? 'checked' : '' }}>
-                                                        <label class="form-check-label" for="tidak_kondensasi_tidak">Tidak ✗</label>
-                                                    </div>
-                                                </div>
-
-                                                <!-- 4. Bebas dari Produk Halal -->
-                                                <div class="mb-3">
-                                                    <label class="form-label"><strong>4. Bebas dari Produk Non Halal</strong></label>
-                                                    <div class="form-check">
-                                                        <input class="form-check-input" type="radio" name="kondisi_mobil[bebas_produk_halal]" id="bebas_produk_halal_ya" value="1" {{ old('kondisi_mobil.bebas_produk_halal') == '1' ? 'checked' : '' }}>
-                                                        <label class="form-check-label" for="bebas_produk_halal_ya">Ya ✓</label>
-                                                    </div>
-                                                    <div class="form-check">
-                                                        <input class="form-check-input" type="radio" name="kondisi_mobil[bebas_produk_halal]" id="bebas_produk_halal_tidak" value="0" {{ old('kondisi_mobil.bebas_produk_halal') == '0' ? 'checked' : '' }}>
-                                                        <label class="form-check-label" for="bebas_produk_halal_tidak">Tidak ✗</label>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <div class="col-md-4">
-                                                <!-- 5. Tidak Berbau Menyimpang -->
-                                                <div class="mb-3">
-                                                    <label class="form-label"><strong>5. Tidak Berbau Menyimpang</strong></label>
-                                                    <div class="form-check">
-                                                        <input class="form-check-input" type="radio" name="kondisi_mobil[tidak_berbau]" id="tidak_berbau_ya" value="1" {{ old('kondisi_mobil.tidak_berbau') == '1' ? 'checked' : '' }}>
-                                                        <label class="form-check-label" for="tidak_berbau_ya">Ya ✓</label>
-                                                    </div>
-                                                    <div class="form-check">
-                                                        <input class="form-check-input" type="radio" name="kondisi_mobil[tidak_berbau]" id="tidak_berbau_tidak" value="0" {{ old('kondisi_mobil.tidak_berbau') == '0' ? 'checked' : '' }}>
-                                                        <label class="form-check-label" for="tidak_berbau_tidak">Tidak ✗</label>
-                                                    </div>
-                                                </div>
-
-                                                <!-- 6. Tidak ada sampah -->
-                                                <div class="mb-3">
-                                                    <label class="form-label"><strong>6. Tidak ada sampah</strong></label>
-                                                    <div class="form-check">
-                                                        <input class="form-check-input" type="radio" name="kondisi_mobil[tidak_ada_sampah]" id="tidak_ada_sampah_ya" value="1" {{ old('kondisi_mobil.tidak_ada_sampah') == '1' ? 'checked' : '' }}>
-                                                        <label class="form-check-label" for="tidak_ada_sampah_ya">Ya ✓</label>
-                                                    </div>
-                                                    <div class="form-check">
-                                                        <input class="form-check-input" type="radio" name="kondisi_mobil[tidak_ada_sampah]" id="tidak_ada_sampah_tidak" value="0" {{ old('kondisi_mobil.tidak_ada_sampah') == '0' ? 'checked' : '' }}>
-                                                        <label class="form-check-label" for="tidak_ada_sampah_tidak">Tidak ✗</label>
-                                                    </div>
-                                                </div>
-
-                                                <!-- 7. Tidak ada pertumbuhan mikroba -->
-                                                <div class="mb-3">
-                                                    <label class="form-label"><strong>7. Tidak ada pertumbuhan mikroba</strong></label>
-                                                    <div class="form-check">
-                                                        <input class="form-check-input" type="radio" name="kondisi_mobil[tidak_ada_mikroba]" id="tidak_ada_mikroba_ya" value="1" {{ old('kondisi_mobil.tidak_ada_mikroba') == '1' ? 'checked' : '' }}>
-                                                        <label class="form-check-label" for="tidak_ada_mikroba_ya">Ya ✓</label>
-                                                    </div>
-                                                    <div class="form-check">
-                                                        <input class="form-check-input" type="radio" name="kondisi_mobil[tidak_ada_mikroba]" id="tidak_ada_mikroba_tidak" value="0" {{ old('kondisi_mobil.tidak_ada_mikroba') == '0' ? 'checked' : '' }}>
-                                                        <label class="form-check-label" for="tidak_ada_mikroba_tidak">Tidak ✗</label>
-                                                    </div>
-                                                </div>
-
-                                                <!-- 8. Lampu dan Cover tidak pecah -->
-                                                <div class="mb-3">
-                                                    <label class="form-label"><strong>8. Lampu dan Cover tidak pecah</strong></label>
-                                                    <div class="form-check">
-                                                        <input class="form-check-input" type="radio" name="kondisi_mobil[lampu_cover_utuh]" id="lampu_cover_utuh_ya" value="1" {{ old('kondisi_mobil.lampu_cover_utuh') == '1' ? 'checked' : '' }}>
-                                                        <label class="form-check-label" for="lampu_cover_utuh_ya">Ya ✓</label>
-                                                    </div>
-                                                    <div class="form-check">
-                                                        <input class="form-check-input" type="radio" name="kondisi_mobil[lampu_cover_utuh]" id="lampu_cover_utuh_tidak" value="0" {{ old('kondisi_mobil.lampu_cover_utuh') == '0' ? 'checked' : '' }}>
-                                                        <label class="form-check-label" for="lampu_cover_utuh_tidak">Tidak ✗</label>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <div class="col-md-4">
-                                                <!-- 9. Pallet / Alas Utuh -->
-                                                <div class="mb-3">
-                                                    <label class="form-label"><strong>9. Pallet / Alas Utuh</strong></label>
-                                                    <div class="form-check">
-                                                        <input class="form-check-input" type="radio" name="kondisi_mobil[pallet_utuh]" id="pallet_utuh_ya" value="1" {{ old('kondisi_mobil.pallet_utuh') == '1' ? 'checked' : '' }}>
-                                                        <label class="form-check-label" for="pallet_utuh_ya">Ya ✓</label>
-                                                    </div>
-                                                    <div class="form-check">
-                                                        <input class="form-check-input" type="radio" name="kondisi_mobil[pallet_utuh]" id="pallet_utuh_tidak" value="0" {{ old('kondisi_mobil.pallet_utuh') == '0' ? 'checked' : '' }}>
-                                                        <label class="form-check-label" for="pallet_utuh_tidak">Tidak ✗</label>
-                                                    </div>
-                                                </div>
-
-                                                <!-- 10. Tertutup rapat/tidak bocor -->
-                                                <div class="mb-3">
-                                                    <label class="form-label"><strong>10. Tertutup rapat/tidak bocor</strong></label>
-                                                    <div class="form-check">
-                                                        <input class="form-check-input" type="radio" name="kondisi_mobil[tertutup_rapat]" id="tertutup_rapat_ya" value="1" {{ old('kondisi_mobil.tertutup_rapat') == '1' ? 'checked' : '' }}>
-                                                        <label class="form-check-label" for="tertutup_rapat_ya">Ya ✓</label>
-                                                    </div>
-                                                    <div class="form-check">
-                                                        <input class="form-check-input" type="radio" name="kondisi_mobil[tertutup_rapat]" id="tertutup_rapat_tidak" value="0" {{ old('kondisi_mobil.tertutup_rapat') == '0' ? 'checked' : '' }}>
-                                                        <label class="form-check-label" for="tertutup_rapat_tidak">Tidak ✗</label>
-                                                    </div>
-                                                </div>
-
-                                                <!-- 11. Bebas dari Kontaminan -->
-                                                <div class="mb-3">
-                                                    <label class="form-label"><strong>11. Bebas dari Kontaminan</strong></label>
-                                                    <div class="form-check">
-                                                        <input class="form-check-input" type="radio" name="kondisi_mobil[bebas_kontaminan]" id="bebas_kontaminan_ya" value="1" {{ old('kondisi_mobil.bebas_kontaminan') == '1' ? 'checked' : '' }}>
-                                                        <label class="form-check-label" for="bebas_kontaminan_ya">Ya ✓</label>
-                                                    </div>
-                                                    <div class="form-check">
-                                                        <input class="form-check-input" type="radio" name="kondisi_mobil[bebas_kontaminan]" id="bebas_kontaminan_tidak" value="0" {{ old('kondisi_mobil.bebas_kontaminan') == '0' ? 'checked' : '' }}>
-                                                        <label class="form-check-label" for="bebas_kontaminan_tidak">Tidak ✗</label>
-                                                    </div>
-                                                </div>
-                                            </div>
+                                            @endforeach
                                         </div>
                                     </div>
 
@@ -351,38 +223,26 @@
                                                 alert('Section kondisi mobil tidak ditemukan!');
                                                 return;
                                             }
-
-                                            // Cari semua radio button dalam section kondisi mobil
                                             const allRadios = section.querySelectorAll('input[type="radio"][name^="kondisi_mobil["]');
-                                            console.log('Total radio buttons found:', allRadios.length);
-                                            
                                             if (checkbox.checked) {
-                                                // Centang semua radio button dengan value="1" (Ya)
-                                                let checkedCount = 0;
                                                 allRadios.forEach(function(radio) {
-                                                    if (radio.value === '1') {
-                                                        radio.checked = true;
-                                                        checkedCount++;
-                                                    }
+                                                    if (radio.value === '1') radio.checked = true;
                                                 });
-                                                console.log('Checked', checkedCount, 'radio buttons');
                                             } else {
-                                                // Uncheck semua radio buttons
                                                 allRadios.forEach(function(radio) {
                                                     radio.checked = false;
                                                 });
-                                                console.log('Unchecked all radio buttons');
                                             }
                                         }
                                     </script>
 
-                                    <!-- UNIFIED DYNAMIC FORM - Bahan Kemasan, Informasi Kemasan, Kondisi Fisik, Detail Tambahan, Dokumen -->
-                                    <!-- DYNAMIC ROWS CONTAINER -->
+                                    <!-- UNIFIED DYNAMIC FORM -->
                                     <div id="unified-container">
                                         <div class="unified-row mb-4 p-3 border rounded" style="background-color: #f8f9fa;" data-row-index="0">
                                             <div class="d-flex justify-content-between align-items-center mb-3">
                                                 <h5 class="mb-0 bahan-title">Bahan #1</h5>
                                             </div>
+
                                             <!-- Bahan Kemasan -->
                                             <div class="form-section mb-3">
                                                 <h6 class="text-primary mb-2">Bahan Kemasan</h6>
@@ -412,6 +272,15 @@
                                             </div>
 
                                             <!-- Informasi Kemasan & Supplier -->
+                                            @php
+                                                $oldProdusen0 = old('produsen.0', []);
+                                                $oldProdusen0 = is_array($oldProdusen0) ? $oldProdusen0 : [$oldProdusen0];
+                                                $oldProdusen0 = array_values(array_filter($oldProdusen0, fn ($v) => $v !== null && $v !== ''));
+
+                                                $oldDistributor0 = old('distributor.0', []);
+                                                $oldDistributor0 = is_array($oldDistributor0) ? $oldDistributor0 : [$oldDistributor0];
+                                                $oldDistributor0 = array_values(array_filter($oldDistributor0, fn ($v) => $v !== null && $v !== ''));
+                                            @endphp
                                             <div class="form-section mb-3">
                                                 <h6 class="text-primary mb-2">Informasi Kemasan & Supplier</h6>
                                                 <div class="row">
@@ -419,19 +288,20 @@
                                                         <div class="card border-0 shadow-sm">
                                                             <div class="card-body p-3">
                                                                 <div class="fw-semibold">Produsen</div>
-                                                                <div class="small text-muted mb-2">Otomatis terisi sesuai Produk yang dipilih</div>
-
-                                                                @php
-                                                                    $oldProdusen0 = old('produsen.0', []);
-                                                                    $oldProdusen0 = is_array($oldProdusen0) ? $oldProdusen0 : [$oldProdusen0];
-                                                                    $oldProdusen0 = array_values(array_filter($oldProdusen0, fn ($v) => $v !== null && $v !== ''));
-                                                                @endphp
+                                                                <div class="small text-muted mb-2">Data akan terisi secara otomatis berdasarkan produk yang dipilih. Anda juga dapat memilih data secara manual melalui pilihan yang tersedia di bawah ini.</div>
+                                                                {{-- PENTING: pakai class js-supplier-choices (BUKAN "choices") agar tidak di-init oleh script global layout --}}
+                                                                <option value="" selected disabled>-- Pilih Produsen --</option>
+                                                                <select class="form-select js-supplier-choices supplier-master-select produsen-master-select mb-2" multiple data-supplier-type="produsen" aria-label="Pilih produsen">
+                                                                    @foreach (($produsens ?? collect()) as $produsen)
+                                                                    <option value="{{ $produsen->nama_produsen }}" {{ in_array($produsen->nama_produsen, $oldProdusen0, true) ? 'selected' : '' }}>{{ $produsen->nama_produsen }}</option>
+                                                                    @endforeach
+                                                                </select>
 
                                                                 <div class="produsen-badges d-flex flex-wrap gap-1">
                                                                     @forelse ($oldProdusen0 as $p)
                                                                         <span class="badge bg-light-primary text-primary badge-removable" data-value="{{ $p }}">
                                                                             {{ $p }}
-                                                                            <button type="button" class="badge-remove-btn" title="Hapus produsen ini dari form" onclick="removeBadgeItem(this, 'produsen')">×</button>
+                                                                            <button type="button" class="badge-remove-btn" title="Hapus produsen ini dari form" onclick="removeBadgeItem(this, 'produsen')">Hapus</button>
                                                                         </span>
                                                                     @empty
                                                                         <span class="text-muted small badge-empty">-</span>
@@ -454,19 +324,19 @@
                                                         <div class="card border-0 shadow-sm">
                                                             <div class="card-body p-3">
                                                                 <div class="fw-semibold">Distributor</div>
-                                                                <div class="small text-muted mb-2">Otomatis terisi sesuai Produk yang dipilih</div>
-
-                                                                @php
-                                                                    $oldDistributor0 = old('distributor.0', []);
-                                                                    $oldDistributor0 = is_array($oldDistributor0) ? $oldDistributor0 : [$oldDistributor0];
-                                                                    $oldDistributor0 = array_values(array_filter($oldDistributor0, fn ($v) => $v !== null && $v !== ''));
-                                                                @endphp
+                                                                <div class="small text-muted mb-2">Data akan terisi secara otomatis berdasarkan produk yang dipilih. Anda juga dapat memilih data secara manual melalui pilihan yang tersedia di bawah ini.</div>
+                                                                <option value="" selected disabled>-- Pilih Distributor --</option>
+                                                                <select class="form-select js-supplier-choices supplier-master-select distributor-master-select mb-2" multiple data-supplier-type="distributor" aria-label="Pilih distributor">
+                                                                    @foreach (($distributors ?? collect()) as $distributor)
+                                                                        <option value="{{ $distributor->nama_distributor }}" {{ in_array($distributor->nama_distributor, $oldDistributor0, true) ? 'selected' : '' }}>{{ $distributor->nama_distributor }}</option>
+                                                                    @endforeach
+                                                                </select>
 
                                                                 <div class="distributor-badges d-flex flex-wrap gap-1">
                                                                     @forelse ($oldDistributor0 as $d)
                                                                         <span class="badge bg-light-info text-info badge-removable" data-value="{{ $d }}">
                                                                             {{ $d }}
-                                                                            <button type="button" class="badge-remove-btn" title="Hapus distributor ini dari form" onclick="removeBadgeItem(this, 'distributor')">×</button>
+                                                                            <button type="button" class="badge-remove-btn" title="Hapus distributor ini dari form" onclick="removeBadgeItem(this, 'distributor')">Hapus</button>
                                                                         </span>
                                                                     @empty
                                                                         <span class="text-muted small badge-empty">-</span>
@@ -500,10 +370,11 @@
                                                     <div class="produsen-hidden-inputs"></div>
                                                     <div class="distributor-hidden-inputs"></div>
 
-                                                    <input type="hidden" class="penampakan-hidden" value="{{ old('penampakan.0') }}">
-                                                    <input type="hidden" class="sealing-hidden" value="{{ old('sealing.0') }}">
-                                                    <input type="hidden" class="cetakan-hidden" value="{{ old('cetakan.0') }}">
-                                                    <input type="hidden" name="logo_halal[]" class="logo-halal-hidden" value="{{ old('logo_halal.0') }}">
+                                                    {{-- FIX: hidden Kondisi Fisik SELALU ter-submit (punya name). Radio hanya UI. --}}
+                                                    <input type="hidden" name="penampakan[]" class="penampakan-hidden" value="{{ old('penampakan.0') }}">
+                                                    <input type="hidden" name="sealing[]" class="sealing-hidden" value="{{ old('sealing.0') }}">
+                                                    <input type="hidden" name="cetakan[]" class="cetakan-hidden" value="{{ old('cetakan.0') }}">
+                                                    <input type="hidden" name="logo_halal[]" class="logo_halal-hidden" value="{{ old('logo_halal.0') }}">
                                                     <input type="hidden" name="dokumen_halal[]" class="dokumen-halal-hidden" value="{{ old('dokumen_halal.0') }}">
                                                     <input type="hidden" name="coa[]" class="coa-hidden" value="{{ old('coa.0') }}">
 
@@ -574,45 +445,22 @@
                                                     <div class="form-section mb-3 mt-3">
                                                         <h6 class="text-primary mb-2">Kondisi Fisik</h6>
                                                         <div class="row">
-                                                            <div class="col-md-4">
-                                                                <div class="mb-3">
-                                                                    <label class="form-label"><strong>Penampakan</strong></label>
-                                                                    <div class="form-check">
-                                                                        <input class="form-check-input" type="radio" name="penampakan[0]" value="1" {{ old('penampakan.0') == '1' ? 'checked' : '' }}>
-                                                                        <label class="form-check-label">Ya ✓</label>
-                                                                    </div>
-                                                                    <div class="form-check">
-                                                                        <input class="form-check-input" type="radio" name="penampakan[0]" value="0" {{ old('penampakan.0') == '0' ? 'checked' : '' }}>
-                                                                        <label class="form-check-label">Tidak ✗</label>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                            <div class="col-md-4">
-                                                                <div class="mb-3">
-                                                                    <label class="form-label"><strong>Sealing</strong></label>
-                                                                    <div class="form-check">
-                                                                        <input class="form-check-input" type="radio" name="sealing[0]" value="1" {{ old('sealing.0') == '1' ? 'checked' : '' }}>
-                                                                        <label class="form-check-label">Ya ✓</label>
-                                                                    </div>
-                                                                    <div class="form-check">
-                                                                        <input class="form-check-input" type="radio" name="sealing[0]" value="0" {{ old('sealing.0') == '0' ? 'checked' : '' }}>
-                                                                        <label class="form-check-label">Tidak ✗</label>
+                                                            {{-- FIX: nama radio unik per detail (UI-only), TIDAK pernah di-rename oleh JS --}}
+                                                            @foreach ([['penampakan', 'Penampakan'], ['sealing', 'Sealing'], ['cetakan', 'Cetakan'], ['logo_halal', 'Logo Halal']] as [$grp, $grpLabel])
+                                                                <div class="col-md-3">
+                                                                    <div class="mb-3">
+                                                                        <label class="form-label"><strong>{{ $grpLabel }}</strong></label>
+                                                                        <div class="form-check">
+                                                                            <input class="form-check-input" type="radio" name="{{ $grp }}_master_0" data-group="{{ $grp }}" value="1" {{ old($grp . '.0') == '1' ? 'checked' : '' }}>
+                                                                            <label class="form-check-label">Ya ✓</label>
+                                                                        </div>
+                                                                        <div class="form-check">
+                                                                            <input class="form-check-input" type="radio" name="{{ $grp }}_master_0" data-group="{{ $grp }}" value="0" {{ old($grp . '.0') == '0' ? 'checked' : '' }}>
+                                                                            <label class="form-check-label">Tidak ✗</label>
+                                                                        </div>
                                                                     </div>
                                                                 </div>
-                                                            </div>
-                                                            <div class="col-md-4">
-                                                                <div class="mb-3">
-                                                                    <label class="form-label"><strong>Cetakan</strong></label>
-                                                                    <div class="form-check">
-                                                                        <input class="form-check-input" type="radio" name="cetakan[0]" value="1" {{ old('cetakan.0') == '1' ? 'checked' : '' }}>
-                                                                        <label class="form-check-label">Ya ✓</label>
-                                                                    </div>
-                                                                    <div class="form-check">
-                                                                        <input class="form-check-input" type="radio" name="cetakan[0]" value="0" {{ old('cetakan.0') == '0' ? 'checked' : '' }}>
-                                                                        <label class="form-check-label">Tidak ✗</label>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
+                                                            @endforeach
                                                         </div>
                                                     </div>
 
@@ -671,6 +519,7 @@
                                                             </div>
                                                         </div>
                                                     </div>
+
                                                     <div class="form-section mb-3 coa-upload-section">
                                                         <h6 class="text-primary mb-2">Upload COA</h6>
                                                         <div class="row mb-2">
@@ -707,6 +556,7 @@
                                                             </div>
                                                         </div>
                                                     </div>
+
                                                     <div class="form-section mb-3">
                                                         <h6 class="text-primary mb-2">Upload Gambar</h6>
                                                         <div class="row">
@@ -721,31 +571,15 @@
                                                             </div>
                                                         </div>
                                                     </div>
-
-                                                    
                                                 </div>
                                             </div>
 
                                             <div class="form-section mb-3">
                                                 <h6 class="text-primary mb-2">Dokumen</h6>
-                                                <input type="hidden" class="doc-master-logo" value="{{ old('logo_halal.0') }}">
                                                 <input type="hidden" class="doc-master-dokumen" value="{{ old('dokumen_halal.0') }}">
                                                 <input type="hidden" class="doc-master-coa" value="{{ old('coa.0') }}">
                                                 <div class="row">
-                                                    <div class="col-md-4">
-                                                        <div class="mb-3">
-                                                            <label class="form-label"><strong>Logo Halal</strong></label>
-                                                            <div class="form-check">
-                                                                <input class="form-check-input" type="radio" name="logo_halal_master_1" value="1" {{ old('logo_halal.0') == '1' ? 'checked' : '' }}>
-                                                                <label class="form-check-label">Ya ✓</label>
-                                                            </div>
-                                                            <div class="form-check">
-                                                                <input class="form-check-input" type="radio" name="logo_halal_master_1" value="0" {{ old('logo_halal.0') == '0' ? 'checked' : '' }}>
-                                                                <label class="form-check-label">Tidak ✗</label>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-md-4">
+                                                    <div class="col-md-6">
                                                         <div class="mb-3">
                                                             <label class="form-label"><strong>Dokumen Halal</strong></label>
                                                             <div class="form-check">
@@ -758,7 +592,7 @@
                                                             </div>
                                                         </div>
                                                     </div>
-                                                    <div class="col-md-4">
+                                                    <div class="col-md-6">
                                                         <div class="mb-3">
                                                             <label class="form-label"><strong>COA</strong></label>
                                                             <div class="form-check">
@@ -796,7 +630,6 @@
                                     <div class="col-md-12 d-flex justify-content-end mt-3">
                                         <a href="{{ route('pemeriksaan-kedatangan-kemasan.index') }}" id="btn-kembali" class="btn btn-light-secondary me-1 mb-1">Kembali</a>
                                         <button type="submit" class="btn btn-primary me-1 mb-1">Simpan Data</button>
-                                        <!-- <button type="reset" class="btn btn-light-secondary me-1 mb-1">Reset</button> -->
                                     </div>
                                 </form>
                             </div>
@@ -834,13 +667,13 @@
     .badge-remove-btn {
         background: none;
         border: none;
-        padding: 0 2px;
+        padding: 1px 4px;
         font-size: 13px;
         font-weight: bold;
         line-height: 1;
         cursor: pointer;
         color: #dc3545;
-        border-radius: 50%;
+        border-radius: 3px;
         transition: color .15s, background .15s;
     }
     .badge-remove-btn:hover {
@@ -852,7 +685,57 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const choicesInstances = new WeakMap();
-    
+
+    // Daftar master (dipakai untuk membedakan badge hasil master vs badge dari meta produk)
+    const supplierMasters = {
+        produsen: @json(($produsens ?? collect())->pluck('nama_produsen')->map(fn ($v) => (string) $v)->values()),
+        distributor: @json(($distributors ?? collect())->pluck('nama_distributor')->map(fn ($v) => (string) $v)->values()),
+    };
+
+    // Lock agar event "change"/"removeItem" yang dipicu kode kita sendiri tidak memicu sinkronisasi ulang
+    window.__supplierSyncLock = false;
+    const withSupplierLock = (fn) => {
+        window.__supplierSyncLock = true;
+        try { fn(); } finally {
+            setTimeout(() => { window.__supplierSyncLock = false; }, 0);
+        }
+    };
+
+    const CHOICES_OPTIONS = {
+        searchResultLimit: 100,
+        searchFuzziness: 0.000001,
+        fuseOptions: { ignoreLocation: true, threshold: 0.2, matchAllTokens: false },
+        searchEnabled: true,
+        searchPlaceholderValue: 'Cari...',
+        itemSelectText: 'Tekan untuk memilih',
+        noResultsText: 'Tidak ada hasil ditemukan',
+        noChoicesText: 'Tidak ada pilihan tersedia',
+        removeItemButton: true,
+        shouldSort: false,
+        placeholder: true,
+        placeholderValue: 'Pilih...'
+    };
+
+    const INIT_SELECTOR = 'select.choices, select.js-supplier-choices';
+
+    // Daftar grup Kondisi Fisik (radio UI-only -> hidden bernama yang selalu ter-submit)
+    const KONDISI_FISIK_GROUPS = ['penampakan', 'sealing', 'cetakan', 'logo_halal'];
+
+    const initSelectChoices = (select) => {
+        if (!select || (select.classList && select.classList.contains('produk-select'))) return;
+        if (choicesInstances.has(select)) return;
+
+        if (select.dataset.choicesInitialized) {
+            const existing = select._choices || select._choicesInstance;
+            if (existing) choicesInstances.set(select, existing);
+            return;
+        }
+
+        const instance = new Choices(select, CHOICES_OPTIONS);
+        choicesInstances.set(select, instance);
+        select.dataset.choicesInitialized = 'true';
+    };
+
     const btnKembali = document.getElementById('btn-kembali');
     if (btnKembali) {
         btnKembali.addEventListener('click', function(e) {
@@ -862,38 +745,13 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
-    
+
     // Initialize Choices.js for all existing selects
     function initializeAllChoices() {
-        const selects = document.querySelectorAll('select.choices');
-        selects.forEach(select => {
-            if (select.classList && select.classList.contains('produk-select')) {
-                return;
-            }
-            if (!select.dataset.choicesInitialized) {
-                const instance = new Choices(select, {
-                    searchResultLimit: 100,
-                    searchFuzziness: 0.000001,
-                    fuseOptions: { ignoreLocation: true, threshold: 0.2, matchAllTokens: false },
-                    searchEnabled: true,
-                    searchPlaceholderValue: 'Cari...',
-                    itemSelectText: 'Tekan untuk memilih',
-                    noResultsText: 'Tidak ada hasil ditemukan',
-                    noChoicesText: 'Tidak ada pilihan tersedia',
-                    removeItemButton: true,
-                    shouldSort: false,
-                    placeholder: true,
-                    placeholderValue: 'Pilih...'
-                });
-                choicesInstances.set(select, instance);
-                select.dataset.choicesInitialized = 'true';
-            }
-        });
+        document.querySelectorAll(INIT_SELECTOR).forEach(initSelectChoices);
     }
-    
-    // Initialize on page load
     initializeAllChoices();
-    
+
     const produkByKategori = @json($produkByKategori ?? []);
     const produkMeta = @json($produkMeta ?? []);
     const oldKategoriCodes = @json(old('kategori_code', []));
@@ -901,6 +759,131 @@ document.addEventListener('DOMContentLoaded', function() {
 
     window.produkByKategori = produkByKategori;
     window.produkMeta = produkMeta;
+    window.syncHeaderToDetailsGlobal = syncHeaderToDetails; // dipakai removeBadgeItem
+
+    const getSupplierInstance = (select) =>
+        choicesInstances.get(select) || select._choices || select._choicesInstance || null;
+
+    // Set pilihan pada kotak select multiple (tanpa memicu sinkronisasi balik)
+    const setSupplierSelectValues = (rowEl, type, values) => {
+        const select = rowEl?.querySelector(`select.${type}-master-select`);
+        if (!select) return;
+
+        const normalized = [...new Set((values || []).map((value) => String(value).trim()).filter(Boolean))];
+        const instance = getSupplierInstance(select);
+
+        withSupplierLock(() => {
+            if (instance) {
+                instance.removeActiveItems();
+                normalized.forEach((value) => {
+                    try { instance.setChoiceByValue(value); } catch (e) { /* abaikan */ }
+                });
+            } else {
+                Array.from(select.options).forEach((option) => {
+                    option.selected = normalized.includes(String(option.value));
+                });
+            }
+        });
+    };
+
+    // Hapus satu nilai dari kotak select multiple
+    window.removeSupplierValueFromSelect = (rowEl, type, value) => {
+        const select = rowEl?.querySelector(`select.${type}-master-select`);
+        if (!select) return;
+        value = String(value);
+
+        withSupplierLock(() => {
+            const instance = getSupplierInstance(select);
+            if (instance && typeof instance.removeActiveItemsByValue === 'function') {
+                try { instance.removeActiveItemsByValue(value); } catch (e) { /* abaikan */ }
+            }
+
+            // Fallback: pastikan <option> asli tidak lagi terpilih
+            Array.from(select.options).forEach((opt) => {
+                if (String(opt.value) === value) {
+                    opt.selected = false;
+                    opt.removeAttribute('selected');
+                }
+            });
+
+            // Fallback: jika masih ada item tampil di kotak, klik tombol "x"-nya
+            const wrapper = select.closest('.choices');
+            if (wrapper) {
+                wrapper.querySelectorAll('.choices__list--multiple .choices__item').forEach((item) => {
+                    if (String(item.dataset.value) === value) {
+                        const btn = item.querySelector('.choices__button');
+                        if (btn) btn.click();
+                    }
+                });
+            }
+        });
+    };
+
+    // Sinkronkan badge + hidden input dari isi kotak select (kotak = sumber kebenaran)
+    window.syncSupplierSelectionFromSelect = (select) => {
+        if (window.__supplierSyncLock) return;
+
+        const rowEl = select?.closest('.unified-row');
+        const type = select?.dataset.supplierType;
+        if (!rowEl || !type) return;
+
+        const badges = rowEl.querySelector(`.${type}-badges`);
+        const hidden = rowEl.querySelector(`.${type}-hidden-inputs`);
+        if (!badges || !hidden) return;
+
+        const selectedValues = Array.from(select.selectedOptions)
+            .map((option) => String(option.value).trim())
+            .filter(Boolean);
+
+        // Badge yang nilainya BUKAN bagian dari master (mis. dari meta produk) tetap dipertahankan,
+        // karena tidak bisa direpresentasikan di kotak select. Dihapus lewat tombol "Hapus".
+        const masterSet = new Set(supplierMasters[type] || []);
+        const keptExtra = Array.from(badges.querySelectorAll('.badge-removable[data-value]'))
+            .map((badge) => String(badge.dataset.value || '').trim())
+            .filter((v) => v && !masterSet.has(v));
+
+        const values = [...new Set([...selectedValues, ...keptExtra])];
+
+        badges.innerHTML = '';
+        hidden.innerHTML = '';
+        values.forEach((value) => {
+            const badge = document.createElement('span');
+            badge.className = `badge ${type === 'produsen' ? 'bg-light-primary text-primary' : 'bg-light-info text-info'} badge-removable`;
+            badge.dataset.value = value;
+            badge.appendChild(document.createTextNode(`${value} `));
+
+            const removeButton = document.createElement('button');
+            removeButton.type = 'button';
+            removeButton.className = 'badge-remove-btn';
+            removeButton.title = `Hapus ${type} ini dari form`;
+            removeButton.textContent = 'Hapus';
+            removeButton.setAttribute('onclick', `removeBadgeItem(this, '${type}')`);
+            badge.appendChild(removeButton);
+            badges.appendChild(badge);
+
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.className = `${type}-hidden-item`;
+            input.value = value;
+            hidden.appendChild(input);
+        });
+
+        if (values.length === 0) {
+            badges.innerHTML = '<span class="text-muted small badge-empty">-</span>';
+        }
+
+        syncHeaderToDetails(rowEl);
+    };
+
+    // Event bawaan Choices.js (addItem / removeItem) -> sinkronkan setelah store ter-update
+    ['addItem', 'removeItem'].forEach((evtName) => {
+        document.addEventListener(evtName, function(e) {
+            const t = e.target;
+            if (t && t.matches && t.matches('select.supplier-master-select')) {
+                setTimeout(() => window.syncSupplierSelectionFromSelect(t), 0);
+            }
+        });
+    });
 
     const bsCollapse = (el) => {
         try {
@@ -982,13 +965,10 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!detailEl) return;
         let collapseId = detailEl.dataset.detailCollapseId || '';
 
-        // If this element was cloned, it may carry duplicate ids/targets.
-        // Regenerate when the id is missing OR already used elsewhere.
         const hasDuplicateId = (id) => {
             if (!id) return true;
             const el = document.getElementById(id);
             if (!el) return false;
-            // If the element with this id is not inside this detail, it's a duplicate for this detail.
             return !detailEl.contains(el);
         };
 
@@ -1050,7 +1030,6 @@ document.addEventListener('DOMContentLoaded', function() {
             detailEl.appendChild(body);
         }
 
-        // Ensure button target points to this unique id
         const btn = detailEl.querySelector(':scope > .d-flex button.detail-title[data-bs-toggle="collapse"], :scope > .d-flex button[data-bs-toggle="collapse"].detail-title');
         if (btn) {
             btn.setAttribute('data-bs-target', `#${collapseId}`);
@@ -1106,8 +1085,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 else inst.hide();
                 return;
             }
-
-            // Fallback if Bootstrap Collapse is not available
             if (detailEl === activeDetailEl) body.classList.add('show');
             else body.classList.remove('show');
         });
@@ -1136,8 +1113,9 @@ document.addEventListener('DOMContentLoaded', function() {
             const newRow = document.createElement('div');
             newRow.className = 'unified-row mb-4 p-3 border rounded';
             newRow.style.backgroundColor = '#f8f9fa';
-            
-            const timestamp = Date.now();
+
+            // Penanda unik per baris produk (dipakai untuk nama radio UI-only)
+            const timestamp = uniqueDomId('r');
             const rowIndex = container.querySelectorAll('.unified-row').length;
             newRow.innerHTML = `
                 <div class="d-flex justify-content-between align-items-center mb-3">
@@ -1177,8 +1155,15 @@ document.addEventListener('DOMContentLoaded', function() {
                             <div class="card border-0 shadow-sm">
                                 <div class="card-body p-3">
                                     <div class="fw-semibold">Produsen</div>
-                                    <div class="small text-muted mb-2">Otomatis terisi sesuai Produk yang dipilih</div>
-                                    <div class="produsen-badges d-flex flex-wrap gap-1"><span class="text-muted small">-</span></div>
+                                    <div class="small text-muted mb-2">Data akan terisi secara otomatis berdasarkan produk yang dipilih. Anda juga dapat memilih data secara manual melalui pilihan yang tersedia di bawah ini.</div>
+                                    {{-- PENTING: pakai class js-supplier-choices (BUKAN "choices") agar tidak di-init oleh script global layout --}}
+                                    <option value="" selected disabled>-- Pilih Produsen --</option>
+                                    <select class="form-select js-supplier-choices supplier-master-select produsen-master-select mb-2" multiple data-supplier-type="produsen" aria-label="Pilih produsen">
+                                        @foreach (($produsens ?? collect()) as $produsen)
+                                            <option value="{{ $produsen->nama_produsen }}">{{ $produsen->nama_produsen }}</option>
+                                        @endforeach
+                                    </select>
+                                    <div class="produsen-badges d-flex flex-wrap gap-1"><span class="text-muted small badge-empty">-</span></div>
                                     <div class="produsen-hidden-inputs"></div>
                                 </div>
                             </div>
@@ -1187,8 +1172,14 @@ document.addEventListener('DOMContentLoaded', function() {
                             <div class="card border-0 shadow-sm">
                                 <div class="card-body p-3">
                                     <div class="fw-semibold">Distributor</div>
-                                    <div class="small text-muted mb-2">Otomatis terisi sesuai Produk yang dipilih</div>
-                                    <div class="distributor-badges d-flex flex-wrap gap-1"><span class="text-muted small">-</span></div>
+                                    <div class="small text-muted mb-2">Data akan terisi secara otomatis berdasarkan produk yang dipilih. Anda juga dapat memilih data secara manual melalui pilihan yang tersedia di bawah ini.</div>
+                                    <option value="" selected disabled>-- Pilih Distributor --</option>
+                                    <select class="form-select js-supplier-choices supplier-master-select distributor-master-select mb-2" multiple data-supplier-type="distributor" aria-label="Pilih distributor">
+                                        @foreach (($distributors ?? collect()) as $distributor)
+                                            <option value="{{ $distributor->nama_distributor }}">{{ $distributor->nama_distributor }}</option>
+                                        @endforeach
+                                    </select>
+                                    <div class="distributor-badges d-flex flex-wrap gap-1"><span class="text-muted small badge-empty">-</span></div>
                                     <div class="distributor-hidden-inputs"></div>
                                 </div>
                             </div>
@@ -1207,10 +1198,10 @@ document.addEventListener('DOMContentLoaded', function() {
                         <div class="produsen-hidden-inputs"></div>
                         <div class="distributor-hidden-inputs"></div>
 
-                        <input type="hidden" class="penampakan-hidden" value="">
-                        <input type="hidden" class="sealing-hidden" value="">
-                        <input type="hidden" class="cetakan-hidden" value="">
-                        <input type="hidden" name="logo_halal[]" class="logo-halal-hidden" value="">
+                        <input type="hidden" name="penampakan[]" class="penampakan-hidden" value="">
+                        <input type="hidden" name="sealing[]" class="sealing-hidden" value="">
+                        <input type="hidden" name="cetakan[]" class="cetakan-hidden" value="">
+                        <input type="hidden" name="logo_halal[]" class="logo_halal-hidden" value="">
                         <input type="hidden" name="dokumen_halal[]" class="dokumen-halal-hidden" value="">
                         <input type="hidden" name="coa[]" class="coa-hidden" value="">
 
@@ -1263,41 +1254,54 @@ document.addEventListener('DOMContentLoaded', function() {
                         <div class="form-section mb-3 mt-3">
                             <h6 class="text-primary mb-2">Kondisi Fisik</h6>
                             <div class="row">
-                                <div class="col-md-4">
+                                <div class="col-md-3">
                                     <div class="mb-3">
                                         <label class="form-label"><strong>Penampakan</strong></label>
                                         <div class="form-check">
-                                            <input class="form-check-input" type="radio" name="penampakan_master_${timestamp}" value="1">
+                                            <input class="form-check-input" type="radio" name="penampakan_master_${timestamp}" data-group="penampakan" value="1">
                                             <label class="form-check-label">Ya ✓</label>
                                         </div>
                                         <div class="form-check">
-                                            <input class="form-check-input" type="radio" name="penampakan_master_${timestamp}" value="0">
+                                            <input class="form-check-input" type="radio" name="penampakan_master_${timestamp}" data-group="penampakan" value="0">
                                             <label class="form-check-label">Tidak ✗</label>
                                         </div>
                                     </div>
                                 </div>
-                                <div class="col-md-4">
+                                <div class="col-md-3">
                                     <div class="mb-3">
                                         <label class="form-label"><strong>Sealing</strong></label>
                                         <div class="form-check">
-                                            <input class="form-check-input" type="radio" name="sealing_master_${timestamp}" value="1">
+                                            <input class="form-check-input" type="radio" name="sealing_master_${timestamp}" data-group="sealing" value="1">
                                             <label class="form-check-label">Ya ✓</label>
                                         </div>
                                         <div class="form-check">
-                                            <input class="form-check-input" type="radio" name="sealing_master_${timestamp}" value="0">
+                                            <input class="form-check-input" type="radio" name="sealing_master_${timestamp}" data-group="sealing" value="0">
                                             <label class="form-check-label">Tidak ✗</label>
                                         </div>
                                     </div>
                                 </div>
-                                <div class="col-md-4">
+                                <div class="col-md-3">
                                     <div class="mb-3">
                                         <label class="form-label"><strong>Cetakan</strong></label>
                                         <div class="form-check">
-                                            <input class="form-check-input" type="radio" name="cetakan_master_${timestamp}" value="1">
+                                            <input class="form-check-input" type="radio" name="cetakan_master_${timestamp}" data-group="cetakan" value="1">
                                             <label class="form-check-label">Ya ✓</label>
                                         </div>
                                         <div class="form-check">
-                                            <input class="form-check-input" type="radio" name="cetakan_master_${timestamp}" value="0">
+                                            <input class="form-check-input" type="radio" name="cetakan_master_${timestamp}" data-group="cetakan" value="0">
+                                            <label class="form-check-label">Tidak ✗</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="mb-3">
+                                        <label class="form-label"><strong>Logo Halal</strong></label>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="logo_halal_master_${timestamp}" data-group="logo_halal" value="1">
+                                            <label class="form-check-label">Ya ✓</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="logo_halal_master_${timestamp}" data-group="logo_halal" value="0">
                                             <label class="form-check-label">Tidak ✗</label>
                                         </div>
                                     </div>
@@ -1308,19 +1312,25 @@ document.addEventListener('DOMContentLoaded', function() {
                         <div class="form-section mb-3">
                             <h6 class="text-primary mb-2">Detail Tambahan</h6>
                             <div class="row">
-                                <div class="col-md-4">
+                                <div class="col-md-3">
                                     <div class="form-group">
                                         <label class="form-label">Ketebalan (Micron)</label>
                                         <input type="number" step="0.01" class="form-control" name="ketebalan_micron[]" placeholder="Ketebalan">
                                     </div>
                                 </div>
-                                <div class="col-md-4">
+                                <div class="col-md-3">
                                     <div class="form-group">
                                         <label class="form-label">Dimensi</label>
                                         <input type="text" class="form-control" name="dimensi[]" placeholder="Dimensi">
                                     </div>
                                 </div>
-                                <div class="col-md-4">
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label class="form-label">Berat</label>
+                                        <input type="text" class="form-control" name="berat[]" placeholder="Berat (cth: 25 kg / 500 gr)">
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
                                     <div class="form-group">
                                         <label class="form-label">Status <span class="text-danger">*</span></label>
                                         <select class="form-control" name="status[]">
@@ -1347,11 +1357,11 @@ document.addEventListener('DOMContentLoaded', function() {
                                     <div class="form-group">
                                         <label class="form-label d-block">Tipe File</label>
                                         <div class="form-check form-check-inline">
-                                            <input class="form-check-input coa-type-pdf" type="radio" name="coa_type_master_1" value="pdf" checked>
+                                            <input class="form-check-input coa-type-pdf" type="radio" name="coa_type_master_${timestamp}" value="pdf" checked>
                                             <label class="form-check-label">PDF</label>
                                         </div>
                                         <div class="form-check form-check-inline">
-                                            <input class="form-check-input coa-type-img" type="radio" name="coa_type_master_1" value="gambar">
+                                            <input class="form-check-input coa-type-img" type="radio" name="coa_type_master_${timestamp}" value="gambar">
                                             <label class="form-check-label">Gambar</label>
                                         </div>
                                     </div>
@@ -1393,24 +1403,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 <div class="form-section mb-3">
                     <h6 class="text-primary mb-2">Dokumen</h6>
-                    <input type="hidden" class="doc-master-logo" value="">
                     <input type="hidden" class="doc-master-dokumen" value="">
                     <input type="hidden" class="doc-master-coa" value="">
                     <div class="row">
-                        <div class="col-md-4">
-                            <div class="mb-3">
-                                <label class="form-label"><strong>Logo Halal</strong></label>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="logo_halal_master_1" value="1">
-                                    <label class="form-check-label">Ya ✓</label>
-                                </div>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="logo_halal_master_1" value="0">
-                                    <label class="form-check-label">Tidak ✗</label>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
+                        <div class="col-md-6">
                             <div class="mb-3">
                                 <label class="form-label"><strong>Dokumen Halal</strong></label>
                                 <div class="form-check">
@@ -1423,7 +1419,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-6">
                             <div class="mb-3">
                                 <label class="form-label"><strong>COA</strong></label>
                                 <div class="form-check">
@@ -1460,29 +1456,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
             initKemasanCollapses();
             collapseAllProdukExcept(newRow);
-            
+
             // Initialize Choices.js for new selects ONLY in the new row
-            const newSelects = newRow.querySelectorAll('select.choices');
-            newSelects.forEach(select => {
-                if (select.classList && select.classList.contains('produk-select')) {
-                    return;
-                }
-                const instance = new Choices(select, {
-                    searchResultLimit: 100,
-                    searchFuzziness: 0.000001,
-                    fuseOptions: { ignoreLocation: true, threshold: 0.2, matchAllTokens: false },
-                    searchEnabled: true,
-                    searchPlaceholderValue: 'Cari...',
-                    itemSelectText: 'Tekan untuk memilih',
-                    noResultsText: 'Tidak ada hasil ditemukan',
-                    noChoicesText: 'Tidak ada pilihan tersedia',
-                    removeItemButton: true,
-                    shouldSort: false,
-                    placeholder: true,
-                    placeholderValue: 'Pilih...'
-                });
-                choicesInstances.set(select, instance);
-            });
+            newRow.querySelectorAll(INIT_SELECTOR).forEach(initSelectChoices);
 
             const kategoriSelect = newRow.querySelector('select.kategori-produk-select');
             if (kategoriSelect) {
@@ -1538,8 +1514,6 @@ document.addEventListener('DOMContentLoaded', function() {
             console.warn('[QC] populateProdukOptionsForRow: kategori kosong');
         } else if (!options || options.length === 0) {
             console.warn('[QC] Tidak ada produk untuk kategori:', kategori);
-        } else {
-            console.debug('[QC] populateProdukOptionsForRow kategori:', kategori, 'jumlah produk:', options.length);
         }
 
         const choiceItems = [{ value: '', label: 'Pilih Produk', selected: true }].concat(
@@ -1588,9 +1562,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
             const instance = new Choices(freshProdukSelect, {
                 searchResultLimit: 100,
-                    searchFuzziness: 0.000001,
-                    fuseOptions: { ignoreLocation: true, threshold: 0.2, matchAllTokens: false },
-                    searchEnabled: true,
+                searchFuzziness: 0.000001,
+                fuseOptions: { ignoreLocation: true, threshold: 0.2, matchAllTokens: false },
+                searchEnabled: true,
                 searchPlaceholderValue: 'Cari...',
                 itemSelectText: 'Tekan untuk memilih',
                 noResultsText: 'Tidak ada hasil ditemukan',
@@ -1618,13 +1592,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
         if (!produkSelect || !produsenBadges || !distributorBadges || !produsenHidden || !distributorHidden) return;
 
-        const rowIndex = rowEl.dataset.rowIndex ? String(rowEl.dataset.rowIndex) : '0';
-
         const produkId = produkSelect.value;
         const meta = produkMeta[produkId];
         if (!meta) {
-            produsenBadges.innerHTML = '<span class="text-muted small">-</span>';
-            distributorBadges.innerHTML = '<span class="text-muted small">-</span>';
+            produsenBadges.innerHTML = '<span class="text-muted small badge-empty">-</span>';
+            distributorBadges.innerHTML = '<span class="text-muted small badge-empty">-</span>';
             produsenHidden.innerHTML = '';
             distributorHidden.innerHTML = '';
             return;
@@ -1651,14 +1623,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 span.className = badgeClass + ' badge-removable';
                 span.dataset.value = String(v);
 
-                const textNode = document.createTextNode(String(v) + ' ');
-                span.appendChild(textNode);
+                span.appendChild(document.createTextNode(String(v) + ' '));
 
                 const btn = document.createElement('button');
                 btn.type = 'button';
                 btn.className = 'badge-remove-btn';
                 btn.title = 'Hapus ' + (type === 'produsen' ? 'produsen' : 'distributor') + ' ini dari form';
-                btn.textContent = '×';
+                btn.textContent = 'Hapus';
                 btn.setAttribute('onclick', `removeBadgeItem(this, '${type}')`);
                 span.appendChild(btn);
 
@@ -1682,19 +1653,20 @@ document.addEventListener('DOMContentLoaded', function() {
         renderHiddenInputs(produsenHidden, 'produsen-hidden-item', prodVals);
         renderHiddenInputs(distributorHidden, 'distributor-hidden-item', distVals);
 
+        setSupplierSelectValues(rowEl, 'produsen', prodVals);
+        setSupplierSelectValues(rowEl, 'distributor', distVals);
+
         syncHeaderToDetails(rowEl);
     }
 
     function syncHeaderToDetails(rowEl) {
-        window.syncHeaderToDetailsGlobal = syncHeaderToDetails; // expose ke global untuk removeBadgeItem
         const kategoriSelect = rowEl.querySelector('select.kategori-produk-select');
         const produkSelect = rowEl.querySelector('select.produk-select');
 
         const kategoriVal = kategoriSelect ? String(kategoriSelect.value || '') : '';
         const produkVal = produkSelect ? String(produkSelect.value || '') : '';
 
-        // Baca nilai produsen/distributor dari badge yang MASIH ADA di UI (setelah user hapus)
-        // Bukan dari hidden input header, agar badge yang sudah dihapus user tidak ikut sync
+        // Baca nilai produsen/distributor dari badge yang MASIH ADA di UI
         const headerProdusenBadges = rowEl.querySelector(':scope > .produk-collapse .produsen-badges, .produsen-badges');
         const headerDistributorBadges = rowEl.querySelector(':scope > .produk-collapse .distributor-badges, .distributor-badges');
 
@@ -1708,7 +1680,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const produsenVals = getValuesFromBadges(headerProdusenBadges);
         const distributorVals = getValuesFromBadges(headerDistributorBadges);
 
-        // Update juga hidden inputs di header agar konsisten
+        // Update hidden inputs di header agar konsisten
         const headerProdusenHidden = rowEl.querySelector('.produsen-hidden-inputs');
         const headerDistributorHidden = rowEl.querySelector('.distributor-hidden-inputs');
         if (headerProdusenHidden) {
@@ -1787,11 +1759,12 @@ document.addEventListener('DOMContentLoaded', function() {
             setArrayName(detailEl.querySelector('input[type="file"][name^="file_coa"]'), 'file_coa');
             setArrayName(detailEl.querySelector('input[type="file"][name^="file_coa_img"]'), 'file_coa_img');
 
-            const masterRadioGroups = ['penampakan', 'sealing', 'cetakan', 'logo_halal', 'dokumen_halal', 'coa', 'coa_type'];
-            masterRadioGroups.forEach((g) => {
-                detailEl.querySelectorAll(`input[type="radio"][name^="${g}_master_"]`).forEach((r) => {
-                    r.name = `${g}[${idx}]`;
-                });
+            // FIX: Kondisi Fisik dibawa oleh hidden input bernama x[idx] yang SELALU ter-submit.
+            // Radio-nya hanya UI (nama unik per detail, TIDAK pernah di-rename di sini),
+            // sehingga pilihan yang sudah dicentang tidak hilang saat detail ditambah/dihapus.
+            KONDISI_FISIK_GROUPS.forEach((g) => {
+                const h = detailEl.querySelector(`input.${g}-hidden`);
+                if (h) h.name = `${g}[${idx}]`;
             });
 
             const prodWrap = detailEl.querySelector('.produsen-hidden-inputs');
@@ -1834,8 +1807,6 @@ document.addEventListener('DOMContentLoaded', function() {
             clone.querySelectorAll('input, textarea').forEach((el) => {
                 if (el.type === 'radio' || el.type === 'checkbox') {
                     el.checked = false;
-                } else if (el.type === 'file') {
-                    el.value = '';
                 } else {
                     el.value = '';
                 }
@@ -1847,37 +1818,37 @@ document.addEventListener('DOMContentLoaded', function() {
                 wrap.innerHTML = '';
             });
 
-            clone.querySelectorAll('input.penampakan-hidden, input.sealing-hidden, input.cetakan-hidden, input.logo-halal-hidden, input.dokumen-halal-hidden, input.coa-hidden').forEach((h) => {
+            clone.querySelectorAll('input.penampakan-hidden, input.sealing-hidden, input.cetakan-hidden, input.logo_halal-hidden, input.dokumen-halal-hidden, input.coa-hidden').forEach((h) => {
                 h.value = '';
             });
 
-            // Ensure unit selects have all options available
-            const unitDatangSelect = clone.querySelector('select[name="unit_datang[]"]');
-            const unitSamplingSelect = clone.querySelector('select[name="unit_sampling[]"]');
-            
-            if (unitDatangSelect) {
-                // Ensure all options from first row are present
-                const firstUnitDatang = container.querySelector('select[name="unit_datang[]"]');
-                if (firstUnitDatang && unitDatangSelect.options.length <= 1) {
-                    // Clone options from first row
-                    Array.from(firstUnitDatang.options).forEach((opt) => {
-                        const newOpt = opt.cloneNode(true);
-                        unitDatangSelect.appendChild(newOpt);
+            // Pastikan select unit punya semua opsi
+            ['unit_datang[]', 'unit_sampling[]'].forEach((selName) => {
+                const cloneSel = clone.querySelector(`select[name="${selName}"]`);
+                const firstSel = container.querySelector(`select[name="${selName}"]`);
+                if (cloneSel && firstSel && cloneSel.options.length <= 1) {
+                    Array.from(firstSel.options).forEach((opt) => {
+                        cloneSel.appendChild(opt.cloneNode(true));
                     });
                 }
-            }
-            
-            if (unitSamplingSelect) {
-                // Ensure all options from first row are present
-                const firstUnitSampling = container.querySelector('select[name="unit_sampling[]"]');
-                if (firstUnitSampling && unitSamplingSelect.options.length <= 1) {
-                    // Clone options from first row
-                    Array.from(firstUnitSampling.options).forEach((opt) => {
-                        const newOpt = opt.cloneNode(true);
-                        unitSamplingSelect.appendChild(newOpt);
-                    });
+            });
+
+            // FIX: beri nama radio yang UNIK sebelum klon masuk DOM,
+            // agar tidak satu grup dengan detail lain (yang akan mengosongkan pilihan sebelumnya).
+            const uid = uniqueDomId('d');
+            clone.querySelectorAll('input[type="radio"]').forEach((r) => {
+                if (r.dataset.group) {
+                    r.name = `${r.dataset.group}_master_${uid}`;
+                } else if (r.name && r.name.startsWith('coa_type')) {
+                    r.name = `coa_type_master_${uid}`;
                 }
-            }
+            });
+            const pdfRadio = clone.querySelector('.coa-type-pdf');
+            if (pdfRadio) pdfRadio.checked = true;
+            const pdfBox = clone.querySelector('.coa-pdf-input');
+            const imgBox = clone.querySelector('.coa-img-input');
+            if (pdfBox) pdfBox.style.display = '';
+            if (imgBox) imgBox.style.display = 'none';
 
             container.appendChild(clone);
             updateSectionLabels();
@@ -1932,10 +1903,9 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
 
-        // Update master dokumen radio names per row to avoid cross-row interference
+        // Nama radio master dokumen per row agar tidak saling mengganggu
         rows.forEach((rowEl, rowIdx) => {
             const rowNum = rowIdx + 1;
-            rowEl.querySelectorAll('input[type="radio"][name^="logo_halal_master_"]').forEach((el) => { el.name = `logo_halal_master_${rowNum}`; });
             rowEl.querySelectorAll('input[type="radio"][name^="dokumen_halal_master_"]').forEach((el) => { el.name = `dokumen_halal_master_${rowNum}`; });
             rowEl.querySelectorAll('input[type="radio"][name^="coa_master_"]').forEach((el) => { el.name = `coa_master_${rowNum}`; });
         });
@@ -1943,15 +1913,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function syncDokumenToDetails(rowEl) {
         if (!rowEl) return;
-        const logo = rowEl.querySelector('input.doc-master-logo')?.value ?? '';
         const dok = rowEl.querySelector('input.doc-master-dokumen')?.value ?? '';
         const coa = rowEl.querySelector('input.doc-master-coa')?.value ?? '';
 
         rowEl.querySelectorAll('.detail-item').forEach((detailEl) => {
-            const l = detailEl.querySelector('input.logo-halal-hidden');
             const d = detailEl.querySelector('input.dokumen-halal-hidden');
             const c = detailEl.querySelector('input.coa-hidden');
-            if (l) l.value = String(logo);
             if (d) d.value = String(dok);
             if (c) c.value = String(coa);
         });
@@ -1959,6 +1926,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
     document.addEventListener('change', function(e) {
         const target = e.target;
+
+        if (target && target.matches('select.supplier-master-select')) {
+            window.syncSupplierSelectionFromSelect(target);
+            return;
+        }
+
         if (target && target.matches('select.kategori-produk-select')) {
             const row = target.closest('.unified-row');
             if (row) {
@@ -1975,14 +1948,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
 
-        if (target && target.matches('input[type="radio"][name^="logo_halal_master_"]')) {
-            const rowEl = target.closest('.unified-row');
-            if (rowEl) {
-                const master = rowEl.querySelector('input.doc-master-logo');
-                if (master) master.value = String(target.value);
-                syncDokumenToDetails(rowEl);
-            }
-        }
         if (target && target.matches('input[type="radio"][name^="dokumen_halal_master_"]')) {
             const rowEl = target.closest('.unified-row');
             if (rowEl) {
@@ -2000,45 +1965,12 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
 
-        if (target && target.matches('input[type="radio"][name^="penampakan_master_"]')) {
+        // Kondisi Fisik: salin nilai radio (UI) ke hidden input bernama milik detail yang sama
+        if (target && target.matches('input[type="radio"][data-group]')) {
+            const field = target.dataset.group;
             const detail = target.closest('.detail-item');
-            if (detail) {
-                const hidden = detail.querySelector('input.penampakan-hidden');
-                if (hidden) hidden.value = String(target.value);
-            }
-        }
-        if (target && target.matches('input[type="radio"][name^="sealing_master_"]')) {
-            const detail = target.closest('.detail-item');
-            if (detail) {
-                const hidden = detail.querySelector('input.sealing-hidden');
-                if (hidden) hidden.value = String(target.value);
-            }
-        }
-        if (target && target.matches('input[type="radio"][name^="cetakan_master_"]')) {
-            const detail = target.closest('.detail-item');
-            if (detail) {
-                const hidden = detail.querySelector('input.cetakan-hidden');
-                if (hidden) hidden.value = String(target.value);
-            }
-        }
-        if (target && target.matches('input[type="radio"][name^="logo_halal_master_"]')) {
-            const detail = target.closest('.detail-item');
-            if (detail) {
-                const hidden = detail.querySelector('input.logo-halal-hidden');
-                if (hidden) hidden.value = String(target.value);
-            }
-        }
-        if (target && target.matches('input[type="radio"][name^="dokumen_halal_master_"]')) {
-            const detail = target.closest('.detail-item');
-            if (detail) {
-                const hidden = detail.querySelector('input.dokumen-halal-hidden');
-                if (hidden) hidden.value = String(target.value);
-            }
-        }
-        if (target && target.matches('input[type="radio"][name^="coa_master_"]')) {
-            const detail = target.closest('.detail-item');
-            if (detail) {
-                const hidden = detail.querySelector('input.coa-hidden');
+            if (detail && KONDISI_FISIK_GROUPS.includes(field)) {
+                const hidden = detail.querySelector(`input.${field}-hidden`);
                 if (hidden) hidden.value = String(target.value);
             }
         }
@@ -2046,7 +1978,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     document.addEventListener('input', function(e) {
         const target = e.target;
-        if (target && target.matches('input[name="kode_produksi[]"]')) {
+        if (target && target.matches('input[name^="kode_produksi"]')) {
             const detailEl = target.closest('.detail-item');
             const rowEl = target.closest('.unified-row');
             if (!detailEl || !rowEl) return;
@@ -2055,7 +1987,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Bind directly for initial rows (Choices.js can swallow delegated change in some cases)
+    // Bind langsung untuk row awal (Choices.js kadang menelan event delegasi)
     document.querySelectorAll('#unified-container .unified-row').forEach((row, idx) => {
         const kategoriSelect = row.querySelector('select.kategori-produk-select');
         if (kategoriSelect) {
@@ -2080,7 +2012,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const produkSelect = row.querySelector('select.produk-select');
         if (produkSelect) {
-
             const desiredProduk = (oldProdukIds && oldProdukIds[idx]) ? String(oldProdukIds[idx]) : '';
             row.dataset.oldProdukId = desiredProduk;
 
@@ -2104,29 +2035,25 @@ document.addEventListener('DOMContentLoaded', function() {
             const rowCount = document.querySelectorAll('#unified-container .unified-row').length;
             if (rowCount > 1) {
                 e.target.closest('.unified-row').remove();
+                updateDetailIndices();
                 updateRemoveButtons();
             } else {
                 alert('Minimal harus ada satu baris data!');
             }
         }
     });
-    
-    // Update remove buttons visibility
+
     function updateRemoveButtons() {
         const rows = document.querySelectorAll('#unified-container .unified-row');
         rows.forEach((row) => {
             const removeBtn = row.querySelector('.remove-unified-btn');
-            if (rows.length > 1) {
-                removeBtn.style.display = 'inline-block';
-            } else {
-                removeBtn.style.display = 'none';
-            }
+            if (!removeBtn) return;
+            removeBtn.style.display = rows.length > 1 ? 'inline-block' : 'none';
         });
 
         updateSectionLabels();
     }
-    
-    // Initialize on page load
+
     updateRemoveButtons();
     updateSectionLabels();
 
@@ -2177,8 +2104,7 @@ document.addEventListener('DOMContentLoaded', function() {
             blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', quality));
         }
 
-        const newName = (file.name || 'image')
-            .replace(/\.[^/.]+$/, '') + '.jpg';
+        const newName = (file.name || 'image').replace(/\.[^/.]+$/, '') + '.jpg';
         return new File([blob], newName, { type: 'image/jpeg', lastModified: Date.now() });
     }
 
@@ -2186,35 +2112,29 @@ document.addEventListener('DOMContentLoaded', function() {
         const file = input.files && input.files[0] ? input.files[0] : null;
         if (!file) return;
 
-        // Read file immediately into memory to prevent ERR_UPLOAD_FILE_CHANGED on Android
-        // (Android camera app may modify/move the file after browser gets reference)
+        // Baca file ke memori agar tidak kena ERR_UPLOAD_FILE_CHANGED di Android
         let fileToProcess = file;
         try {
-            // Force-read the file into a Blob right away to detach from filesystem reference
             const arrayBuffer = await file.arrayBuffer();
             fileToProcess = new File([arrayBuffer], file.name, { type: file.type, lastModified: Date.now() });
         } catch (e) {
-            // fallback: use original file
             fileToProcess = file;
         }
 
-        // Compress if file > 500KB (more aggressive to prevent upload errors)
-        const COMPRESS_THRESHOLD = 512 * 1024; // 500KB
+        const COMPRESS_THRESHOLD = 512 * 1024;
         if (fileToProcess.size <= COMPRESS_THRESHOLD) {
-            // Still replace input.files to use in-memory copy (prevents ERR_UPLOAD_FILE_CHANGED)
             try {
                 const dt = new DataTransfer();
                 dt.items.add(fileToProcess);
                 input.files = dt.files;
-            } catch (e) { /* ignore if DataTransfer not supported */ }
+            } catch (e) { /* ignore */ }
             return;
         }
 
-        // Show processing feedback
         const formGroup = input.closest('.form-group');
         const labelEl = formGroup ? formGroup.querySelector('.form-label') : null;
         const originalLabel = labelEl ? labelEl.innerHTML : 'Foto';
-        
+
         if (labelEl) {
             labelEl.innerHTML = originalLabel + ' <span class="badge bg-primary"><i class="bi bi-hourglass-split"></i> Mengompres...</span>';
         }
@@ -2225,7 +2145,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const dt = new DataTransfer();
             dt.items.add(compressedFile);
             input.files = dt.files;
-            
+
             if (labelEl) {
                 labelEl.innerHTML = originalLabel + ' <span class="badge bg-success"><i class="bi bi-check-circle"></i> Selesai (Auto-Compressed)</span>';
             }
@@ -2244,7 +2164,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     document.addEventListener('change', function(e) {
         const input = e.target;
-        if (input && input.classList && (input.classList.contains('image-kemasan-input') || input.name === 'file_coa_img[]')) {
+        if (input && input.classList && (input.classList.contains('image-kemasan-input') || (input.name && input.name.startsWith('file_coa_img')))) {
             handleImageInputChange(input);
         }
     });
@@ -2254,7 +2174,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (e.target.type === 'file') {
             const file = e.target.files[0];
             if (file) {
-                const maxSize = 3 * 1024 * 1024; // 3 MB
+                const maxSize = 3 * 1024 * 1024;
                 if (file.size > maxSize) {
                     alert('Ukuran file ' + file.name + ' terlalu besar (' + (file.size / 1024 / 1024).toFixed(2) + ' MB). Maksimal ukuran file yang diizinkan adalah 3 MB.');
                     e.target.value = '';
@@ -2283,11 +2203,11 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 /**
- * Hapus satu badge Produsen/Distributor dari tampilan form.
- * Data master TIDAK berubah — hanya berlaku untuk pengiriman form ini.
+ * Hapus satu badge Produsen/Distributor dari tampilan form
+ * DAN dari kotak select multiple. Data master TIDAK berubah.
  *
- * @param {HTMLButtonElement} btn  — tombol × yang diklik
- * @param {string} type            — 'produsen' | 'distributor'
+ * @param {HTMLButtonElement} btn  tombol Hapus yang diklik
+ * @param {string} type            'produsen' | 'distributor'
  */
 function removeBadgeItem(btn, type) {
     const badge = btn.closest('.badge-removable');
@@ -2295,66 +2215,27 @@ function removeBadgeItem(btn, type) {
 
     const rowEl = badge.closest('.unified-row');
     const badgesContainer = badge.closest('.produsen-badges, .distributor-badges');
+    const value = badge.dataset.value || '';
 
-    // Hapus badge dari tampilan
-    badge.remove();
-
-    // Jika tidak ada badge tersisa, tampilkan placeholder "-"
-    if (badgesContainer) {
-        const remaining = badgesContainer.querySelectorAll('.badge-removable');
-        if (remaining.length === 0) {
-            const placeholder = document.createElement('span');
-            placeholder.className = 'text-muted small badge-empty';
-            placeholder.textContent = '-';
-            badgesContainer.appendChild(placeholder);
-        }
+    // 1. Hapus dari kotak select multiple
+    if (rowEl && window.removeSupplierValueFromSelect) {
+        window.removeSupplierValueFromSelect(rowEl, type, value);
     }
 
-    // Rebuild hidden inputs di header & sync ke semua detail dalam row ini
+    // 2. Hapus badge dari tampilan
+    badge.remove();
+
+    // 3. Jika tidak ada badge tersisa, tampilkan placeholder "-"
+    if (badgesContainer && badgesContainer.querySelectorAll('.badge-removable').length === 0) {
+        const placeholder = document.createElement('span');
+        placeholder.className = 'text-muted small badge-empty';
+        placeholder.textContent = '-';
+        badgesContainer.appendChild(placeholder);
+    }
+
+    // 4. Rebuild hidden inputs header & semua detail dalam row ini
     if (rowEl && window.syncHeaderToDetailsGlobal) {
         window.syncHeaderToDetailsGlobal(rowEl);
-    } else if (rowEl) {
-        // Fallback: trigger event agar applyProdukMetaForRow / syncHeaderToDetails terpanggil
-        // Kita cukup rebuild hidden inputs dari badge yang tersisa
-        const produsenBadgesEl = rowEl.querySelector('.produsen-badges');
-        const distributorBadgesEl = rowEl.querySelector('.distributor-badges');
-
-        const getValsFromBadges = (el) => {
-            if (!el) return [];
-            return Array.from(el.querySelectorAll('.badge-removable[data-value]'))
-                       .map(b => String(b.dataset.value || '').trim())
-                       .filter(v => v !== '');
-        };
-
-        const produsenVals = getValsFromBadges(produsenBadgesEl);
-        const distributorVals = getValsFromBadges(distributorBadgesEl);
-
-        // Update hidden inputs di header (bagian .form-section, bukan .detail-item)
-        const headerProdusenHidden = rowEl.querySelector('.form-section .produsen-hidden-inputs');
-        const headerDistributorHidden = rowEl.querySelector('.form-section .distributor-hidden-inputs');
-
-        const rebuildHidden = (wrap, vals, cls) => {
-            if (!wrap) return;
-            wrap.innerHTML = '';
-            vals.forEach(v => {
-                const inp = document.createElement('input');
-                inp.type = 'hidden';
-                inp.className = cls;
-                inp.value = v;
-                wrap.appendChild(inp);
-            });
-        };
-
-        rebuildHidden(headerProdusenHidden, produsenVals, 'produsen-hidden-item');
-        rebuildHidden(headerDistributorHidden, distributorVals, 'distributor-hidden-item');
-
-        // Update hidden inputs di setiap detail-item dalam row ini
-        rowEl.querySelectorAll('.detail-item').forEach((detailEl, idx) => {
-            const prodWrap = detailEl.querySelector('.produsen-hidden-inputs');
-            const distWrap = detailEl.querySelector('.distributor-hidden-inputs');
-            rebuildHidden(prodWrap, produsenVals, '');
-            rebuildHidden(distWrap, distributorVals, '');
-        });
     }
 }
 </script>
@@ -2363,18 +2244,17 @@ function removeBadgeItem(btn, type) {
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('form-pemeriksaan-kedatangan-kemasan');
-    
+
     if (!form) return;
 
     /**
-     * Validasi Form - Cek field wajib:
+     * Validasi Form:
      * 1. Tanggal (wajib)
-     * 2. Status (minimal satu item harus "Hold" atau "Release")
+     * 2. Status (minimal satu item harus "Hold", "Release", atau "Retur")
      */
     function validateForm() {
         const errors = [];
-        
-        // 1. Tanggal (wajib)
+
         const tanggal = document.getElementById('tanggal');
         if (!tanggal || !tanggal.value || tanggal.value.trim() === '') {
             errors.push('Tanggal harus diisi');
@@ -2383,14 +2263,13 @@ document.addEventListener('DOMContentLoaded', function() {
             removeHighlight(tanggal);
         }
 
-        // 2. Status (minimal satu item harus "Hold" atau "Release")
         const statusSelects = document.querySelectorAll('select[name^="status"]');
         let hasValidStatus = false;
         let firstStatusField = null;
-        
-        statusSelects.forEach((select, index) => {
+
+        statusSelects.forEach((select) => {
             if (!firstStatusField) firstStatusField = select;
-            
+
             const value = select.value ? select.value.trim() : '';
             if (value === 'Hold' || value === 'Release' || value === 'Retur') {
                 hasValidStatus = true;
@@ -2399,7 +2278,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 highlightField(select);
             }
         });
-        
+
         if (!hasValidStatus) {
             errors.push('Minimal satu item harus memilih Status "Hold", "Release", atau "Retur"');
             if (firstStatusField) {
@@ -2410,9 +2289,6 @@ document.addEventListener('DOMContentLoaded', function() {
         return errors;
     }
 
-    /**
-     * Highlight field yang error
-     */
     function highlightField(field) {
         if (field) {
             field.classList.add('is-invalid');
@@ -2421,9 +2297,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    /**
-     * Remove highlight dari field
-     */
     function removeHighlight(field) {
         if (field) {
             field.classList.remove('is-invalid');
@@ -2432,31 +2305,25 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    /**
-     * Handle form submit
-     */
     form.addEventListener('submit', function(e) {
+        // Pengaman terakhir: sinkronkan radio Kondisi Fisik -> hidden bernama (per detail)
         document.querySelectorAll('#unified-container .detail-item').forEach((detail) => {
-            ['penampakan', 'sealing', 'cetakan'].forEach((field) => {
-                const checked = detail.querySelector('input[type="radio"][name*="' + field + '_"]:checked');
-                const hidden = detail.querySelector('input.' + field + '-hidden');
-                if (checked && hidden) {
-                    hidden.value = String(checked.value);
-                }
+            ['penampakan', 'sealing', 'cetakan', 'logo_halal'].forEach((f) => {
+                const checked = detail.querySelector(`input[type="radio"][data-group="${f}"]:checked`);
+                const hidden = detail.querySelector(`input.${f}-hidden`);
+                if (hidden) hidden.value = checked ? String(checked.value) : '';
             });
         });
         const errors = validateForm();
-        
+
         if (errors.length > 0) {
             e.preventDefault();
-            
-            // Tampilkan error messages
+
             let errorMessage = '❌ Data Tidak Lengkap:\n\n';
             errors.forEach((error, index) => {
                 errorMessage += `${index + 1}. ${error}\n`;
             });
-            
-            // Gunakan SweetAlert jika tersedia, jika tidak gunakan alert biasa
+
             if (typeof Swal !== 'undefined') {
                 Swal.fire({
                     icon: 'error',
@@ -2471,15 +2338,13 @@ document.addEventListener('DOMContentLoaded', function() {
             } else {
                 alert(errorMessage);
             }
-            
-            // Scroll ke field pertama yang error
+
             const allFields = document.querySelectorAll('.is-invalid');
             if (allFields.length > 0) {
                 allFields[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
                 allFields[0].focus();
             }
         }
-        // Jika validasi berhasil, form akan submit normalmente
     });
 });
 </script>

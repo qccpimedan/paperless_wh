@@ -409,11 +409,15 @@
                                             
                                             <!-- Detail Pemeriksaan -->
                                             <div class="row">
-                                                <div class="col-md-6">
+                                                <div class="col-md-4">
                                                     <div class="card border-0 shadow-sm">
                                                         <div class="card-body p-3">
                                                             <div class="fw-semibold">Produsen</div>
-                                                            <div class="small text-muted mb-2">Otomatis terisi sesuai Produk yang dipilih</div>
+                                                            <div class="small text-muted mb-2">Data akan terisi secara otomatis berdasarkan produk yang dipilih. Anda juga dapat memilih data secara manual melalui pilihan yang tersedia di bawah ini.</div>
+                                                            <option value="" selected disabled>-- Pilih Produsen --</option>
+                                                            <select class="form-select js-supplier-choices js-chemical-supplier produsen-master-select" multiple>
+                                                                @foreach($produsens as $produsen)<option value="{{ $produsen->id }}">{{ $produsen->nama_produsen }}</option>@endforeach
+                                                            </select>
                                                             <div class="produsen-badges d-flex flex-wrap gap-1">
                                                                 <span class="text-muted small">-</span>
                                                             </div>
@@ -421,11 +425,15 @@
                                                         </div>
                                                     </div>
                                                 </div>
-                                                <div class="col-md-6">
+                                                <div class="col-md-4">
                                                     <div class="card border-0 shadow-sm">
                                                         <div class="card-body p-3">
                                                             <div class="fw-semibold">Distributor</div>
-                                                            <div class="small text-muted mb-2">Otomatis terisi sesuai Produk yang dipilih</div>
+                                                            <div class="small text-muted mb-2">Data akan terisi secara otomatis berdasarkan produk yang dipilih. Anda juga dapat memilih data secara manual melalui pilihan yang tersedia di bawah ini.</div>
+                                                            <option value="" selected disabled>-- Pilih Distributor --</option>
+                                                            <select class="form-select js-supplier-choices js-chemical-supplier distributor-master-select" multiple>
+                                                                @foreach($distributors as $distributor)<option value="{{ $distributor->id }}">{{ $distributor->nama_distributor }}</option>@endforeach
+                                                            </select>
                                                             <div class="distributor-badges d-flex flex-wrap gap-1">
                                                                 <span class="text-muted small">-</span>
                                                             </div>
@@ -502,11 +510,11 @@
                                                         </div>
                                                     </div>
 
-                                                    <!-- Kondisi Fisik -->
+                                                    <!-- Kondisi Fisik (Kemasan, Warna, Logo Halal) -->
                                                     <div class="form-section mb-3">
                                                         <h6 class="text-primary mb-2">Kondisi Fisik</h6>
                                                         <div class="row">
-                                                            <div class="col-md-6">
+                                                            <div class="col-md-4">
                                                                 <div class="mb-3">
                                                                     <label class="form-label"><strong>Kemasan</strong></label>
                                                                     <div class="form-check">
@@ -520,7 +528,7 @@
                                                                     <input type="hidden" name="kondisi_fisik_kemasan[]" class="radio-value-kemasan-1">
                                                                 </div>
                                                             </div>
-                                                            <div class="col-md-6">
+                                                            <div class="col-md-4">
                                                                 <div class="mb-3">
                                                                     <label class="form-label"><strong>Warna</strong></label>
                                                                     <div class="form-check">
@@ -532,6 +540,20 @@
                                                                         <label class="form-check-label" for="warna_tidak_1">Tidak ✗</label>
                                                                     </div>
                                                                     <input type="hidden" name="kondisi_fisik_warna[]" class="radio-value-warna-1">
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-md-4">
+                                                                <div class="mb-3">
+                                                                    <label class="form-label"><strong>Logo Halal</strong></label>
+                                                                    <div class="form-check">
+                                                                        <input class="form-check-input" type="radio" name="persyaratan_dokumen_halal_1" id="halal_ya_1" value="1">
+                                                                        <label class="form-check-label" for="halal_ya_1">Ya ✓</label>
+                                                                    </div>
+                                                                    <div class="form-check">
+                                                                        <input class="form-check-input" type="radio" name="persyaratan_dokumen_halal_1" id="halal_tidak_1" value="0">
+                                                                        <label class="form-check-label" for="halal_tidak_1">Tidak ✗</label>
+                                                                    </div>
+                                                                    <input type="hidden" name="persyaratan_dokumen_halal[]" class="radio-value-halal-1">
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -617,24 +639,10 @@
                                                         </div>
                                                     </div>
 
-                                                    <!-- Dokumen -->
+                                                    <!-- Dokumen (Logo Halal sudah dipindah ke Kondisi Fisik) -->
                                                     <div class="form-section mb-3">
                                                         <h6 class="text-primary mb-2">Dokumen & Sertifikasi</h6>
                                                         <div class="row">
-                                                            <div class="col-md-6">
-                                                                <div class="mb-3">
-                                                                    <label class="form-label"><strong>Halal (berlaku)</strong></label>
-                                                                    <div class="form-check">
-                                                                        <input class="form-check-input" type="radio" name="persyaratan_dokumen_halal_1" id="halal_ya_1" value="1">
-                                                                        <label class="form-check-label" for="halal_ya_1">Ya ✓</label>
-                                                                    </div>
-                                                                    <div class="form-check">
-                                                                        <input class="form-check-input" type="radio" name="persyaratan_dokumen_halal_1" id="halal_tidak_1" value="0">
-                                                                        <label class="form-check-label" for="halal_tidak_1">Tidak ✗</label>
-                                                                    </div>
-                                                                    <input type="hidden" name="persyaratan_dokumen_halal[]" class="radio-value-halal-1">
-                                                                </div>
-                                                            </div>
                                                             <div class="col-md-6">
                                                                 <div class="mb-3">
                                                                     <label class="form-label"><strong>COA</strong></label>
@@ -706,13 +714,13 @@
     .badge-remove-btn {
         background: none;
         border: none;
-        padding: 0 2px;
+        padding: 1px 4px;
         font-size: 13px;
         font-weight: bold;
         line-height: 1;
         cursor: pointer;
         color: #dc3545;
-        border-radius: 50%;
+        border-radius: 3px;
         transition: color .15s, background .15s;
     }
     .badge-remove-btn:hover {
@@ -1138,11 +1146,30 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+    function setSupplierChoicesValues(select, values) {
+        if (!select) return;
+
+        const normalized = [...new Set((Array.isArray(values) ? values : []).map(value => String(value).trim()).filter(Boolean))];
+        const instance = select.choicesInstance || select.__choicesInstance || null;
+
+        if (instance && typeof instance.removeActiveItems === 'function' && typeof instance.setChoiceByValue === 'function') {
+            instance.removeActiveItems();
+            normalized.forEach(value => instance.setChoiceByValue(value));
+            return;
+        }
+
+        Array.from(select.options).forEach(option => {
+            option.selected = normalized.includes(String(option.value).trim());
+        });
+    }
+
     function applyProdukForRow(rowEl) {
         const produkSelect = rowEl.querySelector('select.produk-select');
         const idChemicalHidden = rowEl.querySelector('.id-chemical-hidden');
         const idProdusenHidden = rowEl.querySelector('.id-produsen-hidden');
         const idDistributorHidden = rowEl.querySelector('.id-distributor-hidden');
+        const produsenSelect = rowEl.querySelector('.produsen-master-select');
+        const distributorSelect = rowEl.querySelector('.distributor-master-select');
         const produsenBadges = rowEl.querySelector('.produsen-badges');
         const distributorBadges = rowEl.querySelector('.distributor-badges');
 
@@ -1168,8 +1195,10 @@ document.addEventListener('DOMContentLoaded', function() {
         const produsenNames = meta && meta.produsen_names ? meta.produsen_names : [];
         const distributorNames = meta && meta.distributor_names ? meta.distributor_names : [];
 
-        idProdusenHidden.value = (Array.isArray(produsenIds) && produsenIds.length > 0) ? String(produsenIds[0]) : '';
-        idDistributorHidden.value = (Array.isArray(distributorIds) && distributorIds.length > 0) ? String(distributorIds[0]) : '';
+        setSupplierChoicesValues(produsenSelect, produsenIds);
+        setSupplierChoicesValues(distributorSelect, distributorIds);
+        idProdusenHidden.value = JSON.stringify(produsenSelect ? Array.from(produsenSelect.selectedOptions).map(o => o.value) : produsenIds);
+        idDistributorHidden.value = JSON.stringify(distributorSelect ? Array.from(distributorSelect.selectedOptions).map(o => o.value) : distributorIds);
 
         const renderBadges = (containerEl, idValues, nameValues, badgeClass, type) => {
             if (!Array.isArray(nameValues) || nameValues.length === 0) {
@@ -1183,7 +1212,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 span.className = badgeClass + ' badge-removable';
                 span.setAttribute('data-value', String(v).trim());
                 span.setAttribute('data-id', String(idVal));
-                span.innerHTML = `${String(v)} <button type="button" class="badge-remove-btn" onclick="removeBadgeItem(this, '${type}')">&times;</button>`;
+                span.innerHTML = `${String(v)} <button type="button" class="badge-remove-btn" onclick="removeBadgeItem(this, '${type}')">Hapus</button>`;
                 containerEl.appendChild(span);
             });
         };
@@ -1194,6 +1223,26 @@ document.addEventListener('DOMContentLoaded', function() {
 
     document.addEventListener('change', function(e) {
         const target = e.target;
+        if (target && target.matches('.produsen-master-select, .distributor-master-select')) {
+            const row = target.closest('.unified-row');
+            if (row) {
+                const isProdusen = target.classList.contains('produsen-master-select');
+                const hidden = row.querySelector(isProdusen ? '.id-produsen-hidden' : '.id-distributor-hidden');
+                const badges = row.querySelector(isProdusen ? '.produsen-badges' : '.distributor-badges');
+                const type = isProdusen ? 'produsen' : 'distributor';
+                const badgeClass = isProdusen ? 'badge bg-light-primary text-primary' : 'badge bg-light-info text-info';
+                const selected = Array.from(target.selectedOptions);
+                hidden.value = JSON.stringify(selected.map(o => o.value));
+                badges.innerHTML = selected.length ? '' : '<span class="text-muted small badge-empty">-</span>';
+                selected.forEach(o => {
+                    const span = document.createElement('span'); span.className = badgeClass + ' badge-removable';
+                    span.dataset.value = o.text; span.dataset.id = o.value;
+                    span.innerHTML = `${o.text} <button type="button" class="badge-remove-btn" onclick="removeBadgeItem(this, '${type}')">Hapus</button>`;
+                    badges.appendChild(span);
+                });
+            }
+            return;
+        }
         if (target && target.matches('select.kategori-produk-select')) {
             const row = target.closest('.unified-row');
             if (row) {
@@ -1413,6 +1462,34 @@ function setupDynamicFormListeners() {
     });
 }
 
+// Catatan: Logo Halal (persyaratan_dokumen_halal) kini berada di section Kondisi Fisik,
+// tetapi tetap berada di dalam .detail-item sehingga mapping di bawah tidak perlu berubah.
+// Parkir semua radio milik detail dengan nama sementara yang unik sebelum penomoran ulang.
+// Tanpa ini, radio yang tercentang yang diberi nama sama dengan grup lain akan membuat
+// browser menghapus centang radio lain di grup tersebut (pilihan "hilang" dari tampilan).
+function parkDetailRadios(detailEl) {
+    window.__radioParkSeq = (window.__radioParkSeq || 0) + 1;
+    const uid = window.__radioParkSeq;
+    const groupKeys = ['kondisi_fisik_kemasan', 'kondisi_fisik_warna', 'persyaratan_dokumen_halal', 'coa'];
+    detailEl.querySelectorAll('input[type="radio"]').forEach((radio) => {
+        let grp = null;
+        if (radio.classList.contains('coa-type-pdf') || radio.classList.contains('coa-type-img')) {
+            grp = 'coa_type';
+        } else {
+            const name = radio.getAttribute('name') || '';
+            // Cocokkan nama persis "<key>_<angka>" agar grup lain (mis. coa_type_*) tidak ikut tertangkap
+            grp = groupKeys.find((k) => new RegExp('^' + k + '_\\d+$').test(name)) || null;
+        }
+        if (!grp) return;
+        radio.__radioGroup = grp;
+        radio.name = `__park_${uid}_${grp}`;
+    });
+}
+
+function radiosOfGroup(detailEl, grp) {
+    return Array.from(detailEl.querySelectorAll('input[type="radio"]')).filter((r) => r.__radioGroup === grp);
+}
+
 function setupRowRadios(detailEl) {
     const globalIndex = Number(detailEl.dataset.detailGlobalIndex || 0) + 1;
     const mappings = [
@@ -1424,7 +1501,7 @@ function setupRowRadios(detailEl) {
 
     mappings.forEach(({ key, hiddenPrefix }) => {
         const radioName = `${key}_${globalIndex}`;
-        detailEl.querySelectorAll(`input[type="radio"][name^="${key}_"]`).forEach((radio, idx) => {
+        radiosOfGroup(detailEl, key).forEach((radio, idx) => {
             radio.name = radioName;
             const uniqueRadioId = `${key}_${globalIndex}_${idx}`;
             radio.id = uniqueRadioId;
@@ -1437,6 +1514,8 @@ function setupRowRadios(detailEl) {
             || detailEl.querySelector(`input[type="hidden"][name="${key}[]"]`);
 
         detailEl.querySelectorAll(`input[type="radio"][name="${radioName}"]`).forEach((radio) => {
+            if (radio.__hiddenBound) return; // cegah listener ganda
+            radio.__hiddenBound = true;
             radio.addEventListener('change', function () {
                 if (hidden) hidden.value = this.value;
             });
@@ -1451,7 +1530,7 @@ function setupRowRadios(detailEl) {
 
 // Initialize Choices.js for select elements
 function initializeAllChoices() {
-    const selectElements = document.querySelectorAll('select.choices');
+    const selectElements = document.querySelectorAll('select.choices, select.js-supplier-choices');
     
     selectElements.forEach(function(select) {
         // Skip if already initialized
@@ -1467,9 +1546,9 @@ function initializeAllChoices() {
         try {
             const choicesInstance = new Choices(select, {
                 searchResultLimit: 100,
-                    searchFuzziness: 0.000001,
-                    fuseOptions: { ignoreLocation: true, threshold: 0.2, matchAllTokens: false },
-                    searchEnabled: true,
+                searchFuzziness: 0.000001,
+                fuseOptions: { ignoreLocation: true, threshold: 0.2, matchAllTokens: false },
+                searchEnabled: true,
                 removeItemButton: true,
                 placeholder: true,
                 placeholderValue: 'Pilih opsi',
@@ -1510,7 +1589,7 @@ function setupRadioListenersForRow1() {
         });
     });
     
-    // Dokumen - Halal
+    // Kondisi Fisik - Logo Halal
     document.querySelectorAll('input[name="persyaratan_dokumen_halal_1"]').forEach(radio => {
         radio.addEventListener('change', function() {
             if (this.checked) {
@@ -1582,11 +1661,15 @@ function addNewRow() {
         
         <!-- Detail Pemeriksaan -->
         <div class="row">
-            <div class="col-md-6">
+            <div class="col-md-4">
                 <div class="card border-0 shadow-sm">
                     <div class="card-body p-3">
                         <div class="fw-semibold">Produsen</div>
-                        <div class="small text-muted mb-2">Otomatis terisi sesuai Produk yang dipilih</div>
+                        <div class="small text-muted mb-2">Data akan terisi secara otomatis berdasarkan produk yang dipilih. Anda juga dapat memilih data secara manual melalui pilihan yang tersedia di bawah ini.</div>
+                        <option value="" selected disabled>-- Pilih Produsen --</option>
+                        <select class="form-select js-supplier-choices js-chemical-supplier produsen-master-select" multiple>
+                            @foreach($produsens as $produsen)<option value="{{ $produsen->id }}">{{ $produsen->nama_produsen }}</option>@endforeach
+                        </select>
                         <div class="produsen-badges d-flex flex-wrap gap-1">
                             <span class="text-muted small">-</span>
                         </div>
@@ -1594,11 +1677,15 @@ function addNewRow() {
                     </div>
                 </div>
             </div>
-            <div class="col-md-6">
+            <div class="col-md-4">
                 <div class="card border-0 shadow-sm">
                     <div class="card-body p-3">
                         <div class="fw-semibold">Distributor</div>
-                        <div class="small text-muted mb-2">Otomatis terisi sesuai Produk yang dipilih</div>
+                        <div class="small text-muted mb-2">Data akan terisi secara otomatis berdasarkan produk yang dipilih. Anda juga dapat memilih data secara manual melalui pilihan yang tersedia di bawah ini.</div>
+                        <option value="" selected disabled>-- Pilih Distributor --</option>
+                        <select class="form-select js-supplier-choices js-chemical-supplier distributor-master-select" multiple>
+                            @foreach($distributors as $distributor)<option value="{{ $distributor->id }}">{{ $distributor->nama_distributor }}</option>@endforeach
+                        </select>
                         <div class="distributor-badges d-flex flex-wrap gap-1">
                             <span class="text-muted small">-</span>
                         </div>
@@ -1718,11 +1805,11 @@ function addNewRow() {
                     </div>
                 </div>
 
-                <!-- Kondisi Fisik -->
+                <!-- Kondisi Fisik (Kemasan, Warna, Logo Halal) -->
                 <div class="form-section mb-3">
                     <h6 class="text-primary mb-2">Kondisi Fisik</h6>
                     <div class="row">
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <div class="mb-3">
                                 <label class="form-label"><strong>Kemasan</strong></label>
                                 <div class="form-check">
@@ -1736,7 +1823,7 @@ function addNewRow() {
                                 <input type="hidden" name="kondisi_fisik_kemasan[]" class="radio-value-kemasan-1">
                             </div>
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <div class="mb-3">
                                 <label class="form-label"><strong>Warna</strong></label>
                                 <div class="form-check">
@@ -1748,6 +1835,20 @@ function addNewRow() {
                                     <label class="form-check-label">Tidak ✗</label>
                                 </div>
                                 <input type="hidden" name="kondisi_fisik_warna[]" class="radio-value-warna-1">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="form-label"><strong>Logo Halal</strong></label>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="persyaratan_dokumen_halal_1" value="1">
+                                    <label class="form-check-label">Ya ✓</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="persyaratan_dokumen_halal_1" value="0">
+                                    <label class="form-check-label">Tidak ✗</label>
+                                </div>
+                                <input type="hidden" name="persyaratan_dokumen_halal[]" class="radio-value-halal-1">
                             </div>
                         </div>
                     </div>
@@ -1826,24 +1927,10 @@ function addNewRow() {
                     </div>
                 </div>
 
-                <!-- Dokumen -->
+                <!-- Dokumen (Logo Halal sudah dipindah ke Kondisi Fisik) -->
                 <div class="form-section mb-3">
                     <h6 class="text-primary mb-2">Dokumen & Sertifikasi</h6>
                     <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label class="form-label"><strong>Halal (berlaku)</strong></label>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="persyaratan_dokumen_halal_1" value="1">
-                                    <label class="form-check-label">Ya ✓</label>
-                                </div>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="persyaratan_dokumen_halal_1" value="0">
-                                    <label class="form-check-label">Tidak ✗</label>
-                                </div>
-                                <input type="hidden" name="persyaratan_dokumen_halal[]" class="radio-value-halal-1">
-                            </div>
-                        </div>
                         <div class="col-md-6">
                             <div class="mb-3">
                                 <label class="form-label"><strong>COA</strong></label>
@@ -1915,7 +2002,7 @@ function setupRadioListeners(row, uniqueId) {
         });
     });
     
-    // Dokumen - Halal
+    // Kondisi Fisik - Logo Halal
     row.querySelectorAll(`input[name="persyaratan_dokumen_halal_${uniqueId}"]`).forEach(radio => {
         radio.addEventListener('change', function() {
             if (this.checked) {
@@ -2073,6 +2160,8 @@ function getDistributorOptions() {
 
 // Update row numbers
 function updateRowNumbers() {
+    // Fase 1: parkir semua radio detail agar penamaan ulang tidak saling menimpa
+    document.querySelectorAll('.unified-row .detail-items .detail-item').forEach(parkDetailRadios);
     const rows = document.querySelectorAll('#unified-container .unified-row');
     let globalDetail = 0;
     rows.forEach((row, index) => {
@@ -2338,7 +2427,7 @@ document.addEventListener('change', function(e) {
  * Hapus satu badge Produsen/Distributor dari tampilan form Chemical.
  * Data master TIDAK berubah.
  *
- * @param {HTMLButtonElement} btn  — tombol × yang diklik
+ * @param {HTMLButtonElement} btn  — tombol Hapus yang diklik
  * @param {string} type            — 'produsen' | 'distributor'
  */
 function removeBadgeItem(btn, type) {
@@ -2370,21 +2459,16 @@ function removeBadgeItem(btn, type) {
         const idDistributorHidden = rowEl.querySelector('.id-distributor-hidden');
 
         if (type === 'produsen' && idProdusenHidden) {
+            if (produsenSelect) Array.from(produsenSelect.options).forEach(o => { if (o.value === badge.dataset.id) o.selected = false; });
             const remainingBadges = produsenBadgesEl ? produsenBadgesEl.querySelectorAll('.badge-removable') : [];
-            if (remainingBadges.length > 0) {
-                idProdusenHidden.value = remainingBadges[0].getAttribute('data-id') || remainingBadges[0].dataset.id || '';
-            } else {
-                idProdusenHidden.value = '';
-            }
+            idProdusenHidden.value = JSON.stringify(Array.from(remainingBadges).map(item => item.dataset.id));
         } else if (type === 'distributor' && idDistributorHidden) {
+            if (distributorSelect) Array.from(distributorSelect.options).forEach(o => { if (o.value === badge.dataset.id) o.selected = false; });
             const remainingBadges = distributorBadgesEl ? distributorBadgesEl.querySelectorAll('.badge-removable') : [];
-            if (remainingBadges.length > 0) {
-                idDistributorHidden.value = remainingBadges[0].getAttribute('data-id') || remainingBadges[0].dataset.id || '';
-            } else {
-                idDistributorHidden.value = '';
-            }
+            idDistributorHidden.value = JSON.stringify(Array.from(remainingBadges).map(item => item.dataset.id));
         }
     }
 }
 </script>
+@include('qc-sistem.supplier-choices-sync')
 @endpush

@@ -9,6 +9,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Barryvdh\DomPDF\Facade\Pdf;
+use App\Exports\SingleRecordViewExport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class DetailKomplainController extends Controller
 {
@@ -555,6 +557,22 @@ class DetailKomplainController extends Controller
         ]);
 
         return $pdf->download('laporan-detail-komplain-' . date('Ymd-His') . '.pdf');
+    }
+
+    public function exportExcel(Request $request, $uuid = null)
+    {
+        $user = Auth::user();
+        $detailKomplain = DetailKomplain::where('uuid', $uuid)->firstOrFail();
+        if ($user->role && strtolower($user->role->role) !== 'superadmin'
+            && $user->getEffectivePlantId() !== $detailKomplain->user->id_plant) {
+            abort(403, 'Unauthorized');
+        }
+
+        return Excel::download(new SingleRecordViewExport(
+            'qc-sistem.detail-komplain.eksport_pdf',
+            ['detailKomplain' => $detailKomplain],
+            'Detail Komplain'
+        ), 'komplain-' . $detailKomplain->uuid . '.xlsx');
     }
 
     public function batchVerify(Request $request)

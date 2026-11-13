@@ -354,7 +354,6 @@
 
                     <div class="fp-docs">
                         <span>Status dokumen:</span>
-                        <span class="fp-doc {{ $stLogo === 'bad' ? 'bad' : $stLogo }}"><i class="bi {{ $triDocIcon[$stLogo] }}"></i> Logo Halal</span>
                         <span class="fp-doc {{ $stDok === 'bad' ? 'bad' : $stDok }}"><i class="bi {{ $triDocIcon[$stDok] }}"></i> Dokumen Halal</span>
                         <span class="fp-doc {{ $stCoa === 'bad' ? 'bad' : $stCoa }}"><i class="bi {{ $triDocIcon[$stCoa] }}"></i> COA</span>
                     </div>
@@ -405,6 +404,8 @@
                                         @php $st = $tri($physVal); @endphp
                                         <span class="fp-pill fp-pill-{{ $st }}"><i class="bi {{ $triIcon[$st] }}"></i> {{ $physLabel }}</span>
                                     @endforeach
+                                        <span class="fp-doc {{ $stLogo === 'bad' ? 'bad' : $stLogo }}"><i class="bi {{ $triDocIcon[$stLogo] }}"></i> Logo Halal</span>
+
                                 </div>
 
                                 @if($keterangan)

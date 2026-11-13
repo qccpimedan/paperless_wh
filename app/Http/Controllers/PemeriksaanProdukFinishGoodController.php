@@ -5,16 +5,22 @@ namespace App\Http\Controllers;
 use App\Models\PemeriksaanProdukFinishGood;
 use App\Models\Produk;
 use App\Models\Shift;
+use App\Models\Produsen;
+use App\Models\Distributor;
 use App\Models\User;
+use App\Exports\SingleRecordViewExport;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Barryvdh\DomPDF\Facade\Pdf as PDF;
+use Maatwebsite\Excel\Facades\Excel;
 use Monarobase\CountryList\CountryListFacade as Countries;
 use App\Http\Controllers\Traits\HasAuditController;
+use App\Http\Controllers\Traits\RejectsTruncatedDynamicInput;
 
 class PemeriksaanProdukFinishGoodController extends Controller
 {
     use HasAuditController;
+    use RejectsTruncatedDynamicInput;
     public function index(Request $request)
     {
         $user = Auth::user();
@@ -139,6 +145,8 @@ return view('qc-sistem.pemeriksaan-produk-finish-good.index', compact('pemeriksa
     {
         $user = Auth::user();
         $plantId = $user->getEffectivePlantId();
+        $produsens = Produsen::query()->when($plantId, fn ($q) => $q->whereHas('user', fn ($uq) => $uq->where('id_plant', $plantId)))->orderBy('nama_produsen')->get(['id', 'nama_produsen']);
+        $distributors = Distributor::query()->when($plantId, fn ($q) => $q->whereHas('user', fn ($uq) => $uq->where('id_plant', $plantId)))->orderBy('nama_distributor')->get(['id', 'nama_distributor']);
 
         $countries = Countries::getList('en', 'php');
 
@@ -204,7 +212,9 @@ return view('qc-sistem.pemeriksaan-produk-finish-good.index', compact('pemeriksa
             'produkKategoriOptions',
             'produkByKategori',
             'produkMeta',
-            'produkKategoriById'
+            'produkKategoriById',
+            'produsens',
+            'distributors'
         ));
     }
 
@@ -278,6 +288,15 @@ return view('qc-sistem.pemeriksaan-produk-finish-good.index', compact('pemeriksa
             'file_coa_img.*' => 'nullable|file|mimes:jpeg,png,jpg,gif,webp|max:3072',
         ]);
 
+        $this->rejectMismatchedDynamicArrayLengths($request, 'id_produk', [
+            'kategori_code', 'suhu_mobil_type', 'suhu_mobil_value',
+            'suhu_produk_type', 'suhu_produk_value', 'kondisi_produk',
+            'kondisi_produk_suhu_value', 'negara_produsen', 'kode_produksi',
+            'expire_date', 'jumlah_datang', 'jumlah_sampling', 'kondisi_kemasan',
+            'kondisi_warna', 'kondisi_aroma', 'logo_halal', 'dokumen_halal',
+            'coa', 'status_baris', 'keterangan',
+        ]);
+
         $idProdukArr = $request->input('id_produk', []);
         $kategoriArr = $request->input('kategori_code', []);
         $suhuMobilTypeArr = $request->input('suhu_mobil_type', []);
@@ -345,12 +364,19 @@ return view('qc-sistem.pemeriksaan-produk-finish-good.index', compact('pemeriksa
             }
         }
 
+        $submittedProdusen = (array) $request->input('produsen', []);
+        $submittedDistributor = (array) $request->input('distributor', []);
+        $decodeSupplier = function ($value) {
+            if (is_array($value)) return array_values(array_unique(array_filter(array_map('strval', $value), fn ($v) => trim($v) !== '')));
+            $decoded = json_decode((string) $value, true);
+            return is_array($decoded) ? array_values(array_unique(array_filter(array_map('strval', $decoded), fn ($v) => trim($v) !== ''))) : (trim((string) $value) !== '' ? [(string) $value] : []);
+        };
         $produsenArray = [];
         $distributorArray = [];
         foreach ($idProdukArr as $idx => $pid) {
             $pid = $pid ? (int) $pid : null;
-            $produsenArray[$idx] = $pid && isset($produsenByProduk[$pid]) ? $produsenByProduk[$pid] : [];
-            $distributorArray[$idx] = $pid && isset($distributorByProduk[$pid]) ? $distributorByProduk[$pid] : [];
+            $produsenArray[$idx] = array_key_exists($idx, $submittedProdusen) ? $decodeSupplier($submittedProdusen[$idx]) : ($pid && isset($produsenByProduk[$pid]) ? $produsenByProduk[$pid] : []);
+            $distributorArray[$idx] = array_key_exists($idx, $submittedDistributor) ? $decodeSupplier($submittedDistributor[$idx]) : ($pid && isset($distributorByProduk[$pid]) ? $distributorByProduk[$pid] : []);
         }
 
         $pemeriksaan = PemeriksaanProdukFinishGood::create([
@@ -427,6 +453,8 @@ return view('qc-sistem.pemeriksaan-produk-finish-good.index', compact('pemeriksa
     {
         $user = Auth::user();
         $plantId = $user->getEffectivePlantId();
+        $produsens = Produsen::query()->when($plantId, fn ($q) => $q->whereHas('user', fn ($uq) => $uq->where('id_plant', $plantId)))->orderBy('nama_produsen')->get(['id', 'nama_produsen']);
+        $distributors = Distributor::query()->when($plantId, fn ($q) => $q->whereHas('user', fn ($uq) => $uq->where('id_plant', $plantId)))->orderBy('nama_distributor')->get(['id', 'nama_distributor']);
 
         $countries = Countries::getList('en', 'php');
 
@@ -493,7 +521,9 @@ return view('qc-sistem.pemeriksaan-produk-finish-good.index', compact('pemeriksa
             'produkKategoriOptions',
             'produkByKategori',
             'produkMeta',
-            'produkKategoriById'
+            'produkKategoriById',
+            'produsens',
+            'distributors'
         ));
     }
 
@@ -644,12 +674,19 @@ return view('qc-sistem.pemeriksaan-produk-finish-good.index', compact('pemeriksa
             }
         }
 
+        $submittedProdusen = (array) $request->input('produsen', []);
+        $submittedDistributor = (array) $request->input('distributor', []);
+        $decodeSupplier = function ($value) {
+            if (is_array($value)) return array_values(array_unique(array_filter(array_map('strval', $value), fn ($v) => trim($v) !== '')));
+            $decoded = json_decode((string) $value, true);
+            return is_array($decoded) ? array_values(array_unique(array_filter(array_map('strval', $decoded), fn ($v) => trim($v) !== ''))) : (trim((string) $value) !== '' ? [(string) $value] : []);
+        };
         $produsenArray = [];
         $distributorArray = [];
         foreach ($idProdukArr as $idx => $pid) {
             $pid = $pid ? (int) $pid : null;
-            $produsenArray[$idx] = $pid && isset($produsenByProduk[$pid]) ? $produsenByProduk[$pid] : [];
-            $distributorArray[$idx] = $pid && isset($distributorByProduk[$pid]) ? $distributorByProduk[$pid] : [];
+            $produsenArray[$idx] = array_key_exists($idx, $submittedProdusen) ? $decodeSupplier($submittedProdusen[$idx]) : ($pid && isset($produsenByProduk[$pid]) ? $produsenByProduk[$pid] : []);
+            $distributorArray[$idx] = array_key_exists($idx, $submittedDistributor) ? $decodeSupplier($submittedDistributor[$idx]) : ($pid && isset($distributorByProduk[$pid]) ? $distributorByProduk[$pid] : []);
         }
 
         // FIX: Preserve approval fields agar tidak ter-overwrite saat edit data
@@ -1104,6 +1141,51 @@ return view('qc-sistem.pemeriksaan-produk-finish-good.index', compact('pemeriksa
         $filenameDate = $tanggal ?? $tanggalDari ?? date('Y-m-d');
         $filename = 'laporan-pemeriksaan-finish-good-' . $filenameDate . '.pdf';
         return $pdf->download($filename);
+    }
+
+    public function exportExcel(Request $request)
+    {
+        $user = Auth::user();
+        $pemeriksaan = PemeriksaanProdukFinishGood::where('uuid', $request->input('uuid'))
+            ->with(['user.role', 'user.plant', 'shift', 'qcVerifier', 'produksiVerifier', 'spvVerifier'])
+            ->firstOrFail();
+
+        if ($user->role && strtolower($user->role->role) !== 'superadmin'
+            && $user->getEffectivePlantId() !== $pemeriksaan->user->id_plant) {
+            abort(403, 'Unauthorized');
+        }
+
+        $qcUser = $pemeriksaan->qcVerifier?->name;
+        $produksiUser = $pemeriksaan->produksiVerifier?->name;
+        $spvQcUser = $pemeriksaan->spvVerifier?->name;
+        $produkIds = array_filter($pemeriksaan->id_produk_array ?? []);
+        $produkMap = Produk::whereIn('id', $produkIds)->pluck('nama_produk', 'id')->all();
+        $dataPerShift = [[
+            'shift' => $pemeriksaan->shift,
+            'pemeriksaans' => collect([$pemeriksaan]),
+            'qcUser' => $qcUser,
+            'produksiUser' => $produksiUser,
+            'spvQcUser' => $spvQcUser,
+            'filterProdukIds' => null,
+            'produkMap' => $produkMap,
+        ]];
+
+        return Excel::download(new SingleRecordViewExport(
+            'qc-sistem.pemeriksaan-produk-finish-good.pdf-report',
+            [
+                'pemeriksaans' => collect([$pemeriksaan]),
+                'tanggal' => $pemeriksaan->tanggal,
+                'shift' => $pemeriksaan->shift,
+                'qcUser' => $qcUser,
+                'produksiUser' => $produksiUser,
+                'spvQcUser' => $spvQcUser,
+                'filterProdukIds' => null,
+                'isAllShift' => false,
+                'dataPerShift' => $dataPerShift,
+                'produkMap' => $produkMap,
+            ],
+            'Pemeriksaan Finish Good'
+        ), 'produk-finish-good-' . $pemeriksaan->uuid . '.xlsx');
     }
 
     private function exportPDFAllShift($request, $user, $tanggalDari, $tanggalSampai, $id_produk, $kategori_code)
