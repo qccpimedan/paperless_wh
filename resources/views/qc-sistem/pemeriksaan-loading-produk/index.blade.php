@@ -23,8 +23,33 @@
     }
     $canVerify = in_array($userRole, ['qc inspector', 'warehouse', 'produksi', 'spv qc', 'superadmin']);
 @endphp
-<div id="main">
 
+{{-- ============ STYLE PERBAIKAN KOLOM CUSTOMER / TUJUAN ============ --}}
+<style>
+    /* Kolom customer dibatasi lebarnya & boleh turun baris */
+    .col-customer {
+        min-width: 200px;
+        max-width: 280px;
+        white-space: normal !important;
+        word-break: break-word;
+    }
+    .customer-badge {
+        display: inline-block;
+        max-width: 100%;
+        white-space: normal;
+        text-align: left;
+        line-height: 1.3;
+        cursor: help;
+    }
+    /* Tooltip menampilkan daftar lengkap, satu nama per baris */
+    .tooltip-inner {
+        white-space: pre-line;
+        text-align: left;
+        max-width: 420px;
+    }
+</style>
+
+<div id="main">
 
     <div class="page-heading">
         <div class="page-title">
@@ -130,10 +155,10 @@
                             </div>
                         </form>
                     </div>
-                    
+
                     <form action="{{ route('pemeriksaan-loading-produk.index') }}" method="GET" class="row g-3 mb-3">
                         <div class="col-md-9"><input type="text" name="search" class="form-control" placeholder="Cari Produk, Customer / Tujuan Pengiriman, No. Kendaraan..." value="{{ request('search') }}"></div>
-                        
+
                         @php $isPlantMedan = auth()->user() && auth()->user()->plant && stripos(auth()->user()->plant->plant ?? '', 'medan') !== false; @endphp
                         @if($isPlantMedan || (auth()->user()->role && strtolower(auth()->user()->role->role) === 'superadmin'))
                         <div class="col-md-3">
@@ -169,7 +194,7 @@
                                         <th>Sub Area</th>
                                         @endif
                                         <th>Nama Produk</th>
-                                        <th>Customer / Tujuan Pengiriman</th>
+                                        <th class="col-customer">Customer / Tujuan Pengiriman</th>
                                         <th>No. Kendaraan</th>
                                         <th>Verifikasi</th>
                                         <th>Aksi</th>
@@ -224,22 +249,37 @@
                                                         $tujuanLabels = collect([trim(collect([
                                                             $item->tujuanPengiriman->customer->nama_cust ?? null,
                                                             $item->tujuanPengiriman->nama_tujuan !== '-' ? ($item->tujuanPengiriman->nama_tujuan ?? null) : null,
-                                                        ])->filter()->implode(' / '))])->filter();
+                                                        ])->filter()->implode(' / '))])->filter()->values();
                                                     }
                                                 @endphp
                                                 <span class="badge bg-info">{{ $pName }}</span>
                                                 @if($countP > 1) <br><small class="text-muted">+{{ $countP-1 }} lainnya</small> @endif
                                             </td>
-                                            <td>
+
+                                            {{-- ====== KOLOM CUSTOMER / TUJUAN (DIPERBAIKI) ====== --}}
+                                            <td class="col-customer">
                                                 @if($tujuanLabels->isNotEmpty())
-                                                    <span class="badge bg-light-info text-info">{{ $tujuanLabels->first() }}</span>
+                                                    <span class="badge bg-light-info text-info customer-badge"
+                                                          data-bs-toggle="tooltip"
+                                                          data-bs-placement="top"
+                                                          title="{{ $tujuanLabels->implode("\n") }}">
+                                                        {{ \Illuminate\Support\Str::limit($tujuanLabels->first(), 60) }}
+                                                    </span>
                                                     @if($tujuanLabels->count() > 1)
-                                                        <br><small class="text-muted">+{{ $tujuanLabels->count() - 1 }} lainnya</small>
+                                                        <br>
+                                                        <small class="text-muted"
+                                                               style="cursor: help;"
+                                                               data-bs-toggle="tooltip"
+                                                               data-bs-placement="bottom"
+                                                               title="{{ $tujuanLabels->slice(1)->implode("\n") }}">
+                                                            +{{ $tujuanLabels->count() - 1 }} lainnya
+                                                        </small>
                                                     @endif
                                                 @else
                                                     <span class="text-muted">-</span>
                                                 @endif
                                             </td>
+
                                             <td>{{ $item->kendaraan->no_kendaraan ?? '-' }}</td>
                                             <td>
                                                 @if($st === 'pending' || $st === null)
@@ -279,7 +319,7 @@
                                             </td>
                                         </tr>
                                     @empty
-                                        <tr><td colspan="10" class="text-center py-4">Belum ada data</td></tr>
+                                        <tr><td colspan="11" class="text-center py-4">Belum ada data</td></tr>
                                     @endforelse
                                 </tbody>
                             </table>
@@ -356,9 +396,16 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // ===== Aktifkan tooltip Bootstrap (daftar lengkap customer/tujuan) =====
+    if (typeof bootstrap !== 'undefined' && bootstrap.Tooltip) {
+        document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function(el) {
+            new bootstrap.Tooltip(el);
+        });
+    }
+
     const pByCat = @json($produkByKategori ?? []);
     const kRel = document.getElementById('filterKategori'), pRel = document.getElementById('filterProduk');
-    
+
     if (kRel && pRel) {
         const initC = (el) => (typeof Choices !== 'undefined') ? new Choices(el, { searchEnabled: true, itemSelectText: '', removeItemButton: true }) : null;
         const kC = initC(kRel), pC = initC(pRel);
