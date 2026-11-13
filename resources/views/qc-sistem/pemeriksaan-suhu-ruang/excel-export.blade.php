@@ -159,8 +159,8 @@
                 $hJam = $history->created_at->format('H:i');
             }
 
-            // FIX: Gunakan tanggal dari created_at history untuk fix midnight crossing bug
-            $tanggalHistory = $history->created_at ? $history->created_at->format('d/m/Y') : $tanggalStr;
+            // Histori merupakan catatan untuk tanggal pemeriksaan induk; created_at hanya waktu perubahan disimpan.
+            $tanggalHistory = $tanggalStr;
 
             $lama = is_array($history->suhu_data_lama) ? $history->suhu_data_lama : (json_decode($history->suhu_data_lama ?? '[]', true) ?: []);
             $baru = is_array($history->suhu_data_baru) ? $history->suhu_data_baru : (json_decode($history->suhu_data_baru ?? '[]', true) ?: []);

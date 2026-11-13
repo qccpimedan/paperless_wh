@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 use App\Traits\HasPlantTimezoneTimestamps;
@@ -86,6 +87,14 @@ class PemeriksaanSuhuRuangV3 extends Model
     public function histories()
     {
         return $this->hasMany(PemeriksaanSuhuRuangV3History::class, 'id_pemeriksaan_suhu_ruang_v3');
+    }
+
+    /** Load the complete change history for report records, regardless of edit date. */
+    public function scopeWithReportHistories(Builder $query): Builder
+    {
+        return $query->with([
+            'histories' => fn ($historyQuery) => $historyQuery->orderByDesc('id'),
+        ]);
     }
 
     public function verifiedBy()

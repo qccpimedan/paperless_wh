@@ -208,8 +208,8 @@
                 $hJam = $history->created_at->format('H:i');
             }
 
-            // FIX: Gunakan tanggal dari created_at history untuk fix midnight crossing bug
-            $tanggalHistory = $history->created_at ? $history->created_at->format('d/m/Y') : $tanggalStr;
+            // Histori merupakan catatan untuk tanggal pemeriksaan induk; created_at hanya waktu perubahan disimpan.
+            $tanggalHistory = $tanggalStr;
 
             $lama = is_array($history->suhu_data_lama) ? $history->suhu_data_lama : (json_decode($history->suhu_data_lama ?? '[]', true) ?: []);
             $baru = is_array($history->suhu_data_baru) ? $history->suhu_data_baru : (json_decode($history->suhu_data_baru ?? '[]', true) ?: []);
@@ -302,21 +302,13 @@
     $displaySuhuProduk = !empty($uniqueSuhuProduk) ? $uniqueSuhuProduk : '-';
 
     // Chunking baris data (misal 20 baris per halaman) seperti versi v2
-    $rowsPerChunk = 20;
-    $shiftPages = collect($rows)->groupBy('shift')->map(function ($shiftRows, $shiftName) use ($allRecords, $rowsPerChunk) {
-        $shiftRecord = $allRecords->filter(fn ($record) => ($record->shift->shift ?? '-') === $shiftName)->first();
-        return [
-            'shift' => $shiftName,
-            'rows' => $shiftRows->values()->chunk($rowsPerChunk),
-            'record' => $shiftRecord,
-            'totalRows' => $shiftRows->count(),
-        ];
-    })->values();
-    $totalPages = $shiftPages->sum(fn ($page) => $page['rows']->count());
+    // Paginate the complete report continuously; shift is a data column, not a page group.
+    $pages = collect($rows)->values()->chunk(20)->values();
+    $totalPages = $pages->count();
     $pageNumber = 0;
 @endphp
 
-@if($shiftPages->isEmpty())
+@if($pages->isEmpty())
     <div class="header">
         <div class="header-left">
             <div class="logo-company">
@@ -336,9 +328,13 @@
     </div>
     <div class="empty-state">Tidak ada data untuk periode / filter yang dipilih.</div>
 @else
-    @foreach($shiftPages as $shiftPage)
-      @foreach($shiftPage['rows'] as $chunkRows)
-        @php $pageNumber++; $signatureRecord = $shiftPage['record']; @endphp
+    @foreach($pages as $chunkRows)
+        @php
+            $pageNumber++;
+            $pageShift = (string) ($chunkRows->first()['shift'] ?? '-');
+            $signatureRecord = $allRecords->first(fn ($record) => (string) ($record->shift->shift ?? '-') === $pageShift)
+                ?? $allRecords->first();
+        @endphp
         {{-- Header KOP --}}
         <div class="header">
             <div class="header-left">
@@ -369,7 +365,7 @@
                 </tr>
                 <tr>
                     <td class="subheader-label">Total Baris</td>
-                    <td>{{ $shiftPage['totalRows'] }}</td>
+                    <td>{{ count($rows) }}</td>
                     <td class="subheader-label">Halaman</td>
                     <td>{{ $pageNumber }} / {{ $totalPages }}</td>
                 </tr>
@@ -475,7 +471,6 @@
         @if($pageNumber < $totalPages)
             <div class="page-break"></div>
         @endif
-      @endforeach
     @endforeach
 @endif
 

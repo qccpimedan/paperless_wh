@@ -827,25 +827,10 @@ class PemeriksaanSuhuRuangV3Controller extends Controller
             'user.role',
             'user.plant',
             'shift',
-            'histories' => function ($q) use ($tanggalDari, $tanggalSampai, $tanggal) {
-                $q->when($tanggalDari && $tanggalSampai, function ($historyQuery) use ($tanggalDari, $tanggalSampai) {
-                    $historyQuery->whereDate('created_at', '>=', $tanggalDari)
-                        ->whereDate('created_at', '<=', $tanggalSampai);
-                })
-                    ->when($tanggalDari && !$tanggalSampai, function ($historyQuery) use ($tanggalDari) {
-                        $historyQuery->whereDate('created_at', '>=', $tanggalDari);
-                    })
-                    ->when(!$tanggalDari && $tanggalSampai, function ($historyQuery) use ($tanggalSampai) {
-                        $historyQuery->whereDate('created_at', '<=', $tanggalSampai);
-                    })
-                    ->when(!$tanggalDari && !$tanggalSampai && $tanggal, function ($historyQuery) use ($tanggal) {
-                        $historyQuery->whereDate('created_at', $tanggal);
-                    });
-            },
             'verifiedByQc.role',
             'verifiedByProduksi.role',
             'verifiedBySpv.role',
-        ]);
+        ])->withReportHistories();
 
         if ($user->role && strtolower($user->role->role) !== 'superadmin') {
             $query->whereHas('user', function ($q) use ($user) {
@@ -921,20 +906,8 @@ class PemeriksaanSuhuRuangV3Controller extends Controller
         foreach ($allShifts as $shift) {
             $query = PemeriksaanSuhuRuangV3::with([
                 'user.role', 'user.plant', 'shift',
-                'histories' => function ($q) use ($tanggalDari, $tanggalSampai) {
-                    $q->when($tanggalDari && $tanggalSampai, function ($historyQuery) use ($tanggalDari, $tanggalSampai) {
-                        $historyQuery->whereDate('created_at', '>=', $tanggalDari)
-                            ->whereDate('created_at', '<=', $tanggalSampai);
-                    })
-                        ->when($tanggalDari && !$tanggalSampai, function ($historyQuery) use ($tanggalDari) {
-                            $historyQuery->whereDate('created_at', '>=', $tanggalDari);
-                        })
-                        ->when(!$tanggalDari && $tanggalSampai, function ($historyQuery) use ($tanggalSampai) {
-                            $historyQuery->whereDate('created_at', '<=', $tanggalSampai);
-                        });
-                },
                 'verifiedByQc.role', 'verifiedByProduksi.role', 'verifiedBySpv.role',
-            ]);
+            ])->withReportHistories();
             if ($user->role && strtolower($user->role->role) !== 'superadmin') {
                 $query->whereHas('user', fn($q) => $q->where('id_plant', $user->getEffectivePlantId()));
             }
@@ -995,11 +968,10 @@ class PemeriksaanSuhuRuangV3Controller extends Controller
             'user.role',
             'user.plant',
             'shift',
-            'histories',
             'verifiedByQc.role',
             'verifiedByProduksi.role',
             'verifiedBySpv.role',
-        ]);
+        ])->withReportHistories();
 
         if ($user->role && strtolower($user->role->role) !== 'superadmin') {
             $query->whereHas('user', function ($q) use ($user) {

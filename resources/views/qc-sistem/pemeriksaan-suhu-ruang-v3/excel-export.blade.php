@@ -160,8 +160,8 @@
                 $hJam = $history->created_at->format('H:i');
             }
 
-            // FIX: Gunakan tanggal dari created_at history untuk fix midnight crossing bug
-            $tanggalHistory = $history->created_at ? $history->created_at->format('d/m/Y') : $tanggalStr;
+            // Histori merupakan catatan untuk tanggal pemeriksaan induk; created_at hanya waktu perubahan disimpan.
+            $tanggalHistory = $tanggalStr;
 
             $hSuhuProduk = !empty($history->suhu_produk_baru) ? $history->suhu_produk_baru : $suhuProdukStr;
             $userQcName = $history->user ? $history->user->name : $qcStr;

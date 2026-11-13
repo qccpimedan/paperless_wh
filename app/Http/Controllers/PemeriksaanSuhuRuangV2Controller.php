@@ -908,46 +908,7 @@ class PemeriksaanSuhuRuangV2Controller extends Controller
             'spvVerifier' => function ($q) {
                 $q->select('id', 'name');
             },
-            'histories' => function ($q) use ($tanggalDari, $tanggalSampai, $tanggal) {
-                $q->select(
-                    'id',
-                    'id_pemeriksaan_suhu_ruang_v2',
-                    'created_at',
-                    'suhu_produk_lama',
-                    'suhu_produk_baru',
-                    'pukul_lama',
-                    'pukul_baru',
-                    'suhu_cold_storage_lama',
-                    'suhu_cold_storage_baru',
-                    'suhu_anteroom_loading_lama',
-                    'suhu_anteroom_loading_baru',
-                    'suhu_pre_loading_lama',
-                    'suhu_pre_loading_baru',
-                    'suhu_prestaging_lama',
-                    'suhu_prestaging_baru',
-                    'suhu_anteroom_ekspansi_abf_lama',
-                    'suhu_anteroom_ekspansi_abf_baru',
-                    'suhu_chillroom_rm_lama',
-                    'suhu_chillroom_rm_baru',
-                    'suhu_chillroom_domestik_lama',
-                    'suhu_chillroom_domestik_baru'
-                )
-                    ->when($tanggalDari && $tanggalSampai, function ($historyQuery) use ($tanggalDari, $tanggalSampai) {
-                        $historyQuery->whereDate('created_at', '>=', $tanggalDari)
-                            ->whereDate('created_at', '<=', $tanggalSampai);
-                    })
-                    ->when($tanggalDari && !$tanggalSampai, function ($historyQuery) use ($tanggalDari) {
-                        $historyQuery->whereDate('created_at', '>=', $tanggalDari);
-                    })
-                    ->when(!$tanggalDari && $tanggalSampai, function ($historyQuery) use ($tanggalSampai) {
-                        $historyQuery->whereDate('created_at', '<=', $tanggalSampai);
-                    })
-                    ->when(!$tanggalDari && !$tanggalSampai && $tanggal, function ($historyQuery) use ($tanggal) {
-                        $historyQuery->whereDate('created_at', $tanggal);
-                    })
-                    ->orderByDesc('id');
-            }
-        ]);
+        ])->withReportHistories();
 
         if ($user->role && strtolower($user->role->role) !== 'superadmin') {
             $query->whereHas('user', function ($q) use ($user) {
@@ -1053,19 +1014,6 @@ class PemeriksaanSuhuRuangV2Controller extends Controller
                 ->get();
         }
 
-        $historiesSelect = [
-            'id', 'id_pemeriksaan_suhu_ruang_v2', 'created_at',
-            'suhu_produk_lama', 'suhu_produk_baru',
-            'pukul_lama', 'pukul_baru',
-            'suhu_cold_storage_lama', 'suhu_cold_storage_baru',
-            'suhu_anteroom_loading_lama', 'suhu_anteroom_loading_baru',
-            'suhu_pre_loading_lama', 'suhu_pre_loading_baru',
-            'suhu_prestaging_lama', 'suhu_prestaging_baru',
-            'suhu_anteroom_ekspansi_abf_lama', 'suhu_anteroom_ekspansi_abf_baru',
-            'suhu_chillroom_rm_lama', 'suhu_chillroom_rm_baru',
-            'suhu_chillroom_domestik_lama', 'suhu_chillroom_domestik_baru',
-        ];
-
         $dataPerShift = [];
 
         foreach ($allShifts as $shift) {
@@ -1074,21 +1022,7 @@ class PemeriksaanSuhuRuangV2Controller extends Controller
                 'qcVerifier'       => fn($q) => $q->select('id', 'name'),
                 'produksiVerifier' => fn($q) => $q->select('id', 'name'),
                 'spvVerifier'      => fn($q) => $q->select('id', 'name'),
-                'histories'        => function ($q) use ($historiesSelect, $tanggalDari, $tanggalSampai) {
-                    $q->select($historiesSelect)
-                        ->when($tanggalDari && $tanggalSampai, function ($historyQuery) use ($tanggalDari, $tanggalSampai) {
-                            $historyQuery->whereDate('created_at', '>=', $tanggalDari)
-                                ->whereDate('created_at', '<=', $tanggalSampai);
-                        })
-                        ->when($tanggalDari && !$tanggalSampai, function ($historyQuery) use ($tanggalDari) {
-                            $historyQuery->whereDate('created_at', '>=', $tanggalDari);
-                        })
-                        ->when(!$tanggalDari && $tanggalSampai, function ($historyQuery) use ($tanggalSampai) {
-                            $historyQuery->whereDate('created_at', '<=', $tanggalSampai);
-                        })
-                        ->orderByDesc('id');
-                },
-            ]);
+            ])->withReportHistories();
 
             if ($user->role && strtolower($user->role->role) !== 'superadmin') {
                 $query->whereHas('user', fn($q) => $q->where('id_plant', $user->getEffectivePlantId()));
