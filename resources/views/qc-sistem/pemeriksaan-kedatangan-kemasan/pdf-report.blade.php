@@ -174,8 +174,14 @@
             word-wrap: break-word;
         }
         
+        /* Ceklis (V) hijau & Silang (X) merah */
         .check-item {
             color: #28a745;
+            font-weight: bold;
+        }
+
+        .cross-item {
+            color: #dc3545;
             font-weight: bold;
         }
 
@@ -267,6 +273,14 @@
             $isAllShift = $isAllShift ?? false;
             $dataPerShift = $dataPerShift ?? [['pemeriksaans' => $pemeriksaans ?? collect()]];
             $isFirstPage = true;
+
+            // Helper: baris ceklis (V hijau) / silang (X merah) diikuti label
+            $cekRow = function ($value, $label) {
+                $mark = $value
+                    ? '<span class="check-item">V</span>'
+                    : '<span class="cross-item">X</span>';
+                return '<div class="field-row">' . $mark . '<span class="field-value"> ' . e($label) . '</span></div>';
+            };
         @endphp
 
         @if(empty($dataPerShift))
@@ -495,14 +509,7 @@
                                 @if(!empty($kondisiMobilArr))
                                     <div class="section-title">1. Kondisi Mobil Pengangkut</div>
                                     @foreach($kondisiMobilLabels as $key => $label)
-                                        <div class="field-row">
-                                            @if(!empty($kondisiMobilArr[$key]))
-                                                <span class="check-item">V</span>
-                                            @else
-                                                <span style="color:#dc3545;font-weight:bold;">X</span>
-                                            @endif
-                                            <span class="field-value"> {{ $label }}</span>
-                                        </div>
+                                        {!! $cekRow(!empty($kondisiMobilArr[$key]), $label) !!}
                                     @endforeach
                                 @endif
 
@@ -587,7 +594,7 @@
                                     @endif
                                 @endif
 
-                                {{-- KONDISI FISIK --}}
+                                {{-- KONDISI FISIK (gaya ceklis seperti Kondisi Mobil) --}}
                                 @php
                                     $penampakans = json_decode($pemeriksaan->penampakan_array ?? '[]', true) ?? [];
                                     $sealings = json_decode($pemeriksaan->sealing_array ?? '[]', true) ?? [];
@@ -600,22 +607,13 @@
                                 @if($penampakan_val !== null || $sealing_val !== null || $cetakan_val !== null)
                                     <div class="section-title">3. Kondisi Fisik</div>
                                     @if($penampakan_val !== null)
-                                        <div class="field-row">
-                                            <span class="field-label">Penampakan:</span>
-                                            <span class="field-value">{{ $penampakan_val ? 'V' : 'X' }}</span>
-                                        </div>
+                                        {!! $cekRow($penampakan_val, 'Penampakan') !!}
                                     @endif
                                     @if($sealing_val !== null)
-                                        <div class="field-row">
-                                            <span class="field-label">Sealing:</span>
-                                            <span class="field-value">{{ $sealing_val ? 'V' : 'X' }}</span>
-                                        </div>
+                                        {!! $cekRow($sealing_val, 'Sealing') !!}
                                     @endif
                                     @if($cetakan_val !== null)
-                                        <div class="field-row">
-                                            <span class="field-label">Cetakan:</span>
-                                            <span class="field-value">{{ $cetakan_val ? 'V' : 'X' }}</span>
-                                        </div>
+                                        {!! $cekRow($cetakan_val, 'Cetakan') !!}
                                     @endif
                                 @endif
 
@@ -659,42 +657,28 @@
                                     @endif
                                 @endif
 
-                                {{-- DOKUMEN --}}
+                                {{-- DOKUMEN (gaya ceklis seperti Kondisi Mobil) --}}
                                 @php
                                     $logo_halals = json_decode($pemeriksaan->logo_halal_array ?? '[]', true) ?? [];
                                     $dokumen_halals = json_decode($pemeriksaan->dokumen_halal_array ?? '[]', true) ?? [];
                                     $coas = json_decode($pemeriksaan->coa_array ?? '[]', true) ?? [];
                                     $keterangans = json_decode($pemeriksaan->keterangan_array ?? '[]', true) ?? [];
                                     $image_kemasans = json_decode($pemeriksaan->image_kemasan_array ?? '[]', true) ?? [];
+                                    $fileCoas = json_decode($pemeriksaan->file_coa_array ?? '[]', true) ?? [];
 
                                     $logo_halal_val = $logo_halals[$rowIndex] ?? null;
                                     $dokumen_halal_val = $dokumen_halals[$rowIndex] ?? null;
                                     $coa_val = $coas[$rowIndex] ?? null;
                                     $keterangan_val = $keterangans[$rowIndex] ?? null;
                                     $image_path_val = $image_kemasans[$rowIndex] ?? null;
+                                    $fileCoaVal = $fileCoas[$rowIndex] ?? null;
                                 @endphp
                                 @if($logo_halal_val !== null || $dokumen_halal_val !== null || $coa_val !== null || $keterangan_val)
                                     <div class="section-title">5. Dokumen</div>
-                                    <div class="field-row">
-                                        <span class="field-label">Logo Halal:</span>
-                                        <span class="field-value">{{ $logo_halal_val ? 'V' : 'X' }}</span>
-                                    </div>
-                                    <div class="field-row">
-                                        <span class="field-label">Halal Berlaku:</span>
-                                        <span class="field-value">{{ $dokumen_halal_val ? 'V' : 'X' }}</span>
-                                    </div>
-                                    <div class="field-row">
-                                        <span class="field-label">COA:</span>
-                                        <span class="field-value">{{ $coa_val ? 'V' : 'X' }}</span>
-                                    </div>
-                                    @php
-                                        $fileCoas = json_decode($pemeriksaan->file_coa_array ?? '[]', true) ?? [];
-                                        $fileCoaVal = $fileCoas[$rowIndex] ?? null;
-                                    @endphp
-                                    <div class="field-row">
-                                        <span class="field-label">File COA:</span>
-                                        <span class="field-value">{{ $fileCoaVal ? 'Ada' : 'Tidak Ada' }}</span>
-                                    </div>
+                                    {!! $cekRow($logo_halal_val, 'Logo Halal') !!}
+                                    {!! $cekRow($dokumen_halal_val, 'Halal Berlaku') !!}
+                                    {!! $cekRow($coa_val, 'COA') !!}
+                                    {!! $cekRow($fileCoaVal, 'File COA') !!}
                                     @if($keterangan_val)
                                         <div class="field-row">
                                             <span class="field-label">Keterangan:</span>

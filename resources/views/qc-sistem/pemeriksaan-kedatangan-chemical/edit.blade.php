@@ -368,7 +368,7 @@
                                                 $mappedProdukId = $existingChemicalId ? ($produkByChemicalId[$existingChemicalId]['id_produk'] ?? null) : null;
                                             @endphp
 
-                                            <div class="unified-row mb-4 p-3 border rounded" style="background-color: #f8f9fa;">
+                                            <div class="unified-row mb-4 p-3 border rounded" style="background-color: #f8f9fa;" data-legacy-chemical-name="{{ $mappedProdukId ? '' : ($chemicalNamesById[$existingChemicalId] ?? '') }}">
                                                 <h6 class="text-primary mb-3">Produk {{ $produkNo }}</h6>
 
                                                 <!-- Informasi Chemical (Header Produk) -->
@@ -415,7 +415,6 @@
                                                             <div class="card-body p-3">
                                                                 <div class="fw-semibold">Produsen</div>
                                                                 <div class="small text-muted mb-2">Data akan terisi secara otomatis berdasarkan produk yang dipilih. Anda juga dapat memilih data secara manual melalui pilihan yang tersedia di bawah ini.</div>
-                                                                <option value="" selected disabled>-- Pilih Produsen --</option>
                                                                 @php $savedProdusenIds = is_array($firstDetail['id_produsen'] ?? null) ? $firstDetail['id_produsen'] : (json_decode((string)($firstDetail['id_produsen'] ?? ''), true) ?: (isset($firstDetail['id_produsen']) && is_numeric($firstDetail['id_produsen']) ? [$firstDetail['id_produsen']] : [])); @endphp
                                                                 <select class="form-select js-supplier-choices produsen-master-select js-chemical-supplier" multiple>
                                                                     @foreach($produsens as $produsen)<option value="{{ $produsen->id }}" {{ in_array((string)$produsen->id, array_map('strval', $savedProdusenIds), true) ? 'selected' : '' }}>{{ $produsen->nama_produsen }}</option>@endforeach
@@ -442,7 +441,6 @@
                                                             <div class="card-body p-3">
                                                                 <div class="fw-semibold">Distributor</div>
                                                                 <div class="small text-muted mb-2">Data akan terisi secara otomatis berdasarkan produk yang dipilih. Anda juga dapat memilih data secara manual melalui pilihan yang tersedia di bawah ini.</div>
-                                                                <option value="" selected disabled>-- Pilih Distributor --</option>
                                                                 @php $savedDistributorIds = is_array($firstDetail['id_distributor'] ?? null) ? $firstDetail['id_distributor'] : (json_decode((string)($firstDetail['id_distributor'] ?? ''), true) ?: (isset($firstDetail['id_distributor']) && is_numeric($firstDetail['id_distributor']) ? [$firstDetail['id_distributor']] : [])); @endphp
                                                                 <select class="form-select js-supplier-choices distributor-master-select js-chemical-supplier" multiple>
                                                                     @foreach($distributors as $distributor)<option value="{{ $distributor->id }}" {{ in_array((string)$distributor->id, array_map('strval', $savedDistributorIds), true) ? 'selected' : '' }}>{{ $distributor->nama_distributor }}</option>@endforeach
@@ -470,6 +468,7 @@
                                                     @foreach($detailIdxList as $dNo => $idx)
                                                         @php $detail = $detailChemicals[$idx] ?? []; @endphp
                                                         <div class="detail-item border rounded p-3 mb-3" style="background: #fff;" data-detail-index="{{ $dNo }}" data-detail-global-index="{{ $idx }}">
+                                                            <input type="hidden" name="detail_origin_index[]" value="{{ $idx }}">
                                                             <div class="d-flex justify-content-between align-items-center mb-2">
                                                                 <strong>Detail {{ $dNo + 1 }}</strong>
                                                                 <button type="button" class="btn btn-danger btn-sm remove-detail-btn" style="display:none;"><i class="bi bi-trash"></i> Hapus Detail</button>
@@ -1191,7 +1190,6 @@ function addNewRow() {
                     <div class="card-body p-3">
                         <div class="fw-semibold">Produsen</div>
                         <div class="small text-muted mb-2">Data akan terisi secara otomatis berdasarkan produk yang dipilih. Anda juga dapat memilih data secara manual melalui pilihan yang tersedia di bawah ini.</div>
-                        <option value="" selected disabled>-- Pilih Produsen --</option>
                         <select class="form-select js-supplier-choices produsen-master-select js-chemical-supplier" multiple>@foreach($produsens as $produsen)<option value="{{ $produsen->id }}">{{ $produsen->nama_produsen }}</option>@endforeach</select>
                         <div class="produsen-badges d-flex flex-wrap gap-1">
                             <span class="text-muted small">-</span>
@@ -1205,7 +1203,6 @@ function addNewRow() {
                     <div class="card-body p-3">
                         <div class="fw-semibold">Distributor</div>
                         <div class="small text-muted mb-2">Data akan terisi secara otomatis berdasarkan produk yang dipilih. Anda juga dapat memilih data secara manual melalui pilihan yang tersedia di bawah ini.</div>
-                        <option value="" selected disabled>-- Pilih Distributor --</option>
                         <select class="form-select js-supplier-choices distributor-master-select js-chemical-supplier" multiple>@foreach($distributors as $distributor)<option value="{{ $distributor->id }}">{{ $distributor->nama_distributor }}</option>@endforeach</select>
                         <div class="distributor-badges d-flex flex-wrap gap-1">
                             <span class="text-muted small">-</span>
@@ -1218,6 +1215,7 @@ function addNewRow() {
         
         <div class="detail-items">
             <div class="detail-item border rounded p-3 mb-3" style="background: #fff;" data-detail-index="0" data-detail-global-index="0">
+                <input type="hidden" name="detail_origin_index[]" value="">
                 <div class="d-flex justify-content-between align-items-center mb-2">
                     <strong>Detail 1</strong>
                     <button type="button" class="btn btn-danger btn-sm remove-detail-btn" style="display:none;"><i class="bi bi-trash"></i> Hapus Detail</button>
@@ -1464,7 +1462,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 noResultsText: 'Tidak ada hasil ditemukan',
                 noChoicesText: 'Tidak ada pilihan tersedia',
                 placeholder: true,
-                placeholderValue: 'Pilih...'
+                placeholderValue: selectEl.dataset.placeholderValue || 'Pilih...'
             });
             selectEl.choicesInstance = instance;
         } catch (e) {}
@@ -1482,13 +1480,23 @@ document.addEventListener('DOMContentLoaded', function() {
         const desiredProdukId = (kategoriSelect.dataset && kategoriSelect.dataset.desiredProduk)
             ? String(kategoriSelect.dataset.desiredProduk)
             : (produkSelect.value ? String(produkSelect.value) : '');
+        const hasDesiredProduk = items.some((item) => String(item.id) === desiredProdukId);
+        const legacyChemicalName = rowEl.dataset.legacyChemicalName || '';
+        const placeholderLabel = legacyChemicalName && (!desiredProdukId || !hasDesiredProduk)
+            ? `${legacyChemicalName} (Chemical lama; tidak ada di master Produk)`
+            : 'Pilih Produk';
 
         if (produkSelect.choicesInstance) {
             try { produkSelect.choicesInstance.destroy(); } catch (e) {}
             produkSelect.choicesInstance = null;
         }
 
-        produkSelect.innerHTML = '<option value="">Pilih Produk</option>';
+        produkSelect.innerHTML = '';
+        const placeholderOption = document.createElement('option');
+        placeholderOption.value = '';
+        placeholderOption.textContent = placeholderLabel;
+        produkSelect.appendChild(placeholderOption);
+        produkSelect.dataset.placeholderValue = placeholderLabel;
         items.forEach((p) => {
             const opt = document.createElement('option');
             opt.value = String(p.id);
@@ -1531,6 +1539,8 @@ document.addEventListener('DOMContentLoaded', function() {
             const mappedChemicalId = (chemicalKey && chemicalByName) ? chemicalByName[chemicalKey] : null;
             if (mappedChemicalId) {
                 idChemicalHidden.value = String(mappedChemicalId);
+            } else if (forceOverride && !produkId) {
+                idChemicalHidden.value = '';
             }
         }
 
@@ -1583,6 +1593,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (target && target.matches('select.kategori-produk-select')) {
             const row = target.closest('.unified-row');
             if (row) {
+                row.dataset.legacyChemicalName = '';
                 if (target.dataset) {
                     target.dataset.desiredProduk = '';
                 }
@@ -1626,7 +1637,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     document.querySelectorAll('.unified-row').forEach((row) => {
         const kategoriSelect = row.querySelector('select.kategori-produk-select');
-        if (kategoriSelect && kategoriSelect.value) {
+        if (kategoriSelect) {
             populateProdukOptionsForRow(row);
             applyProdukForRow(row);
         }
@@ -1743,6 +1754,32 @@ document.addEventListener('DOMContentLoaded', function() {
         const rows = Array.from(form.querySelectorAll('.unified-row'));
         rows.forEach((rowEl) => {
             const details = Array.from(rowEl.querySelectorAll('.detail-items .detail-item'));
+            // Salin field level-produk ke setiap detail agar panjang array
+            // sejajar dengan field level-detail (satu entri per detail).
+            rowEl.querySelectorAll('.__submitted_group').forEach((el) => el.remove());
+            const groupFields = [
+                rowEl.querySelector('select.produk-select'),
+                rowEl.querySelector('.id-chemical-hidden'),
+                Array.from(rowEl.querySelectorAll('select')).find((select) =>
+                    (select.dataset.origName || select.name) === 'kondisi_chemical[]'
+                ),
+            ].filter(Boolean);
+            const groupValues = groupFields.map((el) => {
+                el.dataset.origName = el.dataset.origName || el.name;
+                return [el.dataset.origName, el.value];
+            });
+            groupFields.forEach((el) => el.removeAttribute('name'));
+            details.forEach((detail) => {
+                groupValues.forEach(([name, value]) => {
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = name;
+                    input.value = value;
+                    input.className = '__submitted_group';
+                    detail.appendChild(input);
+                });
+            });
+
             const supplierSelections = ['produsen', 'distributor'].map((type) => {
                 const select = rowEl.querySelector(`select.${type}-master-select`);
                 const values = select

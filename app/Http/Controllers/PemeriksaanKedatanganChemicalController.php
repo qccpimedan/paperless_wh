@@ -641,6 +641,7 @@ return view('qc-sistem.pemeriksaan-kedatangan-chemical.index', compact('pemeriks
                     ],
                 ];
             });
+
         $produkNamaById = $produkList->pluck('nama_produk', 'id')->all();
         $allSupplierIds = collect($pemeriksaanChemical->detail_chemicals ?? [])->flatMap(function ($detail) {
             return array_merge($this->normalizeSupplierIds($detail['id_produsen'] ?? null), $this->normalizeSupplierIds($detail['id_distributor'] ?? null));
@@ -747,10 +748,46 @@ return view('qc-sistem.pemeriksaan-kedatangan-chemical.index', compact('pemeriks
                 return [$key => ['id' => $p->id, 'kategori_code' => $p->kategori_code]];
             });
 
-        $produkByChemicalId = $chemicals
-            ->mapWithKeys(function ($c) use ($produkByName) {
+        $detailChemicalIds = collect($pemeriksaanChemical->detail_chemicals ?? [])
+            ->pluck('id_chemical')
+            ->filter()
+            ->unique()
+            ->values();
+        $detailChemicalRows = Chemical::query()
+            ->whereIn('id', $detailChemicalIds)
+            ->get(['id', 'nama_chemical']);
+        $chemicalNamesById = $detailChemicalRows->pluck('nama_chemical', 'id');
+        $chemicalRowsForMapping = $chemicals
+            ->concat($detailChemicalRows)
+            ->unique('id')
+            ->values();
+
+        $normalizeName = function ($value) {
+            $v = strtolower(trim((string) $value));
+            return preg_replace('/[^a-z0-9]+/i', '', $v);
+        };
+
+        $produkByChemicalId = $chemicalRowsForMapping
+            ->mapWithKeys(function ($c) use ($produkByName, $produkList, $normalizeName) {
                 $key = strtolower(trim((string) $c->nama_chemical));
                 $produk = $produkByName[$key] ?? null;
+
+                if (!$produk) {
+                    $normalizedChemicalName = $normalizeName($c->nama_chemical);
+                    $matches = $produkList->filter(function ($candidate) use ($normalizedChemicalName, $normalizeName) {
+                        $normalizedProductName = $normalizeName($candidate->nama_produk);
+                        return strlen($normalizedChemicalName) >= 4
+                            && (str_contains($normalizedProductName, $normalizedChemicalName)
+                                || $this->safeFuzzyMatch($normalizedChemicalName, $normalizedProductName));
+                    });
+
+                    // Gunakan fuzzy match hanya jika unik agar tidak memilih produk yang ambigu.
+                    if ($matches->count() === 1) {
+                        $match = $matches->first();
+                        $produk = ['id' => $match->id, 'kategori_code' => $match->kategori_code];
+                    }
+                }
+
                 return [
                     $c->id => [
                         'id_produk' => $produk['id'] ?? null,
@@ -758,12 +795,6 @@ return view('qc-sistem.pemeriksaan-kedatangan-chemical.index', compact('pemeriks
                     ],
                 ];
             });
-
-        $normalizeName = function ($value) {
-            $v = strtolower(trim((string) $value));
-            $v = preg_replace('/[^a-z0-9]+/i', '', $v);
-            return $v;
-        };
 
         $chemicalByNorm = $chemicals
             ->mapWithKeys(function ($c) use ($normalizeName) {
@@ -794,7 +825,7 @@ return view('qc-sistem.pemeriksaan-kedatangan-chemical.index', compact('pemeriks
                 return [$p->id => null];
             });
 
-        return view('qc-sistem.pemeriksaan-kedatangan-chemical.edit', compact('pemeriksaanChemical', 'shifts', 'chemicals', 'produsens', 'distributors', 'countries', 'produkKategoriOptions', 'produkByKategori', 'produkMeta', 'chemicalByName', 'produkByChemicalId', 'chemicalByProdukId'));
+        return view('qc-sistem.pemeriksaan-kedatangan-chemical.edit', compact('pemeriksaanChemical', 'shifts', 'chemicals', 'produsens', 'distributors', 'countries', 'produkKategoriOptions', 'produkByKategori', 'produkMeta', 'chemicalByName', 'produkByChemicalId', 'chemicalByProdukId', 'chemicalNamesById'));
     }
 
     public function createRow(PemeriksaanKedatanganChemical $pemeriksaanChemical)
@@ -1081,6 +1112,14 @@ return view('qc-sistem.pemeriksaan-kedatangan-chemical.index', compact('pemeriks
     {
         $this->checkPlantAccess($pemeriksaanChemical);
 
+        $this->rejectMismatchedDynamicArrayLengths($request, 'id_produk', [
+            'id_chemical', 'kondisi_chemical', 'id_produsen', 'negara_produsen',
+            'id_distributor', 'kode_produksi', 'expire_date', 'jumlah_datang',
+            'unit_datang', 'jumlah_sampling', 'unit_sampling',
+            'kondisi_fisik_kemasan', 'kondisi_fisik_warna',
+            'persyaratan_dokumen_halal', 'coa', 'status_baris', 'keterangan',
+        ]);
+
         $inputProdukIds = $request->input('id_produk', []);
         $inputChemicalIds = $request->input('id_chemical', []);
 
@@ -1162,18 +1201,20 @@ return view('qc-sistem.pemeriksaan-kedatangan-chemical.index', compact('pemeriks
                         'nama_chemical' => $produkRawName,
                     ];
 
-                    $incomingProdusen = $request->input('id_produsen.' . $idx);
+                    $incomingProdusen = $this->normalizeSupplierIds($request->input('id_produsen.' . $idx));
                     if (!empty($incomingProdusen)) {
-                        $createPayload['id_produsen'] = $incomingProdusen;
+                        $createPayload['id_produsen'] = $incomingProdusen[0];
                     }
 
-                    $incomingDistributor = $request->input('id_distributor.' . $idx);
+                    $incomingDistributor = $this->normalizeSupplierIds($request->input('id_distributor.' . $idx));
                     if (!empty($incomingDistributor)) {
-                        $createPayload['id_distributor'] = $incomingDistributor;
+                        $createPayload['id_distributor'] = $incomingDistributor[0];
                     }
 
                     $createdChemical = Chemical::create($createPayload);
                     $mapped = $createdChemical->id;
+                    $chemicalIdByName->put($produkKey, $mapped);
+                    $chemicalIdByNorm->put($normalizeName($produkKey), $mapped);
                 }
 
                 if (!$mapped && !empty($currentChemicalId)) {
@@ -1204,7 +1245,9 @@ return view('qc-sistem.pemeriksaan-kedatangan-chemical.index', compact('pemeriks
             'nama_supir' => 'nullable|string|max:255',
             'id_shift' => 'nullable|exists:shifts,id',
             'id_produk' => 'required|array',
-            'id_produk.*' => 'required|exists:produks,id',
+            // Baris Chemical lama belum tentu memiliki pasangan di master Produk.
+            // Saat edit, pertahankan id_chemical lama jika produk tidak tersedia.
+            'id_produk.*' => 'nullable|exists:produks,id',
             // Validasi array untuk dynamic rows
             'id_chemical' => 'required|array',
             'id_chemical.*' => 'required|exists:chemicals,id',
@@ -1228,7 +1271,12 @@ return view('qc-sistem.pemeriksaan-kedatangan-chemical.index', compact('pemeriks
             'status_baris.*' => 'required|in:Release,Hold,Retur',
             'keterangan' => 'nullable|array',
             'image_chemical' => 'nullable|array',
-            'image_chemical.*' => 'nullable|image|max:1024',
+            'image_chemical.*' => 'nullable|image|max:3072',
+            'file_coa' => 'nullable|array',
+            'file_coa.*' => 'nullable|mimes:pdf,jpg,jpeg,png,webp|max:3072',
+            'file_coa_img' => 'nullable|array',
+            'file_coa_img.*' => 'nullable|image|max:3072',
+            'detail_origin_index' => 'nullable|array',
         ]);
 
         // Process kondisi mobil (11 items)
@@ -1260,13 +1308,17 @@ return view('qc-sistem.pemeriksaan-kedatangan-chemical.index', compact('pemeriks
 
         foreach ($idChemicals as $index => $idChemical) {
             $uploadedImage = $request->file("image_chemical.{$index}") ?? ($uploadedImages[$index] ?? null);
-            $existingImage = $existingDetails[$index]['image_chemical'] ?? null;
+            $origIdx = $request->input('detail_origin_index.' . $index);
+            $existingDetail = ($origIdx !== null && $origIdx !== '')
+                ? ($existingDetails[(int) $origIdx] ?? [])
+                : [];
+            $existingImage = $existingDetail['image_chemical'] ?? null;
             $imagePath = $uploadedImage
                 ? $uploadedImage->storePublicly('pemeriksaan-chemical/images', 'public')
                 : $existingImage;
 
             $uploadedFile = $request->file("file_coa_img.{$index}") ?? $request->file("file_coa.{$index}") ?? ($uploadedCoaImgs[$index] ?? $uploadedCoas[$index] ?? null);
-            $existingCoa = $existingDetails[$index]['file_coa'] ?? null;
+            $existingCoa = $existingDetail['file_coa'] ?? null;
             if ($uploadedFile) {
                 $coaPath = $this->compressAndStoreCoa($uploadedFile);
             } else {
