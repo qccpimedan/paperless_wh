@@ -30,6 +30,11 @@
             ? $val == $sectionStd[$secKey]
             : (strpos((string) $val, $sectionStd[$secKey]) !== false);
     };
+    $formatStdValue = function ($value, $secKey) {
+        return $secKey === 'cold_storage' && trim((string) $value) === '-18'
+            ? '≤ (-18)°C'
+            : $value;
+    };
 
     // Susun kartu per area untuk bagian "monitoring"
     $areaCards = [];
@@ -443,9 +448,10 @@
                                                 @if($tRow['note'])<em class="fp-mono">({{ $tRow['note'] }})</em>@endif
                                             </span>
                                         </td>
-                                        <td class="c">{{ $tRow['setting'] }}</td>
-                                        <td class="c fp-actual">{{ $tRow['aktual'] }}</td>
-                                        <td class="c">{{ $tRow['display'] }}</td>
+                                        @php $isColdStorageRow = strpos($tRow['area'], 'Cold Storage') === 0; @endphp
+                                        <td class="c">{{ $formatStdValue($tRow['setting'], $isColdStorageRow ? 'cold_storage' : '') }}</td>
+                                        <td class="c fp-actual">{{ $formatStdValue($tRow['aktual'], $isColdStorageRow ? 'cold_storage' : '') }}</td>
+                                        <td class="c">{{ $formatStdValue($tRow['display'], $isColdStorageRow ? 'cold_storage' : '') }}</td>
                                         <td class="c">
                                             @if($tRow['tipe'] === 'awal')
                                                 <span class="fp-status fp-status-awal"><i class="bi bi-check-circle-fill"></i> Input Awal</span>
