@@ -35,7 +35,7 @@
         table.data-simple tbody tr:nth-child(even) { background: #fafafa; }
 
         /* FIX: font DejaVu Sans mendukung simbol ≤ ≥ ± (Helvetica bawaan DomPDF tidak mendukung ≤) */
-        table.data-simple td.setting-cell { font-family: 'DejaVu Sans', sans-serif; font-size: 7.5px; text-align: center; }
+        table.data-simple td.sym-cell { font-family: 'DejaVu Sans', sans-serif; font-size: 7.5px; text-align: center; }
 
         .empty-state { text-align: center; padding: 40px; color: #6c757d; font-style: italic; }
 
@@ -101,6 +101,17 @@
         if ($val === null || $val === '' || $val === []) return '-';
         if (is_array($val)) return $val[$key] ?? '-';
         return (string) $val;
+    };
+
+    $dejavuOk = file_exists(base_path('vendor/dompdf/dompdf/lib/fonts/DejaVuSans.ttf'))
+        || file_exists(storage_path('fonts/DejaVuSans.ttf'));
+    $fixSym = fn ($v) => $dejavuOk ? $v : str_replace(['≤', '≥'], ['<=', '>='], (string) $v);
+    $formatSetting = function ($value) use ($fixSym) {
+        $value = trim((string) $value);
+        if ($value === '-18') {
+            $value = '≤ (-18)°C';
+        }
+        return $fixSym($value);
     };
 
     $findUnitRow = function ($rows, $unit) {
@@ -402,9 +413,9 @@
                         <td>{{ $row['produk'] }}</td>
                         <td class="center">{{ $row['suhu_produk'] }}</td>
                         <td>{{ $row['area'] }}</td>
-                        <td class="setting-cell">{{ $row['setting'] }}</td>
-                        <td class="center">{{ $row['aktual'] }}</td>
-                        <td class="center">{{ $row['display'] }}</td>
+                        <td class="sym-cell">{{ $formatSetting($row['setting']) }}</td>
+                        <td class="sym-cell">{{ $fixSym($row['aktual']) }}</td>
+                        <td class="sym-cell">{{ $fixSym($row['display']) }}</td>
                     </tr>
                 @endforeach
             </tbody>
