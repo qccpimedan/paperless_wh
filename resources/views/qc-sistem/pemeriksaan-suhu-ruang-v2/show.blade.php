@@ -386,7 +386,7 @@
                         <i class="bi bi-clock-history text-primary"></i> Riwayat Data Per Jam
                         <span class="fp-chip" style="background:var(--fp-blue-soft);color:var(--fp-blue)">{{ count($timelineRows) }} entri</span>
                     </h5>
-                    <small>Pencatatan interval 60 menit</small>
+                    <!-- <small>Pencatatan interval 60 menit</small> -->
                 </div>
 
                 <div class="fp-table-wrap">

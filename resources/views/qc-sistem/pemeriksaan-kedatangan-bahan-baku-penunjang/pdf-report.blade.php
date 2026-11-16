@@ -129,7 +129,7 @@
         }
 
         .subheader-label {
-            font-weight: 600;
+            font-weight: bold;
             color: #495057;
         }
 
@@ -219,7 +219,7 @@
 
         .f-label {
             display: table-cell;
-            font-weight: 600;
+            font-weight: bold;
             color: #495057;
             width: 62px;
             padding-right: 3px;
@@ -242,8 +242,8 @@
         }
 
         .check-item {
-            color: #28a745;
-            font-weight: 500;
+            color: #1a1a1a;      /* teks label hitam */
+            font-weight: normal;
         }
 
         .check-item::before {
@@ -274,12 +274,12 @@
 
         .sig-note .ok {
             color: #28a745;
-            font-weight: 600;
+            font-weight: bold;
         }
 
         .sig-note .not-ok {
             color: #dc3545;
-            font-weight: 600;
+            font-weight: bold;
         }
 
         .sig-table {
@@ -296,7 +296,7 @@
 
         .sig-label {
             font-size: 7.5px;
-            font-weight: 600;
+            font-weight: bold;
             color: #495057;
             padding-bottom: 20px;
         }
@@ -348,7 +348,18 @@
 <body>
     <div class="container">
 
-        @php $isAllShift = $isAllShift ?? false; @endphp
+        @php
+            $isAllShift = $isAllShift ?? false;
+
+            // Helper: baris ceklis (V hijau + label) / silang (X merah + label)
+            // Tampilannya sama dengan bagian "Kondisi Mobil"
+            $cekRow = function ($value, $label) {
+                if ($value) {
+                    return '<div class="f-row"><span class="check-item">' . e($label) . '</span></div>';
+                }
+                return '<div class="f-row"><span style="color:#dc3545;font-weight:bold;">X </span><span style="color:#1a1a1a;font-weight:normal;">' . e($label) . '</span></div>';
+            };
+        @endphp
 
         @if($isAllShift)
             {{-- ======= MODE: SEMUA SHIFT ======= --}}
@@ -496,13 +507,7 @@
                                     @if(!empty($kondisiMobilArr))
                                         <div class="sec-title">Kondisi Mobil</div>
                                         @foreach($kondisiLabels as $key => $label)
-                                            <div class="f-row">
-                                                @if(!empty($kondisiMobilArr[$key]))
-                                                    <span class="check-item">{{ $label }}</span>
-                                                @else
-                                                    <span style="color:#dc3545;font-weight:bold;">X </span><span style="color:#1a1a1a;font-weight:500;">{{ $label }}</span>
-                                                @endif
-                                            </div>
+                                            {!! $cekRow(!empty($kondisiMobilArr[$key]), $label) !!}
                                         @endforeach
                                     @endif
                                     @php
@@ -576,13 +581,15 @@
                                         @if($ffa_v)<div class="f-row"><span class="f-label">FFA:</span><span class="f-value">{{ $ffa_v }}</span></div>@endif
                                         @if($ket_v)<div class="f-row"><span class="f-label">Ket:</span><span class="f-value">{{ substr($ket_v,0,20) }}{{ strlen($ket_v)>20?'..':'' }}</span></div>@endif
                                     @endif
+
+                                    {{-- KONDISI FISIK (gaya ceklis seperti Kondisi Mobil) --}}
                                     @php $kf_v = (json_decode($p->kondisi_fisik_array ?? '[]', true) ?? [])[$ri] ?? []; @endphp
                                     @if(!empty($kf_v))
                                         <div class="sec-title">Kondisi Fisik</div>
-                                        @if(isset($kf_v['kemasan']))<div class="f-row"><span class="f-label">Kemasan:</span><span class="f-value">{{ $kf_v['kemasan'] ? 'V' : 'X' }}</span></div>@endif
-                                        @if(isset($kf_v['warna']))<div class="f-row"><span class="f-label">Warna:</span><span class="f-value">{{ $kf_v['warna'] ? 'V' : 'X' }}</span></div>@endif
-                                        @if(isset($kf_v['benda_asing']))<div class="f-row"><span class="f-label">B.Asing:</span><span class="f-value">{{ $kf_v['benda_asing'] ? 'V' : 'X' }}</span></div>@endif
-                                        @if(isset($kf_v['aroma']))<div class="f-row"><span class="f-label">Aroma:</span><span class="f-value">{{ $kf_v['aroma'] ? 'V' : 'X' }}</span></div>@endif
+                                        @if(isset($kf_v['kemasan']))      {!! $cekRow($kf_v['kemasan'], 'Kemasan') !!}@endif
+                                        @if(isset($kf_v['warna']))        {!! $cekRow($kf_v['warna'], 'Warna') !!}@endif
+                                        @if(isset($kf_v['benda_asing']))  {!! $cekRow($kf_v['benda_asing'], 'Tidak ada benda asing') !!}@endif
+                                        @if(isset($kf_v['aroma']))        {!! $cekRow($kf_v['aroma'], 'Aroma') !!}@endif
                                         @if(!empty($kf_v['allergen']))<div class="f-row"><span class="f-label" style="width:60px;">Allergen:</span><span class="f-value" style="font-weight:bold;">{{ $kf_v['allergen'] }}</span></div>@endif
                                     @endif
                                     @php
@@ -595,6 +602,8 @@
                                         <div class="sec-title">Spesifikasi</div>
                                         <div class="spec-text">{{ $spes_v }}</div>
                                     @endif
+
+                                    {{-- DOKUMENTASI (gaya ceklis seperti Kondisi Mobil) --}}
                                     @php
                                         $lh_v = (json_decode($p->logo_halal_array ?? '[]', true) ?? [])[$ri] ?? null;
                                         $dh_v = (json_decode($p->dokumen_halal_array ?? '[]', true) ?? [])[$ri] ?? null;
@@ -603,9 +612,9 @@
                                     @endphp
                                     @if($lh_v !== null || $dh_v !== null || $ca_v !== null || $fc_v)
                                         <div class="sec-title">Dokumentasi</div>
-                                        @if($lh_v !== null)<div class="f-row"><span class="f-label" style="width:55px;">Logo Halal:</span><span class="f-value">{{ $lh_v ? 'Ya' : 'Tidak' }}</span></div>@endif
-                                        @if($dh_v !== null)<div class="f-row"><span class="f-label" style="width:55px;">Dok. Halal:</span><span class="f-value">{{ $dh_v ? 'Ya' : 'Tidak' }}</span></div>@endif
-                                        @if($ca_v !== null)<div class="f-row"><span class="f-label" style="width:55px;">COA:</span><span class="f-value">{{ $ca_v ? 'Ya' : 'Tidak' }}</span></div>@endif
+                                        @if($lh_v !== null){!! $cekRow($lh_v, 'Logo Halal') !!}@endif
+                                        @if($dh_v !== null){!! $cekRow($dh_v, 'Dokumen Halal') !!}@endif
+                                        @if($ca_v !== null){!! $cekRow($ca_v, 'COA') !!}@endif
                                     @endif
                                     @php $sb_v = (json_decode($p->status_baris_array ?? '[]', true) ?? [])[$ri] ?? null; @endphp
                                     @if($sb_v)
@@ -862,13 +871,7 @@
                                 @if(!empty($kondisiMobilArr))
                                     <div class="sec-title">Kondisi Mobil</div>
                                     @foreach($kondisiLabels as $key => $label)
-                                        <div class="f-row">
-                                            @if(!empty($kondisiMobilArr[$key]))
-                                                <span class="check-item">{{ $label }}</span>
-                                            @else
-                                                <span style="color:#dc3545;font-weight:bold;">X </span><span style="color:#1a1a1a;font-weight:500;">{{ $label }}</span>
-                                            @endif
-                                        </div>
+                                        {!! $cekRow(!empty($kondisiMobilArr[$key]), $label) !!}
                                     @endforeach
                                 @endif
 
@@ -957,16 +960,17 @@
                                 @if($ket_v)<div class="f-row"><span class="f-label">Ket:</span><span class="f-value">{{ substr($ket_v, 0, 20) }}{{ strlen($ket_v) > 20 ? '..' : '' }}</span></div>@endif
                             @endif
 
+                            {{-- KONDISI FISIK (gaya ceklis seperti Kondisi Mobil) --}}
                             @php
                                 $kfs = json_decode($p->kondisi_fisik_array ?? '[]', true) ?? [];
                                 $kf_v = $kfs[$ri] ?? [];
                             @endphp
                             @if(!empty($kf_v))
                                 <div class="sec-title">Kondisi Fisik</div>
-                                @if(isset($kf_v['kemasan']))<div class="f-row"><span class="f-label">Kemasan:</span><span class="f-value">{{ $kf_v['kemasan'] ? 'V' : 'X' }}</span></div>@endif
-                                @if(isset($kf_v['warna']))<div class="f-row"><span class="f-label">Warna:</span><span class="f-value">{{ $kf_v['warna'] ? 'V' : 'X' }}</span></div>@endif
-                                @if(isset($kf_v['benda_asing']))<div class="f-row"><span class="f-label">B.Asing:</span><span class="f-value">{{ $kf_v['benda_asing'] ? 'V' : 'X' }}</span></div>@endif
-                                @if(isset($kf_v['aroma']))<div class="f-row"><span class="f-label">Aroma:</span><span class="f-value">{{ $kf_v['aroma'] ? 'V' : 'X' }}</span></div>@endif
+                                @if(isset($kf_v['kemasan']))      {!! $cekRow($kf_v['kemasan'], 'Kemasan') !!}@endif
+                                @if(isset($kf_v['warna']))        {!! $cekRow($kf_v['warna'], 'Warna') !!}@endif
+                                @if(isset($kf_v['benda_asing']))  {!! $cekRow($kf_v['benda_asing'], 'Tidak ada benda asing') !!}@endif
+                                @if(isset($kf_v['aroma']))        {!! $cekRow($kf_v['aroma'], 'Aroma') !!}@endif
                                 @if(!empty($kf_v['allergen']))<div class="f-row"><span class="f-label" style="width:60px;">Allergen:</span><span class="f-value" style="font-weight:bold;">{{ $kf_v['allergen'] }}</span></div>@endif
                             @endif
 
@@ -982,6 +986,7 @@
                                 <div class="spec-text">{{ $spes_v }}</div>
                             @endif
 
+                            {{-- DOKUMENTASI (gaya ceklis seperti Kondisi Mobil) --}}
                             @php
                                 $lhs = json_decode($p->logo_halal_array ?? '[]', true) ?? [];
                                 $dhs = json_decode($p->dokumen_halal_array ?? '[]', true) ?? [];
@@ -994,10 +999,9 @@
                             @endphp
                             @if($lh_v !== null || $dh_v !== null || $ca_v !== null || $fc_v)
                                 <div class="sec-title">Dokumentasi</div>
-                                @if($lh_v !== null)<div class="f-row"><span class="f-label" style="width:55px;">Logo Halal:</span><span class="f-value">{{ $lh_v ? 'Ya' : 'Tidak' }}</span></div>@endif
-                                @if($dh_v !== null)<div class="f-row"><span class="f-label" style="width:55px;">Dok. Halal:</span><span class="f-value">{{ $dh_v ? 'Ya' : 'Tidak' }}</span></div>@endif
-                                @if($ca_v !== null)<div class="f-row"><span class="f-label" style="width:55px;">COA:</span><span class="f-value">{{ $ca_v ? 'Ya' : 'Tidak' }}</span></div>@endif
-                                {{-- @if($fc_v)<div class="f-row"><span class="f-label" style="width:55px;">File COA:</span><span class="f-value">Ada</span></div>@endif --}}
+                                @if($lh_v !== null){!! $cekRow($lh_v, 'Logo Halal') !!}@endif
+                                @if($dh_v !== null){!! $cekRow($dh_v, 'Dokumen Halal') !!}@endif
+                                @if($ca_v !== null){!! $cekRow($ca_v, 'COA') !!}@endif
                             @endif
 
                             @php

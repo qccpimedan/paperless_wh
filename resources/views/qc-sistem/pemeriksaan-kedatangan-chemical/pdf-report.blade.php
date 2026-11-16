@@ -174,8 +174,14 @@
             word-wrap: break-word;
         }
         
+        /* Ceklis (V) hijau & Silang (X) merah */
         .check-item {
             color: #28a745;
+            font-weight: bold;
+        }
+
+        .cross-item {
+            color: #dc3545;
             font-weight: bold;
         }
 
@@ -287,6 +293,14 @@
             $isAllShift = $isAllShift ?? false;
             $dataPerShift = $dataPerShift ?? [['pemeriksaans' => $pemeriksaans ?? collect()]];
             $isFirstPage = true;
+
+            // Helper: baris ceklis (V hijau) / silang (X merah) diikuti label hitam
+            $cekRow = function ($value, $label) {
+                $mark = $value
+                    ? '<span class="check-item">V</span>'
+                    : '<span class="cross-item">X</span>';
+                return '<div class="field-row">' . $mark . '<span class="field-value"> ' . e($label) . '</span></div>';
+            };
         @endphp
 
         @if(empty($dataPerShift))
@@ -498,14 +512,7 @@
                                 @if(!empty($kondisiMobilArr))
                                     <div class="section-title">1. Kondisi Mobil Pengangkut</div>
                                     @foreach($kondisiMobilLabels as $key => $label)
-                                        <div class="field-row">
-                                            @if(!empty($kondisiMobilArr[$key]))
-                                                <span class="check-item">V</span>
-                                            @else
-                                                <span style="color:#dc3545;font-weight:bold;">X</span>
-                                            @endif
-                                            <span class="field-value"> {{ $label }}</span>
-                                        </div>
+                                        {!! $cekRow(!empty($kondisiMobilArr[$key]), $label) !!}
                                     @endforeach
                                 @endif
 
@@ -571,44 +578,29 @@
                                         </div>
                                     @endif
 
-                                    {{-- KONDISI FISIK --}}
+                                    {{-- KONDISI FISIK (gaya ceklis seperti Kondisi Mobil) --}}
                                     @php
                                         $kondisiFisik = $chemicalDetail['kondisi_fisik'] ?? [];
                                     @endphp
                                     @if(!empty($kondisiFisik))
                                         <div class="section-title">3. Kondisi Fisik</div>
                                         @if(isset($kondisiFisik['kemasan']))
-                                            <div class="field-row">
-                                                <span class="field-label">Kemasan:</span>
-                                                <span class="field-value">{{ ($kondisiFisik['kemasan'] ?? false) ? 'V' : 'X' }}</span>
-                                            </div>
+                                            {!! $cekRow($kondisiFisik['kemasan'], 'Kemasan') !!}
                                         @endif
                                         @if(isset($kondisiFisik['warna']))
-                                            <div class="field-row">
-                                                <span class="field-label">Warna:</span>
-                                                <span class="field-value">{{ ($kondisiFisik['warna'] ?? false) ? 'V' : 'X' }}</span>
-                                            </div>
+                                            {!! $cekRow($kondisiFisik['warna'], 'Warna') !!}
                                         @endif
                                     @endif
 
-                                    {{-- DOKUMEN --}}
-                                    <div class="section-title">4. Dokumen</div>
-                                    <div class="field-row">
-                                        <span class="field-label">Logo Halal:</span>
-                                        <span class="field-value">{{ ($chemicalDetail['persyaratan_dokumen_halal'] ?? false) ? 'V' : 'X' }}</span>
-                                    </div>
-                                    <div class="field-row">
-                                        <span class="field-label">COA:</span>
-                                        <span class="field-value">{{ ($chemicalDetail['coa'] ?? false) ? 'V' : 'X' }}</span>
-                                    </div>
+                                    {{-- DOKUMEN (gaya ceklis seperti Kondisi Mobil) --}}
                                     @php
                                         $pdfCoaArr = json_decode($pemeriksaan->file_coa_array ?? '[]', true) ?? [];
                                         $pdfCoaFile = $chemicalDetail['file_coa'] ?? $pdfCoaArr[$rowIndex] ?? null;
                                     @endphp
-                                    <div class="field-row">
-                                        <span class="field-label">File COA:</span>
-                                        <span class="field-value">{{ $pdfCoaFile ? 'Ada' : 'Tidak Ada' }}</span>
-                                    </div>
+                                    <div class="section-title">4. Dokumen</div>
+                                    {!! $cekRow($chemicalDetail['persyaratan_dokumen_halal'] ?? false, 'Logo Halal') !!}
+                                    {!! $cekRow($chemicalDetail['coa'] ?? false, 'COA') !!}
+                                    {!! $cekRow($pdfCoaFile, 'File COA') !!}
 
                                     {{-- STATUS --}}
                                     <div class="section-title">5. Status</div>
