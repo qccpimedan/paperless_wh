@@ -107,10 +107,10 @@
     $dejavuOk = file_exists(base_path('vendor/dompdf/dompdf/lib/fonts/DejaVuSans.ttf'))
         || file_exists(storage_path('fonts/DejaVuSans.ttf'));
     $fixSym = fn ($v) => $dejavuOk ? $v : str_replace(['≤', '≥'], ['<=', '>='], (string) $v);
-    $formatSetting = function ($value) use ($fixSym) {
+    $formatStdValue = function ($value) use ($fixSym) {
         $value = trim((string) $value);
 
-        // Nilai standar di form disimpan sebagai -18; label "Std ≤ (-18)°C" tidak ikut tersimpan.
+        // Nilai standar cold storage disimpan sebagai -18; label "Std ≤ (-18)°C" tidak ikut tersimpan.
         if ($value === '-18') {
             $value = '≤ (-18)°C';
         }
@@ -425,9 +425,9 @@
                         <td>{{ $row['produk'] }}</td>
                         <td class="center">{{ $row['suhu_produk'] }}</td>
                         <td>{{ $row['area'] }}</td>
-                        <td class="sym-cell">{{ $formatSetting($row['setting']) }}</td>
+                        <td class="sym-cell">{{ $formatStdValue($row['setting']) }}</td>
                         <td class="sym-cell">{{ $fixSym($row['aktual']) }}</td>
-                        <td class="sym-cell">{{ $fixSym($row['display']) }}</td>
+                        <td class="sym-cell">{{ $formatStdValue($row['display']) }}</td>
                     </tr>
                 @endforeach
             </tbody>
