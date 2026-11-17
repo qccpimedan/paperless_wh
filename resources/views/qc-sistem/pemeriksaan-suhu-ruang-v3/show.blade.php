@@ -255,10 +255,12 @@
             ? $val == $sectionStd[$secKey]
             : (strpos((string) $val, $sectionStd[$secKey]) !== false);
     };
-    $formatStdValue = function ($value, $secKey) {
-        return $secKey === 'cold_storage' && trim((string) $value) === '-18'
-            ? '≤ (-18)°C'
-            : $value;
+    $formatStdValue = function ($value, $field = 'setting') {
+        $normalized = trim((string) $value);
+        if ($field === 'setting' && in_array($normalized, ['≤30', '<=30', 'â‰¤30', '≤ 30', '<= 30', 'â‰¤ 30'], true)) {
+            return '≤ 30';
+        }
+        return $value;
     };
 @endphp
 <!--
@@ -294,7 +296,7 @@
 
                                 <div class="fp-read-label">{{ $meta['label'] }}</div>
                                 <div class="fp-read-cap">{{ $meta['caption'] }}</div>
-                                <div class="fp-read-val">{{ $val !== null && $val !== '' ? $formatStdValue($val, $group['key']) : '-' }} <small>°Celsius</small></div>
+                                <div class="fp-read-val">{{ $val !== null && $val !== '' ? $formatStdValue($val, $field) : '-' }} <small>°Celsius</small></div>
                                 <div class="fp-read-foot"><i class="bi {{ $meta['icon'] }}"></i> {{ $meta['label'] }}</div>
                             </div>
                         @endforeach
@@ -352,10 +354,9 @@
                                         @if(!empty($tRow['note']))<em class="fp-mono">({{ $tRow['note'] }})</em>@endif
                                     </span>
                                 </td>
-                                @php $isColdStorageRow = strpos($tRow['area'], 'Cold Storage') === 0; @endphp
-                                <td class="c">{{ $formatStdValue($tRow['setting'], $isColdStorageRow ? 'cold_storage' : '') }}</td>
-                                <td class="c fp-actual">{{ $formatStdValue($tRow['aktual'], $isColdStorageRow ? 'cold_storage' : '') }}</td>
-                                <td class="c">{{ $formatStdValue($tRow['display'], $isColdStorageRow ? 'cold_storage' : '') }}</td>
+                                <td class="c">{{ $formatStdValue($tRow['setting'], 'setting') }}</td>
+                                <td class="c fp-actual">{{ $tRow['aktual'] }}</td>
+                                <td class="c">{{ $tRow['display'] }}</td>
                                 <td class="c">
                                     @if($tRow['tipe'] === 'awal')
                                         <span class="fp-status fp-status-awal"><i class="bi bi-check-circle-fill"></i> Input Awal</span>
