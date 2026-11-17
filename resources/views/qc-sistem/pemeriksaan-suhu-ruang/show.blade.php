@@ -31,9 +31,11 @@
             : (strpos((string) $val, $sectionStd[$secKey]) !== false);
     };
     $formatStdValue = function ($value, $secKey) {
-        return $secKey === 'cold_storage' && trim((string) $value) === '-18'
-            ? '≤ (-18)°C'
-            : $value;
+        $normalized = trim((string) $value);
+        if ($secKey === 'cold_storage' && is_numeric($normalized) && (float) $normalized === -18.0) {
+            return '≤ (-18)°C';
+        }
+        return $value;
     };
 
     // Susun kartu per area untuk bagian "monitoring"
