@@ -10,6 +10,7 @@ use App\Models\Produk;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Carbon;
 use Barryvdh\DomPDF\Facade\Pdf as PDF;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Http\Controllers\Traits\HasAuditController;
@@ -24,6 +25,29 @@ class PemeriksaanReturnBarangCustomerController extends Controller
         $user = Auth::user();
 
         $search = trim((string) $request->input('search', ''));
+        $grafanaCategory = trim((string) $request->query('kategori_code', ''));
+        $parseGrafanaDate = static function ($value) {
+            $value = trim((string) $value);
+            if ($value === '') {
+                return null;
+            }
+
+            try {
+                if (ctype_digit($value)) {
+                    $timestamp = (int) $value;
+                    return Carbon::createFromTimestamp(
+                        $timestamp > 9999999999 ? (int) floor($timestamp / 1000) : $timestamp
+                    )->toDateString();
+                }
+
+                return Carbon::parse($value)->toDateString();
+            } catch (\Throwable $exception) {
+                return null;
+            }
+        };
+        $grafanaDate = $parseGrafanaDate($request->query('tanggal'));
+        $grafanaFrom = $parseGrafanaDate($request->query('from'));
+        $grafanaTo = $parseGrafanaDate($request->query('to'));
 
         $query = PemeriksaanReturnBarangCustomer::with([
             'user.role',
@@ -33,9 +57,33 @@ class PemeriksaanReturnBarangCustomerController extends Controller
             'customer'
         ])->where('is_audit', false);
 
-        if (!($user->role && strtolower($user->role->role) === 'superadmin')) {
+        $isSuperAdmin = $user->role && strtolower($user->role->role) === 'superadmin';
+        if ($isSuperAdmin) {
+            $requestedPlantId = filter_var($request->query('plant_id'), FILTER_VALIDATE_INT);
+            if ($requestedPlantId !== false && $requestedPlantId > 0) {
+                $query->whereHas('user', fn ($q) => $q->where('id_plant', $requestedPlantId));
+            }
+        } else {
             $query->whereHas('user', function ($q) use ($user) {
                 $q->where('id_plant', $user->getEffectivePlantId());
+            });
+        }
+
+        if ($grafanaFrom !== null && $grafanaTo !== null) {
+            if ($grafanaFrom > $grafanaTo) {
+                [$grafanaFrom, $grafanaTo] = [$grafanaTo, $grafanaFrom];
+            }
+            $query->whereBetween('tanggal', [$grafanaFrom, $grafanaTo]);
+        } elseif ($grafanaDate !== null) {
+            $query->whereDate('tanggal', $grafanaDate);
+        }
+        if ($grafanaCategory !== '') {
+            $categoryJson = json_encode(['kategori_code' => $grafanaCategory], JSON_UNESCAPED_UNICODE);
+            $escapedCategory = addcslashes($grafanaCategory, '%_\\');
+            $query->where(function ($categoryQuery) use ($categoryJson, $escapedCategory) {
+                $categoryQuery
+                    ->whereRaw("JSON_CONTAINS(produk_data, ?, '$')", [$categoryJson])
+                    ->orWhere('produk_data', 'like', '%"kategori_code":"' . $escapedCategory . '"%');
             });
         }
 
@@ -120,7 +168,6 @@ class PemeriksaanReturnBarangCustomerController extends Controller
             ->orderByDesc('id')
             ->paginate(25);
 
-        
         $produkKategoriOptions = \App\Models\Produk::query()
             ->whereNotNull('kategori_code')
             ->select('kategori_code')
@@ -144,7 +191,15 @@ class PemeriksaanReturnBarangCustomerController extends Controller
 
         $produkNamaById = $produkList->pluck('nama_produk', 'id')->all();
 
-        return view('qc-sistem.pemeriksaan-return-barang-customer.index', compact('pemeriksaans', 'produkKategoriOptions', 'produkList', 'produkByKategori', 'produkNamaById'));
+        return view('qc-sistem.pemeriksaan-return-barang-customer.index', compact(
+            'pemeriksaans',
+            'produkKategoriOptions',
+            'produkList',
+            'produkByKategori',
+            'produkNamaById',
+            'grafanaCategory',
+            'grafanaDate'
+        ));
     }
 
     public function create()
