@@ -1116,6 +1116,42 @@ function initBbpCollapses() {
     };
 
     const choicesInstances = new WeakMap();
+    let supplierSyncLocked = false;
+
+    function withSupplierSyncLock(callback) {
+        supplierSyncLocked = true;
+        try {
+            callback();
+        } finally {
+            supplierSyncLocked = false;
+        }
+    }
+
+    function getSupplierChoices(select) {
+        return select
+            ? (choicesInstances.get(select) || select._choices || select._choicesInstance || select.choicesInstance || null)
+            : null;
+    }
+
+    function setSupplierSelectValues(rowEl, type, values) {
+        const select = rowEl?.querySelector(`select.${type}-master-select`);
+        if (!select) return;
+
+        const normalized = [...new Set((values || []).map((value) => String(value).trim()).filter(Boolean))];
+        const instance = getSupplierChoices(select);
+
+        withSupplierSyncLock(() => {
+            if (instance) {
+                instance.removeActiveItems();
+                normalized.forEach((value) => instance.setChoiceByValue(value));
+                return;
+            }
+
+            Array.from(select.options).forEach((option) => {
+                option.selected = normalized.includes(String(option.value).trim());
+            });
+        });
+    }
 
     document.addEventListener('DOMContentLoaded', function() {
         document.querySelectorAll('.btn-kembali-confirm').forEach((el) => {
@@ -1678,6 +1714,17 @@ function initBbpCollapses() {
         const produkId = String(produkSelect.value || '');
         const meta = produkId && produkMeta ? produkMeta[produkId] : null;
 
+        if (!meta) {
+            produsenBadges.innerHTML = '<span class="text-muted small badge-empty">-</span>';
+            distributorBadges.innerHTML = '<span class="text-muted small badge-empty">-</span>';
+            produsenHidden.innerHTML = '';
+            distributorHidden.innerHTML = '';
+            setSupplierSelectValues(rowEl, 'produsen', []);
+            setSupplierSelectValues(rowEl, 'distributor', []);
+            syncHeaderToDetails(rowEl);
+            return;
+        }
+
         const normalizeMulti = (v) => {
             if (Array.isArray(v)) return v.map(x => String(x));
             if (v === null || v === undefined) return [];
@@ -1718,20 +1765,13 @@ function initBbpCollapses() {
         renderBadges(distributorBadges, distVals, 'badge bg-light-info text-info', 'distributor');
         renderHiddenInputs(produsenHidden, 'produsen', prodVals);
         renderHiddenInputs(distributorHidden, 'distributor', distVals);
-        syncSupplierSelectOptions(rowEl, 'produsen', prodVals);
-        syncSupplierSelectOptions(rowEl, 'distributor', distVals);
-    }
-
-    function syncSupplierSelectOptions(rowEl, type, values) {
-        const select = rowEl?.querySelector(`select.${type}-master-select`);
-        if (!select) return;
-        const selected = new Set((values || []).map((value) => String(value).trim()));
-        Array.from(select.options).forEach((option) => {
-            option.selected = selected.has(String(option.value).trim());
-        });
+        setSupplierSelectValues(rowEl, 'produsen', prodVals);
+        setSupplierSelectValues(rowEl, 'distributor', distVals);
     }
 
     function syncSupplierSelectionFromSelect(select) {
+        if (supplierSyncLocked) return;
+
         const rowEl = select.closest('.unified-row');
         if (!rowEl) return;
 
@@ -1746,7 +1786,9 @@ function initBbpCollapses() {
         const selected = Array.from(select.selectedOptions)
             .map((option) => String(option.value || '').trim())
             .filter(Boolean);
-        const values = [...new Set([...existing, ...selected])];
+        const masterValues = new Set(Array.from(select.options).map((option) => String(option.value || '').trim()));
+        const extraValues = existing.filter((value) => !masterValues.has(value));
+        const values = [...new Set([...selected, ...extraValues])];
 
         badges.innerHTML = '';
         if (values.length === 0) {
@@ -1770,6 +1812,8 @@ function initBbpCollapses() {
             input.value = value;
             hidden.appendChild(input);
         });
+
+        syncHeaderToDetails(rowEl);
     }
 
     function setupDynamicFormListeners() {
@@ -1810,6 +1854,15 @@ function initBbpCollapses() {
                 syncSupplierSelectionFromSelect(e.target);
             }
         });
+
+        ['addItem', 'removeItem'].forEach((eventName) => {
+            document.addEventListener(eventName, function(e) {
+                const select = e.target;
+                if (select && select.matches && select.matches('select.supplier-master-select')) {
+                    window.setTimeout(() => syncSupplierSelectionFromSelect(select), 0);
+                }
+            });
+        });
     }
 
     // Initialize Choices.js for select elements
@@ -1822,6 +1875,8 @@ function initBbpCollapses() {
             }
             // Skip if already initialized
             if (select.dataset.choicesInitialized === 'true') {
+                const existingInstance = getSupplierChoices(select);
+                if (existingInstance) choicesInstances.set(select, existingInstance);
                 return;
             }
             
@@ -1831,7 +1886,7 @@ function initBbpCollapses() {
             }
             
             try {
-                new Choices(select, {
+                const instance = new Choices(select, {
                     searchResultLimit: 100,
                         searchFuzziness: 0.000001,
                         fuseOptions: { ignoreLocation: true, threshold: 0.2, matchAllTokens: false },
@@ -1844,12 +1899,7 @@ function initBbpCollapses() {
                     searchPlaceholderValue: 'Cari...',
                     itemSelectText: 'Tekan untuk memilih'
                 });
-                if (select) {
-                    try {
-                        choicesInstances.set(select, select.choicesInstance);
-                    } catch (e) {
-                    }
-                }
+                choicesInstances.set(select, instance);
                 select.dataset.choicesInitialized = 'true';
             } catch(err) {
                 console.error('Error initializing Choices:', err);
@@ -2339,12 +2389,18 @@ function initBbpCollapses() {
         // Beri nama radio unik per produk agar tidak bentrok dengan produk lain
         reindexDetails(newRow);
         
-        // Initialize Choices.js ONLY for selects in the new row
-        const newSelects = newRow.querySelectorAll('select.choices');
+        // Initialize both regular and supplier Choices controls in every added row.
+        const newSelects = newRow.querySelectorAll('select.choices, select.js-supplier-choices');
         
         newSelects.forEach(select => {
+            if (select.dataset.choicesInitialized === 'true') {
+                const existingInstance = getSupplierChoices(select);
+                if (existingInstance) choicesInstances.set(select, existingInstance);
+                return;
+            }
+
             try {
-                new Choices(select, {
+                const instance = new Choices(select, {
                     searchResultLimit: 100,
                         searchFuzziness: 0.000001,
                         fuseOptions: { ignoreLocation: true, threshold: 0.2, matchAllTokens: false },
@@ -2357,6 +2413,7 @@ function initBbpCollapses() {
                     searchPlaceholderValue: 'Cari...',
                     itemSelectText: 'Tekan untuk memilih'
                 });
+                choicesInstances.set(select, instance);
                 select.dataset.choicesInitialized = 'true';
             } catch(err) {
                 console.error('Error initializing new select:', err);
@@ -2770,11 +2827,6 @@ function initBbpCollapses() {
         const rowEl = badge.closest('.unified-row');
         const badgesContainer = badge.closest('.produsen-badges, .distributor-badges');
         const value = String(badge.dataset.value || '').trim();
-        const masterSelect = rowEl?.querySelector(`select.${type}-master-select`);
-        if (masterSelect && value) {
-            const option = Array.from(masterSelect.options).find((item) => String(item.value).trim() === value);
-            if (option) option.selected = false;
-        }
         
         // Hapus badge dari tampilan
         badge.remove();
@@ -2823,6 +2875,8 @@ function initBbpCollapses() {
 
             rebuildHidden(headerProdusenHidden, produsenVals, 'produsen');
             rebuildHidden(headerDistributorHidden, distributorVals, 'distributor');
+            setSupplierSelectValues(rowEl, type, type === 'produsen' ? produsenVals : distributorVals);
+            syncHeaderToDetails(rowEl);
         }
     }
 </script>
