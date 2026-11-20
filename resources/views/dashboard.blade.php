@@ -30,15 +30,42 @@
         position: relative;
         height: 430px;
         overflow: hidden;
-        background: #17191d;
+        background: #fff;
     }
-    .qc-grafana-panel.trend-panel { height: 480px; }
-    .qc-grafana-panel iframe {
+    .dash-card .card-body.p-0 > .qc-grafana-panel { border-top: 1px solid #e6e9ef; }
+    .qc-grafana-panel.trend-panel { height: 520px; }
+    .qc-grafana-panel {
+        --qc-shift: 48px;  /* seberapa jauh iframe digeser ke atas untuk memotong badge Grafana */
+        --qc-pad: 0px;     /* tinggi label di atas panel (dipakai panel trend) */
+    }
+    .qc-grafana-frame {
+        position: absolute;
+        inset: var(--qc-pad) 0 0 0;
+        overflow: hidden;
+    }
+    .qc-grafana-panel .qc-grafana-frame iframe {
+        position: absolute;
+        top: calc(-1 * var(--qc-shift));
+        left: 0;
         display: block;
         width: 100%;
-        height: 100%;
+        height: calc(100% + var(--qc-shift));
         border: 0;
-        background: #17191d;
+        background: #fff;
+    }
+    .qc-grafana-label {
+        position: absolute;
+        z-index: 1;
+        top: 0; left: 0; right: 0;
+        height: var(--qc-pad);
+        display: flex;
+        align-items: center;
+        padding: 0 .9rem;
+        font-size: .85rem;
+        font-weight: 600;
+        color: #344767;
+        background: #fff;
+        border-bottom: 1px solid #eef1f6;
     }
     .qc-grafana-loader,
     .qc-grafana-error {
@@ -65,17 +92,6 @@
     .qc-grafana-error { display: none; }
     .qc-grafana-error.is-visible { display: flex; }
 
-    /* Grafana berjalan di origin lain; tutup badge branding hanya secara visual. */
-    .qc-grafana-brand-mask {
-        position: absolute;
-        z-index: 2;
-        top: 0;
-        right: 0;
-        width: 142px;
-        height: 34px;
-        background: #17191d;
-        pointer-events: none;
-    }
     @keyframes qc-logo-pulse {
         0%, 100% { transform: scale(.94); opacity: .75; }
         50% { transform: scale(1.06); opacity: 1; }
@@ -189,7 +205,7 @@
         grid-template-columns: repeat(3, minmax(0, 1fr));
         background: #fff;
     }
-    .trend-wrap .qc-grafana-panel.trend-panel { height: 400px; }
+    .trend-wrap .qc-grafana-panel.trend-panel { height: 400px; --qc-pad: 34px; }
     .trend-wrap .qc-grafana-panel + .qc-grafana-panel { border-left: 1px solid #d9ecf8; }
     @media (max-width: 991.98px) {
         .trend-wrap { grid-template-columns: 1fr; }
@@ -580,7 +596,7 @@
                         <div class="trend-wrap">
                             @foreach($trendPanelIds as $panelId)
                                 <div class="qc-grafana-panel trend-panel" data-panel-name="{{ $panelNames[$panelId] }}">
-                                    @include('grafana-panel-inner', ['panelId' => $panelId])
+                                    @include('grafana-panel-inner', ['panelId' => $panelId, 'showLabel' => true])
                                 </div>
                             @endforeach
                         </div>
@@ -600,6 +616,7 @@
 document.addEventListener('DOMContentLoaded', function () {
     const panels = document.querySelectorAll('.qc-grafana-panel');
     const timeoutMs = 20000;
+
     function loadPanel(panel, retry) {
         const frame = panel.querySelector('iframe');
         const loader = panel.querySelector('.qc-grafana-loader');

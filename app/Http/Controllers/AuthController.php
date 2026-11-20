@@ -454,7 +454,7 @@ class AuthController extends Controller
                 if (is_array($reading)) {
                     $unitName = $reading['unit'] ?? $unit;
                     $addRoomTemperatureIssue($record, 'Suhu Ruang V1', 'Anteroom Loading ' . $unitName,
-                        $reading['actual'] ?? null, '-5 sampai 5°C', fn ($value) => $value >= -5 && $value <= 5);
+                        $reading['actual'] ?? null, '0 ±5°C', fn ($value) => $value >= -5 && $value <= 5);
                 }
             }
             foreach ([
@@ -466,7 +466,7 @@ class AuthController extends Controller
                 $reading = $data[$section] ?? [];
                 if (is_array($reading)) {
                     $addRoomTemperatureIssue($record, 'Suhu Ruang V1', $label,
-                        $reading['actual'] ?? null, '-5 sampai 5°C', fn ($value) => $value >= -5 && $value <= 5);
+                        $reading['actual'] ?? null, '0 ±5°C', fn ($value) => $value >= -5 && $value <= 5);
                 }
             }
         }
@@ -480,7 +480,7 @@ class AuthController extends Controller
         foreach ($v2Query->get() as $record) {
             foreach ([
                 'cold_storage' => ['Cold Storage', '<= -18°C', fn ($value) => $value <= -18],
-                'anteroom_loading' => ['Anteroom Loading', '-5 sampai 5°C', fn ($value) => $value >= -5 && $value <= 5],
+                'anteroom_loading' => ['Anteroom Loading', '0 ±5°C', fn ($value) => $value >= -5 && $value <= 5],
             ] as $section => [$label, $standard, $check]) {
                 $readings = $record->{'suhu_' . $section};
                 foreach ((array) $readings as $unit => $reading) {
@@ -500,7 +500,7 @@ class AuthController extends Controller
                 $reading = $record->{'suhu_' . $section};
                 if (is_array($reading)) {
                     $addRoomTemperatureIssue($record, 'Suhu Ruang V2', $label,
-                        $reading['actual'] ?? null, '-5 sampai 5°C', fn ($value) => $value >= -5 && $value <= 5);
+                        $reading['actual'] ?? null, '0 ±5°C', fn ($value) => $value >= -5 && $value <= 5);
                 }
             }
 
