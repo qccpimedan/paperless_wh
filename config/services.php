@@ -44,4 +44,11 @@ return [
         'key' => env('LOGIN_BYPASS_KEY'),
     ],
 
+    'grafana_qc' => [
+        'dashboard_url' => env(
+            'GRAFANA_QC_DASHBOARD_URL',
+            'http://10.30.4.69:3000/d/adcflvh/smartwh'
+        ),
+    ],
+
 ];
