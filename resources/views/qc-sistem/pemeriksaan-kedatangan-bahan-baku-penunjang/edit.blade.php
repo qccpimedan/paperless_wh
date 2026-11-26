@@ -840,7 +840,7 @@
                                                                 <div class="col-md-6">
                                                                     <div class="form-group">
                                                                         <label class="form-label">Ganti Foto COA</label>
-                                                                        <input type="file" name="file_coa_img[]" class="form-control" accept="image/*" capture="environment">
+                                                                        <input type="file" name="file_coa_img[]" class="form-control" accept="image/*">
                                                                         <small class="form-text text-muted">Format: JPG, PNG, WEBP, GIF. Maksimal 1MB. Gambar &gt; 3MB akan dikompres otomatis.</small>
                                                                     </div>
                                                                 </div>
@@ -858,7 +858,7 @@
                                                                     @endif
                                                                     <div class="form-group">
                                                                         <label class="form-label">Ganti Foto Bahan Baku</label>
-                                                                        <input type="file" name="image_bahan_baku[]" class="form-control image-bahan-baku-input" accept="image/*" capture="camera">
+                                                                        <input type="file" name="image_bahan_baku[]" class="form-control image-bahan-baku-input" accept="image/*">
                                                                     </div>
                                                                 </div>
                                                             </div>

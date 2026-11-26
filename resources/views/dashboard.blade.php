@@ -214,6 +214,64 @@
             border-top: 1px solid #d9ecf8;
         }
     }
+
+    /* =========================================================
+       WARNA: Ringkasan Kebersihan Area (sanitation-summary)
+       ========================================================= */
+    .dash-card.sanitation-summary { border-color: #cfdcf7; }
+    .dash-card.sanitation-summary > .card-header {
+        background: linear-gradient(90deg, #eef2ff 0%, #f6f8ff 100%);
+        border-bottom-color: #cfdcf7;
+    }
+    .sanitation-summary > .card-header .card-title { color: #2f4aa8; }
+
+    /* Stat tile: latar berwarna lembut sesuai maknanya */
+    .sanitation-summary .stat-tile.is-total { background: #eef2ff; border-color: #d5defa; border-left-color: #435ebe; }
+    .sanitation-summary .stat-tile.is-nc    { background: #fff1f2; border-color: #fbd5d9; border-left-color: #dc3545; }
+    .sanitation-summary .stat-tile.is-ok    { background: #ecf9f1; border-color: #c9ecd8; border-left-color: #198754; }
+    .sanitation-summary .stat-tile.is-total .summary-number { color: #435ebe; }
+
+    /* Top 3 box: tiap box punya warna aksen sendiri */
+    .sanitation-summary .top-box { border-top-width: 3px; }
+    .sanitation-summary .row > .col-lg-4:nth-child(1) .top-box { background: #f3f7ff; border-color: #d5e2fb; border-top-color: #0d6efd; }
+    .sanitation-summary .row > .col-lg-4:nth-child(2) .top-box { background: #fff8ec; border-color: #fbe6c2; border-top-color: #fd7e14; }
+    .sanitation-summary .row > .col-lg-4:nth-child(3) .top-box { background: #f6f1ff; border-color: #e1d5f8; border-top-color: #6f42c1; }
+    .sanitation-summary .row > .col-lg-4:nth-child(1) .top-box h6 { color: #0d6efd; }
+    .sanitation-summary .row > .col-lg-4:nth-child(2) .top-box h6 { color: #d9680a; }
+    .sanitation-summary .row > .col-lg-4:nth-child(3) .top-box h6 { color: #6f42c1; }
+    .sanitation-summary .top-list .list-group-item { border-color: rgba(0,0,0,.07); }
+
+    /* Header tabel */
+    .sanitation-summary .table thead th {
+        background: #e4eafc;
+        color: #2f4aa8;
+        border-color: #d0dbf7;
+    }
+    .sanitation-summary .table-hover > tbody > tr:hover > * { background: #f3f6ff; }
+
+    /* =========================================================
+       WARNA: Non-Conformity & Top Issue (issue-card)
+       ========================================================= */
+    .dash-card.issue-card { border-color: #f6d3d6; overflow: hidden; }
+    .dash-card.issue-card > .card-header {
+        background: linear-gradient(90deg, #fff1f2 0%, #fff8f8 100%);
+    }
+    .issue-card > .card-header .card-title { color: #c62f3d; }
+    .issue-tabs { border-bottom-color: #f1d5d8; }
+
+    /* Tiap tab punya warna aktif sendiri */
+    .issue-tabs .nav-link { border-radius: .5rem .5rem 0 0; }
+    #tab-komplain-btn:hover,   #tab-komplain-btn.active   { color: #c62f3d; background: #fff1f2; border-color: #f1d5d8 #f1d5d8 #fff1f2; }
+    #tab-precooling-btn:hover, #tab-precooling-btn.active { color: #0b7fa8; background: #eaf8fd; border-color: #f1d5d8 #f1d5d8 #eaf8fd; }
+    #tab-suhuruang-btn:hover,  #tab-suhuruang-btn.active  { color: #d9680a; background: #fff5e8; border-color: #f1d5d8 #f1d5d8 #fff5e8; }
+
+    /* Isi tab ikut berwarna tipis sesuai tab-nya */
+    #tab-komplain.tab-pane   { background: #fff1f2; }
+    #tab-precooling.tab-pane { background: #eaf8fd; }
+    #tab-suhuruang.tab-pane  { background: #fff5e8; }
+    .issue-card .tab-content > .tab-pane { border-radius: .5rem; padding: .9rem 1rem; }
+    .issue-card .alert-light { background: #fff; }
+    .issue-card .issue-scroll thead th { background: #f7e3e5; }
 </style>
 
 <div id="main">
