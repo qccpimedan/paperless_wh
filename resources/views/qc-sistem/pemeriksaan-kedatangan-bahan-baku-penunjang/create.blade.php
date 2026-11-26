@@ -896,7 +896,9 @@
     const produkByKategori = @json($produkByKategori ?? []);
     const produkMeta = @json($produkMeta ?? []);
     const oldKategoriCodes = @json(old('kategori_code', []));
-    const oldProdukIds = @json(old('id_bahan', []));
+    // id_bahan adalah hasil mapping internal; gunakan id_produk saat mengisi
+    // ulang form setelah validasi gagal.
+    const oldProdukIds = @json(old('id_produk', old('id_bahan', [])));
 
     const bsCollapse = (el) => {
         try {

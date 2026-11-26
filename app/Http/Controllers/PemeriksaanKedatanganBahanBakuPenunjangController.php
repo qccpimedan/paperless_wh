@@ -12,9 +12,11 @@ use App\Models\User;
 use App\Exports\SingleRecordViewExport;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\UploadedFile;
 use Maatwebsite\Excel\Facades\Excel;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Monarobase\CountryList\CountryListFacade as Countries; // Menggunakan Facade
 use App\Http\Controllers\Traits\HasAuditController;
 use App\Http\Controllers\Traits\RejectsTruncatedDynamicInput;
@@ -117,6 +119,7 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
                 return [$p->id => (string) $p->nama_produk];
             });
 
+        /** @var User $user */
         $user = Auth::user();
         $plantId = $user->getEffectivePlantId();
 
@@ -160,23 +163,10 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
                 $normKey = $normalizeName($produkKey);
                 $mapped = $bahanIdByNorm[$normKey] ?? null;
             }
-            if (!$mapped && $produkKey) {
-                $normKey = $normalizeName($produkKey);
-                foreach ($bahanIdByNorm as $bNorm => $bId) {
-                    if ($bNorm && $normKey) {
-                        $shorter = min(strlen($bNorm), strlen($normKey));
-                        $longer  = max(strlen($bNorm), strlen($normKey));
-                        // Hanya fuzzy-match jika string pendek minimal 4 karakter
-                        // DAN panjang string pendek >= 50% dari string panjang (mencegah "gul" cocok dengan "regular")
-                        if ($shorter >= 4 && $longer > 0 && ($shorter / $longer) >= 0.5
-                            && (str_contains($bNorm, $normKey) || str_contains($normKey, $bNorm))
-                        ) {
-                            $mapped = $bId;
-                            break;
-                        }
-                    }
-                }
-            }
+            // Jangan gunakan fuzzy-match. Nama berbeda dapat memiliki bagian
+            // nama yang sama (mis. "Ins Chicken Karage" dan "Aeon Chicken
+            // Karage"), sehingga bahan yang dipilih bisa salah. Jika tidak ada
+            // nama yang sama persis, bahan dibuat pada blok auto-create di bawah.
 
             // Auto-create bahan if missing
             if (!$mapped && $produkRawName) {
@@ -240,6 +230,7 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
 
     public function index(Request $request)
     {
+        /** @var User $user */
         $user = Auth::user();
         $search = trim((string) $request->input('search', ''));
 
@@ -337,6 +328,7 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
 
     public function create()
     {
+        /** @var User $user */
         $user = Auth::user();
         $plantId = $user->getEffectivePlantId();
         $produkKategoriOptions = collect();
@@ -426,6 +418,7 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
 
     private function checkPlantAccess($pemeriksaan)
     {
+        /** @var User $user */
         $user = Auth::user();
         
         if (!($user->role && strtolower($user->role->role) === 'superadmin')) {
@@ -439,7 +432,7 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
     public function store(Request $request)
     {
         // Log semua input untuk debugging
-        \Log::info('Form Submit Data:', $request->all());
+        Log::info('Form Submit Data:', $request->all());
 
         $inputProdukIds = $request->input('id_produk', $request->input('id_bahan', []));
         $inputBahanIds = $request->input('id_bahan', []);
@@ -734,14 +727,14 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
         }
 
         // Log data yang akan disimpan untuk debugging
-        \Log::info('Data yang akan disimpan ke database:', $data);
+            Log::info('Data yang akan disimpan ke database:', $data);
         
         try {
             $pemeriksaan = PemeriksaanKedatanganBahanBakuPenunjang::create($data);
-            \Log::info('Data berhasil disimpan dengan ID: ' . $pemeriksaan->id);
+            Log::info('Data berhasil disimpan dengan ID: ' . $pemeriksaan->id);
         } catch (\Exception $e) {
-            \Log::error('Error saat menyimpan data: ' . $e->getMessage());
-            \Log::error('Stack trace: ' . $e->getTraceAsString());
+            Log::error('Error saat menyimpan data: ' . $e->getMessage());
+            Log::error('Stack trace: ' . $e->getTraceAsString());
             return redirect()->back()
                 ->withInput()
                 ->withErrors(['error' => 'Gagal menyimpan data: ' . $e->getMessage()]);
@@ -764,6 +757,7 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
     {
         $this->checkPlantAccess($pemeriksaanBahanBaku);
         
+        /** @var User $user */
         $user = Auth::user();
         $plantId = $user->getEffectivePlantId();
         $produkKategoriOptions = collect();
@@ -1217,6 +1211,7 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
     {
         $this->checkPlantAccess($pemeriksaanBahanBaku);
 
+        /** @var User $user */
         $user = Auth::user();
         $plantId = $user->getEffectivePlantId();
         $produkKategoriOptions = collect();
@@ -1472,6 +1467,7 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
 
     public function sendToProduksi(PemeriksaanKedatanganBahanBakuPenunjang $pemeriksaanBahanBaku)
     {
+        /** @var User $user */
         $user = Auth::user();
         $this->checkPlantAccess($pemeriksaanBahanBaku);
         if ($pemeriksaanBahanBaku->status_verifikasi !== 'pending') {
@@ -1488,6 +1484,7 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
 
     public function approveProduksi(Request $request, PemeriksaanKedatanganBahanBakuPenunjang $pemeriksaanBahanBaku)
     {
+        /** @var User $user */
         $user = Auth::user();
         $this->checkPlantAccess($pemeriksaanBahanBaku);
         if ($pemeriksaanBahanBaku->status_verifikasi !== 'sent_to_produksi') {
@@ -1506,6 +1503,7 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
     public function rejectProduksi(Request $request, PemeriksaanKedatanganBahanBakuPenunjang $pemeriksaanBahanBaku)
     {
         $request->validate(['notes' => 'required|string|min:5']);
+        /** @var User $user */
         $user = Auth::user();
         $this->checkPlantAccess($pemeriksaanBahanBaku);
         if ($pemeriksaanBahanBaku->status_verifikasi !== 'sent_to_produksi') {
@@ -1523,6 +1521,7 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
 
     public function approveSPV(Request $request, PemeriksaanKedatanganBahanBakuPenunjang $pemeriksaanBahanBaku)
     {
+        /** @var User $user */
         $user = Auth::user();
         $this->checkPlantAccess($pemeriksaanBahanBaku);
         if ($pemeriksaanBahanBaku->status_verifikasi !== 'approved_produksi') {
@@ -1541,6 +1540,7 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
     public function rejectSPV(Request $request, PemeriksaanKedatanganBahanBakuPenunjang $pemeriksaanBahanBaku)
     {
         $request->validate(['notes' => 'required|string|min:5']);
+        /** @var User $user */
         $user = Auth::user();
         $this->checkPlantAccess($pemeriksaanBahanBaku);
         if ($pemeriksaanBahanBaku->status_verifikasi !== 'approved_produksi') {
@@ -1561,6 +1561,7 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
      */
     public function exportPDF(Request $request)
     {
+        /** @var User $user */
         $user = Auth::user();
         $uuid = $request->input('uuid'); // UUID for single record export from traceability
         
@@ -1600,7 +1601,7 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
                 'filterBahanIds' => null,
             ]];
             
-            $pdf = \PDF::loadView('qc-sistem.pemeriksaan-kedatangan-bahan-baku-penunjang.pdf-report', [
+            $pdf = Pdf::loadView('qc-sistem.pemeriksaan-kedatangan-bahan-baku-penunjang.pdf-report', [
                 'pemeriksaans' => collect([$pemeriksaan]),
                 'tanggal' => $pemeriksaan->tanggal,
                 'shift' => $pemeriksaan->shift,
@@ -1780,7 +1781,7 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
         }
 
         // Generate PDF
-        $pdf = \PDF::loadView('qc-sistem.pemeriksaan-kedatangan-bahan-baku-penunjang.pdf-report', [
+        $pdf = Pdf::loadView('qc-sistem.pemeriksaan-kedatangan-bahan-baku-penunjang.pdf-report', [
             'pemeriksaans' => $pemeriksaans,
             'tanggal' => $tanggal,
             'tanggal_dari' => $tanggal_dari,
@@ -1809,6 +1810,7 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
      */
     public function exportExcel(Request $request)
     {
+        /** @var User $user */
         $user = Auth::user();
         $uuid = $request->input('uuid');
 
@@ -1983,7 +1985,7 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
             }
         }
 
-        $pdf = \PDF::loadView('qc-sistem.pemeriksaan-kedatangan-bahan-baku-penunjang.pdf-report', [
+        $pdf = Pdf::loadView('qc-sistem.pemeriksaan-kedatangan-bahan-baku-penunjang.pdf-report', [
             'dataPerShift'   => $dataPerShift,
             'tanggal_dari'   => $tanggal_dari,
             'tanggal_sampai' => $tanggal_sampai,
@@ -2009,6 +2011,7 @@ class PemeriksaanKedatanganBahanBakuPenunjangController extends Controller
 
     public function batchVerify(Request $request)
     {
+        /** @var User $user */
         $user = Auth::user();
         $userRole = $user->role ? strtolower($user->role->role) : null;
         $id_shift = $request->input('id_shift');
